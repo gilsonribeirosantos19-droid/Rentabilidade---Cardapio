@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fichas Técnicas — Sushi Ponta Negra</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0e0f0f;--bg2:#161718;--bg3:#1e2021;--border:#2a2c2e;--border2:#353739;--text:#e8e9ea;--text2:#8a8d90;--text3:#555759;--teal:#2dd4a0;--teal-dim:#1a3d30;--amber:#f0a843;--amber-dim:#3d2e10;--red:#e55353;--red-dim:#3d1414;--purple:#a78bfa;--purple-dim:#2d2550;--blue:#60a5fa;--blue-dim:#1e3a5f;--radius:10px;--radius-lg:16px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+  .shell{display:flex;min-height:100vh}
+  .sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column;flex-shrink:0}
+  .logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px}
+  .logo-mark{font-size:18px;font-weight:600;color:var(--teal);letter-spacing:-0.5px}
+  .logo-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+  .nav-group{padding:0 12px;margin-bottom:4px}
+  .nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:10px 8px 6px}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;color:var(--text2);cursor:pointer;font-size:13px;transition:all .15s;text-decoration:none}
+  .nav-item:hover{background:var(--bg3);color:var(--text)}
+  .nav-item.active{background:var(--teal-dim);color:var(--teal);font-weight:500}
+  .nav-dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0}
+  .nav-item.active .nav-dot{opacity:1}
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2);flex-shrink:0}
+  .topbar-title{font-size:15px;font-weight:500}
+  .content{flex:1;padding:28px;overflow-y:auto}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+  .metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+  .metric-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .metric-val{font-size:26px;font-weight:600;line-height:1}
+  .metric-sub{font-size:11px;color:var(--text3);margin-top:5px}
+  .c-teal{color:var(--teal)}.c-amber{color:var(--amber)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .search-wrap{position:relative;flex:1;min-width:200px}
+  .search-wrap input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px 9px 36px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s}
+  .search-wrap input:focus{border-color:var(--teal)}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+  .filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+  .chip:hover{border-color:var(--border2);color:var(--text)}
+  .chip.active{background:var(--teal-dim);border-color:var(--teal);color:var(--teal);font-weight:500}
+  .btn{padding:9px 16px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s;white-space:nowrap}
+  .btn:hover{background:var(--bg3)}
+  .btn-primary{background:var(--teal);border-color:var(--teal);color:#0e0f0f;font-weight:600}
+  .btn-primary:hover{background:#25c090;border-color:#25c090}
+  .btn-sm{padding:5px 10px;font-size:11px}
+  .btn-danger{border-color:var(--red);color:var(--red)}
+  .btn-danger:hover{background:var(--red-dim)}
+  .fichas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .ficha-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:all .2s}
+  .ficha-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+  .ficha-card-header{padding:16px 18px 12px;border-bottom:1px solid var(--border)}
+  .ficha-card-nome{font-size:14px;font-weight:600;margin-bottom:6px}
+  .ficha-card-body{padding:14px 18px}
+  .ficha-stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px}
+  .ficha-stat:last-child{margin-bottom:0}
+  .ficha-stat-label{color:var(--text3)}
+  .ficha-stat-val{font-family:'DM Mono',monospace;font-weight:500}
+  .ficha-card-footer{padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:6px}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+  .badge-ok{background:var(--teal-dim);color:var(--teal)}
+  .badge-purple{background:var(--purple-dim);color:var(--purple)}
+  .badge-blue{background:var(--blue-dim);color:var(--blue)}
+  .badge-gray{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);width:100%;max-width:700px;margin:auto}
+  .modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-title{font-size:15px;font-weight:600}
+  .modal-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .modal-close:hover{background:var(--bg3);color:var(--text)}
+  .modal-body{padding:20px 24px}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-group.full{grid-column:1/-1}
+  .form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+  .form-input,.form-select,.form-textarea{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s;width:100%}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--teal)}
+  .form-select option{background:var(--bg2)}
+  .form-textarea{resize:vertical;min-height:72px}
+  .form-hint{font-size:11px;color:var(--text3)}
+  .ing-section{margin-top:20px}
+  .ing-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .ing-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+  .ing-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .ing-row{display:grid;grid-template-columns:1fr 130px 100px 32px;gap:8px;align-items:center}
+  .ing-custo{font-size:12px;font-family:'DM Mono',monospace;color:var(--teal);text-align:right;padding-right:4px}
+  .ing-remove{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+  .ing-remove:hover{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+  .custo-box{background:var(--teal-dim);border:1px solid var(--teal);border-radius:var(--radius);padding:14px 16px;margin-top:14px;display:flex;justify-content:space-between;align-items:center}
+  .custo-label{font-size:12px;color:var(--teal);opacity:.8}
+  .custo-val{font-size:22px;font-weight:600;color:var(--teal);font-family:'DM Mono',monospace}
+  .view-ing-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  .view-ing-table th{text-align:left;color:var(--text3);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  .view-ing-table td{padding:8px 8px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+  .view-ing-table tr:last-child td{border-bottom:none}
+  .view-ing-table .num{text-align:right;font-family:'DM Mono',monospace}
+  .loading{text-align:center;padding:48px;color:var(--text3)}
+  .empty{text-align:center;padding:48px;color:var(--text3)}
+  .empty-icon{font-size:32px;margin-bottom:12px;opacity:.4}
+  .spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:200;opacity:0;transform:translateY(8px);transition:all .25s;max-width:320px}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.ok{border-color:var(--teal);color:var(--teal)}
+  .toast.err{border-color:var(--red);color:var(--red)}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <div class="logo"><div class="logo-mark">Sushi PN</div><div class="logo-sub">rentabilidade</div></div>
+    <div class="nav-group">
+      <div class="nav-label">Principal</div>
+      <a class="nav-item" href="dashboard.html">Dashboard</a>
+      <a class="nav-item" href="insumos.html"><div class="nav-dot"></div>Insumos</a>
+      <a class="nav-item active" href="fichas_tecnicas.html"><div class="nav-dot"></div>Fichas técnicas</a>
+      <a class="nav-item" href="precificacao.html">Precificação</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Análise</div>
+      <a class="nav-item" href="engenharia.html">Engenharia cardápio</a>
+      <a class="nav-item" href="cmv.html">CMV teórico x real</a>
+      <a class="nav-item" href="rendimento.html">Rendimento</a>
+      <a class="nav-item" href="simulador.html">Simulador</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Gestão</div>
+      <a class="nav-item" href="fornecedores.html">Fornecedores</a>
+      <a class="nav-item" href="alertas.html">Alertas</a>
+      <a class="nav-item" href="configuracoes.html">Configurações</a>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Fichas Técnicas</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+        <button class="btn btn-primary" onclick="abrirModal()">+ Nova ficha</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Total de fichas</div><div class="metric-val c-teal" id="m-total">—</div><div class="metric-sub">fichas ativas</div></div>
+        <div class="metric"><div class="metric-label">Custo médio</div><div class="metric-val c-blue" id="m-custo">—</div><div class="metric-sub">por porção</div></div>
+        <div class="metric"><div class="metric-label">Menor custo</div><div class="metric-val c-teal" id="m-min">—</div><div class="metric-sub">mais barato</div></div>
+        <div class="metric"><div class="metric-label">Maior custo</div><div class="metric-val c-amber" id="m-max">—</div><div class="metric-sub">mais caro</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap"><span class="search-icon">⌕</span><input type="text" id="busca" placeholder="Buscar ficha técnica..." oninput="filtrar()"></div>
+        <div class="filter-chips" id="chips"></div>
+        <button class="btn" onclick="carregar()">↻ Atualizar</button>
+      </div>
+      <div id="grid-wrap"><div class="loading"><div class="spinner"></div>Carregando fichas...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORM -->
+<div class="modal-overlay" id="modal-form">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-form-title">Nova ficha técnica</span>
+      <button class="modal-close" onclick="fecharModal('modal-form')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Nome do prato</label><input class="form-input" id="f-nome" type="text" placeholder="Ex: Temaki Salmão Completo"></div>
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <select class="form-select" id="f-cat">
+            <option value="">Selecione...</option>
+            <option value="temaki">Temaki</option><option value="sushi">Sushi</option>
+            <option value="hot">Hot</option><option value="uramaki">Uramaki</option>
+            <option value="sashimi">Sashimi</option><option value="combo">Combo</option>
+            <option value="prato">Prato</option><option value="bebida">Bebida</option>
+            <option value="entrada">Entrada</option><option value="sobremesa">Sobremesa</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Rendimento (porções)</label><input class="form-input" id="f-porcoes" type="number" min="1" value="1"><span class="form-hint">Quantas porções a receita produz</span></div>
+        <div class="form-group full"><label class="form-label">Modo de preparo</label><textarea class="form-textarea" id="f-preparo" placeholder="Descreva o passo a passo..."></textarea></div>
+        <div class="form-group full"><label class="form-label">Observações de padrão</label><input class="form-input" id="f-obs" type="text" placeholder="Ex: Servir imediatamente"></div>
+      </div>
+      <div class="ing-section">
+        <div class="ing-header"><span class="ing-title">Ingredientes</span><button class="btn btn-sm" onclick="addIngrediente()">+ Adicionar</button></div>
+        <div class="ing-list" id="ing-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Clique em "+ Adicionar" para inserir ingredientes</div></div>
+        <div class="custo-box"><span class="custo-label">Custo total da porção</span><span class="custo-val" id="custo-total">R$ 0,00</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal('modal-form')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar" onclick="salvar()">Salvar ficha</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER -->
+<div class="modal-overlay" id="modal-view">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title" id="view-nome">—</div><div style="font-size:12px;color:var(--text2);margin-top:3px" id="view-cat">—</div></div>
+      <button class="modal-close" onclick="fecharModal('modal-view')">✕</button>
+    </div>
+    <div class="modal-body" id="view-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="view-btn-del">Arquivar</button>
+      <button class="btn btn-sm" onclick="fecharModal('modal-view')">Fechar</button>
+      <button class="btn btn-primary btn-sm" id="view-btn-edit">Editar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL='https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID='00000000-0000-0000-0000-000000000001';
+const H={'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Prefer':'return=representation'};
+
+async function api(path,opts={}){
+  const r=await fetch(`${SUPA_URL}/rest/v1/${path}`,{headers:{...H,...(opts.headers||{})},...opts});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||e.hint||r.statusText);}
+  return r.status===204?null:r.json();
+}
+
+const CATS=['Todos','temaki','sushi','hot','uramaki','sashimi','combo','prato','bebida','entrada','sobremesa','outros'];
+const CAT_L={temaki:'Temaki',sushi:'Sushi',hot:'Hot',uramaki:'Uramaki',sashimi:'Sashimi',combo:'Combo',prato:'Prato',bebida:'Bebida',entrada:'Entrada',sobremesa:'Sobremesa',outros:'Outros'};
+
+let todasFichas=[],todosInsumos=[],catAtiva='Todos',editId=null,ingredientes=[];
+
+async function carregar(){
+  document.getElementById('grid-wrap').innerHTML='<div class="loading"><div class="spinner"></div>Carregando...</div>';
+  try{
+    const [fichas,insumos]=await Promise.all([
+      api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&order=nome.asc&select=*`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=id,nome,categoria,unidade_compra,preco_compra,rendimento_pct`)
+    ]);
+    todosInsumos=insumos;
+    if(fichas.length){
+      const ids=fichas.map(f=>f.id).join(',');
+      const itens=await api(`itens_ficha?ficha_id=in.(${ids})&select=*`);
+      todasFichas=fichas.map(f=>({...f,itens:itens.filter(i=>i.ficha_id===f.id)}));
+    } else { todasFichas=[]; }
+    document.getElementById('conn-status').textContent='● conectado';
+    document.getElementById('conn-status').style.color='var(--teal)';
+    atualizarMetricas();renderChips();filtrar();
+  }catch(e){
+    document.getElementById('grid-wrap').innerHTML=`<div class="empty"><div class="empty-icon">⚠</div>Erro: ${e.message}</div>`;
+    document.getElementById('conn-status').textContent='● erro';
+    document.getElementById('conn-status').style.color='var(--red)';
+  }
+}
+
+function custoFicha(f){
+  if(!f.itens||!f.itens.length)return 0;
+  const total=f.itens.reduce((acc,it)=>{
+    const ins=todosInsumos.find(i=>i.id===it.insumo_id);
+    if(!ins)return acc;
+    return acc+(it.quantidade_g/1000)*(ins.preco_compra/(ins.rendimento_pct/100));
+  },0);
+  return total/(f.rendimento_porcoes||1);
+}
+
+function atualizarMetricas(){
+  const custos=todasFichas.map(f=>custoFicha(f)).filter(c=>c>0);
+  const media=custos.length?custos.reduce((a,b)=>a+b,0)/custos.length:0;
+  const min=custos.length?Math.min(...custos):0;
+  const max=custos.length?Math.max(...custos):0;
+  document.getElementById('m-total').textContent=todasFichas.length;
+  document.getElementById('m-custo').textContent=media>0?`R$ ${media.toFixed(2)}`:'—';
+  document.getElementById('m-min').textContent=min>0?`R$ ${min.toFixed(2)}`:'—';
+  document.getElementById('m-max').textContent=max>0?`R$ ${max.toFixed(2)}`:'—';
+}
+
+function renderChips(){
+  document.getElementById('chips').innerHTML=CATS.map(c=>
+    `<button class="chip${c===catAtiva?' active':''}" onclick="setCategoria('${c}')">${c==='Todos'?'Todos':(CAT_L[c]||c)}</button>`
+  ).join('');
+}
+
+function setCategoria(c){catAtiva=c;renderChips();filtrar();}
+
+function filtrar(){
+  const q=document.getElementById('busca').value.toLowerCase();
+  let lista=todasFichas;
+  if(catAtiva!=='Todos')lista=lista.filter(f=>f.categoria===catAtiva);
+  if(q)lista=lista.filter(f=>f.nome.toLowerCase().includes(q));
+  renderGrid(lista);
+}
+
+function renderGrid(lista){
+  const el=document.getElementById('grid-wrap');
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">◎</div>Nenhuma ficha encontrada</div>';return;}
+  el.innerHTML=`<div class="fichas-grid">${lista.map(f=>{
+    const custo=custoFicha(f);
+    const nItens=f.itens?f.itens.length:0;
+    return `<div class="ficha-card" onclick="verFicha('${f.id}')">
+      <div class="ficha-card-header">
+        <div class="ficha-card-nome">${f.nome}</div>
+        <span class="badge badge-purple">${CAT_L[f.categoria]||f.categoria}</span>
+      </div>
+      <div class="ficha-card-body">
+        <div class="ficha-stat"><span class="ficha-stat-label">Custo da porção</span><span class="ficha-stat-val c-teal">R$ ${custo.toFixed(2)}</span></div>
+        <div class="ficha-stat"><span class="ficha-stat-label">Ingredientes</span><span class="ficha-stat-val">${nItens} ${nItens===1?'item':'itens'}</span></div>
+        <div class="ficha-stat"><span class="ficha-stat-label">Rendimento</span><span class="ficha-stat-val">${f.rendimento_porcoes} ${f.rendimento_porcoes===1?'porção':'porções'}</span></div>
+        <div class="ficha-stat"><span class="ficha-stat-label">Versão</span><span class="ficha-stat-val">v${f.versao_atual}</span></div>
+      </div>
+      <div class="ficha-card-footer">
+        <button class="btn btn-sm" onclick="event.stopPropagation();editarFicha('${f.id}')">Editar</button>
+        <button class="btn btn-sm" onclick="event.stopPropagation();verFicha('${f.id}')">Ver detalhes →</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function abrirModal(dados=null){
+  editId=dados?dados.id:null;
+  document.getElementById('modal-form-title').textContent=dados?'Editar ficha técnica':'Nova ficha técnica';
+  document.getElementById('f-nome').value=dados?.nome||'';
+  document.getElementById('f-cat').value=dados?.categoria||'';
+  document.getElementById('f-porcoes').value=dados?.rendimento_porcoes||1;
+  document.getElementById('f-preparo').value=dados?.modo_preparo||'';
+  document.getElementById('f-obs').value=dados?.observacoes||'';
+  ingredientes=dados?.itens?dados.itens.map(i=>({insumo_id:i.insumo_id,quantidade_g:i.quantidade_g})):[];
+  renderIngredientes();
+  document.getElementById('modal-form').classList.add('open');
+  setTimeout(()=>document.getElementById('f-nome').focus(),100);
+}
+
+function fecharModal(id){
+  document.getElementById(id).classList.remove('open');
+  if(id==='modal-form'){editId=null;ingredientes=[];}
+}
+
+function addIngrediente(){ingredientes.push({insumo_id:'',quantidade_g:''});renderIngredientes();}
+function removerIngrediente(idx){ingredientes.splice(idx,1);renderIngredientes();}
+
+function renderIngredientes(){
+  const el=document.getElementById('ing-list');
+  if(!ingredientes.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px">Clique em "+ Adicionar" para inserir ingredientes</div>';
+    calcularCusto();return;
+  }
+  el.innerHTML=ingredientes.map((ing,idx)=>{
+    const opts=todosInsumos.map(i=>`<option value="${i.id}" ${i.id===ing.insumo_id?'selected':''}>${i.nome} (${i.unidade_compra})</option>`).join('');
+    const ins=todosInsumos.find(i=>i.id===ing.insumo_id);
+    const custo=ins&&ing.quantidade_g?((ing.quantidade_g/1000)*(ins.preco_compra/(ins.rendimento_pct/100))).toFixed(3):'—';
+    return `<div class="ing-row">
+      <select class="form-select" onchange="ingUpdate(${idx},'insumo_id',this.value)">
+        <option value="">Selecione...</option>${opts}
+      </select>
+      <input class="form-input" type="number" placeholder="Qtd (g/ml)" value="${ing.quantidade_g||''}" oninput="ingUpdate(${idx},'quantidade_g',this.value)">
+      <span class="ing-custo" id="ic-${idx}">R$ ${custo}</span>
+      <button class="ing-remove" onclick="removerIngrediente(${idx})">✕</button>
+    </div>`;
+  }).join('');
+  calcularCusto();
+}
+
+function ingUpdate(idx,campo,val){
+  ingredientes[idx][campo]=campo==='quantidade_g'?parseFloat(val)||'':val;
+  const ins=todosInsumos.find(i=>i.id===ingredientes[idx].insumo_id);
+  const qtd=parseFloat(ingredientes[idx].quantidade_g)||0;
+  const el=document.getElementById(`ic-${idx}`);
+  if(el){const c=ins&&qtd?((qtd/1000)*(ins.preco_compra/(ins.rendimento_pct/100))).toFixed(3):'—';el.textContent=`R$ ${c}`;}
+  calcularCusto();
+}
+
+function calcularCusto(){
+  const total=ingredientes.reduce((acc,ing)=>{
+    const ins=todosInsumos.find(i=>i.id===ing.insumo_id);
+    const qtd=parseFloat(ing.quantidade_g)||0;
+    if(!ins||!qtd)return acc;
+    return acc+(qtd/1000)*(ins.preco_compra/(ins.rendimento_pct/100));
+  },0);
+  const p=parseInt(document.getElementById('f-porcoes')?.value)||1;
+  document.getElementById('custo-total').textContent=`R$ ${(total/p).toFixed(2)}`;
+}
+
+async function salvar(){
+  const nome=document.getElementById('f-nome').value.trim();
+  const cat=document.getElementById('f-cat').value;
+  const porcoes=parseInt(document.getElementById('f-porcoes').value)||1;
+  const preparo=document.getElementById('f-preparo').value.trim();
+  const obs=document.getElementById('f-obs').value.trim();
+  if(!nome||!cat){toast('Preencha nome e categoria.','err');return;}
+  const ingValidos=ingredientes.filter(i=>i.insumo_id&&parseFloat(i.quantidade_g)>0);
+  if(!ingValidos.length){toast('Adicione pelo menos um ingrediente com quantidade.','err');return;}
+  const btn=document.getElementById('btn-salvar');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    let fichaId=editId;
+    if(editId){
+      await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,modo_preparo:preparo||null,observacoes:obs||null})});
+      await api(`itens_ficha?ficha_id=eq.${editId}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+    }else{
+      const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,modo_preparo:preparo||null,observacoes:obs||null,status:'ativa'})});
+      fichaId=res[0].id;
+    }
+    await api('itens_ficha',{method:'POST',body:JSON.stringify(ingValidos.map((ing,i)=>({ficha_id:fichaId,insumo_id:ing.insumo_id,quantidade_g:parseFloat(ing.quantidade_g),ordem:i})))});
+    toast(`${nome} salvo com sucesso.`,'ok');
+    fecharModal('modal-form');
+    await carregar();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar ficha';}
+}
+
+async function verFicha(id){
+  const f=todasFichas.find(x=>x.id===id);
+  if(!f)return;
+  document.getElementById('view-nome').textContent=f.nome;
+  document.getElementById('view-cat').textContent=`${CAT_L[f.categoria]||f.categoria} · ${f.rendimento_porcoes} porção · v${f.versao_atual}`;
+  const custo=custoFicha(f);
+  const itensHtml=f.itens&&f.itens.length?`<table class="view-ing-table">
+    <thead><tr><th>Ingrediente</th><th>Unidade</th><th class="num">Qtd</th><th class="num">Custo/kg</th><th class="num">Subtotal</th></tr></thead>
+    <tbody>${f.itens.map(it=>{
+      const ins=todosInsumos.find(i=>i.id===it.insumo_id);
+      const cr=ins?ins.preco_compra/(ins.rendimento_pct/100):0;
+      const sub=ins?(it.quantidade_g/1000)*cr:0;
+      return `<tr><td>${ins?ins.nome:'—'}</td><td style="color:var(--text2)">${ins?ins.unidade_compra:'—'}</td><td class="num">${it.quantidade_g}g</td><td class="num">R$ ${cr.toFixed(2)}</td><td class="num" style="color:var(--teal);font-weight:500">R$ ${sub.toFixed(3)}</td></tr>`;
+    }).join('')}
+    <tr style="background:var(--teal-dim)"><td colspan="4" style="font-weight:600;color:var(--teal)">Custo total da porção</td><td class="num" style="font-weight:600;color:var(--teal)">R$ ${custo.toFixed(2)}</td></tr>
+    </tbody></table>`:'<div style="color:var(--text3);font-size:12px;padding:12px 0">Sem ingredientes cadastrados</div>';
+  document.getElementById('view-body').innerHTML=`
+    ${f.modo_preparo?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Modo de preparo</div><div style="font-size:13px;color:var(--text2);line-height:1.6">${f.modo_preparo}</div></div>`:''}
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Composição e custos</div>
+    ${itensHtml}
+    ${f.observacoes?`<div style="margin-top:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius);font-size:12px;color:var(--text2)">${f.observacoes}</div>`:''}`;
+  document.getElementById('view-btn-edit').onclick=()=>{fecharModal('modal-view');editarFicha(id);};
+  document.getElementById('view-btn-del').onclick=()=>arquivar(id,f.nome);
+  document.getElementById('modal-view').classList.add('open');
+}
+
+function editarFicha(id){const f=todasFichas.find(x=>x.id===id);if(f)abrirModal(f);}
+
+async function arquivar(id,nome){
+  if(!confirm(`Arquivar "${nome}"?`))return;
+  try{
+    await api(`fichas_tecnicas?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({status:'arquivada'})});
+    toast(`${nome} arquivada.`,'ok');fecharModal('modal-view');await carregar();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+function toast(msg,tipo='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className=`toast ${tipo} show`;
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+['modal-form','modal-view'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)fecharModal(id);});
+});
+
+carregar();
+</script>
+</body>
+</html>

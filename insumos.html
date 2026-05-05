@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Insumos — Sushi Ponta Negra</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0e0f0f;
+    --bg2:      #161718;
+    --bg3:      #1e2021;
+    --border:   #2a2c2e;
+    --border2:  #353739;
+    --text:     #e8e9ea;
+    --text2:    #8a8d90;
+    --text3:    #555759;
+    --teal:     #2dd4a0;
+    --teal-dim: #1a3d30;
+    --amber:    #f0a843;
+    --amber-dim:#3d2e10;
+    --red:      #e55353;
+    --red-dim:  #3d1414;
+    --purple:   #a78bfa;
+    --purple-dim:#2d2550;
+    --radius:   10px;
+    --radius-lg:16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── LAYOUT ── */
+  .shell { display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .logo-mark {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--teal);
+    letter-spacing: -0.5px;
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+  .nav-group { padding: 0 12px; margin-bottom: 4px; }
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 10px 8px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all .15s;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--teal-dim); color: var(--teal); font-weight: 500; }
+  .nav-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor; opacity: .5; flex-shrink: 0;
+  }
+  .nav-item.active .nav-dot { opacity: 1; }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    height: 56px;
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 15px; font-weight: 500; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .content { flex: 1; padding: 28px; overflow-y: auto; }
+
+  /* ── MÉTRICAS ── */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .metric {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+  }
+  .metric-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .metric-val { font-size: 26px; font-weight: 600; line-height: 1; }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 5px; }
+  .c-teal { color: var(--teal); }
+  .c-amber { color: var(--amber); }
+  .c-red { color: var(--red); }
+
+  /* ── TOOLBAR ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px 9px 36px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-wrap input:focus { border-color: var(--teal); }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3); font-size: 14px; pointer-events: none;
+  }
+  .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all .15s;
+  }
+  .chip:hover { border-color: var(--border2); color: var(--text); }
+  .chip.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); font-weight: 500; }
+  .btn {
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg3); }
+  .btn-primary {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #0e0f0f;
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: #25c090; border-color: #25c090; }
+
+  /* ── TABELA ── */
+  .table-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+    cursor: pointer;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg3); }
+  td {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .td-mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+  .td-muted { color: var(--text2); }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-ok     { background: var(--teal-dim);   color: var(--teal); }
+  .badge-warn   { background: var(--amber-dim);  color: var(--amber); }
+  .badge-danger { background: var(--red-dim);    color: var(--red); }
+  .badge-purple { background: var(--purple-dim); color: var(--purple); }
+  .badge-gray   { background: var(--bg3);        color: var(--text2); border: 1px solid var(--border); }
+
+  /* barra de rendimento */
+  .rend-wrap { display: flex; align-items: center; gap: 8px; }
+  .rend-bar-bg { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .rend-bar { height: 5px; border-radius: 3px; }
+  .rend-num { font-size: 12px; font-family: 'DM Mono', monospace; min-width: 34px; text-align: right; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title { font-size: 15px; font-weight: 600; }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+  }
+  .modal-close:hover { background: var(--bg3); color: var(--text); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
+  .form-input, .form-select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+    width: 100%;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--teal); }
+  .form-select option { background: var(--bg2); }
+  .form-hint { font-size: 11px; color: var(--text3); }
+
+  /* custo calculado */
+  .calc-box {
+    background: var(--teal-dim);
+    border: 1px solid var(--teal);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .calc-label { font-size: 12px; color: var(--teal); opacity: .8; }
+  .calc-val { font-size: 20px; font-weight: 600; color: var(--teal); font-family: 'DM Mono', monospace; }
+
+  /* ── LOADING / EMPTY ── */
+  .loading { text-align: center; padding: 48px; color: var(--text3); }
+  .empty { text-align: center; padding: 48px; color: var(--text3); }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: .4; }
+  .spinner {
+    width: 24px; height: 24px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    font-size: 13px;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all .25s;
+    max-width: 320px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.ok { border-color: var(--teal); color: var(--teal); }
+  .toast.err { border-color: var(--red); color: var(--red); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">Sushi PN</div>
+      <div class="logo-sub">rentabilidade</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Principal</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Dashboard</a>
+      <a class="nav-item active" href="insumos.html"><div class="nav-dot"></div>Insumos</a>
+      <a class="nav-item" href="fichas_tecnicas.html"><div class="nav-dot"></div>Fichas técnicas</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Precificação</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Análise</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Engenharia cardápio</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>CMV teórico x real</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Rendimento</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Simulador</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Gestão</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Fornecedores</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Alertas</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Configurações</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="topbar">
+      <span class="topbar-title">Insumos</span>
+      <div class="topbar-right">
+        <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+        <button class="btn btn-primary" onclick="abrirModal()">+ Novo insumo</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- MÉTRICAS -->
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Total cadastrados</div>
+          <div class="metric-val c-teal" id="m-total">—</div>
+          <div class="metric-sub">insumos ativos</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Em atenção</div>
+          <div class="metric-val c-amber" id="m-atencao">—</div>
+          <div class="metric-sub">rendimento baixo</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Críticos</div>
+          <div class="metric-val c-red" id="m-criticos">—</div>
+          <div class="metric-sub">ação necessária</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Categorias</div>
+          <div class="metric-val" id="m-cats">—</div>
+          <div class="metric-sub">tipos diferentes</div>
+        </div>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="busca" placeholder="Buscar insumo..." oninput="filtrar()">
+        </div>
+        <div class="filter-chips" id="chips"></div>
+        <button class="btn" onclick="carregarInsumos()">↻ Atualizar</button>
+      </div>
+
+      <!-- TABELA -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Insumo</th>
+              <th>Categoria</th>
+              <th>Unidade</th>
+              <th>Preço compra</th>
+              <th>Rendimento</th>
+              <th>Custo real/kg</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="8" class="loading"><div class="spinner"></div>Conectando ao banco...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO INSUMO -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Novo insumo</span>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Nome do insumo</label>
+          <input class="form-input" id="f-nome" type="text" placeholder="Ex: Salmão fresco">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <select class="form-select" id="f-cat">
+            <option value="">Selecione...</option>
+            <option value="peixe">Peixe</option>
+            <option value="hortifruti">Hortifruti</option>
+            <option value="proteina">Proteína</option>
+            <option value="laticinios">Laticínios</option>
+            <option value="seco">Seco</option>
+            <option value="molho">Molho</option>
+            <option value="embalagem">Embalagem</option>
+            <option value="bebida">Bebida</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unidade de compra</label>
+          <select class="form-select" id="f-und">
+            <option value="">Selecione...</option>
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="litro">litro</option>
+            <option value="ml">ml</option>
+            <option value="unidade">unidade</option>
+            <option value="caixa">caixa</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preço de compra (R$)</label>
+          <input class="form-input" id="f-preco" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcular()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rendimento (%)</label>
+          <input class="form-input" id="f-rend" type="number" step="0.1" min="1" max="100" value="100" oninput="calcular()">
+          <span class="form-hint">Ex: salmão após limpeza = 68%</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fator de correção</label>
+          <input class="form-input" id="f-fc" type="number" step="0.01" min="0.01" max="1" value="1.00" placeholder="1.00">
+          <span class="form-hint">Perda no pré-preparo (0 a 1)</span>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Observação</label>
+          <input class="form-input" id="f-obs" type="text" placeholder="Ex: Limpar espinha e pele antes de usar">
+        </div>
+      </div>
+      <div class="calc-box">
+        <span class="calc-label">Custo real por kg (após rendimento)</span>
+        <span class="calc-val" id="calc-custo">R$ —</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar" onclick="salvar()">Salvar insumo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── CONFIG SUPABASE ──────────────────────────────────────
+  const SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+  const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Prefer': 'return=representation'
+  };
+
+  async function api(path, opts = {}) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+      headers: { ...headers, ...(opts.headers || {}) },
+      ...opts
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || err.hint || r.statusText);
+    }
+    return r.status === 204 ? null : r.json();
+  }
+
+  // ── ESTADO ───────────────────────────────────────────────
+  let todos = [];
+  let catAtiva = 'Todos';
+  let editId = null;
+
+  const CATS = ['Todos','peixe','hortifruti','proteina','laticinios','seco','molho','embalagem','bebida','outros'];
+  const CAT_LABEL = {
+    peixe:'Peixe', hortifruti:'Hortifruti', proteina:'Proteína',
+    laticinios:'Laticínios', seco:'Seco', molho:'Molho',
+    embalagem:'Embalagem', bebida:'Bebida', outros:'Outros'
+  };
+
+  // ── CARREGAR ─────────────────────────────────────────────
+  async function carregarInsumos() {
+    document.getElementById('tbody').innerHTML =
+      '<tr><td colspan="8" class="loading"><div class="spinner"></div>Carregando...</td></tr>';
+    try {
+      const data = await api(
+        `insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=*`
+      );
+      todos = data;
+      document.getElementById('conn-status').textContent = '● conectado';
+      document.getElementById('conn-status').style.color = 'var(--teal)';
+      atualizarMetricas();
+      renderChips();
+      filtrar();
+    } catch(e) {
+      document.getElementById('tbody').innerHTML =
+        `<tr><td colspan="8" class="empty"><div class="empty-icon">⚠</div>Erro ao conectar: ${e.message}</td></tr>`;
+      document.getElementById('conn-status').textContent = '● desconectado';
+      document.getElementById('conn-status').style.color = 'var(--red)';
+    }
+  }
+
+  function atualizarMetricas() {
+    const atencao  = todos.filter(i => i.rendimento_pct >= 60 && i.rendimento_pct < 72).length;
+    const criticos = todos.filter(i => i.rendimento_pct < 60).length;
+    const cats     = new Set(todos.map(i => i.categoria)).size;
+    document.getElementById('m-total').textContent    = todos.length;
+    document.getElementById('m-atencao').textContent  = atencao;
+    document.getElementById('m-criticos').textContent = criticos;
+    document.getElementById('m-cats').textContent     = cats;
+  }
+
+  function renderChips() {
+    const el = document.getElementById('chips');
+    el.innerHTML = CATS.map(c =>
+      `<button class="chip${c===catAtiva?' active':''}" onclick="setCategoria('${c}')">${c==='Todos'?'Todos':(CAT_LABEL[c]||c)}</button>`
+    ).join('');
+  }
+
+  function setCategoria(c) {
+    catAtiva = c;
+    renderChips();
+    filtrar();
+  }
+
+  function filtrar() {
+    const q = document.getElementById('busca').value.toLowerCase();
+    let lista = todos;
+    if (catAtiva !== 'Todos') lista = lista.filter(i => i.categoria === catAtiva);
+    if (q) lista = lista.filter(i => i.nome.toLowerCase().includes(q));
+    renderTabela(lista);
+  }
+
+  function renderTabela(lista) {
+    const tbody = document.getElementById('tbody');
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty"><div class="empty-icon">◎</div>Nenhum insumo encontrado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = lista.map(i => {
+      const custoReal = i.custo_real || (i.preco_compra / (i.rendimento_pct / 100));
+      const rend      = parseFloat(i.rendimento_pct);
+      const rendColor = rend >= 72 ? 'var(--teal)' : rend >= 60 ? 'var(--amber)' : 'var(--red)';
+      const status    = rend >= 72 ? 'badge-ok' : rend >= 60 ? 'badge-warn' : 'badge-danger';
+      const statusTxt = rend >= 72 ? 'Padrão' : rend >= 60 ? 'Atenção' : 'Crítico';
+      return `<tr onclick="editarInsumo('${i.id}')">
+        <td><strong>${i.nome}</strong></td>
+        <td><span class="badge badge-purple">${CAT_LABEL[i.categoria]||i.categoria}</span></td>
+        <td class="td-muted">${i.unidade_compra}</td>
+        <td class="td-mono">R$ ${parseFloat(i.preco_compra).toFixed(2)}</td>
+        <td>
+          <div class="rend-wrap">
+            <div class="rend-bar-bg">
+              <div class="rend-bar" style="width:${rend}%;background:${rendColor}"></div>
+            </div>
+            <span class="rend-num" style="color:${rendColor}">${rend.toFixed(0)}%</span>
+          </div>
+        </td>
+        <td class="td-mono" style="font-weight:600">R$ ${custoReal.toFixed(2)}</td>
+        <td><span class="badge ${status}">${statusTxt}</span></td>
+        <td><button class="btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();deletar('${i.id}','${i.nome}')">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── MODAL ────────────────────────────────────────────────
+  function abrirModal(dados = null) {
+    editId = dados ? dados.id : null;
+    document.getElementById('modal-title').textContent = dados ? 'Editar insumo' : 'Novo insumo';
+    document.getElementById('f-nome').value  = dados?.nome || '';
+    document.getElementById('f-cat').value   = dados?.categoria || '';
+    document.getElementById('f-und').value   = dados?.unidade_compra || '';
+    document.getElementById('f-preco').value = dados?.preco_compra || '';
+    document.getElementById('f-rend').value  = dados?.rendimento_pct || 100;
+    document.getElementById('f-fc').value    = dados?.fator_correcao || 1;
+    document.getElementById('f-obs').value   = dados?.observacao || '';
+    calcular();
+    document.getElementById('modal').classList.add('open');
+    document.getElementById('f-nome').focus();
+  }
+
+  function fecharModal() {
+    document.getElementById('modal').classList.remove('open');
+    editId = null;
+  }
+
+  function calcular() {
+    const preco = parseFloat(document.getElementById('f-preco').value) || 0;
+    const rend  = parseFloat(document.getElementById('f-rend').value) || 100;
+    const custo = rend > 0 ? preco / (rend / 100) : 0;
+    document.getElementById('calc-custo').textContent = `R$ ${custo.toFixed(2)}`;
+  }
+
+  function editarInsumo(id) {
+    const i = todos.find(x => x.id === id);
+    if (i) abrirModal(i);
+  }
+
+  // ── SALVAR ───────────────────────────────────────────────
+  async function salvar() {
+    const nome  = document.getElementById('f-nome').value.trim();
+    const cat   = document.getElementById('f-cat').value;
+    const und   = document.getElementById('f-und').value;
+    const preco = parseFloat(document.getElementById('f-preco').value);
+    const rend  = parseFloat(document.getElementById('f-rend').value);
+    const fc    = parseFloat(document.getElementById('f-fc').value);
+    const obs   = document.getElementById('f-obs').value.trim();
+
+    if (!nome || !cat || !und || isNaN(preco) || isNaN(rend)) {
+      toast('Preencha todos os campos obrigatórios.', 'err');
+      return;
+    }
+
+    const btn = document.getElementById('btn-salvar');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    const payload = {
+      tenant_id: TENANT_ID,
+      nome, categoria: cat, unidade_compra: und,
+      preco_compra: preco, rendimento_pct: rend,
+      fator_correcao: fc, observacao: obs || null
+    };
+
+    try {
+      if (editId) {
+        await api(`insumos?id=eq.${editId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload)
+        });
+        toast(`${nome} atualizado com sucesso.`, 'ok');
+      } else {
+        await api('insumos', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        toast(`${nome} cadastrado com sucesso.`, 'ok');
+      }
+      fecharModal();
+      await carregarInsumos();
+    } catch(e) {
+      toast('Erro ao salvar: ' + e.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Salvar insumo';
+    }
+  }
+
+  // ── DELETAR ──────────────────────────────────────────────
+  async function deletar(id, nome) {
+    if (!confirm(`Desativar "${nome}"?`)) return;
+    try {
+      await api(`insumos?id=eq.${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ ativo: false })
+      });
+      toast(`${nome} desativado.`, 'ok');
+      await carregarInsumos();
+    } catch(e) {
+      toast('Erro: ' + e.message, 'err');
+    }
+  }
+
+  // ── TOAST ────────────────────────────────────────────────
+  function toast(msg, tipo = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${tipo} show`;
+    setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ── FECHAR MODAL CLICANDO FORA ───────────────────────────
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) fecharModal();
+  });
+
+  // ── INICIAR ──────────────────────────────────────────────
+  carregarInsumos();
+</script>
+</body>
+</html>
