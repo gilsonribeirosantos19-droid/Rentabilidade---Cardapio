@@ -479,10 +479,14 @@ function verFicha(id){
           const cr=ins?ins.preco_compra/(ins.rendimento_pct/100):0;
           const sub=ins?(it.quantidade_g/1000)*cr:0;
           const unidade=ins?(ins.unidade_medida||ins.unidade_compra||ins.unidade||'—'):'—';
+          const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
+          const qtdDisplay=(um==='kg'||um==='litro')
+            ?`${(it.quantidade_g/1000).toFixed(3)} ${um}`
+            :`${it.quantidade_g} ${um}`;
           return `<tr>
             <td>${ins?esc(ins.nome):'—'}</td>
             <td style="color:var(--text2)">${unidade}</td>
-            <td class="num">${it.quantidade_g}g</td>
+            <td class="num">${qtdDisplay}</td>
             <td class="num">R$ ${cr.toFixed(2)}</td>
             <td class="num teal">R$ ${sub.toFixed(3)}</td>
           </tr>`;
@@ -621,14 +625,17 @@ function addIngRow(idx=null){
   if(idx===null){ingredientes.push({insumo_id:'',quantidade_g:''});idx=ingredientes.length-1;}
   const ing=ingredientes[idx];
   const opts=todosInsumos.map(i=>`<option value="${i.id}"${i.id===ing.insumo_id?' selected':''}>${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||i.unidade||'un'})</option>`).join('');
+  const ins=todosInsumos.find(i=>i.id===ing.insumo_id);
+  const unid=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
   const row=document.createElement('div');
   row.className='ing-row';
   row.innerHTML=`
     <select onchange="ingChange(${idx},'insumo_id',this.value)">
       <option value="">Selecione o insumo...</option>${opts}
     </select>
-    <input type="number" placeholder="Qtd (g)" min="0" step="0.01"
+    <input type="number" id="ing-qtd-${idx}" placeholder="Qtd (${unid})" min="0" step="0.01"
       value="${ing.quantidade_g||''}" oninput="ingChange(${idx},'quantidade_g',this.value)">
+    <span id="ing-unit-${idx}" style="color:var(--text3);font-size:12px;min-width:28px;white-space:nowrap">${unid}</span>
     <button class="btn-remove" onclick="remIngRow(${idx})">✕</button>`;
   document.getElementById('ing-list').appendChild(row);
 }
@@ -636,6 +643,14 @@ function addIngRow(idx=null){
 function ingChange(idx,field,val){
   if(!ingredientes[idx])return;
   ingredientes[idx][field]=field==='quantidade_g'?parseFloat(val)||'':val;
+  if(field==='insumo_id'){
+    const ins=todosInsumos.find(i=>i.id===val);
+    const unid=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
+    const unitEl=document.getElementById(`ing-unit-${idx}`);
+    const qtdEl=document.getElementById(`ing-qtd-${idx}`);
+    if(unitEl) unitEl.textContent=unid;
+    if(qtdEl) qtdEl.placeholder=`Qtd (${unid})`;
+  }
   atualizarCustoPreview();
 }
 
@@ -683,14 +698,18 @@ function atualizarCustoPreview(){
     const rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
     const rend=rendUnid==='L'?rendVal*1000:rendVal;
     const totalG=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0).reduce((a,i)=>a+parseFloat(i.quantidade_g||0),0);
+    const insVincId=document.getElementById('f-insumo-vinculado')?.value;
+    const insVinc=insVincId?todosInsumos.find(i=>i.id===insVincId):null;
+    const umVinc=insVinc?(insVinc.unidade_medida||insVinc.unidade_compra||'kg'):'kg';
+    const labelCusto=umVinc==='litro'?'Custo/litro':umVinc==='ml'?'Custo/ml':'Custo/kg';
     if(rend>0&&total>0){
       const custoKg=total/rend*1000;
       const perda=totalG>0?Math.max(0,(1-rend/totalG)*100):0;
-      kgEl.innerHTML=`Custo/kg: <strong style="color:var(--teal);font-family:'DM Mono',monospace">${fmt(custoKg)}</strong>`+(perda>0?` · Perda: <strong>${perda.toFixed(1)}%</strong>`:'');
+      kgEl.innerHTML=`${labelCusto}: <strong style="color:var(--teal);font-family:'DM Mono',monospace">${fmt(custoKg)}</strong>`+(perda>0?` · Perda: <strong>${perda.toFixed(1)}%</strong>`:'');
     } else if(rend>0){
       kgEl.textContent='Adicione ingredientes para calcular';
     } else {
-      kgEl.textContent='Informe o rendimento para ver o custo/kg';
+      kgEl.textContent=`Informe o rendimento para ver o ${labelCusto.toLowerCase()}`;
     }
   } else if(kgEl){
     kgEl.textContent='';
