@@ -181,7 +181,7 @@
 
         <!-- TOP 5 -->
         <div>
-          <div class="section-header"><span class="section-title">Top 5 fichas mais caras</span></div>
+          <div class="section-header"><span class="section-title">Top 10 fichas mais caras</span></div>
           <div class="panel">
             <table class="top5-table">
               <thead>
@@ -355,7 +355,7 @@ function renderSummary(fichas, totalInsumos) {
 
 function renderCmvAlerts(fichas) {
   const alerts = fichas
-    .filter(f => f.cmv !== null && f.cmv > 35)
+    .filter(f => !f.insumo_vinculado_id && f.cmv !== null && f.cmv > 35)
     .sort((a, b) => b.cmv - a.cmv);
 
   document.getElementById('cmvBadge').textContent = alerts.length;
@@ -387,7 +387,7 @@ function renderTop5(fichas) {
   const top5 = [...fichas]
     .filter(f => f.custo > 0 && !f.insumo_vinculado_id)
     .sort((a, b) => b.custo - a.custo)
-    .slice(0, 5);
+    .slice(0, 10);
 
   if (top5.length === 0) {
     document.getElementById('top5Body').innerHTML =
