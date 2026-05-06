@@ -445,17 +445,15 @@ function renderGrid(){
   }).join('');
 }
 
-// converte vírgula para ponto e faz parseFloat
 function parseQtd(val){
   return parseFloat(String(val).replace(',','.'));
 }
 
-// placeholder de exemplo conforme unidade do insumo
-function qtdPlaceholder(um){
-  if(um==='kg')    return 'Ex: 0,100';
-  if(um==='litro') return 'Ex: 0,500';
-  if(um==='ml')    return 'Ex: 500';
-  if(um==='un'||um==='pct'||um==='cx') return 'Ex: 1';
+function qtdPlaceholder(unid){
+  if(unid==='kg')    return 'Ex: 0,100';
+  if(unid==='litro') return 'Ex: 0,500';
+  if(unid==='ml')    return 'Ex: 500';
+  if(unid==='un'||unid==='pct'||unid==='cx') return 'Ex: 1';
   return 'Ex: 100';
 }
 
@@ -612,7 +610,6 @@ function editarFicha(id){
   try{
     const f=todasFichas.find(x=>x.id===id);if(!f)return;
     editId=id;
-    // banco armazena em gramas; converter para unidade do usuário ao exibir
     ingredientes=(f.itens||[]).map(it=>{
       const ins=todosInsumos.find(i=>i.id===it.insumo_id);
       const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
