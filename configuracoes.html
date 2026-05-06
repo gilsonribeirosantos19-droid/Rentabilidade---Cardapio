@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações · Sushi PN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+  :root{
+    --bg1:#0d0f14;--bg2:#161820;--bg3:#1e2030;
+    --border1:#1e2030;--border2:#252840;
+    --teal:#00d4aa;--teal2:#00b890;--teal-dim:rgba(0,212,170,.12);
+    --amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
+    --text1:#f0f2ff;--text2:#94a3c4;--text3:#5a6080;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+
+  /* SIDEBAR */
+  .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border2);
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid var(--border2);margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:var(--text1)}
+  .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin-bottom:20px}
+  .nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:var(--text2);font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:var(--bg3);color:var(--text1)}
+  .nav-item.active{background:rgba(0,212,170,.1);color:var(--teal)}
+  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+  /* MAIN */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid var(--border2);display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:var(--bg2);position:sticky;top:0;z-index:50}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .content{padding:24px;flex:1}
+
+  /* SEÇÕES */
+  .section{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:24px}
+  .section-header{padding:18px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:12px}
+  .section-title{font-size:14px;font-weight:600;flex:1}
+  .section-sub{font-size:12px;color:var(--text3)}
+  .section-body{padding:0}
+
+  /* TABELA */
+  table{width:100%;border-collapse:collapse}
+  thead th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;
+    padding:10px 20px;text-align:left;border-bottom:1px solid var(--border2);background:var(--bg3)}
+  tbody tr{border-bottom:1px solid var(--border2);transition:background .12s}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:var(--bg3)}
+  td{padding:12px 20px;font-size:13px;vertical-align:middle}
+  .td-mono{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3)}
+  .td-actions{display:flex;gap:6px;justify-content:flex-end}
+
+  /* BOTÕES */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s}
+  .btn-primary{background:var(--teal);color:#0d1117}
+  .btn-primary:hover{background:var(--teal2)}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(239,68,68,.4)}
+  .btn-danger:hover{background:rgba(239,68,68,.1)}
+  .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* EMPTY / LOADING */
+  .empty-row td{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+  .spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--teal);
+    border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
+    display:none;align-items:center;justify-content:center;padding:16px}
+  .overlay.open{display:flex}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    width:100%;max-width:460px;position:relative}
+  .modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border2);
+    display:flex;align-items:center;justify-content:space-between}
+  .modal-title{font-size:15px;font-weight:600}
+  .modal-close{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);
+    width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;
+    display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .modal-close:hover{color:var(--text1);border-color:var(--text2)}
+  .modal-body{padding:20px 24px}
+  .modal-footer{padding:16px 24px;border-top:1px solid var(--border2);display:flex;gap:10px;justify-content:flex-end}
+  .form-group{margin-bottom:16px}
+  .form-group label{display:block;font-size:11px;font-weight:600;color:var(--text3);
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  .form-group input,.form-group select{width:100%;background:var(--bg3);border:1px solid var(--border2);
+    color:var(--text1);padding:9px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
+  .form-group input:focus,.form-group select:focus{border-color:var(--teal)}
+  .form-group select option{background:var(--bg3)}
+  .form-group .hint{font-size:11px;color:var(--text3);margin-top:4px}
+
+  /* CONFIRM MODAL */
+  .confirm-msg{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:4px}
+  .confirm-item{font-size:14px;font-weight:600;color:var(--text1);margin-top:6px}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);
+    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;
+    transform:translateY(8px);transition:all .25s;max-width:320px}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.ok{border-color:var(--teal);color:var(--teal)}
+  .toast.err{border-color:var(--red);color:var(--red)}
+
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  @media(max-width:700px){.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">Sushi PN</div>
+      <div class="logo-sub">rentabilidade</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Principal</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Dashboard</a>
+      <a class="nav-item" href="insumos.html"><div class="nav-dot"></div>Insumos</a>
+      <a class="nav-item" href="fichas_tecnicas.html"><div class="nav-dot"></div>Fichas técnicas</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Precificação</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Análise</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Engenharia cardápio</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>CMV teórico x real</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Rendimento</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Simulador</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Gestão</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Fornecedores</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Alertas</a>
+      <a class="nav-item active" href="configuracoes.html"><div class="nav-dot"></div>Configurações</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Configurações</span>
+      <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+    </div>
+    <div class="content">
+
+      <!-- CATEGORIAS DE INSUMOS -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Categorias de Insumos</div>
+            <div class="section-sub">Classifique os insumos por tipo de matéria-prima</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModal('cat_insumo')">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-cat-insumo">
+              <tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CATEGORIAS DE FICHAS -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Categorias de Fichas Técnicas</div>
+            <div class="section-sub">Agrupe as fichas por tipo de produto do cardápio</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModal('cat_ficha')">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-cat-ficha">
+              <tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- UNIDADES DE MEDIDA -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Unidades de Medida</div>
+            <div class="section-sub">Unidades usadas nos insumos e fichas técnicas</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModal('unidade')">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Nome</th><th>Abreviação</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-unidade">
+              <tr class="empty-row"><td colspan="4"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORM -->
+<div id="modal-form" class="overlay" onclick="if(event.target===this)fecharModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Novo item</span>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" id="fg-nome">
+        <label>Nome *</label>
+        <input type="text" id="f-nome" placeholder="Ex: Peixe">
+      </div>
+      <div class="form-group" id="fg-abrev" style="display:none">
+        <label>Abreviação *</label>
+        <input type="text" id="f-abrev" placeholder="Ex: kg">
+        <div class="hint">Usada nos formulários de insumos e fichas</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar" onclick="salvar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAÇÃO EXCLUSÃO -->
+<div id="modal-confirm" class="overlay" onclick="if(event.target===this)fecharConfirm()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">Confirmar exclusão</span>
+      <button class="modal-close" onclick="fecharConfirm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-msg">Tem certeza que deseja excluir este item?</p>
+      <p class="confirm-item" id="confirm-item-name"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharConfirm()">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirmar-del" onclick="confirmarDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+  const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+  const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+  async function api(endpoint, opts = {}) {
+    const method = (opts.method || 'GET').toUpperCase();
+    const headers = {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+    };
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    if (opts.prefer) headers['Prefer'] = opts.prefer;
+    else if (method === 'POST')  headers['Prefer'] = 'return=representation';
+    else if (method === 'PATCH') headers['Prefer'] = 'return=representation';
+
+    const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,
+      { method, headers, body: opts.body || undefined });
+
+    if (!res.ok) {
+      let msg = res.statusText;
+      try { const j = await res.json(); msg = j.message || j.error || msg; } catch {}
+      throw new Error(`[${res.status}] ${msg}`);
+    }
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) { const t = await res.text(); return t ? JSON.parse(t) : []; }
+    return [];
+  }
+
+  // ── ESTADO ────────────────────────────────────────────────
+  let modalTipo  = '';   // 'cat_insumo' | 'cat_ficha' | 'unidade'
+  let editId     = null;
+  let deleteId   = null;
+  let deleteTipo = null;
+  let deleteNome = '';
+
+  const TIPO_TABLE = {
+    cat_insumo: 'categorias',
+    cat_ficha:  'categorias',
+    unidade:    'unidades_medida',
+  };
+
+  const TIPO_TITULO = {
+    cat_insumo: 'Categoria de Insumo',
+    cat_ficha:  'Categoria de Ficha',
+    unidade:    'Unidade de Medida',
+  };
+
+  // ── CARREGAR DADOS ────────────────────────────────────────
+  async function carregar() {
+    try {
+      const [cats, unidades] = await Promise.all([
+        api(`categorias?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=*`),
+        api(`unidades_medida?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=*`),
+      ]);
+      document.getElementById('conn-status').textContent = '● conectado';
+      document.getElementById('conn-status').style.color = 'var(--teal)';
+
+      const catInsumos = cats.filter(c => c.tipo === 'insumo');
+      const catFichas  = cats.filter(c => c.tipo === 'ficha');
+      renderCats('tbody-cat-insumo', catInsumos, 'cat_insumo');
+      renderCats('tbody-cat-ficha',  catFichas,  'cat_ficha');
+      renderUnidades(unidades);
+    } catch (e) {
+      document.getElementById('conn-status').textContent = '● desconectado';
+      document.getElementById('conn-status').style.color = 'var(--red)';
+      mostrarErroTabelas(e.message);
+    }
+  }
+
+  function renderCats(tbodyId, lista, tipo) {
+    const tbody = document.getElementById(tbodyId);
+    if (!lista.length) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="3">Nenhum item cadastrado</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = lista.map(item => `
+      <tr>
+        <td>${escHtml(item.nome)}</td>
+        <td class="td-mono">${formatDate(item.created_at)}</td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="abrirEditar('${tipo}','${item.id}',${JSON.stringify(item).replace(/'/g,'&apos;')})">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="abrirConfirmDelete('${tipo}','${item.id}','${escHtml(item.nome)}')">Excluir</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  function renderUnidades(lista) {
+    const tbody = document.getElementById('tbody-unidade');
+    if (!lista.length) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Nenhuma unidade cadastrada</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = lista.map(item => `
+      <tr>
+        <td>${escHtml(item.nome)}</td>
+        <td class="td-mono">${escHtml(item.abreviacao || '—')}</td>
+        <td class="td-mono">${formatDate(item.created_at)}</td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="abrirEditar('unidade','${item.id}',${JSON.stringify(item).replace(/'/g,'&apos;')})">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="abrirConfirmDelete('unidade','${item.id}','${escHtml(item.nome)}')">Excluir</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  function mostrarErroTabelas(msg) {
+    ['tbody-cat-insumo','tbody-cat-ficha','tbody-unidade'].forEach(id => {
+      const el = document.getElementById(id);
+      const cols = id === 'tbody-unidade' ? 4 : 3;
+      el.innerHTML = `<tr class="empty-row"><td colspan="${cols}">Erro ao carregar: ${escHtml(msg)}</td></tr>`;
+    });
+  }
+
+  // ── MODAL FORM ────────────────────────────────────────────
+  function abrirModal(tipo) {
+    modalTipo = tipo;
+    editId    = null;
+    document.getElementById('modal-title').textContent = 'Novo(a) ' + TIPO_TITULO[tipo];
+    document.getElementById('f-nome').value  = '';
+    document.getElementById('f-abrev').value = '';
+    document.getElementById('fg-abrev').style.display = tipo === 'unidade' ? 'block' : 'none';
+    document.getElementById('btn-salvar').textContent = 'Salvar';
+    document.getElementById('modal-form').classList.add('open');
+    document.getElementById('f-nome').focus();
+  }
+
+  function abrirEditar(tipo, id, item) {
+    modalTipo = tipo;
+    editId    = id;
+    document.getElementById('modal-title').textContent = 'Editar ' + TIPO_TITULO[tipo];
+    document.getElementById('f-nome').value  = item.nome || '';
+    document.getElementById('f-abrev').value = item.abreviacao || '';
+    document.getElementById('fg-abrev').style.display = tipo === 'unidade' ? 'block' : 'none';
+    document.getElementById('btn-salvar').textContent = 'Salvar alterações';
+    document.getElementById('modal-form').classList.add('open');
+    document.getElementById('f-nome').focus();
+  }
+
+  function fecharModal() {
+    document.getElementById('modal-form').classList.remove('open');
+  }
+
+  async function salvar() {
+    const nome  = document.getElementById('f-nome').value.trim();
+    const abrev = document.getElementById('f-abrev').value.trim();
+
+    if (!nome) { toast('Informe o nome', 'err'); document.getElementById('f-nome').focus(); return; }
+    if (modalTipo === 'unidade' && !abrev) {
+      toast('Informe a abreviação', 'err'); document.getElementById('f-abrev').focus(); return;
+    }
+
+    const btn = document.getElementById('btn-salvar');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    try {
+      const table = TIPO_TABLE[modalTipo];
+      const body  = modalTipo === 'unidade'
+        ? { nome, abreviacao: abrev, tenant_id: TENANT_ID }
+        : { nome, tipo: modalTipo === 'cat_insumo' ? 'insumo' : 'ficha', tenant_id: TENANT_ID };
+
+      if (editId) {
+        await api(`${table}?id=eq.${editId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+          prefer: 'return=minimal',
+        });
+        toast('Item atualizado', 'ok');
+      } else {
+        await api(table, { method: 'POST', body: JSON.stringify(body) });
+        toast('Item adicionado', 'ok');
+      }
+      fecharModal();
+      await carregar();
+    } catch (e) {
+      toast('Erro: ' + e.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = editId ? 'Salvar alterações' : 'Salvar';
+    }
+  }
+
+  // ── MODAL CONFIRMAR DELETE ────────────────────────────────
+  function abrirConfirmDelete(tipo, id, nome) {
+    deleteTipo = tipo;
+    deleteId   = id;
+    deleteNome = nome;
+    document.getElementById('confirm-item-name').textContent = nome;
+    document.getElementById('modal-confirm').classList.add('open');
+  }
+
+  function fecharConfirm() {
+    document.getElementById('modal-confirm').classList.remove('open');
+  }
+
+  async function confirmarDelete() {
+    const btn = document.getElementById('btn-confirmar-del');
+    btn.disabled = true;
+    btn.textContent = 'Excluindo...';
+    try {
+      const table = TIPO_TABLE[deleteTipo];
+      await api(`${table}?id=eq.${deleteId}&tenant_id=eq.${TENANT_ID}`, {
+        method: 'DELETE',
+        prefer: 'return=minimal',
+      });
+      toast('Item excluído', 'ok');
+      fecharConfirm();
+      await carregar();
+    } catch (e) {
+      toast('Erro ao excluir: ' + e.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Excluir';
+    }
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+
+  let toastTimer;
+  function toast(msg, type = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ── TECLADO ───────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { fecharModal(); fecharConfirm(); }
+    if (e.key === 'Enter' && document.getElementById('modal-form').classList.contains('open')) salvar();
+  });
+
+  // ── INIT ──────────────────────────────────────────────────
+  carregar();
+</script>
+</body>
+</html>
