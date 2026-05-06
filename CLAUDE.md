@@ -148,6 +148,13 @@ async function api(endpoint, opts={}) {
 
 ---
 
+## Regras de Código (OBRIGATÓRIO)
+- **SEMPRE** escrever código em inglês
+- **NUNCA** traduzir palavras reservadas JavaScript: `function`, `const`, `let`, `var`, `async`, `await`, `return`, `if`, `else`, `for`, `while`, `class`, `new`, `this`, `true`, `false`, `null`, `undefined`, `try`, `catch`, `throw`, `import`, `export`, `default`
+- Comentários e mensagens exibidas ao usuário podem ser em português
+- Ao editar um arquivo existente, manter o estilo e padrão do código original
+- Nunca reescrever o arquivo inteiro — apenas editar o trecho necessário
+
 ## Observações Importantes
 
 - O projeto é **multi-tenant** mas por ora opera com um único tenant fixo
