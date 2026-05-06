@@ -685,7 +685,9 @@ function atualizarCustoPreview(){
   const total=ingredientes.reduce((acc,ing)=>{
     if(!ing.insumo_id||!ing.quantidade_g)return acc;
     const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;
-    return acc+ins.preco_compra/(ins.rendimento_pct/100)/1000*ing.quantidade_g;
+    const um=ins.unidade_medida||ins.unidade_compra||'g';
+    const qtdG=(um==='kg'||um==='litro')?ing.quantidade_g*1000:ing.quantidade_g;
+    return acc+ins.preco_compra/(ins.rendimento_pct/100)/1000*qtdG;
   },0);
   const el=document.getElementById('custo-preview');
   if(total>0){el.style.display='';document.getElementById('custo-total-preview').textContent=fmt(total);}
@@ -697,7 +699,11 @@ function atualizarCustoPreview(){
     const rendVal=parseFloat(rendEl.value)||0;
     const rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
     const rend=rendUnid==='L'?rendVal*1000:rendVal;
-    const totalG=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0).reduce((a,i)=>a+parseFloat(i.quantidade_g||0),0);
+    const totalG=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0).reduce((a,i)=>{
+      const ins=todosInsumos.find(x=>x.id===i.insumo_id);
+      const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
+      return a+parseFloat(i.quantidade_g||0)*((um==='kg'||um==='litro')?1000:1);
+    },0);
     const insVincId=document.getElementById('f-insumo-vinculado')?.value;
     const insVinc=insVincId?todosInsumos.find(i=>i.id===insVincId):null;
     const umVinc=insVinc?(insVinc.unidade_medida||insVinc.unidade_compra||'kg'):'kg';
@@ -770,9 +776,12 @@ async function salvarFicha(){
       fichaId=res[0].id;
     }
     await api('itens_ficha',{method:'POST',prefer:'return=minimal',
-      body:JSON.stringify(ingValidos.map((ing,i)=>({
-        ficha_id:fichaId,insumo_id:ing.insumo_id,
-        quantidade_g:parseFloat(ing.quantidade_g),ordem:i})))});
+      body:JSON.stringify(ingValidos.map((ing,i)=>{
+        const _ins=todosInsumos.find(x=>x.id===ing.insumo_id);
+        const _um=_ins?(_ins.unidade_medida||_ins.unidade_compra||'g'):'g';
+        const _qtdG=(_um==='kg'||_um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);
+        return {ficha_id:fichaId,insumo_id:ing.insumo_id,quantidade_g:_qtdG,ordem:i};
+      }))});
 
     // Gerar/atualizar insumo se marcado
     // Atualizar insumo vinculado se selecionado
@@ -783,7 +792,9 @@ async function salvarFicha(){
       if(!rendimento){toast('Informe o rendimento da receita.','err');btn.disabled=false;btn.textContent='Salvar ficha';return;}
       const custoTotal=ingValidos.reduce((acc,ing)=>{
         const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;
-        return acc+ins.preco_compra/(ins.rendimento_pct/100)/1000*parseFloat(ing.quantidade_g);
+        const um=ins.unidade_medida||ins.unidade_compra||'g';
+        const qtdG=(um==='kg'||um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);
+        return acc+ins.preco_compra/(ins.rendimento_pct/100)/1000*qtdG;
       },0);
       const custoKg=custoTotal/rendimento*1000;
       await api(`insumos?id=eq.${insumoVinculadoId}`,{method:'PATCH',prefer:'return=minimal',
