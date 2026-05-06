@@ -445,18 +445,6 @@ function renderGrid(){
   }).join('');
 }
 
-function parseQtd(val){
-  return parseFloat(String(val).replace(',','.'));
-}
-
-function qtdPlaceholder(unid){
-  if(unid==='kg')    return 'Ex: 0,100';
-  if(unid==='litro') return 'Ex: 0,500';
-  if(unid==='ml')    return 'Ex: 500';
-  if(unid==='un'||unid==='pct'||unid==='cx') return 'Ex: 1';
-  return 'Ex: 100';
-}
-
 function custoIngrediente(ins,qtdG){
   const um=ins.unidade_medida||ins.unidade_compra||'g';
   if(um==='un'||um==='pct'||um==='cx') return ins.preco_compra*qtdG;
@@ -610,12 +598,7 @@ function editarFicha(id){
   try{
     const f=todasFichas.find(x=>x.id===id);if(!f)return;
     editId=id;
-    ingredientes=(f.itens||[]).map(it=>{
-      const ins=todosInsumos.find(i=>i.id===it.insumo_id);
-      const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
-      const qtd=(um==='kg'||um==='litro')?it.quantidade_g/1000:it.quantidade_g;
-      return {insumo_id:it.insumo_id,quantidade_g:qtd};
-    });
+    ingredientes=(f.itens||[]).map(it=>({insumo_id:it.insumo_id,quantidade_g:it.quantidade_g}));
     document.getElementById('form-titulo').textContent='Editar: '+f.nome;
     document.getElementById('f-nome').value=f.nome;
     document.getElementById('f-cat').value=f.categoria;
@@ -651,7 +634,7 @@ function addIngRow(idx=null){
     <select onchange="ingChange(${idx},'insumo_id',this.value)">
       <option value="">Selecione o insumo...</option>${opts}
     </select>
-    <input type="text" inputmode="decimal" id="ing-qtd-${idx}" placeholder="${qtdPlaceholder(unid)}"
+    <input type="number" id="ing-qtd-${idx}" placeholder="Qtd (${unid})" min="0" step="0.01"
       value="${ing.quantidade_g||''}" oninput="ingChange(${idx},'quantidade_g',this.value)">
     <span id="ing-unit-${idx}" style="color:var(--text3);font-size:12px;min-width:28px;white-space:nowrap">${unid}</span>
     <button class="btn-remove" onclick="remIngRow(${idx})">✕</button>`;
@@ -660,14 +643,14 @@ function addIngRow(idx=null){
 
 function ingChange(idx,field,val){
   if(!ingredientes[idx])return;
-  ingredientes[idx][field]=field==='quantidade_g'?parseQtd(val)||'':val;
+  ingredientes[idx][field]=field==='quantidade_g'?parseFloat(val)||'':val;
   if(field==='insumo_id'){
     const ins=todosInsumos.find(i=>i.id===val);
     const unid=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
     const unitEl=document.getElementById(`ing-unit-${idx}`);
     const qtdEl=document.getElementById(`ing-qtd-${idx}`);
     if(unitEl) unitEl.textContent=unid;
-    if(qtdEl) qtdEl.placeholder=qtdPlaceholder(unid);
+    if(qtdEl) qtdEl.placeholder=`Qtd (${unid})`;
   }
   atualizarCustoPreview();
 }
