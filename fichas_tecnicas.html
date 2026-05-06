@@ -210,6 +210,7 @@
     <div class="modal-body" id="view-body"></div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="view-btn-del">Arquivar</button>
+      <button class="btn btn-danger btn-sm" id="view-btn-excluir">Excluir</button>
       <button class="btn btn-sm" onclick="fecharModal('modal-view')">Fechar</button>
       <button class="btn btn-primary btn-sm" id="view-btn-edit">Editar</button>
     </div>
@@ -435,10 +436,23 @@ async function verFicha(id){
     ${f.observacoes?`<div style="margin-top:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius);font-size:12px;color:var(--text2)">${f.observacoes}</div>`:''}`;
   document.getElementById('view-btn-edit').onclick=()=>{fecharModal('modal-view');editarFicha(id);};
   document.getElementById('view-btn-del').onclick=()=>arquivar(id,f.nome);
+  document.getElementById('view-btn-excluir').onclick=()=>excluir(id,f.nome);
   document.getElementById('modal-view').classList.add('open');
 }
 
 function editarFicha(id){const f=todasFichas.find(x=>x.id===id);if(f)abrirModal(f);}
+
+async function excluir(id,nome){
+  if(!confirm(`Excluir permanentemente "${nome}"?\nEsta ação não pode ser desfeita.`))return;
+  try{
+    const hdrs={'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`};
+    const r1=await fetch(`${SUPA_URL}/rest/v1/itens_ficha?ficha_id=eq.${id}`,{method:'DELETE',headers:hdrs});
+    if(!r1.ok){const e=await r1.json().catch(()=>({}));throw new Error(e.message||r1.statusText);}
+    const r2=await fetch(`${SUPA_URL}/rest/v1/fichas_tecnicas?id=eq.${id}`,{method:'DELETE',headers:hdrs});
+    if(!r2.ok){const e=await r2.json().catch(()=>({}));throw new Error(e.message||r2.statusText);}
+    toast(`${nome} excluída permanentemente.`,'ok');fecharModal('modal-view');await carregar();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
 
 async function arquivar(id,nome){
   if(!confirm(`Arquivar "${nome}"?`))return;
