@@ -222,12 +222,6 @@
         <input type="text" id="filtro-busca" placeholder="Buscar ficha..." oninput="filtrar()">
         <select id="filtro-cat" onchange="filtrar()">
           <option value="">Todas categorias</option>
-          <option value="temaki">Temaki</option><option value="sushi">Sushi</option>
-          <option value="hot">Hot Roll</option><option value="uramaki">Uramaki</option>
-          <option value="sashimi">Sashimi</option><option value="combo">Combo</option>
-          <option value="prato">Prato</option><option value="bebida">Bebida</option>
-          <option value="entrada">Entrada</option><option value="sobremesa">Sobremesa</option>
-          <option value="outros">Outros</option>
         </select>
         <select id="filtro-status" onchange="filtrar()">
           <option value="">Todos status</option>
@@ -270,12 +264,6 @@
         <input type="text" id="f-nome" placeholder="Ex: Temaki Salmão"></div>
       <div class="form-group"><label>Categoria *</label>
         <select id="f-cat">
-          <option value="temaki">Temaki</option><option value="sushi">Sushi</option>
-          <option value="hot">Hot Roll</option><option value="uramaki">Uramaki</option>
-          <option value="sashimi">Sashimi</option><option value="combo">Combo</option>
-          <option value="prato">Prato</option><option value="bebida">Bebida</option>
-          <option value="entrada">Entrada</option><option value="sobremesa">Sobremesa</option>
-          <option value="outros">Outros</option>
         </select></div>
     </div>
     <div class="form-row">
@@ -349,9 +337,7 @@
 const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
 const TENANT_ID = '00000000-0000-0000-0000-000000000001';
-const CAT_LABEL = {temaki:'Temaki',sushi:'Sushi',hot:'Hot Roll',uramaki:'Uramaki',
-  sashimi:'Sashimi',combo:'Combo',prato:'Prato',bebida:'Bebida',
-  entrada:'Entrada',sobremesa:'Sobremesa',outros:'Outros'};
+let categoriasFicha = [];
 
 // ── API — FIX: DELETE não envia Content-Type ──────────────────
 async function api(endpoint, opts={}) {
@@ -378,12 +364,15 @@ let todasFichas=[],fichasFilt=[],todosInsumos=[],editId=null,ingredientes=[];
 async function carregar(){
   document.getElementById('conn-status').textContent='carregando...';
   try{
-    const [fichas,insumos]=await Promise.all([
+    const [fichas,insumos,cats]=await Promise.all([
       api('fichas_tecnicas?tenant_id=eq.'+TENANT_ID+'&order=nome.asc&select=*,itens_ficha(id,insumo_id,quantidade_g,ordem)'),
-      api('insumos?tenant_id=eq.'+TENANT_ID+'&ativo=eq.true&order=nome.asc')
+      api('insumos?tenant_id=eq.'+TENANT_ID+'&ativo=eq.true&order=nome.asc'),
+      api('categorias?tenant_id=eq.'+TENANT_ID+'&tipo=eq.ficha&order=nome.asc&select=*'),
     ]);
     todasFichas=fichas.map(f=>({...f,itens:f.itens_ficha||[]}));
     todosInsumos=insumos;
+    categoriasFicha=cats;
+    popularSelectsCat();
     atualizarMetricas();filtrar();
     document.getElementById('conn-status').textContent='● conectado';
     document.getElementById('conn-status').style.color='var(--teal)';
@@ -393,6 +382,12 @@ async function carregar(){
     document.getElementById('fichas-grid').innerHTML=
       `<div class="empty"><h3>Erro ao carregar</h3><p>${e.message}</p></div>`;
   }
+}
+
+function popularSelectsCat(){
+  const opts=categoriasFicha.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('');
+  document.getElementById('filtro-cat').innerHTML='<option value="">Todas categorias</option>'+opts;
+  document.getElementById('f-cat').innerHTML=opts;
 }
 
 function atualizarMetricas(){
@@ -431,7 +426,7 @@ function renderGrid(){
         <div style="flex:1">
           <div class="fc-nome">${esc(f.nome)}</div>
           <div style="margin-top:5px;display:flex;gap:6px;align-items:center">
-            <span class="fc-badge">${CAT_LABEL[f.categoria]||f.categoria}</span>
+            <span class="fc-badge">${f.categoria||'—'}</span>
             <span class="badge-${f.status}" style="font-size:10px">${f.status}</span>
           </div>
         </div>
@@ -464,7 +459,7 @@ function verFicha(id){
   const f=todasFichas.find(x=>x.id===id);if(!f)return;
   document.getElementById('view-title').textContent=f.nome;
   document.getElementById('view-sub').textContent=
-    `${CAT_LABEL[f.categoria]||f.categoria} · ${f.rendimento_porcoes} porção · v${f.versao_atual||1}`;
+    `${f.categoria||'—'} · ${f.rendimento_porcoes} porção · v${f.versao_atual||1}`;
 
   const custo=custoFicha(f);
   const itensHtml=f.itens&&f.itens.length
@@ -576,7 +571,7 @@ function abrirModalNovo(){
   editId=null;ingredientes=[];
   document.getElementById('form-titulo').textContent='Nova Ficha Técnica';
   document.getElementById('f-nome').value='';
-  document.getElementById('f-cat').value='temaki';
+  document.getElementById('f-cat').value=categoriasFicha[0]?.nome||'';
   document.getElementById('f-porcoes').value='1';
   document.getElementById('f-preco').value='';
   document.getElementById('f-status').value='ativa';
