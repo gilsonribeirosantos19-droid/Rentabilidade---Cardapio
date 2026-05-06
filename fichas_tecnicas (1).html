@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fichas Técnicas · Sushi PN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+  :root{
+    --bg1:#0d0f14;--bg2:#161820;--bg3:#1e2030;
+    --border1:#1e2030;--border2:#252840;
+    --teal:#00d4aa;--teal2:#00b890;--teal-dim:rgba(0,212,170,.12);
+    --amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
+    --text1:#f0f2ff;--text2:#94a3c4;--text3:#5a6080;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+
+  /* SIDEBAR */
+  .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border2);
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid var(--border2);margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:var(--text1)}
+  .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin-bottom:20px}
+  .nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:var(--text2);font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:var(--bg3);color:var(--text1)}
+  .nav-item.active{background:rgba(0,212,170,.1);color:var(--teal)}
+  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+  /* MAIN */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid var(--border2);display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:var(--bg2);position:sticky;top:0;z-index:50}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .content{padding:24px;flex:1}
+
+  /* MÉTRICAS */
+  .metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+  .metric{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px}
+  .metric-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .metric-value{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}
+  .metric-sub{font-size:11px;color:var(--text3);margin-top:4px}
+
+  /* TOOLBAR */
+  .toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .toolbar input,.toolbar select{background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
+    padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
+  .toolbar input{flex:1;min-width:180px}
+  .toolbar input:focus,.toolbar select:focus{border-color:var(--teal)}
+  .toolbar select option{background:var(--bg2)}
+
+  /* GRID */
+  .fichas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+  .ficha-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    padding:18px;transition:border-color .2s,transform .15s;cursor:pointer}
+  .ficha-card:hover{border-color:var(--teal);transform:translateY(-1px)}
+  .fc-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .fc-nome{font-size:14px;font-weight:700;flex:1;line-height:1.3}
+  .fc-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
+    background:rgba(0,212,170,.15);color:var(--teal);white-space:nowrap;margin-top:2px}
+  .fc-custo{font-size:16px;font-weight:700;color:var(--amber);font-family:'DM Mono',monospace}
+  .fc-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  .fc-meta-item{font-size:12px;color:var(--text3)}
+  .fc-meta-item span{color:var(--text1);font-weight:600}
+  .fc-footer{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border2)}
+  .fc-footer .btn{flex:1;justify-content:center;font-size:12px;padding:6px 8px}
+  .badge-ativa{color:var(--teal)}
+  .badge-rascunho{color:var(--amber)}
+  .badge-arquivada{color:var(--text3)}
+
+  /* BOTÕES */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s}
+  .btn-primary{background:var(--teal);color:#0d1117}
+  .btn-primary:hover{background:var(--teal2)}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid var(--red)}
+  .btn-danger:hover{background:var(--red);color:#fff}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
+    display:none;align-items:center;justify-content:center;padding:16px}
+  .overlay.open{display:flex}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:28px;position:relative}
+
+  /* VIEW MODAL — igual ao da imagem */
+  .view-header{margin-bottom:20px}
+  .view-title{font-size:20px;font-weight:700;margin-bottom:4px}
+  .view-sub{font-size:13px;color:var(--text3);font-family:'DM Mono',monospace}
+  .view-close{position:absolute;top:20px;right:20px;background:var(--bg3);border:1px solid var(--border2);
+    color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;
+    display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .view-close:hover{color:var(--text1);border-color:var(--text2)}
+  .view-section-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;
+    letter-spacing:.06em;margin-bottom:10px}
+  .comp-table{width:100%;border-collapse:collapse;font-size:13px}
+  .comp-table th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;
+    letter-spacing:.04em;padding:0 10px 8px;text-align:left;border-bottom:1px solid var(--border2)}
+  .comp-table th.num,.comp-table td.num{text-align:right}
+  .comp-table td{padding:10px;border-bottom:1px solid var(--border2);color:var(--text1)}
+  .comp-table tbody tr:last-child td{border-bottom:none}
+  .comp-table td.teal{color:var(--teal);font-weight:500;font-family:'DM Mono',monospace}
+  .comp-total td{background:var(--teal-dim);font-weight:600;color:var(--teal)!important;
+    padding:12px 10px!important;border-top:1px solid rgba(0,212,170,.25)!important;border-bottom:none!important}
+  .view-footer{display:flex;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--border2);align-items:center}
+  .precif-box{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .precif-item{background:var(--bg3);padding:12px 14px;border-radius:8px}
+  .precif-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .precif-value{font-size:15px;font-weight:700;font-family:'DM Mono',monospace}
+  .semaforo{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-top:6px}
+  .semaforo.ok{background:rgba(0,212,170,.15);color:var(--teal)}
+  .semaforo.warn{background:rgba(245,158,11,.15);color:var(--amber)}
+  .semaforo.bad{background:rgba(239,68,68,.15);color:var(--red)}
+
+  /* FORM MODAL */
+  .modal h2{margin-bottom:20px;font-size:16px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .form-group{margin-bottom:14px}
+  .form-group label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+  .form-group input,.form-group select,.form-group textarea{width:100%;background:var(--bg3);
+    border:1px solid var(--border2);color:var(--text1);padding:9px 12px;border-radius:8px;
+    font-size:13px;outline:none;font-family:inherit}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--teal)}
+  .form-group textarea{resize:vertical;min-height:70px}
+  .form-group select option{background:var(--bg3)}
+  .ing-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .ing-header h3{font-size:13px;font-weight:600}
+  .ing-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .ing-row{display:flex;gap:8px;align-items:center}
+  .ing-row select,.ing-row input{background:var(--bg3);border:1px solid var(--border2);color:var(--text1);
+    padding:7px 10px;border-radius:7px;font-size:12px;outline:none;font-family:inherit}
+  .ing-row select{flex:2}
+  .ing-row select:focus,.ing-row input:focus{border-color:var(--teal)}
+  .ing-row select option{background:var(--bg3)}
+  .ing-row input{flex:1}
+  .btn-remove{padding:7px 9px;border-radius:7px;background:transparent;border:1px solid transparent;
+    color:var(--red);cursor:pointer;font-size:13px;transition:all .15s}
+  .btn-remove:hover{background:rgba(239,68,68,.1);border-color:var(--red)}
+  .custo-prev{padding:10px 14px;background:var(--bg3);border-radius:8px;font-size:13px;
+    border-left:3px solid var(--teal);margin-bottom:4px}
+  .modal-footer{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border2)}
+
+  /* EMPTY / TOAST */
+  .empty{text-align:center;padding:60px 20px;color:var(--text3)}
+  .empty h3{color:var(--text2);margin-bottom:8px}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);
+    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;
+    transform:translateY(8px);transition:all .25s;max-width:320px}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.ok{border-color:var(--teal);color:var(--teal)}
+  .toast.err{border-color:var(--red);color:var(--red)}
+
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  @media(max-width:700px){
+    .sidebar{display:none}
+    .form-row{grid-template-columns:1fr}
+    .fichas-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">Sushi PN</div>
+      <div class="logo-sub">rentabilidade</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Principal</div>
+      <a class="nav-item" href="#">Dashboard</a>
+      <a class="nav-item" href="insumos.html"><div class="nav-dot"></div>Insumos</a>
+      <a class="nav-item active" href="fichas_tecnicas.html"><div class="nav-dot"></div>Fichas técnicas</a>
+      <a class="nav-item" href="#">Precificação</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Análise</div>
+      <a class="nav-item" href="#">Engenharia cardápio</a>
+      <a class="nav-item" href="#">CMV teórico x real</a>
+      <a class="nav-item" href="#">Rendimento</a>
+      <a class="nav-item" href="#">Simulador</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Gestão</div>
+      <a class="nav-item" href="#">Fornecedores</a>
+      <a class="nav-item" href="#">Alertas</a>
+      <a class="nav-item" href="#">Configurações</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Fichas Técnicas</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+        <button class="btn btn-primary" onclick="abrirModalNovo()">+ Nova ficha</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Total de fichas</div>
+          <div class="metric-value" id="m-total">—</div><div class="metric-sub">cadastradas</div></div>
+        <div class="metric"><div class="metric-label">Fichas ativas</div>
+          <div class="metric-value" id="m-ativas">—</div><div class="metric-sub">em uso</div></div>
+        <div class="metric"><div class="metric-label">Custo médio</div>
+          <div class="metric-value" id="m-custo">—</div><div class="metric-sub">por ficha</div></div>
+        <div class="metric"><div class="metric-label">Insumos</div>
+          <div class="metric-value" id="m-insumos">—</div><div class="metric-sub">cadastrados</div></div>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="filtro-busca" placeholder="Buscar ficha..." oninput="filtrar()">
+        <select id="filtro-cat" onchange="filtrar()">
+          <option value="">Todas categorias</option>
+          <option value="temaki">Temaki</option><option value="sushi">Sushi</option>
+          <option value="hot">Hot Roll</option><option value="uramaki">Uramaki</option>
+          <option value="sashimi">Sashimi</option><option value="combo">Combo</option>
+          <option value="prato">Prato</option><option value="bebida">Bebida</option>
+          <option value="entrada">Entrada</option><option value="sobremesa">Sobremesa</option>
+          <option value="outros">Outros</option>
+        </select>
+        <select id="filtro-status" onchange="filtrar()">
+          <option value="">Todos status</option>
+          <option value="ativa">Ativa</option><option value="rascunho">Rascunho</option>
+          <option value="arquivada">Arquivada</option>
+        </select>
+      </div>
+      <div id="fichas-grid" class="fichas-grid">
+        <div class="empty"><h3>Carregando fichas...</h3></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VIEW — igual à imagem -->
+<div id="modal-view" class="overlay" onclick="if(event.target===this)fecharModal('modal-view')">
+  <div class="modal" style="max-width:620px" onclick="event.stopPropagation()">
+    <button class="view-close" onclick="fecharModal('modal-view')">✕</button>
+    <div class="view-header">
+      <div class="view-title" id="view-title">—</div>
+      <div class="view-sub" id="view-sub">—</div>
+    </div>
+    <div id="view-body"></div>
+    <div class="view-footer">
+      <button class="btn btn-danger" id="view-btn-del">Arquivar</button>
+      <button class="btn btn-danger" id="view-btn-excluir" style="margin-left:4px">Excluir</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" onclick="fecharModal('modal-view')">Fechar</button>
+      <button class="btn btn-primary" id="view-btn-edit">Editar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORM -->
+<div id="modal-form" class="overlay" onclick="if(event.target===this)fecharModal('modal-form')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="form-titulo">Nova Ficha Técnica</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Nome do prato *</label>
+        <input type="text" id="f-nome" placeholder="Ex: Temaki Salmão"></div>
+      <div class="form-group"><label>Categoria *</label>
+        <select id="f-cat">
+          <option value="temaki">Temaki</option><option value="sushi">Sushi</option>
+          <option value="hot">Hot Roll</option><option value="uramaki">Uramaki</option>
+          <option value="sashimi">Sashimi</option><option value="combo">Combo</option>
+          <option value="prato">Prato</option><option value="bebida">Bebida</option>
+          <option value="entrada">Entrada</option><option value="sobremesa">Sobremesa</option>
+          <option value="outros">Outros</option>
+        </select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Rendimento (porções) *</label>
+        <input type="number" id="f-porcoes" value="1" min="1"></div>
+      <div class="form-group"><label>Preço de venda (R$)</label>
+        <input type="number" id="f-preco" placeholder="Ex: 49.90" min="0" step="0.01"
+          oninput="atualizarCustoPreview()"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Status</label>
+        <select id="f-status">
+          <option value="ativa">Ativa</option><option value="rascunho">Rascunho</option>
+          <option value="arquivada">Arquivada</option>
+        </select></div>
+      <div class="form-group"><label>Preview precificação</label>
+        <div id="precif-preview" style="padding:9px 12px;background:var(--bg3);border:1px solid var(--border2);
+          border-radius:8px;font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">
+          Informe o preço de venda
+        </div>
+      </div>
+    </div>
+    <div class="form-group"><label>Modo de preparo</label>
+      <textarea id="f-preparo" placeholder="Descreva o processo..."></textarea></div>
+    <div class="form-group"><label>Observações</label>
+      <textarea id="f-obs" placeholder="Alérgenos, variações, notas..."></textarea></div>
+
+    <div style="border-top:1px solid var(--border2);padding-top:14px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Vincular a insumo existente</div>
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Insumo que receberá o custo</label>
+          <select id="f-insumo-vinculado" onchange="toggleRendimento()">
+            <option value="">— Não vincular —</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Rendimento da receita (g) *</label>
+          <input type="number" id="f-rendimento" placeholder="Ex: 800g prontos"
+            min="1" step="0.1" oninput="atualizarCustoPreview()" disabled>
+          <div id="custo-kg-preview" style="margin-top:5px;font-size:12px;color:var(--text3)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="ing-header">
+      <h3>Ingredientes</h3><div style="flex:1"></div>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="addIngRow()">+ Adicionar</button>
+    </div>
+    <div id="ing-list" class="ing-list"></div>
+    <div id="custo-preview" class="custo-prev" style="display:none">
+      Custo total: <strong id="custo-total-preview" style="font-family:'DM Mono',monospace;color:var(--amber)">R$ 0,00</strong>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-form')">Cancelar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" id="btn-salvar" onclick="salvarFicha()">Salvar ficha</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+const CAT_LABEL = {temaki:'Temaki',sushi:'Sushi',hot:'Hot Roll',uramaki:'Uramaki',
+  sashimi:'Sashimi',combo:'Combo',prato:'Prato',bebida:'Bebida',
+  entrada:'Entrada',sobremesa:'Sobremesa',outros:'Outros'};
+
+// ── API — FIX: DELETE não envia Content-Type ──────────────────
+async function api(endpoint, opts={}) {
+  const method = (opts.method||'GET').toUpperCase();
+  const headers = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+  if (opts.body) headers['Content-Type']='application/json';
+  if (opts.prefer) headers['Prefer']=opts.prefer;
+  else if (method==='POST') headers['Prefer']='return=representation';
+  else if (method==='PATCH') headers['Prefer']='return=representation';
+  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,
+    {method,headers,body:opts.body||undefined});
+  if (!res.ok){
+    let msg=res.statusText;
+    try{const j=await res.json();msg=j.message||j.error||msg;}catch{}
+    throw new Error(`[${res.status}] ${msg}`);
+  }
+  const ct=res.headers.get('content-type')||'';
+  if (ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
+  return [];
+}
+
+let todasFichas=[],fichasFilt=[],todosInsumos=[],editId=null,ingredientes=[];
+
+async function carregar(){
+  document.getElementById('conn-status').textContent='carregando...';
+  try{
+    const [fichas,insumos]=await Promise.all([
+      api('fichas_tecnicas?tenant_id=eq.'+TENANT_ID+'&order=nome.asc&select=*,itens_ficha(id,insumo_id,quantidade_g,ordem)'),
+      api('insumos?tenant_id=eq.'+TENANT_ID+'&ativo=eq.true&order=nome.asc')
+    ]);
+    todasFichas=fichas.map(f=>({...f,itens:f.itens_ficha||[]}));
+    todosInsumos=insumos;
+    atualizarMetricas();filtrar();
+    document.getElementById('conn-status').textContent='● conectado';
+    document.getElementById('conn-status').style.color='var(--teal)';
+  }catch(e){
+    document.getElementById('conn-status').textContent='● erro';
+    document.getElementById('conn-status').style.color='var(--red)';
+    document.getElementById('fichas-grid').innerHTML=
+      `<div class="empty"><h3>Erro ao carregar</h3><p>${e.message}</p></div>`;
+  }
+}
+
+function atualizarMetricas(){
+  const ativas=todasFichas.filter(f=>f.status==='ativa');
+  const custos=todasFichas.map(custoFicha).filter(c=>c>0);
+  const media=custos.length?custos.reduce((a,b)=>a+b,0)/custos.length:0;
+  document.getElementById('m-total').textContent=todasFichas.length;
+  document.getElementById('m-ativas').textContent=ativas.length;
+  document.getElementById('m-custo').textContent=media>0?fmt(media):'—';
+  document.getElementById('m-insumos').textContent=todosInsumos.length;
+}
+carregar();
+
+function filtrar(){
+  const busca=document.getElementById('filtro-busca').value.toLowerCase();
+  const cat=document.getElementById('filtro-cat').value;
+  const status=document.getElementById('filtro-status').value;
+  fichasFilt=todasFichas.filter(f=>{
+    if(busca&&!f.nome.toLowerCase().includes(busca))return false;
+    if(cat&&f.categoria!==cat)return false;
+    if(status&&f.status!==status)return false;
+    return true;
+  });
+  renderGrid();
+}
+
+function renderGrid(){
+  const el=document.getElementById('fichas-grid');
+  if(!fichasFilt.length){
+    el.innerHTML='<div class="empty"><h3>Nenhuma ficha encontrada</h3><p>Clique em "+ Nova ficha" para começar.</p></div>';return;
+  }
+  el.innerHTML=fichasFilt.map(f=>{
+    const custo=custoFicha(f);
+    return `<div class="ficha-card" onclick="verFicha('${f.id}')">
+      <div class="fc-top">
+        <div style="flex:1">
+          <div class="fc-nome">${esc(f.nome)}</div>
+          <div style="margin-top:5px;display:flex;gap:6px;align-items:center">
+            <span class="fc-badge">${CAT_LABEL[f.categoria]||f.categoria}</span>
+            <span class="badge-${f.status}" style="font-size:10px">${f.status}</span>
+          </div>
+        </div>
+        <div class="fc-custo">${custo>0?fmt(custo):'—'}</div>
+      </div>
+      <div class="fc-meta">
+        <div class="fc-meta-item">Porções: <span>${f.rendimento_porcoes}</span></div>
+        <div class="fc-meta-item">Preço: <span>${f.preco_venda?fmt(f.preco_venda):'—'}</span></div>
+        ${f.preco_venda&&custo>0?`<div class="fc-meta-item">CMV: <span style="color:${(custo/f.preco_venda*100)<=30?'var(--teal)':(custo/f.preco_venda*100)<=38?'var(--amber)':'var(--red)'}">${(custo/f.preco_venda*100).toFixed(1)}%</span></div>`:''}
+      </div>
+      <div class="fc-footer">
+        <button class="btn btn-ghost" onclick="event.stopPropagation();editarFicha('${f.id}')">✏️ Editar</button>
+        <button class="btn btn-ghost" onclick="event.stopPropagation();verFicha('${f.id}')">👁 Ver</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function custoFicha(f){
+  if(!f.itens||!f.itens.length)return 0;
+  return f.itens.reduce((acc,it)=>{
+    const ins=todosInsumos.find(i=>i.id===it.insumo_id);
+    if(!ins)return acc;
+    const cpg=ins.preco_compra/(ins.rendimento_pct/100)/1000;
+    return acc+cpg*it.quantidade_g;
+  },0);
+}
+
+function verFicha(id){
+  const f=todasFichas.find(x=>x.id===id);if(!f)return;
+  document.getElementById('view-title').textContent=f.nome;
+  document.getElementById('view-sub').textContent=
+    `${CAT_LABEL[f.categoria]||f.categoria} · ${f.rendimento_porcoes} porção · v${f.versao_atual||1}`;
+
+  const custo=custoFicha(f);
+  const itensHtml=f.itens&&f.itens.length
+    ?`<table class="comp-table">
+        <thead><tr>
+          <th>Ingrediente</th><th>Unidade</th>
+          <th class="num">QTD</th><th class="num">Custo/KG</th><th class="num">Subtotal</th>
+        </tr></thead>
+        <tbody>
+        ${f.itens.map(it=>{
+          const ins=todosInsumos.find(i=>i.id===it.insumo_id);
+          const cr=ins?ins.preco_compra/(ins.rendimento_pct/100):0;
+          const sub=ins?(it.quantidade_g/1000)*cr:0;
+          const unidade=ins?(ins.unidade_medida||ins.unidade_compra||ins.unidade||'—'):'—';
+          return `<tr>
+            <td>${ins?esc(ins.nome):'—'}</td>
+            <td style="color:var(--text2)">${unidade}</td>
+            <td class="num">${it.quantidade_g}g</td>
+            <td class="num">R$ ${cr.toFixed(2)}</td>
+            <td class="num teal">R$ ${sub.toFixed(3)}</td>
+          </tr>`;
+        }).join('')}
+        <tr class="comp-total">
+          <td colspan="4">Custo total da porção</td>
+          <td class="num">R$ ${custo.toFixed(2)}</td>
+        </tr>
+        </tbody>
+      </table>`
+    :'<div style="color:var(--text3);font-size:12px;padding:12px 0">Sem ingredientes cadastrados</div>';
+
+  // Bloco de precificação compacto
+  let precifHtml='';
+  if(f.preco_venda&&f.preco_venda>0){
+    const pv=f.preco_venda;
+    const cmv=custo>0?(custo/pv*100):0;
+    const markup=custo>0?(pv/custo):0;
+    const margem=pv-custo;
+    const margemPct=pv>0?(margem/pv*100):0;
+    const cmvColor=cmv<=30?'var(--teal)':cmv<=38?'var(--amber)':'var(--red)';
+    precifHtml=`
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:20px">
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Preço</div>
+          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1)">${fmt(pv)}</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">CMV</div>
+          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${cmvColor}">${cmv.toFixed(1)}%</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Markup</div>
+          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1)">${markup.toFixed(2)}×</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Margem</div>
+          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1)">${fmt(margem)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${margemPct.toFixed(1)}%</div>
+        </div>
+      </div>`;
+  } else {
+    precifHtml=`<div style="margin-bottom:16px;padding:8px 12px;background:var(--bg3);border-radius:8px;
+      font-size:12px;color:var(--text3);border-left:2px solid var(--border2)">
+      💡 Informe o preço de venda na edição para ver CMV, markup e margem.
+    </div>`;
+  }
+
+
+  document.getElementById('view-body').innerHTML=`
+    ${precifHtml}
+    ${f.modo_preparo?`<div style="margin-bottom:16px">
+      <div class="view-section-label">Modo de preparo</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6">${esc(f.modo_preparo)}</div>
+    </div>`:''}
+    <div class="view-section-label">Composição e custos</div>
+    ${itensHtml}
+    ${f.observacoes?`<div style="margin-top:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius);font-size:12px;color:var(--text2)">${esc(f.observacoes)}</div>`:''}`;
+
+  document.getElementById('view-btn-edit').onclick=()=>{fecharModal('modal-view');editarFicha(id);};
+  document.getElementById('view-btn-del').onclick=()=>arquivar(id,f.nome);
+  document.getElementById('view-btn-excluir').onclick=()=>excluirFicha(id,f.nome);
+  abrirModal('modal-view');
+}
+
+async function excluirFicha(id,nome){
+  if(!confirm(`Excluir permanentemente "${nome}"?\nEsta ação não pode ser desfeita.`))return;
+  try{
+    await api(`itens_ficha?ficha_id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+    await api(`fichas_tecnicas?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+    toast(`"${nome}" excluída permanentemente.`,'ok');
+    fecharModal('modal-view');
+    await carregar();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+async function arquivar(id,nome){
+  if(!confirm(`Arquivar "${nome}"?`))return;
+  try{
+    await api(`fichas_tecnicas?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',
+      body:JSON.stringify({status:'arquivada'})});
+    toast(`${nome} arquivada.`,'ok');fecharModal('modal-view');await carregar();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+function abrirModalNovo(){
+  editId=null;ingredientes=[];
+  document.getElementById('form-titulo').textContent='Nova Ficha Técnica';
+  document.getElementById('f-nome').value='';
+  document.getElementById('f-cat').value='temaki';
+  document.getElementById('f-porcoes').value='1';
+  document.getElementById('f-preco').value='';
+  document.getElementById('f-status').value='ativa';
+  document.getElementById('f-preparo').value='';
+  document.getElementById('f-obs').value='';
+  document.getElementById('ing-list').innerHTML='';
+  document.getElementById('custo-preview').style.display='none';
+  preencherSelectInsumos('');
+  document.getElementById('f-rendimento').value='';
+  document.getElementById('f-rendimento').disabled=true;
+  document.getElementById('custo-kg-preview').textContent='';
+  addIngRow();abrirModal('modal-form');
+}
+
+function editarFicha(id){
+  const f=todasFichas.find(x=>x.id===id);if(!f)return;
+  editId=id;
+  ingredientes=(f.itens||[]).map(it=>({insumo_id:it.insumo_id,quantidade_g:it.quantidade_g}));
+  document.getElementById('form-titulo').textContent='Editar: '+f.nome;
+  document.getElementById('f-nome').value=f.nome;
+  document.getElementById('f-cat').value=f.categoria;
+  document.getElementById('f-porcoes').value=f.rendimento_porcoes;
+  document.getElementById('f-preco').value=f.preco_venda||'';
+  document.getElementById('f-status').value=f.status;
+  document.getElementById('f-preparo').value=f.modo_preparo||'';
+  document.getElementById('f-obs').value=f.observacoes||'';
+  preencherSelectInsumos(f.insumo_vinculado_id||'');
+  document.getElementById('f-rendimento').value=f.rendimento_receita_g||'';
+  document.getElementById('f-rendimento').disabled=!f.insumo_vinculado_id;
+  document.getElementById('custo-kg-preview').textContent='';
+  document.getElementById('ing-list').innerHTML='';
+  if(ingredientes.length)ingredientes.forEach((_,i)=>addIngRow(i));else addIngRow();
+  atualizarCustoPreview();abrirModal('modal-form');
+}
+
+function addIngRow(idx=null){
+  if(idx===null){ingredientes.push({insumo_id:'',quantidade_g:''});idx=ingredientes.length-1;}
+  const ing=ingredientes[idx];
+  const opts=todosInsumos.map(i=>`<option value="${i.id}"${i.id===ing.insumo_id?' selected':''}>${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||i.unidade||'un'})</option>`).join('');
+  const row=document.createElement('div');
+  row.className='ing-row';
+  row.innerHTML=`
+    <select onchange="ingChange(${idx},'insumo_id',this.value)">
+      <option value="">Selecione o insumo...</option>${opts}
+    </select>
+    <input type="number" placeholder="Qtd (g)" min="0" step="0.01"
+      value="${ing.quantidade_g||''}" oninput="ingChange(${idx},'quantidade_g',this.value)">
+    <button class="btn-remove" onclick="remIngRow(${idx})">✕</button>`;
+  document.getElementById('ing-list').appendChild(row);
+}
+
+function ingChange(idx,field,val){
+  if(!ingredientes[idx])return;
+  ingredientes[idx][field]=field==='quantidade_g'?parseFloat(val)||'':val;
+  atualizarCustoPreview();
+}
+
+function remIngRow(idx){
+  ingredientes.splice(idx,1);
+  document.getElementById('ing-list').innerHTML='';
+  ingredientes.forEach((_,i)=>addIngRow(i));
+  atualizarCustoPreview();
+}
+
+function preencherSelectInsumos(selectedId){
+  const sel=document.getElementById('f-insumo-vinculado');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— Não vincular —</option>'+
+    todosInsumos.map(i=>`<option value="${i.id}"${i.id===selectedId?' selected':''}>${esc(i.nome)} (${i.unidade_medida||'kg'})</option>`).join('');
+}
+
+function toggleRendimento(){
+  const sel=document.getElementById('f-insumo-vinculado');
+  const rend=document.getElementById('f-rendimento');
+  const vinculado=sel&&sel.value;
+  if(rend) rend.disabled=!vinculado;
+  if(!vinculado&&rend) rend.value='';
+  atualizarCustoPreview();
+}
+
+function atualizarCustoPreview(){
+  const total=ingredientes.reduce((acc,ing)=>{
+    if(!ing.insumo_id||!ing.quantidade_g)return acc;
+    const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;
+    return acc+ins.preco_compra/(ins.rendimento_pct/100)/1000*ing.quantidade_g;
+  },0);
+  const el=document.getElementById('custo-preview');
+  if(total>0){el.style.display='';document.getElementById('custo-total-preview').textContent=fmt(total);}
+  else el.style.display='none';
+
+  const rendEl=document.getElementById('f-rendimento');
+  const kgEl=document.getElementById('custo-kg-preview');
+  if(rendEl&&kgEl&&!rendEl.disabled){
+    const rend=parseFloat(rendEl.value)||0;
+    const totalG=ingValidos.reduce((a,i)=>a+parseFloat(i.quantidade_g||0),0);
+    if(rend>0&&total>0){
+      const custoKg=total/rend*1000;
+      const perda=totalG>0?Math.max(0,(1-rend/totalG)*100):0;
+      kgEl.innerHTML=`Custo/kg: <strong style="color:var(--teal);font-family:'DM Mono',monospace">${fmt(custoKg)}</strong>`+(perda>0?` · Perda: <strong>${perda.toFixed(1)}%</strong>`:'');
+    } else if(rend>0){
+      kgEl.textContent='Adicione ingredientes para calcular';
+    } else {
+      kgEl.textContent='Informe o rendimento para ver o custo/kg';
+    }
+  } else if(kgEl){
+    kgEl.textContent='';
+  }
+
+  // Preview precificação
+  const pv=parseFloat(document.getElementById('f-preco').value)||0;
+  const prev=document.getElementById('precif-preview');
+  if(pv>0&&total>0){
+    const cmv=total/pv*100;
+    const markup=pv/total;
+    const margem=pv-total;
+    const cor=cmv<=30?'var(--teal)':cmv<=38?'var(--amber)':'var(--red)';
+    prev.style.color=cor;
+    prev.innerHTML=`CMV <strong>${cmv.toFixed(1)}%</strong> · Markup <strong>${markup.toFixed(2)}×</strong> · Margem <strong>${fmt(margem)}</strong>`;
+  } else if(pv>0&&total===0){
+    prev.style.color='var(--text3)';prev.textContent='Adicione ingredientes para calcular';
+  } else {
+    prev.style.color='var(--text3)';prev.textContent='Informe o preço de venda';
+  }
+}
+
+async function salvarFicha(){
+  const nome=document.getElementById('f-nome').value.trim();
+  const cat=document.getElementById('f-cat').value;
+  const porcoes=parseInt(document.getElementById('f-porcoes').value)||1;
+  const preco=parseFloat(document.getElementById('f-preco').value)||null;
+  const status=document.getElementById('f-status').value;
+  const preparo=document.getElementById('f-preparo').value.trim();
+  const obs=document.getElementById('f-obs').value.trim();
+  if(!nome){toast('Informe o nome da ficha.','err');return;}
+  const ingValidos=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0);
+  if(!ingValidos.length){toast('Adicione pelo menos um ingrediente.','err');return;}
+  const btn=document.getElementById('btn-salvar');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    let fichaId=editId;
+    const insumoVinculadoId=document.getElementById('f-insumo-vinculado').value||null;
+  const rendimentoReceita=parseFloat(document.getElementById('f-rendimento').value)||null;
+
+  if(editId){
+      await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',
+        body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,
+          preco_venda:preco,modo_preparo:preparo||null,observacoes:obs||null,
+          status,insumo_vinculado_id:insumoVinculadoId,
+          rendimento_receita_g:rendimentoReceita,
+          atualizado_em:new Date().toISOString()})});
+      // FIX: DELETE sem Content-Type, sem body
+      await api(`itens_ficha?ficha_id=eq.${editId}`,{method:'DELETE',prefer:'return=minimal'});
+    }else{
+      const res=await api('fichas_tecnicas',{method:'POST',
+        body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,
+          rendimento_porcoes:porcoes,preco_venda:preco,modo_preparo:preparo||null,
+          observacoes:obs||null,status,insumo_vinculado_id:insumoVinculadoId,
+          rendimento_receita_g:rendimentoReceita})});
+      fichaId=res[0].id;
+    }
+    await api('itens_ficha',{method:'POST',prefer:'return=minimal',
+      body:JSON.stringify(ingValidos.map((ing,i)=>({
+        ficha_id:fichaId,insumo_id:ing.insumo_id,
+        quantidade_g:parseFloat(ing.quantidade_g),ordem:i})))});
+
+    // Gerar/atualizar insumo se marcado
+    // Atualizar insumo vinculado se selecionado
+    if(insumoVinculadoId){
+      const rendimento=parseFloat(document.getElementById('f-rendimento').value)||0;
+      if(!rendimento){toast('Informe o rendimento da receita.','err');btn.disabled=false;btn.textContent='Salvar ficha';return;}
+      const custoTotal=ingValidos.reduce((acc,ing)=>{
+        const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;
+        return acc+ins.preco_compra/(ins.rendimento_pct/100)/1000*parseFloat(ing.quantidade_g);
+      },0);
+      const custoKg=custoTotal/rendimento*1000;
+      await api(`insumos?id=eq.${insumoVinculadoId}`,{method:'PATCH',prefer:'return=minimal',
+        body:JSON.stringify({preco_compra:parseFloat(custoKg.toFixed(4))})});
+      const insNome=todosInsumos.find(i=>i.id===insumoVinculadoId)?.nome||'insumo';
+      toast(`"${nome}" salvo · "${insNome}" atualizado para R$ ${custoKg.toFixed(2)}/kg`,'ok');
+    } else {
+      toast(`"${nome}" salvo com sucesso!`,'ok');
+    }
+    fecharModal('modal-form');await carregar();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar ficha';}
+}
+
+function abrirModal(id){document.getElementById(id).classList.add('open');}
+function fecharModal(id){document.getElementById(id).classList.remove('open');}
+function fmt(v){return'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let toastTimer;
+function toast(msg,tipo='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast '+tipo+' show';
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
