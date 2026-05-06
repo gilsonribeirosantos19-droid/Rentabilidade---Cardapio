@@ -652,7 +652,7 @@ function preencherSelectInsumos(selectedId){
   // se o id vinculado não existe mais na lista, trata como vazio para não bloquear o modal
   const validId=selectedId&&todosInsumos.some(i=>i.id===selectedId)?selectedId:'';
   sel.innerHTML='<option value="">— Não vincular —</option>'+
-    todosInsumos.map(i=>`<option value="${i.id}"${i.id===validId?' selected':''}>${esc(i.nome)} (${i.unidade_medida||'kg'})</option>`).join('');
+    todosInsumos.map(i=>`<option value="${i.id}"${i.id===validId?' selected':''}>${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
 }
 
 function toggleRendimento(){
