@@ -170,7 +170,7 @@
       <div class="section-header">
         <span class="section-title">Alertas de CMV</span>
         <span class="section-badge red" id="cmvBadge">—</span>
-        <span style="font-size:11px;color:var(--text3);margin-left:4px">fichas com CMV &gt; 35%</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">fichas com CMV &gt; 30%</span>
       </div>
       <div id="cmvList" class="cmv-list">
         <div class="empty-msg skeleton">Carregando...</div>
@@ -191,10 +191,13 @@
                   <th>Categoria</th>
                   <th class="num">Custo</th>
                   <th class="num">Venda</th>
+                  <th class="num">CMV</th>
+                  <th class="num">Markup</th>
+                  <th class="num">Margem</th>
                 </tr>
               </thead>
               <tbody id="top5Body">
-                <tr><td colspan="5" class="empty-msg skeleton">Carregando...</td></tr>
+                <tr><td colspan="8" class="empty-msg skeleton">Carregando...</td></tr>
               </tbody>
             </table>
           </div>
@@ -260,7 +263,7 @@ function calcCusto(itens, insumoMap) {
 }
 
 function cmvClass(pct) {
-  return pct > 38 ? 'bad' : 'warn';
+  return pct > 35 ? 'bad' : 'warn';
 }
 
 function showToast(msg, type='err') {
@@ -355,14 +358,14 @@ function renderSummary(fichas, totalInsumos) {
 
 function renderCmvAlerts(fichas) {
   const alerts = fichas
-    .filter(f => !f.insumo_vinculado_id && f.cmv !== null && f.cmv > 35)
+    .filter(f => !f.insumo_vinculado_id && f.cmv !== null && f.cmv > 30)
     .sort((a, b) => b.cmv - a.cmv);
 
   document.getElementById('cmvBadge').textContent = alerts.length;
 
   if (alerts.length === 0) {
     document.getElementById('cmvList').innerHTML =
-      '<div class="empty-msg" style="color:var(--teal)">Nenhuma ficha com CMV acima de 35% 🎉</div>';
+      '<div class="empty-msg" style="color:var(--teal)">Nenhuma ficha com CMV acima de 30% 🎉</div>';
     return;
   }
 
@@ -391,19 +394,32 @@ function renderTop5(fichas) {
 
   if (top5.length === 0) {
     document.getElementById('top5Body').innerHTML =
-      '<tr><td colspan="5" class="empty-msg">Nenhuma ficha com custo calculado</td></tr>';
+      '<tr><td colspan="8" class="empty-msg">Nenhuma ficha com custo calculado</td></tr>';
     return;
   }
 
-  document.getElementById('top5Body').innerHTML = top5.map((f, i) => `
+  document.getElementById('top5Body').innerHTML = top5.map((f, i) => {
+    const pv = f.preco_venda;
+    const hasPv = pv && pv > 0;
+    const cmv    = hasPv ? (f.custo / pv) * 100 : null;
+    const markup = hasPv ? pv / f.custo : null;
+    const margem = hasPv ? pv - f.custo : null;
+    const cmvColor = cmv === null ? '' : cmv <= 30
+      ? 'color:var(--teal)'
+      : cmv <= 35 ? 'color:var(--amber)' : 'color:var(--red)';
+    const dash = '<span style="color:var(--text3)">—</span>';
+    return `
     <tr>
       <td><span class="top5-rank${i === 0 ? ' gold' : ''}">${i + 1}</span></td>
       <td style="font-weight:500">${f.nome}</td>
       <td><span class="cat-badge">${f.categoria || '—'}</span></td>
       <td class="num mono">${fmtBRL(f.custo)}</td>
-      <td class="num teal">${f.preco_venda ? fmtBRL(f.preco_venda) : '<span style="color:var(--text3)">—</span>'}</td>
-    </tr>
-  `).join('');
+      <td class="num teal">${hasPv ? fmtBRL(pv) : dash}</td>
+      <td class="num" style="font-family:'DM Mono',monospace;font-weight:600;${cmvColor}">${cmv !== null ? cmv.toFixed(1) + '%' : dash}</td>
+      <td class="num" style="font-family:'DM Mono',monospace">${markup !== null ? markup.toFixed(2) + '×' : dash}</td>
+      <td class="num" style="font-family:'DM Mono',monospace">${margem !== null ? fmtBRL(margem) : dash}</td>
+    </tr>`;
+  }).join('');
 }
 
 function renderCategories(fichas) {
