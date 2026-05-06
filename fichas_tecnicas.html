@@ -313,9 +313,16 @@
           </select>
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <label>Rendimento da receita (g) *</label>
-          <input type="number" id="f-rendimento" placeholder="Ex: 800g prontos"
-            min="1" step="0.1" oninput="atualizarCustoPreview()" disabled>
+          <label>Rendimento da receita *</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" id="f-rendimento" placeholder="Ex: 800"
+              min="1" step="0.1" oninput="atualizarCustoPreview()" disabled style="flex:1">
+            <select id="f-rendimento-unidade" onchange="atualizarCustoPreview()" disabled style="width:72px">
+              <option value="g">g</option>
+              <option value="ml">ml</option>
+              <option value="L">L</option>
+            </select>
+          </div>
           <div id="custo-kg-preview" style="margin-top:5px;font-size:12px;color:var(--text3)"></div>
         </div>
       </div>
@@ -576,6 +583,8 @@ function abrirModalNovo(){
   preencherSelectInsumos('');
   document.getElementById('f-rendimento').value='';
   document.getElementById('f-rendimento').disabled=true;
+  document.getElementById('f-rendimento-unidade').value='g';
+  document.getElementById('f-rendimento-unidade').disabled=true;
   document.getElementById('custo-kg-preview').textContent='';
   addIngRow();abrirModal('modal-form');
 }
@@ -596,6 +605,8 @@ function editarFicha(id){
     preencherSelectInsumos(f.insumo_vinculado_id||'');
     document.getElementById('f-rendimento').value=f.rendimento_receita_g||'';
     document.getElementById('f-rendimento').disabled=!f.insumo_vinculado_id;
+    document.getElementById('f-rendimento-unidade').value='g';
+    document.getElementById('f-rendimento-unidade').disabled=!f.insumo_vinculado_id;
     document.getElementById('custo-kg-preview').textContent='';
     document.getElementById('ing-list').innerHTML='';
     if(ingredientes.length)ingredientes.forEach((_,i)=>addIngRow(i));else addIngRow();
@@ -647,9 +658,11 @@ function preencherSelectInsumos(selectedId){
 function toggleRendimento(){
   const sel=document.getElementById('f-insumo-vinculado');
   const rend=document.getElementById('f-rendimento');
+  const rendUnidade=document.getElementById('f-rendimento-unidade');
   const vinculado=sel&&sel.value;
   if(rend) rend.disabled=!vinculado;
   if(!vinculado&&rend) rend.value='';
+  if(rendUnidade){ rendUnidade.disabled=!vinculado; if(!vinculado) rendUnidade.value='g'; }
   atualizarCustoPreview();
 }
 
@@ -666,7 +679,9 @@ function atualizarCustoPreview(){
   const rendEl=document.getElementById('f-rendimento');
   const kgEl=document.getElementById('custo-kg-preview');
   if(rendEl&&kgEl&&!rendEl.disabled){
-    const rend=parseFloat(rendEl.value)||0;
+    const rendVal=parseFloat(rendEl.value)||0;
+    const rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
+    const rend=rendUnid==='L'?rendVal*1000:rendVal;
     const totalG=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0).reduce((a,i)=>a+parseFloat(i.quantidade_g||0),0);
     if(rend>0&&total>0){
       const custoKg=total/rend*1000;
@@ -714,7 +729,9 @@ async function salvarFicha(){
   try{
     let fichaId=editId;
     const insumoVinculadoId=document.getElementById('f-insumo-vinculado').value||null;
-  const rendimentoReceita=parseFloat(document.getElementById('f-rendimento').value)||null;
+  const _rendVal=parseFloat(document.getElementById('f-rendimento').value)||null;
+  const _rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
+  const rendimentoReceita=_rendVal!=null?(_rendUnid==='L'?_rendVal*1000:_rendVal):null;
 
   if(editId){
       await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',
@@ -741,7 +758,9 @@ async function salvarFicha(){
     // Gerar/atualizar insumo se marcado
     // Atualizar insumo vinculado se selecionado
     if(insumoVinculadoId){
-      const rendimento=parseFloat(document.getElementById('f-rendimento').value)||0;
+      const _rVal=parseFloat(document.getElementById('f-rendimento').value)||0;
+      const _rUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
+      const rendimento=_rUnid==='L'?_rVal*1000:_rVal;
       if(!rendimento){toast('Informe o rendimento da receita.','err');btn.disabled=false;btn.textContent='Salvar ficha';return;}
       const custoTotal=ingValidos.reduce((acc,ing)=>{
         const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;
