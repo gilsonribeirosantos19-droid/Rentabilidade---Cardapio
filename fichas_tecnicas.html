@@ -667,7 +667,7 @@ function atualizarCustoPreview(){
   const kgEl=document.getElementById('custo-kg-preview');
   if(rendEl&&kgEl&&!rendEl.disabled){
     const rend=parseFloat(rendEl.value)||0;
-    const totalG=ingValidos.reduce((a,i)=>a+parseFloat(i.quantidade_g||0),0);
+    const totalG=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0).reduce((a,i)=>a+parseFloat(i.quantidade_g||0),0);
     if(rend>0&&total>0){
       const custoKg=total/rend*1000;
       const perda=totalG>0?Math.max(0,(1-rend/totalG)*100):0;
