@@ -488,27 +488,12 @@
           <label class="form-label">Categoria</label>
           <select class="form-select" id="f-cat">
             <option value="">Selecione...</option>
-            <option value="peixe">Peixe</option>
-            <option value="hortifruti">Hortifruti</option>
-            <option value="proteina">Proteína</option>
-            <option value="laticinios">Laticínios</option>
-            <option value="seco">Seco</option>
-            <option value="molho">Molho</option>
-            <option value="embalagem">Embalagem</option>
-            <option value="bebida">Bebida</option>
-            <option value="outros">Outros</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Unidade de compra</label>
           <select class="form-select" id="f-und">
             <option value="">Selecione...</option>
-            <option value="kg">kg</option>
-            <option value="g">g</option>
-            <option value="litro">litro</option>
-            <option value="ml">ml</option>
-            <option value="unidade">unidade</option>
-            <option value="caixa">caixa</option>
           </select>
         </div>
         <div class="form-group">
@@ -573,13 +558,35 @@
   let todos = [];
   let catAtiva = 'Todos';
   let editId = null;
+  let categoriasInsumo = [];
+  let unidadesMedida = [];
 
-  const CATS = ['Todos','peixe','hortifruti','proteina','laticinios','seco','molho','embalagem','bebida','outros'];
-  const CAT_LABEL = {
-    peixe:'Peixe', hortifruti:'Hortifruti', proteina:'Proteína',
-    laticinios:'Laticínios', seco:'Seco', molho:'Molho',
-    embalagem:'Embalagem', bebida:'Bebida', outros:'Outros'
-  };
+  // ── CARREGAR OPÇÕES DE SELECTS ───────────────────────────
+  async function carregarOpcoes() {
+    try {
+      const [cats, unidades] = await Promise.all([
+        api(`categorias?tenant_id=eq.${TENANT_ID}&tipo=eq.insumo&order=nome.asc&select=*`),
+        api(`unidades_medida?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=*`),
+      ]);
+      categoriasInsumo = cats;
+      unidadesMedida   = unidades;
+
+      const selCat = document.getElementById('f-cat');
+      selCat.innerHTML = '<option value="">Selecione...</option>' +
+        cats.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+
+      const selUnd = document.getElementById('f-und');
+      selUnd.innerHTML = '<option value="">Selecione...</option>' +
+        unidades.map(u => {
+          const val   = u.abreviacao || u.nome;
+          const label = u.abreviacao ? `${u.nome} (${u.abreviacao})` : u.nome;
+          return `<option value="${val}">${label}</option>`;
+        }).join('');
+    } catch (e) {
+      // silently continue — insumos still load even if options fail
+      console.warn('Erro ao carregar opções:', e.message);
+    }
+  }
 
   // ── CARREGAR ─────────────────────────────────────────────
   async function carregarInsumos() {
@@ -615,9 +622,13 @@
 
   function renderChips() {
     const el = document.getElementById('chips');
-    el.innerHTML = CATS.map(c =>
-      `<button class="chip${c===catAtiva?' active':''}" onclick="setCategoria('${c}')">${c==='Todos'?'Todos':(CAT_LABEL[c]||c)}</button>`
-    ).join('');
+    const chips = [
+      `<button class="chip${catAtiva==='Todos'?' active':''}" onclick="setCategoria('Todos')">Todos</button>`,
+      ...categoriasInsumo.map(c =>
+        `<button class="chip${catAtiva===c.nome?' active':''}" onclick="setCategoria('${c.nome}')">${c.nome}</button>`
+      ),
+    ];
+    el.innerHTML = chips.join('');
   }
 
   function setCategoria(c) {
@@ -648,7 +659,7 @@
       const statusTxt = rend >= 72 ? 'Padrão' : rend >= 60 ? 'Atenção' : 'Crítico';
       return `<tr onclick="editarInsumo('${i.id}')">
         <td><strong>${i.nome}</strong></td>
-        <td><span class="badge badge-purple">${CAT_LABEL[i.categoria]||i.categoria}</span></td>
+        <td><span class="badge badge-purple">${i.categoria || '—'}</span></td>
         <td class="td-muted">${i.unidade_compra}</td>
         <td class="td-mono">R$ ${parseFloat(i.preco_compra).toFixed(2)}</td>
         <td>
@@ -778,7 +789,10 @@
   });
 
   // ── INICIAR ──────────────────────────────────────────────
-  carregarInsumos();
+  (async () => {
+    await carregarOpcoes();
+    carregarInsumos();
+  })();
 </script>
 </body>
 </html>
