@@ -610,7 +610,12 @@ function editarFicha(id){
   try{
     const f=todasFichas.find(x=>x.id===id);if(!f)return;
     editId=id;
-    ingredientes=(f.itens||[]).map(it=>({insumo_id:it.insumo_id,quantidade_g:it.quantidade_g}));
+    ingredientes=(f.itens||[]).map(it=>{
+      const ins=todosInsumos.find(i=>i.id===it.insumo_id);
+      const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
+      const qtd=(um==='kg'||um==='litro')?it.quantidade_g/1000:it.quantidade_g;
+      return {insumo_id:it.insumo_id,quantidade_g:qtd};
+    });
     document.getElementById('form-titulo').textContent='Editar: '+f.nome;
     document.getElementById('f-nome').value=f.nome;
     document.getElementById('f-cat').value=f.categoria;
