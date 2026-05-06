@@ -47,6 +47,7 @@
   .sc-sub{font-size:11px;color:var(--text3);margin-top:6px}
   .sc-teal .sc-value{color:var(--teal)}
   .sc-amber .sc-value{color:var(--amber)}
+  .sc-red .sc-value{color:var(--red)}
 
   /* SECTION HEADER */
   .section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
@@ -272,7 +273,7 @@ function showToast(msg, type='err') {
 async function loadDashboard() {
   try {
     const [fichas, itens, insumos] = await Promise.all([
-      api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&select=id,nome,categoria,status,preco_venda`),
+      api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&select=id,nome,categoria,status,preco_venda,insumo_vinculado_id`),
       api(`itens_ficha?select=ficha_id,insumo_id,quantidade_g`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,preco_compra,rendimento_pct&ativo=eq.true`),
     ]);
@@ -309,10 +310,19 @@ async function loadDashboard() {
 function renderSummary(fichas, totalInsumos) {
   const total = fichas.length;
   const ativas = fichas.filter(f => f.status === 'ativa').length;
-  const withCost = fichas.filter(f => f.custo > 0);
-  const avgCost = withCost.length > 0
-    ? withCost.reduce((s, f) => s + f.custo, 0) / withCost.length
+
+  // custo médio: apenas fichas sem insumo_vinculado_id
+  const cardapioComCusto = fichas.filter(f => !f.insumo_vinculado_id && f.custo > 0);
+  const avgCost = cardapioComCusto.length > 0
+    ? cardapioComCusto.reduce((s, f) => s + f.custo, 0) / cardapioComCusto.length
     : 0;
+
+  // CMV médio: fichas sem insumo_vinculado_id com preco_venda informado
+  const comCmv = fichas.filter(f => !f.insumo_vinculado_id && f.cmv !== null);
+  const avgCmv = comCmv.length > 0
+    ? comCmv.reduce((s, f) => s + f.cmv, 0) / comCmv.length
+    : null;
+  const cmvCls = avgCmv === null ? '' : avgCmv > 38 ? 'sc-red' : avgCmv > 35 ? 'sc-amber' : 'sc-teal';
 
   document.getElementById('summaryGrid').innerHTML = `
     <div class="summary-card">
@@ -333,7 +343,12 @@ function renderSummary(fichas, totalInsumos) {
     <div class="summary-card sc-amber">
       <div class="sc-label">Custo médio / ficha</div>
       <div class="sc-value" style="font-size:22px">${fmtBRL(avgCost)}</div>
-      <div class="sc-sub">fichas com ingredientes</div>
+      <div class="sc-sub">fichas do cardápio</div>
+    </div>
+    <div class="summary-card ${cmvCls}">
+      <div class="sc-label">CMV Médio</div>
+      <div class="sc-value">${avgCmv !== null ? avgCmv.toFixed(1) + '%' : '—'}</div>
+      <div class="sc-sub">${comCmv.length} fichas com preço de venda</div>
     </div>
   `;
 }
@@ -370,7 +385,7 @@ function renderCmvAlerts(fichas) {
 
 function renderTop5(fichas) {
   const top5 = [...fichas]
-    .filter(f => f.custo > 0)
+    .filter(f => f.custo > 0 && !f.insumo_vinculado_id)
     .sort((a, b) => b.custo - a.custo)
     .slice(0, 5);
 
