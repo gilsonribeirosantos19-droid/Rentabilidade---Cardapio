@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Sushi PN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+  :root{
+    --bg1:#0d0f14;--bg2:#161820;--bg3:#1e2030;
+    --border1:#1e2030;--border2:#252840;
+    --teal:#00d4aa;--teal2:#00b890;--teal-dim:rgba(0,212,170,.12);
+    --amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;
+    --text1:#f0f2ff;--text2:#94a3c4;--text3:#5a6080;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+
+  /* SIDEBAR */
+  .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border2);
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid var(--border2);margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:var(--text1)}
+  .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin-bottom:20px}
+  .nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:var(--text2);font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:var(--bg3);color:var(--text1)}
+  .nav-item.active{background:rgba(0,212,170,.1);color:var(--teal)}
+  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+  /* MAIN */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid var(--border2);display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:var(--bg2);position:sticky;top:0;z-index:50}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .topbar-sub{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace}
+  .content{padding:24px;flex:1}
+
+  /* SUMMARY CARDS */
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+  .summary-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px}
+  .sc-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+  .sc-value{font-size:28px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+  .sc-sub{font-size:11px;color:var(--text3);margin-top:6px}
+  .sc-teal .sc-value{color:var(--teal)}
+  .sc-amber .sc-value{color:var(--amber)}
+
+  /* SECTION HEADER */
+  .section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .section-title{font-size:14px;font-weight:600}
+  .section-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg3);color:var(--text3)}
+  .section-badge.red{background:rgba(239,68,68,.15);color:var(--red)}
+
+  /* CMV ALERTS */
+  .cmv-list{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+  .cmv-row{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);
+    padding:14px 16px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+  .cmv-row:hover{border-color:var(--red)}
+  .cmv-nome{font-size:13px;font-weight:600;flex:1}
+  .cmv-cat{font-size:11px;color:var(--text3);margin-top:2px}
+  .cmv-pct{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap}
+  .cmv-pct.warn{color:var(--amber)}
+  .cmv-pct.bad{color:var(--red)}
+  .cmv-bar-wrap{width:100px;height:6px;background:var(--bg3);border-radius:3px;flex-shrink:0}
+  .cmv-bar{height:6px;border-radius:3px}
+  .cmv-bar.warn{background:var(--amber)}
+  .cmv-bar.bad{background:var(--red)}
+  .btn-edit{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;
+    background:transparent;border:1px solid var(--border2);color:var(--text2);font-size:12px;
+    font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;text-decoration:none;white-space:nowrap}
+  .btn-edit:hover{border-color:var(--teal);color:var(--teal)}
+
+  /* TWO COLUMNS */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
+  @media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+  /* TOP 5 TABLE */
+  .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden}
+  .panel-header{padding:16px 18px;border-bottom:1px solid var(--border2)}
+  .panel-title{font-size:13px;font-weight:600}
+  .top5-table{width:100%;border-collapse:collapse;font-size:13px}
+  .top5-table th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;
+    letter-spacing:.06em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border2)}
+  .top5-table th.num,.top5-table td.num{text-align:right}
+  .top5-table td{padding:11px 14px;border-bottom:1px solid var(--border2);color:var(--text1)}
+  .top5-table tbody tr:last-child td{border-bottom:none}
+  .top5-table td.mono{font-family:'DM Mono',monospace;color:var(--amber)}
+  .top5-table td.teal{font-family:'DM Mono',monospace;color:var(--teal)}
+  .top5-rank{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+    border-radius:50%;background:var(--bg3);font-size:11px;font-weight:700;color:var(--text3);font-family:'DM Mono',monospace}
+  .top5-rank.gold{background:rgba(245,158,11,.2);color:var(--amber)}
+  .cat-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--text3)}
+
+  /* CATEGORY CARDS */
+  .cat-grid{padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+  .cat-card{background:var(--bg3);border-radius:8px;padding:12px 10px;text-align:center}
+  .cat-count{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--teal);line-height:1}
+  .cat-name{font-size:11px;color:var(--text3);margin-top:4px;text-transform:capitalize}
+
+  /* EMPTY / LOADING */
+  .empty-msg{padding:24px;text-align:center;color:var(--text3);font-size:13px}
+  .skeleton{animation:pulse 1.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);
+    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;
+    transform:translateY(8px);transition:all .25s;max-width:320px}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.err{border-color:var(--red);color:var(--red)}
+
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  @media(max-width:700px){.sidebar{display:none}.summary-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">Sushi PN</div>
+      <div class="logo-sub">rentabilidade</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Principal</div>
+      <a class="nav-item active" href="dashboard.html"><div class="nav-dot"></div>Dashboard</a>
+      <a class="nav-item" href="insumos.html"><div class="nav-dot"></div>Insumos</a>
+      <a class="nav-item" href="fichas_tecnicas.html"><div class="nav-dot"></div>Fichas técnicas</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Precificação</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Análise</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Engenharia cardápio</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>CMV teórico x real</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Rendimento</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Simulador</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Gestão</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Fornecedores</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Alertas</a>
+      <a class="nav-item" href="configuracoes.html"><div class="nav-dot"></div>Configurações</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Dashboard</div>
+      <span class="topbar-sub" id="lastUpdated"></span>
+    </div>
+    <div class="content">
+
+      <!-- 1. SUMMARY CARDS -->
+      <div class="summary-grid" id="summaryGrid">
+        <div class="summary-card skeleton"><div class="sc-label">Total de fichas</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">Fichas ativas</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">Insumos cadastrados</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">Custo médio / ficha</div><div class="sc-value">—</div></div>
+      </div>
+
+      <!-- 2. CMV ALERTS -->
+      <div class="section-header">
+        <span class="section-title">Alertas de CMV</span>
+        <span class="section-badge red" id="cmvBadge">—</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">fichas com CMV &gt; 35%</span>
+      </div>
+      <div id="cmvList" class="cmv-list">
+        <div class="empty-msg skeleton">Carregando...</div>
+      </div>
+
+      <!-- 3 & 4. TWO COLUMNS -->
+      <div class="two-col">
+
+        <!-- TOP 5 -->
+        <div>
+          <div class="section-header"><span class="section-title">Top 5 fichas mais caras</span></div>
+          <div class="panel">
+            <table class="top5-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nome</th>
+                  <th>Categoria</th>
+                  <th class="num">Custo</th>
+                  <th class="num">Venda</th>
+                </tr>
+              </thead>
+              <tbody id="top5Body">
+                <tr><td colspan="5" class="empty-msg skeleton">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- BY CATEGORY -->
+        <div>
+          <div class="section-header"><span class="section-title">Fichas por categoria</span></div>
+          <div class="panel">
+            <div class="cat-grid" id="catGrid">
+              <div class="empty-msg skeleton" style="grid-column:1/-1">Carregando...</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+async function api(endpoint, opts={}) {
+  const method = (opts.method||'GET').toUpperCase();
+  const headers = {
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer '+SUPA_KEY,
+  };
+  if (opts.body) headers['Content-Type']='application/json';
+  if (opts.prefer) headers['Prefer']=opts.prefer;
+  else if (method==='POST') headers['Prefer']='return=representation';
+  else if (method==='PATCH') headers['Prefer']='return=representation';
+
+  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,
+    {method, headers, body: opts.body||undefined});
+
+  if (!res.ok){
+    let msg=res.statusText;
+    try{const j=await res.json();msg=j.message||j.error||msg;}catch{}
+    throw new Error(`[${res.status}] ${msg}`);
+  }
+  const ct=res.headers.get('content-type')||'';
+  if (ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
+  return [];
+}
+
+function fmtBRL(v) {
+  return v == null ? '—' : 'R$ ' + v.toFixed(2).replace('.', ',');
+}
+
+function calcCusto(itens, insumoMap) {
+  return itens.reduce((acc, item) => {
+    const ins = insumoMap[item.insumo_id];
+    if (!ins) return acc;
+    const rend = ins.rendimento_pct > 0 ? ins.rendimento_pct / 100 : 1;
+    return acc + (ins.preco_compra / rend / 1000) * item.quantidade_g;
+  }, 0);
+}
+
+function cmvClass(pct) {
+  return pct > 38 ? 'bad' : 'warn';
+}
+
+function showToast(msg, type='err') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+async function loadDashboard() {
+  try {
+    const [fichas, itens, insumos] = await Promise.all([
+      api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&select=id,nome,categoria,status,preco_venda`),
+      api(`itens_ficha?select=ficha_id,insumo_id,quantidade_g`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,preco_compra,rendimento_pct&ativo=eq.true`),
+    ]);
+
+    // build lookup maps
+    const insumoMap = Object.fromEntries(insumos.map(i => [i.id, i]));
+    const itensByFicha = {};
+    for (const item of itens) {
+      if (!itensByFicha[item.ficha_id]) itensByFicha[item.ficha_id] = [];
+      itensByFicha[item.ficha_id].push(item);
+    }
+
+    // compute cost per ficha
+    const fichasWithCost = fichas.map(f => {
+      const custo = calcCusto(itensByFicha[f.id] || [], insumoMap);
+      const cmv = f.preco_venda > 0 ? (custo / f.preco_venda) * 100 : null;
+      return { ...f, custo, cmv };
+    });
+
+    renderSummary(fichasWithCost, insumos.length);
+    renderCmvAlerts(fichasWithCost);
+    renderTop5(fichasWithCost);
+    renderCategories(fichasWithCost);
+
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent =
+      'Atualizado às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+  } catch(e) {
+    showToast('Erro ao carregar dados: ' + e.message);
+  }
+}
+
+function renderSummary(fichas, totalInsumos) {
+  const total = fichas.length;
+  const ativas = fichas.filter(f => f.status === 'ativa').length;
+  const withCost = fichas.filter(f => f.custo > 0);
+  const avgCost = withCost.length > 0
+    ? withCost.reduce((s, f) => s + f.custo, 0) / withCost.length
+    : 0;
+
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="summary-card">
+      <div class="sc-label">Total de fichas</div>
+      <div class="sc-value">${total}</div>
+      <div class="sc-sub">cadastradas</div>
+    </div>
+    <div class="summary-card sc-teal">
+      <div class="sc-label">Fichas ativas</div>
+      <div class="sc-value">${ativas}</div>
+      <div class="sc-sub">de ${total} no total</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Insumos cadastrados</div>
+      <div class="sc-value">${totalInsumos}</div>
+      <div class="sc-sub">matérias-primas ativas</div>
+    </div>
+    <div class="summary-card sc-amber">
+      <div class="sc-label">Custo médio / ficha</div>
+      <div class="sc-value" style="font-size:22px">${fmtBRL(avgCost)}</div>
+      <div class="sc-sub">fichas com ingredientes</div>
+    </div>
+  `;
+}
+
+function renderCmvAlerts(fichas) {
+  const alerts = fichas
+    .filter(f => f.cmv !== null && f.cmv > 35)
+    .sort((a, b) => b.cmv - a.cmv);
+
+  document.getElementById('cmvBadge').textContent = alerts.length;
+
+  if (alerts.length === 0) {
+    document.getElementById('cmvList').innerHTML =
+      '<div class="empty-msg" style="color:var(--teal)">Nenhuma ficha com CMV acima de 35% 🎉</div>';
+    return;
+  }
+
+  document.getElementById('cmvList').innerHTML = alerts.map(f => {
+    const cls = cmvClass(f.cmv);
+    const barWidth = Math.min(f.cmv, 100);
+    return `
+      <div class="cmv-row">
+        <div style="flex:1;min-width:0">
+          <div class="cmv-nome">${f.nome}</div>
+          <div class="cmv-cat">${f.categoria || '—'} · venda ${fmtBRL(f.preco_venda)} · custo ${fmtBRL(f.custo)}</div>
+        </div>
+        <div class="cmv-bar-wrap"><div class="cmv-bar ${cls}" style="width:${barWidth}%"></div></div>
+        <div class="cmv-pct ${cls}">${f.cmv.toFixed(1)}%</div>
+        <a class="btn-edit" href="fichas_tecnicas.html">Editar →</a>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTop5(fichas) {
+  const top5 = [...fichas]
+    .filter(f => f.custo > 0)
+    .sort((a, b) => b.custo - a.custo)
+    .slice(0, 5);
+
+  if (top5.length === 0) {
+    document.getElementById('top5Body').innerHTML =
+      '<tr><td colspan="5" class="empty-msg">Nenhuma ficha com custo calculado</td></tr>';
+    return;
+  }
+
+  document.getElementById('top5Body').innerHTML = top5.map((f, i) => `
+    <tr>
+      <td><span class="top5-rank${i === 0 ? ' gold' : ''}">${i + 1}</span></td>
+      <td style="font-weight:500">${f.nome}</td>
+      <td><span class="cat-badge">${f.categoria || '—'}</span></td>
+      <td class="num mono">${fmtBRL(f.custo)}</td>
+      <td class="num teal">${f.preco_venda ? fmtBRL(f.preco_venda) : '<span style="color:var(--text3)">—</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+function renderCategories(fichas) {
+  const counts = {};
+  for (const f of fichas) {
+    const cat = f.categoria || 'outros';
+    counts[cat] = (counts[cat] || 0) + 1;
+  }
+
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+  if (sorted.length === 0) {
+    document.getElementById('catGrid').innerHTML =
+      '<div class="empty-msg" style="grid-column:1/-1">Nenhuma ficha cadastrada</div>';
+    return;
+  }
+
+  document.getElementById('catGrid').innerHTML = sorted.map(([cat, count]) => `
+    <div class="cat-card">
+      <div class="cat-count">${count}</div>
+      <div class="cat-name">${cat}</div>
+    </div>
+  `).join('');
+}
+
+loadDashboard();
+</script>
+</body>
+</html>
