@@ -202,6 +202,8 @@
                     <th>Insumo</th>
                     <th class="r">Qtd atual</th>
                     <th class="r">Mínimo</th>
+                    <th class="r">Total entradas</th>
+                    <th class="r">Total saídas</th>
                     <th class="r">Status</th>
                     <th></th>
                   </tr>
@@ -459,6 +461,8 @@ function renderDashboard(){
       const e=getEstoque(ins.id);
       const s=statusEstoque(e.quantidade,e.quantidade_minima);
       const um=ins.unidade_medida||ins.unidade_compra||'un';
+      const totalEnt=movimentacoes.filter(m=>m.insumo_id===ins.id&&m.tipo==='entrada').reduce((s,m)=>s+parseFloat(m.quantidade),0);
+      const totalSai=movimentacoes.filter(m=>m.insumo_id===ins.id&&m.tipo==='saida').reduce((s,m)=>s+parseFloat(m.quantidade),0);
       return `<div class="alert-row ${s}">
         <div style="flex:1">
           <div class="alert-nome">${esc(ins.nome)}</div>
@@ -481,6 +485,8 @@ function renderDashboard(){
         <td class="r" style="font-family:'DM Mono',monospace;font-size:12px">${fmtQtd(e.quantidade,um)}</td>
         <td class="r" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text3)">${fmtQtd(e.quantidade_minima,um)}</td>
         <td class="r"><span class="badge badge-${s}">${s==='ok'?'Ok':s==='warn'?'Baixo':'Zerado'}</span></td>
+        <td class="r" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${totalEnt>0?'+'+fmtQtd(totalEnt,um):'\u2014'}</td>
+        <td class="r" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">${totalSai>0?'-'+fmtQtd(totalSai,um):'\u2014'}</td>
         <td class="r"><button class="btn btn-ghost btn-sm" onclick="abrirModalMinimo('${ins.id}','${esc(ins.nome)}','${e.quantidade_minima||0}')">Mínimo</button></td>
       </tr>`;
     }).join('')
