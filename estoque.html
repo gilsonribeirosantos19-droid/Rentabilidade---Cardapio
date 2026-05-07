@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estoque · Sushi PN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+  :root{
+    --bg1:#0d0f14;--bg2:#161820;--bg3:#1e2030;
+    --border1:#1e2030;--border2:#252840;
+    --teal:#00d4aa;--teal2:#00b890;--teal-dim:rgba(0,212,170,.12);
+    --amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--green:#22c55e;
+    --text1:#f0f2ff;--text2:#94a3c4;--text3:#5a6080;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+  .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border2);
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid var(--border2);margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:var(--text1)}
+  .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin-bottom:20px}
+  .nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:var(--text2);font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:var(--bg3);color:var(--text1)}
+  .nav-item.active{background:rgba(0,212,170,.1);color:var(--teal)}
+  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid var(--border2);display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:var(--bg2);position:sticky;top:0;z-index:50}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .content{padding:24px;flex:1}
+
+  /* TABS */
+  .tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border2);padding-bottom:0}
+  .tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;
+    border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+  .tab:hover{color:var(--text2)}
+  .tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+
+  /* CARDS */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:24px}
+  .card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px}
+  .card-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .card-value{font-size:24px;font-weight:700;font-family:'DM Mono',monospace}
+  .card-sub{font-size:11px;color:var(--text3);margin-top:4px}
+  .c-teal{color:var(--teal)}
+  .c-amber{color:var(--amber)}
+  .c-red{color:var(--red)}
+  .c-green{color:var(--green)}
+
+  /* ALERTS */
+  .alert-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+  .alert-row{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);
+    padding:12px 16px;display:flex;align-items:center;gap:12px}
+  .alert-row.danger{border-left:3px solid var(--red)}
+  .alert-row.warn{border-left:3px solid var(--amber)}
+  .alert-nome{font-size:13px;font-weight:600;flex:1}
+  .alert-info{font-size:11px;color:var(--text3);margin-top:2px}
+
+  /* BADGE */
+  .badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .badge-ok{background:rgba(34,197,94,.15);color:var(--green)}
+  .badge-warn{background:rgba(245,158,11,.15);color:var(--amber)}
+  .badge-danger{background:rgba(239,68,68,.15);color:var(--red)}
+  .badge-in{background:rgba(34,197,94,.15);color:var(--green)}
+  .badge-out{background:rgba(239,68,68,.15);color:var(--red)}
+
+  /* TABLE */
+  .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;
+    padding:10px 14px;text-align:left;border-bottom:1px solid var(--border2);background:var(--bg3)}
+  .tbl th.r,.tbl td.r{text-align:right}
+  .tbl td{padding:11px 14px;border-bottom:1px solid var(--border2);color:var(--text1)}
+  .tbl tbody tr:last-child td{border-bottom:none}
+  .tbl tbody tr:hover td{background:var(--bg3)}
+  .date-sep td{background:var(--bg3);font-size:11px;font-weight:600;color:var(--text3);padding:6px 14px}
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s}
+  .btn-primary{background:var(--teal);color:#0d1117}
+  .btn-primary:hover{background:var(--teal2)}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid var(--red)}
+  .btn-danger:hover{background:var(--red);color:#fff}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-sm{padding:5px 10px;font-size:12px}
+
+  /* FILTERS */
+  .filter-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;
+    color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .chip:hover{border-color:var(--border2);color:var(--text1)}
+  .chip.active{background:var(--teal-dim);border-color:var(--teal);color:var(--teal)}
+
+  /* TWO COL */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
+    display:none;align-items:center;justify-content:center;padding:16px}
+  .overlay.open{display:flex}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:28px;position:relative}
+  .modal h2{margin-bottom:20px;font-size:16px}
+  .form-group{margin-bottom:14px}
+  .form-group label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+  .form-group input,.form-group select,.form-group textarea{width:100%;background:var(--bg3);
+    border:1px solid var(--border2);color:var(--text1);padding:9px 12px;border-radius:8px;
+    font-size:13px;outline:none;font-family:inherit}
+  .form-group input:focus,.form-group select:focus{border-color:var(--teal)}
+  .form-group select option{background:var(--bg3)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-footer{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border2)}
+
+  /* EMPTY / TOAST */
+  .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);
+    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;
+    transform:translateY(8px);transition:all .25s;max-width:320px}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.ok{border-color:var(--teal);color:var(--teal)}
+  .toast.err{border-color:var(--red);color:var(--red)}
+
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  @media(max-width:700px){.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">Sushi PN</div>
+      <div class="logo-sub">rentabilidade</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Principal</div>
+      <a class="nav-item" href="dashboard.html"><div class="nav-dot"></div>Dashboard</a>
+      <a class="nav-item" href="insumos.html"><div class="nav-dot"></div>Insumos</a>
+      <a class="nav-item" href="fichas_tecnicas.html"><div class="nav-dot"></div>Fichas técnicas</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Precificação</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Análise</div>
+      <a class="nav-item active" href="estoque.html"><div class="nav-dot"></div>Estoque</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Engenharia cardápio</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>CMV teórico x real</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Gestão</div>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Fornecedores</a>
+      <a class="nav-item" href="#"><div class="nav-dot"></div>Alertas</a>
+      <a class="nav-item" href="configuracoes.html"><div class="nav-dot"></div>Configurações</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title">Estoque</span>
+      <div style="display:flex;gap:8px">
+        <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModal('saida')">↑ Saída</button>
+        <button class="btn btn-primary btn-sm" onclick="abrirModal('entrada')">↓ Entrada</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="tabs">
+        <div class="tab active" onclick="setTab('dashboard')">Dashboard</div>
+        <div class="tab" onclick="setTab('relatorio')">Relatório</div>
+      </div>
+
+      <!-- TAB DASHBOARD -->
+      <div id="tab-dashboard">
+        <div class="cards" id="cards-resumo">
+          <div class="card"><div class="card-label">Total insumos</div><div class="card-value">—</div></div>
+          <div class="card"><div class="card-label">Em estoque ok</div><div class="card-value">—</div></div>
+          <div class="card"><div class="card-label">Atenção</div><div class="card-value">—</div></div>
+          <div class="card"><div class="card-label">Críticos</div><div class="card-value">—</div></div>
+        </div>
+
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Alertas de reposição</div>
+        <div id="alert-list" class="alert-list">
+          <div class="empty">Carregando...</div>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:12px">Estoque atual</div>
+            <div class="panel">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>Insumo</th>
+                    <th class="r">Qtd atual</th>
+                    <th class="r">Mínimo</th>
+                    <th class="r">Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-estoque">
+                  <tr><td colspan="5" class="empty">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:12px">Últimas movimentações</div>
+            <div class="panel">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>Insumo</th>
+                    <th>Tipo</th>
+                    <th class="r">Qtd</th>
+                    <th>Motivo</th>
+                    <th class="r">Data</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-movs-recentes">
+                  <tr><td colspan="5" class="empty">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB RELATORIO -->
+      <div id="tab-relatorio" style="display:none">
+        <div class="filter-row">
+          <button class="chip active" onclick="setFiltroData('hoje',this)">Hoje</button>
+          <button class="chip" onclick="setFiltroData('7',this)">7 dias</button>
+          <button class="chip" onclick="setFiltroData('30',this)">30 dias</button>
+          <button class="chip" onclick="setFiltroData('todos',this)">Todos</button>
+          <select id="filtro-insumo" onchange="renderRelatorio()"
+            style="background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
+            padding:5px 10px;border-radius:8px;font-size:12px;outline:none;font-family:inherit">
+            <option value="">Todos os insumos</option>
+          </select>
+          <select id="filtro-tipo" onchange="renderRelatorio()"
+            style="background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
+            padding:5px 10px;border-radius:8px;font-size:12px;outline:none;font-family:inherit">
+            <option value="">Entrada e saída</option>
+            <option value="entrada">Somente entradas</option>
+            <option value="saida">Somente saídas</option>
+          </select>
+        </div>
+
+        <div class="cards" id="cards-relatorio">
+          <div class="card"><div class="card-label">Entradas</div><div class="card-value c-green">—</div></div>
+          <div class="card"><div class="card-label">Saídas</div><div class="card-value c-red">—</div></div>
+          <div class="card"><div class="card-label">Valor entradas</div><div class="card-value c-teal">—</div></div>
+          <div class="card"><div class="card-label">Movimentações</div><div class="card-value">—</div></div>
+        </div>
+
+        <div class="panel">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Data / hora</th>
+                <th>Insumo</th>
+                <th>Tipo</th>
+                <th>Motivo</th>
+                <th class="r">Quantidade</th>
+                <th class="r">Valor unit.</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-relatorio">
+              <tr><td colspan="6" class="empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MOVIMENTAÇÃO -->
+<div id="modal-mov" class="overlay" onclick="if(event.target===this)fecharModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="modal-titulo">Registrar entrada</h2>
+    <div class="form-group">
+      <label>Insumo *</label>
+      <select id="m-insumo">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Quantidade *</label>
+        <input type="number" id="m-qtd" placeholder="Ex: 5" min="0" step="0.001">
+      </div>
+      <div class="form-group">
+        <label>Unidade</label>
+        <input type="text" id="m-unidade" disabled placeholder="—">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Valor unitário (R$)</label>
+        <input type="number" id="m-valor" placeholder="Ex: 72.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Motivo</label>
+        <select id="m-motivo">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observação</label>
+      <input type="text" id="m-obs" placeholder="Opcional...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" id="btn-salvar-mov" onclick="salvarMovimentacao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ESTOQUE MÍNIMO -->
+<div id="modal-minimo" class="overlay" onclick="if(event.target===this)fecharModalMinimo()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:360px">
+    <h2>Estoque mínimo</h2>
+    <div class="form-group">
+      <label id="minimo-label">Quantidade mínima</label>
+      <input type="number" id="m-minimo" placeholder="Ex: 2" min="0" step="0.001">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalMinimo()">Cancelar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="salvarMinimo()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+async function api(endpoint, opts={}) {
+  const method = (opts.method||'GET').toUpperCase();
+  const headers = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+  if (opts.body) headers['Content-Type']='application/json';
+  if (opts.prefer) headers['Prefer']=opts.prefer;
+  else if (method==='POST') headers['Prefer']='return=representation';
+  else if (method==='PATCH') headers['Prefer']='return=representation';
+  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers,body:opts.body||undefined});
+  if (!res.ok){
+    let msg=res.statusText;
+    try{const j=await res.json();msg=j.message||j.error||msg;}catch{}
+    throw new Error(`[${res.status}] ${msg}`);
+  }
+  const ct=res.headers.get('content-type')||'';
+  if (ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
+  return [];
+}
+
+let insumos=[], estoques=[], movimentacoes=[];
+let tipoAtual='entrada', editMinimoId=null, editMinimoInsumoId=null;
+let filtroData='hoje';
+
+async function carregar(){
+  document.getElementById('conn-status').textContent='carregando...';
+  try{
+    [insumos, estoques, movimentacoes] = await Promise.all([
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      api(`estoque?tenant_id=eq.${TENANT_ID}`),
+      api(`movimentacoes_estoque?tenant_id=eq.${TENANT_ID}&order=criado_em.desc&limit=200`),
+    ]);
+    popularSelectInsumos();
+    renderDashboard();
+    renderRelatorio();
+    document.getElementById('conn-status').textContent='● conectado';
+    document.getElementById('conn-status').style.color='var(--teal)';
+  }catch(e){
+    document.getElementById('conn-status').textContent='● erro';
+    document.getElementById('conn-status').style.color='var(--red)';
+    toast('Erro ao carregar: '+e.message,'err');
+  }
+}
+
+function getEstoque(insumoId){
+  return estoques.find(e=>e.insumo_id===insumoId)||{quantidade:0,quantidade_minima:0};
+}
+
+function statusEstoque(qtd, min){
+  if(qtd<=0) return 'danger';
+  if(min>0 && qtd<min) return 'warn';
+  return 'ok';
+}
+
+function fmtQtd(v, um){
+  const n=parseFloat(v)||0;
+  return n%1===0?`${n} ${um||''}`:`${n.toFixed(3).replace(/\.?0+$/,'')} ${um||''}`;
+}
+
+function fmtData(d){
+  const dt=new Date(d);
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})+
+    ' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function fmtDataCurta(d){
+  const dt=new Date(d);
+  const hoje=new Date();
+  const ontem=new Date(hoje);ontem.setDate(hoje.getDate()-1);
+  if(dt.toDateString()===hoje.toDateString()) return 'hoje '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  if(dt.toDateString()===ontem.toDateString()) return 'ontem';
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+}
+
+function renderDashboard(){
+  const total=insumos.length;
+  let ok=0,warn=0,danger=0;
+  for(const ins of insumos){
+    const e=getEstoque(ins.id);
+    const s=statusEstoque(e.quantidade,e.quantidade_minima);
+    if(s==='ok')ok++;
+    else if(s==='warn')warn++;
+    else danger++;
+  }
+
+  document.getElementById('cards-resumo').innerHTML=`
+    <div class="card"><div class="card-label">Total insumos</div><div class="card-value">${total}</div><div class="card-sub">cadastrados</div></div>
+    <div class="card"><div class="card-label">Em estoque ok</div><div class="card-value c-green">${ok}</div><div class="card-sub">nível normal</div></div>
+    <div class="card"><div class="card-label">Atenção</div><div class="card-value c-amber">${warn}</div><div class="card-sub">abaixo do mínimo</div></div>
+    <div class="card"><div class="card-label">Críticos</div><div class="card-value c-red">${danger}</div><div class="card-sub">zerado</div></div>
+  `;
+
+  // alertas
+  const alertas=insumos.filter(ins=>{
+    const e=getEstoque(ins.id);
+    return statusEstoque(e.quantidade,e.quantidade_minima)!=='ok';
+  }).sort((a,b)=>{
+    const sa=statusEstoque(getEstoque(a.id).quantidade,getEstoque(a.id).quantidade_minima);
+    const sb=statusEstoque(getEstoque(b.id).quantidade,getEstoque(b.id).quantidade_minima);
+    return sa===sb?0:sa==='danger'?-1:1;
+  });
+
+  const alertEl=document.getElementById('alert-list');
+  if(!alertas.length){
+    alertEl.innerHTML='<div class="empty" style="color:var(--teal)">Nenhum alerta de reposição 🎉</div>';
+  } else {
+    alertEl.innerHTML=alertas.map(ins=>{
+      const e=getEstoque(ins.id);
+      const s=statusEstoque(e.quantidade,e.quantidade_minima);
+      const um=ins.unidade_medida||ins.unidade_compra||'un';
+      return `<div class="alert-row ${s}">
+        <div style="flex:1">
+          <div class="alert-nome">${esc(ins.nome)}</div>
+          <div class="alert-info">Estoque: ${fmtQtd(e.quantidade,um)} · Mínimo: ${fmtQtd(e.quantidade_minima,um)}</div>
+        </div>
+        <span class="badge badge-${s}">${s==='danger'?'Zerado':'Baixo'}</span>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModal('entrada','${ins.id}')">+ Entrada</button>
+      </div>`;
+    }).join('');
+  }
+
+  // tabela estoque
+  document.getElementById('tabela-estoque').innerHTML=insumos.length
+    ?insumos.map(ins=>{
+      const e=getEstoque(ins.id);
+      const s=statusEstoque(e.quantidade,e.quantidade_minima);
+      const um=ins.unidade_medida||ins.unidade_compra||'un';
+      return `<tr>
+        <td style="font-weight:500">${esc(ins.nome)}</td>
+        <td class="r" style="font-family:'DM Mono',monospace;font-size:12px">${fmtQtd(e.quantidade,um)}</td>
+        <td class="r" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text3)">${fmtQtd(e.quantidade_minima,um)}</td>
+        <td class="r"><span class="badge badge-${s}">${s==='ok'?'Ok':s==='warn'?'Baixo':'Zerado'}</span></td>
+        <td class="r"><button class="btn btn-ghost btn-sm" onclick="abrirModalMinimo('${ins.id}','${esc(ins.nome)}','${e.quantidade_minima||0}')">Mínimo</button></td>
+      </tr>`;
+    }).join('')
+    :'<tr><td colspan="5" class="empty">Nenhum insumo cadastrado</td></tr>';
+
+  // movimentações recentes
+  const recentes=movimentacoes.slice(0,10);
+  document.getElementById('tabela-movs-recentes').innerHTML=recentes.length
+    ?recentes.map(m=>{
+      const ins=insumos.find(i=>i.id===m.insumo_id);
+      const um=ins?(ins.unidade_medida||ins.unidade_compra||'un'):'un';
+      return `<tr>
+        <td style="font-weight:500">${ins?esc(ins.nome):'—'}</td>
+        <td><span class="badge badge-${m.tipo==='entrada'?'in':'out'}">${m.tipo==='entrada'?'Entrada':'Saída'}</span></td>
+        <td class="r" style="font-family:'DM Mono',monospace;font-size:12px;color:${m.tipo==='entrada'?'var(--green)':'var(--red)'}">
+          ${m.tipo==='entrada'?'+':'-'}${fmtQtd(m.quantidade,um)}</td>
+        <td style="color:var(--text3);font-size:12px">${esc(m.motivo||'—')}</td>
+        <td class="r" style="color:var(--text3);font-size:12px">${fmtDataCurta(m.criado_em)}</td>
+      </tr>`;
+    }).join('')
+    :'<tr><td colspan="5" class="empty">Nenhuma movimentação</td></tr>';
+}
+
+function setFiltroData(v, el){
+  filtroData=v;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderRelatorio();
+}
+
+function renderRelatorio(){
+  const filtroInsumo=document.getElementById('filtro-insumo').value;
+  const filtroTipo=document.getElementById('filtro-tipo').value;
+  const agora=new Date();
+  let movsFilt=movimentacoes.filter(m=>{
+    if(filtroInsumo&&m.insumo_id!==filtroInsumo) return false;
+    if(filtroTipo&&m.tipo!==filtroTipo) return false;
+    if(filtroData==='hoje'){
+      const d=new Date(m.criado_em);
+      return d.toDateString()===agora.toDateString();
+    }
+    if(filtroData==='7'){
+      const d=new Date(agora);d.setDate(d.getDate()-7);
+      return new Date(m.criado_em)>=d;
+    }
+    if(filtroData==='30'){
+      const d=new Date(agora);d.setDate(d.getDate()-30);
+      return new Date(m.criado_em)>=d;
+    }
+    return true;
+  });
+
+  const totalEntradas=movsFilt.filter(m=>m.tipo==='entrada').reduce((s,m)=>s+parseFloat(m.quantidade),0);
+  const totalSaidas=movsFilt.filter(m=>m.tipo==='saida').reduce((s,m)=>s+parseFloat(m.quantidade),0);
+  const valorEntradas=movsFilt.filter(m=>m.tipo==='entrada'&&m.valor_unitario)
+    .reduce((s,m)=>s+parseFloat(m.quantidade)*parseFloat(m.valor_unitario),0);
+
+  document.getElementById('cards-relatorio').innerHTML=`
+    <div class="card"><div class="card-label">Entradas</div><div class="card-value c-green">+${totalEntradas.toFixed(2).replace(/\.?0+$/, '')}</div><div class="card-sub">quantidade total</div></div>
+    <div class="card"><div class="card-label">Saídas</div><div class="card-value c-red">-${totalSaidas.toFixed(2).replace(/\.?0+$/, '')}</div><div class="card-sub">quantidade total</div></div>
+    <div class="card"><div class="card-label">Valor entradas</div><div class="card-value c-teal" style="font-size:18px">R$ ${valorEntradas.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="card-sub">custo total</div></div>
+    <div class="card"><div class="card-label">Movimentações</div><div class="card-value">${movsFilt.length}</div><div class="card-sub">registros</div></div>
+  `;
+
+  if(!movsFilt.length){
+    document.getElementById('tabela-relatorio').innerHTML='<tr><td colspan="6" class="empty">Nenhuma movimentação no período</td></tr>';
+    return;
+  }
+
+  // agrupar por data
+  let html='';
+  let dataAtual='';
+  for(const m of movsFilt){
+    const ins=insumos.find(i=>i.id===m.insumo_id);
+    const um=ins?(ins.unidade_medida||ins.unidade_compra||'un'):'un';
+    const d=new Date(m.criado_em);
+    const dStr=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+    if(dStr!==dataAtual){
+      dataAtual=dStr;
+      html+=`<tr class="date-sep"><td colspan="6">${dStr}</td></tr>`;
+    }
+    html+=`<tr>
+      <td style="color:var(--text3);font-size:12px">${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td style="font-weight:500">${ins?esc(ins.nome):'—'}</td>
+      <td><span class="badge badge-${m.tipo==='entrada'?'in':'out'}">${m.tipo==='entrada'?'Entrada':'Saída'}</span></td>
+      <td style="color:var(--text3);font-size:12px">${esc(m.motivo||'—')}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-size:12px;color:${m.tipo==='entrada'?'var(--green)':'var(--red)'}">
+        ${m.tipo==='entrada'?'+':'-'}${fmtQtd(m.quantidade,um)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-size:12px">
+        ${m.valor_unitario?'R$ '+parseFloat(m.valor_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</td>
+    </tr>`;
+  }
+  document.getElementById('tabela-relatorio').innerHTML=html;
+}
+
+function setTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab')[tab==='dashboard'?0:1].classList.add('active');
+  document.getElementById('tab-dashboard').style.display=tab==='dashboard'?'':'none';
+  document.getElementById('tab-relatorio').style.display=tab==='relatorio'?'':'none';
+}
+
+function popularSelectInsumos(){
+  const opts=insumos.map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
+  document.getElementById('m-insumo').innerHTML='<option value="">Selecione...</option>'+opts;
+  document.getElementById('filtro-insumo').innerHTML='<option value="">Todos os insumos</option>'+opts;
+}
+
+function abrirModal(tipo, insumoId=''){
+  tipoAtual=tipo;
+  document.getElementById('modal-titulo').textContent=tipo==='entrada'?'Registrar entrada':'Registrar saída';
+  document.getElementById('m-insumo').value=insumoId;
+  document.getElementById('m-qtd').value='';
+  document.getElementById('m-valor').value='';
+  document.getElementById('m-obs').value='';
+  if(insumoId){
+    const ins=insumos.find(i=>i.id===insumoId);
+    document.getElementById('m-unidade').value=ins?(ins.unidade_medida||ins.unidade_compra||'un'):'';
+  } else {
+    document.getElementById('m-unidade').value='';
+  }
+  const motivos=tipo==='entrada'
+    ?['Compra fornecedor','Transferência','Ajuste de inventário','Outro']
+    :['Uso cozinha','Descarte','Perda','Vencimento','Transferência','Ajuste de inventário','Outro'];
+  document.getElementById('m-motivo').innerHTML=
+    '<option value="">Selecione...</option>'+motivos.map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('modal-mov').classList.add('open');
+}
+
+document.getElementById('m-insumo').addEventListener('change',function(){
+  const ins=insumos.find(i=>i.id===this.value);
+  document.getElementById('m-unidade').value=ins?(ins.unidade_medida||ins.unidade_compra||'un'):'';
+});
+
+async function salvarMovimentacao(){
+  const insumoId=document.getElementById('m-insumo').value;
+  const qtd=parseFloat(document.getElementById('m-qtd').value);
+  const valor=parseFloat(document.getElementById('m-valor').value)||null;
+  const motivo=document.getElementById('m-motivo').value;
+  const obs=document.getElementById('m-obs').value.trim();
+  if(!insumoId){toast('Selecione o insumo.','err');return;}
+  if(!qtd||qtd<=0){toast('Informe a quantidade.','err');return;}
+  const btn=document.getElementById('btn-salvar-mov');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    // salvar movimentação
+    await api('movimentacoes_estoque',{method:'POST',
+      body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insumoId,tipo:tipoAtual,
+        quantidade:qtd,valor_unitario:valor,
+        motivo:motivo||obs||null})});
+
+    // atualizar saldo no estoque
+    const eAtual=getEstoque(insumoId);
+    const novaQtd=tipoAtual==='entrada'
+      ?(parseFloat(eAtual.quantidade)||0)+qtd
+      :Math.max(0,(parseFloat(eAtual.quantidade)||0)-qtd);
+
+    if(eAtual.id){
+      await api(`estoque?id=eq.${eAtual.id}`,{method:'PATCH',prefer:'return=minimal',
+        body:JSON.stringify({quantidade:novaQtd,atualizado_em:new Date().toISOString()})});
+    } else {
+      await api('estoque',{method:'POST',prefer:'return=minimal',
+        body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insumoId,
+          quantidade:novaQtd,quantidade_minima:0})});
+    }
+
+    // se entrada com valor, atualizar preco_compra do insumo
+    if(tipoAtual==='entrada'&&valor){
+      await api(`insumos?id=eq.${insumoId}`,{method:'PATCH',prefer:'return=minimal',
+        body:JSON.stringify({preco_compra:valor})});
+    }
+
+    toast(`${tipoAtual==='entrada'?'Entrada':'Saída'} registrada com sucesso!`,'ok');
+    fecharModal();
+    await carregar();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+
+function abrirModalMinimo(insumoId, nome, minimoAtual){
+  editMinimoInsumoId=insumoId;
+  const e=getEstoque(insumoId);
+  editMinimoId=e.id||null;
+  document.getElementById('minimo-label').textContent=`Estoque mínimo para ${nome}`;
+  document.getElementById('m-minimo').value=minimoAtual||'';
+  document.getElementById('modal-minimo').classList.add('open');
+}
+
+async function salvarMinimo(){
+  const minimo=parseFloat(document.getElementById('m-minimo').value)||0;
+  try{
+    if(editMinimoId){
+      await api(`estoque?id=eq.${editMinimoId}`,{method:'PATCH',prefer:'return=minimal',
+        body:JSON.stringify({quantidade_minima:minimo})});
+    } else {
+      await api('estoque',{method:'POST',prefer:'return=minimal',
+        body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:editMinimoInsumoId,
+          quantidade:0,quantidade_minima:minimo})});
+    }
+    toast('Estoque mínimo salvo!','ok');
+    fecharModalMinimo();
+    await carregar();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+function fecharModal(){document.getElementById('modal-mov').classList.remove('open');}
+function fecharModalMinimo(){document.getElementById('modal-minimo').classList.remove('open');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let toastTimer;
+function toast(msg,tipo='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast '+tipo+' show';
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+carregar();
+</script>
+</body>
+</html>
