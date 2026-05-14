@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login · Sushi PN</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#0d0f14;--bg2:#161820;--bg3:#1e2030;
+    --border:#252840;
+    --red:#dc2626;--red2:#b91c1c;--red-dim:rgba(220,38,38,.12);
+    --text1:#f0f2ff;--text2:#94a3c4;--text3:#5a6080;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg1);
+    color:var(--text1);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+  }
+
+  /* ── CARD ── */
+  .card{
+    width:100%;
+    max-width:400px;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:40px 36px;
+  }
+
+  /* ── LOGO ── */
+  .logo{text-align:center;margin-bottom:32px}
+  .logo-mark{font-size:22px;font-weight:700;color:var(--text1);letter-spacing:-.3px}
+  .logo-sub{
+    font-size:11px;
+    color:var(--red);
+    font-family:'DM Mono',monospace;
+    margin-top:3px;
+    letter-spacing:.04em;
+  }
+
+  /* ── TÍTULOS ── */
+  .card-title{font-size:18px;font-weight:700;margin-bottom:6px}
+  .card-sub{font-size:13px;color:var(--text2);margin-bottom:28px}
+
+  /* ── FORM ── */
+  .form-group{margin-bottom:16px}
+  .form-group label{
+    display:block;
+    font-size:11px;
+    font-weight:600;
+    color:var(--text3);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:6px;
+  }
+  .form-group input{
+    width:100%;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    color:var(--text1);
+    padding:10px 14px;
+    border-radius:var(--radius);
+    font-size:14px;
+    outline:none;
+    font-family:'Inter',sans-serif;
+    transition:border-color .15s;
+  }
+  .form-group input::placeholder{color:var(--text3)}
+  .form-group input:focus{border-color:var(--red)}
+
+  /* ── BOTÃO PRINCIPAL ── */
+  .btn-primary{
+    width:100%;
+    background:var(--red);
+    color:#fff;
+    border:none;
+    border-radius:var(--radius);
+    padding:11px;
+    font-size:14px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition:background .15s;
+    margin-top:8px;
+  }
+  .btn-primary:hover{background:var(--red2)}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+
+  /* ── LINK ESQUECI SENHA ── */
+  .link-forgot{
+    display:block;
+    text-align:center;
+    margin-top:18px;
+    font-size:13px;
+    color:var(--text2);
+    cursor:pointer;
+    transition:color .15s;
+    text-decoration:none;
+    background:none;
+    border:none;
+    font-family:'Inter',sans-serif;
+  }
+  .link-forgot:hover{color:var(--text1)}
+
+  /* ── BOTÃO VOLTAR ── */
+  .btn-ghost{
+    width:100%;
+    background:transparent;
+    color:var(--text2);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:11px;
+    font-size:14px;
+    font-weight:500;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition:all .15s;
+    margin-top:8px;
+  }
+  .btn-ghost:hover{color:var(--text1);border-color:var(--text2)}
+
+  /* ── ALERTA ── */
+  .alert{
+    padding:10px 14px;
+    border-radius:var(--radius);
+    font-size:13px;
+    margin-bottom:16px;
+    display:none;
+  }
+  .alert.err{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.35);color:#fca5a5}
+  .alert.ok{background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.30);color:#86efac}
+  .alert.show{display:block}
+
+  /* ── SEPARADOR ── */
+  .divider{height:1px;background:var(--border);margin:24px 0}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-mark">Sushi PN</div>
+    <div class="logo-sub">rentabilidade</div>
+  </div>
+
+  <!-- PAINEL LOGIN -->
+  <div id="panel-login">
+    <div class="card-title">Entrar</div>
+    <div class="card-sub">Acesse sua conta para continuar</div>
+
+    <div id="alert-login" class="alert"></div>
+
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')entrar()">
+    </div>
+
+    <button class="btn-primary" id="btn-entrar" onclick="entrar()">Entrar</button>
+    <button class="link-forgot" onclick="mostrarReset()">Esqueci a senha</button>
+  </div>
+
+  <!-- PAINEL RESET -->
+  <div id="panel-reset" style="display:none">
+    <div class="card-title">Recuperar senha</div>
+    <div class="card-sub">Enviaremos um link para o seu e-mail</div>
+
+    <div id="alert-reset" class="alert"></div>
+
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="reset-email" placeholder="seu@email.com" autocomplete="email"
+        onkeydown="if(event.key==='Enter')enviarReset()">
+    </div>
+
+    <button class="btn-primary" id="btn-reset" onclick="enviarReset()">Enviar link</button>
+    <button class="btn-ghost" onclick="mostrarLogin()">← Voltar ao login</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+
+const { createClient } = supabase;
+const sb = createClient(SUPA_URL, SUPA_KEY);
+
+function showAlert(panelId, msg, tipo) {
+  const el = document.getElementById('alert-' + panelId);
+  el.textContent = msg;
+  el.className = 'alert ' + tipo + ' show';
+}
+
+function hideAlert(panelId) {
+  document.getElementById('alert-' + panelId).className = 'alert';
+}
+
+function mostrarReset() {
+  document.getElementById('panel-login').style.display = 'none';
+  document.getElementById('panel-reset').style.display = '';
+  const email = document.getElementById('login-email').value;
+  if (email) document.getElementById('reset-email').value = email;
+  hideAlert('reset');
+}
+
+function mostrarLogin() {
+  document.getElementById('panel-reset').style.display = 'none';
+  document.getElementById('panel-login').style.display = '';
+  hideAlert('login');
+}
+
+async function entrar() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  if (!email || !senha) { showAlert('login', 'Preencha e-mail e senha.', 'err'); return; }
+
+  const btn = document.getElementById('btn-entrar');
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+  hideAlert('login');
+
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+    if (error) throw error;
+    window.location.href = 'dashboard.html';
+  } catch (e) {
+    const msg = e.message.includes('Invalid login') || e.message.includes('invalid_credentials')
+      ? 'E-mail ou senha incorretos.'
+      : e.message;
+    showAlert('login', msg, 'err');
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+async function enviarReset() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email) { showAlert('reset', 'Informe seu e-mail.', 'err'); return; }
+
+  const btn = document.getElementById('btn-reset');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  hideAlert('reset');
+
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/dashboard.html',
+    });
+    if (error) throw error;
+    showAlert('reset', 'Link enviado! Verifique sua caixa de entrada.', 'ok');
+  } catch (e) {
+    showAlert('reset', e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enviar link';
+  }
+}
+</script>
+</body>
+</html>
