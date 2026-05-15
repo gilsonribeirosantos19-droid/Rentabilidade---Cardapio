@@ -918,7 +918,7 @@ async function confirmarNfe() {
       await registrarEntrada(it.insId, {
         fornecedor_id:fornId, fornecedor_nome:fornNome,
         quantidade:qtdEst, unidade_compra:it.unidade,
-        fator_conversao:it.fator, custo_unitario:it.valorUnit,
+        fator_conversao:it.fator, custo_unitario:parseFloat((it.valorUnit/it.fator).toFixed(6)),
         tipo:'nfe', nfe_numero:`${it.nNF}/${it.serie}`,
         observacao:`NF-e ${it.nNF}/${it.serie}`,
         criado_em:dataStr+'T12:00:00.000Z',
