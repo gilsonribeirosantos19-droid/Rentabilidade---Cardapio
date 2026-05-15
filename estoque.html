@@ -716,7 +716,7 @@ function openEntrada() {
   document.getElementById('ef-custo').value='';
   document.getElementById('ef-data').value=hoje();
   document.getElementById('conv-preview').style.display='none';
-  open('m-entrada');
+  abrirModal('m-entrada');
 }
 
 function calcConv() {
@@ -948,7 +948,7 @@ function openSaida() {
   document.getElementById('sf-data').value=hoje();
   document.getElementById('sf-motivo').value='';
   document.getElementById('saldo-info').style.display='none';
-  open('m-saida');
+  abrirModal('m-saida');
 }
 
 function showSaldoInfo() {
@@ -1068,7 +1068,7 @@ function openMM(insId) {
   document.getElementById('mm-min').value=s.minimo!=null?s.minimo:'';
   document.getElementById('mm-max').value=s.maximo!=null?s.maximo:'';
   document.getElementById('mm-id').value=insId;
-  open('m-mm');
+  abrirModal('m-mm');
 }
 
 async function salvarMM() {
