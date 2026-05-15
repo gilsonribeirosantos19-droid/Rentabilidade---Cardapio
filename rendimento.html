@@ -325,7 +325,7 @@ async function carregar() {
   try {
     const [insumos, testes] = await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`testes_rendimento?tenant_id=eq.${TENANT_ID}&order=created_at.desc`),
+      api(`testes_rendimento?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
     ]);
     todosInsumos = insumos;
     todosTestes  = testes;
@@ -396,21 +396,21 @@ function renderTabela() {
     const ins    = todosInsumos.find(i => i.id === t.insumo_id);
     const nome   = ins ? esc(ins.nome) : '—';
     const rend   = t.rendimento_pct || 0;
-    const perda  = (t.peso_bruto_kg || 0) - (t.peso_liquido_kg || 0);
+    const perda  = (t.peso_bruto || 0) - (t.peso_liquido || 0);
     const custoReal = ins && ins.preco_compra && rend > 0
       ? ins.preco_compra / (rend / 100)
       : null;
 
     const rendClass = rend >= 85 ? 'rend-ok' : rend >= 70 ? 'rend-warn' : 'rend-bad';
-    const data = t.created_at
-      ? new Date(t.created_at).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'})
+    const data = t.criado_em
+      ? new Date(t.criado_em).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric'})
       : '—';
 
     return `<tr>
       <td style="font-weight:500">${nome}</td>
       <td style="color:var(--text2)">${data}</td>
-      <td class="num mono">${fmtKg(t.peso_bruto_kg)}</td>
-      <td class="num mono">${fmtKg(t.peso_liquido_kg)}</td>
+      <td class="num mono">${fmtKg(t.peso_bruto)}</td>
+      <td class="num mono">${fmtKg(t.peso_liquido)}</td>
       <td class="num"><span class="rend-badge ${rendClass}">${rend.toFixed(1)}%</span></td>
       <td class="num mono" style="color:var(--red)">${fmtKg(perda)}</td>
       <td class="num mono" style="color:var(--amber)">${custoReal ? fmtBRL(custoReal) : '—'}</td>
@@ -496,8 +496,8 @@ async function salvar() {
       body: JSON.stringify({
         tenant_id:       TENANT_ID,
         insumo_id:       insumoId,
-        peso_bruto_kg:   bruto,
-        peso_liquido_kg: liquido,
+        peso_bruto:   bruto,
+        peso_liquido: liquido,
         rendimento_pct:  rendimento,
         observacao:      obs || null,
       }),
