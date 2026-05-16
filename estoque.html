@@ -57,6 +57,10 @@
   .topbar-title{font-size:15px;font-weight:600;flex:1}
   .content{padding:24px;flex:1}
 
+  .tabs{display:flex;gap:2px;margin-bottom:24px;border-bottom:2px solid var(--border2);position:sticky;top:56px;z-index:50;background:#ffffff;padding-top:8px}
+  .tab-btn{padding:9px 18px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit}
+  .tab-btn:hover{color:var(--text2)}
+  .tab-btn.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
   .tab-pane{display:none}
   .tab-pane.active{display:block}
 
@@ -231,6 +235,18 @@
     <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
   </div>
   <div class="content">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" data-tab="entradas" onclick="switchTab('entradas')">Entradas</button>
+      <button class="tab-btn" data-tab="saidas" onclick="switchTab('saidas')">Saídas</button>
+      <button class="tab-btn" data-tab="kardex" onclick="switchTab('kardex')">Kardex</button>
+      <button class="tab-btn" data-tab="inventario" onclick="switchTab('inventario')">Inventário</button>
+      <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')">Fechamento</button>
+      <button class="tab-btn" data-tab="movimentacao" onclick="switchTab('movimentacao')">Movimentação</button>
+      <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">Relatórios</button>
+    </div>
 
     <!-- TAB: DASHBOARD -->
     <div id="tab-dashboard" class="tab-pane active">
