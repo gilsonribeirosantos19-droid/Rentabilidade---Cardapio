@@ -47,7 +47,7 @@
   .flyout-item{display:flex;align-items:center;gap:10px;padding:9px 14px;color:#e2e8f0;
     font-size:13px;text-decoration:none;cursor:pointer;transition:background .12s;white-space:nowrap}
   .flyout-item:hover{background:#334155;color:#f1f5f9}
-  .flyout-item.flyout-current{color:#f87171}
+  .flyout-item.flyout-active{color:#dc2626;font-weight:600}
   .flyout-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
 
   /* MAIN */
@@ -1573,7 +1573,10 @@ function toast(msg,tipo='ok'){
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);
 }
 
-carregar();
+carregar().then(() => {
+  const tab = new URLSearchParams(location.search).get('tab');
+  if (tab) switchTab(tab);
+});
 
 // ── FLYOUT NAV ────────────────────────────────────────────────────
 let _flyTimer = null;
@@ -1583,6 +1586,9 @@ function showFlyout(el) {
   const rect = el.getBoundingClientRect();
   flyout.style.top = rect.top + 'px';
   flyout.style.left = (rect.right + 6) + 'px';
+  flyout.querySelectorAll('.flyout-item').forEach(item => {
+    item.classList.toggle('flyout-active', item.dataset.tab === tabAtual);
+  });
   flyout.style.display = 'block';
 }
 function hideFlyoutDelayed() {
@@ -1594,33 +1600,18 @@ function hideFlyoutDelayed() {
 function clearFlyoutTimer() { clearTimeout(_flyTimer); }
 </script>
 
-<!-- FLYOUT NAV MENU -->
-<div id="nav-flyout"
-  onmouseenter="clearFlyoutTimer()" onmouseleave="hideFlyoutDelayed()">
-  <div class="flyout-header">Navegar para</div>
+<!-- FLYOUT ESTOQUE - ABAS -->
+<div id="nav-flyout" onmouseenter="clearFlyoutTimer()" onmouseleave="hideFlyoutDelayed()">
+  <div class="flyout-header">Estoque · Abas</div>
   <div class="flyout-sep"></div>
-  <a class="flyout-item" onclick="window.open('dashboard.html','_blank')">
-    <span class="flyout-dot"></span>Dashboard
-  </a>
-  <a class="flyout-item" onclick="window.open('insumos.html','_blank')">
-    <span class="flyout-dot"></span>Insumos
-  </a>
-  <a class="flyout-item" onclick="window.open('fichas_tecnicas.html','_blank')">
-    <span class="flyout-dot"></span>Fichas técnicas
-  </a>
-  <a class="flyout-item flyout-current" onclick="window.open('estoque.html','_blank')">
-    <span class="flyout-dot"></span>Estoque
-  </a>
-  <a class="flyout-item" onclick="window.open('producao.html','_blank')">
-    <span class="flyout-dot"></span>Produção
-  </a>
-  <a class="flyout-item" onclick="window.open('rendimento.html','_blank')">
-    <span class="flyout-dot"></span>Rendimento
-  </a>
-  <div class="flyout-sep"></div>
-  <a class="flyout-item" onclick="window.open('configuracoes.html','_blank')">
-    <span class="flyout-dot"></span>Configurações
-  </a>
+  <a class="flyout-item" data-tab="dashboard" onclick="switchTab('dashboard');document.getElementById('nav-flyout').style.display='none'"><span class="flyout-dot"></span>Dashboard</a>
+  <a class="flyout-item" data-tab="entradas" onclick="switchTab('entradas');document.getElementById('nav-flyout').style.display='none'"><span class="flyout-dot"></span>Entradas</a>
+  <a class="flyout-item" data-tab="saidas" onclick="switchTab('saidas');document.getElementById('nav-flyout').style.display='none'"><span class="flyout-dot"></span>Saídas</a>
+  <a class="flyout-item" data-tab="kardex" onclick="switchTab('kardex');document.getElementById('nav-flyout').style.display='none'"><span class="flyout-dot"></span>Kardex</a>
+  <a class="flyout-item" data-tab="inventario" onclick="switchTab('inventario');document.getElementById('nav-flyout').style.display='none'"><span class="flyout-dot"></span>Inventário</a>
+  <a class="flyout-item" data-tab="fechamento" onclick="switchTab('fechamento');document.getElementById('nav-flyout').style.display='none'"><span class="flyout-dot"></span>Fechamento</a>
+  <a class="flyout-item" data-tab="movimentacao" onclick="switchTab('movimentacao');document.getElementById('nav-flyout').style.display='none'"><span class="flyout-dot"></span>Movimentação</a>
+  <a class="flyout-item" data-tab="relatorios" onclick="switchTab('relatorios');document.getElementById('nav-flyout').style.display='none'"><span class="flyout-dot"></span>Relatórios</a>
 </div>
 
 </body>
