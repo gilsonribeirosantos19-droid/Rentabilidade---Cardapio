@@ -40,7 +40,7 @@
   .content{padding:24px;flex:1}
 
   /* TABS */
-  .tabs{display:flex;gap:2px;margin-bottom:24px;border-bottom:2px solid var(--border2)}
+  .tabs{display:flex;gap:2px;margin-bottom:24px;border-bottom:2px solid var(--border2);position:sticky;top:56px;z-index:40;background:var(--bg1)}
   .tab-btn{padding:9px 18px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;
     border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;
     transition:all .15s;font-family:inherit}
@@ -226,6 +226,7 @@
       <button class="tab-btn" data-tab="kardex" onclick="switchTab('kardex')">Kardex</button>
       <button class="tab-btn" data-tab="inventario" onclick="switchTab('inventario')">Inventário</button>
       <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')">Fechamento</button>
+      <button class="tab-btn" data-tab="movimentacao" onclick="switchTab('movimentacao')">Movimentação</button>
       <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">Relatórios</button>
     </div>
 
@@ -401,9 +402,8 @@
       </div>
     </div>
 
-    <!-- TAB: RELATÓRIOS -->
-    <div id="tab-relatorios" class="tab-pane">
-      <!-- MOVIMENTAÇÃO NO PERÍODO -->
+    <!-- TAB: MOVIMENTAÇÃO -->
+    <div id="tab-movimentacao" class="tab-pane">
       <div class="rep-sec">
         <div class="rep-title">Movimentação de Estoque no Período</div>
         <div class="toolbar" style="margin-bottom:12px;flex-wrap:wrap">
@@ -430,6 +430,10 @@
           </table>
         </div></div>
       </div>
+    </div>
+
+    <!-- TAB: RELATÓRIOS -->
+    <div id="tab-relatorios" class="tab-pane">
       <div class="kpi-grid" id="kpis"></div>
       <div class="rep-sec">
         <div class="rep-title">Curva ABC — por valor em estoque (A=80% · B=15% · C=5%)</div>
@@ -744,6 +748,7 @@ function switchTab(tab) {
   if (el) el.classList.add('active');
   if (tab==='kardex') renderKardex();
   if (tab==='inventario') renderInvHistorico();
+  if (tab==='movimentacao') renderMovimentacao();
   if (tab==='relatorios') { renderRelatorios(); }
 }
 // fix: Relatórios button dataset
