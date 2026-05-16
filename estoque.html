@@ -32,15 +32,33 @@
   .nav-item.active{background:#fef2f2;color:#dc2626}
   .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 
+  /* FLYOUT SIDEBAR */
+  .nav-trigger{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:var(--text2);
+    font-size:13px;cursor:pointer;transition:all .15s;user-select:none}
+  .nav-trigger:hover,.nav-trigger.active{background:#fef2f2;color:#dc2626}
+  .nav-trigger.active{background:#fef2f2;color:#dc2626}
+  .nav-trigger-arrow{margin-left:auto;font-size:11px;opacity:.6}
+  #nav-flyout{position:fixed;background:#1e293b;border:1px solid #334155;border-radius:10px;
+    min-width:210px;padding:6px 0;z-index:300;display:none;
+    box-shadow:0 12px 32px rgba(0,0,0,.35)}
+  .flyout-header{padding:8px 14px 4px;font-size:10px;font-weight:600;color:#64748b;
+    letter-spacing:.08em;text-transform:uppercase}
+  .flyout-sep{height:1px;background:#334155;margin:4px 0}
+  .flyout-item{display:flex;align-items:center;gap:10px;padding:9px 14px;color:#e2e8f0;
+    font-size:13px;text-decoration:none;cursor:pointer;transition:background .12s;white-space:nowrap}
+  .flyout-item:hover{background:#334155;color:#f1f5f9}
+  .flyout-item.flyout-current{color:#f87171}
+  .flyout-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+
   /* MAIN */
   .main{flex:1;display:flex;flex-direction:column;min-width:0}
   .topbar{height:56px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
-    padding:0 24px;gap:12px;background:#ffffff;color:var(--text1);position:sticky;top:0;z-index:50}
+    padding:0 24px;gap:12px;background:#ffffff;color:var(--text1);position:sticky;top:0;z-index:60}
   .topbar-title{font-size:15px;font-weight:600;flex:1}
   .content{padding:24px;flex:1}
 
   /* TABS */
-  .tabs{display:flex;gap:2px;margin-bottom:24px;border-bottom:2px solid var(--border2);position:sticky;top:56px;z-index:40;background:var(--bg1)}
+  .tabs{display:flex;gap:2px;margin-bottom:24px;border-bottom:2px solid var(--border2);position:sticky;top:56px;z-index:50;background:#ffffff;padding-top:8px}
   .tab-btn{padding:9px 18px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;
     border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;
     transition:all .15s;font-family:inherit}
@@ -195,7 +213,10 @@
   </div>
   <div class="nav-group">
     <div class="nav-label">Análise</div>
-    <a class="nav-item active" href="estoque.html"><div class="nav-dot"></div>Estoque</a>
+    <div class="nav-trigger active" id="nav-estoque-trigger"
+      onmouseenter="showFlyout(this)" onmouseleave="hideFlyoutDelayed()">
+      <div class="nav-dot"></div>Estoque<span class="nav-trigger-arrow">›</span>
+    </div>
     <a class="nav-item" href="producao.html"><div class="nav-dot"></div>Produção</a>
     <a class="nav-item" href="rendimento.html"><div class="nav-dot"></div>Rendimento</a>
     <a class="nav-item" href="#"><div class="nav-dot"></div>Engenharia cardápio</a>
@@ -1553,6 +1574,54 @@ function toast(msg,tipo='ok'){
 }
 
 carregar();
+
+// ── FLYOUT NAV ────────────────────────────────────────────────────
+let _flyTimer = null;
+function showFlyout(el) {
+  clearTimeout(_flyTimer);
+  const flyout = document.getElementById('nav-flyout');
+  const rect = el.getBoundingClientRect();
+  flyout.style.top = rect.top + 'px';
+  flyout.style.left = (rect.right + 6) + 'px';
+  flyout.style.display = 'block';
+}
+function hideFlyoutDelayed() {
+  _flyTimer = setTimeout(() => {
+    const flyout = document.getElementById('nav-flyout');
+    if (flyout) flyout.style.display = 'none';
+  }, 180);
+}
+function clearFlyoutTimer() { clearTimeout(_flyTimer); }
 </script>
+
+<!-- FLYOUT NAV MENU -->
+<div id="nav-flyout"
+  onmouseenter="clearFlyoutTimer()" onmouseleave="hideFlyoutDelayed()">
+  <div class="flyout-header">Navegar para</div>
+  <div class="flyout-sep"></div>
+  <a class="flyout-item" onclick="window.open('dashboard.html','_blank')">
+    <span class="flyout-dot"></span>Dashboard
+  </a>
+  <a class="flyout-item" onclick="window.open('insumos.html','_blank')">
+    <span class="flyout-dot"></span>Insumos
+  </a>
+  <a class="flyout-item" onclick="window.open('fichas_tecnicas.html','_blank')">
+    <span class="flyout-dot"></span>Fichas técnicas
+  </a>
+  <a class="flyout-item flyout-current" onclick="window.open('estoque.html','_blank')">
+    <span class="flyout-dot"></span>Estoque
+  </a>
+  <a class="flyout-item" onclick="window.open('producao.html','_blank')">
+    <span class="flyout-dot"></span>Produção
+  </a>
+  <a class="flyout-item" onclick="window.open('rendimento.html','_blank')">
+    <span class="flyout-dot"></span>Rendimento
+  </a>
+  <div class="flyout-sep"></div>
+  <a class="flyout-item" onclick="window.open('configuracoes.html','_blank')">
+    <span class="flyout-dot"></span>Configurações
+  </a>
+</div>
+
 </body>
 </html>
