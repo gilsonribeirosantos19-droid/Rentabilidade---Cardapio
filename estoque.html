@@ -144,6 +144,13 @@
   .kx-sai{color:var(--red);font-family:'DM Mono',monospace;font-weight:600}
   .kx-sal{font-family:'DM Mono',monospace;font-weight:700}
 
+  /* INVENTÁRIO */
+  .inv-pos{color:#16a34a;font-weight:700;font-family:'DM Mono',monospace}
+  .inv-neg{color:var(--red);font-weight:700;font-family:'DM Mono',monospace}
+  .inv-zero{color:var(--text3);font-family:'DM Mono',monospace}
+  .b-aberto{background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .b-fechado{background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+
   /* RELATÓRIOS */
   .rep-title{font-size:14px;font-weight:600;margin-bottom:12px;
     padding-bottom:8px;border-bottom:1px solid var(--border2)}
@@ -217,6 +224,8 @@
       <button class="tab-btn" data-tab="entradas" onclick="switchTab('entradas')">Entradas</button>
       <button class="tab-btn" data-tab="saidas" onclick="switchTab('saidas')">Saídas</button>
       <button class="tab-btn" data-tab="kardex" onclick="switchTab('kardex')">Kardex</button>
+      <button class="tab-btn" data-tab="inventario" onclick="switchTab('inventario')">Inventário</button>
+      <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')">Fechamento</button>
       <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">Relatórios</button>
     </div>
 
@@ -327,8 +336,100 @@
       </div></div>
     </div>
 
+    <!-- TAB: INVENTÁRIO -->
+    <div id="tab-inventario" class="tab-pane">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="novoInventario()">+ Novo inventário</button>
+        <span id="inv-info" style="font-size:12px;color:var(--text3);margin-left:8px"></span>
+        <div class="ml">
+          <button class="btn btn-ghost" id="btn-fechar-inv" style="display:none" onclick="fecharInventario()">✓ Fechar inventário</button>
+        </div>
+      </div>
+      <div id="inv-aberto" style="display:none">
+        <div style="margin-bottom:12px;padding:10px 14px;background:#eff6ff;border-left:3px solid var(--blue);border-radius:8px;font-size:12px;color:#1e40af">
+          Digite a quantidade contada para cada item. Diferença = contado − sistema.
+        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Insumo</th><th>Unidade</th>
+              <th class="r">Saldo Sistema</th><th class="r">Qtd. Contada</th>
+              <th class="r">Diferença</th><th class="r">Custo Médio</th><th class="r">Valor Diferença</th>
+            </tr></thead>
+            <tbody id="inv-body"></tbody>
+          </table>
+        </div></div>
+      </div>
+      <div id="inv-historico">
+        <div class="rep-title" style="margin-top:24px">Histórico de inventários</div>
+        <div class="tbl-wrap" style="margin-top:12px"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Data</th><th class="c">Status</th><th class="r">Itens</th><th class="r">Ajuste Total (R$)</th>
+            </tr></thead>
+            <tbody id="inv-hist-body"><tr><td colspan="4" class="empty"><b>Carregando...</b></td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- TAB: FECHAMENTO MENSAL -->
+    <div id="tab-fechamento" class="tab-pane">
+      <div class="toolbar">
+        <input class="field" type="date" id="fm-de">
+        <input class="field" type="date" id="fm-ate">
+        <button class="btn btn-primary" onclick="calcFechamento()">Calcular CMV</button>
+        <div class="ml">
+          <button class="btn btn-ghost" id="btn-exp-fm" style="display:none" onclick="exportFechamentoCSV()">↓ Exportar CSV</button>
+        </div>
+      </div>
+      <div id="fm-cards" class="sc-grid" style="display:none"></div>
+      <div id="fm-tabela" style="display:none">
+        <div class="rep-title">Detalhamento por insumo</div>
+        <div class="tbl-wrap" style="margin-top:12px"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Insumo</th><th>Categoria</th>
+              <th class="r">Est. Inicial</th><th class="r">+ Compras</th>
+              <th class="r">+ Perdas</th><th class="r">Consumo</th>
+              <th class="r">− Est. Final</th><th class="r">CMV Real</th>
+            </tr></thead>
+            <tbody id="fm-body"></tbody>
+            <tfoot id="fm-foot"></tfoot>
+          </table>
+        </div></div>
+      </div>
+    </div>
+
     <!-- TAB: RELATÓRIOS -->
     <div id="tab-relatorios" class="tab-pane">
+      <!-- MOVIMENTAÇÃO NO PERÍODO -->
+      <div class="rep-sec">
+        <div class="rep-title">Movimentação de Estoque no Período</div>
+        <div class="toolbar" style="margin-bottom:12px;flex-wrap:wrap">
+          <input class="field field-sm" type="date" id="mov-de">
+          <input class="field field-sm" type="date" id="mov-ate">
+          <select class="field field-sm" id="mov-cat"><option value="">Todas categorias</option></select>
+          <select class="field field-sm" id="mov-ins"><option value="">Todos os insumos</option></select>
+          <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportMovCSV()">↓ CSV</button>
+        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Descrição</th><th>Un.</th><th>Grupo</th>
+              <th class="r">Q.Anterior</th><th class="r">V.Anterior</th>
+              <th class="r">Q.Entradas</th><th class="r">V.Entradas</th>
+              <th class="r">Q.Consumo</th><th class="r">V.Consumo</th>
+              <th class="r">Q.Perdas</th><th class="r">V.Perdas</th>
+              <th class="r">Q.Final</th><th class="r">V.Final</th>
+              <th class="r">C.Médio</th>
+            </tr></thead>
+            <tbody id="mov-body"><tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr></tbody>
+            <tfoot id="mov-foot"></tfoot>
+          </table>
+        </div></div>
+      </div>
       <div class="kpi-grid" id="kpis"></div>
       <div class="rep-sec">
         <div class="rep-title">Curva ABC — por valor em estoque (A=80% · B=15% · C=5%)</div>
@@ -625,6 +726,11 @@ function popularSelects() {
   document.getElementById('ent-f-ins').innerHTML = todos;
   document.getElementById('sai-f-ins').innerHTML = todos;
   document.getElementById('kx-ins').innerHTML = '<option value="">Selecione um insumo…</option>'+insOpts;
+  document.getElementById('mov-ins').innerHTML = todos;
+  // categorias únicas
+  const cats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+  document.getElementById('mov-cat').innerHTML = '<option value="">Todas categorias</option>'+
+    cats.map(c=>`<option value="${c}">${esc(c)}</option>`).join('');
 }
 
 // ── TABS ──────────────────────────────────────────────────────────
@@ -637,7 +743,8 @@ function switchTab(tab) {
   const el = document.getElementById('tab-'+tab);
   if (el) el.classList.add('active');
   if (tab==='kardex') renderKardex();
-  if (tab==='relatorios') renderRelatorios();
+  if (tab==='inventario') renderInvHistorico();
+  if (tab==='relatorios') { renderRelatorios(); }
 }
 // fix: Relatórios button dataset
 document.addEventListener('DOMContentLoaded', () => {
@@ -647,8 +754,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (m) b.dataset.tab = m[1];
   });
   const d = new Date(); d.setDate(d.getDate()-30);
-  document.getElementById('kx-de').value = d.toISOString().split('T')[0];
+  const d30 = d.toISOString().split('T')[0];
+  document.getElementById('kx-de').value = d30;
   document.getElementById('kx-ate').value = hoje();
+  // Fechamento: mês atual
+  const ini = new Date(); ini.setDate(1);
+  document.getElementById('fm-de').value = ini.toISOString().split('T')[0];
+  document.getElementById('fm-ate').value = hoje();
+  // Movimentação: últimos 30 dias
+  document.getElementById('mov-de').value = d30;
+  document.getElementById('mov-ate').value = hoje();
   document.getElementById('ef-data').value = hoje();
   document.getElementById('sf-data').value = hoje();
   document.getElementById('nfe-data').value = hoje();
@@ -1148,6 +1263,258 @@ function renderRelatorios() {
         <td class="r mono">${brl(s.custo_medio)}</td>
         <td class="r mono">${qtd(s.quantidade)}</td></tr>`;}).join('')
     ||'<tr><td colspan="3" class="empty"><b>Sem dados</b></td></tr>';
+}
+
+// ── INVENTÁRIO ────────────────────────────────────────────────────
+let invAtual = null;
+
+function novoInventario() {
+  invAtual = insumos.map(i => {
+    const s = getSaldo(i.id);
+    return { ins: i, qtdSistema: s.quantidade || 0, custoMedio: s.custo_medio || 0 };
+  });
+  document.getElementById('inv-aberto').style.display = '';
+  document.getElementById('btn-fechar-inv').style.display = '';
+  document.getElementById('inv-info').textContent = `${invAtual.length} insumos · ${hoje()}`;
+  document.getElementById('inv-body').innerHTML = invAtual.map((r, idx) => `<tr>
+    <td style="font-weight:500">${esc(r.ins.nome)}</td>
+    <td style="color:var(--text3)">${r.ins.unidade_medida||r.ins.unidade_compra||'un'}</td>
+    <td class="r mono">${qtd(r.qtdSistema)}</td>
+    <td class="r"><input type="number" class="field field-sm" id="inv-q-${idx}"
+      value="${r.qtdSistema.toFixed(3)}" step="0.001" min="0"
+      oninput="calcInvDiff(${idx})" style="width:90px;text-align:right"></td>
+    <td class="r" id="inv-d-${idx}">—</td>
+    <td class="r mono">${brl(r.custoMedio)}</td>
+    <td class="r" id="inv-v-${idx}">—</td>
+  </tr>`).join('');
+  invAtual.forEach((_,idx) => calcInvDiff(idx));
+}
+
+function calcInvDiff(idx) {
+  if (!invAtual) return;
+  const r = invAtual[idx];
+  const contada = parseFloat(document.getElementById(`inv-q-${idx}`)?.value) || 0;
+  const diff = contada - r.qtdSistema;
+  const vDiff = diff * r.custoMedio;
+  const cls = diff > 0.0001 ? 'inv-pos' : diff < -0.0001 ? 'inv-neg' : 'inv-zero';
+  const sinal = diff > 0 ? '+' : '';
+  const dEl = document.getElementById(`inv-d-${idx}`);
+  const vEl = document.getElementById(`inv-v-${idx}`);
+  if (dEl) dEl.innerHTML = `<span class="${cls}">${sinal}${qtd(diff)}</span>`;
+  if (vEl) vEl.innerHTML = `<span class="${cls}">${sinal}${brl(vDiff)}</span>`;
+}
+
+async function fecharInventario() {
+  if (!invAtual || !confirm('Fechar o inventário? Os saldos serão atualizados com as quantidades contadas.')) return;
+  const btn = document.getElementById('btn-fechar-inv');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  try {
+    const invRes = await api('inventarios', {
+      method: 'POST',
+      body: JSON.stringify({ tenant_id: TENANT_ID, status: 'fechado', criado_em: new Date().toISOString() }),
+    });
+    const invId = invRes[0]?.id;
+    if (!invId) throw new Error('Falha ao criar registro de inventário.');
+    const itens = invAtual.map((r, idx) => ({
+      inventario_id: invId, insumo_id: r.ins.id,
+      qtd_sistema: r.qtdSistema,
+      qtd_contada: parseFloat(document.getElementById(`inv-q-${idx}`)?.value) || 0,
+      custo_medio: r.custoMedio,
+    }));
+    await api('itens_inventario', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(itens) });
+    for (const it of itens) await upsertSaldo(it.insumo_id, it.qtd_contada, it.custo_medio);
+    toast(`Inventário fechado! ${itens.length} saldos atualizados.`, 'ok');
+    document.getElementById('inv-aberto').style.display = 'none';
+    document.getElementById('btn-fechar-inv').style.display = 'none';
+    document.getElementById('inv-info').textContent = '';
+    invAtual = null;
+    await carregar();
+    renderInvHistorico();
+  } catch(e) { toast('Erro: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '✓ Fechar inventário'; }
+}
+
+async function renderInvHistorico() {
+  const tbody = document.getElementById('inv-hist-body');
+  try {
+    const lista = await api(`inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`);
+    if (!lista.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty"><b>Nenhum inventário realizado</b></td></tr>'; return; }
+    tbody.innerHTML = lista.map(inv => `<tr>
+      <td class="mono">${fmtData(inv.criado_em)}</td>
+      <td class="c"><span class="${inv.status==='fechado'?'b-fechado':'b-aberto'}">${inv.status==='fechado'?'Fechado':'Aberto'}</span></td>
+      <td class="r">—</td><td class="r mono">—</td>
+    </tr>`).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="4" class="empty"><b>Erro ao carregar</b></td></tr>`; }
+}
+
+// ── FECHAMENTO MENSAL ─────────────────────────────────────────────
+async function calcFechamento() {
+  const de = document.getElementById('fm-de').value;
+  const ate = document.getElementById('fm-ate').value;
+  if (!de || !ate) { toast('Selecione o período.', 'err'); return; }
+  try {
+    const entsPer = entradas.filter(e => e.criado_em >= de && e.criado_em <= ate + 'T23:59:59');
+    const saisPer = saidas.filter(s => s.criado_em >= de && s.criado_em <= ate + 'T23:59:59');
+
+    let invIni = [];
+    try {
+      const r = await api(`inventarios?tenant_id=eq.${TENANT_ID}&criado_em=lt.${de}&status=eq.fechado&order=criado_em.desc&limit=1`);
+      if (r.length) invIni = await api(`itens_inventario?inventario_id=eq.${r[0].id}`);
+    } catch(e) {}
+
+    let invFin = []; let usaSaldo = true;
+    try {
+      const r = await api(`inventarios?tenant_id=eq.${TENANT_ID}&criado_em=lte.${ate}T23:59:59&status=eq.fechado&order=criado_em.desc&limit=1`);
+      if (r.length && r[0].criado_em >= de) { invFin = await api(`itens_inventario?inventario_id=eq.${r[0].id}`); usaSaldo = false; }
+    } catch(e) {}
+
+    let totIni=0, totEnt=0, totPerd=0, totCons=0, totFin=0;
+    const rows = insumos.map(ins => {
+      const s = getSaldo(ins.id); const cm = s.custo_medio || 0;
+      const iniIt = invIni.find(i => i.insumo_id === ins.id);
+      const qIni = iniIt?.qtd_contada || 0; const vIni = qIni * (iniIt?.custo_medio || cm);
+      const entsIns = entsPer.filter(e => e.insumo_id === ins.id);
+      const qEnt = entsIns.reduce((a,e) => a + (e.quantidade||0), 0);
+      const vEnt = entsIns.reduce((a,e) => a + (e.custo_total||0), 0);
+      const perdIns = saisPer.filter(x => x.insumo_id === ins.id && ['perda','vencimento','descarte'].includes(x.tipo));
+      const qPerd = perdIns.reduce((a,p) => a + (p.quantidade||0), 0); const vPerd = qPerd * cm;
+      const consIns = saisPer.filter(x => x.insumo_id === ins.id && ['consumo','transferencia'].includes(x.tipo));
+      const qCons = consIns.reduce((a,c) => a + (c.quantidade||0), 0); const vCons = qCons * cm;
+      const finIt = usaSaldo ? null : invFin.find(i => i.insumo_id === ins.id);
+      const qFin = finIt?.qtd_contada ?? (s.quantidade||0); const vFin = Math.max(0,qFin) * cm;
+      const cmv = vIni + vEnt + vPerd - vFin;
+      totIni+=vIni; totEnt+=vEnt; totPerd+=vPerd; totCons+=vCons; totFin+=vFin;
+      if (!qIni && !qEnt && !qPerd && !qCons && !qFin) return null;
+      return { nome: ins.nome, cat: ins.categoria||'—', vIni, vEnt, vPerd, vCons, vFin, cmv };
+    }).filter(Boolean);
+
+    const cmvTotal = totIni + totEnt + totPerd - totFin;
+    document.getElementById('fm-cards').style.display = '';
+    document.getElementById('fm-cards').innerHTML = `
+      <div class="sc"><div class="sc-label">Est. Inicial</div><div class="sc-value c-blue" style="font-size:18px">${brl(totIni)}</div></div>
+      <div class="sc"><div class="sc-label">+ Compras</div><div class="sc-value c-green" style="font-size:18px">${brl(totEnt)}</div></div>
+      <div class="sc"><div class="sc-label">+ Perdas</div><div class="sc-value c-red" style="font-size:18px">${brl(totPerd)}</div></div>
+      <div class="sc"><div class="sc-label">− Est. Final</div><div class="sc-value c-amber" style="font-size:18px">${brl(totFin)}</div></div>
+      <div class="sc"><div class="sc-label">= CMV Real</div><div class="sc-value" style="font-size:18px;font-weight:700">${brl(cmvTotal)}</div></div>`;
+    document.getElementById('fm-tabela').style.display = '';
+    document.getElementById('btn-exp-fm').style.display = '';
+    document.getElementById('fm-body').innerHTML = rows.map(r => `<tr>
+      <td>${esc(r.nome)}</td><td style="color:var(--text3)">${esc(r.cat)}</td>
+      <td class="r mono">${brl(r.vIni)}</td><td class="r mono">${brl(r.vEnt)}</td>
+      <td class="r mono">${brl(r.vPerd)}</td><td class="r mono">${brl(r.vCons)}</td>
+      <td class="r mono">${brl(r.vFin)}</td><td class="r mono" style="font-weight:600">${brl(r.cmv)}</td>
+    </tr>`).join('');
+    document.getElementById('fm-foot').innerHTML = `<tr style="background:var(--bg3);font-weight:700">
+      <td colspan="2">Total</td>
+      <td class="r mono">${brl(totIni)}</td><td class="r mono">${brl(totEnt)}</td>
+      <td class="r mono">${brl(totPerd)}</td><td class="r mono">${brl(totCons)}</td>
+      <td class="r mono">${brl(totFin)}</td><td class="r mono" style="color:var(--teal)">${brl(cmvTotal)}</td>
+    </tr>`;
+    window._fmRows = rows; window._fmMeta = { de, ate, totIni, totEnt, totPerd, totCons, totFin, cmvTotal };
+  } catch(e) { toast('Erro ao calcular: ' + e.message, 'err'); }
+}
+
+function exportFechamentoCSV() {
+  if (!window._fmRows) return;
+  const { de, ate } = window._fmMeta;
+  const header = 'Insumo;Categoria;Est.Inicial;Compras;Perdas;Consumo;Est.Final;CMV Real\n';
+  const body = window._fmRows.map(r =>
+    `${r.nome};${r.cat};${r.vIni.toFixed(2)};${r.vEnt.toFixed(2)};${r.vPerd.toFixed(2)};${r.vCons.toFixed(2)};${r.vFin.toFixed(2)};${r.cmv.toFixed(2)}`
+  ).join('\n');
+  downloadCSV(`fechamento_${de}_${ate}.csv`, header + body);
+}
+
+// ── MOVIMENTAÇÃO NO PERÍODO ───────────────────────────────────────
+async function renderMovimentacao() {
+  const de = document.getElementById('mov-de').value;
+  const ate = document.getElementById('mov-ate').value;
+  const catF = document.getElementById('mov-cat').value;
+  const insF = document.getElementById('mov-ins').value;
+  const tbody = document.getElementById('mov-body');
+  const tfoot = document.getElementById('mov-foot');
+  if (!de || !ate) {
+    tbody.innerHTML = '<tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr>';
+    return;
+  }
+  let invIni = [];
+  try {
+    const r = await api(`inventarios?tenant_id=eq.${TENANT_ID}&criado_em=lt.${de}&status=eq.fechado&order=criado_em.desc&limit=1`);
+    if (r.length) invIni = await api(`itens_inventario?inventario_id=eq.${r[0].id}`);
+  } catch(e) {}
+
+  const entsPer = entradas.filter(e => e.criado_em >= de && e.criado_em <= ate + 'T23:59:59');
+  const saisPer = saidas.filter(s => s.criado_em >= de && s.criado_em <= ate + 'T23:59:59');
+
+  let insFilt = insumos;
+  if (catF) insFilt = insFilt.filter(i => (i.categoria||'') === catF);
+  if (insF) insFilt = insFilt.filter(i => i.id === insF);
+
+  let tQAnt=0,tVAnt=0,tQEnt=0,tVEnt=0,tQCon=0,tVCon=0,tQPerd=0,tVPerd=0,tQFin=0,tVFin=0;
+  const rows = insFilt.map(ins => {
+    const s = getSaldo(ins.id); const cm = s.custo_medio||0;
+    const antIt = invIni.find(i => i.insumo_id === ins.id);
+    const qAnt = antIt?.qtd_contada||0; const vAnt = qAnt*(antIt?.custo_medio||cm);
+    const entsI = entsPer.filter(e => e.insumo_id === ins.id);
+    const qEnt = entsI.reduce((a,e)=>a+(e.quantidade||0),0);
+    const vEnt = entsI.reduce((a,e)=>a+(e.custo_total||0),0);
+    const conI = saisPer.filter(x=>x.insumo_id===ins.id&&['consumo','transferencia'].includes(x.tipo));
+    const qCon = conI.reduce((a,c)=>a+(c.quantidade||0),0); const vCon=qCon*cm;
+    const perI = saisPer.filter(x=>x.insumo_id===ins.id&&['perda','vencimento','descarte'].includes(x.tipo));
+    const qPerd=perI.reduce((a,p)=>a+(p.quantidade||0),0); const vPerd=qPerd*cm;
+    const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd); const vFin=qFin*cm;
+    tQAnt+=qAnt;tVAnt+=vAnt;tQEnt+=qEnt;tVEnt+=vEnt;tQCon+=qCon;tVCon+=vCon;
+    tQPerd+=qPerd;tVPerd+=vPerd;tQFin+=qFin;tVFin+=vFin;
+    return `<tr>
+      <td style="font-weight:500">${esc(ins.nome)}</td>
+      <td style="color:var(--text3)">${ins.unidade_medida||ins.unidade_compra||'—'}</td>
+      <td style="color:var(--text3)">${esc(ins.categoria||'—')}</td>
+      <td class="r mono">${qtd(qAnt)}</td><td class="r mono">${brl(vAnt)}</td>
+      <td class="r mono">${qtd(qEnt)}</td><td class="r mono">${brl(vEnt)}</td>
+      <td class="r mono">${qtd(qCon)}</td><td class="r mono">${brl(vCon)}</td>
+      <td class="r mono">${qtd(qPerd)}</td><td class="r mono">${brl(vPerd)}</td>
+      <td class="r mono">${qtd(qFin)}</td><td class="r mono">${brl(vFin)}</td>
+      <td class="r mono">${brl(cm)}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = rows.join('') || '<tr><td colspan="14" class="empty"><b>Nenhum dado encontrado</b></td></tr>';
+  tfoot.innerHTML = `<tr style="background:var(--bg3);font-weight:700">
+    <td colspan="3">Total</td>
+    <td class="r mono">${qtd(tQAnt)}</td><td class="r mono">${brl(tVAnt)}</td>
+    <td class="r mono">${qtd(tQEnt)}</td><td class="r mono">${brl(tVEnt)}</td>
+    <td class="r mono">${qtd(tQCon)}</td><td class="r mono">${brl(tVCon)}</td>
+    <td class="r mono">${qtd(tQPerd)}</td><td class="r mono">${brl(tVPerd)}</td>
+    <td class="r mono">${qtd(tQFin)}</td><td class="r mono">${brl(tVFin)}</td>
+    <td></td>
+  </tr>`;
+  window._movRows = { insFilt, invIni, entsPer, saisPer, de, ate };
+}
+
+function exportMovCSV() {
+  if (!window._movRows) return;
+  const { insFilt, invIni, entsPer, saisPer, de, ate } = window._movRows;
+  const header = 'Descrição;Unidade;Grupo;Q.Anterior;V.Anterior;Q.Entradas;V.Entradas;Q.Consumo;V.Consumo;Q.Perdas;V.Perdas;Q.Final;V.Final;C.Médio\n';
+  const body = insFilt.map(ins => {
+    const s=getSaldo(ins.id);const cm=s.custo_medio||0;
+    const antIt=invIni.find(i=>i.insumo_id===ins.id);
+    const qAnt=antIt?.qtd_contada||0;const vAnt=qAnt*(antIt?.custo_medio||cm);
+    const entsI=entsPer.filter(e=>e.insumo_id===ins.id);
+    const qEnt=entsI.reduce((a,e)=>a+(e.quantidade||0),0);const vEnt=entsI.reduce((a,e)=>a+(e.custo_total||0),0);
+    const conI=saisPer.filter(x=>x.insumo_id===ins.id&&['consumo','transferencia'].includes(x.tipo));
+    const qCon=conI.reduce((a,c)=>a+(c.quantidade||0),0);const vCon=qCon*cm;
+    const perI=saisPer.filter(x=>x.insumo_id===ins.id&&['perda','vencimento','descarte'].includes(x.tipo));
+    const qPerd=perI.reduce((a,p)=>a+(p.quantidade||0),0);const vPerd=qPerd*cm;
+    const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd);const vFin=qFin*cm;
+    return `${ins.nome};${ins.unidade_medida||'un'};${ins.categoria||'—'};${qAnt.toFixed(3)};${vAnt.toFixed(2)};${qEnt.toFixed(3)};${vEnt.toFixed(2)};${qCon.toFixed(3)};${vCon.toFixed(2)};${qPerd.toFixed(3)};${vPerd.toFixed(2)};${qFin.toFixed(3)};${vFin.toFixed(2)};${cm.toFixed(4)}`;
+  }).join('\n');
+  downloadCSV(`movimentacao_${de}_${ate}.csv`, header + body);
+}
+
+function downloadCSV(filename, content) {
+  const blob = new Blob(['﻿'+content], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── SALDO UPSERT ──────────────────────────────────────────────────
