@@ -234,14 +234,20 @@ async function entrar() {
   hideAlert('login');
 
   try {
-    const { error } = await sb.auth.signInWithPassword({ email, password: senha });
-    if (error) throw error;
+    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPA_KEY
+      },
+      body: JSON.stringify({ email, password: senha })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Erro');
+    localStorage.setItem('sb_token', data.access_token);
     window.location.href = 'dashboard.html';
   } catch (e) {
-    const msg = e.message.includes('Invalid login') || e.message.includes('invalid_credentials')
-      ? 'E-mail ou senha incorretos.'
-      : e.message;
-    showAlert('login', msg, 'err');
+    showAlert('login', e.message, 'err');
     btn.disabled = false;
     btn.textContent = 'Entrar';
   }
