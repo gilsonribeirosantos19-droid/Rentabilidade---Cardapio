@@ -459,7 +459,6 @@
               <th>Categoria</th>
               <th>Unidade</th>
               <th>Preço compra</th>
-              <th>Rendimento</th>
               <th>Custo real/kg</th>
               <th>Status</th>
               <th></th>
@@ -661,14 +660,6 @@
         <td><span class="badge badge-purple">${i.categoria || '—'}</span></td>
         <td class="td-muted">${i.unidade_compra}</td>
         <td class="td-mono">R$ ${parseFloat(i.preco_compra).toFixed(2)}</td>
-        <td>
-          <div class="rend-wrap">
-            <div class="rend-bar-bg">
-              <div class="rend-bar" style="width:${rend}%;background:${rendColor}"></div>
-            </div>
-            <span class="rend-num" style="color:${rendColor}">${rend.toFixed(0)}%</span>
-          </div>
-        </td>
         <td class="td-mono" style="font-weight:600">R$ ${custoReal.toFixed(2)}</td>
         <td><span class="badge ${status}">${statusTxt}</span></td>
         <td><button class="btn" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();deletar('${i.id}','${i.nome}')">✕</button></td>
