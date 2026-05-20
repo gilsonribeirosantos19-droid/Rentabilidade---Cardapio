@@ -414,22 +414,43 @@ function renderTabela() {
       <td class="num"><span class="rend-badge ${rendClass}">${rend.toFixed(1)}%</span></td>
       <td class="num mono" style="color:var(--red)">${fmtKg(perda)}</td>
       <td class="num mono" style="color:var(--amber)">${custoReal ? fmtBRL(custoReal) : '—'}</td>
-      <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:12px"
-        onclick="excluir('${t.id}')">Excluir</button></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px"
+          onclick="editarTeste('${t.id}')">Editar</button>
+        <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;color:var(--red);border-color:var(--red)"
+          onclick="excluir('${t.id}')">Excluir</button>
+      </td>
     </tr>`;
   }).join('');
 }
 
 // ── MODAL ──────────────────────────────────────────────────────────
 
+let editId = null;
+
 function abrirModal() {
-  document.getElementById('f-insumo').value = '';
-  document.getElementById('f-bruto').value  = '';
+  editId = null;
+  document.getElementById('modal-titulo').textContent = 'Novo Teste de Rendimento';
+  document.getElementById('f-insumo').value  = '';
+  document.getElementById('f-bruto').value   = '';
   document.getElementById('f-liquido').value = '';
-  document.getElementById('f-obs').value    = '';
+  document.getElementById('f-obs').value     = '';
   document.getElementById('preview-box').style.display = 'none';
   document.getElementById('modal').classList.add('open');
   document.getElementById('f-insumo').focus();
+}
+
+function editarTeste(id) {
+  const t = todosTestes.find(x => x.id === id);
+  if (!t) return;
+  editId = id;
+  document.getElementById('modal-titulo').textContent = 'Editar Teste de Rendimento';
+  document.getElementById('f-insumo').value  = t.insumo_id;
+  document.getElementById('f-bruto').value   = t.peso_bruto;
+  document.getElementById('f-liquido').value = t.peso_liquido;
+  document.getElementById('f-obs').value     = t.observacao || '';
+  calcPreview();
+  document.getElementById('modal').classList.add('open');
 }
 
 function fecharModal() {
@@ -489,7 +510,20 @@ async function salvar() {
   btn.textContent = 'Salvando...';
 
   try {
-    // 1. Registrar teste
+    // 1. Registrar ou atualizar teste
+    if (editId) {
+      await api(`testes_rendimento?id=eq.${editId}`, {
+        method: 'PATCH',
+        prefer: 'return=minimal',
+        body: JSON.stringify({
+          insumo_id: insumoId,
+          peso_bruto: bruto,
+          peso_liquido: liquido,
+          rendimento_pct: rendimento,
+          observacao: obs || null,
+        }),
+      });
+    } else {
     await api('testes_rendimento', {
       method: 'POST',
       prefer: 'return=minimal',
@@ -502,12 +536,13 @@ async function salvar() {
         observacao:      obs || null,
       }),
     });
+    } // fim else
 
-    // 2. Atualizar rendimento_pct do insumo com a média dos últimos testes
-    const testesDoInsumo = todosTestes.filter(t => t.insumo_id === insumoId);
-    const rendimentos    = [...testesDoInsumo.map(t => t.rendimento_pct || 0), rendimento];
+    // 2. Atualizar rendimento_pct do insumo com a média de todos os testes
+    await carregar();
+    const testesAtualizados = todosTestes.filter(t => t.insumo_id === insumoId);
     const mediaRendimento = parseFloat(
-      (rendimentos.reduce((s, v) => s + v, 0) / rendimentos.length).toFixed(2)
+      (testesAtualizados.reduce((s, t) => s + (t.rendimento_pct || 0), 0) / (testesAtualizados.length || 1)).toFixed(2)
     );
 
     await api(`insumos?id=eq.${insumoId}`, {
