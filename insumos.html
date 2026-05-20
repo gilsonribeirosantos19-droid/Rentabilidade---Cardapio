@@ -505,11 +505,6 @@
           <input class="form-input" id="f-preco" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcular()">
         </div>
         <div class="form-group">
-          <label class="form-label">Rendimento (%)</label>
-          <input class="form-input" id="f-rend" type="number" step="0.1" min="1" max="100" value="100" oninput="calcular()">
-          <span class="form-hint">Ex: salmão após limpeza = 68%</span>
-        </div>
-        <div class="form-group">
           <label class="form-label">Fator de correção</label>
           <input class="form-input" id="f-fc" type="number" step="0.01" min="0.01" max="1" value="1.00" placeholder="1.00">
           <span class="form-hint">Perda no pré-preparo (0 a 1)</span>
@@ -689,7 +684,6 @@
     document.getElementById('f-cat').value   = dados?.categoria || '';
     document.getElementById('f-und').value   = dados?.unidade_compra || '';
     document.getElementById('f-preco').value = dados?.preco_compra || '';
-    document.getElementById('f-rend').value  = dados?.rendimento_pct || 100;
     document.getElementById('f-fc').value    = dados?.fator_correcao || 1;
     document.getElementById('f-obs').value   = dados?.observacao || '';
     calcular();
@@ -704,9 +698,7 @@
 
   function calcular() {
     const preco = parseFloat(document.getElementById('f-preco').value) || 0;
-    const rend  = parseFloat(document.getElementById('f-rend').value) || 100;
-    const custo = rend > 0 ? preco / (rend / 100) : 0;
-    document.getElementById('calc-custo').textContent = `R$ ${custo.toFixed(2)}`;
+    document.getElementById('calc-custo').textContent = `R$ ${preco.toFixed(2)}`;
   }
 
   function editarInsumo(id) {
@@ -720,11 +712,10 @@
     const cat   = document.getElementById('f-cat').value;
     const und   = document.getElementById('f-und').value;
     const preco = parseFloat(document.getElementById('f-preco').value);
-    const rend  = parseFloat(document.getElementById('f-rend').value);
     const fc    = parseFloat(document.getElementById('f-fc').value);
     const obs   = document.getElementById('f-obs').value.trim();
 
-    if (!nome || !cat || !und || isNaN(preco) || isNaN(rend)) {
+    if (!nome || !cat || !und || isNaN(preco)) {
       toast('Preencha todos os campos obrigatórios.', 'err');
       return;
     }
@@ -736,9 +727,11 @@
     const payload = {
       tenant_id: TENANT_ID,
       nome, categoria: cat, unidade_compra: und,
-      preco_compra: preco, rendimento_pct: rend,
-      fator_correcao: fc, observacao: obs || null
+      preco_compra: preco, fator_correcao: fc, observacao: obs || null
     };
+    // rendimento_pct só é definido na criação (padrão 100%)
+    // em edições, é gerenciado pela aba Rendimento
+    if (!editId) payload.rendimento_pct = 100;
 
     try {
       if (editId) {
