@@ -273,6 +273,63 @@
         </div>
       </div>
 
+      <!-- GRUPOS DE COMPRA -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Grupos de Compra</div>
+            <div class="section-sub">Organize os insumos em grupos para solicitação de compra dos gerentes</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalGrupoCompra()">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Nome</th><th>Insumos</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-grupos-compra">
+              <tr class="empty-row"><td colspan="4"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INVENTÁRIOS -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Inventários</div>
+            <div class="section-sub">Crie inventários para as lojas preencherem a contagem de estoque</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalInventario()">+ Criar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Descrição</th><th>Loja</th><th>Período</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-inventarios">
+              <tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MOTIVOS DE PERDA -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Motivos de Perda</div>
+            <div class="section-sub">Motivos disponíveis para lançamento de perdas pelos gerentes</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalMotivo()">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Nome</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-motivos">
+              <tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- USUÁRIOS -->
       <div class="section">
         <div class="section-header">
@@ -292,6 +349,63 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GRUPO DE COMPRA -->
+<div id="m-grupo-compra" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-grupo-compra')">
+  <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+    <div class="modal-header"><span class="modal-title" id="gc-titulo">Novo Grupo de Compra</span><button class="modal-close" onclick="fecharModalExtra('m-grupo-compra')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nome *</label><input type="text" id="gc-nome" placeholder="Ex: Frios e Proteína"></div>
+      <div class="form-group">
+        <label>Insumos do grupo</label>
+        <input type="text" id="gc-busca" placeholder="Buscar insumo..." oninput="filtrarInsumosGC()" style="margin-bottom:8px">
+        <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border2);border-radius:8px" id="gc-insumos-list"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalExtra('m-grupo-compra')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarGrupoCompra()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: INVENTÁRIO -->
+<div id="m-inventario" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-inventario')">
+  <div class="modal" style="max-width:600px" onclick="event.stopPropagation()">
+    <div class="modal-header"><span class="modal-title" id="inv-titulo">Criar Inventário</span><button class="modal-close" onclick="fecharModalExtra('m-inventario')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Descrição *</label><input type="text" id="inv-desc" placeholder="Ex: Inventário Mensal — Ponta Negra"></div>
+      <div class="form-group"><label>Loja *</label><select id="inv-loja" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text1);padding:9px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit"></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>Data início *</label><input type="date" id="inv-inicio"></div>
+        <div class="form-group"><label>Data fim *</label><input type="date" id="inv-fim"></div>
+      </div>
+      <div class="form-group">
+        <label>Insumos do inventário</label>
+        <input type="text" id="inv-busca" placeholder="Buscar insumo..." oninput="filtrarInsumosInv()" style="margin-bottom:8px">
+        <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border2);border-radius:8px" id="inv-insumos-list"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalExtra('m-inventario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarInventario()">Criar Inventário</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: MOTIVO DE PERDA -->
+<div id="m-motivo" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-motivo')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><span class="modal-title" id="mot-titulo">Novo Motivo</span><button class="modal-close" onclick="fecharModalExtra('m-motivo')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nome *</label><input type="text" id="mot-nome" placeholder="Ex: Validade vencida"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalExtra('m-motivo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMotivo()">Salvar</button>
     </div>
   </div>
 </div>
@@ -881,8 +995,197 @@
     } catch(e) { toast('Erro: '+e.message,'err'); }
   }
 
+  // ══════════════════════════════════════════════════════════
+  // GRUPOS DE COMPRA
+  // ══════════════════════════════════════════════════════════
+  let todosInsumos = [], gcSelecionados = new Set(), gcEditId = null;
+  let invSelecionados = new Set(), invEditId = null;
+  let motivoEditId = null;
+
+  async function carregarGruposCompra() {
+    const tbody = document.getElementById('tbody-grupos-compra');
+    try {
+      const grupos = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
+      if (!grupos.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="4">Nenhum grupo cadastrado</td></tr>'; return; }
+      const counts = await Promise.all(grupos.map(g=>api(`grupos_compra_itens?grupo_id=eq.${g.id}`)));
+      tbody.innerHTML = grupos.map((g,i)=>`<tr>
+        <td style="font-weight:500">${escHtml(g.nome)}</td>
+        <td class="td-mono">${counts[i].length} insumo(s)</td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${g.ativo?'#dcfce7':'#fee2e2'};color:${g.ativo?'#16a34a':'#dc2626'}">${g.ativo?'Ativo':'Inativo'}</span></td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalGrupoCompra('${g.id}')">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="excluirItem('grupos_compra','${g.id}','${escHtml(g.nome)}')">Excluir</button>
+        </div></td>
+      </tr>`).join('');
+    } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="4">Erro: ${escHtml(e.message)}</td></tr>`; }
+  }
+
+  async function abrirModalGrupoCompra(id) {
+    gcEditId = id||null;
+    gcSelecionados.clear();
+    if (!todosInsumos.length) todosInsumos = await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    document.getElementById('gc-titulo').textContent = id ? 'Editar Grupo' : 'Novo Grupo de Compra';
+    document.getElementById('gc-nome').value = '';
+    document.getElementById('gc-busca').value = '';
+    if (id) {
+      const g = await api(`grupos_compra?id=eq.${id}&limit=1`).then(r=>r[0]);
+      document.getElementById('gc-nome').value = g?.nome||'';
+      const its = await api(`grupos_compra_itens?grupo_id=eq.${id}`);
+      its.forEach(it => gcSelecionados.add(it.insumo_id));
+    }
+    renderInsumosGC('');
+    document.getElementById('m-grupo-compra').classList.add('open');
+  }
+
+  function renderInsumosGC(busca) {
+    const lista = todosInsumos.filter(i=>!busca||i.nome.toLowerCase().includes(busca.toLowerCase()));
+    document.getElementById('gc-insumos-list').innerHTML = lista.map(ins=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border2);font-size:13px">
+        <input type="checkbox" ${gcSelecionados.has(ins.id)?'checked':''} onchange="gcToggle('${ins.id}',this.checked)" style="width:auto">
+        ${escHtml(ins.nome)} <span style="font-size:11px;color:var(--text3);margin-left:auto">${escHtml(ins.unidade_medida||'')}</span>
+      </label>`).join('');
+  }
+  function filtrarInsumosGC() { renderInsumosGC(document.getElementById('gc-busca').value); }
+  function gcToggle(id, checked) { checked ? gcSelecionados.add(id) : gcSelecionados.delete(id); }
+
+  async function salvarGrupoCompra() {
+    const nome = document.getElementById('gc-nome').value.trim();
+    if (!nome) { toast('Informe o nome.','err'); return; }
+    try {
+      let grupoId = gcEditId;
+      if (gcEditId) {
+        await api(`grupos_compra?id=eq.${gcEditId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,ativo:true})});
+        await api(`grupos_compra_itens?grupo_id=eq.${gcEditId}`,{method:'DELETE',prefer:'return=minimal'});
+      } else {
+        const res = await api('grupos_compra',{method:'POST',body:JSON.stringify({nome,tenant_id:TENANT_ID,ativo:true})});
+        grupoId = res[0]?.id;
+      }
+      if (gcSelecionados.size && grupoId) {
+        const payload = [...gcSelecionados].map(insId=>({grupo_id:grupoId,insumo_id:insId}));
+        await api('grupos_compra_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
+      }
+      toast('Grupo salvo!','ok');
+      fecharModalExtra('m-grupo-compra');
+      carregarGruposCompra();
+    } catch(e) { toast('Erro: '+e.message,'err'); }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // INVENTÁRIOS
+  // ══════════════════════════════════════════════════════════
+  async function carregarInventariosAdmin() {
+    const tbody = document.getElementById('tbody-inventarios');
+    try {
+      const invs = await api(`inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`);
+      if (!invs.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="5">Nenhum inventário criado</td></tr>'; return; }
+      tbody.innerHTML = invs.map(inv=>{
+        const loja = lojas.find(l=>l.id===inv.loja_id);
+        const periodo = inv.data_inicial?`${formatDate(inv.data_inicial)} a ${formatDate(inv.data_final)}`:'—';
+        const statusColor = {ativo:'#16a34a',encerrado:'#1d4ed8',cancelado:'#dc2626'}[inv.status]||'#64748b';
+        const statusBg = {ativo:'#dcfce7',encerrado:'#dbeafe',cancelado:'#fee2e2'}[inv.status]||'#f1f5f9';
+        return `<tr>
+          <td style="font-weight:500">${escHtml(inv.descricao||'—')}</td>
+          <td>${escHtml(loja?.nome||'—')}</td>
+          <td class="td-mono">${periodo}</td>
+          <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${statusBg};color:${statusColor}">${inv.status}</span></td>
+          <td><div class="td-actions">
+            <button class="btn btn-danger btn-sm" onclick="excluirItem('inventarios','${inv.id}','inventário')">Excluir</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+    } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="5">Erro: ${escHtml(e.message)}</td></tr>`; }
+  }
+
+  async function abrirModalInventario() {
+    invSelecionados.clear();
+    if (!todosInsumos.length) todosInsumos = await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    document.getElementById('inv-desc').value='';
+    document.getElementById('inv-busca').value='';
+    document.getElementById('inv-inicio').value='';
+    document.getElementById('inv-fim').value='';
+    document.getElementById('inv-loja').innerHTML = lojas.map(l=>`<option value="${l.id}">${escHtml(l.nome)}</option>`).join('');
+    renderInsumosInv('');
+    document.getElementById('m-inventario').classList.add('open');
+  }
+
+  function renderInsumosInv(busca) {
+    const lista = todosInsumos.filter(i=>!busca||i.nome.toLowerCase().includes(busca.toLowerCase()));
+    document.getElementById('inv-insumos-list').innerHTML = lista.map(ins=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border2);font-size:13px">
+        <input type="checkbox" ${invSelecionados.has(ins.id)?'checked':''} onchange="invToggle('${ins.id}',this.checked)" style="width:auto">
+        ${escHtml(ins.nome)} <span style="font-size:11px;color:var(--text3);margin-left:auto">${escHtml(ins.unidade_medida||'')}</span>
+      </label>`).join('');
+  }
+  function filtrarInsumosInv() { renderInsumosInv(document.getElementById('inv-busca').value); }
+  function invToggle(id, checked) { checked ? invSelecionados.add(id) : invSelecionados.delete(id); }
+
+  async function salvarInventario() {
+    const desc = document.getElementById('inv-desc').value.trim();
+    const lojaId = document.getElementById('inv-loja').value;
+    const inicio = document.getElementById('inv-inicio').value;
+    const fim = document.getElementById('inv-fim').value;
+    if (!desc) { toast('Informe a descrição.','err'); return; }
+    if (!lojaId) { toast('Selecione a loja.','err'); return; }
+    if (!inicio||!fim) { toast('Informe as datas.','err'); return; }
+    if (!invSelecionados.size) { toast('Selecione ao menos um insumo.','err'); return; }
+    try {
+      const res = await api('inventarios',{method:'POST',body:JSON.stringify({
+        tenant_id:TENANT_ID, loja_id:lojaId, descricao:desc,
+        data_inicial:inicio, data_final:fim, status:'ativo'
+      })});
+      const invId = res[0]?.id;
+      if (!invId) throw new Error('Falha ao criar inventário.');
+      const payload = [...invSelecionados].map(insId=>({inventario_id:invId,insumo_id:insId,qtd_contada:0,qtd_estoque:0}));
+      await api('inventario_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
+      toast('Inventário criado!','ok');
+      fecharModalExtra('m-inventario');
+      carregarInventariosAdmin();
+    } catch(e) { toast('Erro: '+e.message,'err'); }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // MOTIVOS DE PERDA
+  // ══════════════════════════════════════════════════════════
+  async function carregarMotivos() {
+    const tbody = document.getElementById('tbody-motivos');
+    try {
+      const motivos = await api(`motivos_perda?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
+      if (!motivos.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="3">Nenhum motivo cadastrado</td></tr>'; return; }
+      tbody.innerHTML = motivos.map(m=>`<tr>
+        <td style="font-weight:500">${escHtml(m.nome)}</td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${m.ativo?'#dcfce7':'#fee2e2'};color:${m.ativo?'#16a34a':'#dc2626'}">${m.ativo?'Ativo':'Inativo'}</span></td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalMotivo('${m.id}','${escHtml(m.nome)}')">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="excluirItem('motivos_perda','${m.id}','${escHtml(m.nome)}')">Excluir</button>
+        </div></td>
+      </tr>`).join('');
+    } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="3">Erro: ${escHtml(e.message)}</td></tr>`; }
+  }
+
+  function abrirModalMotivo(id, nome) {
+    motivoEditId = id||null;
+    document.getElementById('mot-titulo').textContent = id ? 'Editar Motivo' : 'Novo Motivo';
+    document.getElementById('mot-nome').value = nome||'';
+    document.getElementById('m-motivo').classList.add('open');
+  }
+
+  async function salvarMotivo() {
+    const nome = document.getElementById('mot-nome').value.trim();
+    if (!nome) { toast('Informe o nome.','err'); return; }
+    try {
+      if (motivoEditId) {
+        await api(`motivos_perda?id=eq.${motivoEditId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome})});
+      } else {
+        await api('motivos_perda',{method:'POST',prefer:'return=minimal',body:JSON.stringify({nome,tenant_id:TENANT_ID,ativo:true})});
+      }
+      toast('Motivo salvo!','ok');
+      fecharModalExtra('m-motivo');
+      carregarMotivos();
+    } catch(e) { toast('Erro: '+e.message,'err'); }
+  }
+
   // ── INIT ──────────────────────────────────────────────────
-  carregar(); carregarExtras();
+  carregar(); carregarExtras(); carregarGruposCompra(); carregarInventariosAdmin(); carregarMotivos();
 </script>
 
 </body>
