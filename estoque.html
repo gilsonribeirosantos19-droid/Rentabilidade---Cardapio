@@ -226,6 +226,7 @@
       <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')">Fechamento</button>
       <button class="tab-btn" data-tab="movimentacao" onclick="switchTab('movimentacao')">Movimentação</button>
       <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">Relatórios</button>
+      <button class="tab-btn" data-tab="faturamento" onclick="switchTab('faturamento')">Faturamento</button>
       <button class="tab-btn" data-tab="compras" onclick="switchTab('compras')">Sugestão de Compras</button>
     </div>
 
@@ -429,6 +430,26 @@
           </table>
         </div></div>
       </div>
+    </div>
+
+    <!-- TAB: FATURAMENTO -->
+    <div id="tab-faturamento" class="tab-pane">
+      <div class="sc-grid" id="fat-cards"></div>
+      <div class="toolbar">
+        <input class="field field-sm" type="date" id="fat-de">
+        <input class="field field-sm" type="date" id="fat-ate">
+        <button class="btn btn-primary btn-sm" onclick="renderFaturamento()">Filtrar</button>
+        <button class="btn btn-ghost btn-sm ml" onclick="abrirModal('m-fat')">+ Lançar faturamento</button>
+      </div>
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr>
+            <th>Data</th><th>Canal</th><th class="r">Valor</th><th>Observação</th><th></th>
+          </tr></thead>
+          <tbody id="fat-body"><tr><td colspan="5" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr></tbody>
+          <tfoot id="fat-foot"></tfoot>
+        </table>
+      </div></div>
     </div>
 
     <!-- TAB: SUGESTÃO DE COMPRAS -->
@@ -696,6 +717,41 @@
   </div>
 </div>
 
+<!-- MODAL: FATURAMENTO -->
+<div id="m-fat" class="overlay" onclick="if(event.target===this)fecharModal('m-fat')">
+  <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
+    <h2 id="fat-modal-titulo">Lançar Faturamento</h2>
+    <div class="fg">
+      <label>Data *</label>
+      <input type="date" id="fat-data">
+    </div>
+    <div class="fg">
+      <label>Canal *</label>
+      <select id="fat-canal">
+        <option value="salão">Salão</option>
+        <option value="delivery">Delivery próprio</option>
+        <option value="ifood">iFood</option>
+        <option value="rappi">Rappi</option>
+        <option value="outros">Outros</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Valor (R$) *</label>
+      <input type="number" id="fat-valor" min="0" step="0.01" placeholder="0,00">
+    </div>
+    <div class="fg">
+      <label>Observação</label>
+      <input type="text" id="fat-obs" placeholder="Opcional">
+    </div>
+    <input type="hidden" id="fat-edit-id">
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModal('m-fat')">Cancelar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" id="btn-fat-salvar" onclick="salvarFaturamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -794,6 +850,7 @@ function switchTab(tab) {
   if (tab==='movimentacao') renderMovimentacao();
   if (tab==='relatorios') { renderRelatorios(); }
   if (tab==='compras') { renderCompras(); }
+  if (tab==='faturamento') { iniciarFaturamento(); }
 }
 // fix: Relatórios button dataset
 document.addEventListener('DOMContentLoaded', () => {
@@ -1438,13 +1495,25 @@ async function calcFechamento() {
     }).filter(Boolean);
 
     const cmvTotal = totIni + totEnt + totPerd - totFin;
+
+    let faturamentoTotal = 0;
+    try {
+      const fats = await api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`);
+      faturamentoTotal = fats.reduce((s, f) => s + (f.valor||0), 0);
+    } catch(e) {}
+
+    const cmvPct = faturamentoTotal > 0 ? (cmvTotal / faturamentoTotal * 100) : null;
+    const cmvCor = cmvPct === null ? '' : cmvPct <= 30 ? 'c-green' : cmvPct <= 38 ? 'c-amber' : 'c-red';
+
     document.getElementById('fm-cards').style.display = '';
     document.getElementById('fm-cards').innerHTML = `
       <div class="sc"><div class="sc-label">Est. Inicial</div><div class="sc-value c-blue" style="font-size:18px">${brl(totIni)}</div></div>
       <div class="sc"><div class="sc-label">+ Compras</div><div class="sc-value c-green" style="font-size:18px">${brl(totEnt)}</div></div>
       <div class="sc"><div class="sc-label">+ Perdas</div><div class="sc-value c-red" style="font-size:18px">${brl(totPerd)}</div></div>
       <div class="sc"><div class="sc-label">− Est. Final</div><div class="sc-value c-amber" style="font-size:18px">${brl(totFin)}</div></div>
-      <div class="sc"><div class="sc-label">= CMV Real</div><div class="sc-value" style="font-size:18px;font-weight:700">${brl(cmvTotal)}</div></div>`;
+      <div class="sc"><div class="sc-label">= CMV Real</div><div class="sc-value" style="font-size:18px;font-weight:700">${brl(cmvTotal)}</div></div>
+      <div class="sc"><div class="sc-label">Faturamento</div><div class="sc-value c-blue" style="font-size:18px">${faturamentoTotal > 0 ? brl(faturamentoTotal) : '—'}</div><div class="sc-sub">${faturamentoTotal > 0 ? '' : 'lance na aba Faturamento'}</div></div>
+      <div class="sc"><div class="sc-label">CMV%</div><div class="sc-value ${cmvCor}" style="font-size:22px;font-weight:700">${cmvPct !== null ? cmvPct.toFixed(1)+'%' : '—'}</div><div class="sc-sub">${cmvPct !== null ? (cmvPct<=30?'✓ Excelente':cmvPct<=38?'⚠ Atenção':'✗ Crítico') : 'sem faturamento'}</div></div>`;
     document.getElementById('fm-tabela').style.display = '';
     document.getElementById('btn-exp-fm').style.display = '';
     document.getElementById('fm-body').innerHTML = rows.map(r => `<tr>
@@ -1594,6 +1663,103 @@ function toast(msg,tipo='ok'){
   const el=document.getElementById('toast');
   el.textContent=msg;el.className='toast '+tipo+' show';
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);
+}
+
+// ── FATURAMENTO ───────────────────────────────────────────────────
+function iniciarFaturamento() {
+  const now = new Date();
+  const ini = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  const fim = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().split('T')[0];
+  if (!document.getElementById('fat-de').value) document.getElementById('fat-de').value = ini;
+  if (!document.getElementById('fat-ate').value) document.getElementById('fat-ate').value = fim;
+  renderFaturamento();
+}
+
+async function renderFaturamento() {
+  const de  = document.getElementById('fat-de').value;
+  const ate = document.getElementById('fat-ate').value;
+  if (!de || !ate) return;
+  try {
+    const data = await api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}&order=data.desc`);
+    const totalGeral = data.reduce((s, f) => s + (f.valor||0), 0);
+    const porCanal = {};
+    data.forEach(f => { porCanal[f.canal] = (porCanal[f.canal]||0) + (f.valor||0); });
+    const melhorCanal = Object.entries(porCanal).sort((a,b) => b[1]-a[1])[0];
+
+    document.getElementById('fat-cards').innerHTML = `
+      <div class="sc"><div class="sc-label">Total do período</div>
+        <div class="sc-value c-green">${brl(totalGeral)}</div>
+        <div class="sc-sub">${data.length} lançamento(s)</div></div>
+      <div class="sc"><div class="sc-label">Maior canal</div>
+        <div class="sc-value" style="font-size:18px">${melhorCanal ? melhorCanal[0] : '—'}</div>
+        <div class="sc-sub">${melhorCanal ? brl(melhorCanal[1]) : '—'}</div></div>
+      ${Object.entries(porCanal).map(([c,v]) =>
+        `<div class="sc"><div class="sc-label">${c}</div>
+          <div class="sc-value c-blue" style="font-size:18px">${brl(v)}</div>
+          <div class="sc-sub">${((v/totalGeral)*100).toFixed(1)}% do total</div></div>`
+      ).join('')}`;
+
+    const canais = {salão:'Salão',delivery:'Delivery',ifood:'iFood',rappi:'Rappi',outros:'Outros'};
+    document.getElementById('fat-body').innerHTML = data.length ? data.map(f => `<tr>
+      <td class="mono">${fmtData(f.data)}</td>
+      <td><span class="badge b-manual">${canais[f.canal]||f.canal}</span></td>
+      <td class="r mono" style="font-weight:600">${brl(f.valor)}</td>
+      <td style="color:var(--text2)">${esc(f.observacao||'—')}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="editarFaturamento('${f.id}','${f.data}','${f.canal}',${f.valor},'${esc(f.observacao||'')}')">Editar</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirFaturamento('${f.id}')">Excluir</button>
+      </td>
+    </tr>`).join('') : `<tr><td colspan="5" class="empty">Nenhum lançamento no período</td></tr>`;
+
+    document.getElementById('fat-foot').innerHTML = data.length ? `
+      <tr style="background:var(--bg3);font-weight:700">
+        <td colspan="2" style="padding:10px 14px">Total</td>
+        <td class="r mono" style="padding:10px 14px;color:var(--teal)">${brl(totalGeral)}</td>
+        <td colspan="2"></td>
+      </tr>` : '';
+  } catch(e) { toast('Erro ao carregar faturamento: '+e.message,'err'); }
+}
+
+async function salvarFaturamento() {
+  const id    = document.getElementById('fat-edit-id').value;
+  const data  = document.getElementById('fat-data').value;
+  const canal = document.getElementById('fat-canal').value;
+  const valor = parseFloat(document.getElementById('fat-valor').value);
+  const obs   = document.getElementById('fat-obs').value.trim();
+  if (!data || !canal || isNaN(valor) || valor <= 0) { toast('Preencha data, canal e valor.','err'); return; }
+  const btn = document.getElementById('btn-fat-salvar');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    const payload = { tenant_id: TENANT_ID, data, canal, valor, observacao: obs||null };
+    if (id) {
+      await api(`faturamento?id=eq.${id}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify(payload) });
+    } else {
+      await api('faturamento', { method:'POST', prefer:'return=minimal', body:JSON.stringify(payload) });
+    }
+    fecharModal('m-fat');
+    renderFaturamento();
+    toast('Faturamento salvo!','ok');
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  finally { btn.disabled=false; btn.textContent='Salvar'; }
+}
+
+function editarFaturamento(id, data, canal, valor, obs) {
+  document.getElementById('fat-modal-titulo').textContent = 'Editar Faturamento';
+  document.getElementById('fat-edit-id').value = id;
+  document.getElementById('fat-data').value    = data;
+  document.getElementById('fat-canal').value   = canal;
+  document.getElementById('fat-valor').value   = valor;
+  document.getElementById('fat-obs').value     = obs;
+  abrirModal('m-fat');
+}
+
+async function excluirFaturamento(id) {
+  if (!confirm('Excluir este lançamento?')) return;
+  try {
+    await api(`faturamento?id=eq.${id}`, { method:'DELETE', prefer:'return=minimal' });
+    renderFaturamento();
+    toast('Lançamento excluído.','ok');
+  } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
 // ── SUGESTÃO DE COMPRAS ───────────────────────────────────────────
