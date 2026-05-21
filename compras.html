@@ -247,11 +247,12 @@
       <div id="tab-pedidos" class="tab-pane">
         <div class="toolbar">
           <select class="field field-sm" id="ped-fil-status" onchange="renderPedidos()">
-            <option value="">Todos os status</option>
+            <option value="ativos">Ativos (pendente + enviado)</option>
             <option value="pendente">Pendente</option>
             <option value="enviado">Enviado</option>
-            <option value="recebido">Recebido</option>
+            <option value="baixado">Baixados</option>
             <option value="cancelado">Cancelado</option>
+            <option value="">Todos</option>
           </select>
           <button class="btn btn-ghost btn-sm ml" onclick="renderPedidos()">↻ Atualizar</button>
         </div>
@@ -726,8 +727,12 @@ async function renderPedidos() {
   const container = document.getElementById('ped-body');
   container.innerHTML = '<div class="empty">Carregando...</div>';
   try {
-    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=neq.solicitado&status=neq.processado&order=created_at.desc`;
-    if (statusFil) q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.${statusFil}&order=created_at.desc`;
+    let q;
+    if (!statusFil || statusFil === 'ativos') {
+      q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=in.(pendente,enviado)&order=created_at.desc`;
+    } else {
+      q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.${statusFil}&order=created_at.desc`;
+    }
     pedidosGerados = await api(q);
 
     if (!pedidosGerados.length) {
@@ -802,7 +807,7 @@ async function verPedido(id) {
       if (forn?.whatsapp) acoes.innerHTML += `<button class="btn btn-blue btn-sm" onclick="enviarWhatsApp('${id}')">💬 WhatsApp</button>`;
     }
     if (p.status==='enviado') {
-      acoes.innerHTML += `<button class="btn btn-green btn-sm" onclick="mudarStatus('${id}','recebido')">✓ Confirmar Recebimento</button>`;
+      acoes.innerHTML += `<button class="btn btn-green btn-sm" onclick="mudarStatus('${id}','baixado')">✓ Baixar Pedido</button>`;
     }
   } catch(e) { toast('Erro: '+e.message,'err'); }
   abrirModal('m-ped');
@@ -1051,7 +1056,7 @@ function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{min
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function hoje(plusDias=0){const d=new Date();d.setDate(d.getDate()+plusDias);return d.toISOString().split('T')[0];}
 function fmtData(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
-function statusBadge(s){const l={solicitado:'Aguardando',pendente:'Pendente',processado:'Processado',aprovado:'Aprovado',enviado:'Enviado',recebido:'Recebido',cancelado:'Cancelado'};return `<span class="badge b-${s}">${l[s]||s}</span>`;}
+function statusBadge(s){const l={solicitado:'Aguardando',pendente:'Pendente',processado:'Processado',aprovado:'Aprovado',enviado:'Enviado',recebido:'Baixado',baixado:'Baixado',cancelado:'Cancelado'};const cls=s==='baixado'?'recebido':s;return `<span class="badge b-${cls}">${l[s]||s}</span>`;}
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
 function abrirModal(id){document.getElementById(id).classList.add('open');}
