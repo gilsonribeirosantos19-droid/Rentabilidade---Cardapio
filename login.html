@@ -198,7 +198,8 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const SUPA_ANON = 'sb_publishable_GJqQ_qWVg5Y8GWaKy1qe7w_VvZiIQ3i';
 
 const { createClient } = supabase;
-const sb = createClient(SUPA_URL, SUPA_KEY);
+const sb  = createClient(SUPA_URL, SUPA_KEY);
+const sbAuth = createClient(SUPA_URL, SUPA_ANON);
 
 function showAlert(panelId, msg, tipo) {
   const el = document.getElementById('alert-' + panelId);
@@ -235,17 +236,9 @@ async function entrar() {
   hideAlert('login');
 
   try {
-    const res = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPA_ANON
-      },
-      body: JSON.stringify({ email, password: senha })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error_description || data.msg || 'Erro');
-    localStorage.setItem('sb_token', data.access_token);
+    const { data, error } = await sbAuth.auth.signInWithPassword({ email, password: senha });
+    if (error) throw new Error(error.message);
+    localStorage.setItem('sb_token', data.session?.access_token || '');
     localStorage.setItem('sb_user_id', data.user?.id || '');
 
     // Busca perfil do usuário
