@@ -338,36 +338,43 @@
 
     <!-- TAB: INVENTÁRIO -->
     <div id="tab-inventario" class="tab-pane">
-      <div class="toolbar">
-        <button class="btn btn-primary" onclick="novoInventario()">+ Novo inventário</button>
-        <span id="inv-info" style="font-size:12px;color:var(--text3);margin-left:8px"></span>
-        <div class="ml">
-          <button class="btn btn-ghost" id="btn-fechar-inv" style="display:none" onclick="fecharInventario()">✓ Fechar inventário</button>
-        </div>
-      </div>
+
+      <!-- CONTAGEM ABERTA -->
       <div id="inv-aberto" style="display:none">
-        <div style="margin-bottom:12px;padding:10px 14px;background:#eff6ff;border-left:3px solid var(--blue);border-radius:8px;font-size:12px;color:#1e40af">
-          Digite a quantidade contada para cada item. Diferença = contado − sistema.
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:14px 16px;
+          background:#eff6ff;border-left:3px solid var(--blue);border-radius:8px">
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:14px" id="inv-titulo-aberto"></div>
+            <div style="font-size:12px;color:#1e40af;margin-top:2px">Digite a quantidade contada. Diferença = contado − sistema.</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="cancelarInventario()">Cancelar</button>
+          <button class="btn btn-primary btn-sm" onclick="fecharInventario()">✓ Fechar inventário</button>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th>Insumo</th><th>Unidade</th>
-              <th class="r">Saldo Sistema</th><th class="r">Qtd. Contada</th>
-              <th class="r">Diferença</th><th class="r">Custo Médio</th><th class="r">Valor Diferença</th>
+              <th>Insumo</th><th>Un.</th>
+              <th class="r">Saldo sistema</th><th class="r">Qtd. contada</th>
+              <th class="r">Diferença</th><th class="r">Custo médio</th><th class="r">Valor dif.</th>
             </tr></thead>
             <tbody id="inv-body"></tbody>
           </table>
         </div></div>
       </div>
-      <div id="inv-historico">
-        <div class="rep-title" style="margin-top:24px">Histórico de inventários</div>
-        <div class="tbl-wrap" style="margin-top:12px"><div class="tbl-scroll">
+
+      <!-- LISTA E HISTÓRICO -->
+      <div id="inv-lista">
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="abrirModalNovoInv()">+ Novo inventário</button>
+          <button class="btn btn-ghost ml" onclick="abrirModalGrupos()">⚙ Gerenciar grupos</button>
+        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th>Data</th><th class="c">Status</th><th class="r">Itens</th><th class="r">Ajuste Total (R$)</th>
+              <th>Data</th><th>Grupo</th><th>Tipo</th>
+              <th class="c">Status</th><th class="r">Itens</th><th class="r">Ajuste (R$)</th><th></th>
             </tr></thead>
-            <tbody id="inv-hist-body"><tr><td colspan="4" class="empty"><b>Carregando...</b></td></tr></tbody>
+            <tbody id="inv-hist-body"><tr><td colspan="7" class="empty"><b>Carregando...</b></td></tr></tbody>
           </table>
         </div></div>
       </div>
@@ -692,6 +699,89 @@
       <button class="btn btn-ghost" onclick="fecharModal('m-mm')">Cancelar</button>
       <div style="flex:1"></div>
       <button class="btn btn-primary" onclick="salvarMM()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVO INVENTÁRIO -->
+<div id="m-novo-inv" class="overlay" onclick="if(event.target===this)fecharModal('m-novo-inv')">
+  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+    <h2>Novo Inventário</h2>
+    <div class="fg">
+      <label>Grupo *</label>
+      <select id="ni-grupo"><option value="">Selecione o grupo...</option></select>
+    </div>
+    <div class="fg">
+      <label>Data do inventário *</label>
+      <input type="date" id="ni-data">
+    </div>
+    <div class="fg">
+      <label>Tipo</label>
+      <select id="ni-tipo">
+        <option value="mensal">Mensal</option>
+        <option value="quinzenal">Quinzenal</option>
+        <option value="semanal">Semanal</option>
+        <option value="avulso">Avulso</option>
+      </select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModal('m-novo-inv')">Cancelar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="iniciarInventario()">Iniciar contagem</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GERENCIAR GRUPOS -->
+<div id="m-grupos" class="overlay" onclick="if(event.target===this)fecharModal('m-grupos')">
+  <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
+    <h2>Grupos de Inventário</h2>
+    <div class="toolbar" style="margin-bottom:12px">
+      <button class="btn btn-primary btn-sm" onclick="abrirModalGrupo()">+ Novo grupo</button>
+    </div>
+    <div class="tbl-wrap"><div class="tbl-scroll">
+      <table class="tbl">
+        <thead><tr><th>Nome</th><th>Tipo padrão</th><th class="r">Insumos</th><th></th></tr></thead>
+        <tbody id="grupos-body"><tr><td colspan="4" class="empty">Nenhum grupo cadastrado</td></tr></tbody>
+      </table>
+    </div></div>
+    <div class="modal-foot">
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" onclick="fecharModal('m-grupos')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CRIAR/EDITAR GRUPO -->
+<div id="m-grupo" class="overlay" onclick="if(event.target===this)fecharModal('m-grupo')">
+  <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
+    <h2 id="grupo-titulo">Novo Grupo</h2>
+    <div class="row2">
+      <div class="fg">
+        <label>Nome do grupo *</label>
+        <input type="text" id="grp-nome" placeholder="Ex: Proteínas, Hortifruti...">
+      </div>
+      <div class="fg">
+        <label>Tipo padrão</label>
+        <select id="grp-tipo">
+          <option value="mensal">Mensal</option>
+          <option value="quinzenal">Quinzenal</option>
+          <option value="semanal">Semanal</option>
+          <option value="avulso">Avulso</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Insumos do grupo</label>
+      <input type="text" id="grp-busca" placeholder="Buscar insumo..." oninput="filtrarInsumosGrupo()" style="margin-bottom:8px">
+      <div id="grp-insumos-lista" style="max-height:260px;overflow-y:auto;border:1px solid var(--border2);border-radius:8px;padding:4px"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px"><span id="grp-count">0</span> insumo(s) selecionado(s)</div>
+    </div>
+    <input type="hidden" id="grp-edit-id">
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModal('m-grupo')">Cancelar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" onclick="salvarGrupo()">Salvar grupo</button>
     </div>
   </div>
 </div>
@@ -1315,16 +1405,49 @@ function renderRelatorios() {
 }
 
 // ── INVENTÁRIO ────────────────────────────────────────────────────
-let invAtual = null;
+// ── INVENTÁRIO COM GRUPOS ─────────────────────────────────────────
+let invAtual = null, invGrupoAtual = null, invDataAtual = null, invTipoAtual = null;
+let grupos = [], grupoSelecionados = new Set();
 
-function novoInventario() {
-  invAtual = insumos.map(i => {
-    const s = getSaldo(i.id);
-    return { ins: i, qtdSistema: s.quantidade || 0, custoMedio: s.custo_medio || 0 };
+async function carregarGrupos() {
+  try {
+    grupos = await api(`grupos_inventario?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    for (const g of grupos) {
+      const itens = await api(`grupos_inventario_itens?grupo_id=eq.${g.id}`);
+      g.itens = itens;
+    }
+  } catch(e) { grupos = []; }
+}
+
+async function abrirModalNovoInv() {
+  await carregarGrupos();
+  const sel = document.getElementById('ni-grupo');
+  sel.innerHTML = '<option value="">Selecione o grupo...</option>' +
+    grupos.map(g => `<option value="${g.id}">${esc(g.nome)} (${g.tipo||'mensal'} · ${g.itens?.length||0} itens)</option>`).join('');
+  document.getElementById('ni-data').value = hoje();
+  abrirModal('m-novo-inv');
+}
+
+async function iniciarInventario() {
+  const grupoId = document.getElementById('ni-grupo').value;
+  const data = document.getElementById('ni-data').value;
+  const tipo = document.getElementById('ni-tipo').value;
+  if (!grupoId) { toast('Selecione um grupo.','err'); return; }
+  if (!data) { toast('Selecione a data.','err'); return; }
+  const grupo = grupos.find(g => g.id === grupoId);
+  if (!grupo?.itens?.length) { toast('Grupo sem insumos cadastrados.','err'); return; }
+  fecharModal('m-novo-inv');
+  invGrupoAtual = grupo; invDataAtual = data; invTipoAtual = tipo;
+  const insGrupo = grupo.itens.map(it => insumos.find(i => i.id === it.insumo_id)).filter(Boolean)
+    .sort((a,b) => a.nome.localeCompare(b.nome));
+  invAtual = insGrupo.map(ins => {
+    const s = getSaldo(ins.id);
+    return { ins, qtdSistema: s.quantidade||0, custoMedio: s.custo_medio||0 };
   });
+  document.getElementById('inv-titulo-aberto').textContent =
+    `${grupo.nome} · ${tipo.charAt(0).toUpperCase()+tipo.slice(1)} · ${new Date(data+'T12:00:00').toLocaleDateString('pt-BR')}`;
   document.getElementById('inv-aberto').style.display = '';
-  document.getElementById('btn-fechar-inv').style.display = '';
-  document.getElementById('inv-info').textContent = `${invAtual.length} insumos · ${hoje()}`;
+  document.getElementById('inv-lista').style.display = 'none';
   document.getElementById('inv-body').innerHTML = invAtual.map((r, idx) => `<tr>
     <td style="font-weight:500">${esc(r.ins.nome)}</td>
     <td style="color:var(--text3)">${r.ins.unidade_medida||r.ins.unidade_compra||'un'}</td>
@@ -1332,11 +1455,17 @@ function novoInventario() {
     <td class="r"><input type="number" class="field field-sm" id="inv-q-${idx}"
       value="${r.qtdSistema.toFixed(3)}" step="0.001" min="0"
       oninput="calcInvDiff(${idx})" style="width:90px;text-align:right"></td>
-    <td class="r" id="inv-d-${idx}">—</td>
+    <td class="r mono" id="inv-d-${idx}">—</td>
     <td class="r mono">${brl(r.custoMedio)}</td>
-    <td class="r" id="inv-v-${idx}">—</td>
+    <td class="r mono" id="inv-v-${idx}">—</td>
   </tr>`).join('');
   invAtual.forEach((_,idx) => calcInvDiff(idx));
+}
+
+function cancelarInventario() {
+  invAtual = null; invGrupoAtual = null;
+  document.getElementById('inv-aberto').style.display = 'none';
+  document.getElementById('inv-lista').style.display = '';
 }
 
 function calcInvDiff(idx) {
@@ -1345,55 +1474,146 @@ function calcInvDiff(idx) {
   const contada = parseFloat(document.getElementById(`inv-q-${idx}`)?.value) || 0;
   const diff = contada - r.qtdSistema;
   const vDiff = diff * r.custoMedio;
-  const cls = diff > 0.0001 ? 'inv-pos' : diff < -0.0001 ? 'inv-neg' : 'inv-zero';
+  const cls = diff > 0.0001 ? 'color:#16a34a' : diff < -0.0001 ? 'color:var(--red)' : 'color:var(--text3)';
   const sinal = diff > 0 ? '+' : '';
   const dEl = document.getElementById(`inv-d-${idx}`);
   const vEl = document.getElementById(`inv-v-${idx}`);
-  if (dEl) dEl.innerHTML = `<span class="${cls}">${sinal}${qtd(diff)}</span>`;
-  if (vEl) vEl.innerHTML = `<span class="${cls}">${sinal}${brl(vDiff)}</span>`;
+  if (dEl) dEl.innerHTML = `<span style="${cls}">${sinal}${qtd(diff)}</span>`;
+  if (vEl) vEl.innerHTML = `<span style="${cls}">${sinal}${brl(vDiff)}</span>`;
 }
 
 async function fecharInventario() {
-  if (!invAtual || !confirm('Fechar o inventário? Os saldos serão atualizados com as quantidades contadas.')) return;
-  const btn = document.getElementById('btn-fechar-inv');
-  btn.disabled = true; btn.textContent = 'Salvando…';
+  if (!invAtual || !confirm('Fechar o inventário? Os saldos serão atualizados.')) return;
   try {
-    const invRes = await api('inventarios', {
-      method: 'POST',
-      body: JSON.stringify({ tenant_id: TENANT_ID, status: 'fechado', criado_em: new Date().toISOString() }),
-    });
+    const invRes = await api('inventarios', { method:'POST',
+      body: JSON.stringify({ tenant_id:TENANT_ID, status:'fechado',
+        grupo_id: invGrupoAtual?.id||null, tipo: invTipoAtual||'avulso',
+        criado_em: invDataAtual+'T12:00:00.000Z' }) });
     const invId = invRes[0]?.id;
-    if (!invId) throw new Error('Falha ao criar registro de inventário.');
+    if (!invId) throw new Error('Falha ao criar inventário.');
     const itens = invAtual.map((r, idx) => ({
       inventario_id: invId, insumo_id: r.ins.id,
       qtd_sistema: r.qtdSistema,
       qtd_contada: parseFloat(document.getElementById(`inv-q-${idx}`)?.value) || 0,
       custo_medio: r.custoMedio,
     }));
-    await api('itens_inventario', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(itens) });
+    await api('itens_inventario', { method:'POST', prefer:'return=minimal', body:JSON.stringify(itens) });
     for (const it of itens) await upsertSaldo(it.insumo_id, it.qtd_contada, it.custo_medio);
-    toast(`Inventário fechado! ${itens.length} saldos atualizados.`, 'ok');
-    document.getElementById('inv-aberto').style.display = 'none';
-    document.getElementById('btn-fechar-inv').style.display = 'none';
-    document.getElementById('inv-info').textContent = '';
-    invAtual = null;
+    toast(`Inventário fechado! ${itens.length} saldos atualizados.`,'ok');
+    cancelarInventario();
     await carregar();
     renderInvHistorico();
-  } catch(e) { toast('Erro: ' + e.message, 'err'); }
-  finally { btn.disabled = false; btn.textContent = '✓ Fechar inventário'; }
+  } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
 async function renderInvHistorico() {
+  await carregarGrupos();
   const tbody = document.getElementById('inv-hist-body');
   try {
     const lista = await api(`inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`);
-    if (!lista.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty"><b>Nenhum inventário realizado</b></td></tr>'; return; }
-    tbody.innerHTML = lista.map(inv => `<tr>
-      <td class="mono">${fmtData(inv.criado_em)}</td>
-      <td class="c"><span class="${inv.status==='fechado'?'b-fechado':'b-aberto'}">${inv.status==='fechado'?'Fechado':'Aberto'}</span></td>
-      <td class="r">—</td><td class="r mono">—</td>
-    </tr>`).join('');
-  } catch(e) { tbody.innerHTML = `<tr><td colspan="4" class="empty"><b>Erro ao carregar</b></td></tr>`; }
+    if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty"><b>Nenhum inventário realizado</b></td></tr>'; return; }
+    const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso'};
+    tbody.innerHTML = lista.map(inv => {
+      const grupo = grupos.find(g => g.id === inv.grupo_id);
+      return `<tr>
+        <td class="mono">${fmtData(inv.criado_em)}</td>
+        <td style="font-weight:500">${grupo ? esc(grupo.nome) : '—'}</td>
+        <td style="color:var(--text3)">${tipoLabel[inv.tipo]||inv.tipo||'—'}</td>
+        <td class="c"><span class="badge ${inv.status==='fechado'?'b-ok':'b-manual'}">${inv.status==='fechado'?'Fechado':'Aberto'}</span></td>
+        <td class="r">—</td><td class="r mono">—</td><td></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="7" class="empty"><b>Erro ao carregar</b></td></tr>`; }
+}
+
+// ── GRUPOS DE INVENTÁRIO ──────────────────────────────────────────
+async function abrirModalGrupos() {
+  await carregarGrupos();
+  const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso'};
+  document.getElementById('grupos-body').innerHTML = grupos.length ? grupos.map(g => `<tr>
+    <td style="font-weight:500">${esc(g.nome)}</td>
+    <td style="color:var(--text3)">${tipoLabel[g.tipo]||g.tipo||'—'}</td>
+    <td class="r">${g.itens?.length||0}</td>
+    <td style="display:flex;gap:6px">
+      <button class="btn btn-ghost btn-sm" onclick="abrirModalGrupo('${g.id}')">Editar</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirGrupo('${g.id}')">Excluir</button>
+    </td>
+  </tr>`).join('') : '<tr><td colspan="4" class="empty">Nenhum grupo cadastrado</td></tr>';
+  abrirModal('m-grupos');
+}
+
+async function abrirModalGrupo(id) {
+  grupoSelecionados = new Set();
+  document.getElementById('grp-edit-id').value = id||'';
+  document.getElementById('grp-busca').value = '';
+  if (id) {
+    const g = grupos.find(x => x.id === id);
+    document.getElementById('grupo-titulo').textContent = 'Editar Grupo';
+    document.getElementById('grp-nome').value = g?.nome||'';
+    document.getElementById('grp-tipo').value = g?.tipo||'mensal';
+    (g?.itens||[]).forEach(it => grupoSelecionados.add(it.insumo_id));
+  } else {
+    document.getElementById('grupo-titulo').textContent = 'Novo Grupo';
+    document.getElementById('grp-nome').value = '';
+    document.getElementById('grp-tipo').value = 'mensal';
+  }
+  filtrarInsumosGrupo();
+  abrirModal('m-grupo');
+}
+
+function filtrarInsumosGrupo() {
+  const busca = (document.getElementById('grp-busca')?.value||'').toLowerCase();
+  const lista = insumos.filter(i => !busca || i.nome.toLowerCase().includes(busca))
+    .sort((a,b) => a.nome.localeCompare(b.nome));
+  document.getElementById('grp-insumos-lista').innerHTML = lista.map(ins => `
+    <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;
+      border-radius:6px;font-size:13px;${grupoSelecionados.has(ins.id)?'background:var(--teal-dim)':''}">
+      <input type="checkbox" ${grupoSelecionados.has(ins.id)?'checked':''}
+        onchange="toggleInsumoGrupo('${ins.id}',this.checked)" style="width:auto">
+      <span>${esc(ins.nome)}</span>
+      <span style="color:var(--text3);font-size:11px;margin-left:auto">${ins.unidade_medida||ins.unidade_compra||'un'}</span>
+    </label>`).join('');
+  document.getElementById('grp-count').textContent = grupoSelecionados.size;
+}
+
+function toggleInsumoGrupo(insId, checked) {
+  if (checked) grupoSelecionados.add(insId);
+  else grupoSelecionados.delete(insId);
+  document.getElementById('grp-count').textContent = grupoSelecionados.size;
+  filtrarInsumosGrupo();
+}
+
+async function salvarGrupo() {
+  const id = document.getElementById('grp-edit-id').value;
+  const nome = document.getElementById('grp-nome').value.trim();
+  const tipo = document.getElementById('grp-tipo').value;
+  if (!nome) { toast('Informe o nome do grupo.','err'); return; }
+  if (!grupoSelecionados.size) { toast('Selecione ao menos um insumo.','err'); return; }
+  try {
+    let grupoId = id;
+    if (id) {
+      await api(`grupos_inventario?id=eq.${id}`, {method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,tipo})});
+      await api(`grupos_inventario_itens?grupo_id=eq.${id}`, {method:'DELETE',prefer:'return=minimal'});
+    } else {
+      const res = await api('grupos_inventario', {method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,tipo,ativo:true})});
+      grupoId = res[0]?.id;
+      if (!grupoId) throw new Error('Falha ao criar grupo.');
+    }
+    const itens = [...grupoSelecionados].map((insId, ordem) => ({grupo_id:grupoId, insumo_id:insId, ordem}));
+    await api('grupos_inventario_itens', {method:'POST',prefer:'return=minimal',body:JSON.stringify(itens)});
+    toast(`Grupo "${nome}" salvo com ${itens.length} insumos!`,'ok');
+    fecharModal('m-grupo');
+    abrirModalGrupos();
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+}
+
+async function excluirGrupo(id) {
+  if (!confirm('Excluir este grupo? Os inventários realizados não serão afetados.')) return;
+  try {
+    await api(`grupos_inventario?id=eq.${id}`, {method:'DELETE',prefer:'return=minimal'});
+    toast('Grupo excluído.','ok');
+    abrirModalGrupos();
+  } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
 // ── FECHAMENTO MENSAL ─────────────────────────────────────────────
