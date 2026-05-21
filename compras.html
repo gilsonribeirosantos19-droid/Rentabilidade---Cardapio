@@ -726,8 +726,8 @@ async function renderPedidos() {
   const container = document.getElementById('ped-body');
   container.innerHTML = '<div class="empty">Carregando...</div>';
   try {
-    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&fornecedor_id=not.is.null&order=created_at.desc`;
-    if (statusFil) q += `&status=eq.${statusFil}`;
+    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=neq.solicitado&status=neq.processado&order=created_at.desc`;
+    if (statusFil) q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.${statusFil}&order=created_at.desc`;
     pedidosGerados = await api(q);
 
     if (!pedidosGerados.length) {
@@ -735,19 +735,21 @@ async function renderPedidos() {
       return;
     }
 
-    // Group by fornecedor
+    // Group by fornecedor (null = sem fornecedor)
     const porForn = {};
     pedidosGerados.forEach(p => {
-      const fId = p.fornecedor_id;
-      if (!porForn[fId]) porForn[fId] = [];
-      porForn[fId].push(p);
+      const fKey = p.fornecedor_id || '__sem__';
+      if (!porForn[fKey]) porForn[fKey] = [];
+      porForn[fKey].push(p);
     });
 
-    container.innerHTML = Object.entries(porForn).map(([fId, peds]) => {
-      const forn = fornecedores.find(f=>f.id===fId);
+    container.innerHTML = Object.entries(porForn).map(([fKey, peds]) => {
+      const forn = fKey === '__sem__' ? null : fornecedores.find(f=>f.id===fKey);
+      const fornNome = forn?.nome || '⚠ Sem fornecedor';
+      const fornStyle = forn ? '' : 'color:var(--amber)';
       return `<div class="ped-card">
         <div class="ped-card-header">
-          <div class="ped-card-forn">${esc(forn?.nome||'Fornecedor')}</div>
+          <div class="ped-card-forn" style="${fornStyle}">${esc(fornNome)}</div>
           <div style="font-size:12px;color:var(--text3)">${peds.length} pedido(s)</div>
         </div>
         <div class="ped-card-body">
