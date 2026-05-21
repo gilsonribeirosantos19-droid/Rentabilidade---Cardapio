@@ -16,7 +16,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{
     font-family:'Plus Jakarta Sans',sans-serif;
-    background:var(--bg1);
+    background: url('https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1600&q=80') center/cover no-repeat fixed;
     color:var(--text1);
     min-height:100vh;
     display:flex;
@@ -24,6 +24,14 @@
     justify-content:center;
     padding:16px;
   }
+  body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:0;
+  }
+  .card{position:relative;z-index:1;}
 
   /* ── CARD ── */
   .card{
