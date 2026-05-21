@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pedidos de Compra · Sushi PN</title>
+<title>Pedidos de Compra · Aiko</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   :root{
@@ -152,8 +152,8 @@
 <!-- SIDEBAR -->
 <nav class="sidebar">
   <div class="logo">
-    <div class="logo-mark">Sushi PN</div>
-    <div class="logo-sub">rentabilidade</div>
+    <div class="logo-mark">Aiko</div>
+    <div class="logo-sub">sistema</div>
   </div>
   <div class="nav-group">
     <div class="nav-label">Principal</div>
@@ -821,7 +821,7 @@ async function enviarWhatsApp(id) {
   if (!forn?.whatsapp) { toast('Fornecedor sem WhatsApp.','err'); return; }
 
   const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
-  let msg = `*Pedido de Compra — Sushi PN*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`;
+  let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`;
   itens.forEach(it => {
     const ins = insumos.find(i=>i.id===it.insumo_id);
     msg += `• ${ins?.nome||'?'}: ${Number(it.quantidade).toFixed(3)} ${it.unidade||'un'}\n`;

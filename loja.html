@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal da Loja · Sushi PN</title>
+<title>sistema · Aiko</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   :root{
@@ -117,8 +117,8 @@
 
 <nav class="sidebar">
   <div class="logo">
-    <div class="logo-mark">Sushi PN</div>
-    <div class="logo-sub">portal da loja</div>
+    <div class="logo-mark">Aiko</div>
+    <div class="logo-sub">sistema</div>
     <div class="logo-loja" id="sb-loja-nome"></div>
   </div>
   <div class="nav-group">
@@ -136,7 +136,7 @@
 
 <div class="main">
   <div class="topbar">
-    <span class="topbar-title" id="topbar-title">Portal da Loja</span>
+    <span class="topbar-title" id="topbar-title">sistema</span>
     <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
   </div>
   <div class="content">
@@ -353,7 +353,7 @@ async function carregar() {
     const loja = await api(`lojas?id=eq.${userProfile?.loja_id}&limit=1`).then(r=>r[0]);
     const lojaNome = loja?.nome || 'Minha Loja';
     document.getElementById('sb-loja-nome').textContent = lojaNome;
-    document.getElementById('topbar-title').textContent = `Portal da Loja — ${lojaNome}`;
+    document.getElementById('topbar-title').textContent = `sistema — ${lojaNome}`;
 
     [insumos, fichas, motivos] = await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
