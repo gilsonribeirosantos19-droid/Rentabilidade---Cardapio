@@ -226,6 +226,7 @@
       <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')">Fechamento</button>
       <button class="tab-btn" data-tab="movimentacao" onclick="switchTab('movimentacao')">Movimentação</button>
       <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">Relatórios</button>
+      <button class="tab-btn" data-tab="compras" onclick="switchTab('compras')">Sugestão de Compras</button>
     </div>
 
     <!-- TAB: DASHBOARD -->
@@ -425,6 +426,50 @@
             </tr></thead>
             <tbody id="mov-body"><tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr></tbody>
             <tfoot id="mov-foot"></tfoot>
+          </table>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- TAB: SUGESTÃO DE COMPRAS -->
+    <div id="tab-compras" class="tab-pane">
+      <div class="rep-sec">
+        <div class="rep-title">Sugestão de Compras — baseada no consumo médio diário</div>
+        <div class="toolbar" style="margin-bottom:16px;flex-wrap:wrap;align-items:center">
+          <label style="font-size:13px;color:var(--text2)">Cobertura desejada:</label>
+          <select class="field field-sm" id="comp-dias" onchange="renderCompras()">
+            <option value="7">7 dias</option>
+            <option value="15" selected>15 dias</option>
+            <option value="30">30 dias</option>
+            <option value="60">60 dias</option>
+          </select>
+          <label style="font-size:13px;color:var(--text2)">Período de consumo:</label>
+          <select class="field field-sm" id="comp-periodo" onchange="renderCompras()">
+            <option value="30" selected>Últimos 30 dias</option>
+            <option value="60">Últimos 60 dias</option>
+            <option value="90">Últimos 90 dias</option>
+          </select>
+          <label style="font-size:13px;color:var(--text2)">Exibir:</label>
+          <select class="field field-sm" id="comp-filtro" onchange="renderCompras()">
+            <option value="necessidade">Apenas com necessidade</option>
+            <option value="todos">Todos com consumo</option>
+          </select>
+          <button class="btn btn-ghost btn-sm ml" onclick="exportComprasCSV()">↓ CSV</button>
+        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Insumo</th>
+              <th>Un.</th>
+              <th class="r">Estoque atual</th>
+              <th class="r">Consumo (período)</th>
+              <th class="r">Média/dia</th>
+              <th class="r">Cobertura atual</th>
+              <th class="r">Sugestão de compra</th>
+              <th class="r">Custo estimado</th>
+            </tr></thead>
+            <tbody id="comp-body"><tr><td colspan="8" class="empty"><b>Clique na aba para calcular</b></td></tr></tbody>
+            <tfoot id="comp-foot"></tfoot>
           </table>
         </div></div>
       </div>
@@ -748,6 +793,7 @@ function switchTab(tab) {
   if (tab==='inventario') renderInvHistorico();
   if (tab==='movimentacao') renderMovimentacao();
   if (tab==='relatorios') { renderRelatorios(); }
+  if (tab==='compras') { renderCompras(); }
 }
 // fix: Relatórios button dataset
 document.addEventListener('DOMContentLoaded', () => {
@@ -1548,6 +1594,99 @@ function toast(msg,tipo='ok'){
   const el=document.getElementById('toast');
   el.textContent=msg;el.className='toast '+tipo+' show';
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);
+}
+
+// ── SUGESTÃO DE COMPRAS ───────────────────────────────────────────
+function renderCompras() {
+  const diasCobertura = parseInt(document.getElementById('comp-dias')?.value) || 15;
+  const periodoConsulta = parseInt(document.getElementById('comp-periodo')?.value) || 30;
+  const filtro = document.getElementById('comp-filtro')?.value || 'necessidade';
+  const corte = new Date();
+  corte.setDate(corte.getDate() - periodoConsulta);
+
+  const rows = insumos.map(ins => {
+    const saldo = getSaldo(ins.id);
+    const estoqueAtual = saldo.quantidade || 0;
+
+    const consumoPeriodo = saidas
+      .filter(s => s.insumo_id === ins.id
+        && ['consumo','transferencia'].includes(s.tipo)
+        && new Date(s.criado_em) >= corte)
+      .reduce((acc, s) => acc + (s.quantidade || 0), 0);
+
+    const mediaDiaria = consumoPeriodo / periodoConsulta;
+    const consumoProjetado = mediaDiaria * diasCobertura;
+    const sugestao = Math.max(0, consumoProjetado - estoqueAtual);
+    const custoEstimado = sugestao * (ins.preco_compra || 0);
+    const coberturaDias = mediaDiaria > 0 ? estoqueAtual / mediaDiaria : Infinity;
+
+    return { ins, estoqueAtual, consumoPeriodo, mediaDiaria, coberturaDias, sugestao, custoEstimado };
+  }).filter(r => filtro === 'todos' ? r.consumoPeriodo > 0 : r.sugestao > 0);
+
+  rows.sort((a, b) => a.coberturaDias - b.coberturaDias);
+
+  const tbody = document.getElementById('comp-body');
+  const tfoot = document.getElementById('comp-foot');
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty"><b>Nenhum item necessita reposição no período</b></td></tr>`;
+    tfoot.innerHTML = '';
+    return;
+  }
+
+  const um = ins => ins.unidade_medida || ins.unidade_compra || 'un';
+  const fmtQ = v => v === Infinity ? '—' : Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+  const fmtD = v => v === Infinity ? '∞ dias' : v.toFixed(1) + ' dias';
+
+  tbody.innerHTML = rows.map(r => {
+    const urgente = r.coberturaDias < 3;
+    const atencao = r.coberturaDias >= 3 && r.coberturaDias < 7;
+    const cor = urgente ? 'color:var(--red)' : atencao ? 'color:var(--amber)' : '';
+    return `<tr>
+      <td style="font-weight:500;${cor}">${esc(r.ins.nome)}</td>
+      <td style="color:var(--text2)">${um(r.ins)}</td>
+      <td class="r mono">${fmtQ(r.estoqueAtual)}</td>
+      <td class="r mono">${fmtQ(r.consumoPeriodo)}</td>
+      <td class="r mono">${fmtQ(r.mediaDiaria)}</td>
+      <td class="r mono" style="${cor}">${fmtD(r.coberturaDias)}</td>
+      <td class="r mono" style="font-weight:600;color:var(--teal)">${fmtQ(r.sugestao)}</td>
+      <td class="r mono">${r.custoEstimado > 0 ? brl(r.custoEstimado) : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  const totalCusto = rows.reduce((s, r) => s + r.custoEstimado, 0);
+  tfoot.innerHTML = `<tr style="background:var(--bg3);font-weight:600">
+    <td colspan="6" style="padding:10px 14px;font-size:12px;color:var(--text2)">
+      ${rows.length} item(s) · cobertura de ${diasCobertura} dias
+    </td>
+    <td class="r" style="padding:10px 14px">—</td>
+    <td class="r mono" style="padding:10px 14px;color:var(--teal)">${brl(totalCusto)}</td>
+  </tr>`;
+}
+
+function exportComprasCSV() {
+  const diasCobertura = parseInt(document.getElementById('comp-dias')?.value) || 15;
+  const periodoConsulta = parseInt(document.getElementById('comp-periodo')?.value) || 30;
+  const corte = new Date();
+  corte.setDate(corte.getDate() - periodoConsulta);
+
+  const rows = insumos.map(ins => {
+    const saldo = getSaldo(ins.id);
+    const estoqueAtual = saldo.quantidade || 0;
+    const consumoPeriodo = saidas
+      .filter(s => s.insumo_id === ins.id && ['consumo','transferencia'].includes(s.tipo) && new Date(s.criado_em) >= corte)
+      .reduce((acc, s) => acc + (s.quantidade || 0), 0);
+    const mediaDiaria = consumoPeriodo / periodoConsulta;
+    const sugestao = Math.max(0, mediaDiaria * diasCobertura - estoqueAtual);
+    const custoEstimado = sugestao * (ins.preco_compra || 0);
+    return { ins, estoqueAtual, consumoPeriodo, mediaDiaria, sugestao, custoEstimado };
+  }).filter(r => r.sugestao > 0);
+
+  const header = 'Insumo;Unidade;Estoque Atual;Consumo Período;Média/dia;Sugestão Compra;Custo Estimado\n';
+  const body = rows.map(r =>
+    `${r.ins.nome};${r.ins.unidade_medida||r.ins.unidade_compra||'un'};${r.estoqueAtual.toFixed(3)};${r.consumoPeriodo.toFixed(3)};${r.mediaDiaria.toFixed(3)};${r.sugestao.toFixed(3)};${r.custoEstimado.toFixed(2)}`
+  ).join('\n');
+  downloadCSV(`sugestao_compras_${hoje()}.csv`, header + body);
 }
 
 carregar().then(() => {
