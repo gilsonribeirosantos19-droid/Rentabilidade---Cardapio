@@ -16,7 +16,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{
     font-family:'Plus Jakarta Sans',sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    background: linear-gradient(135deg, #0a1628 0%, #0d2145 40%, #1a3a6e 70%, #7a9ab5 100%);
     color:var(--text1);
     min-height:100vh;
     display:flex;
@@ -26,16 +26,7 @@
     position:relative;
     overflow:hidden;
   }
-  body::before{
-    content:'';
-    position:fixed;
-    inset:0;
-    background-image:
-      radial-gradient(circle at 20% 50%, rgba(220,38,38,.08) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(220,38,38,.06) 0%, transparent 40%),
-      radial-gradient(circle at 60% 80%, rgba(99,102,241,.06) 0%, transparent 40%);
-    z-index:0;
-  }
+  #bg-canvas{position:fixed;inset:0;z-index:0;width:100%;height:100%;}
   .card{position:relative;z-index:1;box-shadow:0 20px 60px rgba(0,0,0,.5);}
 
   /* ── CARD ── */
@@ -159,6 +150,7 @@
 </head>
 <body>
 
+<canvas id="bg-canvas"></canvas>
 <div class="card">
   <div class="logo">
     <div class="logo-mark">Aiko</div>
@@ -297,6 +289,69 @@ async function enviarReset() {
     btn.textContent = 'Enviar link';
   }
 }
+</script>
+<script>
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, pts;
+  const N = 80, CONN = 140, SPEED = 0.3;
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function initPts(){
+    pts = Array.from({length:N}, ()=>({
+      x: Math.random()*W, y: Math.random()*H,
+      vx:(Math.random()-.5)*SPEED, vy:(Math.random()-.5)*SPEED,
+      r: Math.random()*2+1
+    }));
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // linhas
+    for(let i=0;i<N;i++){
+      for(let j=i+1;j<N;j++){
+        const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<CONN){
+          const alpha=(1-d/CONN)*0.35;
+          ctx.beginPath();
+          ctx.strokeStyle=`rgba(100,180,255,${alpha})`;
+          ctx.lineWidth=0.6;
+          ctx.moveTo(pts[i].x,pts[i].y);
+          ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    // pontos
+    pts.forEach(p=>{
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(120,200,255,0.7)';
+      ctx.fill();
+      // glow
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r*2.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(80,160,255,0.12)';
+      ctx.fill();
+    });
+    // move
+    pts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>W) p.vx*=-1;
+      if(p.y<0||p.y>H) p.vy*=-1;
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize',()=>{resize();initPts();});
+  resize(); initPts(); draw();
+})();
 </script>
 </body>
 </html>
