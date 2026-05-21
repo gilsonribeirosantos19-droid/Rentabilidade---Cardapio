@@ -244,9 +244,23 @@ async function entrar() {
       body: JSON.stringify({ email, password: senha })
     });
     const data = await res.json();
-    console.log(data);
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Erro');
     localStorage.setItem('sb_token', data.access_token);
+    localStorage.setItem('sb_user_id', data.user?.id || '');
+
+    // Busca perfil do usuário
+    const perfRes = await fetch(`${SUPA_URL}/rest/v1/usuarios?id=eq.${data.user?.id}&limit=1`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + data.access_token }
+    });
+    const perfil = perfRes.ok ? await perfRes.json() : [];
+    if (perfil.length) {
+      localStorage.setItem('sb_user', JSON.stringify(perfil[0]));
+      // Gerente vai direto para compras
+      if (perfil[0].perfil === 'gerente') {
+        window.location.href = 'compras.html';
+        return;
+      }
+    }
     window.location.href = 'dashboard.html';
   } catch (e) {
     showAlert('login', e.message, 'err');
