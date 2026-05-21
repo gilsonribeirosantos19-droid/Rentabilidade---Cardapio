@@ -850,18 +850,17 @@
     btn.disabled = true; btn.textContent = 'Salvando...';
     try {
       if (!editUserId) {
-        // Cria usuário no Supabase Auth
-        const authRes = await fetch(`${SUPA_URL}/auth/v1/admin/users`, {
-          method:'POST',
-          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
-          body: JSON.stringify({ email, password:senha, email_confirm:true })
+        const rpcRes = await api('rpc/criar_usuario_auth', {
+          method: 'POST',
+          body: JSON.stringify({
+            p_email: email,
+            p_senha: senha,
+            p_nome: nome,
+            p_perfil: perfil,
+            p_loja_id: perfil === 'gerente' ? lojaId : null
+          })
         });
-        const authData = await authRes.json();
-        if (!authRes.ok) throw new Error(authData.message||authData.error||'Erro ao criar auth');
-        const userId = authData.id;
-        await api('usuarios',{method:'POST',prefer:'return=minimal',
-          body:JSON.stringify({id:userId,tenant_id:TENANT_ID,nome,email,perfil,loja_id:perfil==='gerente'?lojaId:null,ativo:true})});
-        toast(`Usuário "${nome}" criado!`,'ok');
+        toast(`Usuário "${nome}" criado!`, 'ok');
       } else {
         await api(`usuarios?id=eq.${editUserId}`,{method:'PATCH',prefer:'return=minimal',
           body:JSON.stringify({nome,perfil,loja_id:perfil==='gerente'?lojaId:null})});
