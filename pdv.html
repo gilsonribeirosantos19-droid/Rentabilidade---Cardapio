@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDV · Sushi PN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+  :root{
+    --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
+    --border1:#e2e8f0;--border2:#e2e8f0;
+    --teal:#dc2626;--teal2:#b91c1c;--teal-dim:rgba(220,38,38,.10);
+    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#22c55e;
+    --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+
+  /* SIDEBAR */
+  .sidebar{width:220px;min-height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin-bottom:20px}
+  .nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:var(--text2);font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:var(--bg1);color:var(--text1)}
+  .nav-item.active{background:#fef2f2;color:#dc2626}
+  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+  /* MAIN */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:#ffffff;color:var(--text1);position:sticky;top:0;z-index:60}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .content{padding:24px;flex:1}
+
+  /* TABS */
+  .tabs{display:flex;gap:2px;margin-bottom:24px;border-bottom:2px solid var(--border2);
+    position:sticky;top:56px;z-index:50;background:#ffffff;padding-top:8px}
+  .tab-btn{padding:9px 18px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;
+    border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;
+    transition:all .15s;font-family:inherit;white-space:nowrap}
+  .tab-btn:hover{color:var(--text2)}
+  .tab-btn.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+  .tab-pane{display:none}
+  .tab-pane.active{display:block}
+
+  /* CARDS */
+  .sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:24px}
+  .sc{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .sc-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .sc-value{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+  .sc-sub{font-size:11px;color:var(--text3);margin-top:5px}
+  .c-blue{color:var(--blue)}.c-green{color:#16a34a}.c-amber{color:var(--amber)}.c-red{color:var(--red)}
+
+  /* TOOLBAR */
+  .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .ml{margin-left:auto}
+  .field{background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
+    padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
+  .field:focus{border-color:var(--teal)}
+  .field-sm{padding:6px 10px;font-size:12px}
+
+  /* TABLE */
+  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:24px}
+  .tbl-scroll{overflow-x:auto}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl thead tr{background:var(--bg3);border-bottom:2px solid var(--border2)}
+  .tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);
+    text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .tbl th.r,.tbl td.r{text-align:right}
+  .tbl th.c,.tbl td.c{text-align:center}
+  .tbl td{padding:10px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
+  .tbl tbody tr:last-child td{border-bottom:none}
+  .tbl tbody tr:hover{background:var(--bg3)}
+  .mono{font-family:'DM Mono',monospace}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .b-A{background:#dbeafe;color:#1d4ed8}
+  .b-B{background:#ede9fe;color:#7c3aed}
+  .b-C{background:var(--bg3);color:var(--text3)}
+  .b-estrela{background:#fef3c7;color:#b45309}
+  .b-vaca{background:#dcfce7;color:#16a34a}
+  .b-puzzle{background:#dbeafe;color:#1d4ed8}
+  .b-abacaxi{background:#fde8ea;color:#dc2626}
+  .b-canal{background:var(--bg3);color:var(--text2)}
+
+  /* BOTÕES */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:var(--teal2)}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn-sm{padding:5px 12px;font-size:12px}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;
+    display:none;align-items:center;justify-content:center;padding:16px}
+  .overlay.open{display:flex}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:28px;position:relative;
+    box-shadow:0 8px 32px rgba(0,0,0,.12)}
+  .modal h2{font-size:16px;font-weight:700;margin-bottom:20px}
+  .fg{margin-bottom:14px}
+  .fg label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;
+    text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .fg input,.fg select,.fg textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);
+    color:var(--text1);padding:9px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
+  .fg input:focus,.fg select:focus{border-color:var(--teal)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-foot{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border2)}
+
+  /* ENGENHARIA */
+  .matriz{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+  .quadrante{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px}
+  .quad-titulo{font-size:13px;font-weight:700;margin-bottom:4px}
+  .quad-sub{font-size:11px;color:var(--text3);margin-bottom:12px}
+  .quad-item{display:flex;justify-content:space-between;align-items:center;
+    padding:6px 0;border-bottom:1px solid var(--border2);font-size:13px}
+  .quad-item:last-child{border-bottom:none}
+
+  /* BARRA CANAL */
+  .canal-bar{height:8px;border-radius:4px;background:var(--teal);margin-top:4px}
+
+  /* IMPORTAR */
+  .import-box{background:var(--bg2);border:2px dashed var(--border2);border-radius:var(--radius-lg);
+    padding:40px;text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:24px}
+  .import-box:hover{border-color:var(--teal)}
+  .import-box input[type=file]{display:none}
+  .import-icon{font-size:32px;margin-bottom:12px}
+  .import-title{font-size:15px;font-weight:600;margin-bottom:6px}
+  .import-sub{font-size:13px;color:var(--text3)}
+  .api-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);
+    padding:16px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:12px;word-break:break-all}
+
+  /* REP */
+  .rep-sec{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .rep-title{font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text1)}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text1);color:#fff;
+    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;
+    opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.err{background:var(--red)}
+  .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Sushi PN</div>
+    <div class="logo-sub">rentabilidade</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><div class="nav-dot"></div>Dashboard</a>
+    <a class="nav-item" href="insumos.html"><div class="nav-dot"></div>Insumos</a>
+    <a class="nav-item" href="fichas_tecnicas.html"><div class="nav-dot"></div>Fichas técnicas</a>
+    <a class="nav-item" href="#"><div class="nav-dot"></div>Precificação</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Análise</div>
+    <a class="nav-item" href="estoque.html"><div class="nav-dot"></div>Estoque</a>
+    <a class="nav-item" href="producao.html"><div class="nav-dot"></div>Produção</a>
+    <a class="nav-item" href="rendimento.html"><div class="nav-dot"></div>Rendimento</a>
+    <a class="nav-item active" href="pdv.html"><div class="nav-dot"></div>PDV / Vendas</a>
+    <a class="nav-item" href="#"><div class="nav-dot"></div>Engenharia cardápio</a>
+    <a class="nav-item" href="#"><div class="nav-dot"></div>CMV teórico x real</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="#"><div class="nav-dot"></div>Fornecedores</a>
+    <a class="nav-item" href="#"><div class="nav-dot"></div>Alertas</a>
+    <a class="nav-item" href="configuracoes.html"><div class="nav-dot"></div>Configurações</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">PDV / Vendas</span>
+    <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+  </div>
+  <div class="content">
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" data-tab="faturamento" onclick="switchTab('faturamento')">Faturamento</button>
+      <button class="tab-btn" data-tab="vendas" onclick="switchTab('vendas')">Vendas por Produto</button>
+      <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">Relatórios</button>
+      <button class="tab-btn" data-tab="importar" onclick="switchTab('importar')">Importar / API</button>
+    </div>
+
+    <!-- TAB: DASHBOARD -->
+    <div id="tab-dashboard" class="tab-pane active">
+      <div class="toolbar">
+        <input class="field field-sm" type="date" id="db-de">
+        <input class="field field-sm" type="date" id="db-ate">
+        <button class="btn btn-primary btn-sm" onclick="renderDashboard()">Filtrar</button>
+      </div>
+      <div class="sc-grid" id="db-cards">
+        <div class="sc"><div class="sc-label">Faturamento</div><div class="sc-value c-green" id="db-fat">—</div></div>
+        <div class="sc"><div class="sc-label">Produtos vendidos</div><div class="sc-value c-blue" id="db-qtd">—</div></div>
+        <div class="sc"><div class="sc-label">Ticket médio</div><div class="sc-value c-amber" id="db-ticket">—</div></div>
+        <div class="sc"><div class="sc-label">CMV%</div><div class="sc-value" id="db-cmv">—</div></div>
+      </div>
+      <div class="row2">
+        <div class="rep-sec">
+          <div class="rep-title">Faturamento por canal</div>
+          <div id="db-canais"></div>
+        </div>
+        <div class="rep-sec">
+          <div class="rep-title">Top 5 produtos mais vendidos</div>
+          <div class="tbl-scroll">
+            <table class="tbl">
+              <thead><tr><th>#</th><th>Produto</th><th class="r">Qtd</th><th class="r">Total</th></tr></thead>
+              <tbody id="db-top5"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="rep-sec">
+        <div class="rep-title">Faturamento por categoria</div>
+        <div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr><th>Categoria</th><th class="r">Qtd itens</th><th class="r">Faturado</th><th class="r">% do total</th><th class="r">CMV</th><th class="r">Margem</th></tr></thead>
+            <tbody id="db-cats"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: FATURAMENTO -->
+    <div id="tab-faturamento" class="tab-pane">
+      <div class="sc-grid" id="fat-cards"></div>
+      <div class="toolbar">
+        <input class="field field-sm" type="date" id="fat-de">
+        <input class="field field-sm" type="date" id="fat-ate">
+        <button class="btn btn-primary btn-sm" onclick="renderFaturamento()">Filtrar</button>
+        <button class="btn btn-ghost btn-sm ml" onclick="abrirModalFat()">+ Lançar faturamento</button>
+      </div>
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr><th>Data</th><th>Canal</th><th class="r">Valor</th><th>Observação</th><th></th></tr></thead>
+          <tbody id="fat-body"><tr><td colspan="5" class="empty">Selecione o período e clique em Filtrar</td></tr></tbody>
+          <tfoot id="fat-foot"></tfoot>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- TAB: VENDAS POR PRODUTO -->
+    <div id="tab-vendas" class="tab-pane">
+      <div class="toolbar">
+        <input class="field field-sm" type="date" id="vnd-de">
+        <input class="field field-sm" type="date" id="vnd-ate">
+        <select class="field field-sm" id="vnd-cat">
+          <option value="">Todas categorias</option>
+        </select>
+        <select class="field field-sm" id="vnd-canal">
+          <option value="">Todos os canais</option>
+          <option value="salão">Salão</option>
+          <option value="delivery">Delivery</option>
+          <option value="ifood">iFood</option>
+          <option value="rappi">Rappi</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="renderVendas()">Filtrar</button>
+        <button class="btn btn-ghost btn-sm ml" onclick="abrirModalVenda()">+ Lançar venda</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportVendasCSV()">↓ CSV</button>
+      </div>
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr>
+            <th>Data</th><th>Produto</th><th>Categoria</th><th>Canal</th>
+            <th class="r">Qtd</th><th class="r">V.Unit</th><th class="r">Total</th>
+            <th class="r">Custo</th><th class="r">Margem</th><th></th>
+          </tr></thead>
+          <tbody id="vnd-body"><tr><td colspan="10" class="empty">Selecione o período e clique em Filtrar</td></tr></tbody>
+          <tfoot id="vnd-foot"></tfoot>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- TAB: RELATÓRIOS -->
+    <div id="tab-relatorios" class="tab-pane">
+      <div class="toolbar" style="margin-bottom:20px">
+        <input class="field field-sm" type="date" id="rel-de">
+        <input class="field field-sm" type="date" id="rel-ate">
+        <button class="btn btn-primary btn-sm" onclick="renderRelatorios()">Calcular</button>
+      </div>
+
+      <!-- CURVA ABC -->
+      <div class="rep-sec">
+        <div class="rep-title">Curva ABC — por faturamento (A=80% · B=15% · C=5%)</div>
+        <div class="tbl-wrap" style="margin-bottom:0"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th class="c">#</th><th>Produto</th><th>Categoria</th>
+              <th class="c">Classe</th><th class="r">Qtd</th>
+              <th class="r">Faturado</th><th class="r">% Individual</th><th class="r">% Acumulada</th>
+            </tr></thead>
+            <tbody id="abc-body"><tr><td colspan="8" class="empty">Clique em Calcular</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- CMV POR PRODUTO -->
+      <div class="rep-sec">
+        <div class="rep-title">CMV por Produto</div>
+        <div class="tbl-wrap" style="margin-bottom:0"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Produto</th><th>Categoria</th>
+              <th class="r">Qtd vendida</th><th class="r">Faturado</th>
+              <th class="r">Custo total</th><th class="r">CMV%</th><th class="r">Margem</th>
+            </tr></thead>
+            <tbody id="cmv-body"><tr><td colspan="7" class="empty">Clique em Calcular</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ENGENHARIA DE CARDÁPIO -->
+      <div class="rep-sec">
+        <div class="rep-title">Engenharia de Cardápio</div>
+        <div class="matriz" id="eng-matriz">
+          <div class="quadrante" style="border-color:#fbbf24">
+            <div class="quad-titulo" style="color:#b45309">⭐ Estrela</div>
+            <div class="quad-sub">Alta venda · Alta margem — Manter e promover</div>
+            <div id="eng-estrela"><div class="empty" style="padding:12px">Clique em Calcular</div></div>
+          </div>
+          <div class="quadrante" style="border-color:#86efac">
+            <div class="quad-titulo" style="color:#16a34a">🐄 Vaca Leiteira</div>
+            <div class="quad-sub">Alta venda · Baixa margem — Rever preço ou custo</div>
+            <div id="eng-vaca"><div class="empty" style="padding:12px">Clique em Calcular</div></div>
+          </div>
+          <div class="quadrante" style="border-color:#93c5fd">
+            <div class="quad-titulo" style="color:#1d4ed8">🧩 Puzzle</div>
+            <div class="quad-sub">Baixa venda · Alta margem — Promover mais</div>
+            <div id="eng-puzzle"><div class="empty" style="padding:12px">Clique em Calcular</div></div>
+          </div>
+          <div class="quadrante" style="border-color:#fca5a5">
+            <div class="quad-titulo" style="color:#dc2626">🍍 Abacaxi</div>
+            <div class="quad-sub">Baixa venda · Baixa margem — Avaliar eliminação</div>
+            <div id="eng-abacaxi"><div class="empty" style="padding:12px">Clique em Calcular</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: IMPORTAR / API -->
+    <div id="tab-importar" class="tab-pane">
+      <div class="row2" style="margin-bottom:24px">
+
+        <!-- CSV -->
+        <div class="rep-sec">
+          <div class="rep-title">Importar CSV de Vendas</div>
+          <label class="import-box" id="csv-drop">
+            <input type="file" id="csv-file" accept=".csv" onchange="importarCSV(this)">
+            <div class="import-icon">📄</div>
+            <div class="import-title">Arraste ou clique para selecionar</div>
+            <div class="import-sub">Arquivo CSV com colunas: data, produto, categoria, quantidade, valor_unitario, canal</div>
+          </label>
+          <div id="csv-preview" style="display:none">
+            <div style="font-size:13px;font-weight:600;margin-bottom:10px" id="csv-info"></div>
+            <div class="tbl-scroll" style="max-height:200px;overflow-y:auto">
+              <table class="tbl"><thead id="csv-head"></thead><tbody id="csv-body-prev"></tbody></table>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <button class="btn btn-primary" onclick="confirmarImportCSV()">Importar</button>
+              <button class="btn btn-ghost" onclick="cancelarImportCSV()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- API -->
+        <div class="rep-sec">
+          <div class="rep-title">Integração via API</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+            Envie dados de vendas diretamente do seu PDV via POST para o Supabase.
+          </p>
+          <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px">ENDPOINT</div>
+          <div class="api-box">POST https://trczpnjidqfippbfxtpe.supabase.co/rest/v1/vendas_item</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px;margin-top:12px">HEADERS</div>
+          <div class="api-box">apikey: &lt;sua_chave_anon&gt;
+Authorization: Bearer &lt;sua_chave_anon&gt;
+Content-Type: application/json</div>
+          <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px;margin-top:12px">BODY (exemplo)</div>
+          <div class="api-box">[{
+  "tenant_id": "00000000-0000-0000-0000-000000000001",
+  "data": "2026-05-20",
+  "produto_nome": "Temaki Salmão",
+  "categoria": "temaki",
+  "quantidade": 3,
+  "valor_unitario": 29.90,
+  "valor_total": 89.70,
+  "custo_unitario": 8.50,
+  "canal": "salão"
+}]</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:12px">
+            ℹ️ Para vincular ao PDV automático, use webhooks ou polling a cada fechamento de caixa.
+          </div>
+        </div>
+      </div>
+
+      <!-- MAPEAMENTO PDV → FICHAS -->
+      <div class="rep-sec">
+        <div class="rep-title">Mapeamento PDV → Fichas Técnicas</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Vincule o nome do produto no PDV à ficha técnica correspondente para calcular CMV automaticamente.
+        </p>
+        <div class="toolbar">
+          <input class="field field-sm" id="map-pdv" placeholder="Nome no PDV (ex: Temaki Salmão)">
+          <select class="field field-sm" id="map-ficha">
+            <option value="">Selecione a ficha técnica...</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="salvarMapeamento()">Vincular</button>
+        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr><th>Nome no PDV</th><th>Ficha Técnica</th><th>Custo unitário</th><th></th></tr></thead>
+            <tbody id="map-body"><tr><td colspan="4" class="empty">Nenhum mapeamento cadastrado</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- MODAL: FATURAMENTO -->
+<div id="m-fat" class="overlay" onclick="if(event.target===this)fecharModal('m-fat')">
+  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+    <h2 id="fat-titulo">Lançar Faturamento</h2>
+    <div class="fg"><label>Data *</label><input type="date" id="fat-data"></div>
+    <div class="fg"><label>Canal *</label>
+      <select id="fat-canal">
+        <option value="salão">Salão</option>
+        <option value="delivery">Delivery próprio</option>
+        <option value="ifood">iFood</option>
+        <option value="rappi">Rappi</option>
+        <option value="outros">Outros</option>
+      </select>
+    </div>
+    <div class="fg"><label>Valor (R$) *</label><input type="number" id="fat-valor" min="0" step="0.01" placeholder="0,00"></div>
+    <div class="fg"><label>Observação</label><input type="text" id="fat-obs" placeholder="Opcional"></div>
+    <input type="hidden" id="fat-edit-id">
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModal('m-fat')">Cancelar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" id="btn-fat" onclick="salvarFaturamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VENDA -->
+<div id="m-vnd" class="overlay" onclick="if(event.target===this)fecharModal('m-vnd')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="vnd-titulo">Lançar Venda</h2>
+    <div class="row2">
+      <div class="fg"><label>Data *</label><input type="date" id="vnd-data"></div>
+      <div class="fg"><label>Canal</label>
+        <select id="vnd-canal-form">
+          <option value="salão">Salão</option>
+          <option value="delivery">Delivery</option>
+          <option value="ifood">iFood</option>
+          <option value="rappi">Rappi</option>
+          <option value="outros">Outros</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Produto (ficha técnica)</label>
+      <select id="vnd-ficha" onchange="onFichaChange()">
+        <option value="">Selecione ou deixe em branco para digitar</option>
+      </select>
+    </div>
+    <div class="fg"><label>Nome do produto *</label><input type="text" id="vnd-nome" placeholder="Ex: Temaki Salmão"></div>
+    <div class="fg"><label>Categoria</label>
+      <select id="vnd-cat-form">
+        <option value="">Sem categoria</option>
+        <option value="temaki">Temaki</option><option value="sushi">Sushi</option>
+        <option value="hot">Hot Roll</option><option value="uramaki">Uramaki</option>
+        <option value="sashimi">Sashimi</option><option value="combo">Combo</option>
+        <option value="prato">Prato</option><option value="bebida">Bebida</option>
+        <option value="entrada">Entrada</option><option value="sobremesa">Sobremesa</option>
+        <option value="outros">Outros</option>
+      </select>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Quantidade *</label><input type="number" id="vnd-qtd" min="1" step="1" value="1" oninput="calcVndPreview()"></div>
+      <div class="fg"><label>Valor unitário (R$) *</label><input type="number" id="vnd-vunit" min="0" step="0.01" oninput="calcVndPreview()"></div>
+    </div>
+    <div class="fg"><label>Custo unitário (R$)</label><input type="number" id="vnd-custo" min="0" step="0.01" placeholder="Calculado automaticamente se ficha vinculada"></div>
+    <div id="vnd-preview" style="display:none;background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px">
+      Total: <strong id="vnd-total" style="font-family:'DM Mono',monospace"></strong> |
+      Margem: <strong id="vnd-margem" style="font-family:'DM Mono',monospace"></strong>
+    </div>
+    <input type="hidden" id="vnd-edit-id">
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModal('m-vnd')">Cancelar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" id="btn-vnd" onclick="salvarVenda()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+async function api(endpoint, opts={}) {
+  const method = (opts.method||'GET').toUpperCase();
+  const headers = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY };
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  if (opts.prefer) headers['Prefer'] = opts.prefer;
+  else if (method==='POST') headers['Prefer'] = 'return=representation';
+  else if (method==='PATCH') headers['Prefer'] = 'return=representation';
+  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`, {method, headers, body: opts.body||undefined});
+  if (!res.ok) { let m=res.statusText; try{const j=await res.json();m=j.message||j.error||m;}catch{}throw new Error(`[${res.status}] ${m}`); }
+  const ct = res.headers.get('content-type')||'';
+  if (ct.includes('application/json')) { const t=await res.text(); return t?JSON.parse(t):[]; }
+  return [];
+}
+
+// ── STATE ──────────────────────────────────────────────────────────
+let fichas = [], mapeamentos = [];
+let tabAtual = 'dashboard';
+
+// ── INIT ───────────────────────────────────────────────────────────
+async function carregar() {
+  document.getElementById('conn-status').textContent = 'carregando...';
+  try {
+    fichas = await api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&order=nome.asc&select=*,itens_ficha(insumo_id,quantidade_g)`);
+    popularFichasSelect();
+    const hoje2 = new Date();
+    const ini = new Date(hoje2.getFullYear(), hoje2.getMonth(), 1).toISOString().split('T')[0];
+    const fim = new Date(hoje2.getFullYear(), hoje2.getMonth()+1, 0).toISOString().split('T')[0];
+    ['db-de','db-ate','fat-de','fat-ate','vnd-de','vnd-ate','rel-de','rel-ate'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.value) el.value = id.endsWith('-de') ? ini : fim;
+    });
+    document.getElementById('conn-status').textContent = '● conectado';
+    document.getElementById('conn-status').style.color = 'var(--green)';
+    renderDashboard();
+  } catch(e) {
+    document.getElementById('conn-status').textContent = '✕ erro';
+    document.getElementById('conn-status').style.color = 'var(--red)';
+    toast('Erro ao carregar: '+e.message, 'err');
+  }
+}
+
+function popularFichasSelect() {
+  const opts = fichas.map(f => `<option value="${f.id}" data-nome="${esc(f.nome)}" data-cat="${esc(f.categoria||'')}" data-preco="${f.preco_venda||0}">${esc(f.nome)}</option>`).join('');
+  document.getElementById('vnd-ficha').innerHTML = '<option value="">— Digitar manualmente —</option>' + opts;
+  document.getElementById('map-ficha').innerHTML = '<option value="">Selecione a ficha...</option>' + opts;
+  const cats = [...new Set(fichas.map(f=>f.categoria).filter(Boolean))].sort();
+  document.getElementById('vnd-cat').innerHTML = '<option value="">Todas categorias</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+
+// ── TABS ───────────────────────────────────────────────────────────
+function switchTab(tab) {
+  tabAtual = tab;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  const el = document.getElementById('tab-'+tab);
+  if (el) el.classList.add('active');
+  if (tab==='faturamento') renderFaturamento();
+  if (tab==='vendas') renderVendas();
+  if (tab==='relatorios') renderRelatorios();
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────
+function brl(v) { if(v==null||v==='')return'—'; return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function hoje() { return new Date().toISOString().split('T')[0]; }
+function fmtData(d) { if(!d)return'—'; return new Date(d+'T12:00:00').toLocaleDateString('pt-BR'); }
+let toastTimer;
+function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
+function abrirModal(id){document.getElementById(id).classList.add('open')}
+function fecharModal(id){document.getElementById(id).classList.remove('open')}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────
+async function renderDashboard() {
+  const de = document.getElementById('db-de').value;
+  const ate = document.getElementById('db-ate').value;
+  if (!de || !ate) return;
+  try {
+    const [fats, vendas] = await Promise.all([
+      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`),
+      api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}&order=data.desc`)
+    ]);
+
+    const totalFat = fats.reduce((s,f)=>s+(f.valor||0),0);
+    const totalQtd = vendas.reduce((s,v)=>s+(v.quantidade||0),0);
+    const totalVnd = vendas.reduce((s,v)=>s+(v.valor_total||0),0);
+    const totalCusto = vendas.reduce((s,v)=>s+(v.custo_unitario||0)*(v.quantidade||0),0);
+    const cmvPct = totalFat>0 ? (totalCusto/totalFat*100) : null;
+    const cmvCor = cmvPct===null?'':cmvPct<=30?'c-green':cmvPct<=38?'c-amber':'c-red';
+
+    document.getElementById('db-fat').textContent = brl(totalFat||totalVnd);
+    document.getElementById('db-qtd').textContent = totalQtd.toLocaleString('pt-BR',{maximumFractionDigits:0});
+    const diasPeriodo = Math.max(1,(new Date(ate)-new Date(de))/(1000*60*60*24)+1);
+    document.getElementById('db-ticket').textContent = brl((totalFat||totalVnd)/diasPeriodo);
+    document.getElementById('db-cmv').className = 'sc-value '+cmvCor;
+    document.getElementById('db-cmv').textContent = cmvPct!==null ? cmvPct.toFixed(1)+'%' : '—';
+
+    // Canais
+    const porCanal = {};
+    fats.forEach(f => { porCanal[f.canal]=(porCanal[f.canal]||0)+(f.valor||0); });
+    const canaisNomes = {salão:'Salão',delivery:'Delivery',ifood:'iFood',rappi:'Rappi',outros:'Outros'};
+    document.getElementById('db-canais').innerHTML = Object.entries(porCanal).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>${canaisNomes[c]||c}</span><span class="mono">${brl(v)} (${totalFat>0?(v/totalFat*100).toFixed(1):0}%)</span>
+        </div>
+        <div style="height:6px;background:var(--bg3);border-radius:3px">
+          <div style="height:6px;border-radius:3px;background:var(--teal);width:${totalFat>0?(v/totalFat*100):0}%"></div>
+        </div>
+      </div>`).join('') || '<div style="color:var(--text3);font-size:13px">Sem faturamento no período</div>';
+
+    // Top 5 produtos
+    const porProduto = {};
+    vendas.forEach(v => {
+      if (!porProduto[v.produto_nome]) porProduto[v.produto_nome] = {qtd:0,total:0};
+      porProduto[v.produto_nome].qtd += (v.quantidade||0);
+      porProduto[v.produto_nome].total += (v.valor_total||0);
+    });
+    const top5 = Object.entries(porProduto).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+    document.getElementById('db-top5').innerHTML = top5.length ? top5.map(([nome,d],i)=>`<tr>
+      <td class="c mono" style="color:var(--text3)">${i+1}</td>
+      <td>${esc(nome)}</td>
+      <td class="r mono">${d.qtd.toFixed(0)}</td>
+      <td class="r mono" style="font-weight:600">${brl(d.total)}</td>
+    </tr>`).join('') : `<tr><td colspan="4" class="empty">Sem vendas no período</td></tr>`;
+
+    // Por categoria
+    const porCat = {};
+    vendas.forEach(v => {
+      const c = v.categoria||'Sem categoria';
+      if (!porCat[c]) porCat[c]={qtd:0,fat:0,custo:0};
+      porCat[c].qtd += (v.quantidade||0);
+      porCat[c].fat += (v.valor_total||0);
+      porCat[c].custo += (v.custo_unitario||0)*(v.quantidade||0);
+    });
+    const totalFatVnd = vendas.reduce((s,v)=>s+(v.valor_total||0),0);
+    document.getElementById('db-cats').innerHTML = Object.entries(porCat).sort((a,b)=>b[1].fat-a[1].fat).map(([cat,d])=>{
+      const margem = d.fat-d.custo;
+      return `<tr>
+        <td style="font-weight:500">${esc(cat)}</td>
+        <td class="r mono">${d.qtd.toFixed(0)}</td>
+        <td class="r mono">${brl(d.fat)}</td>
+        <td class="r mono">${totalFatVnd>0?(d.fat/totalFatVnd*100).toFixed(1):0}%</td>
+        <td class="r mono">${brl(d.custo)}</td>
+        <td class="r mono" style="${margem>=0?'color:#16a34a':'color:var(--red)'}">${brl(margem)}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="6" class="empty">Sem vendas no período</td></tr>`;
+
+  } catch(e) { toast('Erro dashboard: '+e.message,'err'); }
+}
+
+// ── FATURAMENTO ────────────────────────────────────────────────────
+async function renderFaturamento() {
+  const de = document.getElementById('fat-de').value;
+  const ate = document.getElementById('fat-ate').value;
+  if (!de||!ate) return;
+  try {
+    const data = await api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}&order=data.desc`);
+    const total = data.reduce((s,f)=>s+(f.valor||0),0);
+    const porCanal = {};
+    data.forEach(f=>{porCanal[f.canal]=(porCanal[f.canal]||0)+(f.valor||0);});
+    const melhor = Object.entries(porCanal).sort((a,b)=>b[1]-a[1])[0];
+    const canaisNomes = {salão:'Salão',delivery:'Delivery',ifood:'iFood',rappi:'Rappi',outros:'Outros'};
+    document.getElementById('fat-cards').innerHTML = `
+      <div class="sc"><div class="sc-label">Total do período</div><div class="sc-value c-green">${brl(total)}</div><div class="sc-sub">${data.length} lançamento(s)</div></div>
+      <div class="sc"><div class="sc-label">Maior canal</div><div class="sc-value" style="font-size:16px">${melhor?canaisNomes[melhor[0]]||melhor[0]:'—'}</div><div class="sc-sub">${melhor?brl(melhor[1]):'—'}</div></div>
+      ${Object.entries(porCanal).map(([c,v])=>`<div class="sc"><div class="sc-label">${canaisNomes[c]||c}</div><div class="sc-value c-blue" style="font-size:18px">${brl(v)}</div><div class="sc-sub">${total>0?(v/total*100).toFixed(1):0}%</div></div>`).join('')}`;
+    document.getElementById('fat-body').innerHTML = data.length ? data.map(f=>`<tr>
+      <td class="mono">${fmtData(f.data)}</td>
+      <td><span class="badge b-canal">${canaisNomes[f.canal]||f.canal}</span></td>
+      <td class="r mono" style="font-weight:600">${brl(f.valor)}</td>
+      <td style="color:var(--text2)">${esc(f.observacao||'—')}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="editarFat('${f.id}','${f.data}','${f.canal}',${f.valor},'${esc(f.observacao||'')}')">Editar</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirFat('${f.id}')">Excluir</button>
+      </td>
+    </tr>`).join('') : `<tr><td colspan="5" class="empty">Nenhum lançamento no período</td></tr>`;
+    document.getElementById('fat-foot').innerHTML = data.length ? `<tr style="background:var(--bg3);font-weight:700"><td colspan="2" style="padding:10px 14px">Total</td><td class="r mono" style="padding:10px 14px;color:var(--teal)">${brl(total)}</td><td colspan="2"></td></tr>` : '';
+  } catch(e) { toast('Erro faturamento: '+e.message,'err'); }
+}
+
+function abrirModalFat() {
+  document.getElementById('fat-titulo').textContent = 'Lançar Faturamento';
+  document.getElementById('fat-edit-id').value = '';
+  document.getElementById('fat-data').value = hoje();
+  document.getElementById('fat-canal').value = 'salão';
+  document.getElementById('fat-valor').value = '';
+  document.getElementById('fat-obs').value = '';
+  abrirModal('m-fat');
+}
+
+function editarFat(id,data,canal,valor,obs) {
+  document.getElementById('fat-titulo').textContent = 'Editar Faturamento';
+  document.getElementById('fat-edit-id').value = id;
+  document.getElementById('fat-data').value = data;
+  document.getElementById('fat-canal').value = canal;
+  document.getElementById('fat-valor').value = valor;
+  document.getElementById('fat-obs').value = obs;
+  abrirModal('m-fat');
+}
+
+async function salvarFaturamento() {
+  const id = document.getElementById('fat-edit-id').value;
+  const data = document.getElementById('fat-data').value;
+  const canal = document.getElementById('fat-canal').value;
+  const valor = parseFloat(document.getElementById('fat-valor').value);
+  const obs = document.getElementById('fat-obs').value.trim();
+  if (!data||!canal||isNaN(valor)||valor<=0){toast('Preencha data, canal e valor.','err');return;}
+  const btn = document.getElementById('btn-fat');
+  btn.disabled=true; btn.textContent='Salvando...';
+  try {
+    const payload = {tenant_id:TENANT_ID,data,canal,valor,observacao:obs||null};
+    if (id) await api(`faturamento?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
+    else await api('faturamento',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
+    fecharModal('m-fat'); renderFaturamento(); toast('Faturamento salvo!','ok');
+  } catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+
+async function excluirFat(id) {
+  if(!confirm('Excluir este lançamento?'))return;
+  try{await api(`faturamento?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});renderFaturamento();toast('Excluído.','ok');}
+  catch(e){toast('Erro: '+e.message,'err');}
+}
+
+// ── VENDAS POR PRODUTO ─────────────────────────────────────────────
+async function renderVendas() {
+  const de = document.getElementById('vnd-de').value;
+  const ate = document.getElementById('vnd-ate').value;
+  const cat = document.getElementById('vnd-cat').value;
+  const canal = document.getElementById('vnd-canal').value;
+  if (!de||!ate) return;
+  try {
+    let q = `vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}&order=data.desc`;
+    if (cat) q += `&categoria=eq.${cat}`;
+    if (canal) q += `&canal=eq.${canal}`;
+    const data = await api(q);
+    const totalVnd = data.reduce((s,v)=>s+(v.valor_total||0),0);
+    const totalCusto = data.reduce((s,v)=>s+(v.custo_unitario||0)*(v.quantidade||0),0);
+    const totalMargem = totalVnd - totalCusto;
+    document.getElementById('vnd-body').innerHTML = data.length ? data.map(v=>{
+      const custo = (v.custo_unitario||0)*(v.quantidade||0);
+      const margem = (v.valor_total||0)-custo;
+      const margemPct = v.valor_total>0?(margem/v.valor_total*100):0;
+      return `<tr>
+        <td class="mono" style="color:var(--text2)">${fmtData(v.data)}</td>
+        <td style="font-weight:500">${esc(v.produto_nome)}</td>
+        <td style="color:var(--text3)">${esc(v.categoria||'—')}</td>
+        <td><span class="badge b-canal">${esc(v.canal||'—')}</span></td>
+        <td class="r mono">${Number(v.quantidade).toFixed(0)}</td>
+        <td class="r mono">${brl(v.valor_unitario)}</td>
+        <td class="r mono" style="font-weight:600">${brl(v.valor_total)}</td>
+        <td class="r mono">${custo>0?brl(custo):'—'}</td>
+        <td class="r mono" style="${margem>=0?'color:#16a34a':'color:var(--red)'}">${custo>0?margemPct.toFixed(1)+'%':'—'}</td>
+        <td style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="excluirVenda('${v.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="10" class="empty">Nenhuma venda no período</td></tr>`;
+    document.getElementById('vnd-foot').innerHTML = data.length ? `<tr style="background:var(--bg3);font-weight:700">
+      <td colspan="6" style="padding:10px 14px">Total</td>
+      <td class="r mono" style="padding:10px 14px;color:var(--teal)">${brl(totalVnd)}</td>
+      <td class="r mono" style="padding:10px 14px">${brl(totalCusto)}</td>
+      <td class="r mono" style="padding:10px 14px;color:#16a34a">${brl(totalMargem)}</td>
+      <td></td>
+    </tr>` : '';
+  } catch(e){toast('Erro vendas: '+e.message,'err');}
+}
+
+function abrirModalVenda() {
+  document.getElementById('vnd-titulo').textContent = 'Lançar Venda';
+  document.getElementById('vnd-edit-id').value = '';
+  document.getElementById('vnd-data').value = hoje();
+  document.getElementById('vnd-ficha').value = '';
+  document.getElementById('vnd-nome').value = '';
+  document.getElementById('vnd-cat-form').value = '';
+  document.getElementById('vnd-qtd').value = 1;
+  document.getElementById('vnd-vunit').value = '';
+  document.getElementById('vnd-custo').value = '';
+  document.getElementById('vnd-preview').style.display = 'none';
+  abrirModal('m-vnd');
+}
+
+function onFichaChange() {
+  const sel = document.getElementById('vnd-ficha');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) return;
+  document.getElementById('vnd-nome').value = opt.dataset.nome||'';
+  document.getElementById('vnd-cat-form').value = opt.dataset.cat||'';
+  const preco = parseFloat(opt.dataset.preco)||0;
+  if (preco>0) document.getElementById('vnd-vunit').value = preco;
+  calcVndPreview();
+}
+
+function calcVndPreview() {
+  const qtd = parseFloat(document.getElementById('vnd-qtd').value)||0;
+  const vunit = parseFloat(document.getElementById('vnd-vunit').value)||0;
+  const custo = parseFloat(document.getElementById('vnd-custo').value)||0;
+  const total = qtd*vunit;
+  const margem = custo>0 ? ((total-qtd*custo)/total*100) : null;
+  const prev = document.getElementById('vnd-preview');
+  if (total>0){
+    document.getElementById('vnd-total').textContent = brl(total);
+    document.getElementById('vnd-margem').textContent = margem!==null?margem.toFixed(1)+'%':'—';
+    prev.style.display='block';
+  } else { prev.style.display='none'; }
+}
+
+async function salvarVenda() {
+  const id = document.getElementById('vnd-edit-id').value;
+  const data = document.getElementById('vnd-data').value;
+  const fichaId = document.getElementById('vnd-ficha').value||null;
+  const nome = document.getElementById('vnd-nome').value.trim();
+  const cat = document.getElementById('vnd-cat-form').value||null;
+  const canal = document.getElementById('vnd-canal-form').value;
+  const qtd = parseFloat(document.getElementById('vnd-qtd').value)||0;
+  const vunit = parseFloat(document.getElementById('vnd-vunit').value)||0;
+  const custo = parseFloat(document.getElementById('vnd-custo').value)||null;
+  if (!data||!nome||qtd<=0||vunit<=0){toast('Preencha data, produto, quantidade e valor.','err');return;}
+  const btn = document.getElementById('btn-vnd');
+  btn.disabled=true; btn.textContent='Salvando...';
+  try {
+    const payload = {tenant_id:TENANT_ID,data,ficha_id:fichaId,produto_nome:nome,
+      categoria:cat,quantidade:qtd,valor_unitario:vunit,valor_total:parseFloat((qtd*vunit).toFixed(2)),
+      custo_unitario:custo,canal};
+    if (id) await api(`vendas_item?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
+    else await api('vendas_item',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
+    fecharModal('m-vnd'); renderVendas(); toast('Venda salva!','ok');
+  } catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+
+async function excluirVenda(id) {
+  if(!confirm('Excluir esta venda?'))return;
+  try{await api(`vendas_item?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});renderVendas();toast('Excluído.','ok');}
+  catch(e){toast('Erro: '+e.message,'err');}
+}
+
+function exportVendasCSV() {
+  const rows = document.querySelectorAll('#vnd-body tr');
+  toast('Use o filtro e exporte via CSV em breve.','ok');
+}
+
+// ── RELATÓRIOS ─────────────────────────────────────────────────────
+async function renderRelatorios() {
+  const de = document.getElementById('rel-de').value;
+  const ate = document.getElementById('rel-ate').value;
+  if (!de||!ate){toast('Selecione o período.','err');return;}
+  try {
+    const vendas = await api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`);
+    if (!vendas.length){toast('Sem vendas no período.','ok');return;}
+
+    // Agrupa por produto
+    const porProd = {};
+    vendas.forEach(v=>{
+      const k = v.produto_nome;
+      if(!porProd[k]) porProd[k]={nome:k,cat:v.categoria||'—',qtd:0,fat:0,custo:0};
+      porProd[k].qtd+=(v.quantidade||0);
+      porProd[k].fat+=(v.valor_total||0);
+      porProd[k].custo+=(v.custo_unitario||0)*(v.quantidade||0);
+    });
+    const prods = Object.values(porProd).sort((a,b)=>b.fat-a.fat);
+    const totalFat = prods.reduce((s,p)=>s+p.fat,0);
+    const mediaQtd = prods.reduce((s,p)=>s+p.qtd,0)/prods.length;
+    const mediaMargem = prods.reduce((s,p)=>s+(p.fat>0?(p.fat-p.custo)/p.fat:0),0)/prods.length;
+
+    // CURVA ABC
+    let acum=0;
+    const abcRows = prods.map((p,i)=>{
+      const pct = totalFat>0?p.fat/totalFat*100:0;
+      acum+=pct;
+      const classe = acum<=80?'A':acum<=95?'B':'C';
+      return `<tr>
+        <td class="c mono" style="color:var(--text3)">${i+1}</td>
+        <td style="font-weight:500">${esc(p.nome)}</td>
+        <td style="color:var(--text3)">${esc(p.cat)}</td>
+        <td class="c"><span class="badge b-${classe}">${classe}</span></td>
+        <td class="r mono">${p.qtd.toFixed(0)}</td>
+        <td class="r mono">${brl(p.fat)}</td>
+        <td class="r mono">${pct.toFixed(1)}%</td>
+        <td class="r mono">${acum.toFixed(1)}%</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('abc-body').innerHTML = abcRows;
+
+    // CMV POR PRODUTO
+    document.getElementById('cmv-body').innerHTML = prods.map(p=>{
+      const margem=p.fat-p.custo;
+      const cmvPct=p.fat>0?(p.custo/p.fat*100):null;
+      const cor=cmvPct===null?'':cmvPct<=30?'color:#16a34a':cmvPct<=38?'color:var(--amber)':'color:var(--red)';
+      return `<tr>
+        <td style="font-weight:500">${esc(p.nome)}</td>
+        <td style="color:var(--text3)">${esc(p.cat)}</td>
+        <td class="r mono">${p.qtd.toFixed(0)}</td>
+        <td class="r mono">${brl(p.fat)}</td>
+        <td class="r mono">${p.custo>0?brl(p.custo):'—'}</td>
+        <td class="r mono" style="${cor}">${cmvPct!==null?cmvPct.toFixed(1)+'%':'—'}</td>
+        <td class="r mono" style="${margem>=0?'color:#16a34a':'color:var(--red)'}">${brl(margem)}</td>
+      </tr>`;
+    }).join('');
+
+    // ENGENHARIA DE CARDÁPIO
+    const estrela=[],vaca=[],puzzle=[],abacaxi=[];
+    prods.forEach(p=>{
+      const altaVenda = p.qtd>=mediaQtd;
+      const margem = p.fat>0?(p.fat-p.custo)/p.fat:0;
+      const altaMargem = margem>=mediaMargem;
+      const item = `<div class="quad-item"><span>${esc(p.nome)}</span><span class="mono" style="font-size:12px">${p.qtd.toFixed(0)} · ${brl(p.fat)}</span></div>`;
+      if(altaVenda&&altaMargem) estrela.push(item);
+      else if(altaVenda&&!altaMargem) vaca.push(item);
+      else if(!altaVenda&&altaMargem) puzzle.push(item);
+      else abacaxi.push(item);
+    });
+    const renderQuad=(id,items)=>{document.getElementById(id).innerHTML=items.join('')||'<div class="empty" style="padding:12px">Nenhum produto</div>';};
+    renderQuad('eng-estrela',estrela);
+    renderQuad('eng-vaca',vaca);
+    renderQuad('eng-puzzle',puzzle);
+    renderQuad('eng-abacaxi',abacaxi);
+
+    toast('Relatórios calculados!','ok');
+  } catch(e){toast('Erro relatórios: '+e.message,'err');}
+}
+
+// ── IMPORTAR CSV ───────────────────────────────────────────────────
+let csvDados = [];
+function importarCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').filter(l=>l.trim());
+    if (lines.length<2){toast('CSV inválido ou vazio.','err');return;}
+    const headers = lines[0].split(';').map(h=>h.trim().toLowerCase());
+    csvDados = lines.slice(1).map(l=>{
+      const cols = l.split(';');
+      const obj={};
+      headers.forEach((h,i)=>obj[h]=cols[i]?.trim()||'');
+      return obj;
+    }).filter(r=>r.produto_nome||r.produto||r.nome);
+    document.getElementById('csv-info').textContent = `${csvDados.length} registros encontrados`;
+    document.getElementById('csv-head').innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+    document.getElementById('csv-body-prev').innerHTML = csvDados.slice(0,5).map(r=>`<tr>${headers.map(h=>`<td>${esc(r[h]||'')}</td>`).join('')}</tr>`).join('');
+    document.getElementById('csv-preview').style.display='block';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+async function confirmarImportCSV() {
+  if (!csvDados.length){toast('Nenhum dado para importar.','err');return;}
+  try {
+    const payload = csvDados.map(r=>({
+      tenant_id: TENANT_ID,
+      data: r.data||hoje(),
+      produto_nome: r.produto_nome||r.produto||r.nome||'Sem nome',
+      categoria: r.categoria||null,
+      quantidade: parseFloat(r.quantidade)||1,
+      valor_unitario: parseFloat(r.valor_unitario||r.valor_unit||r.preco)||0,
+      valor_total: parseFloat(r.valor_total||r.total)||(parseFloat(r.quantidade||1)*parseFloat(r.valor_unitario||r.preco||0)),
+      custo_unitario: parseFloat(r.custo_unitario||r.custo)||null,
+      canal: r.canal||'salão',
+    }));
+    await api('vendas_item',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
+    toast(`${payload.length} registros importados!`,'ok');
+    cancelarImportCSV();
+  } catch(e){toast('Erro importação: '+e.message,'err');}
+}
+
+function cancelarImportCSV() {
+  csvDados=[];
+  document.getElementById('csv-file').value='';
+  document.getElementById('csv-preview').style.display='none';
+}
+
+// ── MAPEAMENTO ─────────────────────────────────────────────────────
+async function salvarMapeamento() {
+  toast('Mapeamento será implementado com a integração PDV.','ok');
+}
+
+// ── INIT ───────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(b=>{
+  const fn=b.getAttribute('onclick');
+  const m=fn&&fn.match(/'([^']+)'/);
+  if(m) b.dataset.tab=m[1];
+});
+
+carregar();
+</script>
+</body>
+</html>
