@@ -694,10 +694,11 @@ async function salvarPedido() {
   });
 
   try {
-    for (const [fornId, itens] of Object.entries(porForn)) {
+    for (const [fornIdKey, itens] of Object.entries(porForn)) {
+      const fornId = (fornIdKey === 'null' || !fornIdKey) ? null : fornIdKey;
       const pedRes = await api('pedidos_compra', { method:'POST',
         body: JSON.stringify({ tenant_id:TENANT_ID, loja_id:lojaId,
-          fornecedor_id:fornId||null, status:'pendente',
+          fornecedor_id: fornId, status:'pendente',
           data_pedido: hoje(), data_entrega_prevista:entrega||null,
           observacao:obs||null,
           solicitante_id: userProfile?.id||null }) });
