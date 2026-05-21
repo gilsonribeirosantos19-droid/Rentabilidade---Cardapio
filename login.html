@@ -16,22 +16,27 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{
     font-family:'Plus Jakarta Sans',sans-serif;
-    background: url('https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1600&q=80') center/cover no-repeat fixed;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
     color:var(--text1);
     min-height:100vh;
     display:flex;
     align-items:center;
     justify-content:center;
     padding:16px;
+    position:relative;
+    overflow:hidden;
   }
   body::before{
     content:'';
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,.45);
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(220,38,38,.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(220,38,38,.06) 0%, transparent 40%),
+      radial-gradient(circle at 60% 80%, rgba(99,102,241,.06) 0%, transparent 40%);
     z-index:0;
   }
-  .card{position:relative;z-index:1;}
+  .card{position:relative;z-index:1;box-shadow:0 20px 60px rgba(0,0,0,.5);}
 
   /* ── CARD ── */
   .card{
