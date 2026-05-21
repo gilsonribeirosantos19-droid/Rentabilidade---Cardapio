@@ -226,6 +226,17 @@
 
 <script>
 (function(){if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u&&u.perfil==='gerente'){window.location.href='loja.html';}}catch{}})();
+(function(){
+    try{
+      const u=JSON.parse(localStorage.getItem('sb_user')||'null');
+      if(u){
+        const n=document.getElementById('sb-user-nome');
+        const p=document.getElementById('sb-user-perfil');
+        if(n)n.textContent=u.nome||'Usuário';
+        if(p)p.textContent=u.perfil||'—';
+      }
+    }catch{}
+  })();
 const SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
 const TENANT_ID = '00000000-0000-0000-0000-000000000001';
