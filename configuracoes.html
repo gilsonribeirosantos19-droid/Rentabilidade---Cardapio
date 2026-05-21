@@ -215,6 +215,82 @@
         </div>
       </div>
 
+      <!-- LOJAS -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Lojas / Filiais</div>
+            <div class="section-sub">Cadastre as unidades da empresa</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalLoja()">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Nome</th><th>Endereço</th><th>WhatsApp</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-lojas">
+              <tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FORNECEDORES -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Fornecedores</div>
+            <div class="section-sub">Cadastre os fornecedores para vincular aos insumos</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalForn()">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Nome</th><th>Contato</th><th>WhatsApp</th><th>Email</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-fornecedores">
+              <tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VÍNCULO INSUMO → FORNECEDOR -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Vínculo Insumo → Fornecedor</div>
+            <div class="section-sub">Define qual fornecedor abastece cada insumo e o preço negociado</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalVinculo()">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Insumo</th><th>Fornecedor</th><th>Preço unit.</th><th>Principal</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-vinculos">
+              <tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- USUÁRIOS -->
+      <div class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Usuários</div>
+            <div class="section-sub">Gerencie os acessos e perfis de cada usuário</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalUsuario()">+ Adicionar</button>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Loja</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+            <tbody id="tbody-usuarios">
+              <tr class="empty-row"><td colspan="6"><span class="spinner"></span>Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -258,6 +334,83 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharConfirm()">Cancelar</button>
       <button class="btn btn-danger" id="btn-confirmar-del" onclick="confirmarDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: LOJA -->
+<div id="m-loja" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-loja')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><span class="modal-title" id="loja-titulo">Nova Loja</span><button class="modal-close" onclick="fecharModalExtra('m-loja')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nome *</label><input type="text" id="loja-nome" placeholder="Ex: Sushi PN - Ponta Negra"></div>
+      <div class="form-group"><label>Endereço</label><input type="text" id="loja-end" placeholder="Rua, número, bairro"></div>
+      <div class="form-group"><label>WhatsApp</label><input type="text" id="loja-wpp" placeholder="84 9 9999-9999"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalExtra('m-loja')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLoja()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FORNECEDOR -->
+<div id="m-forn" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-forn')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><span class="modal-title" id="forn-titulo">Novo Fornecedor</span><button class="modal-close" onclick="fecharModalExtra('m-forn')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nome *</label><input type="text" id="forn-nome" placeholder="Ex: Distribuidora Frutos do Mar"></div>
+      <div class="form-group"><label>Contato (nome da pessoa)</label><input type="text" id="forn-contato" placeholder="Ex: João"></div>
+      <div class="form-group"><label>WhatsApp</label><input type="text" id="forn-wpp" placeholder="84 9 9999-9999"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="forn-email" placeholder="email@fornecedor.com"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalExtra('m-forn')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarForn()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VÍNCULO INSUMO → FORNECEDOR -->
+<div id="m-vinculo" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-vinculo')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><span class="modal-title" id="vinculo-titulo">Vincular Insumo</span><button class="modal-close" onclick="fecharModalExtra('m-vinculo')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Insumo *</label><select id="vinculo-ins"></select></div>
+      <div class="form-group"><label>Fornecedor *</label><select id="vinculo-forn"></select></div>
+      <div class="form-group"><label>Preço unitário negociado (R$)</label><input type="number" id="vinculo-preco" min="0" step="0.01" placeholder="0,00"></div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="vinculo-principal" style="width:auto">
+        <label style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text1)">Fornecedor principal deste insumo</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalExtra('m-vinculo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarVinculo()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: USUÁRIO -->
+<div id="m-usuario" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-usuario')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><span class="modal-title" id="usuario-titulo">Novo Usuário</span><button class="modal-close" onclick="fecharModalExtra('m-usuario')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nome *</label><input type="text" id="usuario-nome" placeholder="Nome completo"></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="usuario-email" placeholder="email@empresa.com"></div>
+      <div class="form-group" id="fg-senha"><label>Senha *</label><input type="password" id="usuario-senha" placeholder="Mínimo 6 caracteres"></div>
+      <div class="form-group"><label>Perfil *</label>
+        <select id="usuario-perfil" onchange="onPerfilChange()">
+          <option value="admin">Admin (acesso total)</option>
+          <option value="compras">Compras (pedidos + relatórios)</option>
+          <option value="gerente">Gerente de loja (apenas pedidos)</option>
+        </select>
+      </div>
+      <div class="form-group" id="fg-loja" style="display:none"><label>Loja *</label><select id="usuario-loja"></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalExtra('m-usuario')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-usuario" onclick="salvarUsuario()">Criar usuário</button>
     </div>
   </div>
 </div>
@@ -505,8 +658,230 @@
     if (e.key === 'Enter' && document.getElementById('modal-form').classList.contains('open')) salvar();
   });
 
+  // ── LOJAS ─────────────────────────────────────────────────
+  let lojas = [], fornecedores = [], insumos = [], vinculos = [], usuarios = [];
+  let editLojaId = null, editFornId = null, editVincId = null, editUserId = null;
+
+  function fecharModalExtra(id) { document.getElementById(id).classList.remove('open'); }
+
+  async function carregarExtras() {
+    [lojas, fornecedores, insumos, vinculos, usuarios] = await Promise.all([
+      api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
+      api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`),
+      api(`usuarios?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
+    ]);
+    renderLojas(); renderFornecedores(); renderVinculos(); renderUsuarios();
+  }
+
+  function renderLojas() {
+    const tbody = document.getElementById('tbody-lojas');
+    tbody.innerHTML = lojas.length ? lojas.map(l => `<tr>
+      <td style="font-weight:500">${escHtml(l.nome)}</td>
+      <td class="td-mono">${escHtml(l.endereco||'—')}</td>
+      <td class="td-mono">${escHtml(l.whatsapp||'—')}</td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${l.ativo?'#dcfce7':'#fee2e2'};color:${l.ativo?'#16a34a':'#dc2626'}">${l.ativo?'Ativa':'Inativa'}</span></td>
+      <td><div class="td-actions">
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalLoja('${l.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirItem('lojas','${l.id}','${escHtml(l.nome)}')">Excluir</button>
+      </div></td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhuma loja cadastrada</td></tr>';
+  }
+
+  function abrirModalLoja(id) {
+    editLojaId = id||null;
+    const l = id ? lojas.find(x=>x.id===id) : null;
+    document.getElementById('loja-titulo').textContent = id ? 'Editar Loja' : 'Nova Loja';
+    document.getElementById('loja-nome').value = l?.nome||'';
+    document.getElementById('loja-end').value = l?.endereco||'';
+    document.getElementById('loja-wpp').value = l?.whatsapp||'';
+    document.getElementById('m-loja').classList.add('open');
+  }
+
+  async function salvarLoja() {
+    const nome = document.getElementById('loja-nome').value.trim();
+    if (!nome) { toast('Informe o nome.','err'); return; }
+    const payload = { nome, endereco: document.getElementById('loja-end').value.trim()||null,
+      whatsapp: document.getElementById('loja-wpp').value.trim()||null, tenant_id: TENANT_ID, ativo: true };
+    try {
+      if (editLojaId) await api(`lojas?id=eq.${editLojaId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
+      else await api('lojas',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
+      toast('Loja salva!','ok'); fecharModalExtra('m-loja'); await carregarExtras();
+    } catch(e) { toast('Erro: '+e.message,'err'); }
+  }
+
+  // ── FORNECEDORES ───────────────────────────────────────────
+  function renderFornecedores() {
+    const tbody = document.getElementById('tbody-fornecedores');
+    tbody.innerHTML = fornecedores.length ? fornecedores.map(f => `<tr>
+      <td style="font-weight:500">${escHtml(f.nome)}</td>
+      <td>${escHtml(f.contato||'—')}</td>
+      <td class="td-mono">${escHtml(f.whatsapp||'—')}</td>
+      <td class="td-mono">${escHtml(f.email||'—')}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalForn('${f.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirItem('fornecedores','${f.id}','${escHtml(f.nome)}')">Excluir</button>
+      </div></td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhum fornecedor cadastrado</td></tr>';
+  }
+
+  function abrirModalForn(id) {
+    editFornId = id||null;
+    const f = id ? fornecedores.find(x=>x.id===id) : null;
+    document.getElementById('forn-titulo').textContent = id ? 'Editar Fornecedor' : 'Novo Fornecedor';
+    document.getElementById('forn-nome').value = f?.nome||'';
+    document.getElementById('forn-contato').value = f?.contato||'';
+    document.getElementById('forn-wpp').value = f?.whatsapp||'';
+    document.getElementById('forn-email').value = f?.email||'';
+    document.getElementById('m-forn').classList.add('open');
+  }
+
+  async function salvarForn() {
+    const nome = document.getElementById('forn-nome').value.trim();
+    if (!nome) { toast('Informe o nome.','err'); return; }
+    const payload = { nome, contato: document.getElementById('forn-contato').value.trim()||null,
+      whatsapp: document.getElementById('forn-wpp').value.trim()||null,
+      email: document.getElementById('forn-email').value.trim()||null,
+      tenant_id: TENANT_ID, ativo: true };
+    try {
+      if (editFornId) await api(`fornecedores?id=eq.${editFornId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
+      else await api('fornecedores',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
+      toast('Fornecedor salvo!','ok'); fecharModalExtra('m-forn'); await carregarExtras();
+    } catch(e) { toast('Erro: '+e.message,'err'); }
+  }
+
+  // ── VÍNCULOS ───────────────────────────────────────────────
+  function renderVinculos() {
+    const tbody = document.getElementById('tbody-vinculos');
+    tbody.innerHTML = vinculos.length ? vinculos.map(v => {
+      const ins = insumos.find(i=>i.id===v.insumo_id);
+      const forn = fornecedores.find(f=>f.id===v.fornecedor_id);
+      return `<tr>
+        <td style="font-weight:500">${escHtml(ins?.nome||'—')}</td>
+        <td>${escHtml(forn?.nome||'—')}</td>
+        <td class="td-mono">${v.preco_unitario?'R$ '+Number(v.preco_unitario).toFixed(2):'—'}</td>
+        <td>${v.principal?'<span style="color:#16a34a;font-weight:600">✓ Principal</span>':'—'}</td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalVinculo('${v.id}')">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="excluirItem('insumo_fornecedores','${v.id}','vínculo')">Excluir</button>
+        </div></td>
+      </tr>`;
+    }).join('') : '<tr class="empty-row"><td colspan="5">Nenhum vínculo cadastrado</td></tr>';
+  }
+
+  function abrirModalVinculo(id) {
+    editVincId = id||null;
+    const v = id ? vinculos.find(x=>x.id===id) : null;
+    document.getElementById('vinculo-titulo').textContent = id ? 'Editar Vínculo' : 'Vincular Insumo';
+    document.getElementById('vinculo-ins').innerHTML = insumos.map(i=>`<option value="${i.id}" ${v?.insumo_id===i.id?'selected':''}>${escHtml(i.nome)}</option>`).join('');
+    document.getElementById('vinculo-forn').innerHTML = fornecedores.map(f=>`<option value="${f.id}" ${v?.fornecedor_id===f.id?'selected':''}>${escHtml(f.nome)}</option>`).join('');
+    document.getElementById('vinculo-preco').value = v?.preco_unitario||'';
+    document.getElementById('vinculo-principal').checked = v?.principal||false;
+    document.getElementById('m-vinculo').classList.add('open');
+  }
+
+  async function salvarVinculo() {
+    const insId = document.getElementById('vinculo-ins').value;
+    const fornId = document.getElementById('vinculo-forn').value;
+    if (!insId||!fornId) { toast('Selecione insumo e fornecedor.','err'); return; }
+    const preco = parseFloat(document.getElementById('vinculo-preco').value)||null;
+    const principal = document.getElementById('vinculo-principal').checked;
+    const payload = { insumo_id:insId, fornecedor_id:fornId, preco_unitario:preco, principal, tenant_id:TENANT_ID };
+    try {
+      if (editVincId) await api(`insumo_fornecedores?id=eq.${editVincId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
+      else await api('insumo_fornecedores',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
+      toast('Vínculo salvo!','ok'); fecharModalExtra('m-vinculo'); await carregarExtras();
+    } catch(e) { toast('Erro: '+e.message,'err'); }
+  }
+
+  // ── USUÁRIOS ───────────────────────────────────────────────
+  const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.8Yx9qY2kZ1mN3pL6wR4vT7cF0dE5nQ2jH8xK9bA1sU4';
+
+  const PERFIL_LABEL = { admin:'Admin', compras:'Compras', gerente:'Gerente' };
+
+  function renderUsuarios() {
+    const tbody = document.getElementById('tbody-usuarios');
+    tbody.innerHTML = usuarios.length ? usuarios.map(u => {
+      const loja = lojas.find(l=>l.id===u.loja_id);
+      return `<tr>
+        <td style="font-weight:500">${escHtml(u.nome)}</td>
+        <td class="td-mono">${escHtml(u.email||'—')}</td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg3);color:var(--text2)">${PERFIL_LABEL[u.perfil]||u.perfil}</span></td>
+        <td>${escHtml(loja?.nome||'—')}</td>
+        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${u.ativo?'#dcfce7':'#fee2e2'};color:${u.ativo?'#16a34a':'#dc2626'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+        <td><div class="td-actions">
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalUsuario('${u.id}')">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="excluirItem('usuarios','${u.id}','${escHtml(u.nome)}')">Excluir</button>
+        </div></td>
+      </tr>`;
+    }).join('') : '<tr class="empty-row"><td colspan="6">Nenhum usuário cadastrado</td></tr>';
+  }
+
+  function abrirModalUsuario(id) {
+    editUserId = id||null;
+    const u = id ? usuarios.find(x=>x.id===id) : null;
+    document.getElementById('usuario-titulo').textContent = id ? 'Editar Usuário' : 'Novo Usuário';
+    document.getElementById('usuario-nome').value = u?.nome||'';
+    document.getElementById('usuario-email').value = u?.email||'';
+    document.getElementById('usuario-senha').value = '';
+    document.getElementById('usuario-perfil').value = u?.perfil||'gerente';
+    document.getElementById('fg-senha').style.display = id ? 'none' : '';
+    document.getElementById('btn-usuario').textContent = id ? 'Salvar alterações' : 'Criar usuário';
+    document.getElementById('usuario-loja').innerHTML = lojas.map(l=>`<option value="${l.id}" ${u?.loja_id===l.id?'selected':''}>${escHtml(l.nome)}</option>`).join('');
+    onPerfilChange();
+    document.getElementById('m-usuario').classList.add('open');
+  }
+
+  function onPerfilChange() {
+    const perfil = document.getElementById('usuario-perfil').value;
+    document.getElementById('fg-loja').style.display = perfil==='gerente' ? '' : 'none';
+  }
+
+  async function salvarUsuario() {
+    const nome = document.getElementById('usuario-nome').value.trim();
+    const email = document.getElementById('usuario-email').value.trim();
+    const senha = document.getElementById('usuario-senha').value;
+    const perfil = document.getElementById('usuario-perfil').value;
+    const lojaId = document.getElementById('usuario-loja').value||null;
+    if (!nome||!email) { toast('Preencha nome e email.','err'); return; }
+    if (!editUserId && senha.length < 6) { toast('Senha deve ter ao menos 6 caracteres.','err'); return; }
+    const btn = document.getElementById('btn-usuario');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try {
+      if (!editUserId) {
+        // Cria usuário no Supabase Auth
+        const authRes = await fetch(`${SUPA_URL}/auth/v1/admin/users`, {
+          method:'POST',
+          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+          body: JSON.stringify({ email, password:senha, email_confirm:true })
+        });
+        const authData = await authRes.json();
+        if (!authRes.ok) throw new Error(authData.message||authData.error||'Erro ao criar auth');
+        const userId = authData.id;
+        await api('usuarios',{method:'POST',prefer:'return=minimal',
+          body:JSON.stringify({id:userId,tenant_id:TENANT_ID,nome,email,perfil,loja_id:perfil==='gerente'?lojaId:null,ativo:true})});
+        toast(`Usuário "${nome}" criado!`,'ok');
+      } else {
+        await api(`usuarios?id=eq.${editUserId}`,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify({nome,perfil,loja_id:perfil==='gerente'?lojaId:null})});
+        toast('Usuário atualizado!','ok');
+      }
+      fecharModalExtra('m-usuario'); await carregarExtras();
+    } catch(e) { toast('Erro: '+e.message,'err'); }
+    finally { btn.disabled=false; btn.textContent=editUserId?'Salvar alterações':'Criar usuário'; }
+  }
+
+  async function excluirItem(tabela, id, nome) {
+    if (!confirm(`Excluir "${nome}"?`)) return;
+    try {
+      await api(`${tabela}?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+      toast('Excluído com sucesso.','ok'); await carregarExtras();
+    } catch(e) { toast('Erro: '+e.message,'err'); }
+  }
+
   // ── INIT ──────────────────────────────────────────────────
-  carregar();
+  carregar(); carregarExtras();
 </script>
 
 </body>
