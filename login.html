@@ -250,7 +250,7 @@ async function entrar() {
       localStorage.setItem('sb_user', JSON.stringify(perfil[0]));
       // Gerente vai direto para compras
       if (perfil[0].perfil === 'gerente') {
-        window.location.href = 'compras.html';
+        window.location.href = 'loja.html';
         return;
       }
     }
