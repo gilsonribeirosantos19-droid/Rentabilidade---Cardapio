@@ -113,11 +113,28 @@
   .toast.show{opacity:1;transform:translateY(0)}
   .toast.err{border-color:var(--red);color:var(--red)}
 
+  /* ALERT CARDS */
+  .alert-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+  .alert-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    padding:18px 20px;display:flex;align-items:center;gap:16px;text-decoration:none;
+    transition:border-color .15s;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .alert-card:hover{border-color:var(--teal)}
+  .alert-card.c-orange{border-left:4px solid var(--amber)}
+  .alert-card.c-red{border-left:4px solid var(--red)}
+  .alert-card.c-blue{border-left:4px solid var(--blue)}
+  .alert-card.c-teal{border-left:4px solid var(--teal)}
+  .alert-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+  .alert-icon.c-orange{background:rgba(245,158,11,.12)}
+  .alert-icon.c-red{background:rgba(220,38,38,.12)}
+  .alert-icon.c-blue{background:rgba(59,130,246,.12)}
+  .alert-icon.c-teal{background:rgba(13,148,136,.12)}
+  .alert-count{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+  .alert-label{font-size:12px;color:var(--text2);margin-top:3px}
   .summary-card,.panel,.cmv-row{box-shadow:0 1px 3px rgba(0,0,0,.08)}
   ::-webkit-scrollbar{width:6px;height:6px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-  @media(max-width:700px){.sidebar{display:none}.summary-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:700px){.sidebar{display:none}.summary-grid{grid-template-columns:1fr 1fr}.alert-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -160,61 +177,76 @@
     </div>
     <div class="content">
 
-      <!-- 1. SUMMARY CARDS -->
+      <!-- BLOCO 1: AÇÕES NECESSÁRIAS -->
+      <div class="section-header" style="margin-bottom:14px">
+        <span class="section-title">Ações necessárias</span>
+        <span class="section-badge" id="alertBadge" style="margin-left:8px">—</span>
+      </div>
+      <div class="alert-grid" id="alertGrid">
+        <div class="alert-card c-orange skeleton"><div class="alert-icon c-orange">📦</div><div><div class="alert-count">—</div><div class="alert-label">Pedidos para enviar</div></div></div>
+        <div class="alert-card c-blue skeleton"><div class="alert-icon c-blue">📋</div><div><div class="alert-count">—</div><div class="alert-label">Solicitações pendentes</div></div></div>
+        <div class="alert-card c-teal skeleton"><div class="alert-icon c-teal">📊</div><div><div class="alert-count">—</div><div class="alert-label">Inventários abertos</div></div></div>
+      </div>
+
+      <!-- BLOCO 2: RESUMO DO MÊS -->
+      <div class="section-header"><span class="section-title">Resumo do mês</span></div>
       <div class="summary-grid" id="summaryGrid">
-        <div class="summary-card skeleton"><div class="sc-label">Total de fichas</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">Entradas no mês</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">Perdas no mês</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">Valor do estoque</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">CMV médio teórico</div><div class="sc-value">—</div></div>
+      </div>
+
+      <!-- BLOCO 3: FICHAS -->
+      <div class="section-header"><span class="section-title">Fichas técnicas</span></div>
+      <div class="summary-grid" id="fichasGrid">
         <div class="summary-card skeleton"><div class="sc-label">Fichas ativas</div><div class="sc-value">—</div></div>
-        <div class="summary-card skeleton"><div class="sc-label">Insumos cadastrados</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">Insumos ativos</div><div class="sc-value">—</div></div>
         <div class="summary-card skeleton"><div class="sc-label">Custo médio / ficha</div><div class="sc-value">—</div></div>
+        <div class="summary-card skeleton"><div class="sc-label">CMV > 30%</div><div class="sc-value">—</div></div>
       </div>
 
-      <!-- 2. FICHAS POR CATEGORIA -->
-      <div class="section-header"><span class="section-title">Fichas por categoria</span></div>
-      <div class="panel" style="margin-bottom:28px">
-        <div class="cat-grid" id="catGrid">
-          <div class="empty-msg skeleton" style="grid-column:1/-1">Carregando...</div>
-        </div>
-      </div>
-
-      <!-- 3 & 4. TWO COLUMNS -->
+      <!-- BLOCO 4: ESTOQUE CRÍTICO + CMV ALERTS -->
       <div class="two-col">
-
-        <!-- TOP 5 -->
-        <div>
-          <div class="section-header"><span class="section-title">Top 10 fichas mais caras</span></div>
-          <div class="panel">
-            <table class="top5-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Nome</th>
-                  <th>Categoria</th>
-                  <th class="num">Custo</th>
-                  <th class="num">Venda</th>
-                  <th class="num">CMV</th>
-                  <th class="num">Markup</th>
-                  <th class="num">Margem</th>
-                </tr>
-              </thead>
-              <tbody id="top5Body">
-                <tr><td colspan="8" class="empty-msg skeleton">Carregando...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- CMV ALERTS -->
         <div>
           <div class="section-header">
-            <span class="section-badge red" id="cmvBadge">—</span>
-            <span style="font-size:11px;color:var(--text3);margin-left:4px">fichas com CMV &gt; 30%</span>
+            <span class="section-title">Estoque crítico</span>
+            <span class="section-badge red" id="estoqueBadge" style="margin-left:8px">—</span>
+          </div>
+          <div id="estoquePanel"><div class="panel"><div class="empty-msg skeleton">Carregando...</div></div></div>
+        </div>
+        <div>
+          <div class="section-header">
+            <span class="section-title">Fichas com CMV alto</span>
+            <span class="section-badge red" id="cmvBadge" style="margin-left:8px">—</span>
           </div>
           <div id="cmvList" class="cmv-list" style="margin-bottom:0">
             <div class="empty-msg skeleton">Carregando...</div>
           </div>
         </div>
-
       </div>
+
+      <!-- BLOCO 5: TOP FICHAS + CATEGORIAS -->
+      <div class="two-col" style="margin-top:28px">
+        <div>
+          <div class="section-header"><span class="section-title">Top 10 fichas mais caras</span></div>
+          <div class="panel">
+            <table class="top5-table">
+              <thead><tr><th>#</th><th>Nome</th><th>Categoria</th><th class="num">Custo</th><th class="num">Venda</th><th class="num">CMV</th><th class="num">Markup</th><th class="num">Margem</th></tr></thead>
+              <tbody id="top5Body"><tr><td colspan="8" class="empty-msg skeleton">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="section-header"><span class="section-title">Fichas por categoria</span></div>
+          <div class="panel">
+            <div class="cat-grid" id="catGrid">
+              <div class="empty-msg skeleton" style="grid-column:1/-1">Carregando...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -286,87 +318,163 @@ function showToast(msg, type='err') {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+function primeiroDiaMes() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
 async function loadDashboard() {
   try {
-    const [fichas, itens, insumos] = await Promise.all([
+    const ini = primeiroDiaMes();
+    const [fichas, itens, insumos, pedPendentes, pedSolicitados, inventarios,
+           comprasMes, perdasMes, saldos] = await Promise.all([
       api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&select=id,nome,categoria,status,preco_venda,insumo_vinculado_id`),
       api(`itens_ficha?select=ficha_id,insumo_id,quantidade_g`),
-      api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,preco_compra,rendimento_pct&ativo=eq.true`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,nome,preco_compra,rendimento_pct,unidade_medida&ativo=eq.true`),
+      api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.pendente&select=id`),
+      api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id`),
+      api(`inventarios?tenant_id=eq.${TENANT_ID}&status=eq.ativo&select=id`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${ini}T00:00:00&select=id,custo_total`),
+      api(`perdas?tenant_id=eq.${TENANT_ID}&data_perda=gte.${ini}&select=id`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,quantidade,custo_medio,minimo`),
     ]);
 
-    // build lookup maps
     const insumoMap = Object.fromEntries(insumos.map(i => [i.id, i]));
     const itensByFicha = {};
     for (const item of itens) {
       if (!itensByFicha[item.ficha_id]) itensByFicha[item.ficha_id] = [];
       itensByFicha[item.ficha_id].push(item);
     }
-
-    // compute cost per ficha
     const fichasWithCost = fichas.map(f => {
       const custo = calcCusto(itensByFicha[f.id] || [], insumoMap);
       const cmv = f.preco_venda > 0 ? (custo / f.preco_venda) * 100 : null;
       return { ...f, custo, cmv };
     });
 
-    renderSummary(fichasWithCost, insumos.length);
+    renderAlerts(pedPendentes.length, pedSolicitados.length, inventarios.length);
+    renderResumoMes(comprasMes, perdasMes, saldos, fichasWithCost);
+    renderFichasCards(fichasWithCost, insumos.length);
+    renderEstoqueCritico(saldos, insumoMap);
     renderCmvAlerts(fichasWithCost);
     renderTop5(fichasWithCost);
     renderCategories(fichasWithCost);
 
-    const now = new Date();
     document.getElementById('lastUpdated').textContent =
-      'Atualizado às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-
-  } catch(e) {
-    showToast('Erro ao carregar dados: ' + e.message);
-  }
+      'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  } catch(e) { showToast('Erro ao carregar dados: ' + e.message); }
 }
 
-function renderSummary(fichas, totalInsumos) {
+function renderAlerts(pendentes, solicitados, inventarios) {
+  const total = pendentes + solicitados + inventarios;
+  document.getElementById('alertBadge').textContent = total > 0 ? `${total} itens` : 'tudo ok';
+  document.getElementById('alertBadge').style.background = total > 0 ? 'rgba(220,38,38,.12)' : '';
+  document.getElementById('alertBadge').style.color = total > 0 ? 'var(--red)' : '';
+  document.getElementById('alertGrid').innerHTML = `
+    <a class="alert-card c-orange" href="compras.html">
+      <div class="alert-icon c-orange">📦</div>
+      <div><div class="alert-count" style="color:${pendentes>0?'var(--amber)':'var(--text1)'}">${pendentes}</div><div class="alert-label">Pedidos para enviar</div></div>
+    </a>
+    <a class="alert-card c-blue" href="compras.html">
+      <div class="alert-icon c-blue">📋</div>
+      <div><div class="alert-count" style="color:${solicitados>0?'var(--blue)':'var(--text1)'}">${solicitados}</div><div class="alert-label">Solicitações pendentes</div></div>
+    </a>
+    <a class="alert-card c-teal" href="estoque.html">
+      <div class="alert-icon c-teal">📊</div>
+      <div><div class="alert-count" style="color:${inventarios>0?'var(--teal)':'var(--text1)'}">${inventarios}</div><div class="alert-label">Inventários abertos</div></div>
+    </a>`;
+}
+
+function renderResumoMes(compras, perdas, saldos, fichas) {
+  const valorEstoque = saldos.reduce((a,s) => a + (Number(s.quantidade)||0) * (Number(s.custo_medio)||0), 0);
+  const totalCompras = compras.reduce((a,e) => a + (Number(e.custo_total)||0), 0);
+  const comCmv = fichas.filter(f => !f.insumo_vinculado_id && f.cmv !== null);
+  const avgCmv = comCmv.length > 0 ? comCmv.reduce((s,f) => s+f.cmv, 0) / comCmv.length : null;
+  const cmvCls = avgCmv === null ? '' : avgCmv > 38 ? 'sc-red' : avgCmv > 30 ? 'sc-amber' : 'sc-teal';
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="summary-card sc-teal">
+      <div class="sc-label">Entradas no mês</div>
+      <div class="sc-value">${compras.length}</div>
+      <div class="sc-sub">${totalCompras > 0 ? fmtBRL(totalCompras) : 'sem custo registrado'}</div>
+    </div>
+    <div class="summary-card sc-red">
+      <div class="sc-label">Perdas no mês</div>
+      <div class="sc-value">${perdas.length}</div>
+      <div class="sc-sub">registros de perda</div>
+    </div>
+    <div class="summary-card sc-amber">
+      <div class="sc-label">Valor do estoque</div>
+      <div class="sc-value" style="font-size:20px">${fmtBRL(valorEstoque)}</div>
+      <div class="sc-sub">custo médio × saldo</div>
+    </div>
+    <div class="summary-card ${cmvCls}">
+      <div class="sc-label">CMV médio teórico</div>
+      <div class="sc-value">${avgCmv !== null ? avgCmv.toFixed(1)+'%' : '—'}</div>
+      <div class="sc-sub">${comCmv.length} fichas com preço de venda</div>
+    </div>`;
+}
+
+function renderFichasCards(fichas, totalInsumos) {
   const total = fichas.length;
   const ativas = fichas.filter(f => f.status === 'ativa').length;
-
-  // custo médio: apenas fichas sem insumo_vinculado_id
-  const cardapioComCusto = fichas.filter(f => !f.insumo_vinculado_id && f.custo > 0);
-  const avgCost = cardapioComCusto.length > 0
-    ? cardapioComCusto.reduce((s, f) => s + f.custo, 0) / cardapioComCusto.length
-    : 0;
-
-  // CMV médio: fichas sem insumo_vinculado_id com preco_venda informado
-  const comCmv = fichas.filter(f => !f.insumo_vinculado_id && f.cmv !== null);
-  const avgCmv = comCmv.length > 0
-    ? comCmv.reduce((s, f) => s + f.cmv, 0) / comCmv.length
-    : null;
-  const cmvCls = avgCmv === null ? '' : avgCmv > 38 ? 'sc-red' : avgCmv > 35 ? 'sc-amber' : 'sc-teal';
-
-  document.getElementById('summaryGrid').innerHTML = `
-    <div class="summary-card">
-      <div class="sc-label">Total de fichas</div>
-      <div class="sc-value">${total}</div>
-      <div class="sc-sub">cadastradas</div>
-    </div>
+  const cardapio = fichas.filter(f => !f.insumo_vinculado_id && f.custo > 0);
+  const avgCost = cardapio.length > 0 ? cardapio.reduce((s,f) => s+f.custo, 0) / cardapio.length : 0;
+  const altoCmv = fichas.filter(f => !f.insumo_vinculado_id && f.cmv !== null && f.cmv > 30).length;
+  document.getElementById('fichasGrid').innerHTML = `
     <div class="summary-card sc-teal">
       <div class="sc-label">Fichas ativas</div>
       <div class="sc-value">${ativas}</div>
-      <div class="sc-sub">de ${total} no total</div>
+      <div class="sc-sub">de ${total} cadastradas</div>
     </div>
     <div class="summary-card">
-      <div class="sc-label">Insumos cadastrados</div>
+      <div class="sc-label">Insumos ativos</div>
       <div class="sc-value">${totalInsumos}</div>
-      <div class="sc-sub">matérias-primas ativas</div>
+      <div class="sc-sub">matérias-primas</div>
     </div>
     <div class="summary-card sc-amber">
       <div class="sc-label">Custo médio / ficha</div>
-      <div class="sc-value" style="font-size:22px">${fmtBRL(avgCost)}</div>
+      <div class="sc-value" style="font-size:20px">${fmtBRL(avgCost)}</div>
       <div class="sc-sub">fichas do cardápio</div>
     </div>
-    <div class="summary-card ${cmvCls}">
-      <div class="sc-label">CMV Médio</div>
-      <div class="sc-value">${avgCmv !== null ? avgCmv.toFixed(1) + '%' : '—'}</div>
-      <div class="sc-sub">${comCmv.length} fichas com preço de venda</div>
-    </div>
-  `;
+    <div class="summary-card ${altoCmv > 0 ? 'sc-red' : 'sc-teal'}">
+      <div class="sc-label">CMV &gt; 30%</div>
+      <div class="sc-value">${altoCmv}</div>
+      <div class="sc-sub">fichas acima do limite</div>
+    </div>`;
+}
+
+function renderEstoqueCritico(saldos, insumoMap) {
+  const criticos = saldos
+    .map(s => ({
+      ...s,
+      ins: insumoMap[s.insumo_id],
+      qtd: Number(s.quantidade)||0,
+      min: Number(s.minimo)||0,
+    }))
+    .filter(s => s.ins && (s.qtd <= 0 || (s.min > 0 && s.qtd <= s.min)))
+    .sort((a,b) => a.qtd - b.qtd)
+    .slice(0, 8);
+
+  document.getElementById('estoqueBadge').textContent = criticos.length || '✓';
+  const panel = document.getElementById('estoquePanel');
+  if (!criticos.length) {
+    panel.innerHTML = '<div class="panel"><div class="empty-msg" style="color:var(--teal)">Nenhum insumo com saldo crítico ✓</div></div>';
+    return;
+  }
+  panel.innerHTML = `<div class="panel"><table class="top5-table">
+    <thead><tr><th>Insumo</th><th class="num">Saldo</th><th class="num">Mín.</th><th>Status</th></tr></thead>
+    <tbody>${criticos.map(s => {
+      const zerado = s.qtd <= 0;
+      const cor = zerado ? 'var(--red)' : 'var(--amber)';
+      const bgCor = zerado ? 'rgba(220,38,38,.1)' : 'rgba(245,158,11,.1)';
+      return `<tr>
+        <td style="font-weight:500">${esc(s.ins.nome)}</td>
+        <td class="num mono" style="color:${cor}">${s.qtd.toFixed(2)} ${s.ins.unidade_medida||'un'}</td>
+        <td class="num" style="color:var(--text3)">${s.min > 0 ? s.min.toFixed(2) : '—'}</td>
+        <td><span class="cat-badge" style="background:${bgCor};color:${cor}">${zerado?'Zerado':'Baixo'}</span></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
 }
 
 function renderCmvAlerts(fichas) {
