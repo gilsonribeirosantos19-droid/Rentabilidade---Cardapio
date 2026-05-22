@@ -488,20 +488,42 @@
 
 <!-- MODAL: VÍNCULO INSUMO → FORNECEDOR -->
 <div id="m-vinculo" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-vinculo')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><span class="modal-title" id="vinculo-titulo">Vincular Insumo</span><button class="modal-close" onclick="fecharModalExtra('m-vinculo')">✕</button></div>
+  <div class="modal" style="max-width:700px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">Vincular Insumos ao Fornecedor</span>
+      <button class="modal-close" onclick="fecharModalExtra('m-vinculo')">✕</button>
+    </div>
     <div class="modal-body">
-      <div class="form-group"><label>Insumo *</label><select id="vinculo-ins"></select></div>
-      <div class="form-group"><label>Fornecedor *</label><select id="vinculo-forn"></select></div>
-      <div class="form-group"><label>Preço unitário negociado (R$)</label><input type="number" id="vinculo-preco" min="0" step="0.01" placeholder="0,00"></div>
-      <div class="form-group" style="display:flex;align-items:center;gap:8px">
-        <input type="checkbox" id="vinculo-principal" style="width:auto">
-        <label style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--text1)">Fornecedor principal deste insumo</label>
+      <div class="form-group">
+        <label>Fornecedor *</label>
+        <select id="vinculo-forn" onchange="renderVinculoInsumos()"></select>
+      </div>
+      <div id="vinculo-insumos-wrap" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:600;color:var(--text1)">Insumos</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="vinculo-todos" onchange="selecionarTodosVinculos(this.checked)" style="width:auto">
+            Selecionar todos
+          </label>
+          <span id="vinculo-count" style="font-size:12px;color:var(--text3);margin-left:auto"></span>
+        </div>
+        <div style="max-height:380px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)">
+          <table class="tbl" style="font-size:13px">
+            <thead><tr>
+              <th style="width:36px"></th>
+              <th>Insumo</th>
+              <th>Un.</th>
+              <th class="r">Preço/un (R$)</th>
+              <th style="text-align:center">Principal</th>
+            </tr></thead>
+            <tbody id="vinculo-ins-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModalExtra('m-vinculo')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarVinculo()">Salvar</button>
+      <button class="btn btn-primary" id="btn-salvar-vinculos" onclick="salvarVinculos()">Salvar vínculos</button>
     </div>
   </div>
 </div>
@@ -901,29 +923,111 @@
     }).join('') : '<tr class="empty-row"><td colspan="5">Nenhum vínculo cadastrado</td></tr>';
   }
 
-  function abrirModalVinculo(id) {
-    editVincId = id||null;
-    const v = id ? vinculos.find(x=>x.id===id) : null;
-    document.getElementById('vinculo-titulo').textContent = id ? 'Editar Vínculo' : 'Vincular Insumo';
-    document.getElementById('vinculo-ins').innerHTML = insumos.map(i=>`<option value="${i.id}" ${v?.insumo_id===i.id?'selected':''}>${escHtml(i.nome)}</option>`).join('');
-    document.getElementById('vinculo-forn').innerHTML = fornecedores.map(f=>`<option value="${f.id}" ${v?.fornecedor_id===f.id?'selected':''}>${escHtml(f.nome)}</option>`).join('');
-    document.getElementById('vinculo-preco').value = v?.preco_unitario||'';
-    document.getElementById('vinculo-principal').checked = v?.principal||false;
+  function abrirModalVinculo(fornPreselId) {
+    document.getElementById('vinculo-forn').innerHTML =
+      '<option value="">— Selecione o fornecedor —</option>' +
+      fornecedores.map(f=>`<option value="${f.id}">${escHtml(f.nome)}</option>`).join('');
+    if (fornPreselId) {
+      // Se veio de um vínculo existente, pré-seleciona o fornecedor desse vínculo
+      const v = vinculos.find(x=>x.id===fornPreselId);
+      const fid = v?.fornecedor_id || fornPreselId;
+      document.getElementById('vinculo-forn').value = fid;
+      renderVinculoInsumos();
+    } else {
+      document.getElementById('vinculo-insumos-wrap').style.display = 'none';
+    }
     document.getElementById('m-vinculo').classList.add('open');
   }
 
-  async function salvarVinculo() {
-    const insId = document.getElementById('vinculo-ins').value;
+  function renderVinculoInsumos() {
     const fornId = document.getElementById('vinculo-forn').value;
-    if (!insId||!fornId) { toast('Selecione insumo e fornecedor.','err'); return; }
-    const preco = parseFloat(document.getElementById('vinculo-preco').value)||null;
-    const principal = document.getElementById('vinculo-principal').checked;
-    const payload = { insumo_id:insId, fornecedor_id:fornId, preco_unitario:preco, principal, tenant_id:TENANT_ID };
+    const wrap = document.getElementById('vinculo-insumos-wrap');
+    if (!fornId) { wrap.style.display = 'none'; return; }
+
+    const vincsForn = vinculos.filter(v=>v.fornecedor_id===fornId);
+    wrap.style.display = '';
+    document.getElementById('vinculo-todos').checked = false;
+
+    const tbody = document.getElementById('vinculo-ins-body');
+    tbody.innerHTML = insumos.map(ins => {
+      const ex = vincsForn.find(v=>v.insumo_id===ins.id);
+      const chk = !!ex;
+      const preco = ex?.preco_unitario||'';
+      const prin = ex?.principal||false;
+      const un = ins.unidade_medida||ins.unidade_compra||'un';
+      return `<tr id="vrow-${ins.id}" style="${chk?'background:#f0fdf4':''}">
+        <td style="text-align:center">
+          <input type="checkbox" id="vi-chk-${ins.id}" ${chk?'checked':''}
+            onchange="toggleVinculoRow('${ins.id}',this.checked)" style="width:auto;cursor:pointer">
+        </td>
+        <td style="font-weight:${chk?600:400}">${escHtml(ins.nome)}</td>
+        <td style="color:var(--text3)">${escHtml(un)}</td>
+        <td style="text-align:right">
+          <input type="number" id="vi-preco-${ins.id}" value="${preco}" min="0" step="0.01" placeholder="—"
+            ${!chk?'disabled':''}
+            style="width:90px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;
+                   font-size:12px;text-align:right;font-family:inherit;outline:none;
+                   background:${chk?'#fff':'var(--bg3)'}">
+        </td>
+        <td style="text-align:center">
+          <input type="checkbox" id="vi-prin-${ins.id}" ${prin?'checked':''} ${!chk?'disabled':''}
+            style="width:auto;cursor:pointer">
+        </td>
+      </tr>`;
+    }).join('');
+    atualizarContadorVinculo();
+  }
+
+  function toggleVinculoRow(insId, checked) {
+    const row = document.getElementById('vrow-'+insId);
+    const preco = document.getElementById('vi-preco-'+insId);
+    const prin = document.getElementById('vi-prin-'+insId);
+    if (row) row.style.background = checked ? '#f0fdf4' : '';
+    if (preco) { preco.disabled = !checked; preco.style.background = checked?'#fff':'var(--bg3)'; }
+    if (prin) { prin.disabled = !checked; if (!checked) prin.checked = false; }
+    atualizarContadorVinculo();
+  }
+
+  function selecionarTodosVinculos(checked) {
+    insumos.forEach(ins => {
+      const chk = document.getElementById('vi-chk-'+ins.id);
+      if (chk) { chk.checked = checked; toggleVinculoRow(ins.id, checked); }
+    });
+  }
+
+  function atualizarContadorVinculo() {
+    const total = insumos.filter(ins => document.getElementById('vi-chk-'+ins.id)?.checked).length;
+    document.getElementById('vinculo-count').textContent = total > 0 ? `${total} selecionado(s)` : '';
+  }
+
+  async function salvarVinculos() {
+    const fornId = document.getElementById('vinculo-forn').value;
+    if (!fornId) { toast('Selecione um fornecedor.','err'); return; }
+    const btn = document.getElementById('btn-salvar-vinculos');
+    btn.disabled = true; btn.textContent = 'Salvando...';
     try {
-      if (editVincId) await api(`insumo_fornecedores?id=eq.${editVincId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
-      else await api('insumo_fornecedores',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
-      toast('Vínculo salvo!','ok'); fecharModalExtra('m-vinculo'); await carregarExtras();
+      for (const ins of insumos) {
+        const chk = document.getElementById('vi-chk-'+ins.id);
+        if (!chk) continue;
+        const checked = chk.checked;
+        const preco = parseFloat(document.getElementById('vi-preco-'+ins.id)?.value)||null;
+        const principal = document.getElementById('vi-prin-'+ins.id)?.checked||false;
+        const existing = vinculos.find(v=>v.fornecedor_id===fornId&&v.insumo_id===ins.id);
+        if (checked && !existing) {
+          await api('insumo_fornecedores',{method:'POST',prefer:'return=minimal',
+            body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:ins.id,fornecedor_id:fornId,preco_unitario:preco,principal})});
+        } else if (checked && existing) {
+          await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'PATCH',prefer:'return=minimal',
+            body:JSON.stringify({preco_unitario:preco,principal})});
+        } else if (!checked && existing) {
+          await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'DELETE',prefer:'return=minimal'});
+        }
+      }
+      toast('Vínculos salvos!','ok');
+      fecharModalExtra('m-vinculo');
+      await carregarExtras();
     } catch(e) { toast('Erro: '+e.message,'err'); }
+    finally { btn.disabled=false; btn.textContent='Salvar vínculos'; }
   }
 
   // ── USUÁRIOS ───────────────────────────────────────────────
