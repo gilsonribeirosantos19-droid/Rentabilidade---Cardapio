@@ -197,15 +197,6 @@
         <div class="summary-card skeleton"><div class="sc-label">CMV médio teórico</div><div class="sc-value">—</div></div>
       </div>
 
-      <!-- BLOCO 3: FICHAS -->
-      <div class="section-header"><span class="section-title">Fichas técnicas</span></div>
-      <div class="summary-grid" id="fichasGrid">
-        <div class="summary-card skeleton"><div class="sc-label">Fichas ativas</div><div class="sc-value">—</div></div>
-        <div class="summary-card skeleton"><div class="sc-label">Insumos ativos</div><div class="sc-value">—</div></div>
-        <div class="summary-card skeleton"><div class="sc-label">Custo médio / ficha</div><div class="sc-value">—</div></div>
-        <div class="summary-card skeleton"><div class="sc-label">CMV > 30%</div><div class="sc-value">—</div></div>
-      </div>
-
       <!-- BLOCO 4: ESTOQUE CRÍTICO + CMV ALERTS -->
       <div class="two-col">
         <div>
@@ -354,7 +345,6 @@ async function loadDashboard() {
 
     renderAlerts(pedPendentes.length, pedSolicitados.length, inventarios.length);
     renderResumoMes(comprasMes, perdasMes, saldos, fichasWithCost);
-    renderFichasCards(fichasWithCost, insumos.length);
     renderEstoqueCritico(saldos, insumoMap);
     renderCmvAlerts(fichasWithCost);
     renderTop5(fichasWithCost);
@@ -411,35 +401,6 @@ function renderResumoMes(compras, perdas, saldos, fichas) {
       <div class="sc-label">CMV médio teórico</div>
       <div class="sc-value">${avgCmv !== null ? avgCmv.toFixed(1)+'%' : '—'}</div>
       <div class="sc-sub">${comCmv.length} fichas com preço de venda</div>
-    </div>`;
-}
-
-function renderFichasCards(fichas, totalInsumos) {
-  const total = fichas.length;
-  const ativas = fichas.filter(f => f.status === 'ativa').length;
-  const cardapio = fichas.filter(f => !f.insumo_vinculado_id && f.custo > 0);
-  const avgCost = cardapio.length > 0 ? cardapio.reduce((s,f) => s+f.custo, 0) / cardapio.length : 0;
-  const altoCmv = fichas.filter(f => !f.insumo_vinculado_id && f.cmv !== null && f.cmv > 30).length;
-  document.getElementById('fichasGrid').innerHTML = `
-    <div class="summary-card sc-teal">
-      <div class="sc-label">Fichas ativas</div>
-      <div class="sc-value">${ativas}</div>
-      <div class="sc-sub">de ${total} cadastradas</div>
-    </div>
-    <div class="summary-card">
-      <div class="sc-label">Insumos ativos</div>
-      <div class="sc-value">${totalInsumos}</div>
-      <div class="sc-sub">matérias-primas</div>
-    </div>
-    <div class="summary-card sc-amber">
-      <div class="sc-label">Custo médio / ficha</div>
-      <div class="sc-value" style="font-size:20px">${fmtBRL(avgCost)}</div>
-      <div class="sc-sub">fichas do cardápio</div>
-    </div>
-    <div class="summary-card ${altoCmv > 0 ? 'sc-red' : 'sc-teal'}">
-      <div class="sc-label">CMV &gt; 30%</div>
-      <div class="sc-value">${altoCmv}</div>
-      <div class="sc-sub">fichas acima do limite</div>
     </div>`;
 }
 
