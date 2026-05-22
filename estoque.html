@@ -1747,6 +1747,21 @@ async function renderMovimentacao() {
     if (r.length) invIni = await api(`itens_inventario?inventario_id=eq.${r[0].id}`);
   } catch(e) {}
 
+  // Perdas lançadas pelos gerentes no período
+  const perdasMap = {}; // { insumo_id: qty }
+  try {
+    const perdasPer = await api(`perdas?tenant_id=eq.${TENANT_ID}&data_perda=gte.${de}&data_perda=lte.${ate}`);
+    if (perdasPer.length) {
+      const perdasIds = perdasPer.map(p=>p.id);
+      const perdasItens = await Promise.all(
+        perdasIds.map(id => api(`perdas_itens?perda_id=eq.${id}`))
+      );
+      perdasItens.flat().forEach(it => {
+        perdasMap[it.insumo_id] = (perdasMap[it.insumo_id]||0) + (Number(it.quantidade)||0);
+      });
+    }
+  } catch(e) {}
+
   const entsPer = entradas.filter(e => e.criado_em >= de && e.criado_em <= ate + 'T23:59:59');
   const saisPer = saidas.filter(s => s.criado_em >= de && s.criado_em <= ate + 'T23:59:59');
 
@@ -1764,8 +1779,11 @@ async function renderMovimentacao() {
     const vEnt = entsI.reduce((a,e)=>a+(e.custo_total||0),0);
     const conI = saisPer.filter(x=>x.insumo_id===ins.id&&['consumo','transferencia'].includes(x.tipo));
     const qCon = conI.reduce((a,c)=>a+(c.quantidade||0),0); const vCon=qCon*cm;
+    // Perdas: saídas do estoque + perdas lançadas pelos gerentes
     const perI = saisPer.filter(x=>x.insumo_id===ins.id&&['perda','vencimento','descarte'].includes(x.tipo));
-    const qPerd=perI.reduce((a,p)=>a+(p.quantidade||0),0); const vPerd=qPerd*cm;
+    const qPerdSaida = perI.reduce((a,p)=>a+(p.quantidade||0),0);
+    const qPerdGerente = perdasMap[ins.id]||0;
+    const qPerd = qPerdSaida + qPerdGerente; const vPerd=qPerd*cm;
     const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd); const vFin=qFin*cm;
     tQAnt+=qAnt;tVAnt+=vAnt;tQEnt+=qEnt;tVEnt+=vEnt;tQCon+=qCon;tVCon+=vCon;
     tQPerd+=qPerd;tVPerd+=vPerd;tQFin+=qFin;tVFin+=vFin;
