@@ -252,13 +252,13 @@
           </div>
         </div>
         <div class="cat-btns" id="mov-cat-btns"></div>
-        <div style="display:grid;grid-template-columns:300px 1fr;gap:24px">
+        <div style="display:grid;grid-template-columns:380px 1fr;gap:24px">
           <!-- Formulário -->
           <div>
             <div style="font-size:14px;font-weight:700;margin-bottom:16px">Nova Movimentação</div>
             <div class="fg">
               <label>Tipo</label>
-              <select id="mov-tipo" class="field" style="width:100%">
+              <select id="mov-tipo" class="field" style="width:100%" onchange="onMovTipoChange()">
                 <option value="saida">Saída</option>
                 <option value="entrada">Entrada</option>
               </select>
@@ -270,10 +270,43 @@
               </select>
             </div>
             <div class="fg">
-              <label>Quantidade</label>
+              <label id="mov-qtd-label">Quantidade</label>
               <div style="display:flex;gap:8px;align-items:center">
                 <input type="number" id="mov-qtd" class="field" min="0" step="0.001" placeholder="0.000" style="flex:1">
                 <span id="mov-un" style="font-size:13px;color:var(--text3);min-width:32px"></span>
+              </div>
+            </div>
+            <!-- Campos extras somente para ENTRADA -->
+            <div id="mov-campos-entrada" style="display:none">
+              <div class="fg">
+                <label>Fornecedor</label>
+                <select id="mov-forn" class="field" style="width:100%">
+                  <option value="">Sem fornecedor</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="fg">
+                  <label>Unidade compra</label>
+                  <input type="text" id="mov-unid" class="field" placeholder="CX, KG, UN...">
+                </div>
+                <div class="fg">
+                  <label>Fator conversão</label>
+                  <input type="number" id="mov-fator" class="field" value="1" min="0.001" step="0.001">
+                </div>
+              </div>
+              <div class="fg">
+                <label>Custo unitário (por embalagem) *</label>
+                <input type="number" id="mov-custo" class="field" min="0" step="0.01" placeholder="0.00" style="width:100%">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="fg">
+                  <label>Lote</label>
+                  <input type="text" id="mov-lote" class="field" placeholder="Opcional">
+                </div>
+                <div class="fg">
+                  <label>Validade</label>
+                  <input type="date" id="mov-val" class="field">
+                </div>
               </div>
             </div>
             <div class="fg">
@@ -442,7 +475,7 @@ async function api(endpoint, opts={}) {
 
 // ── STATE ──────────────────────────────────────────────────────────
 let userProfile = null;
-let insumos = [], fichas = [], motivos = [], grupos = [], gruposItens = {};
+let insumos = [], fichas = [], motivos = [], grupos = [], gruposItens = {}, fornecedores = [];
 let invAtual = null; // inventário aberto no modal
 let solGrupoAtual = null;
 let solChecked = new Set();
@@ -466,10 +499,11 @@ async function carregar() {
     document.getElementById('sb-loja-nome').textContent = lojaNome;
     document.getElementById('topbar-title').textContent = `sistema — ${lojaNome}`;
 
-    [insumos, fichas, motivos] = await Promise.all([
+    [insumos, fichas, motivos, fornecedores] = await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
       api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&order=nome.asc`),
       api(`motivos_perda?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
     ]);
 
     // Grupos de compra
@@ -870,7 +904,21 @@ function iniciarEstoque() {
   document.getElementById('rel-data-fim').value = document.getElementById('rel-data-fim').value || hoje();
   document.getElementById('mov-data').value = document.getElementById('mov-data').value || hoje();
   renderCategoriasEstoque();
+  popularFornMov();
   switchEstoqueTab('relatorio');
+}
+
+function popularFornMov() {
+  const sel = document.getElementById('mov-forn');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Sem fornecedor</option>' +
+    fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('');
+}
+
+function onMovTipoChange() {
+  const tipo = document.getElementById('mov-tipo').value;
+  document.getElementById('mov-campos-entrada').style.display = tipo==='entrada' ? '' : 'none';
+  document.getElementById('mov-qtd-label').textContent = tipo==='entrada' ? 'Quantidade (na embalagem) *' : 'Quantidade';
 }
 
 function primeiroDiaMes() {
@@ -1024,29 +1072,53 @@ async function registrarMovimentacao() {
   btn.disabled = true; btn.textContent = 'Salvando...';
   try {
     const criadoEm = data + 'T12:00:00.000Z';
+    const sals = await api(`saldo_estoque?loja_id=eq.${lojaId}&insumo_id=eq.${insumoId}`);
+    const qtdAtual = Number(sals[0]?.quantidade)||0;
+    const cmAtual  = Number(sals[0]?.custo_medio)||0;
+    let novaQtd = qtdAtual, novoCm = cmAtual;
+
     if (tipo === 'entrada') {
+      const fator  = parseFloat(document.getElementById('mov-fator').value)||1;
+      const custo  = parseFloat(document.getElementById('mov-custo').value)||0;
+      const fornId = document.getElementById('mov-forn').value||null;
+      const fornNome = fornId ? fornecedores.find(f=>f.id===fornId)?.nome||null : null;
+      const qtdEst   = parseFloat((qtd * fator).toFixed(4));
+      const custoUnit = parseFloat((custo / fator).toFixed(6));
       await api('entradas_estoque', {method:'POST', prefer:'return=minimal',
         body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
-          quantidade:qtd, custo_unitario:0, tipo:'manual', motivo:obs||null, criado_em:criadoEm})});
+          fornecedor_id:fornId, fornecedor_nome:fornNome,
+          quantidade:qtdEst,
+          unidade_compra: document.getElementById('mov-unid').value.trim()||null,
+          fator_conversao:fator, custo_unitario:custo,
+          lote: document.getElementById('mov-lote').value.trim()||null,
+          validade: document.getElementById('mov-val').value||null,
+          tipo:'manual', observacao:obs||null, criado_em:criadoEm})});
+      novaQtd = qtdAtual + qtdEst;
+      novoCm  = novaQtd>0 ? (qtdAtual*cmAtual + qtdEst*custoUnit)/novaQtd : custoUnit;
     } else {
       await api('saidas_estoque', {method:'POST', prefer:'return=minimal',
         body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
           quantidade:qtd, tipo:'manual', motivo:obs||null, criado_em:criadoEm})});
+      novaQtd = Math.max(0, qtdAtual - qtd);
     }
     // Atualiza saldo via upsert
-    const sals = await api(`saldo_estoque?loja_id=eq.${lojaId}&insumo_id=eq.${insumoId}`);
-    const qtdAtual = Number(sals[0]?.quantidade)||0;
-    const novaQtd = tipo==='entrada' ? qtdAtual + qtd : Math.max(0, qtdAtual - qtd);
     await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
       method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal',
       body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
-        quantidade: parseFloat(novaQtd.toFixed(4)), custo_medio: sals[0]?.custo_medio||0,
+        quantidade: parseFloat(novaQtd.toFixed(4)),
+        custo_medio: parseFloat(novoCm.toFixed(6)),
         atualizado_em: new Date().toISOString()})
     });
     document.getElementById('mov-insumo').value = '';
     document.getElementById('mov-qtd').value = '';
     document.getElementById('mov-obs').value = '';
     document.getElementById('mov-un').textContent = '';
+    document.getElementById('mov-forn').value = '';
+    document.getElementById('mov-unid').value = '';
+    document.getElementById('mov-fator').value = '1';
+    document.getElementById('mov-custo').value = '';
+    document.getElementById('mov-lote').value = '';
+    document.getElementById('mov-val').value = '';
     toast(`${tipo==='entrada'?'Entrada':'Saída'} registrada!`, 'ok');
     carregarMovimentacoes();
   } catch(e) { toast('Erro: '+e.message,'err'); }
