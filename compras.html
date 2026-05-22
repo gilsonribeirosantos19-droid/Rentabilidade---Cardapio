@@ -218,6 +218,14 @@
           <select class="field field-sm" id="sol-fil-loja" onchange="renderSolicitacoes()">
             <option value="">Todas as lojas</option>
           </select>
+          <input type="date" class="field field-sm" id="sol-fil-data" onchange="renderSolicitacoes()" title="Filtrar por data">
+          <select class="field field-sm" id="sol-fil-status" onchange="renderSolicitacoes()">
+            <option value="solicitado">Aguardando</option>
+            <option value="">Todas</option>
+            <option value="processado">Processadas</option>
+            <option value="cancelado">Canceladas</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="limparFiltrosSol()">✕ Limpar</button>
           <button class="btn btn-ghost btn-sm ml" onclick="renderSolicitacoes()">↻ Atualizar</button>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
@@ -505,32 +513,47 @@ function switchTab(tab) {
 // ══════════════════════════════════════════════════════════════════════
 // ADMIN — SOLICITAÇÕES
 // ══════════════════════════════════════════════════════════════════════
-async function renderSolicitacoes() {
-  const lojaFil = document.getElementById('sol-fil-loja')?.value||'';
-  try {
-    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&order=created_at.desc`;
-    if (lojaFil) q += `&loja_id=eq.${lojaFil}`;
-    solicitacoes = await api(q);
+function limparFiltrosSol() {
+  document.getElementById('sol-fil-loja').value = '';
+  document.getElementById('sol-fil-data').value = '';
+  document.getElementById('sol-fil-status').value = 'solicitado';
+  renderSolicitacoes();
+}
 
-    const pendentes = solicitacoes.length;
-    const lojaSet = new Set(solicitacoes.map(s=>s.loja_id).filter(Boolean));
+async function renderSolicitacoes() {
+  const lojaFil   = document.getElementById('sol-fil-loja')?.value||'';
+  const dataFil   = document.getElementById('sol-fil-data')?.value||'';
+  const statusFil = document.getElementById('sol-fil-status')?.value||'';
+  try {
+    // Cards sempre mostram total de aguardando (sem filtros)
+    const totais = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id,loja_id`);
+    const lojaSet = new Set(totais.map(s=>s.loja_id).filter(Boolean));
     document.getElementById('sol-cards').innerHTML = `
-      <div class="sc"><div class="sc-label">Aguardando</div><div class="sc-value c-amber">${pendentes}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">solicitações</div></div>
+      <div class="sc"><div class="sc-label">Aguardando</div><div class="sc-value c-amber">${totais.length}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">solicitações</div></div>
       <div class="sc"><div class="sc-label">Lojas</div><div class="sc-value c-blue">${lojaSet.size}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">com pedidos</div></div>`;
+
+    // Lista com filtros aplicados
+    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&order=data_pedido.desc,created_at.desc`;
+    if (statusFil) q += `&status=eq.${statusFil}`;
+    if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
+    if (dataFil)   q += `&data_pedido=eq.${dataFil}`;
+    solicitacoes = await api(q);
 
     const tbody = document.getElementById('sol-body');
     if (!solicitacoes.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma solicitação pendente</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma solicitação encontrada</td></tr>';
       return;
     }
     tbody.innerHTML = solicitacoes.map(s => {
       const loja = lojas.find(l=>l.id===s.loja_id);
+      const badgeMap = { solicitado:'b-solicitado', processado:'b-processado', cancelado:'b-cancelado' };
+      const labelMap = { solicitado:'Aguardando', processado:'Processada', cancelado:'Cancelada' };
       return `<tr>
         <td class="mono">${fmtData(s.data_pedido)}</td>
         <td style="font-weight:600">${esc(loja?.nome||'—')}</td>
         <td class="mono">—</td>
         <td style="color:var(--text3)">${esc(s.observacao||'—')}</td>
-        <td><span class="badge b-solicitado">Aguardando</span></td>
+        <td><span class="badge ${badgeMap[s.status]||'b-solicitado'}">${labelMap[s.status]||s.status}</span></td>
         <td><button class="btn btn-ghost btn-sm" onclick="verSolicitacao('${s.id}')">Ver itens</button></td>
       </tr>`;
     }).join('');
