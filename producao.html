@@ -134,6 +134,15 @@
   ::-webkit-scrollbar{width:6px;height:6px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid var(--border2);display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .content{padding:24px;flex:1}
+  .nav-user{padding:12px 18px;border-top:1px solid #1e293b;margin-top:auto}
+  .nav-user-nome{font-size:12px;font-weight:600;color:#f1f5f9}
+  .nav-user-perfil{font-size:11px;color:#64748b;text-transform:capitalize}
+  .nav-user-sair{font-size:11px;color:var(--red);cursor:pointer;margin-top:4px;display:inline-block}
   @media(max-width:700px){.sidebar{display:none}}
 </style>
 </head>
@@ -165,6 +174,11 @@
       <a class="nav-item" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
       <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
       <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações</a>
+    </div>
+    <div class="nav-user">
+      <div class="nav-user-nome" id="sb-user-nome">—</div>
+      <div class="nav-user-perfil" id="sb-user-perfil">—</div>
+      <span class="nav-user-sair" onclick="sair()">← Sair</span>
     </div>
   </nav>
 
