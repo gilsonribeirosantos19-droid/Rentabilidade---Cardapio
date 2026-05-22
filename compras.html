@@ -691,12 +691,15 @@ async function gerarPedidos() {
     if (qtdInput) consolidado[insId].qtdComprar = parseFloat(qtdInput.value)||consolidado[insId].total;
   });
 
-  // Group by supplier
-  const porForn = {};
+  // Agrupa por LOJA + FORNECEDOR
+  const porLojaForn = {};
   itens.forEach(([insId, d]) => {
-    const fKey = d.fornecedorId || '__sem__';
-    if (!porForn[fKey]) porForn[fKey] = [];
-    porForn[fKey].push({ insId, ...d });
+    const fornId = d.fornecedorId || '__sem__';
+    d.lojas.forEach(l => {
+      const key = $"{l.loja_id}|${fornId}";
+      if (!porLojaForn[key]) porLojaForn[key] = { loja_id: l.loja_id, loja_nome: l.nome, fornId, itens: [] };
+      porLojaForn[key].itens.push({ insId, qty: l.qty, unidade: d.unidade });
+    });
   });
 
   const btn = document.getElementById('btn-gerar');
