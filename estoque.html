@@ -611,7 +611,7 @@
       <div class="tbl-wrap" style="margin-bottom:14px;max-height:340px;overflow-y:auto">
         <table class="tbl">
           <thead><tr>
-            <th>Descrição NF-e</th><th>Un.</th><th class="r">Qtd</th>
+            <th>Descrição NF-e</th><th>Cód.</th><th>Un.</th><th class="r">Qtd</th>
             <th class="r">Vl.Unit.</th><th>Insumo</th><th class="r">Fator conv.</th><th class="c">✓</th>
           </tr></thead>
           <tbody id="nfe-body"></tbody>
@@ -831,7 +831,7 @@ async function api(endpoint, opts={}) {
 }
 
 // ── STATE ─────────────────────────────────────────────────────────
-let insumos=[], saldos=[], entradas=[], saidas=[], vinculos=[], fornecedores=[];
+let insumos=[], saldos=[], entradas=[], saidas=[], vinculos=[], fornecedores=[], insumoFornVinculos=[];
 let nfeItens=[], tabAtual='dashboard';
 
 // ── LOAD ──────────────────────────────────────────────────────────
@@ -846,6 +846,7 @@ async function carregar() {
       api(`vinculos_nfe?tenant_id=eq.${TENANT_ID}`),
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
     ]);
+    insumoFornVinculos = await api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
     popularSelects();
     renderDash(); renderEntradas(); renderSaidas();
     if (tabAtual==='kardex') renderKardex();
@@ -1149,22 +1150,39 @@ function renderNfeMap(itens) {
   document.getElementById('nfe-info').textContent=
     `NF-e ${pi.nNF||'?'}/${pi.serie||'?'} · ${itens.length} item(s) · Emitente: ${pi.emitNome||'—'}`;
 
+  // Detecta fornecedor pelo nome do emitente
+  const fornMatch = fornecedores.find(f=>f.nome.toLowerCase()===(pi.emitNome||'').toLowerCase());
+  const fornId = fornMatch?.id||null;
+
   const insOpts='<option value="">— não importar —</option>'+
     insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
 
   document.getElementById('nfe-body').innerHTML = itens.map((it,i)=>{
-    const vin = vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
+    // 1. Match por código em vinculos_nfe (aprendizado anterior)
+    let vin = it.codigo ? vinculos.find(v=>v.codigo_nfe&&v.codigo_nfe===it.codigo) : null;
+    // 2. Match por código em insumo_fornecedores (cadastro manual)
+    if (!vin?.insumo_id && it.codigo) {
+      const ifv = insumoFornVinculos.find(v=>
+        v.codigo_fornecedor===it.codigo && (!fornId||v.fornecedor_id===fornId)
+      );
+      if (ifv) vin = { insumo_id:ifv.insumo_id, fator_conversao:ifv.qtd_por_embalagem||1 };
+    }
+    // 3. Fallback: match por descrição
+    if (!vin?.insumo_id) vin = vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
+
     const selVal = vin?.insumo_id||'';
     const fator = vin?.fator_conversao||1;
+    const autoFill = !!vin?.insumo_id;
     const opts = insOpts.replace(`value="${selVal}"`,`value="${selVal}" selected`);
-    return `<tr>
-      <td title="${esc(it.descricao)}">${esc(it.descricao.substring(0,40))}${it.descricao.length>40?'…':''}</td>
+    return `<tr ${autoFill?'style="background:#f0fdf4"':''}>
+      <td title="${esc(it.descricao)}">${esc(it.descricao.substring(0,38))}${it.descricao.length>38?'…':''}</td>
+      <td class="mono" style="color:var(--text3);font-size:11px">${esc(it.codigo||'—')}</td>
       <td class="mono" style="color:var(--text3)">${esc(it.unidade)}</td>
       <td class="r mono">${it.quantidade.toFixed(3)}</td>
       <td class="r mono">${brl(it.valorUnit)}</td>
       <td><select class="field field-sm" id="ns-${i}" style="width:100%" onchange="checkNfeInc(${i})">${opts}</select></td>
       <td class="r"><input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:70px"></td>
-      <td class="c"><input type="checkbox" id="ni-${i}" ${selVal?'checked':''}></td>
+      <td class="c"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''}></td>
     </tr>`;
   }).join('');
 }
@@ -1203,13 +1221,18 @@ async function confirmarNfe() {
         criado_em:dataStr+'T12:00:00.000Z',
       }, custoUnitEst);
       // salvar/atualizar vínculo
-      const vin=vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
+      // Salva vínculo: prioriza match por código, depois por descrição
+      const vin = (it.codigo&&vinculos.find(v=>v.codigo_nfe===it.codigo))
+               || vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
       if(!vin){
-        await api('vinculos_nfe',{method:'POST',prefer:'return=minimal',
-          body:JSON.stringify({tenant_id:TENANT_ID,descricao_nfe:it.descricao,insumo_id:it.insId,fator_conversao:it.fator})});
-      } else if(vin.insumo_id!==it.insId||vin.fator_conversao!==it.fator){
-        await api(`vinculos_nfe?id=eq.${vin.id}`,{method:'PATCH',prefer:'return=minimal',
-          body:JSON.stringify({insumo_id:it.insId,fator_conversao:it.fator})});
+        const novo = await api('vinculos_nfe',{method:'POST',prefer:'return=representation',
+          body:JSON.stringify({tenant_id:TENANT_ID,descricao_nfe:it.descricao,codigo_nfe:it.codigo||null,insumo_id:it.insId,fator_conversao:it.fator})});
+        if(novo[0]) vinculos.push(novo[0]);
+      } else {
+        const patch = {insumo_id:it.insId,fator_conversao:it.fator};
+        if(it.codigo&&!vin.codigo_nfe) patch.codigo_nfe=it.codigo;
+        await api(`vinculos_nfe?id=eq.${vin.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
+        Object.assign(vin,patch);
       }
     }
     toast(`${itensOk.length} entrada(s) importada(s) com sucesso!`,'ok');
