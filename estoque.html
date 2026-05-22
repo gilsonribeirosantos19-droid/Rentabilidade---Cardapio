@@ -872,12 +872,12 @@ async function carregar() {
     if (!lojas.length) {
       lojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
       const sel = document.getElementById('sel-loja');
-      sel.innerHTML = '<option value="">Selecione a loja...</option>' +
+      sel.innerHTML = '<option value="">Todas as lojas</option>' +
         lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
       if (lojas.length===1) { sel.value=lojas[0].id; lojaAtual=lojas[0]; }
     }
 
-    const lojaFiltro = lojaAtual ? `&loja_id=eq.${lojaAtual.id}` : '&loja_id=is.null';
+    const lojaFiltro = lojaAtual ? `&loja_id=eq.${lojaAtual.id}` : '';
 
     [insumos, saldos, entradas, saidas, vinculos, fornecedores] = await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
@@ -892,7 +892,7 @@ async function carregar() {
     renderDash(); renderEntradas(); renderSaidas();
     if (tabAtual==='kardex') renderKardex();
     if (tabAtual==='relatorios') renderRelatorios();
-    setStatus('● '+(lojaAtual?lojaAtual.nome:'sem loja'), true);
+    setStatus('● '+(lojaAtual?lojaAtual.nome:'todas as lojas'), true);
   } catch(e) {
     setStatus('● erro', false);
     toast('Erro ao carregar: '+e.message, 'err');
