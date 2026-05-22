@@ -1100,9 +1100,6 @@ async function registrarEntrada(insId, dados, custoUnitEstoque) {
   const qN = qA + dados.quantidade;
   const cmN = qN>0 ? (qA*cmA + dados.quantidade*custoUnitEstoque)/qN : custoUnitEstoque;
   await upsertSaldo(insId, qN, parseFloat(cmN.toFixed(6)));
-  // atualiza preco_compra no insumo (custo por unidade de estoque)
-  await api(`insumos?id=eq.${insId}`,{method:'PATCH',prefer:'return=minimal',
-    body:JSON.stringify({preco_compra:parseFloat(custoUnitEstoque.toFixed(6))})});
   // atualiza preco_unitario no vínculo insumo → fornecedor se houver
   if (dados.fornecedor_id) {
     await api(`insumo_fornecedores?insumo_id=eq.${insId}&fornecedor_id=eq.${dados.fornecedor_id}`,
