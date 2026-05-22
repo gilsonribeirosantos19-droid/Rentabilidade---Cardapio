@@ -8,9 +8,9 @@
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   :root{
     --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
-    --border1:#e2e8f0;--border2:#e2e8f0;
+    --border2:#e2e8f0;
     --teal:#dc2626;--teal2:#b91c1c;--teal-dim:rgba(220,38,38,.10);
-    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#22c55e;
+    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#16a34a;
     --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
     --radius:10px;--radius-lg:16px;
   }
@@ -18,13 +18,11 @@
   body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
   .shell{display:flex;width:100%;min-height:100vh}
 
-  /* SIDEBAR */
-  .sidebar{width:220px;min-height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;
+  .sidebar{width:220px;min-height:100vh;background:#fff;border-right:1px solid #e2e8f0;
     display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
   .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
   .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
   .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
-  .logo-loja{font-size:10px;color:var(--text3);margin-top:3px}
   .nav-group{padding:0 10px;margin-bottom:20px}
   .nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
   .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:var(--text2);font-size:13px;text-decoration:none;transition:all .15s}
@@ -36,16 +34,14 @@
   .nav-user-perfil{font-size:11px;color:var(--text3);text-transform:capitalize}
   .nav-user-sair{font-size:11px;color:var(--red);cursor:pointer;margin-top:4px;display:inline-block}
 
-  /* MAIN */
   .main{flex:1;display:flex;flex-direction:column;min-width:0}
   .topbar{height:56px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
-    padding:0 24px;gap:12px;background:#ffffff;position:sticky;top:0;z-index:60}
+    padding:0 24px;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
   .topbar-title{font-size:15px;font-weight:600;flex:1}
   .content{padding:24px;flex:1}
 
-  /* TABS */
   .tabs{display:flex;gap:2px;margin-bottom:24px;border-bottom:2px solid var(--border2);
-    position:sticky;top:56px;z-index:50;background:#ffffff;padding-top:8px}
+    position:sticky;top:56px;z-index:50;background:#fff;padding-top:8px}
   .tab-btn{padding:9px 18px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;
     border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;
     transition:all .15s;font-family:inherit;white-space:nowrap}
@@ -53,91 +49,101 @@
   .tab-btn.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
   .tab-pane{display:none}.tab-pane.active{display:block}
 
-  /* CARDS */
-  .sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
-  .sc{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:18px 20px}
-  .sc-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-  .sc-value{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
-  .sc-sub{font-size:11px;color:var(--text3);margin-top:5px}
-  .c-blue{color:var(--blue)}.c-green{color:#16a34a}.c-amber{color:var(--amber)}.c-red{color:var(--red)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:var(--teal2)}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#15803d}
+  .btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#2563eb}
+  .btn-sm{padding:5px 12px;font-size:12px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .ml{margin-left:auto}
 
-  /* TABLE */
-  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
-    overflow:hidden;margin-bottom:20px}
+  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
   .tbl-scroll{overflow-x:auto}
   .tbl{width:100%;border-collapse:collapse;font-size:13px}
   .tbl thead tr{background:var(--bg3);border-bottom:2px solid var(--border2)}
-  .tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);
-    text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
   .tbl th.r,.tbl td.r{text-align:right}
   .tbl td{padding:10px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
   .tbl tbody tr:last-child td{border-bottom:none}
   .tbl tbody tr:hover{background:var(--bg3)}
   .mono{font-family:'DM Mono',monospace}
 
-  /* BADGES */
   .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .b-solicitado{background:#f3f4f6;color:#374151}
   .b-pendente{background:#fef3c7;color:#b45309}
+  .b-processado{background:#dbeafe;color:#1d4ed8}
   .b-aprovado{background:#dbeafe;color:#1d4ed8}
   .b-enviado{background:#ede9fe;color:#7c3aed}
   .b-recebido{background:#dcfce7;color:#16a34a}
   .b-cancelado{background:#fee2e2;color:#dc2626}
 
-  /* TOOLBAR */
-  .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-  .ml{margin-left:auto}
   .field{background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
     padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
   .field:focus{border-color:var(--teal)}
   .field-sm{padding:6px 10px;font-size:12px}
+  select.field{cursor:pointer}
 
-  /* BOTÕES */
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
-    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
-  .btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:var(--teal2)}
-  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
-  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
-  .btn-sm{padding:5px 12px;font-size:12px}
-  .btn-green{background:#16a34a;color:#fff}.btn-green:hover{background:#15803d}
-  .btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#2563eb}
+  .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
 
-  /* MODAL */
+  .sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+  .sc{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:18px 20px}
+  .sc-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .sc-value{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+  .c-amber{color:var(--amber)}.c-blue{color:var(--blue)}.c-green{color:var(--green)}
+
+  /* GRUPOS (gerente) */
+  .grupo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+  .grupo-card{background:var(--bg2);border:2px solid var(--border2);border-radius:var(--radius-lg);
+    padding:20px;cursor:pointer;transition:all .15s;position:relative}
+  .grupo-card:hover{border-color:var(--teal);background:var(--teal-dim)}
+  .grupo-card.selected{border-color:var(--teal);background:var(--teal-dim)}
+  .grupo-card-nome{font-size:14px;font-weight:700;margin-bottom:6px}
+  .grupo-card-count{font-size:12px;color:var(--text3)}
+  .grupo-card-badge{position:absolute;top:10px;right:10px;background:var(--teal);color:#fff;
+    font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+
+  /* ITENS DO GRUPO */
+  .grupo-itens{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:16px}
+  .grupo-itens-header{padding:14px 18px;background:var(--bg3);border-bottom:1px solid var(--border2);
+    display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+  .grupo-itens-header.collapsed{border-radius:var(--radius-lg);border-bottom:none}
+  .grupo-itens-title{font-size:14px;font-weight:700;flex:1}
+  .grupo-itens-body{padding:0}
+  .grupo-itens-body.hidden{display:none}
+
+  /* CONSOLIDADO */
+  .loja-pill{display:inline-block;font-size:11px;color:var(--text3);margin-top:2px;line-height:1.6}
+  .forn-select{width:100%;min-width:160px;background:var(--bg3);border:1px solid var(--border2);
+    color:var(--text1);padding:5px 8px;border-radius:6px;font-size:12px;outline:none;font-family:inherit}
+  .forn-select:focus{border-color:var(--teal)}
+  .forn-select.sem-forn{color:var(--text3)}
+
+  /* PEDIDO CARD */
+  .ped-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:14px}
+  .ped-card-header{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border2)}
+  .ped-card-forn{font-size:15px;font-weight:700;flex:1}
+  .ped-card-body{padding:0}
+
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;
     display:none;align-items:center;justify-content:center;padding:16px}
   .overlay.open{display:flex}
   .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
-    width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:28px;
-    box-shadow:0 8px 32px rgba(0,0,0,.12)}
-  .modal h2{font-size:16px;font-weight:700;margin-bottom:20px}
-  .fg{margin-bottom:14px}
-  .fg label{display:block;font-size:11px;color:var(--text3);margin-bottom:5px;
-    text-transform:uppercase;letter-spacing:.05em;font-weight:600}
-  .fg input,.fg select,.fg textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);
-    color:var(--text1);padding:9px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
-  .fg input:focus,.fg select:focus{border-color:var(--teal)}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+  .modal h2{font-size:16px;font-weight:700;margin-bottom:16px}
   .modal-foot{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border2)}
 
-  /* PEDIDO CARD (agrupado por fornecedor) */
-  .forn-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
-    margin-bottom:16px;overflow:hidden}
-  .forn-header{padding:14px 18px;background:var(--bg3);border-bottom:1px solid var(--border2);
-    display:flex;align-items:center;gap:12px}
-  .forn-nome{font-size:14px;font-weight:700;flex:1}
-  .forn-body{padding:0}
-
-  /* FORMULÁRIO DE ITENS */
-  .item-row{display:grid;grid-template-columns:1fr 120px 100px 32px;gap:8px;align-items:center;
-    padding:8px 0;border-bottom:1px solid var(--border2)}
-  .item-row:last-child{border-bottom:none}
-
-  /* TOAST */
   .toast{position:fixed;bottom:24px;right:24px;background:var(--text1);color:#fff;
     border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;
-    opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+    opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;max-width:360px}
   .toast.show{opacity:1;transform:translateY(0)}
   .toast.err{background:var(--red)}
+  .toast.ok{background:var(--green)}
   .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
+
+  @media(max-width:700px){.sidebar{display:none}}
 </style>
 </head>
 <body>
@@ -187,85 +193,121 @@
   </div>
   <div class="content">
 
-    <div class="tabs" id="tabs-container">
-      <!-- Tabs injetadas via JS conforme perfil -->
-    </div>
-
-    <!-- TAB: MEUS PEDIDOS / TODOS OS PEDIDOS -->
-    <div id="tab-pedidos" class="tab-pane active">
-      <div class="toolbar">
-        <select class="field field-sm" id="fil-status" onchange="renderPedidos()">
-          <option value="">Todos os status</option>
-          <option value="pendente">Pendente</option>
-          <option value="aprovado">Aprovado</option>
-          <option value="enviado">Enviado</option>
-          <option value="recebido">Recebido</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-        <select class="field field-sm" id="fil-loja" onchange="renderPedidos()" style="display:none">
-          <option value="">Todas as lojas</option>
-        </select>
-        <button class="btn btn-primary ml" onclick="abrirModalNovoPedido()">+ Nova solicitação</button>
+    <!-- ══════════════════════ VIEW ADMIN ══════════════════════ -->
+    <div id="view-admin" style="display:none">
+      <div class="tabs">
+        <button class="tab-btn" data-tab="solicitacoes" onclick="switchTab('solicitacoes')">Solicitações</button>
+        <button class="tab-btn" data-tab="processar" onclick="switchTab('processar')">Processar</button>
+        <button class="tab-btn" data-tab="pedidos" onclick="switchTab('pedidos')">Pedidos Gerados</button>
       </div>
-      <div class="sc-grid" id="ped-cards"></div>
-      <div class="tbl-wrap"><div class="tbl-scroll">
-        <table class="tbl">
-          <thead><tr>
-            <th>Data</th><th id="th-loja" style="display:none">Loja</th>
-            <th>Fornecedor</th><th class="r">Itens</th>
-            <th class="r">Valor est.</th><th class="c">Status</th><th></th>
-          </tr></thead>
-          <tbody id="ped-body"><tr><td colspan="7" class="empty">Carregando...</td></tr></tbody>
-        </table>
-      </div></div>
-    </div>
 
-    <!-- TAB: CONSOLIDADO POR FORNECEDOR (admin/compras) -->
-    <div id="tab-consolidado" class="tab-pane">
-      <div class="toolbar">
-        <span style="font-size:13px;color:var(--text2)">Pedidos pendentes agrupados por fornecedor</span>
-        <button class="btn btn-ghost btn-sm ml" onclick="renderConsolidado()">↻ Atualizar</button>
-      </div>
-      <div id="consolidado-body">
-        <div class="empty">Carregando...</div>
-      </div>
-    </div>
-
-    <!-- TAB: NOVO PEDIDO -->
-    <div id="tab-novo" class="tab-pane">
-      <div style="max-width:700px">
-        <div class="row2" style="margin-bottom:16px">
-          <div class="fg" style="margin:0">
-            <label>Loja solicitante *</label>
-            <select id="np-loja" class="field"></select>
-          </div>
-          <div class="fg" style="margin:0">
-            <label>Data de entrega prevista</label>
-            <input type="date" id="np-entrega" class="field">
-          </div>
+      <!-- TAB: SOLICITAÇÕES -->
+      <div id="tab-solicitacoes" class="tab-pane">
+        <div class="sc-grid" id="sol-cards"></div>
+        <div class="toolbar">
+          <select class="field field-sm" id="sol-fil-loja" onchange="renderSolicitacoes()">
+            <option value="">Todas as lojas</option>
+          </select>
+          <button class="btn btn-ghost btn-sm ml" onclick="renderSolicitacoes()">↻ Atualizar</button>
         </div>
-        <div class="fg">
-          <label>Observação geral</label>
-          <textarea id="np-obs" class="field" rows="2" placeholder="Opcional"></textarea>
-        </div>
-
-        <div style="font-size:14px;font-weight:700;margin-bottom:12px;margin-top:8px">Itens do pedido</div>
-        <div class="toolbar" style="margin-bottom:12px">
-          <input class="field field-sm" id="np-busca" placeholder="Buscar insumo..." oninput="filtrarInsumosNP()">
-        </div>
-        <div class="tbl-wrap">
+        <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th>Insumo</th><th>Fornecedor</th><th class="r">Qtd</th><th>Un.</th><th class="r">Preço est.</th><th class="c">Incluir</th>
+              <th>Data</th><th>Loja</th><th>Itens</th><th>Observação</th><th>Status</th><th></th>
             </tr></thead>
-            <tbody id="np-body"></tbody>
+            <tbody id="sol-body"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody>
           </table>
+        </div></div>
+      </div>
+
+      <!-- TAB: PROCESSAR -->
+      <div id="tab-processar" class="tab-pane">
+        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Consolidado de solicitações pendentes</div>
+            <div style="font-size:12px;color:var(--text3)" id="cons-desc">Carregando...</div>
+          </div>
+          <button class="btn btn-primary" onclick="gerarPedidos()" id="btn-gerar" disabled>Gerar Pedidos por Fornecedor</button>
         </div>
-        <div style="display:flex;gap:10px;margin-top:16px">
-          <button class="btn btn-ghost" onclick="switchTab('pedidos')">Cancelar</button>
-          <div style="flex:1"></div>
-          <span id="np-count" style="font-size:13px;color:var(--text2);align-self:center"></span>
-          <button class="btn btn-primary" onclick="salvarPedido()">Enviar solicitação</button>
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl" id="cons-table">
+            <thead><tr>
+              <th>Insumo</th>
+              <th class="r">Qtd Total</th>
+              <th>Un.</th>
+              <th>Por Loja</th>
+              <th>Fornecedor</th>
+            </tr></thead>
+            <tbody id="cons-body"><tr><td colspan="5" class="empty">Nenhuma solicitação pendente</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- TAB: PEDIDOS GERADOS -->
+      <div id="tab-pedidos" class="tab-pane">
+        <div class="toolbar">
+          <select class="field field-sm" id="ped-fil-status" onchange="renderPedidos()">
+            <option value="ativos">Ativos (pendente + enviado)</option>
+            <option value="pendente">Pendente</option>
+            <option value="enviado">Enviado</option>
+            <option value="baixado">Baixados</option>
+            <option value="cancelado">Cancelado</option>
+            <option value="">Todos</option>
+          </select>
+          <button class="btn btn-ghost btn-sm ml" onclick="renderPedidos()">↻ Atualizar</button>
+        </div>
+        <div id="ped-body"><div class="empty">Carregando...</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ VIEW GERENTE ══════════════════════ -->
+    <div id="view-gerente" style="display:none">
+      <div class="tabs">
+        <button class="tab-btn" data-tab="g-minhas" onclick="switchTab('g-minhas')">Minhas Solicitações</button>
+        <button class="tab-btn" data-tab="g-nova" onclick="switchTab('g-nova')">+ Nova Solicitação</button>
+      </div>
+
+      <!-- TAB: MINHAS SOLICITAÇÕES -->
+      <div id="tab-g-minhas" class="tab-pane">
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr><th>Data</th><th>Itens</th><th>Observação</th><th>Status</th><th></th></tr></thead>
+            <tbody id="g-sol-body"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- TAB: NOVA SOLICITAÇÃO (etapa 1: selecionar grupo e itens) -->
+      <div id="tab-g-nova" class="tab-pane">
+        <!-- Seletor de grupo -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Grupo de itens</div>
+          <div id="g-grupos-btns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+
+        <!-- Lista de itens do grupo (etapa 1: só checkboxes) -->
+        <div id="g-itens-wrap" style="display:none">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:700" id="g-grupo-titulo"></div>
+            <span id="g-sel-count" style="font-size:12px;color:var(--text3)"></span>
+            <div class="ml"></div>
+            <button class="btn btn-ghost btn-sm" onclick="limparSelecao()">Limpar</button>
+            <button class="btn btn-primary" id="btn-add-itens" onclick="abrirModalQuantidades()" disabled>Adicionar itens selecionados →</button>
+          </div>
+          <div class="tbl-wrap"><div class="tbl-scroll">
+            <table class="tbl">
+              <thead><tr>
+                <th style="width:40px"><input type="checkbox" id="g-chk-all" onchange="selecionarTodos(this.checked)" style="cursor:pointer"></th>
+                <th>Item</th>
+                <th>Unidade</th>
+              </tr></thead>
+              <tbody id="g-itens-body"></tbody>
+            </table>
+          </div></div>
+        </div>
+
+        <div id="g-sem-grupos" style="display:none" class="empty">
+          Nenhum grupo cadastrado. Configure em <strong>Estoque → Inventário</strong>.
         </div>
       </div>
     </div>
@@ -274,22 +316,67 @@
 </div>
 </div>
 
-<!-- MODAL: DETALHE PEDIDO -->
-<div id="m-pedido" class="overlay" onclick="if(event.target===this)fecharModal('m-pedido')">
-  <div class="modal" style="max-width:640px" onclick="event.stopPropagation()">
-    <h2 id="mp-titulo">Pedido</h2>
-    <div id="mp-info" style="margin-bottom:16px;font-size:13px;color:var(--text2)"></div>
+<!-- MODAL: QUANTIDADES (gerente etapa 2) -->
+<div id="m-qtd" class="overlay" onclick="if(event.target===this)fecharModal('m-qtd')">
+  <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
+    <h2>Informar Quantidades</h2>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Entrega prevista</div>
+        <input type="date" class="field" id="g-entrega" style="width:100%">
+      </div>
+      <div style="flex:2;min-width:200px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Observação</div>
+        <input type="text" class="field" id="g-obs" placeholder="Opcional" style="width:100%">
+      </div>
+    </div>
     <div class="tbl-wrap"><div class="tbl-scroll">
       <table class="tbl">
-        <thead><tr><th>Insumo</th><th class="r">Qtd</th><th>Un.</th><th class="r">Preço unit.</th><th class="r">Total</th></tr></thead>
+        <thead><tr><th>Item</th><th class="r">Quantidade</th><th>Un.</th></tr></thead>
+        <tbody id="g-qtd-body"></tbody>
+      </table>
+    </div></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModal('m-qtd')">← Voltar</button>
+      <div class="ml"></div>
+      <button class="btn btn-primary" id="btn-enviar" onclick="enviarSolicitacao()">Enviar Solicitação</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHE SOLICITAÇÃO -->
+<div id="m-sol" class="overlay" onclick="if(event.target===this)fecharModal('m-sol')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="ms-titulo">Solicitação</h2>
+    <div id="ms-info" style="font-size:13px;color:var(--text2);margin-bottom:16px"></div>
+    <div class="tbl-wrap"><div class="tbl-scroll">
+      <table class="tbl">
+        <thead><tr><th>Insumo</th><th class="r">Qtd</th><th>Un.</th></tr></thead>
+        <tbody id="ms-body"></tbody>
+      </table>
+    </div></div>
+    <div class="modal-foot">
+      <div class="ml"></div>
+      <button class="btn btn-ghost" onclick="fecharModal('m-sol')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHE PEDIDO -->
+<div id="m-ped" class="overlay" onclick="if(event.target===this)fecharModal('m-ped')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="mp-titulo">Pedido</h2>
+    <div id="mp-info" style="font-size:13px;color:var(--text2);margin-bottom:16px"></div>
+    <div class="tbl-wrap"><div class="tbl-scroll">
+      <table class="tbl">
+        <thead><tr><th>Insumo</th><th class="r">Qtd</th><th>Un.</th><th>Por Loja</th></tr></thead>
         <tbody id="mp-body"></tbody>
-        <tfoot id="mp-foot"></tfoot>
       </table>
     </div></div>
     <div id="mp-acoes" style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap"></div>
     <div class="modal-foot">
-      <div style="flex:1"></div>
-      <button class="btn btn-ghost" onclick="fecharModal('m-pedido')">Fechar</button>
+      <div class="ml"></div>
+      <button class="btn btn-ghost" onclick="fecharModal('m-ped')">Fechar</button>
     </div>
   </div>
 </div>
@@ -297,7 +384,8 @@
 <div id="toast" class="toast"></div>
 
 <script>
-(function(){if(!localStorage.getItem('sb_token')){window.location.href='login.html';}})();
+(function(){if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u&&u.perfil==='gerente'){window.location.href='loja.html';}}catch{}})();
+
 const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
 const TENANT_ID = '00000000-0000-0000-0000-000000000001';
@@ -307,7 +395,7 @@ async function api(endpoint, opts={}) {
   const headers = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY };
   if (opts.body) headers['Content-Type'] = 'application/json';
   if (opts.prefer) headers['Prefer'] = opts.prefer;
-  else if (method==='POST') headers['Prefer'] = 'return=representation';
+  else if (method==='POST')  headers['Prefer'] = 'return=representation';
   else if (method==='PATCH') headers['Prefer'] = 'return=representation';
   const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`, {method, headers, body: opts.body||undefined});
   if (!res.ok) { let m=res.statusText; try{const j=await res.json();m=j.message||j.error||m;}catch{}throw new Error(`[${res.status}] ${m}`); }
@@ -316,11 +404,16 @@ async function api(endpoint, opts={}) {
   return [];
 }
 
-// ── STATE ──────────────────────────────────────────────────────────
-let userProfile = null, insumos = [], fornecedores = [], lojas = [], pedidos = [];
-let vinculosForn = [], npItens = {}, tabAtual = 'pedidos';
+// ── STATE ──────────────────────────────────────────────────────────────
+let userProfile = null;
+let insumos = [], fornecedores = [], lojas = [], vinculosForn = [];
+let grupos = [], gruposItens = {};
+let solicitacoes = [], pedidosGerados = [];
+let selectedItems = {}; // { insumo_id: { qty, unidade } }
+let consolidado = {}; // built from solicitacoes
+let tabAtual = '';
 
-// ── AUTH ───────────────────────────────────────────────────────────
+// ── AUTH ───────────────────────────────────────────────────────────────
 function getUser() {
   try { return JSON.parse(localStorage.getItem('sb_user')||'null'); } catch { return null; }
 }
@@ -331,30 +424,13 @@ function sair() {
   window.location.href = 'login.html';
 }
 
-// ── INIT ───────────────────────────────────────────────────────────
+// ── INIT ───────────────────────────────────────────────────────────────
 async function carregar() {
   userProfile = getUser();
-  const isAdmin = !userProfile || ['admin','compras'].includes(userProfile?.perfil);
   const isGerente = userProfile?.perfil === 'gerente';
 
-  // Sidebar
   document.getElementById('sb-user-nome').textContent = userProfile?.nome || 'Usuário';
   document.getElementById('sb-user-perfil').textContent = userProfile?.perfil || 'admin';
-
-  // Tabs conforme perfil
-  const tabs = document.getElementById('tabs-container');
-  if (isAdmin) {
-    tabs.innerHTML = `
-      <button class="tab-btn active" data-tab="pedidos" onclick="switchTab('pedidos')">Todos os Pedidos</button>
-      <button class="tab-btn" data-tab="consolidado" onclick="switchTab('consolidado')">Por Fornecedor</button>
-      <button class="tab-btn" data-tab="novo" onclick="switchTab('novo')">+ Nova Solicitação</button>`;
-    document.getElementById('fil-loja').style.display = '';
-    document.getElementById('th-loja').style.display = '';
-  } else {
-    tabs.innerHTML = `
-      <button class="tab-btn active" data-tab="pedidos" onclick="switchTab('pedidos')">Meus Pedidos</button>
-      <button class="tab-btn" data-tab="novo" onclick="switchTab('novo')">+ Nova Solicitação</button>`;
-  }
 
   document.getElementById('conn-status').textContent = 'carregando...';
   try {
@@ -364,239 +440,337 @@ async function carregar() {
       api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
       api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`),
     ]);
-
-    // Popula filtro de lojas
-    const filLoja = document.getElementById('fil-loja');
-    filLoja.innerHTML = '<option value="">Todas as lojas</option>' +
-      lojas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
-
-    // Popula select de loja no novo pedido
-    const npLoja = document.getElementById('np-loja');
-    if (isGerente && userProfile?.loja_id) {
-      const loja = lojas.find(l => l.id === userProfile.loja_id);
-      npLoja.innerHTML = `<option value="${userProfile.loja_id}">${esc(loja?.nome||'Minha loja')}</option>`;
-      npLoja.disabled = true;
-      document.getElementById('sb-loja').textContent = loja?.nome||'';
-    } else {
-      npLoja.innerHTML = '<option value="">Selecione a loja...</option>' +
-        lojas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
-    }
-
-    document.getElementById('np-entrega').value = hoje(7);
-    renderInsumosNP();
-    await renderPedidos();
     document.getElementById('conn-status').textContent = '● conectado';
     document.getElementById('conn-status').style.color = 'var(--green)';
   } catch(e) {
     document.getElementById('conn-status').textContent = '✕ erro';
     document.getElementById('conn-status').style.color = 'var(--red)';
-    toast('Erro ao carregar: '+e.message,'err');
+    toast('Erro ao carregar: '+e.message, 'err');
+    return;
+  }
+
+  if (isGerente) {
+    document.getElementById('view-gerente').style.display = '';
+    await carregarGrupos();
+    switchTab('g-nova');
+  } else {
+    document.getElementById('view-admin').style.display = '';
+    // Popula filtro de lojas
+    const fil = document.getElementById('sol-fil-loja');
+    fil.innerHTML = '<option value="">Todas as lojas</option>' +
+      lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    switchTab('solicitacoes');
   }
 }
 
-// ── TABS ───────────────────────────────────────────────────────────
+// ── TABS ───────────────────────────────────────────────────────────────
 function switchTab(tab) {
   tabAtual = tab;
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   const el = document.getElementById('tab-'+tab);
   if (el) el.classList.add('active');
-  if (tab==='pedidos') renderPedidos();
-  if (tab==='consolidado') renderConsolidado();
-  if (tab==='novo') renderInsumosNP();
+  if (tab==='solicitacoes') renderSolicitacoes();
+  if (tab==='processar')    carregarConsolidado();
+  if (tab==='pedidos')      renderPedidos();
+  if (tab==='g-minhas')     renderMinhasSolicitacoes();
+  if (tab==='g-nova')       renderGrupos();
 }
 
-// ── HELPERS ────────────────────────────────────────────────────────
-function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function hoje(plusDias=0){const d=new Date();d.setDate(d.getDate()+plusDias);return d.toISOString().split('T')[0];}
-function fmtData(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
-function statusBadge(s){return `<span class="badge b-${s}">${s.charAt(0).toUpperCase()+s.slice(1)}</span>`;}
-let toastTimer;
-function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
-function abrirModal(id){document.getElementById(id).classList.add('open');}
-function fecharModal(id){document.getElementById(id).classList.remove('open');}
-function abrirModalNovoPedido(){switchTab('novo');}
-
-// ── LISTAR PEDIDOS ─────────────────────────────────────────────────
-async function renderPedidos() {
-  const isGerente = userProfile?.perfil === 'gerente';
-  const statusFil = document.getElementById('fil-status')?.value||'';
-  const lojaFil = document.getElementById('fil-loja')?.value||'';
+// ══════════════════════════════════════════════════════════════════════
+// ADMIN — SOLICITAÇÕES
+// ══════════════════════════════════════════════════════════════════════
+async function renderSolicitacoes() {
+  const lojaFil = document.getElementById('sol-fil-loja')?.value||'';
   try {
-    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&order=created_at.desc`;
-    if (isGerente && userProfile?.loja_id) q += `&loja_id=eq.${userProfile.loja_id}`;
+    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&order=created_at.desc`;
     if (lojaFil) q += `&loja_id=eq.${lojaFil}`;
-    if (statusFil) q += `&status=eq.${statusFil}`;
-    pedidos = await api(q);
+    solicitacoes = await api(q);
 
-    // KPIs
-    const pendentes = pedidos.filter(p=>p.status==='pendente').length;
-    const enviados = pedidos.filter(p=>p.status==='enviado').length;
-    const recebidos = pedidos.filter(p=>p.status==='recebido').length;
-    document.getElementById('ped-cards').innerHTML = `
-      <div class="sc"><div class="sc-label">Pendentes</div><div class="sc-value c-amber">${pendentes}</div><div class="sc-sub">aguardando aprovação</div></div>
-      <div class="sc"><div class="sc-label">Enviados</div><div class="sc-value c-blue">${enviados}</div><div class="sc-sub">aguardando entrega</div></div>
-      <div class="sc"><div class="sc-label">Recebidos</div><div class="sc-value c-green">${recebidos}</div><div class="sc-sub">este mês</div></div>
-      <div class="sc"><div class="sc-label">Total</div><div class="sc-value">${pedidos.length}</div><div class="sc-sub">no período</div></div>`;
+    const pendentes = solicitacoes.length;
+    const lojaSet = new Set(solicitacoes.map(s=>s.loja_id).filter(Boolean));
+    document.getElementById('sol-cards').innerHTML = `
+      <div class="sc"><div class="sc-label">Aguardando</div><div class="sc-value c-amber">${pendentes}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">solicitações</div></div>
+      <div class="sc"><div class="sc-label">Lojas</div><div class="sc-value c-blue">${lojaSet.size}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">com pedidos</div></div>`;
 
-    const isAdmin = !isGerente;
-    document.getElementById('ped-body').innerHTML = pedidos.length ? pedidos.map(p => {
-      const loja = lojas.find(l=>l.id===p.loja_id);
-      const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
+    const tbody = document.getElementById('sol-body');
+    if (!solicitacoes.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma solicitação pendente</td></tr>';
+      return;
+    }
+    tbody.innerHTML = solicitacoes.map(s => {
+      const loja = lojas.find(l=>l.id===s.loja_id);
       return `<tr>
-        <td class="mono">${fmtData(p.data_pedido)}</td>
-        ${isAdmin?`<td style="font-weight:500">${esc(loja?.nome||'—')}</td>`:''}
-        <td>${esc(forn?.nome||'Sem fornecedor')}</td>
-        <td class="r mono">—</td>
-        <td class="r mono">—</td>
-        <td class="c">${statusBadge(p.status)}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="verPedido('${p.id}')">Ver</button></td>
-      </tr>`;
-    }).join('') : `<tr><td colspan="7" class="empty">Nenhum pedido encontrado</td></tr>`;
-  } catch(e) { toast('Erro: '+e.message,'err'); }
-}
-
-// ── VER PEDIDO ─────────────────────────────────────────────────────
-async function verPedido(id) {
-  const p = pedidos.find(x=>x.id===id);
-  if (!p) return;
-  const loja = lojas.find(l=>l.id===p.loja_id);
-  const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
-  const isAdmin = ['admin','compras'].includes(userProfile?.perfil);
-  document.getElementById('mp-titulo').textContent = `Pedido — ${esc(forn?.nome||'Sem fornecedor')}`;
-  document.getElementById('mp-info').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div><span style="color:var(--text3)">Loja:</span> <strong>${esc(loja?.nome||'—')}</strong></div>
-      <div><span style="color:var(--text3)">Status:</span> ${statusBadge(p.status)}</div>
-      <div><span style="color:var(--text3)">Data:</span> ${fmtData(p.data_pedido)}</div>
-      <div><span style="color:var(--text3)">Entrega prevista:</span> ${fmtData(p.data_entrega_prevista)}</div>
-      ${p.observacao?`<div style="grid-column:1/-1"><span style="color:var(--text3)">Obs:</span> ${esc(p.observacao)}</div>`:''}
-    </div>`;
-  try {
-    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
-    const total = itens.reduce((s,it)=>s+(it.preco_unitario||0)*(it.quantidade||0),0);
-    document.getElementById('mp-body').innerHTML = itens.map(it => {
-      const ins = insumos.find(i=>i.id===it.insumo_id);
-      return `<tr>
-        <td>${esc(ins?.nome||it.insumo_id)}</td>
-        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
-        <td>${esc(it.unidade||'un')}</td>
-        <td class="r mono">${it.preco_unitario?brl(it.preco_unitario):'—'}</td>
-        <td class="r mono">${it.preco_unitario?brl(it.preco_unitario*it.quantidade):'—'}</td>
+        <td class="mono">${fmtData(s.data_pedido)}</td>
+        <td style="font-weight:600">${esc(loja?.nome||'—')}</td>
+        <td class="mono">—</td>
+        <td style="color:var(--text3)">${esc(s.observacao||'—')}</td>
+        <td><span class="badge b-solicitado">Aguardando</span></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="verSolicitacao('${s.id}')">Ver itens</button></td>
       </tr>`;
     }).join('');
-    document.getElementById('mp-foot').innerHTML = total>0?`
-      <tr style="background:var(--bg3);font-weight:700">
-        <td colspan="3" style="padding:10px 14px">Total estimado</td>
-        <td colspan="2" class="r mono" style="padding:10px 14px;color:var(--teal)">${brl(total)}</td>
-      </tr>`:'';
-
-    // Ações por status e perfil
-    const acoes = document.getElementById('mp-acoes');
-    acoes.innerHTML = '';
-    if (isAdmin) {
-      if (p.status==='pendente') {
-        acoes.innerHTML += `<button class="btn btn-green btn-sm" onclick="mudarStatus('${id}','aprovado')">✓ Aprovar</button>`;
-        acoes.innerHTML += `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="mudarStatus('${id}','cancelado')">✕ Cancelar</button>`;
-      }
-      if (p.status==='aprovado') {
-        const wpp = forn?.whatsapp;
-        acoes.innerHTML += `<button class="btn btn-blue btn-sm" onclick="mudarStatus('${id}','enviado')">📤 Marcar como enviado</button>`;
-        if (wpp) acoes.innerHTML += `<button class="btn btn-green btn-sm" onclick="enviarWhatsApp('${id}')">💬 WhatsApp</button>`;
-      }
-      if (p.status==='enviado') {
-        acoes.innerHTML += `<button class="btn btn-green btn-sm" onclick="mudarStatus('${id}','recebido')">✓ Confirmar recebimento</button>`;
-      }
-    }
-    if (p.status==='pendente' && userProfile?.perfil==='gerente') {
-      acoes.innerHTML += `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="mudarStatus('${id}','cancelado')">✕ Cancelar pedido</button>`;
-    }
-  } catch(e) { toast('Erro ao carregar itens: '+e.message,'err'); }
-  abrirModal('m-pedido');
-}
-
-async function mudarStatus(id, status) {
-  try {
-    await api(`pedidos_compra?id=eq.${id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({status})});
-    toast(`Pedido marcado como ${status}.`,'ok');
-    fecharModal('m-pedido');
-    await renderPedidos();
   } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
-async function enviarWhatsApp(id) {
-  const p = pedidos.find(x=>x.id===id);
-  const forn = fornecedores.find(f=>f.id===p?.fornecedor_id);
-  const loja = lojas.find(l=>l.id===p?.loja_id);
-  if (!forn?.whatsapp) { toast('Fornecedor sem WhatsApp cadastrado.','err'); return; }
-  const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
-  let msg = `*Pedido de Compra — ${loja?.nome||'Aiko'}*\n`;
-  msg += `Data: ${fmtData(p.data_pedido)}\n`;
-  if (p.data_entrega_prevista) msg += `Entrega: ${fmtData(p.data_entrega_prevista)}\n`;
-  msg += '\n*Itens:*\n';
-  itens.forEach(it => {
-    const ins = insumos.find(i=>i.id===it.insumo_id);
-    msg += `• ${ins?.nome||'?'}: ${Number(it.quantidade).toFixed(3)} ${it.unidade||'un'}`;
-    if (it.preco_unitario) msg += ` (${brl(it.preco_unitario)}/un)`;
-    msg += '\n';
-  });
-  if (p.observacao) msg += `\nObs: ${p.observacao}`;
-  const wpp = forn.whatsapp.replace(/\D/g,'');
-  window.open(`https://wa.me/55${wpp}?text=${encodeURIComponent(msg)}`, '_blank');
-  mudarStatus(id, 'enviado');
+async function verSolicitacao(id) {
+  const s = solicitacoes.find(x=>x.id===id);
+  if (!s) return;
+  const loja = lojas.find(l=>l.id===s.loja_id);
+  document.getElementById('ms-titulo').textContent = `Solicitação — ${esc(loja?.nome||'—')}`;
+  document.getElementById('ms-info').innerHTML = `<span style="color:var(--text3)">Data:</span> ${fmtData(s.data_pedido)}
+    ${s.observacao?` · <span style="color:var(--text3)">Obs:</span> ${esc(s.observacao)}`:''}`;
+  try {
+    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
+    document.getElementById('ms-body').innerHTML = itens.map(it => {
+      const ins = insumos.find(i=>i.id===it.insumo_id);
+      return `<tr><td>${esc(ins?.nome||it.insumo_id)}</td>
+        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
+        <td>${esc(it.unidade||'un')}</td></tr>`;
+    }).join('');
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  abrirModal('m-sol');
 }
 
-// ── CONSOLIDADO POR FORNECEDOR ─────────────────────────────────────
-async function renderConsolidado() {
-  const container = document.getElementById('consolidado-body');
-  container.innerHTML = '<div class="empty">Carregando...</div>';
-  try {
-    const pendentes = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=in.(pendente,aprovado)&order=created_at.desc`);
-    if (!pendentes.length) { container.innerHTML = '<div class="empty">Nenhum pedido pendente</div>'; return; }
+// ══════════════════════════════════════════════════════════════════════
+// ADMIN — PROCESSAR (CONSOLIDADO)
+// ══════════════════════════════════════════════════════════════════════
+async function carregarConsolidado() {
+  const desc = document.getElementById('cons-desc');
+  const tbody = document.getElementById('cons-body');
+  const btnGerar = document.getElementById('btn-gerar');
+  desc.textContent = 'Carregando...';
+  tbody.innerHTML = '<tr><td colspan="5" class="empty">Carregando...</td></tr>';
+  btnGerar.disabled = true;
+  consolidado = {};
 
-    // Agrupa por fornecedor
-    const porForn = {};
-    for (const p of pendentes) {
-      const fId = p.fornecedor_id || 'sem-forn';
-      if (!porForn[fId]) porForn[fId] = { pedidos: [], itens: {} };
-      porForn[fId].pedidos.push(p);
-      const itens = await api(`itens_pedido?pedido_id=eq.${p.id}`);
-      itens.forEach(it => {
-        if (!porForn[fId].itens[it.insumo_id]) porForn[fId].itens[it.insumo_id] = { qtd:0, un:it.unidade, preco:it.preco_unitario };
-        porForn[fId].itens[it.insumo_id].qtd += (it.quantidade||0);
+  try {
+    const sols = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&order=created_at.asc`);
+    if (!sols.length) {
+      desc.textContent = 'Nenhuma solicitação aguardando processamento.';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma solicitação pendente</td></tr>';
+      return;
+    }
+
+    // Load all itens for all solicitacoes in parallel
+    const itensArrays = await Promise.all(sols.map(s => api(`itens_pedido?pedido_id=eq.${s.id}`)));
+
+    // Build consolidated map
+    sols.forEach((s, idx) => {
+      const loja = lojas.find(l=>l.id===s.loja_id);
+      const lojaNome = loja?.nome || 'Sem loja';
+      itensArrays[idx].forEach(it => {
+        if (!consolidado[it.insumo_id]) {
+          const ins = insumos.find(i=>i.id===it.insumo_id);
+          const vincs = vinculosForn.filter(v=>v.insumo_id===it.insumo_id);
+          const principal = vincs.find(v=>v.principal)||vincs[0];
+          consolidado[it.insumo_id] = {
+            nome: ins?.nome||it.insumo_id,
+            unidade: it.unidade||ins?.unidade_medida||'un',
+            total: 0,
+            lojas: [],
+            fornecedorId: principal?.fornecedor_id||null,
+          };
+        }
+        consolidado[it.insumo_id].total += Number(it.quantidade)||0;
+        const existing = consolidado[it.insumo_id].lojas.find(l=>l.loja_id===s.loja_id);
+        if (existing) existing.qty += Number(it.quantidade)||0;
+        else consolidado[it.insumo_id].lojas.push({ loja_id: s.loja_id, nome: lojaNome, qty: Number(it.quantidade)||0 });
+      });
+    });
+
+    const nLojas = new Set(sols.map(s=>s.loja_id)).size;
+    desc.textContent = `${sols.length} solicitação(ões) de ${nLojas} loja(s) · ${Object.keys(consolidado).length} insumo(s)`;
+    btnGerar.disabled = false;
+    renderConsolidado();
+  } catch(e) {
+    desc.textContent = 'Erro ao carregar.';
+    toast('Erro: '+e.message,'err');
+  }
+}
+
+function renderConsolidado() {
+  const tbody = document.getElementById('cons-body');
+  const itens = Object.entries(consolidado);
+  if (!itens.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum item</td></tr>';
+    return;
+  }
+  tbody.innerHTML = itens.map(([insId, d]) => {
+    const fornOpts = buildFornOptions(insId, d.fornecedorId);
+    const breakdown = d.lojas.map(l=>`${esc(l.nome)}: ${l.qty.toFixed(3)} ${esc(d.unidade)}`).join(' · ');
+    return `<tr>
+      <td style="font-weight:600">${esc(d.nome)}</td>
+      <td class="r mono">${d.total.toFixed(3)}</td>
+      <td>${esc(d.unidade)}</td>
+      <td><span class="loja-pill">${breakdown}</span></td>
+      <td><select class="forn-select ${d.fornecedorId?'':'sem-forn'}" id="forn-sel-${insId}"
+        onchange="consolidado['${insId}'].fornecedorId=this.value||null;this.className='forn-select'+(this.value?'':' sem-forn')">
+        ${fornOpts}
+      </select></td>
+    </tr>`;
+  }).join('');
+}
+
+function buildFornOptions(insId, selectedId) {
+  const vincs = vinculosForn.filter(v=>v.insumo_id===insId);
+  let opts = `<option value="">— Sem fornecedor —</option>`;
+  if (vincs.length) {
+    opts += vincs.map(v => {
+      const f = fornecedores.find(x=>x.id===v.fornecedor_id);
+      const label = f?.nome || v.fornecedor_id;
+      const sel = v.fornecedor_id === selectedId ? 'selected' : '';
+      const mark = v.principal ? ' ★' : '';
+      return `<option value="${v.fornecedor_id}" ${sel}>${esc(label)}${mark}</option>`;
+    }).join('');
+  } else {
+    opts += fornecedores.map(f =>
+      `<option value="${f.id}" ${f.id===selectedId?'selected':''}>${esc(f.nome)}</option>`
+    ).join('');
+  }
+  return opts;
+}
+
+async function gerarPedidos() {
+  const itens = Object.entries(consolidado);
+  if (!itens.length) { toast('Nada para gerar.','err'); return; }
+
+  // Read current supplier selections from dropdowns
+  itens.forEach(([insId]) => {
+    const sel = document.getElementById(`forn-sel-${insId}`);
+    if (sel) consolidado[insId].fornecedorId = sel.value||null;
+  });
+
+  // Group by supplier
+  const porForn = {};
+  itens.forEach(([insId, d]) => {
+    const fKey = d.fornecedorId || '__sem__';
+    if (!porForn[fKey]) porForn[fKey] = [];
+    porForn[fKey].push({ insId, ...d });
+  });
+
+  const btn = document.getElementById('btn-gerar');
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+
+  try {
+    // Load all pending solicitacoes to mark as processed
+    const sols = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado`);
+
+    for (const [fKey, itensForn] of Object.entries(porForn)) {
+      const fornId = fKey === '__sem__' ? null : fKey;
+      const forn = fornecedores.find(f=>f.id===fornId);
+
+      // Build observacao with loja breakdown
+      const lojaResumo = [];
+      const allLojas = new Set(itensForn.flatMap(it=>it.lojas.map(l=>l.loja_id)));
+      allLojas.forEach(lojaId => {
+        const loja = lojas.find(l=>l.id===lojaId);
+        lojaResumo.push(loja?.nome||'?');
+      });
+      const obs = `Lojas: ${lojaResumo.join(', ')}`;
+
+      // Create pedido per supplier
+      const pedRes = await api('pedidos_compra', { method:'POST',
+        body: JSON.stringify({
+          tenant_id: TENANT_ID,
+          loja_id: null,
+          fornecedor_id: fornId,
+          status: 'pendente',
+          data_pedido: hoje(),
+          observacao: obs,
+          solicitante_id: userProfile?.id||null
+        })
+      });
+      const pedId = pedRes[0]?.id;
+      if (!pedId) throw new Error('Falha ao criar pedido.');
+
+      // Create itens with loja_breakdown in observacao per item
+      const itensPay = itensForn.map(it => {
+        const breakdown = it.lojas.map(l=>`${l.nome}: ${l.qty.toFixed(3)}`).join(', ');
+        return {
+          pedido_id: pedId,
+          insumo_id: it.insId,
+          quantidade: it.total,
+          unidade: it.unidade,
+          preco_unitario: vinculosForn.find(v=>v.insumo_id===it.insId&&v.fornecedor_id===fornId)?.preco_unitario||null,
+          observacao: breakdown
+        };
+      });
+      await api('itens_pedido', { method:'POST', prefer:'return=minimal', body:JSON.stringify(itensPay)});
+    }
+
+    // Mark all solicitacoes as processed
+    for (const s of sols) {
+      await api(`pedidos_compra?id=eq.${s.id}`, {
+        method:'PATCH', prefer:'return=minimal',
+        body: JSON.stringify({ status:'processado' })
       });
     }
 
-    container.innerHTML = Object.entries(porForn).map(([fId, data]) => {
-      const forn = fornecedores.find(f=>f.id===fId);
-      const lojaNames = [...new Set(data.pedidos.map(p=>lojas.find(l=>l.id===p.loja_id)?.nome||'?'))].join(', ');
-      const total = Object.values(data.itens).reduce((s,it)=>s+(it.preco||0)*it.qtd,0);
-      return `<div class="forn-card">
-        <div class="forn-header">
-          <div class="forn-nome">${esc(forn?.nome||'Sem fornecedor')}</div>
-          <div style="font-size:12px;color:var(--text3)">${data.pedidos.length} pedido(s) · ${esc(lojaNames)}</div>
-          ${forn?.whatsapp?`<button class="btn btn-green btn-sm" onclick="enviarConsolidadoWpp('${fId}')">💬 Enviar WPP</button>`:''}
+    consolidado = {};
+    const nPedidos = Object.keys(porForn).length;
+    toast(`${nPedidos} pedido(s) gerado(s) com sucesso!`,'ok');
+    switchTab('pedidos');
+  } catch(e) {
+    toast('Erro: '+e.message,'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Gerar Pedidos por Fornecedor';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ADMIN — PEDIDOS GERADOS
+// ══════════════════════════════════════════════════════════════════════
+async function renderPedidos() {
+  const statusFil = document.getElementById('ped-fil-status')?.value||'';
+  const container = document.getElementById('ped-body');
+  container.innerHTML = '<div class="empty">Carregando...</div>';
+  try {
+    let q;
+    if (!statusFil || statusFil === 'ativos') {
+      q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=in.(pendente,enviado)&order=created_at.desc`;
+    } else {
+      q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.${statusFil}&order=created_at.desc`;
+    }
+    pedidosGerados = await api(q);
+
+    if (!pedidosGerados.length) {
+      container.innerHTML = '<div class="empty">Nenhum pedido gerado ainda</div>';
+      return;
+    }
+
+    // Group by fornecedor (null = sem fornecedor)
+    const porForn = {};
+    pedidosGerados.forEach(p => {
+      const fKey = p.fornecedor_id || '__sem__';
+      if (!porForn[fKey]) porForn[fKey] = [];
+      porForn[fKey].push(p);
+    });
+
+    container.innerHTML = Object.entries(porForn).map(([fKey, peds]) => {
+      const forn = fKey === '__sem__' ? null : fornecedores.find(f=>f.id===fKey);
+      const fornNome = forn?.nome || '⚠ Sem fornecedor';
+      const fornStyle = forn ? '' : 'color:var(--amber)';
+      return `<div class="ped-card">
+        <div class="ped-card-header">
+          <div class="ped-card-forn" style="${fornStyle}">${esc(fornNome)}</div>
+          <div style="font-size:12px;color:var(--text3)">${peds.length} pedido(s)</div>
         </div>
-        <div class="forn-body">
+        <div class="ped-card-body">
           <table class="tbl">
-            <thead><tr><th>Insumo</th><th class="r">Qtd total</th><th>Un.</th><th class="r">Preço unit.</th><th class="r">Total est.</th></tr></thead>
+            <thead><tr><th>Data</th><th>Lojas</th><th>Status</th><th></th></tr></thead>
             <tbody>
-              ${Object.entries(data.itens).map(([insId,it])=>{
-                const ins=insumos.find(i=>i.id===insId);
-                return `<tr>
-                  <td style="font-weight:500">${esc(ins?.nome||insId)}</td>
-                  <td class="r mono">${it.qtd.toFixed(3)}</td>
-                  <td>${esc(it.un||'un')}</td>
-                  <td class="r mono">${it.preco?brl(it.preco):'—'}</td>
-                  <td class="r mono">${it.preco?brl(it.preco*it.qtd):'—'}</td>
-                </tr>`;
-              }).join('')}
+              ${peds.map(p=>`<tr>
+                <td class="mono">${fmtData(p.data_pedido)}</td>
+                <td style="color:var(--text3);font-size:12px">${esc(p.observacao||'—')}</td>
+                <td>${statusBadge(p.status)}</td>
+                <td style="display:flex;gap:6px;justify-content:flex-end">
+                  <button class="btn btn-ghost btn-sm" onclick="verPedido('${p.id}')">Ver</button>
+                  ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
+                </td>
+              </tr>`).join('')}
             </tbody>
-            ${total>0?`<tfoot><tr style="background:var(--bg3);font-weight:700">
-              <td colspan="3" style="padding:10px 14px">Total estimado</td>
-              <td colspan="2" class="r mono" style="padding:10px 14px;color:var(--teal)">${brl(total)}</td>
-            </tr></tfoot>`:''}
           </table>
         </div>
       </div>`;
@@ -604,119 +778,290 @@ async function renderConsolidado() {
   } catch(e) { container.innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; }
 }
 
-async function enviarConsolidadoWpp(fornId) {
-  const forn = fornecedores.find(f=>f.id===fornId);
-  if (!forn?.whatsapp) { toast('Fornecedor sem WhatsApp.','err'); return; }
-  const pendentes = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&fornecedor_id=eq.${fornId}&status=in.(pendente,aprovado)`);
-  const itensTodos = {};
-  for (const p of pendentes) {
-    const itens = await api(`itens_pedido?pedido_id=eq.${p.id}`);
-    itens.forEach(it => {
-      if (!itensTodos[it.insumo_id]) itensTodos[it.insumo_id]={qtd:0,un:it.unidade};
-      itensTodos[it.insumo_id].qtd+=it.quantidade;
-    });
-  }
-  let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`;
-  Object.entries(itensTodos).forEach(([insId,it])=>{
-    const ins=insumos.find(i=>i.id===insId);
-    msg+=`• ${ins?.nome||'?'}: ${it.qtd.toFixed(3)} ${it.un||'un'}\n`;
-  });
-  const wpp = forn.whatsapp.replace(/\D/g,'');
-  window.open(`https://wa.me/55${wpp}?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-// ── NOVO PEDIDO ────────────────────────────────────────────────────
-function renderInsumosNP() {
-  const busca = (document.getElementById('np-busca')?.value||'').toLowerCase();
-  const lista = insumos.filter(i=>!busca||i.nome.toLowerCase().includes(busca));
-  document.getElementById('np-body').innerHTML = lista.map(ins=>{
-    const vinc = vinculosForn.filter(v=>v.insumo_id===ins.id);
-    const principal = vinc.find(v=>v.principal)||vinc[0];
-    const forn = fornecedores.find(f=>f.id===principal?.fornecedor_id);
-    const item = npItens[ins.id];
-    return `<tr id="np-row-${ins.id}">
-      <td style="font-weight:500">${esc(ins.nome)}</td>
-      <td style="color:var(--text3);font-size:12px">${esc(forn?.nome||'—')}</td>
-      <td class="r"><input type="number" class="field field-sm" id="np-qtd-${ins.id}"
-        value="${item?.qtd||''}" min="0" step="0.001" placeholder="0.000"
-        oninput="atualizarItemNP('${ins.id}')" style="width:80px;text-align:right"></td>
-      <td style="color:var(--text3)">${ins.unidade_medida||ins.unidade_compra||'un'}</td>
-      <td class="r mono" style="font-size:12px">${principal?.preco_unitario?brl(principal.preco_unitario):'—'}</td>
-      <td class="c"><input type="checkbox" id="np-chk-${ins.id}" ${item?'checked':''}
-        onchange="toggleItemNP('${ins.id}')" style="width:auto"></td>
-    </tr>`;
-  }).join('');
-  atualizarCountNP();
-}
-
-function filtrarInsumosNP() { renderInsumosNP(); }
-
-function atualizarItemNP(insId) {
-  const qtd = parseFloat(document.getElementById(`np-qtd-${insId}`)?.value)||0;
-  const chk = document.getElementById(`np-chk-${insId}`);
-  if (qtd > 0) { npItens[insId] = { qtd }; if(chk) chk.checked=true; }
-  else { delete npItens[insId]; if(chk) chk.checked=false; }
-  atualizarCountNP();
-}
-
-function toggleItemNP(insId) {
-  const chk = document.getElementById(`np-chk-${insId}`);
-  if (chk?.checked) {
-    const qtd = parseFloat(document.getElementById(`np-qtd-${insId}`)?.value)||0;
-    if (qtd>0) npItens[insId]={qtd};
-    else { chk.checked=false; toast('Informe a quantidade antes de marcar.','err'); }
-  } else { delete npItens[insId]; }
-  atualizarCountNP();
-}
-
-function atualizarCountNP() {
-  const n = Object.keys(npItens).length;
-  document.getElementById('np-count').textContent = n>0?`${n} item(s) selecionado(s)`:'';
-}
-
-async function salvarPedido() {
-  const lojaId = document.getElementById('np-loja').value;
-  const entrega = document.getElementById('np-entrega').value;
-  const obs = document.getElementById('np-obs').value.trim();
-  if (!lojaId) { toast('Selecione a loja.','err'); return; }
-  if (!Object.keys(npItens).length) { toast('Adicione ao menos um item.','err'); return; }
-
-  // Agrupa itens por fornecedor
-  const porForn = {};
-  Object.entries(npItens).forEach(([insId, item])=>{
-    const vinc = vinculosForn.filter(v=>v.insumo_id===insId);
-    const principal = vinc.find(v=>v.principal)||vinc[0];
-    const fornId = principal?.fornecedor_id||null;
-    if (!porForn[fornId]) porForn[fornId]=[];
-    const ins = insumos.find(i=>i.id===insId);
-    porForn[fornId].push({insId, qtd:item.qtd, preco:principal?.preco_unitario||null,
-      un: ins?.unidade_medida||ins?.unidade_compra||'un'});
-  });
-
+async function verPedido(id) {
+  const p = pedidosGerados.find(x=>x.id===id);
+  if (!p) return;
+  const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
+  document.getElementById('mp-titulo').textContent = `Pedido — ${esc(forn?.nome||'—')}`;
+  document.getElementById('mp-info').innerHTML = `
+    <span style="color:var(--text3)">Data:</span> ${fmtData(p.data_pedido)} &nbsp;
+    ${statusBadge(p.status)} &nbsp;
+    <span style="color:var(--text3);font-size:12px">${esc(p.observacao||'')}</span>`;
   try {
-    for (const [fornIdKey, itens] of Object.entries(porForn)) {
-      const fornId = (fornIdKey === 'null' || !fornIdKey) ? null : fornIdKey;
-      const pedRes = await api('pedidos_compra', { method:'POST',
-        body: JSON.stringify({ tenant_id:TENANT_ID, loja_id:lojaId,
-          fornecedor_id: fornId, status:'pendente',
-          data_pedido: hoje(), data_entrega_prevista:entrega||null,
-          observacao:obs||null,
-          solicitante_id: userProfile?.id||null }) });
-      const pedId = pedRes[0]?.id;
-      if (!pedId) throw new Error('Falha ao criar pedido.');
-      const itensPay = itens.map(it=>({
-        pedido_id:pedId, insumo_id:it.insId,
-        quantidade:it.qtd, unidade:it.un, preco_unitario:it.preco||null
-      }));
-      await api('itens_pedido',{method:'POST',prefer:'return=minimal',body:JSON.stringify(itensPay)});
+    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
+    document.getElementById('mp-body').innerHTML = itens.map(it => {
+      const ins = insumos.find(i=>i.id===it.insumo_id);
+      return `<tr>
+        <td style="font-weight:500">${esc(ins?.nome||it.insumo_id)}</td>
+        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
+        <td>${esc(it.unidade||'un')}</td>
+        <td style="font-size:11px;color:var(--text3)">${esc(it.observacao||'—')}</td>
+      </tr>`;
+    }).join('');
+
+    const acoes = document.getElementById('mp-acoes');
+    acoes.innerHTML = '';
+    if (p.status==='pendente') {
+      acoes.innerHTML += `<button class="btn btn-green btn-sm" onclick="mudarStatus('${id}','enviado')">📤 Marcar como Enviado</button>`;
+      acoes.innerHTML += `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="mudarStatus('${id}','cancelado')">✕ Cancelar</button>`;
+      if (forn?.whatsapp) acoes.innerHTML += `<button class="btn btn-blue btn-sm" onclick="enviarWhatsApp('${id}')">💬 WhatsApp</button>`;
     }
-    const nPedidos = Object.keys(porForn).length;
-    toast(`${nPedidos} pedido(s) criado(s) com sucesso!`,'ok');
-    npItens = {};
-    document.getElementById('np-obs').value='';
-    switchTab('pedidos');
+    if (p.status==='enviado') {
+      acoes.innerHTML += `<button class="btn btn-green btn-sm" onclick="mudarStatus('${id}','baixado')">✓ Baixar Pedido</button>`;
+    }
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  abrirModal('m-ped');
+}
+
+async function mudarStatus(id, status) {
+  try {
+    await api(`pedidos_compra?id=eq.${id}`, {method:'PATCH', prefer:'return=minimal', body:JSON.stringify({status})});
+    toast(`Pedido marcado como ${status}.`,'ok');
+    fecharModal('m-ped');
+    await renderPedidos();
   } catch(e) { toast('Erro: '+e.message,'err'); }
 }
+
+async function enviarWhatsApp(id) {
+  const p = pedidosGerados.find(x=>x.id===id);
+  const forn = fornecedores.find(f=>f.id===p?.fornecedor_id);
+  if (!forn?.whatsapp) { toast('Fornecedor sem WhatsApp.','err'); return; }
+
+  const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
+  let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`;
+  itens.forEach(it => {
+    const ins = insumos.find(i=>i.id===it.insumo_id);
+    msg += `• ${ins?.nome||'?'}: ${Number(it.quantidade).toFixed(3)} ${it.unidade||'un'}\n`;
+    if (it.observacao) {
+      it.observacao.split(', ').forEach(part => { msg += `    → ${part}\n`; });
+    }
+  });
+  if (p.observacao) msg += `\n${p.observacao}`;
+  const wpp = forn.whatsapp.replace(/\D/g,'');
+  window.open(`https://wa.me/55${wpp}?text=${encodeURIComponent(msg)}`, '_blank');
+  await mudarStatus(id, 'enviado');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// GERENTE — GRUPOS (fluxo 2 etapas)
+// ══════════════════════════════════════════════════════════════════════
+let grupoAtual = null; // id do grupo selecionado
+let checkedItems = new Set(); // insumo_ids marcados na etapa 1
+
+async function carregarGrupos() {
+  grupos = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+  const itensPromises = grupos.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}`));
+  const results = await Promise.all(itensPromises);
+  grupos.forEach((g, i) => { gruposItens[g.id] = results[i].map(r=>r.insumo_id); });
+}
+
+function renderGrupos() {
+  document.getElementById('g-entrega').value = hoje(7);
+  const btns = document.getElementById('g-grupos-btns');
+  const semGrupos = document.getElementById('g-sem-grupos');
+
+  const gruposComItens = grupos.filter(g => {
+    const ids = gruposItens[g.id]||[];
+    return insumos.some(i=>ids.includes(i.id));
+  });
+
+  if (!gruposComItens.length) {
+    btns.innerHTML = '';
+    semGrupos.style.display = '';
+    return;
+  }
+  semGrupos.style.display = 'none';
+  btns.innerHTML = gruposComItens.map(g => `
+    <button class="btn btn-ghost" id="gbtn-${g.id}" onclick="selecionarGrupo('${g.id}')"
+      style="font-size:13px;padding:8px 18px">
+      ${esc(g.nome)}
+    </button>`).join('');
+
+  // Seleciona o primeiro por padrão
+  if (gruposComItens.length) selecionarGrupo(gruposComItens[0].id);
+}
+
+function selecionarGrupo(grupoId) {
+  grupoAtual = grupoId;
+  checkedItems.clear();
+
+  // Destaca botão ativo
+  document.querySelectorAll('[id^="gbtn-"]').forEach(b => {
+    b.className = b.id === `gbtn-${grupoId}`
+      ? 'btn btn-primary' : 'btn btn-ghost';
+    b.style.fontSize = '13px';
+    b.style.padding = '8px 18px';
+  });
+
+  const grupo = grupos.find(g=>g.id===grupoId);
+  document.getElementById('g-grupo-titulo').textContent = grupo?.nome||'';
+  document.getElementById('g-itens-wrap').style.display = '';
+  document.getElementById('g-chk-all').checked = false;
+
+  const insIds = gruposItens[grupoId]||[];
+  const insGrupo = insumos.filter(i=>insIds.includes(i.id));
+
+  document.getElementById('g-itens-body').innerHTML = insGrupo.map(ins => `
+    <tr>
+      <td><input type="checkbox" id="g-chk-${ins.id}"
+        onchange="toggleCheck('${ins.id}')" style="cursor:pointer;width:auto"></td>
+      <td style="font-weight:500">${esc(ins.nome)}</td>
+      <td style="color:var(--text3)">${esc(ins.unidade_medida||ins.unidade_compra||'un')}</td>
+    </tr>`).join('');
+
+  atualizarContadorSelecao();
+}
+
+function toggleCheck(insId) {
+  if (document.getElementById(`g-chk-${insId}`)?.checked) checkedItems.add(insId);
+  else checkedItems.delete(insId);
+  atualizarContadorSelecao();
+}
+
+function selecionarTodos(checked) {
+  const insIds = gruposItens[grupoAtual]||[];
+  insumos.filter(i=>insIds.includes(i.id)).forEach(ins => {
+    const chk = document.getElementById(`g-chk-${ins.id}`);
+    if (chk) { chk.checked = checked; checked ? checkedItems.add(ins.id) : checkedItems.delete(ins.id); }
+  });
+  atualizarContadorSelecao();
+}
+
+function atualizarContadorSelecao() {
+  const n = checkedItems.size;
+  document.getElementById('g-sel-count').textContent = n > 0 ? `${n} selecionado(s)` : '';
+  document.getElementById('btn-add-itens').disabled = n === 0;
+}
+
+function limparSelecao() {
+  checkedItems.clear();
+  if (grupoAtual) selecionarGrupo(grupoAtual);
+}
+
+function abrirModalQuantidades() {
+  if (!checkedItems.size) return;
+  document.getElementById('g-entrega').value = document.getElementById('g-entrega').value || hoje(7);
+
+  const tbody = document.getElementById('g-qtd-body');
+  tbody.innerHTML = [...checkedItems].map(insId => {
+    const ins = insumos.find(i=>i.id===insId);
+    const un = ins?.unidade_medida||ins?.unidade_compra||'un';
+    return `<tr>
+      <td style="font-weight:500">${esc(ins?.nome||insId)}</td>
+      <td class="r"><input type="number" class="field field-sm" id="mq-${insId}"
+        min="0" step="0.001" placeholder="0.000" style="width:100px;text-align:right"
+        data-unidade="${esc(un)}"></td>
+      <td style="color:var(--text3)">${esc(un)}</td>
+    </tr>`;
+  }).join('');
+
+  // Foca no primeiro campo
+  abrirModal('m-qtd');
+  setTimeout(()=>{ const first = document.querySelector('#g-qtd-body input'); if(first) first.focus(); }, 100);
+}
+
+async function enviarSolicitacao() {
+  const lojaId = userProfile?.loja_id;
+  if (!lojaId) { toast('Seu perfil não tem loja associada. Contate o administrador.','err'); return; }
+
+  // Lê quantidades do modal
+  const itensFinal = [];
+  for (const insId of checkedItems) {
+    const input = document.getElementById(`mq-${insId}`);
+    const qty = parseFloat(input?.value)||0;
+    if (qty <= 0) { toast(`Informe a quantidade para todos os itens.`,'err'); input?.focus(); return; }
+    itensFinal.push({ insId, qty, unidade: input?.dataset.unidade||'un' });
+  }
+  if (!itensFinal.length) { toast('Selecione ao menos um item.','err'); return; }
+
+  const entrega = document.getElementById('g-entrega').value;
+  const obs = document.getElementById('g-obs').value.trim();
+
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    const pedRes = await api('pedidos_compra', { method:'POST',
+      body: JSON.stringify({
+        tenant_id: TENANT_ID, loja_id: lojaId, fornecedor_id: null,
+        status: 'solicitado', data_pedido: hoje(),
+        data_entrega_prevista: entrega||null,
+        observacao: obs||null, solicitante_id: userProfile?.id||null
+      })
+    });
+    const pedId = pedRes[0]?.id;
+    if (!pedId) throw new Error('Falha ao criar solicitação.');
+
+    await api('itens_pedido', { method:'POST', prefer:'return=minimal',
+      body: JSON.stringify(itensFinal.map(it => ({
+        pedido_id: pedId, insumo_id: it.insId,
+        quantidade: it.qty, unidade: it.unidade, preco_unitario: null
+      })))
+    });
+
+    checkedItems.clear();
+    fecharModal('m-qtd');
+    document.getElementById('g-obs').value = '';
+    toast('Solicitação enviada com sucesso!','ok');
+    switchTab('g-minhas');
+  } catch(e) {
+    toast('Erro: '+e.message,'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enviar Solicitação';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// GERENTE — MINHAS SOLICITAÇÕES
+// ══════════════════════════════════════════════════════════════════════
+async function renderMinhasSolicitacoes() {
+  const lojaId = userProfile?.loja_id;
+  const tbody = document.getElementById('g-sol-body');
+  try {
+    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&order=created_at.desc`;
+    if (lojaId) q += `&loja_id=eq.${lojaId}`;
+    const sols = await api(q);
+    tbody.innerHTML = sols.length ? sols.map(s => {
+      const statusLabel = { solicitado:'Aguardando', processado:'Processado', cancelado:'Cancelado' }[s.status]||s.status;
+      return `<tr>
+        <td class="mono">${fmtData(s.data_pedido)}</td>
+        <td class="mono">—</td>
+        <td style="color:var(--text3)">${esc(s.observacao||'—')}</td>
+        <td>${statusBadge(s.status==='processado'?'aprovado':s.status)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="verSolicitacaoGerente('${s.id}')">Ver</button></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="5" class="empty">Nenhuma solicitação enviada</td></tr>';
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+}
+
+async function verSolicitacaoGerente(id) {
+  document.getElementById('ms-titulo').textContent = 'Minha Solicitação';
+  document.getElementById('ms-info').textContent = '';
+  try {
+    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
+    document.getElementById('ms-body').innerHTML = itens.map(it => {
+      const ins = insumos.find(i=>i.id===it.insumo_id);
+      return `<tr><td>${esc(ins?.nome||it.insumo_id)}</td>
+        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
+        <td>${esc(it.unidade||'un')}</td></tr>`;
+    }).join('');
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  abrirModal('m-sol');
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────
+function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function hoje(plusDias=0){const d=new Date();d.setDate(d.getDate()+plusDias);return d.toISOString().split('T')[0];}
+function fmtData(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
+function statusBadge(s){const l={solicitado:'Aguardando',pendente:'Pendente',processado:'Processado',aprovado:'Aprovado',enviado:'Enviado',recebido:'Baixado',baixado:'Baixado',cancelado:'Cancelado'};const cls=s==='baixado'?'recebido':s;return `<span class="badge b-${cls}">${l[s]||s}</span>`;}
+let toastTimer;
+function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
+function abrirModal(id){document.getElementById(id).classList.add('open');}
+function fecharModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModal('m-sol');fecharModal('m-ped');}});
 
 carregar();
 </script>
