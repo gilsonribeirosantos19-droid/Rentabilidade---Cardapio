@@ -226,6 +226,7 @@
           <div class="sc"><div class="sc-label">Saídas (mov.)</div><div class="sc-value c-red" id="est-card-sai">—</div></div>
           <div class="sc"><div class="sc-label">Insumos em saldo</div><div class="sc-value" id="est-card-ins">—</div></div>
         </div>
+        <div id="rel-inv-label" style="font-size:12px;color:var(--text3);margin-bottom:12px"></div>
         <div class="cat-btns" id="rel-cat-btns"></div>
         <div class="tbl-wrap">
           <table class="tbl">
@@ -991,27 +992,41 @@ async function carregarRelatorio() {
   const dataFim = document.getElementById('rel-data-fim').value;
   if (!dataIni || !dataFim) { container.innerHTML = '<tr><td colspan="6" class="empty">Selecione o período.</td></tr>'; return; }
   try {
-    const [saldos, entradas, saidas] = await Promise.all([
-      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`),
+    // Busca o inventário encerrado mais recente da loja (anterior ou igual ao início do período)
+    const invs = await api(`inventarios?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&status=eq.encerrado&data_final=lte.${dataIni}&order=data_final.desc&limit=1`);
+    const lastInv = invs[0] || null;
+    const invItens = lastInv ? await api(`inventario_itens?inventario_id=eq.${lastInv.id}`) : [];
+
+    const [entradas, saidas, saldos] = await Promise.all([
       api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${dataIni}T00:00:00&criado_em=lte.${dataFim}T23:59:59`),
       api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${dataIni}T00:00:00&criado_em=lte.${dataFim}T23:59:59`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`),
     ]);
+
+    // Mostra label do inventário base
+    const invLabel = lastInv
+      ? `Inventário base: ${fmtData(lastInv.data_final)}`
+      : 'Sem inventário base — Est. Inicial será 0';
+    document.getElementById('rel-inv-label').textContent = invLabel;
+
     const lista = getInsumosFiltrados(relCatAtual);
     const rows = lista.map(ins => {
-      const s = saldos.find(x=>x.insumo_id===ins.id);
-      const saldo = Number(s?.quantidade)||0;
+      const invItem = invItens.find(x => x.insumo_id === ins.id);
+      const inicial = Number(invItem?.qtd_contada) || 0;
       const ent = entradas.filter(e=>e.insumo_id===ins.id).reduce((a,e)=>a+Number(e.quantidade||0),0);
       const sai = saidas.filter(x=>x.insumo_id===ins.id).reduce((a,x)=>a+Number(x.quantidade||0),0);
-      if (!saldo && !ent && !sai) return null;
-      const inicial = saldo - ent + sai;
+      const s = saldos.find(x=>x.insumo_id===ins.id);
+      const saldo = Number(s?.quantidade)||0;
+      if (!inicial && !ent && !sai && !saldo) return null;
       return { ins, inicial, ent, sai, saldo };
     }).filter(Boolean);
+
     document.getElementById('est-card-ent').textContent = entradas.length;
     document.getElementById('est-card-sai').textContent = saidas.length;
     document.getElementById('est-card-ins').textContent = rows.filter(r=>r.saldo>0).length;
 
     if (!rows.length) {
-      container.innerHTML = '<tr><td colspan="6" class="empty">Nenhum saldo ou movimentação no período.</td></tr>';
+      container.innerHTML = '<tr><td colspan="6" class="empty">Nenhum item encontrado.</td></tr>';
       return;
     }
     container.innerHTML = rows.map(({ins, inicial, ent, sai, saldo}) => `<tr>
