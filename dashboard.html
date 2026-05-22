@@ -172,6 +172,9 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-title">Dashboard</div>
+      <select id="sel-loja" onchange="onLojaFiltroChange()" style="border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:13px;color:var(--text1);background:var(--bg2);cursor:pointer;outline:none;font-family:inherit">
+        <option value="">Todas as lojas</option>
+      </select>
       <span class="topbar-sub" id="lastUpdated"></span>
     </div>
     <div class="content">
@@ -305,6 +308,23 @@ function showToast(msg, type='err') {
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+// Estado global para filtro de loja
+let _dashData = null;
+
+function onLojaFiltroChange() {
+  if (!_dashData) return;
+  renderMetricCards(_dashData);
+}
+
+function getLojaFiltro() {
+  return document.getElementById('sel-loja')?.value || '';
+}
+
+function filtrarPorLoja(arr, field='loja_id') {
+  const lojaId = getLojaFiltro();
+  return lojaId ? arr.filter(x => x[field] === lojaId) : arr;
+}
+
 function periodos() {
   const h = new Date();
   const dow = h.getDay() === 0 ? 7 : h.getDay();
@@ -401,70 +421,16 @@ async function loadDashboard() {
       return {...f, custo, cmv};
     });
 
-    // Filtra por períodos
-    const inRange = (items, field, ini, fim) => items.filter(x => {
-      const d = (x[field]||'').substring(0,10);
-      return d >= ini && d <= fim;
-    });
+    // Popular select de lojas
+    const sel = document.getElementById('sel-loja');
+    sel.innerHTML = '<option value="">Todas as lojas</option>' +
+      lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
 
-    const entSem     = inRange(entradas,'criado_em', p.iniSem,    p.hoje);
-    const entSemAnt  = inRange(entradas,'criado_em', p.iniSemAnt, p.fimSemAnt);
-    const entMes     = inRange(entradas,'criado_em', p.iniMes,    p.hoje);
-    const entMesAnt  = inRange(entradas,'criado_em', p.iniMesAnt, p.fimMesAnt);
-    const perdSem    = inRange(perdas,  'data_perda', p.iniSem,    p.hoje);
-    const perdSemAnt = inRange(perdas,  'data_perda', p.iniSemAnt, p.fimSemAnt);
-    const perdMes    = inRange(perdas,  'data_perda', p.iniMes,    p.hoje);
-    const perdMesAnt = inRange(perdas,  'data_perda', p.iniMesAnt, p.fimMesAnt);
+    // Salva estado global para o filtro
+    _dashData = { p, entradas, perdas, saldos, fichasWithCost,
+                  pedPendentes, pedSolicitados, inventarios, insumoMap };
 
-    const sumCusto = arr => arr.reduce((a,e)=>a+(Number(e.custo_total)||0),0);
-    const valorEstoque = saldos.reduce((a,s)=>a+(Number(s.quantidade)||0)*(Number(s.custo_medio)||0),0);
-    const comCmv = fichasWithCost.filter(f=>!f.insumo_vinculado_id&&f.cmv!==null);
-    const avgCmv = comCmv.length ? comCmv.reduce((s,f)=>s+f.cmv,0)/comCmv.length : null;
-
-    // Sparklines (14 dias)
-    const sparkEnt  = groupByDay(entradas,'criado_em','custo_total',14);
-    const sparkPerd = groupByDay(perdas,  'data_perda','id',14);
-
-    // Row 1: Compras + Estoque
-    const cmvColor = avgCmv===null?'var(--teal)':avgCmv>38?'var(--red)':avgCmv>30?'var(--amber)':'var(--teal)';
-    document.getElementById('metricRow1').innerHTML =
-      metricCard('🛒','rgba(13,148,136,.12)','Compras da Semana',
-        sumCusto(entSem)>0?fmtBRL(sumCusto(entSem)):`${entSem.length} entradas`,
-        compareHtml(entSem.length,entSemAnt.length,true), sparkEnt,'#0d9488') +
-      metricCard('📦','rgba(59,130,246,.12)','Compras do Mês',
-        sumCusto(entMes)>0?fmtBRL(sumCusto(entMes)):`${entMes.length} entradas`,
-        compareHtml(entMes.length,entMesAnt.length,true), sparkEnt,'#3b82f6') +
-      metricCard('📊','rgba(245,158,11,.12)','Valor do Estoque',
-        fmtBRL(valorEstoque), '<span class="metric-compare neutral">custo médio × saldo</span>', [], '#f59e0b');
-
-    // Row 2: Perdas + CMV
-    document.getElementById('metricRow2').innerHTML =
-      metricCard('⚠️','rgba(220,38,38,.12)','Perdas da Semana',
-        `${perdSem.length} registros`,
-        compareHtml(perdSem.length,perdSemAnt.length,false), sparkPerd,'#dc2626') +
-      metricCard('📉','rgba(220,38,38,.10)','Perdas do Mês',
-        `${perdMes.length} registros`,
-        compareHtml(perdMes.length,perdMesAnt.length,false), sparkPerd,'#ef4444') +
-      metricCard('📋','rgba(13,148,136,.12)','CMV Médio Teórico',
-        avgCmv!==null?avgCmv.toFixed(1)+'%':'—',
-        `<span class="metric-compare neutral">${comCmv.length} fichas com preço de venda</span>`,
-        [], cmvColor);
-
-    // Row 3: Alertas
-    document.getElementById('alertGrid').innerHTML = `
-      <a class="alert-card" href="compras.html">
-        <div class="alert-icon" style="background:rgba(245,158,11,.15)">📦</div>
-        <div><div class="alert-count">${pedPendentes.length}</div><div class="alert-label">Pedidos para enviar</div></div>
-      </a>
-      <a class="alert-card" href="compras.html">
-        <div class="alert-icon" style="background:rgba(59,130,246,.15)">📋</div>
-        <div><div class="alert-count">${pedSolicitados.length}</div><div class="alert-label">Solicitações pendentes</div></div>
-      </a>
-      <a class="alert-card" href="estoque.html">
-        <div class="alert-icon" style="background:rgba(13,148,136,.15)">📊</div>
-        <div><div class="alert-count">${inventarios.length}</div><div class="alert-label">Inventários abertos</div></div>
-      </a>`;
-
+    renderMetricCards(_dashData);
     renderMultiLoja(lojas, saldosLoja, entradasLoja, perdasLoja, inventariosLoja);
     renderEstoqueCritico(saldos, insumoMap);
     renderCmvAlerts(fichasWithCost);
@@ -474,6 +440,71 @@ async function loadDashboard() {
     document.getElementById('lastUpdated').textContent =
       'Atualizado às ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   } catch(e) { showToast('Erro: '+e.message); }
+}
+
+function renderMetricCards({ p, entradas, perdas, saldos, fichasWithCost,
+                              pedPendentes, pedSolicitados, inventarios }) {
+  const inRange = (items, field, ini, fim) => items.filter(x => {
+    const d = (x[field]||'').substring(0,10);
+    return d >= ini && d <= fim;
+  });
+
+  // Aplica filtro de loja
+  const ent  = filtrarPorLoja(entradas);
+  const perd = filtrarPorLoja(perdas);
+  const sald = filtrarPorLoja(saldos);
+
+  const entSem    = inRange(ent, 'criado_em', p.iniSem,    p.hoje);
+  const entSemAnt = inRange(ent, 'criado_em', p.iniSemAnt, p.fimSemAnt);
+  const entMes    = inRange(ent, 'criado_em', p.iniMes,    p.hoje);
+  const entMesAnt = inRange(ent, 'criado_em', p.iniMesAnt, p.fimMesAnt);
+  const perdSem    = inRange(perd, 'data_perda', p.iniSem,    p.hoje);
+  const perdSemAnt = inRange(perd, 'data_perda', p.iniSemAnt, p.fimSemAnt);
+  const perdMes    = inRange(perd, 'data_perda', p.iniMes,    p.hoje);
+  const perdMesAnt = inRange(perd, 'data_perda', p.iniMesAnt, p.fimMesAnt);
+
+  const sumCusto = arr => arr.reduce((a,e)=>a+(Number(e.custo_total)||0),0);
+  const valorEstoque = sald.reduce((a,s)=>a+(Number(s.quantidade)||0)*(Number(s.custo_medio)||0),0);
+  const comCmv = fichasWithCost.filter(f=>!f.insumo_vinculado_id&&f.cmv!==null);
+  const avgCmv = comCmv.length ? comCmv.reduce((s,f)=>s+f.cmv,0)/comCmv.length : null;
+  const sparkEnt  = groupByDay(ent,  'criado_em',  'custo_total', 14);
+  const sparkPerd = groupByDay(perd, 'data_perda', 'id',          14);
+  const cmvColor  = avgCmv===null?'var(--teal)':avgCmv>38?'var(--red)':avgCmv>30?'var(--amber)':'var(--teal)';
+
+  document.getElementById('metricRow1').innerHTML =
+    metricCard('🛒','rgba(13,148,136,.12)','Compras da Semana',
+      sumCusto(entSem)>0?fmtBRL(sumCusto(entSem)):`${entSem.length} entradas`,
+      compareHtml(entSem.length,entSemAnt.length,true), sparkEnt,'#0d9488') +
+    metricCard('📦','rgba(59,130,246,.12)','Compras do Mês',
+      sumCusto(entMes)>0?fmtBRL(sumCusto(entMes)):`${entMes.length} entradas`,
+      compareHtml(entMes.length,entMesAnt.length,true), sparkEnt,'#3b82f6') +
+    metricCard('📊','rgba(245,158,11,.12)','Valor do Estoque',
+      fmtBRL(valorEstoque),'<span class="metric-compare neutral">custo médio × saldo</span>',[]);
+
+  document.getElementById('metricRow2').innerHTML =
+    metricCard('⚠️','rgba(220,38,38,.12)','Perdas da Semana',
+      `${perdSem.length} registros`,
+      compareHtml(perdSem.length,perdSemAnt.length,false), sparkPerd,'#dc2626') +
+    metricCard('📉','rgba(220,38,38,.10)','Perdas do Mês',
+      `${perdMes.length} registros`,
+      compareHtml(perdMes.length,perdMesAnt.length,false), sparkPerd,'#ef4444') +
+    metricCard('📋','rgba(13,148,136,.12)','CMV Médio Teórico',
+      avgCmv!==null?avgCmv.toFixed(1)+'%':'—',
+      `<span class="metric-compare neutral">${comCmv.length} fichas com preço de venda</span>`,[],cmvColor);
+
+  document.getElementById('alertGrid').innerHTML = `
+    <a class="alert-card" href="compras.html">
+      <div class="alert-icon" style="background:rgba(245,158,11,.15)">📦</div>
+      <div><div class="alert-count">${pedPendentes.length}</div><div class="alert-label">Pedidos para enviar</div></div>
+    </a>
+    <a class="alert-card" href="compras.html">
+      <div class="alert-icon" style="background:rgba(59,130,246,.15)">📋</div>
+      <div><div class="alert-count">${pedSolicitados.length}</div><div class="alert-label">Solicitações pendentes</div></div>
+    </a>
+    <a class="alert-card" href="estoque.html">
+      <div class="alert-icon" style="background:rgba(13,148,136,.15)">📊</div>
+      <div><div class="alert-count">${inventarios.length}</div><div class="alert-label">Inventários abertos</div></div>
+    </a>`;
 }
 
 function renderMultiLoja(lojas, saldos, entradas, perdas, inventarios) {
