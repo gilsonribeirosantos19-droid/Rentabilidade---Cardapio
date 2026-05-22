@@ -294,7 +294,7 @@
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="fecharModal('m-inv')">Fechar</button>
       <div class="ml"></div>
-      <button class="btn btn-green" id="btn-confirmar-inv" onclick="confirmarInventario()">✓ Confirmar Inventário</button>
+      <button class="btn btn-green" id="btn-confirmar-inv" onclick="confirmarInventario()">✓ Salvar Inventário</button>
     </div>
   </div>
 </div>
@@ -489,15 +489,11 @@ async function confirmarInventario() {
         body: JSON.stringify({ qtd_contada: qtd })
       });
     }
-    await api(`inventarios?id=eq.${invAtual.id}`, {
-      method:'PATCH', prefer:'return=minimal',
-      body: JSON.stringify({ status: 'encerrado' })
-    });
-    toast('Inventário confirmado!','ok');
+    toast('Inventário salvo!','ok');
     fecharModal('m-inv');
     carregarInventarios();
   } catch(e) { toast('Erro: '+e.message,'err'); }
-  finally { btn.disabled=false; btn.textContent='✓ Confirmar Inventário'; }
+  finally { btn.disabled=false; btn.textContent='✓ Salvar Inventário'; }
 }
 
 // ══════════════════════════════════════════════════════════════════
