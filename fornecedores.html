@@ -209,14 +209,16 @@
             <table class="tbl">
               <thead><tr>
                 <th>Insumo</th>
-                <th>Categoria</th>
-                <th>Un. medida</th>
-                <th class="r">Preço negociado</th>
-                <th class="r">Última entrada</th>
+                <th>Un. estoque</th>
+                <th>Cód. Fornecedor</th>
+                <th>Embalagem</th>
+                <th class="r">Qtd/Emb</th>
+                <th class="r">Preço/Emb</th>
                 <th class="c">Principal</th>
+                <th></th>
               </tr></thead>
               <tbody id="det-insumos">
-                <tr><td colspan="6" class="empty">Selecione um fornecedor</td></tr>
+                <tr><td colspan="8" class="empty">Selecione um fornecedor</td></tr>
               </tbody>
             </table>
           </div>
@@ -357,20 +359,80 @@ function renderInsumosDetalhe() {
     const ins=insumos.find(i=>i.id===v.insumo_id);
     return !busca||(ins?.nome||'').toLowerCase().includes(busca);
   });
-  if (!lista.length) { tbody.innerHTML='<tr><td colspan="6" class="empty">Nenhum insumo vinculado</td></tr>'; return; }
+  if (!lista.length) { tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum insumo vinculado</td></tr>'; return; }
   tbody.innerHTML = lista.map(v => {
     const ins = insumos.find(i=>i.id===v.insumo_id);
-    const ultimaEnt = entradas.filter(e=>e.insumo_id===v.insumo_id&&e.fornecedor_id===fornSelecionado.id)
-      .sort((a,b)=>b.criado_em.localeCompare(a.criado_em))[0];
-    return `<tr>
+    const un = ins?.unidade_medida||ins?.unidade_compra||'un';
+    const temEmb = v.embalagem_descricao || v.codigo_fornecedor;
+    return `<tr id="row-${v.id}">
       <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
-      <td style="color:var(--text3);font-size:12px">${esc(ins?.categoria||'—')}</td>
-      <td style="color:var(--text3)">${esc(ins?.unidade_medida||ins?.unidade_compra||'—')}</td>
+      <td style="color:var(--text3)">${esc(un)}</td>
+      <td class="mono" style="font-size:12px;color:${v.codigo_fornecedor?'var(--text1)':'var(--text3)'}">${esc(v.codigo_fornecedor||'—')}</td>
+      <td style="color:${temEmb?'var(--text1)':'var(--text3)'}">${esc(v.embalagem_descricao||'—')}</td>
+      <td class="r mono" style="color:${v.qtd_por_embalagem&&v.qtd_por_embalagem!=1?'var(--blue)':'var(--text3)'}">
+        ${v.qtd_por_embalagem ? Number(v.qtd_por_embalagem).toFixed(3)+' '+esc(un) : '—'}</td>
       <td class="r mono" style="font-weight:600;color:${v.preco_unitario?'var(--teal)':'var(--text3)'}">${brl(v.preco_unitario)}</td>
-      <td class="r mono" style="font-size:12px;color:var(--text3)">${fmtData(ultimaEnt?.criado_em)}</td>
-      <td class="c">${v.principal?'<span style="color:#16a34a;font-weight:700">✓</span>':'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="text-align:center">${v.principal?'<span style="color:#16a34a;font-weight:700">✓</span>':'<span style="color:var(--text3)">—</span>'}</td>
+      <td><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="editarVinculo('${v.id}')">✎ Editar</button></td>
+    </tr>
+    <tr id="edit-${v.id}" style="display:none;background:#fef9ec">
+      <td colspan="8" style="padding:12px 16px">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Cód. no Fornecedor</div>
+            <input type="text" id="ei-cod-${v.id}" value="${esc(v.codigo_fornecedor||'')}" placeholder="Ex: 12345"
+              style="width:120px;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:13px;outline:none;font-family:inherit">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Embalagem</div>
+            <input type="text" id="ei-emb-${v.id}" value="${esc(v.embalagem_descricao||'')}" placeholder="Ex: Balde 1kg"
+              style="width:160px;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:13px;outline:none;font-family:inherit">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Qtd por Emb. (em ${esc(un)})</div>
+            <input type="number" id="ei-qtd-${v.id}" value="${v.qtd_por_embalagem||1}" min="0.001" step="0.001" placeholder="1.000"
+              style="width:110px;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:13px;outline:none;font-family:inherit;text-align:right">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Preço/Emb (R$)</div>
+            <input type="number" id="ei-preco-${v.id}" value="${v.preco_unitario||''}" min="0" step="0.01" placeholder="0,00"
+              style="width:110px;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:13px;outline:none;font-family:inherit;text-align:right">
+          </div>
+          <button class="btn" style="background:var(--teal);color:#fff;padding:6px 14px" onclick="salvarVinculo('${v.id}')">✓ Salvar</button>
+          <button class="btn btn-ghost" style="padding:6px 10px" onclick="cancelarEdit('${v.id}')">✕</button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
+}
+
+function editarVinculo(id) {
+  document.getElementById('edit-'+id).style.display = '';
+  document.getElementById('row-'+id).style.background = '#fef9ec';
+}
+
+function cancelarEdit(id) {
+  document.getElementById('edit-'+id).style.display = 'none';
+  document.getElementById('row-'+id).style.background = '';
+}
+
+async function salvarVinculo(id) {
+  const cod   = document.getElementById('ei-cod-'+id)?.value.trim()||null;
+  const emb   = document.getElementById('ei-emb-'+id)?.value.trim()||null;
+  const qtd   = parseFloat(document.getElementById('ei-qtd-'+id)?.value)||1;
+  const preco = parseFloat(document.getElementById('ei-preco-'+id)?.value)||null;
+  try {
+    await api(`insumo_fornecedores?id=eq.${id}`, {
+      method:'PATCH', prefer:'return=minimal',
+      body: JSON.stringify({ codigo_fornecedor:cod, embalagem_descricao:emb, qtd_por_embalagem:qtd, preco_unitario:preco })
+    });
+    // Atualiza cache local
+    const v = vinculos.find(x=>x.id===id);
+    if (v) { v.codigo_fornecedor=cod; v.embalagem_descricao=emb; v.qtd_por_embalagem=qtd; v.preco_unitario=preco; }
+    cancelarEdit(id);
+    renderInsumosDetalhe();
+    toast('Salvo com sucesso!');
+  } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
 function abrirWpp() {
