@@ -120,6 +120,16 @@
     color:var(--text1);padding:5px 8px;border-radius:6px;font-size:12px;outline:none;font-family:inherit}
   .forn-select:focus{border-color:var(--teal)}
   .forn-select.sem-forn{color:var(--text3)}
+  .cons-row{cursor:pointer}
+  .cons-row.sel td{background:#fef2f2}
+  .qtd-comprar{width:90px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;
+    background:#fff;border:1px solid var(--border2);color:var(--text1);
+    padding:4px 8px;border-radius:6px;font-size:13px;outline:none}
+  .qtd-comprar:focus{border-color:var(--teal)}
+  .lojas-panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    margin-top:16px;overflow:hidden}
+  .lojas-panel-hd{padding:12px 18px;background:var(--bg3);border-bottom:1px solid var(--border2);
+    font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
 
   /* PEDIDO CARD */
   .ped-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:14px}
@@ -222,9 +232,9 @@
 
       <!-- TAB: PROCESSAR -->
       <div id="tab-processar" class="tab-pane">
-        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Consolidado de solicitações pendentes</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:2px">Necessidade de Compra</div>
             <div style="font-size:12px;color:var(--text3)" id="cons-desc">Carregando...</div>
           </div>
           <button class="btn btn-primary" onclick="gerarPedidos()" id="btn-gerar" disabled>Gerar Pedidos por Fornecedor</button>
@@ -233,14 +243,29 @@
           <table class="tbl" id="cons-table">
             <thead><tr>
               <th>Insumo</th>
-              <th class="r">Qtd Total</th>
+              <th class="r">Q. Solicitada</th>
+              <th class="r">Q. Comprar</th>
               <th>Un.</th>
-              <th>Por Loja</th>
+              <th>Últ. Compra</th>
               <th>Fornecedor</th>
             </tr></thead>
-            <tbody id="cons-body"><tr><td colspan="5" class="empty">Nenhuma solicitação pendente</td></tr></tbody>
+            <tbody id="cons-body"><tr><td colspan="6" class="empty">Nenhuma solicitação pendente</td></tr></tbody>
           </table>
         </div></div>
+
+        <!-- Painel de lojas (atualiza ao clicar em um item) -->
+        <div id="cons-lojas-panel" style="display:none" class="lojas-panel">
+          <div class="lojas-panel-hd">
+            Solicitações por Loja —
+            <span id="cons-lojas-titulo" style="color:var(--teal)"></span>
+          </div>
+          <div class="tbl-scroll">
+            <table class="tbl">
+              <thead><tr><th>Loja</th><th class="r">Q. Solicitada</th><th>Un.</th></tr></thead>
+              <tbody id="cons-lojas-body"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- TAB: PEDIDOS GERADOS -->
@@ -572,6 +597,7 @@ async function carregarConsolidado() {
           };
         }
         consolidado[it.insumo_id].total += Number(it.quantidade)||0;
+        consolidado[it.insumo_id].qComprar = consolidado[it.insumo_id].total;
         const existing = consolidado[it.insumo_id].lojas.find(l=>l.loja_id===s.loja_id);
         if (existing) existing.qty += Number(it.quantidade)||0;
         else consolidado[it.insumo_id].lojas.push({ loja_id: s.loja_id, nome: lojaNome, qty: Number(it.quantidade)||0 });
@@ -592,23 +618,54 @@ function renderConsolidado() {
   const tbody = document.getElementById('cons-body');
   const itens = Object.entries(consolidado);
   if (!itens.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum item</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum item</td></tr>';
+    document.getElementById('cons-lojas-panel').style.display = 'none';
     return;
   }
   tbody.innerHTML = itens.map(([insId, d]) => {
     const fornOpts = buildFornOptions(insId, d.fornecedorId);
-    const breakdown = d.lojas.map(l=>`${esc(l.nome)}: ${l.qty.toFixed(3)} ${esc(d.unidade)}`).join(' · ');
-    return `<tr>
+    const vinc = vinculosForn.find(v=>v.insumo_id===insId && v.fornecedor_id===d.fornecedorId)
+               || vinculosForn.find(v=>v.insumo_id===insId);
+    const ultCompra = vinc?.preco_unitario
+      ? 'R$ '+Number(vinc.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'/'+esc(d.unidade)
+      : '—';
+    return `<tr class="cons-row" id="crow-${insId}" onclick="mostrarLojaBreakdown('${insId}')">
       <td style="font-weight:600">${esc(d.nome)}</td>
-      <td class="r mono">${d.total.toFixed(3)}</td>
+      <td class="r mono">${d.total.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+      <td class="r" onclick="event.stopPropagation()">
+        <input type="number" class="qtd-comprar" id="qc-${insId}"
+          value="${d.total.toFixed(3)}" min="0" step="0.001"
+          onchange="consolidado['${insId}'].qComprar=parseFloat(this.value)||0">
+      </td>
       <td>${esc(d.unidade)}</td>
-      <td><span class="loja-pill">${breakdown}</span></td>
-      <td><select class="forn-select ${d.fornecedorId?'':'sem-forn'}" id="forn-sel-${insId}"
-        onchange="consolidado['${insId}'].fornecedorId=this.value||null;this.className='forn-select'+(this.value?'':' sem-forn')">
-        ${fornOpts}
-      </select></td>
+      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap">${ultCompra}</td>
+      <td onclick="event.stopPropagation()">
+        <select class="forn-select ${d.fornecedorId?'':'sem-forn'}" id="forn-sel-${insId}"
+          onchange="consolidado['${insId}'].fornecedorId=this.value||null;this.className='forn-select'+(this.value?'':' sem-forn')">
+          ${fornOpts}
+        </select>
+      </td>
     </tr>`;
   }).join('');
+
+  // Mostra breakdown da primeira linha por padrão
+  mostrarLojaBreakdown(itens[0][0]);
+}
+
+function mostrarLojaBreakdown(insId) {
+  const d = consolidado[insId];
+  if (!d) return;
+  document.querySelectorAll('.cons-row').forEach(r => r.classList.remove('sel'));
+  document.getElementById('crow-'+insId)?.classList.add('sel');
+  document.getElementById('cons-lojas-titulo').textContent = d.nome;
+  document.getElementById('cons-lojas-body').innerHTML = d.lojas.map(l =>
+    `<tr>
+      <td style="font-weight:600">${esc(l.nome)}</td>
+      <td class="r mono">${l.qty.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+      <td>${esc(d.unidade)}</td>
+    </tr>`
+  ).join('');
+  document.getElementById('cons-lojas-panel').style.display = '';
 }
 
 function buildFornOptions(insId, selectedId) {
@@ -634,13 +691,18 @@ async function gerarPedidos() {
   const itens = Object.entries(consolidado);
   if (!itens.length) { toast('Nada para gerar.','err'); return; }
 
-  // Read current supplier selections from dropdowns
-  itens.forEach(([insId]) => {
-    const sel = document.getElementById(`forn-sel-${insId}`);
-    if (sel) consolidado[insId].fornecedorId = sel.value||null;
+  // Lê Q.Comprar e fornecedor dos campos na tela
+  itens.forEach(([insId, d]) => {
+    const sel = document.getElementById('forn-sel-'+insId);
+    if (sel) d.fornecedorId = sel.value||null;
+    const qcInput = document.getElementById('qc-'+insId);
+    d.qComprar = qcInput ? (parseFloat(qcInput.value)||0) : d.total;
   });
 
-  // Group by supplier
+  const semQtd = itens.filter(([,d]) => !d.qComprar || d.qComprar <= 0);
+  if (semQtd.length) { toast('Informe Q. Comprar para todos os itens.','err'); return; }
+
+  // Agrupa por fornecedor
   const porForn = {};
   itens.forEach(([insId, d]) => {
     const fKey = d.fornecedorId || '__sem__';
@@ -653,44 +715,32 @@ async function gerarPedidos() {
   btn.textContent = 'Gerando...';
 
   try {
-    // Load all pending solicitacoes to mark as processed
-    const sols = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado`);
+    const sols = await api('pedidos_compra?tenant_id=eq.'+TENANT_ID+'&status=eq.solicitado');
 
     for (const [fKey, itensForn] of Object.entries(porForn)) {
       const fornId = fKey === '__sem__' ? null : fKey;
-      const forn = fornecedores.find(f=>f.id===fornId);
 
-      // Build observacao with loja breakdown
-      const lojaResumo = [];
       const allLojas = new Set(itensForn.flatMap(it=>it.lojas.map(l=>l.loja_id)));
-      allLojas.forEach(lojaId => {
-        const loja = lojas.find(l=>l.id===lojaId);
-        lojaResumo.push(loja?.nome||'?');
-      });
-      const obs = `Lojas: ${lojaResumo.join(', ')}`;
+      const lojaResumo = [...allLojas].map(id => lojas.find(l=>l.id===id)?.nome||'?');
+      const obs = 'Lojas: '+lojaResumo.join(', ');
 
-      // Create pedido per supplier
       const pedRes = await api('pedidos_compra', { method:'POST',
         body: JSON.stringify({
-          tenant_id: TENANT_ID,
-          loja_id: null,
-          fornecedor_id: fornId,
-          status: 'pendente',
-          data_pedido: hoje(),
-          observacao: obs,
-          solicitante_id: userProfile?.id||null
+          tenant_id: TENANT_ID, loja_id: null, fornecedor_id: fornId,
+          status: 'pendente', data_pedido: hoje(),
+          observacao: obs, solicitante_id: userProfile?.id||null
         })
       });
       const pedId = pedRes[0]?.id;
       if (!pedId) throw new Error('Falha ao criar pedido.');
 
-      // Create itens with loja_breakdown in observacao per item
+      // Quantidade = Q.Comprar; breakdown por loja na observacao do item
       const itensPay = itensForn.map(it => {
-        const breakdown = it.lojas.map(l=>`${l.nome}: ${l.qty.toFixed(3)}`).join(', ');
+        const breakdown = it.lojas.map(l=>l.nome+': '+l.qty.toFixed(3)).join(', ');
         return {
           pedido_id: pedId,
           insumo_id: it.insId,
-          quantidade: it.total,
+          quantidade: it.qComprar,
           unidade: it.unidade,
           preco_unitario: vinculosForn.find(v=>v.insumo_id===it.insId&&v.fornecedor_id===fornId)?.preco_unitario||null,
           observacao: breakdown
@@ -699,17 +749,16 @@ async function gerarPedidos() {
       await api('itens_pedido', { method:'POST', prefer:'return=minimal', body:JSON.stringify(itensPay)});
     }
 
-    // Mark all solicitacoes as processed
+    // Marca solicitações como processadas
     for (const s of sols) {
-      await api(`pedidos_compra?id=eq.${s.id}`, {
+      await api('pedidos_compra?id=eq.'+s.id, {
         method:'PATCH', prefer:'return=minimal',
         body: JSON.stringify({ status:'processado' })
       });
     }
 
     consolidado = {};
-    const nPedidos = Object.keys(porForn).length;
-    toast(`${nPedidos} pedido(s) gerado(s) com sucesso!`,'ok');
+    toast(Object.keys(porForn).length+' pedido(s) gerado(s) com sucesso!','ok');
     switchTab('pedidos');
   } catch(e) {
     toast('Erro: '+e.message,'err');
