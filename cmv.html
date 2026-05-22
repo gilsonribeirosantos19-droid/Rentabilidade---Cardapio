@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMV Teórico x Real · Aiko</title>
+<style>
+  :root{
+    --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
+    --border2:#e2e8f0;
+    --teal:#dc2626;--teal2:#b91c1c;--teal-dim:rgba(220,38,38,.10);
+    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#16a34a;
+    --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+
+  .sidebar{width:220px;min-height:100vh;background:#fff;border-right:1px solid #e2e8f0;
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin-bottom:20px}
+  .nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:var(--text2);font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:var(--bg1);color:var(--text1)}
+  .nav-item.active{background:#fef2f2;color:#dc2626}
+  .nav-icon{width:15px;height:15px;flex-shrink:0;stroke-width:1.8}
+  .nav-user{padding:12px 18px;border-top:1px solid #e2e8f0;margin-top:auto}
+  .nav-user-nome{font-size:12px;font-weight:600;color:var(--text1)}
+  .nav-user-perfil{font-size:11px;color:var(--text3);text-transform:capitalize}
+  .nav-user-sair{font-size:11px;color:var(--red);cursor:pointer;margin-top:4px;display:inline-block}
+
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .content{padding:24px;flex:1}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:var(--teal2)}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn-sm{padding:5px 12px;font-size:12px}
+
+  .toolbar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+  .field{background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
+    padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
+  .field:focus{border-color:var(--teal)}
+
+  /* KPI CARDS */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+  .kpi{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px 22px}
+  .kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .kpi-value{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+  .kpi-sub{font-size:12px;color:var(--text3);margin-top:5px}
+  .kpi-ok .kpi-value{color:var(--green)}
+  .kpi-warn .kpi-value{color:var(--amber)}
+  .kpi-danger .kpi-value{color:var(--red)}
+  .kpi-blue .kpi-value{color:var(--blue)}
+
+  /* SEÇÕES */
+  .section{margin-bottom:28px}
+  .section-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .section-title span{font-size:12px;font-weight:400;color:var(--text3)}
+
+  /* TABELA */
+  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden}
+  .tbl-scroll{overflow-x:auto}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl thead tr{background:var(--bg3);border-bottom:2px solid var(--border2)}
+  .tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .tbl th.r,.tbl td.r{text-align:right}
+  .tbl td{padding:10px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
+  .tbl tbody tr:last-child td{border-bottom:none}
+  .tbl tbody tr:hover{background:var(--bg3)}
+  .tbl tfoot td{padding:10px 14px;font-weight:700;background:var(--bg3);border-top:2px solid var(--border2)}
+  .mono{font-family:'DM Mono',monospace}
+
+  /* CMV BADGE */
+  .cmv-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .cmv-ok{background:#dcfce7;color:#16a34a}
+  .cmv-warn{background:#fef3c7;color:#b45309}
+  .cmv-danger{background:#fee2e2;color:#dc2626}
+
+  /* BARRA COMPARATIVA */
+  .bar-wrap{display:flex;gap:4px;align-items:center;height:8px;min-width:100px}
+  .bar-teo{height:8px;border-radius:4px;background:#3b82f6;min-width:2px}
+  .bar-real{height:8px;border-radius:4px;background:#dc2626;min-width:2px}
+
+  /* AVISO SEM DADOS */
+  .no-data{text-align:center;padding:48px;color:var(--text3);font-size:13px}
+  .no-data strong{display:block;font-size:15px;color:var(--text2);margin-bottom:8px}
+
+  .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text1);color:#fff;
+    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;
+    opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.err{background:var(--red)}
+  .toast.ok{background:var(--green)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Aiko</div>
+    <div class="logo-sub">sistema</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard" class="nav-icon"></i>Dashboard</a>
+    <a class="nav-item" href="insumos.html"><i data-lucide="package" class="nav-icon"></i>Insumos</a>
+    <a class="nav-item" href="fichas_tecnicas.html"><i data-lucide="clipboard-list" class="nav-icon"></i>Fichas técnicas</a>
+    <a class="nav-item" href="#"><i data-lucide="tag" class="nav-icon"></i>Precificação</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Análise</div>
+    <a class="nav-item" href="estoque.html"><i data-lucide="archive" class="nav-icon"></i>Estoque</a>
+    <a class="nav-item" href="producao.html"><i data-lucide="chef-hat" class="nav-icon"></i>Produção</a>
+    <a class="nav-item" href="rendimento.html"><i data-lucide="trending-up" class="nav-icon"></i>Rendimento</a>
+    <a class="nav-item" href="pdv.html"><i data-lucide="receipt" class="nav-icon"></i>PDV / Vendas</a>
+    <a class="nav-item active" href="cmv.html"><i data-lucide="bar-chart-2" class="nav-icon"></i>CMV teórico x real</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
+    <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações</a>
+  </div>
+  <div class="nav-user">
+    <div class="nav-user-nome" id="sb-user-nome">—</div>
+    <div class="nav-user-perfil" id="sb-user-perfil">—</div>
+    <span class="nav-user-sair" onclick="sair()">← Sair</span>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">CMV Teórico x Real</span>
+    <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+  </div>
+  <div class="content">
+
+    <!-- FILTROS -->
+    <div class="toolbar">
+      <input type="date" class="field" id="fil-de" style="font-size:13px">
+      <input type="date" class="field" id="fil-ate" style="font-size:13px">
+      <button class="btn btn-primary" onclick="calcular()">Calcular</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Faturamento</div><div class="kpi-value" id="k-fat">—</div><div class="kpi-sub">no período</div></div>
+      <div class="kpi kpi-blue"><div class="kpi-label">CMV Teórico</div><div class="kpi-value" id="k-teo">—</div><div class="kpi-sub" id="k-teo-pct">% do faturamento</div></div>
+      <div class="kpi"><div class="kpi-label">CMV Real</div><div class="kpi-value" id="k-real">—</div><div class="kpi-sub" id="k-real-pct">% do faturamento</div></div>
+      <div class="kpi"><div class="kpi-label">Diferença</div><div class="kpi-value" id="k-dif">—</div><div class="kpi-sub" id="k-dif-sub">teórico vs real</div></div>
+      <div class="kpi"><div class="kpi-label">Produtos vendidos</div><div class="kpi-value" id="k-prods">—</div><div class="kpi-sub">com ficha técnica</div></div>
+    </div>
+
+    <!-- TABELA POR PRODUTO -->
+    <div class="section" id="sec-produtos" style="display:none">
+      <div class="section-title">CMV por Produto <span>— baseado nas fichas técnicas × vendas</span></div>
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr>
+            <th>Produto</th>
+            <th class="r">Qtd vendida</th>
+            <th class="r">Receita</th>
+            <th class="r">Custo teórico</th>
+            <th class="r">CMV%</th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody id="tbody-produtos"></tbody>
+          <tfoot id="tfoot-produtos"></tfoot>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- TABELA POR INSUMO -->
+    <div class="section" id="sec-insumos" style="display:none">
+      <div class="section-title">Consumo por Insumo <span>— teórico (fichas) vs real (estoque)</span></div>
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr>
+            <th>Insumo</th>
+            <th>Un.</th>
+            <th class="r">Consumo teórico</th>
+            <th class="r">Consumo real</th>
+            <th class="r">Diferença</th>
+            <th>Comparativo</th>
+          </tr></thead>
+          <tbody id="tbody-insumos"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- AVISO SEM DADOS -->
+    <div id="aviso-vazio" class="no-data">
+      <strong>Selecione o período e clique em Calcular</strong>
+      Os dados de CMV serão calculados com base nas vendas registradas no PDV e nas fichas técnicas cadastradas.
+      <br><br>
+      <span style="font-size:12px;color:var(--text3)">
+        Sem vendas no período? O CMV teórico será zero, mas o CMV real (compras − variação de estoque) será calculado normalmente.
+      </span>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u&&u.perfil==='gerente'){window.location.href='loja.html';}}catch{}})();
+(function(){try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u){document.getElementById('sb-user-nome').textContent=u.nome||'Usuário';document.getElementById('sb-user-perfil').textContent=u.perfil||'—';}}catch{}})();
+
+const SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+async function api(endpoint, opts={}) {
+  const method = (opts.method||'GET').toUpperCase();
+  const headers = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+  if (opts.body) headers['Content-Type']='application/json';
+  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers,body:opts.body||undefined});
+  if (!res.ok){let m=res.statusText;try{const j=await res.json();m=j.message||j.error||m;}catch{}throw new Error(m);}
+  const ct=res.headers.get('content-type')||'';
+  if(ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
+  return [];
+}
+
+function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
+function hoje(minus=0){const d=new Date();d.setDate(d.getDate()-minus);return d.toISOString().split('T')[0];}
+function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtQtd(v,un=''){return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+(un?' '+un:'');}
+let toastTimer;
+function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
+
+// Estado
+let _resultados = null;
+
+// Inicializa datas (mês atual)
+document.getElementById('fil-de').value  = hoje(0).slice(0,7)+'-01';
+document.getElementById('fil-ate').value = hoje(0);
+
+async function calcular() {
+  const de  = document.getElementById('fil-de').value;
+  const ate = document.getElementById('fil-ate').value;
+  if (!de||!ate) { toast('Selecione o período.','err'); return; }
+
+  document.getElementById('conn-status').textContent = 'calculando...';
+  document.getElementById('aviso-vazio').style.display = 'none';
+  document.getElementById('sec-produtos').style.display = 'none';
+  document.getElementById('sec-insumos').style.display = 'none';
+
+  try {
+    // Carrega dados em paralelo
+    const [faturamentos, vendas, fichas, insumos, saldos, entradas, saidas] = await Promise.all([
+      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`),
+      api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`),
+      api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&select=*`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59`),
+    ]);
+
+    // Carrega itens das fichas
+    const fichasIds = fichas.map(f=>f.id);
+    let itensFichas = [];
+    if (fichasIds.length) {
+      itensFichas = await api(`itens_ficha?ficha_id=in.(${fichasIds.join(',')})&select=*`);
+    }
+
+    // ── FATURAMENTO TOTAL ──────────────────────────────────
+    const totalFat = faturamentos.reduce((s,f)=>s+(f.total||f.valor_total||0),0)
+                   + vendas.reduce((s,v)=>s+(v.valor_total||0),0);
+
+    // ── CMV TEÓRICO ───────────────────────────────────────
+    // Para cada venda, calcula custo usando custo_unitario salvo OU ficha técnica
+    let totalTeo = 0;
+    const porProduto = {}; // ficha_id → { nome, qtd, receita, custo }
+
+    vendas.forEach(v => {
+      const custo = (v.custo_unitario||0) * (v.quantidade||0);
+      totalTeo += custo;
+
+      const fichaId = v.ficha_id||v.produto_id||'sem-ficha';
+      const ficha = fichas.find(f=>f.id===fichaId);
+      if (!porProduto[fichaId]) {
+        porProduto[fichaId] = { nome: ficha?.nome||v.nome_produto||'Produto', qtd:0, receita:0, custo:0 };
+      }
+      porProduto[fichaId].qtd     += v.quantidade||0;
+      porProduto[fichaId].receita += v.valor_total||0;
+      porProduto[fichaId].custo   += custo;
+    });
+
+    // ── CONSUMO TEÓRICO POR INSUMO ────────────────────────
+    const consumoTeoMap = {}; // insumo_id → g consumidos
+    vendas.forEach(v => {
+      const fichaId = v.ficha_id||v.produto_id;
+      if (!fichaId) return;
+      const ficha = fichas.find(f=>f.id===fichaId);
+      if (!ficha) return;
+      const itens = itensFichas.filter(it=>it.ficha_id===fichaId);
+      const porcoes = ficha.rendimento_porcoes||1;
+      const qtdVendida = v.quantidade||0;
+      itens.forEach(it => {
+        const gPorPorcao = (it.quantidade_g||0) / porcoes;
+        const gTotal = gPorPorcao * qtdVendida;
+        consumoTeoMap[it.insumo_id] = (consumoTeoMap[it.insumo_id]||0) + gTotal;
+      });
+    });
+
+    // ── CMV REAL ──────────────────────────────────────────
+    // Compras no período − variação de estoque
+    const totalCompras = entradas.reduce((s,e)=>s+(e.custo_total||0),0);
+    // Saídas por consumo no período (tipo consumo/transferencia)
+    const totalConsumoReal = saidas
+      .filter(s=>['consumo','transferencia','producao'].includes(s.tipo))
+      .reduce((s,x)=>s+(x.quantidade||0)*(x.custo_unitario||saldos.find(sl=>sl.insumo_id===x.insumo_id)?.custo_medio||0),0);
+
+    // CMV Real = total de saídas de consumo no período
+    const totalReal = totalConsumoReal || totalCompras;
+
+    // ── CONSUMO REAL POR INSUMO (saídas) ─────────────────
+    const consumoRealMap = {}; // insumo_id → qtd em unidade do estoque
+    saidas.filter(s=>['consumo','transferencia','producao'].includes(s.tipo)).forEach(s=>{
+      consumoRealMap[s.insumo_id] = (consumoRealMap[s.insumo_id]||0) + (s.quantidade||0);
+    });
+
+    // ── ATUALIZA KPIs ─────────────────────────────────────
+    const pctTeo  = totalFat>0 ? (totalTeo/totalFat*100)  : 0;
+    const pctReal = totalFat>0 ? (totalReal/totalFat*100) : 0;
+    const dif     = totalReal - totalTeo;
+
+    document.getElementById('k-fat').textContent    = brl(totalFat);
+    document.getElementById('k-teo').textContent    = brl(totalTeo);
+    document.getElementById('k-teo-pct').textContent= pctTeo.toFixed(1)+'% do faturamento';
+    document.getElementById('k-real').textContent   = brl(totalReal);
+    document.getElementById('k-real-pct').textContent= pctReal.toFixed(1)+'% do faturamento';
+    document.getElementById('k-dif').textContent    = (dif>=0?'+':'')+brl(dif);
+    document.getElementById('k-dif-sub').textContent= dif>0?'real acima do teórico':dif<0?'real abaixo do teórico':'sem diferença';
+    document.getElementById('k-prods').textContent  = Object.keys(porProduto).length;
+
+    // Cor diferença
+    const kDif = document.getElementById('k-dif').parentElement;
+    kDif.className = 'kpi '+(Math.abs(dif)<totalTeo*0.05?'kpi-ok':dif>0?'kpi-danger':'kpi-warn');
+
+    // ── TABELA POR PRODUTO ────────────────────────────────
+    const prodRows = Object.values(porProduto).sort((a,b)=>b.custo-a.custo);
+    const totQtd=prodRows.reduce((s,p)=>s+p.qtd,0);
+    const totRec=prodRows.reduce((s,p)=>s+p.receita,0);
+    const totCusto=prodRows.reduce((s,p)=>s+p.custo,0);
+
+    if (prodRows.length) {
+      document.getElementById('sec-produtos').style.display = '';
+      document.getElementById('tbody-produtos').innerHTML = prodRows.map(p=>{
+        const pct = p.receita>0 ? p.custo/p.receita*100 : 0;
+        const cls = pct<=30?'cmv-ok':pct<=38?'cmv-warn':'cmv-danger';
+        return `<tr>
+          <td style="font-weight:500">${esc(p.nome)}</td>
+          <td class="r mono">${p.qtd.toLocaleString('pt-BR')}</td>
+          <td class="r mono">${brl(p.receita)}</td>
+          <td class="r mono">${brl(p.custo)}</td>
+          <td class="r"><span class="cmv-badge ${cls}">${pct.toFixed(1)}%</span></td>
+          <td><span class="cmv-badge ${cls}">${pct<=30?'OK':pct<=38?'Atenção':'Crítico'}</span></td>
+        </tr>`;
+      }).join('');
+      const pctTot = totRec>0?totCusto/totRec*100:0;
+      document.getElementById('tfoot-produtos').innerHTML = `<tr>
+        <td>Total</td><td class="r mono">${totQtd.toLocaleString('pt-BR')}</td>
+        <td class="r mono">${brl(totRec)}</td><td class="r mono">${brl(totCusto)}</td>
+        <td class="r"><span class="cmv-badge ${pctTot<=30?'cmv-ok':pctTot<=38?'cmv-warn':'cmv-danger'}">${pctTot.toFixed(1)}%</span></td>
+        <td></td></tr>`;
+    }
+
+    // ── TABELA POR INSUMO ─────────────────────────────────
+    const insumosComDados = insumos.filter(ins=>
+      consumoTeoMap[ins.id]||consumoRealMap[ins.id]
+    ).sort((a,b)=>(consumoTeoMap[b.id]||0)-(consumoTeoMap[a.id]||0));
+
+    if (insumosComDados.length) {
+      document.getElementById('sec-insumos').style.display = '';
+      document.getElementById('tbody-insumos').innerHTML = insumosComDados.map(ins=>{
+        const un  = ins.unidade_medida||ins.unidade_compra||'un';
+        // Converte g → unidade do estoque (se kg divide por 1000, se g deixa)
+        const divTeo = ['kg','litro'].includes(un) ? 1000 : 1;
+        const teo  = (consumoTeoMap[ins.id]||0)/divTeo;
+        const real = consumoRealMap[ins.id]||0;
+        const dif  = real - teo;
+        const difPct = teo>0 ? dif/teo*100 : 0;
+        const maxBar = Math.max(teo,real)||1;
+        const wTeo  = Math.round(teo/maxBar*80);
+        const wReal = Math.round(real/maxBar*80);
+        return `<tr>
+          <td style="font-weight:500">${esc(ins.nome)}</td>
+          <td style="color:var(--text3)">${esc(un)}</td>
+          <td class="r mono">${fmtQtd(teo)}</td>
+          <td class="r mono">${fmtQtd(real)}</td>
+          <td class="r mono" style="color:${Math.abs(difPct)<10?'var(--green)':difPct>0?'var(--red)':'var(--amber)'}">
+            ${dif>=0?'+':''}${fmtQtd(dif)} <span style="font-size:11px">(${difPct>=0?'+':''}${difPct.toFixed(0)}%)</span>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar-teo" style="width:${wTeo}px" title="Teórico"></div>
+              <div class="bar-real" style="width:${wReal}px" title="Real"></div>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    if (!prodRows.length && !insumosComDados.length) {
+      document.getElementById('aviso-vazio').style.display = '';
+    }
+
+    _resultados = { de, ate, totalFat, totalTeo, totalReal, porProduto, consumoTeoMap, consumoRealMap, insumos };
+    document.getElementById('conn-status').textContent = '● calculado';
+    document.getElementById('conn-status').style.color = 'var(--green)';
+  } catch(e) {
+    toast('Erro: '+e.message,'err');
+    document.getElementById('conn-status').textContent = '✕ erro';
+    document.getElementById('conn-status').style.color = 'var(--red)';
+    document.getElementById('aviso-vazio').style.display = '';
+  }
+}
+
+function exportCSV() {
+  if (!_resultados) { toast('Calcule primeiro.','err'); return; }
+  const { porProduto } = _resultados;
+  let csv = 'Produto;Qtd Vendida;Receita;Custo Teórico;CMV%\n';
+  Object.values(porProduto).forEach(p=>{
+    const pct = p.receita>0?p.custo/p.receita*100:0;
+    csv += `${p.nome};${p.qtd};${p.receita.toFixed(2)};${p.custo.toFixed(2)};${pct.toFixed(1)}\n`;
+  });
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`cmv_${_resultados.de}_${_resultados.ate}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>
