@@ -2000,15 +2000,23 @@ function downloadCSV(filename, content) {
 
 // ── SALDO UPSERT ──────────────────────────────────────────────────
 async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maximo=undefined) {
-  const ex=saldos.find(s=>s.insumo_id===insId);
-  const payload={quantidade:parseFloat(quantidade.toFixed(4)),
-    custo_medio:parseFloat(custoMedio.toFixed(6)),
-    atualizado_em:new Date().toISOString()};
-  if(minimo!==undefined) payload.minimo=minimo;
-  if(maximo!==undefined) payload.maximo=maximo;
-  if(ex) await api(`saldo_estoque?id=eq.${ex.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
-  else await api('saldo_estoque',{method:'POST',prefer:'return=minimal',
-    body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,...payload})});
+  const payload = {
+    tenant_id: TENANT_ID,
+    insumo_id: insId,
+    quantidade: parseFloat(Number(quantidade).toFixed(4)),
+    custo_medio: parseFloat(Number(custoMedio).toFixed(6)),
+    atualizado_em: new Date().toISOString()
+  };
+  if (minimo !== undefined) payload.minimo = minimo;
+  if (maximo !== undefined) payload.maximo = maximo;
+  await api('saldo_estoque?on_conflict=insumo_id', {
+    method: 'POST',
+    prefer: 'resolution=merge-duplicates,return=minimal',
+    body: JSON.stringify(payload)
+  });
+  const ex = saldos.find(s=>s.insumo_id===insId);
+  if (ex) Object.assign(ex, payload);
+  else saldos.push({...payload});
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────
