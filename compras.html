@@ -707,50 +707,33 @@ async function gerarPedidos() {
     // Load all pending solicitacoes to mark as processed
     const sols = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado`);
 
-    for (const [fKey, itensForn] of Object.entries(porForn)) {
-      const fornId = fKey === '__sem__' ? null : fKey;
-      const forn = fornecedores.find(f=>f.id===fornId);
-
-      // Build observacao with loja breakdown
-      const lojaResumo = [];
-      const allLojas = new Set(itensForn.flatMap(it=>it.lojas.map(l=>l.loja_id)));
-      allLojas.forEach(lojaId => {
-        const loja = lojas.find(l=>l.id===lojaId);
-        lojaResumo.push(loja?.nome||'?');
-      });
-      const obs = `Lojas: ${lojaResumo.join(', ')}`;
-
-      // Create pedido per supplier
+    for (const data of Object.values(porLojaForn)) {
+      const fornId = data.fornId === '__sem__' ? null : data.fornId;
       const pedRes = await api('pedidos_compra', { method:'POST',
         body: JSON.stringify({
           tenant_id: TENANT_ID,
-          loja_id: null,
+          loja_id: data.loja_id,
           fornecedor_id: fornId,
           status: 'pendente',
           data_pedido: hoje(),
-          observacao: obs,
+          observacao: null,
           solicitante_id: userProfile?.id||null
         })
       });
       const pedId = pedRes[0]?.id;
       if (!pedId) throw new Error('Falha ao criar pedido.');
 
-      // Create itens with loja_breakdown in observacao per item
-      const itensPay = itensForn.map(it => {
-        const breakdown = it.lojas.map(l=>`${l.nome}: ${fmtQtd(l.qty)}`).join(', ');
-        return {
-          pedido_id: pedId,
-          insumo_id: it.insId,
-          quantidade: it.qtdComprar || it.total,
-          unidade: it.unidade,
-          preco_unitario: vinculosForn.find(v=>v.insumo_id===it.insId&&v.fornecedor_id===fornId)?.preco_unitario||null,
-          observacao: breakdown
-        };
-      });
+      const itensPay = data.itens.map(it => ({
+        pedido_id: pedId,
+        insumo_id: it.insId,
+        quantidade: it.qty,
+        unidade: it.unidade,
+        preco_unitario: vinculosForn.find(v=>v.insumo_id===it.insId&&v.fornecedor_id===fornId)?.preco_unitario||null,
+        observacao: null
+      }));
       await api('itens_pedido', { method:'POST', prefer:'return=minimal', body:JSON.stringify(itensPay)});
     }
 
-    // Mark all solicitacoes as processed
     for (const s of sols) {
       await api(`pedidos_compra?id=eq.${s.id}`, {
         method:'PATCH', prefer:'return=minimal',
@@ -759,8 +742,7 @@ async function gerarPedidos() {
     }
 
     consolidado = {};
-    const nPedidos = Object.keys(porForn).length;
-    toast(`${nPedidos} pedido(s) gerado(s) com sucesso!`,'ok');
+    toast(`${Object.keys(porLojaForn).length} pedido(s) gerado(s)!`,'ok');
     switchTab('pedidos');
   } catch(e) {
     toast('Erro: '+e.message,'err');
@@ -791,34 +773,42 @@ async function renderPedidos() {
       return;
     }
 
-    container.innerHTML = `<div class="tbl-wrap"><div class="tbl-scroll">
-      <table class="tbl">
-        <thead><tr>
-          <th>Data</th>
-          <th>Fornecedor</th>
-          <th>Lojas</th>
-          <th>Situação</th>
-          <th></th>
-        </tr></thead>
-        <tbody>
-          ${pedidosGerados.map(p => {
-            const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
-            const fornNome = forn?.nome || '⚠ Sem fornecedor';
-            const fornStyle = forn ? '' : 'color:var(--amber)';
-            return `<tr style="cursor:pointer" onclick="verPedido('${p.id}')">
-              <td class="mono">${fmtData(p.data_pedido)}</td>
-              <td style="font-weight:600;${fornStyle}">${esc(fornNome)}</td>
-              <td style="color:var(--text3);font-size:12px">${esc(p.observacao||'—')}</td>
-              <td>${statusBadge(p.status)}</td>
-              <td style="display:flex;gap:6px;justify-content:flex-end">
-                <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();verPedido('${p.id}')">Ver</button>
-                ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="event.stopPropagation();enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div></div>`;
+    // Agrupa por loja
+    const porLoja = {};
+    pedidosGerados.forEach(p => {
+      const lojaId = p.loja_id || '__sem__';
+      if (!porLoja[lojaId]) porLoja[lojaId] = [];
+      porLoja[lojaId].push(p);
+    });
+
+    container.innerHTML = Object.entries(porLoja).map(([lojaId, peds]) => {
+      const loja = lojas.find(l=>l.id===lojaId);
+      const lojaNome = loja?.nome || '⚠ Sem loja';
+      return `<div style="margin-bottom:20px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text1)">${esc(lojaNome)}</div>
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr><th>Data</th><th>Fornecedor</th><th>Situação</th><th></th></tr></thead>
+            <tbody>
+              ${peds.map(p => {
+                const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
+                const fornNome = forn?.nome || '⚠ Sem fornecedor';
+                const fornStyle = forn ? '' : 'color:var(--amber)';
+                return `<tr style="cursor:pointer" onclick="verPedido('${p.id}')">
+                  <td class="mono">${fmtData(p.data_pedido)}</td>
+                  <td style="font-weight:500;${fornStyle}">${esc(fornNome)}</td>
+                  <td>${statusBadge(p.status)}</td>
+                  <td style="display:flex;gap:6px;justify-content:flex-end">
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();verPedido('${p.id}')">Ver</button>
+                    ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="event.stopPropagation();enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div></div>
+      </div>`;
+    }).join('');
   } catch(e) { container.innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; }
 }
 
@@ -871,16 +861,13 @@ async function enviarWhatsApp(id) {
   const forn = fornecedores.find(f=>f.id===p?.fornecedor_id);
   if (!forn?.whatsapp) { toast('Fornecedor sem WhatsApp.','err'); return; }
 
+  const loja = lojas.find(l=>l.id===p?.loja_id);
   const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
-  let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`;
+  let msg = `*Pedido de Compra — ${esc(loja?.nome||'Aiko')}*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`;
   itens.forEach(it => {
     const ins = insumos.find(i=>i.id===it.insumo_id);
     msg += `• ${ins?.nome||'?'}: ${fmtQtd(it.quantidade)} ${it.unidade||'un'}\n`;
-    if (it.observacao) {
-      it.observacao.split(', ').forEach(part => { msg += `    → ${part}\n`; });
-    }
   });
-  if (p.observacao) msg += `\n${p.observacao}`;
   const wpp = forn.whatsapp.replace(/\D/g,'');
   window.open(`https://wa.me/55${wpp}?text=${encodeURIComponent(msg)}`, '_blank');
   await mudarStatus(id, 'enviado');
