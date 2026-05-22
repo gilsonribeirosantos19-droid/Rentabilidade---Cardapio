@@ -114,7 +114,8 @@
   .content { flex: 1; padding: 28px; overflow-y: auto; }
 
   /* ── MÉTRICAS ── */
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .sticky-header { position: sticky; top: 56px; z-index: 50; background: var(--bg1); padding: 16px 0 4px; margin: -16px 0 0; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
   .metric {
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -417,7 +418,8 @@
 
     <div class="content">
 
-      <!-- MÉTRICAS -->
+      <!-- MÉTRICAS + TOOLBAR FIXAS -->
+      <div class="sticky-header">
       <div class="metrics">
         <div class="metric">
           <div class="metric-label">Total cadastrados</div>
@@ -450,6 +452,7 @@
         <div class="filter-chips" id="chips"></div>
         <button class="btn" onclick="carregarInsumos()">↻ Atualizar</button>
       </div>
+      </div><!-- fim sticky-header -->
 
       <!-- TABELA -->
       <div class="table-wrap">
