@@ -691,15 +691,12 @@ async function gerarPedidos() {
     if (qtdInput) consolidado[insId].qtdComprar = parseFloat(qtdInput.value)||consolidado[insId].total;
   });
 
-  // Agrupa por LOJA + FORNECEDOR
-  const porLojaForn = {};
+  // Agrupa por FORNECEDOR (um pedido consolidado por fornecedor)
+  const porForn = {};
   itens.forEach(([insId, d]) => {
-    const fornId = d.fornecedorId || '__sem__';
-    d.lojas.forEach(l => {
-      const key = `${l.loja_id}|${fornId}`;
-      if (!porLojaForn[key]) porLojaForn[key] = { loja_id: l.loja_id, loja_nome: l.nome, fornId, itens: [] };
-      porLojaForn[key].itens.push({ insId, qty: l.qty, unidade: d.unidade });
-    });
+    const fKey = d.fornecedorId || '__sem__';
+    if (!porForn[fKey]) porForn[fKey] = [];
+    porForn[fKey].push({ insId, ...d });
   });
 
   const btn = document.getElementById('btn-gerar');
@@ -707,33 +704,39 @@ async function gerarPedidos() {
   btn.textContent = 'Gerando...';
 
   try {
-    // Load all pending solicitacoes to mark as processed
     const sols = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado`);
 
-    for (const data of Object.values(porLojaForn)) {
-      const fornId = data.fornId === '__sem__' ? null : data.fornId;
+    for (const [fKey, itensForn] of Object.entries(porForn)) {
+      const fornId = fKey === '__sem__' ? null : fKey;
+      // Resumo das lojas envolvidas
+      const lojaSet = new Set(itensForn.flatMap(it => it.lojas.map(l => l.loja_id)));
+      const lojaResumo = [...lojaSet].map(lid => lojas.find(l=>l.id===lid)?.nome||'?').join(', ');
+
       const pedRes = await api('pedidos_compra', { method:'POST',
         body: JSON.stringify({
           tenant_id: TENANT_ID,
-          loja_id: data.loja_id,
+          loja_id: null,
           fornecedor_id: fornId,
           status: 'pendente',
           data_pedido: hoje(),
-          observacao: null,
+          observacao: lojaResumo,
           solicitante_id: userProfile?.id||null
         })
       });
       const pedId = pedRes[0]?.id;
       if (!pedId) throw new Error('Falha ao criar pedido.');
 
-      const itensPay = data.itens.map(it => ({
-        pedido_id: pedId,
-        insumo_id: it.insId,
-        quantidade: it.qty,
-        unidade: it.unidade,
-        preco_unitario: vinculosForn.find(v=>v.insumo_id===it.insId&&v.fornecedor_id===fornId)?.preco_unitario||null,
-        observacao: null
-      }));
+      const itensPay = itensForn.map(it => {
+        const breakdown = it.lojas.map(l=>`${l.nome}: ${fmtQtd(l.qty)}`).join(', ');
+        return {
+          pedido_id: pedId,
+          insumo_id: it.insId,
+          quantidade: it.qtdComprar || it.total,
+          unidade: it.unidade,
+          preco_unitario: vinculosForn.find(v=>v.insumo_id===it.insId&&v.fornecedor_id===fornId)?.preco_unitario||null,
+          observacao: breakdown
+        };
+      });
       await api('itens_pedido', { method:'POST', prefer:'return=minimal', body:JSON.stringify(itensPay)});
     }
 
@@ -745,7 +748,7 @@ async function gerarPedidos() {
     }
 
     consolidado = {};
-    toast(`${Object.keys(porLojaForn).length} pedido(s) gerado(s)!`,'ok');
+    toast(`${Object.keys(porForn).length} pedido(s) gerado(s) por fornecedor!`,'ok');
     switchTab('pedidos');
   } catch(e) {
     toast('Erro: '+e.message,'err');
@@ -776,42 +779,30 @@ async function renderPedidos() {
       return;
     }
 
-    // Agrupa por loja
-    const porLoja = {};
-    pedidosGerados.forEach(p => {
-      const lojaId = p.loja_id || '__sem__';
-      if (!porLoja[lojaId]) porLoja[lojaId] = [];
-      porLoja[lojaId].push(p);
-    });
-
-    container.innerHTML = Object.entries(porLoja).map(([lojaId, peds]) => {
-      const loja = lojas.find(l=>l.id===lojaId);
-      const lojaNome = loja?.nome || '⚠ Sem loja';
-      return `<div style="margin-bottom:20px">
-        <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text1)">${esc(lojaNome)}</div>
-        <div class="tbl-wrap"><div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr><th>Data</th><th>Fornecedor</th><th>Situação</th><th></th></tr></thead>
-            <tbody>
-              ${peds.map(p => {
-                const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
-                const fornNome = forn?.nome || '⚠ Sem fornecedor';
-                const fornStyle = forn ? '' : 'color:var(--amber)';
-                return `<tr style="cursor:pointer" onclick="verPedido('${p.id}')">
-                  <td class="mono">${fmtData(p.data_pedido)}</td>
-                  <td style="font-weight:500;${fornStyle}">${esc(fornNome)}</td>
-                  <td>${statusBadge(p.status)}</td>
-                  <td style="display:flex;gap:6px;justify-content:flex-end">
-                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();verPedido('${p.id}')">Ver</button>
-                    ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="event.stopPropagation();enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
-                  </td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div></div>
-      </div>`;
-    }).join('');
+    container.innerHTML = `<div class="tbl-wrap"><div class="tbl-scroll">
+      <table class="tbl">
+        <thead><tr>
+          <th>Data</th><th>Fornecedor</th><th>Lojas</th><th>Situação</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${pedidosGerados.map(p => {
+            const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
+            const fornNome = forn?.nome || '⚠ Sem fornecedor';
+            const fornStyle = forn ? '' : 'color:var(--amber)';
+            return `<tr style="cursor:pointer" onclick="verPedido('${p.id}')">
+              <td class="mono">${fmtData(p.data_pedido)}</td>
+              <td style="font-weight:600;${fornStyle}">${esc(fornNome)}</td>
+              <td style="color:var(--text3);font-size:12px">${esc(p.observacao||'—')}</td>
+              <td>${statusBadge(p.status)}</td>
+              <td style="display:flex;gap:6px;justify-content:flex-end">
+                <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();verPedido('${p.id}')">Ver</button>
+                ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="event.stopPropagation();enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div></div>`;
   } catch(e) { container.innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; }
 }
 
