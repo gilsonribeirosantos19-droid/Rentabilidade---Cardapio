@@ -539,7 +539,7 @@ async function verSolicitacao(id) {
     document.getElementById('ms-body').innerHTML = itens.map(it => {
       const ins = insumos.find(i=>i.id===it.insumo_id);
       return `<tr><td>${esc(ins?.nome||it.insumo_id)}</td>
-        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
+        <td class="r mono">${fmtQtd(it.quantidade)}</td>
         <td>${esc(it.unidade||'un')}</td></tr>`;
     }).join('');
   } catch(e) { toast('Erro: '+e.message,'err'); }
@@ -642,7 +642,7 @@ function renderConsolidado() {
       rows.push(`<tr>
         <td style="font-weight:500">${esc(d.nome)}</td>
         <td>${esc(l.nome)}</td>
-        <td class="r mono">${l.qty.toFixed(3)}</td>
+        <td class="r mono">${fmtQtd(l.qty)}</td>
         <td style="color:var(--text3)">${esc(d.unidade)}</td>
       </tr>`);
     });
@@ -737,7 +737,7 @@ async function gerarPedidos() {
 
       // Create itens with loja_breakdown in observacao per item
       const itensPay = itensForn.map(it => {
-        const breakdown = it.lojas.map(l=>`${l.nome}: ${l.qty.toFixed(3)}`).join(', ');
+        const breakdown = it.lojas.map(l=>`${l.nome}: ${fmtQtd(l.qty)}`).join(', ');
         return {
           pedido_id: pedId,
           insumo_id: it.insId,
@@ -844,7 +844,7 @@ async function verPedido(id) {
       const ins = insumos.find(i=>i.id===it.insumo_id);
       return `<tr>
         <td style="font-weight:500">${esc(ins?.nome||it.insumo_id)}</td>
-        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
+        <td class="r mono">${fmtQtd(it.quantidade)}</td>
         <td>${esc(it.unidade||'un')}</td>
         <td style="font-size:11px;color:var(--text3)">${esc(it.observacao||'—')}</td>
       </tr>`;
@@ -882,7 +882,7 @@ async function enviarWhatsApp(id) {
   let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`;
   itens.forEach(it => {
     const ins = insumos.find(i=>i.id===it.insumo_id);
-    msg += `• ${ins?.nome||'?'}: ${Number(it.quantidade).toFixed(3)} ${it.unidade||'un'}\n`;
+    msg += `• ${ins?.nome||'?'}: ${fmtQtd(it.quantidade)} ${it.unidade||'un'}\n`;
     if (it.observacao) {
       it.observacao.split(', ').forEach(part => { msg += `    → ${part}\n`; });
     }
@@ -1095,7 +1095,7 @@ async function verSolicitacaoGerente(id) {
     document.getElementById('ms-body').innerHTML = itens.map(it => {
       const ins = insumos.find(i=>i.id===it.insumo_id);
       return `<tr><td>${esc(ins?.nome||it.insumo_id)}</td>
-        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
+        <td class="r mono">${fmtQtd(it.quantidade)}</td>
         <td>${esc(it.unidade||'un')}</td></tr>`;
     }).join('');
   } catch(e) { toast('Erro: '+e.message,'err'); }
@@ -1107,6 +1107,7 @@ function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{min
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function hoje(plusDias=0){const d=new Date();d.setDate(d.getDate()+plusDias);return d.toISOString().split('T')[0];}
 function fmtData(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
+function fmtQtd(v){const n=Number(v)||0;return n%1===0?n.toLocaleString('pt-BR'):n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3});}
 function statusBadge(s){const l={solicitado:'Aguardando',pendente:'Pendente',processado:'Processado',aprovado:'Aprovado',enviado:'Enviado',recebido:'Baixado',baixado:'Baixado',cancelado:'Cancelado'};const cls=s==='baixado'?'recebido':s;return `<span class="badge b-${cls}">${l[s]||s}</span>`;}
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
