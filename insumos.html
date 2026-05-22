@@ -136,12 +136,6 @@
     gap: 10px;
     margin-bottom: 16px;
     flex-wrap: wrap;
-    position: sticky;
-    top: 56px;
-    z-index: 50;
-    background: var(--bg1);
-    padding: 10px 0;
-    margin-top: -10px;
   }
   .search-wrap { position: relative; flex: 1; min-width: 200px; }
   .search-wrap input {
@@ -202,7 +196,8 @@
     background: var(--bg2);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    overflow: hidden;
+    overflow-y: auto;
+    max-height: calc(100vh - 340px);
   }
   table { width: 100%; border-collapse: collapse; }
   thead th {
