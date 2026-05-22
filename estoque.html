@@ -1493,10 +1493,31 @@ async function iniciarInventario() {
   if (!data) { toast('Selecione a data.','err'); return; }
   const grupo = grupos.find(g => g.id === grupoId);
   if (!grupo?.itens?.length) { toast('Grupo sem insumos cadastrados.','err'); return; }
-  fecharModal('m-novo-inv');
-  invLojaAtual = lojaId; invGrupoAtual = grupo; invDataAtual = data; invTipoAtual = tipo;
+
+  // Se tem loja: cria no banco como ativo para o gerente preencher
   const insGrupo = grupo.itens.map(it => insumos.find(i => i.id === it.insumo_id)).filter(Boolean)
     .sort((a,b) => a.nome.localeCompare(b.nome));
+  try {
+    const invRes = await api('inventarios', { method:'POST',
+      body: JSON.stringify({ tenant_id:TENANT_ID, status:'ativo',
+        loja_id: lojaId, grupo_id: grupo.id, tipo,
+        criado_em: data+'T12:00:00.000Z' }) });
+    const invId = invRes[0]?.id;
+    if (!invId) throw new Error('Falha ao criar inventário.');
+    const itens = insGrupo.map(ins => ({
+      inventario_id: invId, insumo_id: ins.id,
+      qtd_sistema: getSaldo(ins.id).quantidade||0,
+      qtd_contada: null, custo_medio: getSaldo(ins.id).custo_medio||0
+    }));
+    await api('inventario_itens', { method:'POST', prefer:'return=minimal', body:JSON.stringify(itens) });
+    fecharModal('m-novo-inv');
+    toast('Inventário criado! O gerente já pode preenchê-lo em loja.html.','ok');
+    renderInvHistorico();
+    return;
+  } catch(e) { toast('Erro: '+e.message,'err'); return; }
+
+  fecharModal('m-novo-inv');
+  invLojaAtual = lojaId; invGrupoAtual = grupo; invDataAtual = data; invTipoAtual = tipo;
   invAtual = insGrupo.map(ins => {
     const s = getSaldo(ins.id);
     return { ins, qtdSistema: s.quantidade||0, custoMedio: s.custo_medio||0 };
