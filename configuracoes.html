@@ -576,6 +576,7 @@
   // ── ESTADO ────────────────────────────────────────────────
   let modalTipo  = '';   // 'cat_insumo' | 'cat_ficha' | 'unidade'
   let editId     = null;
+  const _itemsMap = {}; // lookup por id para evitar JSON inline em onclick
   let deleteId   = null;
   let deleteTipo = null;
   let deleteNome = '';
@@ -620,12 +621,13 @@
       tbody.innerHTML = `<tr class="empty-row"><td colspan="3">Nenhum item cadastrado</td></tr>`;
       return;
     }
+    lista.forEach(item => { _itemsMap[item.id] = item; });
     tbody.innerHTML = lista.map(item => `
       <tr>
         <td>${escHtml(item.nome)}</td>
         <td class="td-mono">${formatDate(item.created_at)}</td>
         <td><div class="td-actions">
-          <button class="btn btn-ghost btn-sm" onclick="abrirEditar('${tipo}','${item.id}',${JSON.stringify(item).replace(/'/g,'&apos;')})">Editar</button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirEditar('${tipo}','${item.id}')">Editar</button>
           <button class="btn btn-danger btn-sm" onclick="abrirConfirmDelete('${tipo}','${item.id}','${escHtml(item.nome)}')">Excluir</button>
         </div></td>
       </tr>`).join('');
@@ -637,13 +639,14 @@
       tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Nenhuma unidade cadastrada</td></tr>`;
       return;
     }
+    lista.forEach(item => { _itemsMap[item.id] = item; });
     tbody.innerHTML = lista.map(item => `
       <tr>
         <td>${escHtml(item.nome)}</td>
         <td class="td-mono">${escHtml(item.abreviacao || '—')}</td>
         <td class="td-mono">${formatDate(item.created_at)}</td>
         <td><div class="td-actions">
-          <button class="btn btn-ghost btn-sm" onclick="abrirEditar('unidade','${item.id}',${JSON.stringify(item).replace(/'/g,'&apos;')})">Editar</button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirEditar('unidade','${item.id}')">Editar</button>
           <button class="btn btn-danger btn-sm" onclick="abrirConfirmDelete('unidade','${item.id}','${escHtml(item.nome)}')">Excluir</button>
         </div></td>
       </tr>`).join('');
@@ -670,7 +673,8 @@
     document.getElementById('f-nome').focus();
   }
 
-  function abrirEditar(tipo, id, item) {
+  function abrirEditar(tipo, id) {
+    const item = _itemsMap[id] || {};
     modalTipo = tipo;
     editId    = id;
     document.getElementById('modal-title').textContent = 'Editar ' + TIPO_TITULO[tipo];
