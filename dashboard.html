@@ -78,63 +78,62 @@
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
   @media(max-width:900px){.two-col{grid-template-columns:1fr}}
 
-  /* TOP 5 TABLE */
-  .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden}
-  .panel-header{padding:16px 18px;border-bottom:1px solid var(--border2)}
-  .panel-title{font-size:13px;font-weight:600}
+  /* METRIC CARDS */
+  .metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+  .metric-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+    padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:box-shadow .15s}
+  .metric-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1)}
+  .metric-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .metric-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .metric-title{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+  .metric-value{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;line-height:1.1;color:var(--text1);margin-bottom:8px}
+  .metric-compare{font-size:12px;font-weight:500;display:flex;align-items:center;gap:4px}
+  .metric-compare.up{color:#16a34a}.metric-compare.down{color:var(--red)}.metric-compare.neutral{color:var(--text3)}
+  /* ALERT CARDS (dark) */
+  .alert-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+  .alert-card{background:#0f172a;border-radius:var(--radius-lg);padding:20px 24px;
+    display:flex;align-items:center;gap:18px;text-decoration:none;transition:opacity .15s}
+  .alert-card:hover{opacity:.9}
+  .alert-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .alert-count{font-size:28px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;color:#f1f5f9}
+  .alert-label{font-size:12px;color:#64748b;margin-top:3px}
+  /* BOTTOM PANELS */
+  .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
   .top5-table{width:100%;border-collapse:collapse;font-size:13px}
-  .top5-table th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;
-    letter-spacing:.06em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border2)}
+  .top5-table th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border2)}
   .top5-table th.num,.top5-table td.num{text-align:right}
-  .top5-table td{padding:11px 14px;border-bottom:1px solid var(--border2);color:var(--text1)}
+  .top5-table td{padding:10px 14px;border-bottom:1px solid var(--border2)}
   .top5-table tbody tr:last-child td{border-bottom:none}
-  .top5-table td.mono{font-family:'DM Mono',monospace;color:var(--amber)}
-  .top5-table td.teal{font-family:'DM Mono',monospace;color:var(--teal)}
-  .top5-rank{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
-    border-radius:50%;background:var(--bg3);font-size:11px;font-weight:700;color:var(--text3);font-family:'DM Mono',monospace}
+  .top5-rank{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--bg3);font-size:11px;font-weight:700;color:var(--text3)}
   .top5-rank.gold{background:rgba(245,158,11,.2);color:var(--amber)}
   .cat-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--text3)}
-
-  /* CATEGORY CARDS */
   .cat-grid{padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
   .cat-card{background:var(--bg3);border-radius:8px;padding:12px 10px;text-align:center}
   .cat-count{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--teal);line-height:1}
   .cat-name{font-size:11px;color:var(--text3);margin-top:4px;text-transform:capitalize}
-
-  /* EMPTY / LOADING */
+  .cmv-list{display:flex;flex-direction:column;gap:8px}
+  .cmv-row{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;display:flex;align-items:center;gap:10px}
+  .cmv-nome{font-size:13px;font-weight:600;flex:1}.cmv-cat{font-size:11px;color:var(--text3);margin-top:1px}
+  .cmv-pct{font-size:13px;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap}
+  .cmv-pct.warn{color:var(--amber)}.cmv-pct.bad{color:var(--red)}
+  .cmv-bar-wrap{width:80px;height:5px;background:var(--bg3);border-radius:3px;flex-shrink:0}
+  .cmv-bar{height:5px;border-radius:3px}.cmv-bar.warn{background:var(--amber)}.cmv-bar.bad{background:var(--red)}
+  .section-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .section-title{font-size:13px;font-weight:600}
+  .section-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg3);color:var(--text3)}
+  .section-badge.red{background:rgba(220,38,38,.12);color:var(--red)}
+  .btn-edit{display:inline-flex;padding:5px 10px;border-radius:6px;background:transparent;border:1px solid var(--border2);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap}
+  .btn-edit:hover{border-color:var(--teal);color:var(--teal)}
+  /* UTILS */
   .empty-msg{padding:24px;text-align:center;color:var(--text3);font-size:13px}
   .skeleton{animation:pulse 1.5s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
-
-  /* TOAST */
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);
-    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;
-    transform:translateY(8px);transition:all .25s;max-width:320px}
-  .toast.show{opacity:1;transform:translateY(0)}
-  .toast.err{border-color:var(--red);color:var(--red)}
-
-  /* ALERT CARDS */
-  .alert-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
-  .alert-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
-    padding:18px 20px;display:flex;align-items:center;gap:16px;text-decoration:none;
-    transition:border-color .15s;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-  .alert-card:hover{border-color:var(--teal)}
-  .alert-card.c-orange{border-left:4px solid var(--amber)}
-  .alert-card.c-red{border-left:4px solid var(--red)}
-  .alert-card.c-blue{border-left:4px solid var(--blue)}
-  .alert-card.c-teal{border-left:4px solid var(--teal)}
-  .alert-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
-  .alert-icon.c-orange{background:rgba(245,158,11,.12)}
-  .alert-icon.c-red{background:rgba(220,38,38,.12)}
-  .alert-icon.c-blue{background:rgba(59,130,246,.12)}
-  .alert-icon.c-teal{background:rgba(13,148,136,.12)}
-  .alert-count{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
-  .alert-label{font-size:12px;color:var(--text2);margin-top:3px}
-  .summary-card,.panel,.cmv-row{box-shadow:0 1px 3px rgba(0,0,0,.08)}
-  ::-webkit-scrollbar{width:6px;height:6px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-  @media(max-width:700px){.sidebar{display:none}.summary-grid{grid-template-columns:1fr 1fr}.alert-grid{grid-template-columns:1fr}}
+  @keyframes pulse{0%,100%{opacity:.35}50%{opacity:.7}}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:320px}
+  .toast.show{opacity:1;transform:translateY(0)}.toast.err{border-color:var(--red);color:var(--red)}
+  ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  @media(max-width:900px){.metric-grid,.alert-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}}
+  @media(max-width:600px){.metric-grid,.alert-grid{grid-template-columns:1fr}.sidebar{display:none}}
 </style>
 </head>
 <body>
@@ -177,48 +176,41 @@
     </div>
     <div class="content">
 
-      <!-- BLOCO 1: AÇÕES NECESSÁRIAS -->
-      <div class="section-header" style="margin-bottom:14px">
-        <span class="section-title">Ações necessárias</span>
-        <span class="section-badge" id="alertBadge" style="margin-left:8px">—</span>
+      <!-- ROW 1: COMPRAS + ESTOQUE -->
+      <div class="metric-grid" id="metricRow1">
+        <div class="metric-card skeleton"><div class="metric-title">Compras da Semana</div><div class="metric-value">—</div></div>
+        <div class="metric-card skeleton"><div class="metric-title">Compras do Mês</div><div class="metric-value">—</div></div>
+        <div class="metric-card skeleton"><div class="metric-title">Valor do Estoque</div><div class="metric-value">—</div></div>
       </div>
+
+      <!-- ROW 2: PERDAS + CMV -->
+      <div class="metric-grid" id="metricRow2">
+        <div class="metric-card skeleton"><div class="metric-title">Perdas da Semana</div><div class="metric-value">—</div></div>
+        <div class="metric-card skeleton"><div class="metric-title">Perdas do Mês</div><div class="metric-value">—</div></div>
+        <div class="metric-card skeleton"><div class="metric-title">CMV Médio Teórico</div><div class="metric-value">—</div></div>
+      </div>
+
+      <!-- ROW 3: ALERTAS (dark) -->
       <div class="alert-grid" id="alertGrid">
-        <div class="alert-card c-orange skeleton"><div class="alert-icon c-orange">📦</div><div><div class="alert-count">—</div><div class="alert-label">Pedidos para enviar</div></div></div>
-        <div class="alert-card c-blue skeleton"><div class="alert-icon c-blue">📋</div><div><div class="alert-count">—</div><div class="alert-label">Solicitações pendentes</div></div></div>
-        <div class="alert-card c-teal skeleton"><div class="alert-icon c-teal">📊</div><div><div class="alert-count">—</div><div class="alert-label">Inventários abertos</div></div></div>
+        <a class="alert-card skeleton" href="compras.html"><div class="alert-icon" style="background:rgba(245,158,11,.15)">📦</div><div><div class="alert-count">—</div><div class="alert-label">Pedidos para enviar</div></div></a>
+        <a class="alert-card skeleton" href="compras.html"><div class="alert-icon" style="background:rgba(59,130,246,.15)">📋</div><div><div class="alert-count">—</div><div class="alert-label">Solicitações pendentes</div></div></a>
+        <a class="alert-card skeleton" href="estoque.html"><div class="alert-icon" style="background:rgba(13,148,136,.15)">📊</div><div><div class="alert-count">—</div><div class="alert-label">Inventários abertos</div></div></a>
       </div>
 
-      <!-- BLOCO 2: RESUMO DO MÊS -->
-      <div class="section-header"><span class="section-title">Resumo do mês</span></div>
-      <div class="summary-grid" id="summaryGrid">
-        <div class="summary-card skeleton"><div class="sc-label">Entradas no mês</div><div class="sc-value">—</div></div>
-        <div class="summary-card skeleton"><div class="sc-label">Perdas no mês</div><div class="sc-value">—</div></div>
-        <div class="summary-card skeleton"><div class="sc-label">Valor do estoque</div><div class="sc-value">—</div></div>
-        <div class="summary-card skeleton"><div class="sc-label">CMV médio teórico</div><div class="sc-value">—</div></div>
-      </div>
-
-      <!-- BLOCO 4: ESTOQUE CRÍTICO + CMV ALERTS -->
+      <!-- ROW 4: ESTOQUE CRÍTICO + CMV FICHAS -->
       <div class="two-col">
         <div>
-          <div class="section-header">
-            <span class="section-title">Estoque crítico</span>
-            <span class="section-badge red" id="estoqueBadge" style="margin-left:8px">—</span>
-          </div>
+          <div class="section-header"><span class="section-title">Estoque crítico</span><span class="section-badge red" id="estoqueBadge">—</span></div>
           <div id="estoquePanel"><div class="panel"><div class="empty-msg skeleton">Carregando...</div></div></div>
         </div>
         <div>
-          <div class="section-header">
-            <span class="section-title">Fichas com CMV alto</span>
-            <span class="section-badge red" id="cmvBadge" style="margin-left:8px">—</span>
-          </div>
-          <div id="cmvList" class="cmv-list" style="margin-bottom:0">
-            <div class="empty-msg skeleton">Carregando...</div>
-          </div>
+          <div class="section-header"><span class="section-title">Fichas com CMV alto</span><span class="section-badge red" id="cmvBadge">—</span></div>
+          <div id="cmvList" class="cmv-list"><div class="empty-msg skeleton">Carregando...</div></div>
         </div>
       </div>
 
-      <!-- BLOCO 5: TOP FICHAS + CATEGORIAS -->
-      <div class="two-col" style="margin-top:28px">
+      <!-- ROW 5: TOP FICHAS + CATEGORIAS -->
+      <div class="two-col">
         <div>
           <div class="section-header"><span class="section-title">Top 10 fichas mais caras</span></div>
           <div class="panel">
@@ -230,11 +222,7 @@
         </div>
         <div>
           <div class="section-header"><span class="section-title">Fichas por categoria</span></div>
-          <div class="panel">
-            <div class="cat-grid" id="catGrid">
-              <div class="empty-msg skeleton" style="grid-column:1/-1">Carregando...</div>
-            </div>
-          </div>
+          <div class="panel"><div class="cat-grid" id="catGrid"><div class="empty-msg skeleton" style="grid-column:1/-1">Carregando...</div></div></div>
         </div>
       </div>
 
@@ -309,99 +297,170 @@ function showToast(msg, type='err') {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-function primeiroDiaMes() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
-}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function periodos() {
+  const h = new Date();
+  const dow = h.getDay() === 0 ? 7 : h.getDay();
+  const iniSem = new Date(h); iniSem.setDate(h.getDate() - dow + 1); iniSem.setHours(0,0,0,0);
+  const iniSemAnt = new Date(iniSem); iniSemAnt.setDate(iniSem.getDate() - 7);
+  const fimSemAnt = new Date(iniSem); fimSemAnt.setDate(iniSem.getDate() - 1);
+  const iniMes = new Date(h.getFullYear(), h.getMonth(), 1);
+  const iniMesAnt = new Date(h.getFullYear(), h.getMonth() - 1, 1);
+  const fimMesAnt = new Date(h.getFullYear(), h.getMonth(), 0);
+  const fmt = d => d.toISOString().split('T')[0];
+  return { iniSem:fmt(iniSem), iniSemAnt:fmt(iniSemAnt), fimSemAnt:fmt(fimSemAnt),
+           iniMes:fmt(iniMes), iniMesAnt:fmt(iniMesAnt), fimMesAnt:fmt(fimMesAnt), hoje:fmt(h) };
+}
+
+function sparkSVG(values, color='#0d9488') {
+  if (!values || values.length < 2) return '';
+  const w=90, h=36, max=Math.max(...values,0.01), min=Math.min(...values,0), range=max-min||1;
+  const pts = values.map((v,i)=>{
+    const x=(i/(values.length-1))*w;
+    const y=h-((v-min)/range)*(h-6)-3;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function groupByDay(items, dateField, valueField, nDays=14) {
+  const arr = new Array(nDays).fill(0);
+  const hoje = new Date(); hoje.setHours(12,0,0,0);
+  items.forEach(it => {
+    const d = new Date(it[dateField]);
+    const diff = Math.round((hoje - d) / 86400000);
+    if (diff >= 0 && diff < nDays) arr[nDays-1-diff] += Number(it[valueField])||1;
+  });
+  return arr;
+}
+
+function compareHtml(cur, prev, positiveIsGood=true) {
+  if (!prev) return '<span class="metric-compare neutral">sem período anterior</span>';
+  const pct = ((cur-prev)/prev)*100;
+  const up = pct >= 0;
+  const good = positiveIsGood ? up : !up;
+  const cls = good ? 'up' : 'down';
+  const arrow = up ? '↑' : '↓';
+  return `<span class="metric-compare ${cls}">${arrow} ${Math.abs(pct).toFixed(1)}% vs período anterior</span>`;
+}
+
+function metricCard(icon, iconBg, title, value, compare, sparkValues, sparkColor) {
+  return `<div class="metric-card">
+    <div class="metric-card-top">
+      <div class="metric-icon" style="background:${iconBg}">${icon}</div>
+      <div>${sparkSVG(sparkValues, sparkColor)}</div>
+    </div>
+    <div class="metric-title">${title}</div>
+    <div class="metric-value">${value}</div>
+    ${compare}
+  </div>`;
+}
 
 async function loadDashboard() {
   try {
-    const ini = primeiroDiaMes();
+    const p = periodos();
+    // Carrega 60 dias de entradas e perdas para cobrir semana atual + semana ant + mês atual + mês ant
+    const ini60 = new Date(); ini60.setDate(ini60.getDate()-60);
+    const ini60str = ini60.toISOString().split('T')[0];
+
     const [fichas, itens, insumos, pedPendentes, pedSolicitados, inventarios,
-           comprasMes, perdasMes, saldos] = await Promise.all([
+           entradas, perdas, saldos] = await Promise.all([
       api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&select=id,nome,categoria,status,preco_venda,insumo_vinculado_id`),
       api(`itens_ficha?select=ficha_id,insumo_id,quantidade_g`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true`),
       api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.pendente&select=id`),
       api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id`),
       api(`inventarios?tenant_id=eq.${TENANT_ID}&status=eq.ativo&select=id`),
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${ini}T00:00:00&select=id,custo_total`),
-      api(`perdas?tenant_id=eq.${TENANT_ID}&data_perda=gte.${ini}&select=id`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${ini60str}T00:00:00&select=criado_em,custo_total,quantidade`),
+      api(`perdas?tenant_id=eq.${TENANT_ID}&data_perda=gte.${ini60str}&select=data_perda,id`),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,quantidade,custo_medio,minimo`),
     ]);
 
     const insumoMap = Object.fromEntries(insumos.map(i => [i.id, i]));
     const itensByFicha = {};
-    for (const item of itens) {
-      if (!itensByFicha[item.ficha_id]) itensByFicha[item.ficha_id] = [];
-      itensByFicha[item.ficha_id].push(item);
+    for (const it of itens) {
+      if (!itensByFicha[it.ficha_id]) itensByFicha[it.ficha_id] = [];
+      itensByFicha[it.ficha_id].push(it);
     }
     const fichasWithCost = fichas.map(f => {
-      const custo = calcCusto(itensByFicha[f.id] || [], insumoMap);
-      const cmv = f.preco_venda > 0 ? (custo / f.preco_venda) * 100 : null;
-      return { ...f, custo, cmv };
+      const custo = calcCusto(itensByFicha[f.id]||[], insumoMap);
+      const cmv = f.preco_venda > 0 ? (custo/f.preco_venda)*100 : null;
+      return {...f, custo, cmv};
     });
 
-    renderAlerts(pedPendentes.length, pedSolicitados.length, inventarios.length);
-    renderResumoMes(comprasMes, perdasMes, saldos, fichasWithCost);
+    // Filtra por períodos
+    const inRange = (items, field, ini, fim) => items.filter(x => {
+      const d = (x[field]||'').substring(0,10);
+      return d >= ini && d <= fim;
+    });
+
+    const entSem     = inRange(entradas,'criado_em', p.iniSem,    p.hoje);
+    const entSemAnt  = inRange(entradas,'criado_em', p.iniSemAnt, p.fimSemAnt);
+    const entMes     = inRange(entradas,'criado_em', p.iniMes,    p.hoje);
+    const entMesAnt  = inRange(entradas,'criado_em', p.iniMesAnt, p.fimMesAnt);
+    const perdSem    = inRange(perdas,  'data_perda', p.iniSem,    p.hoje);
+    const perdSemAnt = inRange(perdas,  'data_perda', p.iniSemAnt, p.fimSemAnt);
+    const perdMes    = inRange(perdas,  'data_perda', p.iniMes,    p.hoje);
+    const perdMesAnt = inRange(perdas,  'data_perda', p.iniMesAnt, p.fimMesAnt);
+
+    const sumCusto = arr => arr.reduce((a,e)=>a+(Number(e.custo_total)||0),0);
+    const valorEstoque = saldos.reduce((a,s)=>a+(Number(s.quantidade)||0)*(Number(s.custo_medio)||0),0);
+    const comCmv = fichasWithCost.filter(f=>!f.insumo_vinculado_id&&f.cmv!==null);
+    const avgCmv = comCmv.length ? comCmv.reduce((s,f)=>s+f.cmv,0)/comCmv.length : null;
+
+    // Sparklines (14 dias)
+    const sparkEnt  = groupByDay(entradas,'criado_em','custo_total',14);
+    const sparkPerd = groupByDay(perdas,  'data_perda','id',14);
+
+    // Row 1: Compras + Estoque
+    const cmvColor = avgCmv===null?'var(--teal)':avgCmv>38?'var(--red)':avgCmv>30?'var(--amber)':'var(--teal)';
+    document.getElementById('metricRow1').innerHTML =
+      metricCard('🛒','rgba(13,148,136,.12)','Compras da Semana',
+        sumCusto(entSem)>0?fmtBRL(sumCusto(entSem)):`${entSem.length} entradas`,
+        compareHtml(entSem.length,entSemAnt.length,true), sparkEnt,'#0d9488') +
+      metricCard('📦','rgba(59,130,246,.12)','Compras do Mês',
+        sumCusto(entMes)>0?fmtBRL(sumCusto(entMes)):`${entMes.length} entradas`,
+        compareHtml(entMes.length,entMesAnt.length,true), sparkEnt,'#3b82f6') +
+      metricCard('📊','rgba(245,158,11,.12)','Valor do Estoque',
+        fmtBRL(valorEstoque), '<span class="metric-compare neutral">custo médio × saldo</span>', [], '#f59e0b');
+
+    // Row 2: Perdas + CMV
+    document.getElementById('metricRow2').innerHTML =
+      metricCard('⚠️','rgba(220,38,38,.12)','Perdas da Semana',
+        `${perdSem.length} registros`,
+        compareHtml(perdSem.length,perdSemAnt.length,false), sparkPerd,'#dc2626') +
+      metricCard('📉','rgba(220,38,38,.10)','Perdas do Mês',
+        `${perdMes.length} registros`,
+        compareHtml(perdMes.length,perdMesAnt.length,false), sparkPerd,'#ef4444') +
+      metricCard('📋','rgba(13,148,136,.12)','CMV Médio Teórico',
+        avgCmv!==null?avgCmv.toFixed(1)+'%':'—',
+        `<span class="metric-compare neutral">${comCmv.length} fichas com preço de venda</span>`,
+        [], cmvColor);
+
+    // Row 3: Alertas
+    document.getElementById('alertGrid').innerHTML = `
+      <a class="alert-card" href="compras.html">
+        <div class="alert-icon" style="background:rgba(245,158,11,.15)">📦</div>
+        <div><div class="alert-count">${pedPendentes.length}</div><div class="alert-label">Pedidos para enviar</div></div>
+      </a>
+      <a class="alert-card" href="compras.html">
+        <div class="alert-icon" style="background:rgba(59,130,246,.15)">📋</div>
+        <div><div class="alert-count">${pedSolicitados.length}</div><div class="alert-label">Solicitações pendentes</div></div>
+      </a>
+      <a class="alert-card" href="estoque.html">
+        <div class="alert-icon" style="background:rgba(13,148,136,.15)">📊</div>
+        <div><div class="alert-count">${inventarios.length}</div><div class="alert-label">Inventários abertos</div></div>
+      </a>`;
+
     renderEstoqueCritico(saldos, insumoMap);
     renderCmvAlerts(fichasWithCost);
     renderTop5(fichasWithCost);
     renderCategories(fichasWithCost);
 
     document.getElementById('lastUpdated').textContent =
-      'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-  } catch(e) { showToast('Erro ao carregar dados: ' + e.message); }
-}
-
-function renderAlerts(pendentes, solicitados, inventarios) {
-  const total = pendentes + solicitados + inventarios;
-  document.getElementById('alertBadge').textContent = total > 0 ? `${total} itens` : 'tudo ok';
-  document.getElementById('alertBadge').style.background = total > 0 ? 'rgba(220,38,38,.12)' : '';
-  document.getElementById('alertBadge').style.color = total > 0 ? 'var(--red)' : '';
-  document.getElementById('alertGrid').innerHTML = `
-    <a class="alert-card c-orange" href="compras.html">
-      <div class="alert-icon c-orange">📦</div>
-      <div><div class="alert-count" style="color:${pendentes>0?'var(--amber)':'var(--text1)'}">${pendentes}</div><div class="alert-label">Pedidos para enviar</div></div>
-    </a>
-    <a class="alert-card c-blue" href="compras.html">
-      <div class="alert-icon c-blue">📋</div>
-      <div><div class="alert-count" style="color:${solicitados>0?'var(--blue)':'var(--text1)'}">${solicitados}</div><div class="alert-label">Solicitações pendentes</div></div>
-    </a>
-    <a class="alert-card c-teal" href="estoque.html">
-      <div class="alert-icon c-teal">📊</div>
-      <div><div class="alert-count" style="color:${inventarios>0?'var(--teal)':'var(--text1)'}">${inventarios}</div><div class="alert-label">Inventários abertos</div></div>
-    </a>`;
-}
-
-function renderResumoMes(compras, perdas, saldos, fichas) {
-  const valorEstoque = saldos.reduce((a,s) => a + (Number(s.quantidade)||0) * (Number(s.custo_medio)||0), 0);
-  const totalCompras = compras.reduce((a,e) => a + (Number(e.custo_total)||0), 0);
-  const comCmv = fichas.filter(f => !f.insumo_vinculado_id && f.cmv !== null);
-  const avgCmv = comCmv.length > 0 ? comCmv.reduce((s,f) => s+f.cmv, 0) / comCmv.length : null;
-  const cmvCls = avgCmv === null ? '' : avgCmv > 38 ? 'sc-red' : avgCmv > 30 ? 'sc-amber' : 'sc-teal';
-  document.getElementById('summaryGrid').innerHTML = `
-    <div class="summary-card sc-teal">
-      <div class="sc-label">Entradas no mês</div>
-      <div class="sc-value">${compras.length}</div>
-      <div class="sc-sub">${totalCompras > 0 ? fmtBRL(totalCompras) : 'sem custo registrado'}</div>
-    </div>
-    <div class="summary-card sc-red">
-      <div class="sc-label">Perdas no mês</div>
-      <div class="sc-value">${perdas.length}</div>
-      <div class="sc-sub">registros de perda</div>
-    </div>
-    <div class="summary-card sc-amber">
-      <div class="sc-label">Valor do estoque</div>
-      <div class="sc-value" style="font-size:20px">${fmtBRL(valorEstoque)}</div>
-      <div class="sc-sub">custo médio × saldo</div>
-    </div>
-    <div class="summary-card ${cmvCls}">
-      <div class="sc-label">CMV médio teórico</div>
-      <div class="sc-value">${avgCmv !== null ? avgCmv.toFixed(1)+'%' : '—'}</div>
-      <div class="sc-sub">${comCmv.length} fichas com preço de venda</div>
-    </div>`;
+      'Atualizado às ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) { showToast('Erro: '+e.message); }
 }
 
 function renderEstoqueCritico(saldos, insumoMap) {
