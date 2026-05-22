@@ -408,7 +408,7 @@
     </div>
     <div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr><th>Item</th><th class="r">Quantidade *</th><th>Un.</th></tr></thead>
+        <thead><tr><th>Item</th><th class="r">Quantidade *</th><th>Embalagem</th></tr></thead>
         <tbody id="qtd-body"></tbody>
       </table>
     </div>
@@ -701,18 +701,21 @@ function atualizarContadorSol() {
 }
 function limparSelecaoSol() { solChecked.clear(); if(solGrupoAtual) selecionarGrupoSol(solGrupoAtual); }
 
+const UNIDADES_PEDIDO = ['kg','g','un','pct','litro','ml','cx','fardo','bd','sc'];
+
 function abrirModalQtd() {
   if (!solChecked.size) return;
   document.getElementById('sol-entrega').value = hoje(7);
   document.getElementById('qtd-body').innerHTML = [...solChecked].map(insId=>{
     const ins=insumos.find(i=>i.id===insId);
-    const un=ins?.unidade_medida||ins?.unidade_compra||'un';
+    const unPadrao=ins?.unidade_medida||ins?.unidade_compra||'un';
+    const opts=UNIDADES_PEDIDO.map(u=>`<option value="${u}"${u===unPadrao?' selected':''}>${u}</option>`).join('');
     return `<tr>
       <td style="font-weight:500">${esc(ins?.nome||insId)}</td>
       <td class="r"><input type="number" class="field field-sm" id="mq-${insId}"
-        min="0" step="0.001" placeholder="0.000" data-un="${esc(un)}"
+        min="0" step="0.001" placeholder="0.000"
         style="width:100px;text-align:right"></td>
-      <td style="color:var(--text3)">${esc(un)}</td>
+      <td><select class="field field-sm" id="mu-${insId}" style="width:80px">${opts}</select></td>
     </tr>`;
   }).join('');
   abrirModal('m-qtd');
@@ -727,7 +730,8 @@ async function enviarSolicitacao() {
     const inp=document.getElementById(`mq-${insId}`);
     const qty=parseFloat(inp?.value)||0;
     if (qty<=0){toast('Informe a quantidade de todos os itens.','err');inp?.focus();return;}
-    itensFinal.push({insId,qty,unidade:inp?.dataset.un||'un'});
+    const unidade=document.getElementById(`mu-${insId}`)?.value||'un';
+    itensFinal.push({insId,qty,unidade});
   }
   const entrega=document.getElementById('sol-entrega').value;
   const obs=document.getElementById('sol-obs').value.trim();
