@@ -285,6 +285,7 @@
             <option value="cancelado">Cancelado</option>
             <option value="">Todos</option>
           </select>
+          <button class="btn btn-ghost btn-sm" onclick="imprimirTodosPorLoja()">🖨 Documentos por Loja</button>
           <button class="btn btn-ghost btn-sm ml" onclick="renderPedidos()">↻ Atualizar</button>
         </div>
         <div id="ped-body"><div class="empty">Carregando...</div></div>
@@ -1120,6 +1121,123 @@ async function verSolicitacaoGerente(id) {
     }).join('');
   } catch(e) { toast('Erro: '+e.message,'err'); }
   abrirModal('m-sol');
+}
+
+// ── IMPRESSÃO CONSOLIDADA POR LOJA ─────────────────────────────────────
+async function imprimirTodosPorLoja() {
+  try {
+    // Carrega todos pedidos ativos
+    const peds = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=in.(pendente,enviado)&order=data_pedido.desc`);
+    if (!peds.length) { toast('Nenhum pedido ativo para imprimir.','err'); return; }
+
+    // Carrega itens de todos os pedidos
+    const itensArrays = await Promise.all(peds.map(p => api(`itens_pedido?pedido_id=eq.${p.id}`)));
+    const lojasData   = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true`);
+
+    // Consolida itens por loja
+    const porLoja = {}; // { lojaKey: { loja, itens: { insumoNome: qty } } }
+    const dataRef = peds[0]?.data_pedido || hoje();
+
+    itensArrays.flat().forEach(it => {
+      const ins = insumos.find(i=>i.id===it.insumo_id);
+      const nomeIns = ins?.nome || it.insumo_id;
+      const un = it.unidade || 'un';
+      const obs = it.observacao || '';
+
+      if (!obs) {
+        const key = '__geral__';
+        if (!porLoja[key]) porLoja[key] = { loja: { nome: 'Geral' }, itens: {} };
+        porLoja[key].itens[nomeIns] = { qty: (porLoja[key].itens[nomeIns]?.qty||0) + (it.quantidade||0), un };
+      } else {
+        obs.split(', ').forEach(parte => {
+          const match = parte.match(/^(.+?):\s*([\d.]+)$/);
+          if (!match) return;
+          const nomeLoja = match[1].trim();
+          const qty = parseFloat(match[2])||0;
+          const lojaObj = lojasData.find(l=>l.nome.toLowerCase()===nomeLoja.toLowerCase()) || { nome: nomeLoja };
+          const key = lojaObj.id || nomeLoja;
+          if (!porLoja[key]) porLoja[key] = { loja: lojaObj, itens: {} };
+          const prev = porLoja[key].itens[nomeIns];
+          porLoja[key].itens[nomeIns] = { qty: (prev?.qty||0) + qty, un };
+        });
+      }
+    });
+
+    gerarImpressaoPorLoja(porLoja, dataRef);
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+}
+
+function gerarImpressaoPorLoja(porLoja, dataRef) {
+  const dataFormatada = new Date(dataRef+'T12:00:00').toLocaleDateString('pt-BR');
+
+  const paginas = Object.values(porLoja).map(({ loja, itens }) => {
+    const linhasItens = Object.entries(itens).map(([nome, {qty, un}]) => ({ nome, qty, un }));
+    while (linhasItens.length < 8) linhasItens.push(null);
+
+    const nomeLoja  = loja?.nome || '—';
+    const razao     = loja?.razao_social || '';
+    const cnpj      = loja?.cnpj || '';
+    const ende      = loja?.endereco || '';
+    const hrManha   = loja?.horario_manha || '-';
+    const hrTarde   = loja?.horario_tarde || '-';
+
+    return `
+      <div class="pagina">
+        <table class="doc">
+          <tr>
+            <td class="cel-loja">${nomeLoja.toUpperCase()}</td>
+            <td class="cel-data-label">DATA:</td>
+            <td class="cel-data">${dataFormatada}</td>
+          </tr>
+          <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${razao}${cnpj?' CNPJ: '+cnpj:''}</td></tr>
+          <tr><td colspan="3" class="cel-info">ENDEREÇO: ${ende}</td></tr>
+          <tr>
+            <td colspan="2" class="cel-th">ITENS</td>
+            <td class="cel-th" style="text-align:center">QUANTIDADE</td>
+          </tr>
+          ${linhasItens.map(it => it
+            ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${it.qty.toFixed(3)} ${it.un.toUpperCase()}</td></tr>`
+            : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`
+          ).join('')}
+          <tr>
+            <td class="cel-footer">HORÁRIO DE RECEBIMENTO</td>
+            <td class="cel-footer">MANHÃ</td>
+            <td class="cel-footer">${hrManha}</td>
+          </tr>
+          <tr>
+            <td class="cel-footer">&nbsp;</td>
+            <td class="cel-footer">TARDE</td>
+            <td class="cel-footer">${hrTarde}</td>
+          </tr>
+        </table>
+      </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Pedidos por Loja — ${dataFormatada}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+      body{background:#fff}
+      .pagina{page-break-after:always;padding:20px;max-width:700px;margin:0 auto}
+      .pagina:last-child{page-break-after:avoid}
+      .doc{width:100%;border-collapse:collapse;font-size:13px}
+      .doc td{border:1px solid #000;padding:6px 8px;vertical-align:middle}
+      .cel-loja{font-weight:700;font-size:14px;width:55%}
+      .cel-data-label{font-weight:700;width:15%;text-align:center}
+      .cel-data{font-weight:700;font-size:14px;width:30%;text-align:right}
+      .cel-info{background:#f4cccc;font-size:12px;line-height:1.5;height:36px}
+      .cel-th{background:#ffff00;font-weight:700;font-size:13px;text-align:center;padding:8px}
+      .cel-item{height:28px;font-size:12px}
+      .cel-qty{text-align:center;font-weight:600;font-size:12px}
+      .cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
+      @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
+    </style></head><body>${paginas}
+    <script>window.onload=function(){window.print()}<\/script>
+    </body></html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
 }
 
 // ── IMPRESSÃO DE PEDIDO ────────────────────────────────────────────────
