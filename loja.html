@@ -945,13 +945,13 @@ async function carregarRelatorio() {
   try {
     const [saldos, entradas, saidas] = await Promise.all([
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`),
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&data_entrada=gte.${dataIni}&data_entrada=lte.${dataFim}`),
-      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&data_saida=gte.${dataIni}&data_saida=lte.${dataFim}`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${dataIni}T00:00:00&criado_em=lte.${dataFim}T23:59:59`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${dataIni}T00:00:00&criado_em=lte.${dataFim}T23:59:59`),
     ]);
     const lista = getInsumosFiltrados(relCatAtual);
     const rows = lista.map(ins => {
       const s = saldos.find(x=>x.insumo_id===ins.id);
-      const saldo = Number(s?.saldo)||0;
+      const saldo = Number(s?.quantidade)||0;
       const ent = entradas.filter(e=>e.insumo_id===ins.id).reduce((a,e)=>a+Number(e.quantidade||0),0);
       const sai = saidas.filter(x=>x.insumo_id===ins.id).reduce((a,x)=>a+Number(x.quantidade||0),0);
       if (!saldo && !ent && !sai) return null;
@@ -961,6 +961,7 @@ async function carregarRelatorio() {
     document.getElementById('est-card-ent').textContent = entradas.length;
     document.getElementById('est-card-sai').textContent = saidas.length;
     document.getElementById('est-card-ins').textContent = rows.filter(r=>r.saldo>0).length;
+
     if (!rows.length) {
       container.innerHTML = '<tr><td colspan="6" class="empty">Nenhum saldo ou movimentação no período.</td></tr>';
       return;
@@ -984,8 +985,8 @@ async function carregarMovimentacoes() {
   container.innerHTML = '<div class="empty">Carregando...</div>';
   try {
     const [entradas, saidas] = await Promise.all([
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&data_entrada=eq.${data}&order=created_at.desc`),
-      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&data_saida=eq.${data}&order=created_at.desc`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${data}T00:00:00&criado_em=lte.${data}T23:59:59&order=criado_em.desc`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${data}T00:00:00&criado_em=lte.${data}T23:59:59&order=criado_em.desc`),
     ]);
     const insIds = new Set(getInsumosFiltrados(movCatAtual).map(i=>i.id));
     const movs = [
@@ -1022,27 +1023,26 @@ async function registrarMovimentacao() {
   const btn = document.getElementById('btn-registrar-mov');
   btn.disabled = true; btn.textContent = 'Salvando...';
   try {
+    const criadoEm = data + 'T12:00:00.000Z';
     if (tipo === 'entrada') {
       await api('entradas_estoque', {method:'POST', prefer:'return=minimal',
         body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
-          quantidade:qtd, custo_unitario:0, data_entrada:data, tipo:'manual', observacao:obs||null})});
+          quantidade:qtd, custo_unitario:0, tipo:'manual', motivo:obs||null, criado_em:criadoEm})});
     } else {
       await api('saidas_estoque', {method:'POST', prefer:'return=minimal',
         body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
-          quantidade:qtd, data_saida:data, tipo:'manual', observacao:obs||null})});
+          quantidade:qtd, tipo:'manual', motivo:obs||null, criado_em:criadoEm})});
     }
-    // Atualiza saldo
+    // Atualiza saldo via upsert
     const sals = await api(`saldo_estoque?loja_id=eq.${lojaId}&insumo_id=eq.${insumoId}`);
-    const novoSaldo = tipo==='entrada'
-      ? (Number(sals[0]?.saldo)||0) + qtd
-      : Math.max(0, (Number(sals[0]?.saldo)||0) - qtd);
-    if (sals.length) {
-      await api(`saldo_estoque?loja_id=eq.${lojaId}&insumo_id=eq.${insumoId}`,
-        {method:'PATCH', prefer:'return=minimal', body:JSON.stringify({saldo:novoSaldo})});
-    } else {
-      await api('saldo_estoque', {method:'POST', prefer:'return=minimal',
-        body:JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId, saldo:novoSaldo, custo_medio:0})});
-    }
+    const qtdAtual = Number(sals[0]?.quantidade)||0;
+    const novaQtd = tipo==='entrada' ? qtdAtual + qtd : Math.max(0, qtdAtual - qtd);
+    await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
+      method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal',
+      body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
+        quantidade: parseFloat(novaQtd.toFixed(4)), custo_medio: sals[0]?.custo_medio||0,
+        atualizado_em: new Date().toISOString()})
+    });
     document.getElementById('mov-insumo').value = '';
     document.getElementById('mov-qtd').value = '';
     document.getElementById('mov-obs').value = '';
