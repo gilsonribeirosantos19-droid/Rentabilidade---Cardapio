@@ -220,8 +220,8 @@
           </select>
           <input type="date" class="field field-sm" id="sol-fil-data" onchange="renderSolicitacoes()" title="Filtrar por data">
           <select class="field field-sm" id="sol-fil-status" onchange="renderSolicitacoes()">
-            <option value="solicitado">Aguardando</option>
             <option value="">Todas</option>
+            <option value="solicitado">Aguardando</option>
             <option value="processado">Processadas</option>
             <option value="cancelado">Canceladas</option>
           </select>
@@ -516,7 +516,7 @@ function switchTab(tab) {
 function limparFiltrosSol() {
   document.getElementById('sol-fil-loja').value = '';
   document.getElementById('sol-fil-data').value = '';
-  document.getElementById('sol-fil-status').value = 'solicitado';
+  document.getElementById('sol-fil-status').value = '';
   renderSolicitacoes();
 }
 
