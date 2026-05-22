@@ -343,42 +343,56 @@
     <!-- TAB: INVENTÁRIO -->
     <div id="tab-inventario" class="tab-pane">
 
-      <!-- CONTAGEM ABERTA -->
-      <div id="inv-aberto" style="display:none">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:14px 16px;
-          background:#eff6ff;border-left:3px solid var(--blue);border-radius:8px">
+      <!-- LISTA -->
+      <div id="inv-lista">
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="abrirModalNovoInv()">+ Novo inventário</button>
+          <select class="field field-sm" id="inv-fil-status" onchange="renderInvLista()">
+            <option value="">Todos os status</option>
+            <option value="ativo">Ativos</option>
+            <option value="encerrado">Encerrados</option>
+          </select>
+          <select class="field field-sm" id="inv-fil-loja" onchange="renderInvLista()">
+            <option value="">Todas as lojas</option>
+          </select>
+          <button class="btn btn-ghost btn-sm ml" onclick="renderInvLista()">↻ Atualizar</button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalGrupos()">⚙ Grupos</button>
+        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Data</th><th>Loja</th><th>Grupo</th><th>Tipo</th>
+              <th class="c">Status</th><th class="r">Itens</th><th></th>
+            </tr></thead>
+            <tbody id="inv-lista-body"><tr><td colspan="7" class="empty"><b>Carregando...</b></td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- DETALHE -->
+      <div id="inv-detalhe" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:14px 18px;
+          background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg)">
           <div style="flex:1">
-            <div style="font-weight:600;font-size:14px" id="inv-titulo-aberto"></div>
-            <div style="font-size:12px;color:#1e40af;margin-top:2px">Digite a quantidade contada. Diferença = contado − sistema.</div>
+            <div style="font-weight:700;font-size:14px" id="inv-det-titulo"></div>
+            <div style="font-size:12px;color:var(--text3);margin-top:3px" id="inv-det-info"></div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="cancelarInventario()">Cancelar</button>
-          <button class="btn btn-primary btn-sm" onclick="fecharInventario()">✓ Fechar inventário</button>
+          <button class="btn btn-ghost btn-sm" onclick="voltarInvLista()">← Voltar</button>
+          <button class="btn btn-primary btn-sm" id="btn-inv-encerrar" onclick="encerrarInventario()" style="display:none">✓ Encerrar e ajustar estoque</button>
+          <button class="btn btn-ghost btn-sm" id="btn-inv-reabrir" onclick="reabrirInventario()" style="display:none">↺ Reabrir</button>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
               <th>Insumo</th><th>Un.</th>
-              <th class="r">Saldo sistema</th><th class="r">Qtd. contada</th>
-              <th class="r">Diferença</th><th class="r">Custo médio</th><th class="r">Valor dif.</th>
+              <th class="r">Saldo sistema</th>
+              <th class="r">Qtd. contada</th>
+              <th class="r">Diferença</th>
+              <th class="r">Custo médio</th>
+              <th class="r">Valor ajuste</th>
             </tr></thead>
-            <tbody id="inv-body"></tbody>
-          </table>
-        </div></div>
-      </div>
-
-      <!-- LISTA E HISTÓRICO -->
-      <div id="inv-lista">
-        <div class="toolbar">
-          <button class="btn btn-primary" onclick="abrirModalNovoInv()">+ Novo inventário</button>
-          <button class="btn btn-ghost ml" onclick="abrirModalGrupos()">⚙ Gerenciar grupos</button>
-        </div>
-        <div class="tbl-wrap"><div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr>
-              <th>Data</th><th>Grupo</th><th>Tipo</th>
-              <th class="c">Status</th><th class="r">Itens</th><th class="r">Ajuste (R$)</th><th></th>
-            </tr></thead>
-            <tbody id="inv-hist-body"><tr><td colspan="7" class="empty"><b>Carregando...</b></td></tr></tbody>
+            <tbody id="inv-det-body"></tbody>
+            <tfoot id="inv-det-foot"></tfoot>
           </table>
         </div></div>
       </div>
@@ -901,7 +915,7 @@ function switchTab(tab) {
   const el = document.getElementById('tab-'+tab);
   if (el) el.classList.add('active');
   if (tab==='kardex') renderKardex();
-  if (tab==='inventario') renderInvHistorico();
+  if (tab==='inventario') renderInvLista();
   if (tab==='movimentacao') renderMovimentacao();
   if (tab==='relatorios') { renderRelatorios(); }
   if (tab==='compras') { renderCompras(); }
@@ -1540,70 +1554,159 @@ async function iniciarInventario() {
   invAtual.forEach((_,idx) => calcInvDiff(idx));
 }
 
-function cancelarInventario() {
-  invAtual = null; invGrupoAtual = null;
-  document.getElementById('inv-aberto').style.display = 'none';
-  document.getElementById('inv-lista').style.display = '';
-}
+// ── INVENTÁRIO REDESIGN ───────────────────────────────────────────
+let invAberto = null; // inventário atual no detalhe
+let _invLojas = [];
 
-function calcInvDiff(idx) {
-  if (!invAtual) return;
-  const r = invAtual[idx];
-  const contada = parseFloat(document.getElementById(`inv-q-${idx}`)?.value) || 0;
-  const diff = contada - r.qtdSistema;
-  const vDiff = diff * r.custoMedio;
-  const cls = diff > 0.0001 ? 'color:#16a34a' : diff < -0.0001 ? 'color:var(--red)' : 'color:var(--text3)';
-  const sinal = diff > 0 ? '+' : '';
-  const dEl = document.getElementById(`inv-d-${idx}`);
-  const vEl = document.getElementById(`inv-v-${idx}`);
-  if (dEl) dEl.innerHTML = `<span style="${cls}">${sinal}${qtd(diff)}</span>`;
-  if (vEl) vEl.innerHTML = `<span style="${cls}">${sinal}${brl(vDiff)}</span>`;
-}
-
-async function fecharInventario() {
-  if (!invAtual || !confirm('Fechar o inventário? Os saldos serão atualizados.')) return;
+async function renderInvLista() {
+  await carregarGrupos();
+  if (!_invLojas.length) {
+    try { _invLojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`); } catch{}
+    const sel = document.getElementById('inv-fil-loja');
+    sel.innerHTML = '<option value="">Todas as lojas</option>' +
+      _invLojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+  }
+  const statusFil = document.getElementById('inv-fil-status')?.value||'';
+  const lojaFil   = document.getElementById('inv-fil-loja')?.value||'';
+  const tbody = document.getElementById('inv-lista-body');
+  tbody.innerHTML = '<tr><td colspan="7" class="empty">Carregando...</td></tr>';
   try {
-    const invRes = await api('inventarios', { method:'POST',
-      body: JSON.stringify({ tenant_id:TENANT_ID, status:'fechado',
-        loja_id: invLojaAtual||null,
-        grupo_id: invGrupoAtual?.id||null, tipo: invTipoAtual||'avulso',
-        criado_em: invDataAtual+'T12:00:00.000Z' }) });
-    const invId = invRes[0]?.id;
-    if (!invId) throw new Error('Falha ao criar inventário.');
-    const itens = invAtual.map((r, idx) => ({
-      inventario_id: invId, insumo_id: r.ins.id,
-      qtd_sistema: r.qtdSistema,
-      qtd_contada: parseFloat(document.getElementById(`inv-q-${idx}`)?.value) || 0,
-      custo_medio: r.custoMedio,
-    }));
-    await api('itens_inventario', { method:'POST', prefer:'return=minimal', body:JSON.stringify(itens) });
-    for (const it of itens) await upsertSaldo(it.insumo_id, it.qtd_contada, it.custo_medio);
-    toast(`Inventário fechado! ${itens.length} saldos atualizados.`,'ok');
-    cancelarInventario();
-    await carregar();
-    renderInvHistorico();
+    let q = `inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`;
+    if (statusFil) q += `&status=eq.${statusFil}`;
+    if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
+    const lista = await api(q);
+    if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
+    const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso'};
+    const statusLabel = {ativo:'Ativo',encerrado:'Encerrado',fechado:'Encerrado'};
+    const statusCls   = {ativo:'b-pendente',encerrado:'b-recebido',fechado:'b-recebido'};
+    tbody.innerHTML = lista.map(inv => {
+      const grupo = grupos.find(g=>g.id===inv.grupo_id);
+      const loja  = _invLojas.find(l=>l.id===inv.loja_id);
+      return `<tr>
+        <td class="mono">${fmtData(inv.criado_em)}</td>
+        <td style="font-weight:600">${esc(loja?.nome||'—')}</td>
+        <td>${esc(grupo?.nome||'—')}</td>
+        <td style="color:var(--text3)">${tipoLabel[inv.tipo]||inv.tipo||'—'}</td>
+        <td class="c"><span class="badge ${statusCls[inv.status]||'b-manual'}">${statusLabel[inv.status]||inv.status}</span></td>
+        <td class="r">—</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="abrirInvDetalhe('${inv.id}')">Ver →</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="7" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
+}
+
+async function abrirInvDetalhe(invId) {
+  document.getElementById('inv-lista').style.display = 'none';
+  document.getElementById('inv-detalhe').style.display = '';
+  document.getElementById('inv-det-titulo').textContent = 'Carregando...';
+  document.getElementById('inv-det-body').innerHTML = '<tr><td colspan="7" class="empty">Carregando...</td></tr>';
+  try {
+    const invs = await api(`inventarios?id=eq.${invId}&limit=1`);
+    const inv = invs[0]; if (!inv) throw new Error('Inventário não encontrado.');
+    invAberto = inv;
+    const grupo = grupos.find(g=>g.id===inv.grupo_id);
+    const loja  = _invLojas.find(l=>l.id===inv.loja_id);
+    const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso'};
+    const isAtivo = inv.status === 'ativo';
+    document.getElementById('inv-det-titulo').textContent =
+      `${esc(loja?.nome||'—')} · ${esc(grupo?.nome||'—')} · ${tipoLabel[inv.tipo]||inv.tipo}`;
+    document.getElementById('inv-det-info').textContent =
+      `Data: ${fmtData(inv.criado_em)} · Status: ${isAtivo?'Ativo':'Encerrado'}`;
+    document.getElementById('btn-inv-encerrar').style.display = isAtivo ? '' : 'none';
+    document.getElementById('btn-inv-reabrir').style.display  = isAtivo ? 'none' : '';
+
+    const itens = await api(`inventario_itens?inventario_id=eq.${invId}&order=insumo_id.asc`);
+    let totalDif = 0;
+    document.getElementById('inv-det-body').innerHTML = itens.map(it => {
+      const ins = insumos.find(i=>i.id===it.insumo_id);
+      const un  = ins?.unidade_medida||ins?.unidade_compra||'un';
+      const sys = it.qtd_sistema||0;
+      const cnt = it.qtd_contada!=null ? it.qtd_contada : sys;
+      const dif = cnt - sys;
+      const vDif = dif * (it.custo_medio||0);
+      totalDif += vDif;
+      const cls = dif>0.001?'color:#16a34a':dif<-0.001?'color:var(--red)':'color:var(--text3)';
+      const sinal = dif>0?'+':'';
+      const input = isAtivo
+        ? `<input type="number" class="field field-sm" id="idet-${it.id}"
+            value="${cnt.toFixed(3)}" step="0.001" min="0" style="width:90px;text-align:right"
+            oninput="calcDetDiff('${it.id}',${sys},${it.custo_medio||0})">`
+        : `<span class="mono">${qtd(cnt)}</span>`;
+      return `<tr id="idet-row-${it.id}">
+        <td style="font-weight:500">${esc(ins?.nome||it.insumo_id)}</td>
+        <td style="color:var(--text3)">${esc(un)}</td>
+        <td class="r mono">${qtd(sys)}</td>
+        <td class="r">${input}</td>
+        <td class="r mono" id="idet-d-${it.id}"><span style="${cls}">${sinal}${qtd(dif)}</span></td>
+        <td class="r mono">${brl(it.custo_medio)}</td>
+        <td class="r mono" id="idet-v-${it.id}"><span style="${cls}">${sinal}${brl(vDif)}</span></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('inv-det-foot').innerHTML = `<tr>
+      <td colspan="6" style="text-align:right;font-weight:700">Valor total do ajuste:</td>
+      <td class="r mono" style="font-weight:700;color:${totalDif>=0?'#16a34a':'var(--red)'}">
+        ${totalDif>=0?'+':''}${brl(totalDif)}</td>
+    </tr>`;
   } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
-async function renderInvHistorico() {
-  await carregarGrupos();
-  const tbody = document.getElementById('inv-hist-body');
-  try {
-    const lista = await api(`inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`);
-    if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty"><b>Nenhum inventário realizado</b></td></tr>'; return; }
-    const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso'};
-    tbody.innerHTML = lista.map(inv => {
-      const grupo = grupos.find(g => g.id === inv.grupo_id);
-      return `<tr>
-        <td class="mono">${fmtData(inv.criado_em)}</td>
-        <td style="font-weight:500">${grupo ? esc(grupo.nome) : '—'}</td>
-        <td style="color:var(--text3)">${tipoLabel[inv.tipo]||inv.tipo||'—'}</td>
-        <td class="c"><span class="badge ${inv.status==='fechado'?'b-ok':'b-manual'}">${inv.status==='fechado'?'Fechado':'Aberto'}</span></td>
-        <td class="r">—</td><td class="r mono">—</td><td></td>
-      </tr>`;
-    }).join('');
-  } catch(e) { tbody.innerHTML = `<tr><td colspan="7" class="empty"><b>Erro ao carregar</b></td></tr>`; }
+function calcDetDiff(itId, sys, custo) {
+  const cnt = parseFloat(document.getElementById(`idet-${itId}`)?.value)||0;
+  const dif = cnt - sys;
+  const vDif = dif * custo;
+  const cls = dif>0.001?'color:#16a34a':dif<-0.001?'color:var(--red)':'color:var(--text3)';
+  const sinal = dif>0?'+':'';
+  const d = document.getElementById(`idet-d-${itId}`);
+  const v = document.getElementById(`idet-v-${itId}`);
+  if (d) d.innerHTML = `<span style="${cls}">${sinal}${qtd(dif)}</span>`;
+  if (v) v.innerHTML = `<span style="${cls}">${sinal}${brl(vDif)}</span>`;
 }
+
+function voltarInvLista() {
+  invAberto = null;
+  document.getElementById('inv-detalhe').style.display = 'none';
+  document.getElementById('inv-lista').style.display = '';
+  renderInvLista();
+}
+
+async function encerrarInventario() {
+  if (!invAberto) return;
+  if (!confirm('Encerrar o inventário? Os saldos serão ajustados com base nas quantidades contadas.')) return;
+  try {
+    const itens = await api(`inventario_itens?inventario_id=eq.${invAberto.id}`);
+    for (const it of itens) {
+      const inputEl = document.getElementById(`idet-${it.id}`);
+      const qtdContada = inputEl ? (parseFloat(inputEl.value)||0) : (it.qtd_contada||it.qtd_sistema||0);
+      await api(`inventario_itens?id=eq.${it.id}`, {
+        method:'PATCH', prefer:'return=minimal',
+        body: JSON.stringify({ qtd_contada: qtdContada })
+      });
+      await upsertSaldo(it.insumo_id, qtdContada, it.custo_medio||0);
+    }
+    await api(`inventarios?id=eq.${invAberto.id}`, {
+      method:'PATCH', prefer:'return=minimal',
+      body: JSON.stringify({ status:'encerrado' })
+    });
+    toast('Inventário encerrado! Saldos atualizados.','ok');
+    await carregar();
+    voltarInvLista();
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+}
+
+async function reabrirInventario() {
+  if (!invAberto) return;
+  try {
+    await api(`inventarios?id=eq.${invAberto.id}`, {
+      method:'PATCH', prefer:'return=minimal',
+      body: JSON.stringify({ status:'ativo' })
+    });
+    toast('Inventário reaberto.','ok');
+    voltarInvLista();
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+}
+
+// Mantém compatibilidade com código antigo
+async function renderInvHistorico() { renderInvLista(); }
 
 // ── GRUPOS DE INVENTÁRIO ──────────────────────────────────────────
 async function abrirModalGrupos() {
