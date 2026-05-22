@@ -331,7 +331,7 @@ async function loadDashboard() {
            comprasMes, perdasMes, saldos] = await Promise.all([
       api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&select=id,nome,categoria,status,preco_venda,insumo_vinculado_id`),
       api(`itens_ficha?select=ficha_id,insumo_id,quantidade_g`),
-      api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,nome,preco_compra,rendimento_pct,unidade_medida&ativo=eq.true`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true`),
       api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.pendente&select=id`),
       api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id`),
       api(`inventarios?tenant_id=eq.${TENANT_ID}&status=eq.ativo&select=id`),
