@@ -109,6 +109,26 @@
   .toast.err{background:var(--red)}.toast.ok{background:var(--green)}
   .saldo-pos{color:var(--green);font-weight:600}
   .saldo-neg{color:var(--red);font-weight:600}
+  /* Estoque sub-tabs */
+  .est-tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:2px solid var(--border2)}
+  .est-tab{padding:8px 18px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;
+    border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;
+    transition:all .15s;font-family:inherit;white-space:nowrap}
+  .est-tab:hover{color:var(--text2)}
+  .est-tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+  .est-pane{display:none}.est-pane.active{display:block}
+  /* Stat cards */
+  .sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+  .sc{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px}
+  .sc-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  .sc-value{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}
+  .c-green{color:var(--green)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}
+  /* Category filter pills */
+  .cat-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .cat-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;
+    color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .cat-btn:hover{border-color:var(--teal);color:var(--teal)}
+  .cat-btn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
   @media(max-width:700px){.sidebar{display:none}}
 </style>
 </head>
@@ -126,6 +146,7 @@
     <button class="nav-item active" id="nav-inventario" onclick="switchTab('inventario')"><div class="nav-dot"></div>Inventário</button>
     <button class="nav-item" id="nav-solicitacao" onclick="switchTab('solicitacao')"><div class="nav-dot"></div>Solicitação de Compra</button>
     <button class="nav-item" id="nav-perdas" onclick="switchTab('perdas')"><div class="nav-dot"></div>Perdas</button>
+    <button class="nav-item" id="nav-estoque" onclick="switchTab('estoque')"><div class="nav-dot"></div>Estoque</button>
   </div>
   <div class="nav-user">
     <div class="nav-user-nome" id="sb-user-nome">—</div>
@@ -177,6 +198,96 @@
           </div>
         </div>
         <div id="sol-sem-grupos" style="display:none" class="empty">Nenhum grupo de compra cadastrado. Contate o administrador.</div>
+      </div>
+    </div>
+
+    <!-- ══ ESTOQUE ══ -->
+    <div id="tab-estoque" class="tab-pane">
+      <div class="est-tabs">
+        <button class="est-tab active" data-tab="relatorio" onclick="switchEstoqueTab('relatorio')">Relatório</button>
+        <button class="est-tab" data-tab="movimentacao" onclick="switchEstoqueTab('movimentacao')">Movimentação</button>
+      </div>
+
+      <!-- Relatório -->
+      <div id="est-relatorio" class="est-pane active">
+        <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">De</div>
+            <input type="date" id="rel-data-ini" class="field field-sm" onchange="carregarRelatorio()">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Até</div>
+            <input type="date" id="rel-data-fim" class="field field-sm" onchange="carregarRelatorio()">
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="carregarRelatorio()">↻ Atualizar</button>
+        </div>
+        <div class="sc-grid">
+          <div class="sc"><div class="sc-label">Entradas (mov.)</div><div class="sc-value c-green" id="est-card-ent">—</div></div>
+          <div class="sc"><div class="sc-label">Saídas (mov.)</div><div class="sc-value c-red" id="est-card-sai">—</div></div>
+          <div class="sc"><div class="sc-label">Insumos em saldo</div><div class="sc-value" id="est-card-ins">—</div></div>
+        </div>
+        <div class="cat-btns" id="rel-cat-btns"></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>Insumo</th><th>Un.</th>
+              <th class="r">Est. Inicial</th>
+              <th class="r">Entradas</th>
+              <th class="r">Saídas</th>
+              <th class="r">Saldo</th>
+            </tr></thead>
+            <tbody id="est-rel-body">
+              <tr><td colspan="6" class="empty">Selecione o período.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Movimentação -->
+      <div id="est-movimentacao" class="est-pane">
+        <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Data</div>
+            <input type="date" id="mov-data" class="field field-sm" onchange="carregarMovimentacoes()">
+          </div>
+        </div>
+        <div class="cat-btns" id="mov-cat-btns"></div>
+        <div style="display:grid;grid-template-columns:300px 1fr;gap:24px">
+          <!-- Formulário -->
+          <div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px">Nova Movimentação</div>
+            <div class="fg">
+              <label>Tipo</label>
+              <select id="mov-tipo" class="field" style="width:100%">
+                <option value="saida">Saída</option>
+                <option value="entrada">Entrada</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Insumo</label>
+              <select id="mov-insumo" class="field" style="width:100%" onchange="atualizarUnidadeMov()">
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Quantidade</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="number" id="mov-qtd" class="field" min="0" step="0.001" placeholder="0.000" style="flex:1">
+                <span id="mov-un" style="font-size:13px;color:var(--text3);min-width:32px"></span>
+              </div>
+            </div>
+            <div class="fg">
+              <label>Observação</label>
+              <input type="text" id="mov-obs" class="field" placeholder="Opcional" style="width:100%">
+            </div>
+            <button class="btn btn-primary" id="btn-registrar-mov" onclick="registrarMovimentacao()" style="width:100%">Registrar</button>
+          </div>
+          <!-- Histórico do dia -->
+          <div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:16px">Movimentações do dia</div>
+            <div id="mov-historico"><div class="empty">Selecione uma data.</div></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -385,11 +496,12 @@ async function carregar() {
 function switchTab(tab) {
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  ['inventario','solicitacao','perdas'].forEach(t => {
+  ['inventario','solicitacao','perdas','estoque'].forEach(t => {
     document.getElementById('nav-'+t).classList.toggle('active', t===tab);
   });
   if (tab==='inventario') carregarInventarios();
   if (tab==='perdas') carregarHistoricoPerdas();
+  if (tab==='estoque') iniciarEstoque();
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -745,6 +857,200 @@ async function carregarHistoricoPerdas() {
         </tr>`;
       }).join('')+'</tbody></table></div>';
   } catch(e){container.innerHTML=`<div class="empty">Erro: ${esc(e.message)}</div>`;}
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ESTOQUE DO GERENTE
+// ══════════════════════════════════════════════════════════════════
+let relCatAtual = '__todos__';
+let movCatAtual = '__todos__';
+
+function iniciarEstoque() {
+  document.getElementById('rel-data-ini').value = document.getElementById('rel-data-ini').value || primeiroDiaMes();
+  document.getElementById('rel-data-fim').value = document.getElementById('rel-data-fim').value || hoje();
+  document.getElementById('mov-data').value = document.getElementById('mov-data').value || hoje();
+  renderCategoriasEstoque();
+  switchEstoqueTab('relatorio');
+}
+
+function primeiroDiaMes() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+}
+
+function renderCategoriasEstoque() {
+  const comItens = grupos.filter(g => (gruposItens[g.id]||[]).some(id => insumos.find(i=>i.id===id)));
+  const makeBtns = (containerId, prefix, fnName) => {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    c.innerHTML = `<button class="cat-btn active" id="${prefix}-todos" onclick="${fnName}('__todos__')">Todos</button>` +
+      comItens.map(g=>`<button class="cat-btn" id="${prefix}-${g.id}" onclick="${fnName}('${g.id}')">${esc(g.nome)}</button>`).join('');
+  };
+  makeBtns('rel-cat-btns', 'relcat', 'selecionarCatRel');
+  makeBtns('mov-cat-btns', 'movcat', 'selecionarCatMov');
+}
+
+function selecionarCatRel(catId) {
+  relCatAtual = catId;
+  document.querySelectorAll('[id^="relcat-"]').forEach(b => {
+    b.classList.toggle('active', b.id === (catId==='__todos__' ? 'relcat-todos' : `relcat-${catId}`));
+  });
+  carregarRelatorio();
+}
+
+function selecionarCatMov(catId) {
+  movCatAtual = catId;
+  document.querySelectorAll('[id^="movcat-"]').forEach(b => {
+    b.classList.toggle('active', b.id === (catId==='__todos__' ? 'movcat-todos' : `movcat-${catId}`));
+  });
+  popularInsumosMov();
+  carregarMovimentacoes();
+}
+
+function switchEstoqueTab(tab) {
+  document.querySelectorAll('.est-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('est-'+tab).classList.add('active');
+  document.querySelectorAll('.est-tab').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  if (tab==='relatorio') carregarRelatorio();
+  if (tab==='movimentacao') { popularInsumosMov(); carregarMovimentacoes(); }
+}
+
+function getInsumosFiltrados(catId) {
+  if (catId === '__todos__') return insumos;
+  const ids = gruposItens[catId]||[];
+  return insumos.filter(i => ids.includes(i.id));
+}
+
+function popularInsumosMov() {
+  const lista = getInsumosFiltrados(movCatAtual);
+  const sel = document.getElementById('mov-insumo');
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    lista.map(i=>`<option value="${i.id}" data-un="${esc(i.unidade_medida||'un')}">${esc(i.nome)}</option>`).join('');
+  document.getElementById('mov-un').textContent = '';
+}
+
+function atualizarUnidadeMov() {
+  const opt = document.querySelector('#mov-insumo option:checked');
+  document.getElementById('mov-un').textContent = opt?.dataset.un || '';
+}
+
+async function carregarRelatorio() {
+  const lojaId = userProfile?.loja_id;
+  if (!lojaId) return;
+  const container = document.getElementById('est-rel-body');
+  container.innerHTML = '<tr><td colspan="6" class="empty">Carregando...</td></tr>';
+  const dataIni = document.getElementById('rel-data-ini').value;
+  const dataFim = document.getElementById('rel-data-fim').value;
+  if (!dataIni || !dataFim) { container.innerHTML = '<tr><td colspan="6" class="empty">Selecione o período.</td></tr>'; return; }
+  try {
+    const [saldos, entradas, saidas] = await Promise.all([
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&data_entrada=gte.${dataIni}&data_entrada=lte.${dataFim}`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&data_saida=gte.${dataIni}&data_saida=lte.${dataFim}`),
+    ]);
+    const lista = getInsumosFiltrados(relCatAtual);
+    const rows = lista.map(ins => {
+      const s = saldos.find(x=>x.insumo_id===ins.id);
+      const saldo = Number(s?.saldo)||0;
+      const ent = entradas.filter(e=>e.insumo_id===ins.id).reduce((a,e)=>a+Number(e.quantidade||0),0);
+      const sai = saidas.filter(x=>x.insumo_id===ins.id).reduce((a,x)=>a+Number(x.quantidade||0),0);
+      if (!saldo && !ent && !sai) return null;
+      const inicial = saldo - ent + sai;
+      return { ins, inicial, ent, sai, saldo };
+    }).filter(Boolean);
+    document.getElementById('est-card-ent').textContent = entradas.length;
+    document.getElementById('est-card-sai').textContent = saidas.length;
+    document.getElementById('est-card-ins').textContent = rows.filter(r=>r.saldo>0).length;
+    if (!rows.length) {
+      container.innerHTML = '<tr><td colspan="6" class="empty">Nenhum saldo ou movimentação no período.</td></tr>';
+      return;
+    }
+    container.innerHTML = rows.map(({ins, inicial, ent, sai, saldo}) => `<tr>
+      <td style="font-weight:500">${esc(ins.nome)}</td>
+      <td style="color:var(--text3);font-size:12px">${esc(ins.unidade_medida||'un')}</td>
+      <td class="r mono">${fmtQtd(inicial)}</td>
+      <td class="r mono" style="color:var(--green)">${ent>0?'+':''}${fmtQtd(ent)}</td>
+      <td class="r mono" style="color:var(--red)">${sai>0?'-':''}${fmtQtd(sai)}</td>
+      <td class="r mono" style="font-weight:700">${fmtQtd(saldo)}</td>
+    </tr>`).join('');
+  } catch(e) { container.innerHTML = `<tr><td colspan="6" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
+}
+
+async function carregarMovimentacoes() {
+  const lojaId = userProfile?.loja_id;
+  const container = document.getElementById('mov-historico');
+  const data = document.getElementById('mov-data').value;
+  if (!lojaId || !data) return;
+  container.innerHTML = '<div class="empty">Carregando...</div>';
+  try {
+    const [entradas, saidas] = await Promise.all([
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&data_entrada=eq.${data}&order=created_at.desc`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&data_saida=eq.${data}&order=created_at.desc`),
+    ]);
+    const insIds = new Set(getInsumosFiltrados(movCatAtual).map(i=>i.id));
+    const movs = [
+      ...entradas.filter(e=>insIds.has(e.insumo_id)).map(e=>({...e, _tipo:'entrada'})),
+      ...saidas.filter(s=>insIds.has(s.insumo_id)).map(s=>({...s, _tipo:'saida'})),
+    ].sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+    if (!movs.length) { container.innerHTML = '<div class="empty">Nenhuma movimentação neste dia.</div>'; return; }
+    container.innerHTML = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tipo</th><th>Insumo</th><th class="r">Qtd</th><th>Un.</th><th>Obs</th></tr></thead><tbody>' +
+      movs.map(m => {
+        const ins = insumos.find(i=>i.id===m.insumo_id);
+        const badge = m._tipo==='entrada'
+          ? '<span class="badge" style="background:#dcfce7;color:#16a34a">Entrada</span>'
+          : '<span class="badge" style="background:#fee2e2;color:#dc2626">Saída</span>';
+        return `<tr>
+          <td>${badge}</td>
+          <td style="font-weight:500">${esc(ins?.nome||'?')}</td>
+          <td class="r mono">${fmtQtd(m.quantidade)}</td>
+          <td style="color:var(--text3);font-size:12px">${esc(ins?.unidade_medida||'un')}</td>
+          <td style="font-size:12px;color:var(--text2)">${esc(m.observacao||'—')}</td>
+        </tr>`;
+      }).join('') + '</tbody></table></div>';
+  } catch(e) { container.innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; }
+}
+
+async function registrarMovimentacao() {
+  const lojaId = userProfile?.loja_id;
+  const tipo    = document.getElementById('mov-tipo').value;
+  const insumoId = document.getElementById('mov-insumo').value;
+  const qtd     = parseFloat(document.getElementById('mov-qtd').value)||0;
+  const obs     = document.getElementById('mov-obs').value.trim();
+  const data    = document.getElementById('mov-data').value || hoje();
+  if (!insumoId) { toast('Selecione o insumo.','err'); return; }
+  if (qtd <= 0)  { toast('Informe a quantidade.','err'); return; }
+  const btn = document.getElementById('btn-registrar-mov');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    if (tipo === 'entrada') {
+      await api('entradas_estoque', {method:'POST', prefer:'return=minimal',
+        body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
+          quantidade:qtd, custo_unitario:0, data_entrada:data, tipo:'manual', observacao:obs||null})});
+    } else {
+      await api('saidas_estoque', {method:'POST', prefer:'return=minimal',
+        body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
+          quantidade:qtd, data_saida:data, tipo:'manual', observacao:obs||null})});
+    }
+    // Atualiza saldo
+    const sals = await api(`saldo_estoque?loja_id=eq.${lojaId}&insumo_id=eq.${insumoId}`);
+    const novoSaldo = tipo==='entrada'
+      ? (Number(sals[0]?.saldo)||0) + qtd
+      : Math.max(0, (Number(sals[0]?.saldo)||0) - qtd);
+    if (sals.length) {
+      await api(`saldo_estoque?loja_id=eq.${lojaId}&insumo_id=eq.${insumoId}`,
+        {method:'PATCH', prefer:'return=minimal', body:JSON.stringify({saldo:novoSaldo})});
+    } else {
+      await api('saldo_estoque', {method:'POST', prefer:'return=minimal',
+        body:JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId, saldo:novoSaldo, custo_medio:0})});
+    }
+    document.getElementById('mov-insumo').value = '';
+    document.getElementById('mov-qtd').value = '';
+    document.getElementById('mov-obs').value = '';
+    document.getElementById('mov-un').textContent = '';
+    toast(`${tipo==='entrada'?'Entrada':'Saída'} registrada!`, 'ok');
+    carregarMovimentacoes();
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  finally { btn.disabled=false; btn.textContent='Registrar'; }
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────

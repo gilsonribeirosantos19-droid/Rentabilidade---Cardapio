@@ -822,10 +822,12 @@ async function renderPedidos() {
       const forn = fKey === '__sem__' ? null : fornecedores.find(f=>f.id===fKey);
       const fornNome = forn?.nome || '⚠ Sem fornecedor';
       const fornStyle = forn ? '' : 'color:var(--amber)';
+      const pedIdsStr = peds.map(p=>p.id).join(',');
       return `<div class="ped-card">
         <div class="ped-card-header">
           <div class="ped-card-forn" style="${fornStyle}">${esc(fornNome)}</div>
           <div style="font-size:12px;color:var(--text3)">${peds.length} pedido(s)</div>
+          <button class="btn btn-ghost btn-sm ml" onclick="imprimirFornecedor('${fKey}','${pedIdsStr}')">🖨 Imprimir</button>
         </div>
         <div class="ped-card-body">
           <table class="tbl">
@@ -837,7 +839,6 @@ async function renderPedidos() {
                 <td>${statusBadge(p.status)}</td>
                 <td style="display:flex;gap:6px;justify-content:flex-end">
                   <button class="btn btn-ghost btn-sm" onclick="verPedido('${p.id}')">Ver</button>
-                  <button class="btn btn-ghost btn-sm" onclick="imprimirPedido('${p.id}')">🖨 Imprimir</button>
                   ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
                 </td>
               </tr>`).join('')}
@@ -1240,6 +1241,118 @@ function gerarImpressaoPorLoja(porLoja, dataRef) {
 }
 
 // ── IMPRESSÃO DE PEDIDO ────────────────────────────────────────────────
+async function imprimirFornecedor(fornId, pedIdsStr) {
+  const pedIds = pedIdsStr.split(',').filter(Boolean);
+  if (!pedIds.length) return;
+  const forn = fornId === '__sem__' ? null : fornecedores.find(f=>f.id===fornId);
+
+  // Load itens from all pedidos of this supplier
+  const allItens = [];
+  for (const id of pedIds) {
+    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
+    allItens.push(...itens);
+  }
+  if (!allItens.length) { toast('Nenhum item nos pedidos.','err'); return; }
+
+  const lojasData = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true`);
+  const p = pedidosGerados.find(x=>pedIds.includes(x.id));
+
+  // Group by loja, accumulate qty by insumo_id (merges across multiple pedidos)
+  const porLoja = {};
+  allItens.forEach(it => {
+    const ins = insumos.find(i=>i.id===it.insumo_id);
+    const obs = it.observacao||'';
+    if (!obs) {
+      if (!porLoja['__geral__']) porLoja['__geral__'] = { loja: null, itens: {} };
+      const iKey = it.insumo_id;
+      if (!porLoja['__geral__'].itens[iKey]) porLoja['__geral__'].itens[iKey] = { nome: ins?.nome||it.insumo_id, qty: 0, un: it.unidade||'un' };
+      porLoja['__geral__'].itens[iKey].qty += Number(it.quantidade)||0;
+    } else {
+      obs.split(', ').forEach(parte => {
+        const match = parte.match(/^(.+?):\s*([\d.]+)$/);
+        if (!match) return;
+        const nomeLoja = match[1].trim();
+        const qty = parseFloat(match[2])||0;
+        const lojaObj = lojasData.find(l=>l.nome.toLowerCase()===nomeLoja.toLowerCase())||{ nome: nomeLoja };
+        const key = lojaObj.id||nomeLoja;
+        if (!porLoja[key]) porLoja[key] = { loja: lojaObj, itens: {} };
+        const iKey = it.insumo_id;
+        if (!porLoja[key].itens[iKey]) porLoja[key].itens[iKey] = { nome: ins?.nome||it.insumo_id, qty: 0, un: it.unidade||'un' };
+        porLoja[key].itens[iKey].qty += qty;
+      });
+    }
+  });
+
+  const dataFormatada = new Date((p?.data_pedido||hoje())+'T12:00:00').toLocaleDateString('pt-BR');
+  const paginas = Object.values(porLoja).map(({ loja, itens: itensMap }) => {
+    const lojaItens = Object.values(itensMap);
+    const nomeLoja = loja?.nome || '—';
+    const razao   = loja?.razao_social || '';
+    const cnpj    = loja?.cnpj || '';
+    const ende    = loja?.endereco || '';
+    const hrManha = loja?.horario_manha || '-';
+    const hrTarde = loja?.horario_tarde || '-';
+    const linhas = [...lojaItens];
+    while (linhas.length < 8) linhas.push(null);
+    return `
+      <div class="pagina">
+        <table class="doc">
+          <tr>
+            <td class="cel-loja">${nomeLoja.toUpperCase()}</td>
+            <td class="cel-data-label">DATA:</td>
+            <td class="cel-data">${dataFormatada}</td>
+          </tr>
+          <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${razao} ${cnpj ? 'CNPJ: '+cnpj : ''}</td></tr>
+          <tr><td colspan="3" class="cel-info">ENDEREÇO: ${ende}</td></tr>
+          <tr>
+            <td colspan="2" class="cel-th">ITENS</td>
+            <td class="cel-th" style="text-align:center">QUANTIDADE</td>
+          </tr>
+          ${linhas.map(it => it
+            ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${it.qty.toFixed(3)} ${it.un.toUpperCase()}</td></tr>`
+            : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`
+          ).join('')}
+          <tr>
+            <td class="cel-footer">HORÁRIO DE RECEBIMENTO</td>
+            <td class="cel-footer">MANHÃ</td>
+            <td class="cel-footer">${hrManha}</td>
+          </tr>
+          <tr>
+            <td class="cel-footer">&nbsp;</td>
+            <td class="cel-footer">TARDE</td>
+            <td class="cel-footer">${hrTarde}</td>
+          </tr>
+        </table>
+      </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Pedido — ${forn?.nome||'Fornecedor'}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+      body{background:#fff}
+      .pagina{page-break-after:always;padding:20px;max-width:700px;margin:0 auto}
+      .pagina:last-child{page-break-after:avoid}
+      .doc{width:100%;border-collapse:collapse;font-size:13px}
+      .doc td{border:1px solid #000;padding:6px 8px;vertical-align:middle}
+      .cel-loja{font-weight:700;font-size:14px;width:55%}
+      .cel-data-label{font-weight:700;width:15%;text-align:center}
+      .cel-data{font-weight:700;font-size:14px;width:30%;text-align:right}
+      .cel-info{background:#f4cccc;font-size:12px;line-height:1.5;height:36px}
+      .cel-th{background:#ffff00;font-weight:700;font-size:13px;text-align:center;padding:8px}
+      .cel-item{height:28px;font-size:12px}
+      .cel-qty{text-align:center;font-weight:600;font-size:12px}
+      .cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
+      @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
+    </style></head><body>${paginas}
+    <script>window.onload=function(){window.print()}<\/script>
+    </body></html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
 async function imprimirPedido(id) {
   const p = pedidosGerados.find(x=>x.id===id);
   if (!p) return;
