@@ -374,7 +374,7 @@ async function loadDashboard() {
       api(`inventarios?tenant_id=eq.${TENANT_ID}&status=eq.ativo&select=id`),
       api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${ini60str}T00:00:00&select=criado_em,custo_total,quantidade`),
       api(`perdas?tenant_id=eq.${TENANT_ID}&data_perda=gte.${ini60str}&select=data_perda,id`),
-      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,quantidade,custo_medio,minimo`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,quantidade,custo_medio`),
     ]);
 
     const insumoMap = Object.fromEntries(insumos.map(i => [i.id, i]));
@@ -469,9 +469,8 @@ function renderEstoqueCritico(saldos, insumoMap) {
       ...s,
       ins: insumoMap[s.insumo_id],
       qtd: Number(s.quantidade)||0,
-      min: Number(s.minimo)||0,
     }))
-    .filter(s => s.ins && (s.qtd <= 0 || (s.min > 0 && s.qtd <= s.min)))
+    .filter(s => s.ins && s.qtd <= 0)
     .sort((a,b) => a.qtd - b.qtd)
     .slice(0, 8);
 
@@ -482,16 +481,12 @@ function renderEstoqueCritico(saldos, insumoMap) {
     return;
   }
   panel.innerHTML = `<div class="panel"><table class="top5-table">
-    <thead><tr><th>Insumo</th><th class="num">Saldo</th><th class="num">Mín.</th><th>Status</th></tr></thead>
+    <thead><tr><th>Insumo</th><th class="num">Saldo</th><th>Status</th></tr></thead>
     <tbody>${criticos.map(s => {
-      const zerado = s.qtd <= 0;
-      const cor = zerado ? 'var(--red)' : 'var(--amber)';
-      const bgCor = zerado ? 'rgba(220,38,38,.1)' : 'rgba(245,158,11,.1)';
       return `<tr>
         <td style="font-weight:500">${esc(s.ins.nome)}</td>
-        <td class="num mono" style="color:${cor}">${s.qtd.toFixed(2)} ${s.ins.unidade_medida||'un'}</td>
-        <td class="num" style="color:var(--text3)">${s.min > 0 ? s.min.toFixed(2) : '—'}</td>
-        <td><span class="cat-badge" style="background:${bgCor};color:${cor}">${zerado?'Zerado':'Baixo'}</span></td>
+        <td class="num mono" style="color:var(--red)">${s.qtd.toFixed(2)}</td>
+        <td><span class="cat-badge" style="background:rgba(220,38,38,.1);color:var(--red)">Zerado</span></td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
