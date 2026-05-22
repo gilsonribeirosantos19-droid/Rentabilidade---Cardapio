@@ -216,6 +216,10 @@
 <div class="main">
   <div class="topbar">
     <span class="topbar-title">Estoque</span>
+    <select id="sel-loja" class="field" style="font-size:13px;padding:6px 12px;min-width:180px"
+      onchange="onLojaChange()">
+      <option value="">Selecione a loja...</option>
+    </select>
     <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
   </div>
   <div class="content">
@@ -848,17 +852,38 @@ async function api(endpoint, opts={}) {
 
 // ── STATE ─────────────────────────────────────────────────────────
 let insumos=[], saldos=[], entradas=[], saidas=[], vinculos=[], fornecedores=[], insumoFornVinculos=[];
+let lojas=[], lojaAtual=null;
 let nfeItens=[], tabAtual='dashboard';
+
+function getLojaId() { return lojaAtual?.id||null; }
+
+async function onLojaChange() {
+  const id = document.getElementById('sel-loja').value;
+  lojaAtual = lojas.find(l=>l.id===id)||null;
+  if (!lojaAtual) return;
+  await carregar();
+}
 
 // ── LOAD ──────────────────────────────────────────────────────────
 async function carregar() {
   setStatus('carregando…',null);
   try {
+    // Carrega lojas na primeira vez
+    if (!lojas.length) {
+      lojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
+      const sel = document.getElementById('sel-loja');
+      sel.innerHTML = '<option value="">Selecione a loja...</option>' +
+        lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+      if (lojas.length===1) { sel.value=lojas[0].id; lojaAtual=lojas[0]; }
+    }
+
+    const lojaFiltro = lojaAtual ? `&loja_id=eq.${lojaAtual.id}` : '&loja_id=is.null';
+
     [insumos, saldos, entradas, saidas, vinculos, fornecedores] = await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`),
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
-      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`),
       api(`vinculos_nfe?tenant_id=eq.${TENANT_ID}`),
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
     ]);
@@ -867,7 +892,7 @@ async function carregar() {
     renderDash(); renderEntradas(); renderSaidas();
     if (tabAtual==='kardex') renderKardex();
     if (tabAtual==='relatorios') renderRelatorios();
-    setStatus('● conectado', true);
+    setStatus('● '+(lojaAtual?lojaAtual.nome:'sem loja'), true);
   } catch(e) {
     setStatus('● erro', false);
     toast('Erro ao carregar: '+e.message, 'err');
@@ -1061,7 +1086,7 @@ async function salvarEntrada() {
 
 async function registrarEntrada(insId, dados, custoUnitEstoque) {
   await api('entradas_estoque',{method:'POST',prefer:'return=minimal',
-    body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,...dados})});
+    body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,loja_id:getLojaId(),...dados})});
   // custo médio ponderado
   const s = getSaldo(insId);
   const qA = s.quantidade||0, cmA = s.custo_medio||0;
@@ -1291,7 +1316,7 @@ async function salvarSaida() {
   try {
     const dataStr=document.getElementById('sf-data').value||hoje();
     await api('saidas_estoque',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
-      tenant_id:TENANT_ID,insumo_id:insId,quantidade:qtd_,
+      tenant_id:TENANT_ID,insumo_id:insId,loja_id:getLojaId(),quantidade:qtd_,
       tipo:document.getElementById('sf-tipo').value,
       motivo:document.getElementById('sf-motivo').value.trim()||null,
       responsavel:document.getElementById('sf-resp').value.trim()||null,
@@ -2000,21 +2025,23 @@ function downloadCSV(filename, content) {
 
 // ── SALDO UPSERT ──────────────────────────────────────────────────
 async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maximo=undefined) {
+  const lojaId = getLojaId();
   const payload = {
     tenant_id: TENANT_ID,
     insumo_id: insId,
+    loja_id: lojaId,
     quantidade: parseFloat(Number(quantidade).toFixed(4)),
     custo_medio: parseFloat(Number(custoMedio).toFixed(6)),
     atualizado_em: new Date().toISOString()
   };
   if (minimo !== undefined) payload.minimo = minimo;
   if (maximo !== undefined) payload.maximo = maximo;
-  await api('saldo_estoque?on_conflict=insumo_id', {
+  await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates,return=minimal',
     body: JSON.stringify(payload)
   });
-  const ex = saldos.find(s=>s.insumo_id===insId);
+  const ex = saldos.find(s=>s.insumo_id===insId&&s.loja_id===lojaId);
   if (ex) Object.assign(ex, payload);
   else saldos.push({...payload});
 }
