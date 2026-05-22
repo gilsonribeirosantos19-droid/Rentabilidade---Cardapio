@@ -791,41 +791,34 @@ async function renderPedidos() {
       return;
     }
 
-    // Group by fornecedor (null = sem fornecedor)
-    const porForn = {};
-    pedidosGerados.forEach(p => {
-      const fKey = p.fornecedor_id || '__sem__';
-      if (!porForn[fKey]) porForn[fKey] = [];
-      porForn[fKey].push(p);
-    });
-
-    container.innerHTML = Object.entries(porForn).map(([fKey, peds]) => {
-      const forn = fKey === '__sem__' ? null : fornecedores.find(f=>f.id===fKey);
-      const fornNome = forn?.nome || '⚠ Sem fornecedor';
-      const fornStyle = forn ? '' : 'color:var(--amber)';
-      return `<div class="ped-card">
-        <div class="ped-card-header">
-          <div class="ped-card-forn" style="${fornStyle}">${esc(fornNome)}</div>
-          <div style="font-size:12px;color:var(--text3)">${peds.length} pedido(s)</div>
-        </div>
-        <div class="ped-card-body">
-          <table class="tbl">
-            <thead><tr><th>Data</th><th>Lojas</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-              ${peds.map(p=>`<tr>
-                <td class="mono">${fmtData(p.data_pedido)}</td>
-                <td style="color:var(--text3);font-size:12px">${esc(p.observacao||'—')}</td>
-                <td>${statusBadge(p.status)}</td>
-                <td style="display:flex;gap:6px;justify-content:flex-end">
-                  <button class="btn btn-ghost btn-sm" onclick="verPedido('${p.id}')">Ver</button>
-                  ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
-                </td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>`;
-    }).join('');
+    container.innerHTML = `<div class="tbl-wrap"><div class="tbl-scroll">
+      <table class="tbl">
+        <thead><tr>
+          <th>Data</th>
+          <th>Fornecedor</th>
+          <th>Lojas</th>
+          <th>Situação</th>
+          <th></th>
+        </tr></thead>
+        <tbody>
+          ${pedidosGerados.map(p => {
+            const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
+            const fornNome = forn?.nome || '⚠ Sem fornecedor';
+            const fornStyle = forn ? '' : 'color:var(--amber)';
+            return `<tr style="cursor:pointer" onclick="verPedido('${p.id}')">
+              <td class="mono">${fmtData(p.data_pedido)}</td>
+              <td style="font-weight:600;${fornStyle}">${esc(fornNome)}</td>
+              <td style="color:var(--text3);font-size:12px">${esc(p.observacao||'—')}</td>
+              <td>${statusBadge(p.status)}</td>
+              <td style="display:flex;gap:6px;justify-content:flex-end">
+                <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();verPedido('${p.id}')">Ver</button>
+                ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="event.stopPropagation();enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div></div>`;
   } catch(e) { container.innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; }
 }
 
