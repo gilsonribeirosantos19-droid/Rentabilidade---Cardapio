@@ -712,6 +712,10 @@
   <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
     <h2>Novo Inventário</h2>
     <div class="fg">
+      <label>Loja *</label>
+      <select id="ni-loja"><option value="">Selecione a loja...</option></select>
+    </div>
+    <div class="fg">
       <label>Grupo *</label>
       <select id="ni-grupo"><option value="">Selecione o grupo...</option></select>
     </div>
@@ -1451,7 +1455,7 @@ function renderRelatorios() {
 
 // ── INVENTÁRIO ────────────────────────────────────────────────────
 // ── INVENTÁRIO COM GRUPOS ─────────────────────────────────────────
-let invAtual = null, invGrupoAtual = null, invDataAtual = null, invTipoAtual = null;
+let invAtual = null, invGrupoAtual = null, invDataAtual = null, invTipoAtual = null, invLojaAtual = null;
 let grupos = [], grupoSelecionados = new Set();
 
 async function carregarGrupos() {
@@ -1466,6 +1470,12 @@ async function carregarGrupos() {
 
 async function abrirModalNovoInv() {
   await carregarGrupos();
+  // Popula lojas
+  let lojas = [];
+  try { lojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`); } catch{}
+  document.getElementById('ni-loja').innerHTML =
+    '<option value="">Selecione a loja...</option>' +
+    lojas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
   const sel = document.getElementById('ni-grupo');
   sel.innerHTML = '<option value="">Selecione o grupo...</option>' +
     grupos.map(g => `<option value="${g.id}">${esc(g.nome)} (${g.tipo||'mensal'} · ${g.itens?.length||0} itens)</option>`).join('');
@@ -1474,15 +1484,17 @@ async function abrirModalNovoInv() {
 }
 
 async function iniciarInventario() {
+  const lojaId = document.getElementById('ni-loja').value;
   const grupoId = document.getElementById('ni-grupo').value;
   const data = document.getElementById('ni-data').value;
   const tipo = document.getElementById('ni-tipo').value;
+  if (!lojaId) { toast('Selecione a loja.','err'); return; }
   if (!grupoId) { toast('Selecione um grupo.','err'); return; }
   if (!data) { toast('Selecione a data.','err'); return; }
   const grupo = grupos.find(g => g.id === grupoId);
   if (!grupo?.itens?.length) { toast('Grupo sem insumos cadastrados.','err'); return; }
   fecharModal('m-novo-inv');
-  invGrupoAtual = grupo; invDataAtual = data; invTipoAtual = tipo;
+  invLojaAtual = lojaId; invGrupoAtual = grupo; invDataAtual = data; invTipoAtual = tipo;
   const insGrupo = grupo.itens.map(it => insumos.find(i => i.id === it.insumo_id)).filter(Boolean)
     .sort((a,b) => a.nome.localeCompare(b.nome));
   invAtual = insGrupo.map(ins => {
@@ -1532,6 +1544,7 @@ async function fecharInventario() {
   try {
     const invRes = await api('inventarios', { method:'POST',
       body: JSON.stringify({ tenant_id:TENANT_ID, status:'fechado',
+        loja_id: invLojaAtual||null,
         grupo_id: invGrupoAtual?.id||null, tipo: invTipoAtual||'avulso',
         criado_em: invDataAtual+'T12:00:00.000Z' }) });
     const invId = invRes[0]?.id;
