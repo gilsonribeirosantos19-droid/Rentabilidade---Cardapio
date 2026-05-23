@@ -40,14 +40,11 @@
 
   /* SETTINGS LAYOUT */
   .cfg-layout{display:flex;min-height:calc(100vh - 56px);position:relative}
-  .cfg-nav-outer{position:relative;z-index:30;flex-shrink:0}
-  .cfg-trigger{width:6px;height:100%;background:var(--teal);opacity:.35;cursor:pointer;
-    transition:opacity .2s;min-height:calc(100vh - 56px)}
-  .cfg-nav-outer:hover .cfg-trigger{opacity:1}
-  .cfg-nav{position:absolute;left:6px;top:0;width:0;height:100%;min-height:calc(100vh - 56px);
-    overflow:hidden;background:var(--bg2);border-right:1px solid var(--border2);
-    box-shadow:4px 0 20px rgba(0,0,0,.1);transition:width .22s ease}
-  .cfg-nav-outer:hover .cfg-nav{width:220px}
+  .cfg-nav-outer{position:absolute;left:0;top:0;z-index:30;height:100%}
+  .cfg-nav{width:0;height:100%;overflow:hidden;background:var(--bg2);
+    border-right:1px solid var(--border2);box-shadow:4px 0 24px rgba(0,0,0,.1);
+    transition:width .22s ease}
+  .cfg-nav-outer.open .cfg-nav{width:220px}
   .cfg-nav>*{min-width:220px}
   .cfg-nav-inner{padding:16px 0;overflow-y:auto;height:100%}
   .cfg-nav-group{margin-bottom:20px}
@@ -60,6 +57,10 @@
   .cfg-nav-item.active{background:var(--teal-dim);color:var(--teal);font-weight:600}
   .cfg-body{flex:1;padding:24px;min-width:0;overflow-x:hidden}
   .cfg-pane{display:none}.cfg-pane.active{display:block}
+  #cfg-title{cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none}
+  #cfg-title:hover{color:var(--teal)}
+  #cfg-title .cfg-arrow{font-size:12px;color:var(--text3);transition:transform .2s}
+  #cfg-title:hover .cfg-arrow,#cfg-title.open .cfg-arrow{color:var(--teal);transform:rotate(90deg)}
   /* SEÇÕES */
   .section{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:24px}
   .section-header{padding:18px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:12px}
@@ -175,15 +176,14 @@
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title">Configurações</span>
+      <span class="topbar-title" id="cfg-title">Configurações <span class="cfg-arrow">›</span></span>
       <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
     </div>
     <div class="content" style="padding:0">
     <div class="cfg-layout">
 
-      <!-- NAV ESQUERDA (reveal on hover) -->
-      <div class="cfg-nav-outer">
-        <div class="cfg-trigger"></div>
+      <!-- NAV ESQUERDA (reveal on hover do título) -->
+      <div class="cfg-nav-outer" id="cfg-nav-outer">
         <nav class="cfg-nav"><div class="cfg-nav-inner">
           <div class="cfg-nav-group">
             <span class="cfg-nav-label">Cadastros</span>
@@ -823,12 +823,28 @@
 
   function fecharModalExtra(id) { document.getElementById(id).classList.remove('open'); }
 
+  // ── NAV HOVER ─────────────────────────────────────────────
+  (function() {
+    const title  = document.getElementById('cfg-title');
+    const outer  = document.getElementById('cfg-nav-outer');
+    let hideTimer;
+    function show() { clearTimeout(hideTimer); outer.classList.add('open'); title.classList.add('open'); }
+    function hide() { hideTimer = setTimeout(() => { outer.classList.remove('open'); title.classList.remove('open'); }, 180); }
+    title.addEventListener('mouseenter', show);
+    title.addEventListener('mouseleave', hide);
+    outer.addEventListener('mouseenter', show);
+    outer.addEventListener('mouseleave', hide);
+  })();
+
   function switchConfig(nome) {
     document.querySelectorAll('.cfg-pane').forEach(p => p.classList.remove('active'));
     document.getElementById('cfg-'+nome).classList.add('active');
     document.querySelectorAll('.cfg-nav-item').forEach(b => {
       b.classList.toggle('active', b.id === 'cfg-btn-'+nome);
     });
+    // Fecha o nav após selecionar
+    document.getElementById('cfg-nav-outer').classList.remove('open');
+    document.getElementById('cfg-title').classList.remove('open');
   }
 
   async function carregarExtras() {
