@@ -255,7 +255,7 @@ async function entrar() {
     const perfil = perfRes.ok ? await perfRes.json() : [];
     if (perfil.length) {
       localStorage.setItem('sb_user', JSON.stringify(perfil[0]));
-      // Gerente vai direto para compras
+      localStorage.setItem('sb_tenant_id', perfil[0].tenant_id || '00000000-0000-0000-0000-000000000001');
       if (perfil[0].perfil === 'gerente') {
         window.location.href = 'loja.html';
         return;

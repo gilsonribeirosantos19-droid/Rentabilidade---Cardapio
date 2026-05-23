@@ -257,7 +257,7 @@
   })();
 const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
-const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
 
 async function api(endpoint, opts={}) {
   const method = (opts.method||'GET').toUpperCase();
