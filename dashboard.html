@@ -134,6 +134,13 @@
   ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
   @media(max-width:900px){.metric-grid,.alert-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}}
   @media(max-width:600px){.metric-grid,.alert-grid{grid-template-columns:1fr}.sidebar{display:none}}
+  .nav-sub-wrap{position:relative}
+  .nav-sub-list{display:none;padding:2px 0 4px 0}
+  .nav-sub-wrap:hover .nav-sub-list{display:block}
+  .nav-sub-item{display:block;padding:5px 8px 5px 30px;font-size:11px;color:#475569;text-decoration:none;border-radius:5px;transition:all .15s;white-space:nowrap}
+  .nav-sub-item:hover{background:rgba(255,255,255,.06);color:#f1f5f9}
+  .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;transition:transform .2s;display:inline-block}
+  .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
 </style>
 </head>
 <body>
@@ -165,7 +172,17 @@
       <div class="nav-label">Gestão</div>
       <a class="nav-item" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
       <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
-      <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações</a>
+      <div class="nav-sub-wrap">
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
+    <div class="nav-sub-list">
+      <a class="nav-sub-item" href="configuracoes.html?sec=lojas">↳ Lojas / Filiais</a>
+      <a class="nav-sub-item" href="configuracoes.html?sec=usuarios">↳ Usuários</a>
+      <a class="nav-sub-item" href="configuracoes.html?sec=cat-insumo">↳ Categorias</a>
+      <a class="nav-sub-item" href="configuracoes.html?sec=grupos-compra">↳ Grupos de Compra</a>
+      <a class="nav-sub-item" href="configuracoes.html?sec=inventarios">↳ Inventários</a>
+      <a class="nav-sub-item" href="configuracoes.html?sec=fornecedores">↳ Fornecedores</a>
+    </div>
+  </div>
     </div>
   </nav>
 
