@@ -39,9 +39,17 @@
   .content{padding:24px;flex:1}
 
   /* SETTINGS LAYOUT */
-  .cfg-layout{display:flex;min-height:calc(100vh - 56px)}
-  .cfg-nav{width:210px;background:var(--bg2);border-right:1px solid var(--border2);
-    padding:16px 0;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+  .cfg-layout{display:flex;min-height:calc(100vh - 56px);position:relative}
+  .cfg-nav-outer{position:relative;z-index:30;flex-shrink:0}
+  .cfg-trigger{width:6px;height:100%;background:var(--teal);opacity:.35;cursor:pointer;
+    transition:opacity .2s;min-height:calc(100vh - 56px)}
+  .cfg-nav-outer:hover .cfg-trigger{opacity:1}
+  .cfg-nav{position:absolute;left:6px;top:0;width:0;height:100%;min-height:calc(100vh - 56px);
+    overflow:hidden;background:var(--bg2);border-right:1px solid var(--border2);
+    box-shadow:4px 0 20px rgba(0,0,0,.1);transition:width .22s ease}
+  .cfg-nav-outer:hover .cfg-nav{width:220px}
+  .cfg-nav>*{min-width:220px}
+  .cfg-nav-inner{padding:16px 0;overflow-y:auto;height:100%}
   .cfg-nav-group{margin-bottom:20px}
   .cfg-nav-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;
     letter-spacing:.08em;padding:0 16px;margin-bottom:4px;display:block}
@@ -49,7 +57,7 @@
     color:var(--text2);cursor:pointer;border:none;background:none;width:100%;text-align:left;
     font-family:inherit;transition:all .15s;white-space:nowrap}
   .cfg-nav-item:hover{background:var(--bg3);color:var(--text1)}
-  .cfg-nav-item.active{background:var(--teal-dim);color:var(--teal);font-weight:600;border-right:2px solid var(--teal)}
+  .cfg-nav-item.active{background:var(--teal-dim);color:var(--teal);font-weight:600}
   .cfg-body{flex:1;padding:24px;min-width:0;overflow-x:hidden}
   .cfg-pane{display:none}.cfg-pane.active{display:block}
   /* SEÇÕES */
@@ -173,31 +181,34 @@
     <div class="content" style="padding:0">
     <div class="cfg-layout">
 
-      <!-- NAV ESQUERDA -->
-      <nav class="cfg-nav">
-        <div class="cfg-nav-group">
-          <span class="cfg-nav-label">Cadastros</span>
-          <button class="cfg-nav-item active" id="cfg-btn-cat-insumo"  onclick="switchConfig('cat-insumo')">Categorias de Insumos</button>
-          <button class="cfg-nav-item"         id="cfg-btn-cat-ficha"   onclick="switchConfig('cat-ficha')">Categorias de Fichas</button>
-          <button class="cfg-nav-item"         id="cfg-btn-unidades"    onclick="switchConfig('unidades')">Unidades de Medida</button>
-        </div>
-        <div class="cfg-nav-group">
-          <span class="cfg-nav-label">Compras</span>
-          <button class="cfg-nav-item" id="cfg-btn-grupos-compra" onclick="switchConfig('grupos-compra')">Grupos de Compra</button>
-          <button class="cfg-nav-item" id="cfg-btn-inventarios"   onclick="switchConfig('inventarios')">Inventários</button>
-          <button class="cfg-nav-item" id="cfg-btn-motivos"       onclick="switchConfig('motivos')">Motivos de Perda</button>
-        </div>
-        <div class="cfg-nav-group">
-          <span class="cfg-nav-label">Empresa</span>
-          <button class="cfg-nav-item" id="cfg-btn-lojas"        onclick="switchConfig('lojas')">Lojas / Filiais</button>
-          <button class="cfg-nav-item" id="cfg-btn-fornecedores" onclick="switchConfig('fornecedores')">Fornecedores</button>
-          <button class="cfg-nav-item" id="cfg-btn-vinculos"     onclick="switchConfig('vinculos')">Vínculo Insumo → Forn.</button>
-        </div>
-        <div class="cfg-nav-group">
-          <span class="cfg-nav-label">Acesso</span>
-          <button class="cfg-nav-item" id="cfg-btn-usuarios" onclick="switchConfig('usuarios')">Usuários</button>
-        </div>
-      </nav>
+      <!-- NAV ESQUERDA (reveal on hover) -->
+      <div class="cfg-nav-outer">
+        <div class="cfg-trigger"></div>
+        <nav class="cfg-nav"><div class="cfg-nav-inner">
+          <div class="cfg-nav-group">
+            <span class="cfg-nav-label">Cadastros</span>
+            <button class="cfg-nav-item active" id="cfg-btn-cat-insumo"  onclick="switchConfig('cat-insumo')">Categorias de Insumos</button>
+            <button class="cfg-nav-item"         id="cfg-btn-cat-ficha"   onclick="switchConfig('cat-ficha')">Categorias de Fichas</button>
+            <button class="cfg-nav-item"         id="cfg-btn-unidades"    onclick="switchConfig('unidades')">Unidades de Medida</button>
+          </div>
+          <div class="cfg-nav-group">
+            <span class="cfg-nav-label">Compras</span>
+            <button class="cfg-nav-item" id="cfg-btn-grupos-compra" onclick="switchConfig('grupos-compra')">Grupos de Compra</button>
+            <button class="cfg-nav-item" id="cfg-btn-inventarios"   onclick="switchConfig('inventarios')">Inventários</button>
+            <button class="cfg-nav-item" id="cfg-btn-motivos"       onclick="switchConfig('motivos')">Motivos de Perda</button>
+          </div>
+          <div class="cfg-nav-group">
+            <span class="cfg-nav-label">Empresa</span>
+            <button class="cfg-nav-item" id="cfg-btn-lojas"        onclick="switchConfig('lojas')">Lojas / Filiais</button>
+            <button class="cfg-nav-item" id="cfg-btn-fornecedores" onclick="switchConfig('fornecedores')">Fornecedores</button>
+            <button class="cfg-nav-item" id="cfg-btn-vinculos"     onclick="switchConfig('vinculos')">Vínculo Insumo → Forn.</button>
+          </div>
+          <div class="cfg-nav-group">
+            <span class="cfg-nav-label">Acesso</span>
+            <button class="cfg-nav-item" id="cfg-btn-usuarios" onclick="switchConfig('usuarios')">Usuários</button>
+          </div>
+        </div></nav>
+      </div>
 
       <!-- PAINEL DIREITO -->
       <div class="cfg-body">
