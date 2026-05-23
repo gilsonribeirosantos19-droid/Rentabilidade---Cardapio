@@ -1241,40 +1241,9 @@ function gerarImpressaoPorLoja(porLoja, dataRef) {
       .cel-qty{text-align:center;font-weight:600;font-size:12px}
       .cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
       @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
-      .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
-  .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
-  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:auto}
-  .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
-  .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
-  .cfg-flyout-item:last-child{border-bottom:none}
-  .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    <div id="cfg-flyout">
-  <span class="cfg-flyout-title">Configurações</span>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=lojas">Lojas / Filiais</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=usuarios">Usuários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-insumo">Categorias de Insumos</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-ficha">Categorias de Fichas</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=unidades">Unidades de Medida</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=grupos-compra">Grupos de Compra</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=inventarios">Inventários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=motivos">Motivos de Perda</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=fornecedores">Fornecedores</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=vinculos">Vínculo Insumo → Forn.</a>
-</div>
-<script>
-(function(){
-  var tr=document.querySelector('.nav-sub-wrap'),fl=document.getElementById('cfg-flyout');
-  if(!tr||!fl)return;
-  var t;
-  function show(){clearTimeout(t);fl.style.top='0';fl.style.display='block';}
-  function hide(){t=setTimeout(function(){fl.style.display='none';},200);}
-  tr.addEventListener('mouseenter',show);tr.addEventListener('mouseleave',hide);
-  fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
-})();
-</script>
-</body></html>`;
+    </body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
@@ -1385,40 +1354,9 @@ async function imprimirFornecedor(fornId, pedIdsStr) {
       .cel-qty{text-align:center;font-weight:600;font-size:12px}
       .cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
       @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
-      .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
-  .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
-  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:auto}
-  .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
-  .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
-  .cfg-flyout-item:last-child{border-bottom:none}
-  .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    <div id="cfg-flyout">
-  <span class="cfg-flyout-title">Configurações</span>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=lojas">Lojas / Filiais</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=usuarios">Usuários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-insumo">Categorias de Insumos</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-ficha">Categorias de Fichas</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=unidades">Unidades de Medida</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=grupos-compra">Grupos de Compra</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=inventarios">Inventários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=motivos">Motivos de Perda</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=fornecedores">Fornecedores</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=vinculos">Vínculo Insumo → Forn.</a>
-</div>
-<script>
-(function(){
-  var tr=document.querySelector('.nav-sub-wrap'),fl=document.getElementById('cfg-flyout');
-  if(!tr||!fl)return;
-  var t;
-  function show(){clearTimeout(t);fl.style.top='0';fl.style.display='block';}
-  function hide(){t=setTimeout(function(){fl.style.display='none';},200);}
-  tr.addEventListener('mouseenter',show);tr.addEventListener('mouseleave',hide);
-  fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
-})();
-</script>
-</body></html>`;
+    </body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
@@ -1534,40 +1472,9 @@ async function imprimirPedido(id) {
         body{margin:0}
         .pagina{padding:10px;max-width:100%}
       }
-      .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
-  .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
-  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:auto}
-  .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
-  .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
-  .cfg-flyout-item:last-child{border-bottom:none}
-  .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    <div id="cfg-flyout">
-  <span class="cfg-flyout-title">Configurações</span>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=lojas">Lojas / Filiais</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=usuarios">Usuários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-insumo">Categorias de Insumos</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-ficha">Categorias de Fichas</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=unidades">Unidades de Medida</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=grupos-compra">Grupos de Compra</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=inventarios">Inventários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=motivos">Motivos de Perda</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=fornecedores">Fornecedores</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=vinculos">Vínculo Insumo → Forn.</a>
-</div>
-<script>
-(function(){
-  var tr=document.querySelector('.nav-sub-wrap'),fl=document.getElementById('cfg-flyout');
-  if(!tr||!fl)return;
-  var t;
-  function show(){clearTimeout(t);fl.style.top='0';fl.style.display='block';}
-  function hide(){t=setTimeout(function(){fl.style.display='none';},200);}
-  tr.addEventListener('mouseenter',show);tr.addEventListener('mouseleave',hide);
-  fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
-})();
-</script>
-</body></html>`;
+    </body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
