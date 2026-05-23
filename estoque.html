@@ -153,6 +153,7 @@
   .rep-title{font-size:14px;font-weight:600;margin-bottom:12px;
     padding-bottom:8px;border-bottom:1px solid var(--border2)}
   .rep-sec{margin-bottom:28px}
+  .rel-pane{display:none}.rel-pane.active{display:block}
   .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:24px}
   .kpi{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);
     padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -513,54 +514,70 @@
 
     <!-- TAB: RELATÓRIOS -->
     <div id="tab-relatorios" class="tab-pane">
-      <div class="kpi-grid" id="kpis"></div>
-      <div class="rep-sec">
-        <div class="rep-title">Curva ABC — por valor em estoque (A=80% · B=15% · C=5%)</div>
-        <div class="tbl-wrap"><div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr>
-              <th class="c">#</th><th>Insumo</th><th class="c">Classe</th>
-              <th class="r">Valor</th><th class="r">% Individual</th><th class="r">% Acumulada</th>
-            </tr></thead>
-            <tbody id="abc-body"><tr><td colspan="6" class="empty"><b>Carregando...</b></td></tr></tbody>
-          </table>
-        </div></div>
+      <!-- Sub-abas -->
+      <div style="display:flex;gap:2px;border-bottom:2px solid var(--border2);margin-bottom:20px;position:sticky;top:112px;z-index:40;background:var(--bg1);padding-top:6px">
+        <button class="tab-btn active" id="reltab-resumo"     onclick="switchRelTab('resumo')">Resumo</button>
+        <button class="tab-btn"        id="reltab-abc"        onclick="switchRelTab('abc')">Curva ABC</button>
+        <button class="tab-btn"        id="reltab-inflacao"   onclick="switchRelTab('inflacao')">Inflação</button>
       </div>
-      <div class="row2">
-        <div class="rep-sec">
-          <div class="rep-title">Valor por categoria</div>
-          <div class="tbl-wrap">
-            <table class="tbl">
-              <thead><tr><th>Categoria</th><th class="r">Itens</th><th class="r">Valor Total</th></tr></thead>
-              <tbody id="cat-body"></tbody>
-            </table>
+
+      <!-- SUB: RESUMO -->
+      <div id="rel-resumo" class="rel-pane active">
+        <div class="kpi-grid" id="kpis"></div>
+        <div class="row2">
+          <div class="rep-sec">
+            <div class="rep-title">Valor por categoria</div>
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr><th>Categoria</th><th class="r">Itens</th><th class="r">Valor Total</th></tr></thead>
+                <tbody id="cat-body"></tbody>
+              </table>
+            </div>
           </div>
-        </div>
-        <div class="rep-sec">
-          <div class="rep-title">Maiores custos médios</div>
-          <div class="tbl-wrap">
-            <table class="tbl">
-              <thead><tr><th>Insumo</th><th class="r">Custo Médio</th><th class="r">Saldo</th></tr></thead>
-              <tbody id="cm-body"></tbody>
-            </table>
+          <div class="rep-sec">
+            <div class="rep-title">Maiores custos médios</div>
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr><th>Insumo</th><th class="r">Custo Médio</th><th class="r">Saldo</th></tr></thead>
+                <tbody id="cm-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- VARIAÇÃO DE PREÇO -->
-      <div class="rep-sec">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-          <div class="rep-title" style="margin:0">Variação de Preço por Insumo — Inflação</div>
-          <select id="inf-meses" onchange="renderInflacao()" style="border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;background:var(--bg2);color:var(--text1);cursor:pointer">
-            <option value="6">Últimos 6 meses</option>
-            <option value="12" selected>Últimos 12 meses</option>
-          </select>
-          <input type="text" id="inf-busca" placeholder="Filtrar insumo..." oninput="renderInflacao()"
-            style="border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;background:var(--bg2);color:var(--text1);outline:none;width:160px">
+      <!-- SUB: CURVA ABC -->
+      <div id="rel-abc" class="rel-pane">
+        <div class="rep-sec">
+          <div class="rep-title">Curva ABC — por valor em estoque (A=80% · B=15% · C=5%)</div>
+          <div class="tbl-wrap"><div class="tbl-scroll">
+            <table class="tbl">
+              <thead><tr>
+                <th class="c">#</th><th>Insumo</th><th class="c">Classe</th>
+                <th class="r">Valor</th><th class="r">% Individual</th><th class="r">% Acumulada</th>
+              </tr></thead>
+              <tbody id="abc-body"><tr><td colspan="6" class="empty"><b>Carregando...</b></td></tr></tbody>
+            </table>
+          </div></div>
         </div>
-        <div class="tbl-wrap"><div class="tbl-scroll" id="inf-wrap">
-          <div class="empty"><b>Carregando...</b></div>
-        </div></div>
+      </div>
+
+      <!-- SUB: INFLAÇÃO -->
+      <div id="rel-inflacao" class="rel-pane">
+        <div class="rep-sec">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+            <div class="rep-title" style="margin:0">Variação de Preço por Insumo</div>
+            <select id="inf-meses" onchange="renderInflacao()" style="border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;background:var(--bg2);color:var(--text1);cursor:pointer">
+              <option value="6">Últimos 6 meses</option>
+              <option value="12" selected>Últimos 12 meses</option>
+            </select>
+            <input type="text" id="inf-busca" placeholder="Filtrar insumo..." oninput="renderInflacao()"
+              style="border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;background:var(--bg2);color:var(--text1);outline:none;width:160px">
+          </div>
+          <div class="tbl-wrap"><div class="tbl-scroll" id="inf-wrap">
+            <div class="empty"><b>Carregando...</b></div>
+          </div></div>
+        </div>
       </div>
     </div>
   </div><!-- /content -->
@@ -965,7 +982,7 @@ function switchTab(tab) {
   if (tab==='kardex') renderKardex();
   if (tab==='inventario') renderInvLista();
   if (tab==='movimentacao') renderMovimentacao();
-  if (tab==='relatorios') { renderRelatorios(); }
+  if (tab==='relatorios') { switchRelTab('resumo'); }
   if (tab==='compras') { renderCompras(); }
 }
 // fix: Relatórios button dataset
@@ -1587,8 +1604,17 @@ function renderRelatorios() {
         <td class="r mono">${brl(s.custo_medio)}</td>
         <td class="r mono">${qtd(s.quantidade)}</td></tr>`;}).join('')
     ||'<tr><td colspan="3" class="empty"><b>Sem dados</b></td></tr>';
+}
 
-  renderInflacao();
+function switchRelTab(nome) {
+  document.querySelectorAll('.rel-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('rel-'+nome).classList.add('active');
+  ['resumo','abc','inflacao'].forEach(t => {
+    document.getElementById('reltab-'+t).classList.toggle('active', t===nome);
+  });
+  if (nome==='resumo')   renderRelatorios();
+  if (nome==='abc')      renderRelatorios();
+  if (nome==='inflacao') renderInflacao();
 }
 
 function renderInflacao() {
