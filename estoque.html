@@ -546,6 +546,22 @@
           </div>
         </div>
       </div>
+
+      <!-- VARIAÇÃO DE PREÇO -->
+      <div class="rep-sec">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+          <div class="rep-title" style="margin:0">Variação de Preço por Insumo — Inflação</div>
+          <select id="inf-meses" onchange="renderInflacao()" style="border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;background:var(--bg2);color:var(--text1);cursor:pointer">
+            <option value="6">Últimos 6 meses</option>
+            <option value="12" selected>Últimos 12 meses</option>
+          </select>
+          <input type="text" id="inf-busca" placeholder="Filtrar insumo..." oninput="renderInflacao()"
+            style="border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;background:var(--bg2);color:var(--text1);outline:none;width:160px">
+        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll" id="inf-wrap">
+          <div class="empty"><b>Carregando...</b></div>
+        </div></div>
+      </div>
     </div>
   </div><!-- /content -->
 </div><!-- /main -->
@@ -1571,6 +1587,108 @@ function renderRelatorios() {
         <td class="r mono">${brl(s.custo_medio)}</td>
         <td class="r mono">${qtd(s.quantidade)}</td></tr>`;}).join('')
     ||'<tr><td colspan="3" class="empty"><b>Sem dados</b></td></tr>';
+
+  renderInflacao();
+}
+
+function renderInflacao() {
+  const nMeses = parseInt(document.getElementById('inf-meses')?.value)||12;
+  const busca  = (document.getElementById('inf-busca')?.value||'').toLowerCase();
+  const wrap   = document.getElementById('inf-wrap');
+
+  // Gera lista dos últimos N meses (yyyy-MM)
+  const meses = [];
+  const hoje  = new Date();
+  for (let i = nMeses - 1; i >= 0; i--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+    meses.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+
+  // Agrupa entradas por insumo_id + mês → preço médio por unidade de estoque
+  const mapa = {}; // { insumo_id: { 'yyyy-MM': [preçoUnitEstoque, ...] } }
+  entradas.forEach(e => {
+    if (!e.criado_em || !e.custo_unitario || !e.fator_conversao) return;
+    const mes = e.criado_em.substring(0, 7);
+    if (!meses.includes(mes)) return;
+    const precoUnit = e.custo_unitario / (e.fator_conversao || 1);
+    if (!mapa[e.insumo_id]) mapa[e.insumo_id] = {};
+    if (!mapa[e.insumo_id][mes]) mapa[e.insumo_id][mes] = [];
+    mapa[e.insumo_id][mes].push(precoUnit);
+  });
+
+  // Filtra insumos que têm pelo menos 2 meses de dados
+  let linhas = Object.entries(mapa)
+    .map(([insId, porMes]) => {
+      const ins = insumos.find(i => i.id === insId);
+      if (!ins) return null;
+      if (busca && !ins.nome.toLowerCase().includes(busca)) return null;
+      const precos = meses.map(m => {
+        const arr = porMes[m];
+        return arr ? arr.reduce((a,v)=>a+v,0)/arr.length : null;
+      });
+      const comDados = precos.filter(p => p !== null);
+      if (comDados.length < 1) return null;
+      const primeiro = comDados[0];
+      const ultimo   = comDados[comDados.length - 1];
+      const varTotal = primeiro > 0 ? ((ultimo - primeiro) / primeiro) * 100 : null;
+      return { ins, precos, varTotal };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (b.varTotal||0) - (a.varTotal||0));
+
+  if (!linhas.length) {
+    wrap.innerHTML = '<div class="empty"><b>Nenhum dado de preço no período.</b></div>';
+    return;
+  }
+
+  // Monta cabeçalho: Insumo | Un. | M1 | Δ | M2 | Δ | M3 | ... | Var. Total
+  const nomeMes = m => {
+    const [y, mo] = m.split('-');
+    return new Date(y, mo-1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.','');
+  };
+
+  let ths = `<th>Insumo</th><th>Un.</th>`;
+  meses.forEach((m, i) => {
+    ths += `<th class="r" style="white-space:nowrap">${nomeMes(m)}</th>`;
+    if (i < meses.length - 1) ths += `<th class="c" style="width:52px">Δ</th>`;
+  });
+  ths += `<th class="r" style="white-space:nowrap">Var. Total</th>`;
+
+  const rows = linhas.map(({ ins, precos, varTotal }) => {
+    let tds = `<td style="font-weight:500;white-space:nowrap">${esc(ins.nome)}</td>`;
+    tds += `<td style="color:var(--text3);font-size:11px">${esc(ins.unidade_medida||ins.unidade_compra||'un')}</td>`;
+    precos.forEach((p, i) => {
+      tds += p !== null
+        ? `<td class="r mono" style="font-size:12px">${brl(p)}</td>`
+        : `<td class="r" style="color:var(--text3)">—</td>`;
+      if (i < precos.length - 1) {
+        const prev = [...precos].slice(0, i+1).reverse().find(x => x !== null);
+        const next = p;
+        if (prev && next) {
+          const delta = ((next - prev) / prev) * 100;
+          const cor   = delta > 2 ? '#dc2626' : delta < -2 ? '#16a34a' : 'var(--text3)';
+          const sinal = delta > 0 ? '+' : '';
+          tds += `<td class="c" style="font-size:11px;font-weight:600;color:${cor};white-space:nowrap">${sinal}${delta.toFixed(1)}%</td>`;
+        } else {
+          tds += `<td class="c" style="color:var(--text3)">—</td>`;
+        }
+      }
+    });
+    // Var. total
+    if (varTotal !== null) {
+      const cor   = varTotal > 5 ? '#dc2626' : varTotal < -5 ? '#16a34a' : 'var(--text3)';
+      const sinal = varTotal > 0 ? '+' : '';
+      tds += `<td class="r mono" style="font-weight:700;color:${cor}">${sinal}${varTotal.toFixed(1)}%</td>`;
+    } else {
+      tds += `<td class="r" style="color:var(--text3)">—</td>`;
+    }
+    return `<tr>${tds}</tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table class="tbl" style="min-width:800px">
+    <thead><tr>${ths}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
 }
 
 // ── INVENTÁRIO ────────────────────────────────────────────────────
