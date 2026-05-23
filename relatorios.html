@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -18,7 +18,7 @@
   .shell{display:flex;width:100%;min-height:100vh}
 
   .sidebar{width:220px;min-height:100vh;background:#0f172a;border-right:1px solid #1e293b;
-    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
   .logo{padding:0 18px 20px;border-bottom:1px solid #1e293b;margin-bottom:16px}
   .logo-mark{font-size:15px;font-weight:700;color:#f1f5f9}
   .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
@@ -90,7 +90,7 @@
   @media(max-width:700px){.sidebar{display:none}.row2{grid-template-columns:1fr}}
   .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
   .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
-  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:auto}
+  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:hidden}
   .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
   .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
   .cfg-flyout-item:last-child{border-bottom:none}
