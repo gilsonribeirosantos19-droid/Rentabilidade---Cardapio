@@ -38,6 +38,20 @@
   .topbar-title{font-size:15px;font-weight:600;flex:1}
   .content{padding:24px;flex:1}
 
+  /* SETTINGS LAYOUT */
+  .cfg-layout{display:flex;min-height:calc(100vh - 56px)}
+  .cfg-nav{width:210px;background:var(--bg2);border-right:1px solid var(--border2);
+    padding:16px 0;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+  .cfg-nav-group{margin-bottom:20px}
+  .cfg-nav-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;
+    letter-spacing:.08em;padding:0 16px;margin-bottom:4px;display:block}
+  .cfg-nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;
+    color:var(--text2);cursor:pointer;border:none;background:none;width:100%;text-align:left;
+    font-family:inherit;transition:all .15s;white-space:nowrap}
+  .cfg-nav-item:hover{background:var(--bg3);color:var(--text1)}
+  .cfg-nav-item.active{background:var(--teal-dim);color:var(--teal);font-weight:600;border-right:2px solid var(--teal)}
+  .cfg-body{flex:1;padding:24px;min-width:0;overflow-x:hidden}
+  .cfg-pane{display:none}.cfg-pane.active{display:block}
   /* SEÇÕES */
   .section{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:24px}
   .section-header{padding:18px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:12px}
@@ -156,198 +170,180 @@
       <span class="topbar-title">Configurações</span>
       <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
     </div>
-    <div class="content">
+    <div class="content" style="padding:0">
+    <div class="cfg-layout">
 
-      <!-- CATEGORIAS DE INSUMOS -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Categorias de Insumos</div>
-            <div class="section-sub">Classifique os insumos por tipo de matéria-prima</div>
+      <!-- NAV ESQUERDA -->
+      <nav class="cfg-nav">
+        <div class="cfg-nav-group">
+          <span class="cfg-nav-label">Cadastros</span>
+          <button class="cfg-nav-item active" id="cfg-btn-cat-insumo"  onclick="switchConfig('cat-insumo')">Categorias de Insumos</button>
+          <button class="cfg-nav-item"         id="cfg-btn-cat-ficha"   onclick="switchConfig('cat-ficha')">Categorias de Fichas</button>
+          <button class="cfg-nav-item"         id="cfg-btn-unidades"    onclick="switchConfig('unidades')">Unidades de Medida</button>
+        </div>
+        <div class="cfg-nav-group">
+          <span class="cfg-nav-label">Compras</span>
+          <button class="cfg-nav-item" id="cfg-btn-grupos-compra" onclick="switchConfig('grupos-compra')">Grupos de Compra</button>
+          <button class="cfg-nav-item" id="cfg-btn-inventarios"   onclick="switchConfig('inventarios')">Inventários</button>
+          <button class="cfg-nav-item" id="cfg-btn-motivos"       onclick="switchConfig('motivos')">Motivos de Perda</button>
+        </div>
+        <div class="cfg-nav-group">
+          <span class="cfg-nav-label">Empresa</span>
+          <button class="cfg-nav-item" id="cfg-btn-lojas"        onclick="switchConfig('lojas')">Lojas / Filiais</button>
+          <button class="cfg-nav-item" id="cfg-btn-fornecedores" onclick="switchConfig('fornecedores')">Fornecedores</button>
+          <button class="cfg-nav-item" id="cfg-btn-vinculos"     onclick="switchConfig('vinculos')">Vínculo Insumo → Forn.</button>
+        </div>
+        <div class="cfg-nav-group">
+          <span class="cfg-nav-label">Acesso</span>
+          <button class="cfg-nav-item" id="cfg-btn-usuarios" onclick="switchConfig('usuarios')">Usuários</button>
+        </div>
+      </nav>
+
+      <!-- PAINEL DIREITO -->
+      <div class="cfg-body">
+
+        <!-- Categorias de Insumos -->
+        <div class="cfg-pane active" id="cfg-cat-insumo">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Categorias de Insumos</div><div class="section-sub">Classifique os insumos por tipo de matéria-prima</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModal('cat_insumo')">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-cat-insumo"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModal('cat_insumo')">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-cat-insumo">
-              <tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- CATEGORIAS DE FICHAS -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Categorias de Fichas Técnicas</div>
-            <div class="section-sub">Agrupe as fichas por tipo de produto do cardápio</div>
+        <!-- Categorias de Fichas -->
+        <div class="cfg-pane" id="cfg-cat-ficha">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Categorias de Fichas Técnicas</div><div class="section-sub">Agrupe as fichas por tipo de produto do cardápio</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModal('cat_ficha')">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-cat-ficha"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModal('cat_ficha')">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-cat-ficha">
-              <tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- UNIDADES DE MEDIDA -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Unidades de Medida</div>
-            <div class="section-sub">Unidades usadas nos insumos e fichas técnicas</div>
+        <!-- Unidades de Medida -->
+        <div class="cfg-pane" id="cfg-unidades">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Unidades de Medida</div><div class="section-sub">Unidades usadas nos insumos e fichas técnicas</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModal('unidade')">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Abreviação</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-unidade"><tr class="empty-row"><td colspan="4"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModal('unidade')">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Nome</th><th>Abreviação</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-unidade">
-              <tr class="empty-row"><td colspan="4"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- LOJAS -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Lojas / Filiais</div>
-            <div class="section-sub">Cadastre as unidades da empresa</div>
+        <!-- Grupos de Compra -->
+        <div class="cfg-pane" id="cfg-grupos-compra">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Grupos de Compra</div><div class="section-sub">Organize os insumos em grupos para solicitação de compra dos gerentes</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModalGrupoCompra()">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Insumos</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-grupos-compra"><tr class="empty-row"><td colspan="4"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalLoja()">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Nome</th><th>Endereço</th><th>WhatsApp</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-lojas">
-              <tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- FORNECEDORES -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Fornecedores</div>
-            <div class="section-sub">Cadastre os fornecedores para vincular aos insumos</div>
+        <!-- Inventários -->
+        <div class="cfg-pane" id="cfg-inventarios">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Inventários</div><div class="section-sub">Crie inventários para as lojas preencherem a contagem de estoque</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModalInventario()">+ Criar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Descrição</th><th>Loja</th><th>Período</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-inventarios"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalForn()">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Nome</th><th>Contato</th><th>WhatsApp</th><th>Email</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-fornecedores">
-              <tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- VÍNCULO INSUMO → FORNECEDOR -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Vínculo Insumo → Fornecedor</div>
-            <div class="section-sub">Define qual fornecedor abastece cada insumo e o preço negociado</div>
+        <!-- Motivos de Perda -->
+        <div class="cfg-pane" id="cfg-motivos">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Motivos de Perda</div><div class="section-sub">Motivos disponíveis para lançamento de perdas pelos gerentes</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModalMotivo()">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-motivos"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalVinculo()">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Insumo</th><th>Fornecedor</th><th>Preço unit.</th><th>Principal</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-vinculos">
-              <tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- GRUPOS DE COMPRA -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Grupos de Compra</div>
-            <div class="section-sub">Organize os insumos em grupos para solicitação de compra dos gerentes</div>
+        <!-- Lojas -->
+        <div class="cfg-pane" id="cfg-lojas">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Lojas / Filiais</div><div class="section-sub">Cadastre as unidades da empresa</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModalLoja()">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Endereço</th><th>WhatsApp</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-lojas"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalGrupoCompra()">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Nome</th><th>Insumos</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-grupos-compra">
-              <tr class="empty-row"><td colspan="4"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- INVENTÁRIOS -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Inventários</div>
-            <div class="section-sub">Crie inventários para as lojas preencherem a contagem de estoque</div>
+        <!-- Fornecedores -->
+        <div class="cfg-pane" id="cfg-fornecedores">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Fornecedores</div><div class="section-sub">Cadastre os fornecedores para vincular aos insumos</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModalForn()">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Contato</th><th>WhatsApp</th><th>Email</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-fornecedores"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalInventario()">+ Criar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Descrição</th><th>Loja</th><th>Período</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-inventarios">
-              <tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- MOTIVOS DE PERDA -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Motivos de Perda</div>
-            <div class="section-sub">Motivos disponíveis para lançamento de perdas pelos gerentes</div>
+        <!-- Vínculo Insumo → Fornecedor -->
+        <div class="cfg-pane" id="cfg-vinculos">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Vínculo Insumo → Fornecedor</div><div class="section-sub">Define qual fornecedor abastece cada insumo e o preço negociado</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModalVinculo()">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Insumo</th><th>Fornecedor</th><th>Preço unit.</th><th>Principal</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-vinculos"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalMotivo()">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Nome</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-motivos">
-              <tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- USUÁRIOS -->
-      <div class="section">
-        <div class="section-header">
-          <div>
-            <div class="section-title">Usuários</div>
-            <div class="section-sub">Gerencie os acessos e perfis de cada usuário</div>
+        <!-- Usuários -->
+        <div class="cfg-pane" id="cfg-usuarios">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Usuários</div><div class="section-sub">Gerencie os acessos e perfis de cada usuário</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModalUsuario()">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Loja</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-usuarios"><tr class="empty-row"><td colspan="6"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="abrirModalUsuario()">+ Adicionar</button>
         </div>
-        <div class="section-body">
-          <table>
-            <thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Loja</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-            <tbody id="tbody-usuarios">
-              <tr class="empty-row"><td colspan="6"><span class="spinner"></span>Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
+      </div><!-- /cfg-body -->
+    </div><!-- /cfg-layout -->
     </div>
   </div>
 </div>
@@ -815,6 +811,14 @@
   let editLojaId = null, editFornId = null, editVincId = null, editUserId = null;
 
   function fecharModalExtra(id) { document.getElementById(id).classList.remove('open'); }
+
+  function switchConfig(nome) {
+    document.querySelectorAll('.cfg-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById('cfg-'+nome).classList.add('active');
+    document.querySelectorAll('.cfg-nav-item').forEach(b => {
+      b.classList.toggle('active', b.id === 'cfg-btn-'+nome);
+    });
+  }
 
   async function carregarExtras() {
     [lojas, fornecedores, insumos, vinculos, usuarios] = await Promise.all([
