@@ -57,10 +57,6 @@
   .cfg-nav-item.active{background:var(--teal-dim);color:var(--teal);font-weight:600}
   .cfg-body{flex:1;padding:24px;min-width:0;overflow-x:hidden}
   .cfg-pane{display:none}.cfg-pane.active{display:block}
-  #cfg-title{cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none}
-  #cfg-title:hover{color:var(--teal)}
-  #cfg-title .cfg-arrow{font-size:12px;color:var(--text3);transition:transform .2s}
-  #cfg-title:hover .cfg-arrow,#cfg-title.open .cfg-arrow{color:var(--teal);transform:rotate(90deg)}
   /* SEÇÕES */
   .section{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:24px}
   .section-header{padding:18px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:12px}
@@ -184,13 +180,13 @@
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <span class="topbar-title" id="cfg-title">Configurações <span class="cfg-arrow">›</span></span>
+      <span class="topbar-title">Configurações</span>
       <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
     </div>
     <div class="content" style="padding:0">
     <div class="cfg-layout">
 
-      <!-- NAV ESQUERDA (reveal on hover do título) -->
+      <!-- NAV ESQUERDA -->
       <div class="cfg-nav-outer" id="cfg-nav-outer">
         <nav class="cfg-nav"><div class="cfg-nav-inner">
           <div class="cfg-nav-group">
@@ -831,18 +827,6 @@
 
   function fecharModalExtra(id) { document.getElementById(id).classList.remove('open'); }
 
-  // ── NAV HOVER ─────────────────────────────────────────────
-  (function() {
-    const title  = document.getElementById('cfg-title');
-    const outer  = document.getElementById('cfg-nav-outer');
-    let hideTimer;
-    function show() { clearTimeout(hideTimer); outer.classList.add('open'); title.classList.add('open'); }
-    function hide() { hideTimer = setTimeout(() => { outer.classList.remove('open'); title.classList.remove('open'); }, 180); }
-    title.addEventListener('mouseenter', show);
-    title.addEventListener('mouseleave', hide);
-    outer.addEventListener('mouseenter', show);
-    outer.addEventListener('mouseleave', hide);
-  })();
 
   function switchConfig(nome) {
     document.querySelectorAll('.cfg-pane').forEach(p => p.classList.remove('active'));
@@ -851,8 +835,6 @@
       b.classList.toggle('active', b.id === 'cfg-btn-'+nome);
     });
     // Fecha o nav após selecionar
-    document.getElementById('cfg-nav-outer').classList.remove('open');
-    document.getElementById('cfg-title').classList.remove('open');
   }
 
   async function carregarExtras() {
