@@ -152,13 +152,12 @@
   .toast.show{opacity:1;transform:translateY(0)}
   .toast.err{background:var(--red)}
   .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
-  .nav-sub-wrap{position:relative}
-  .nav-sub-list{display:none;padding:2px 0 4px 0}
-  .nav-sub-wrap:hover .nav-sub-list{display:block}
-  .nav-sub-item{display:block;padding:5px 8px 5px 30px;font-size:11px;color:#475569;text-decoration:none;border-radius:5px;transition:all .15s;white-space:nowrap}
-  .nav-sub-item:hover{background:rgba(255,255,255,.06);color:#f1f5f9}
-  .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;transition:transform .2s;display:inline-block}
+  .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
   .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
+  #cfg-flyout{display:none;position:fixed;left:220px;width:210px;background:#1e293b;border:1px solid #334155;border-radius:0 10px 10px 0;z-index:2000;box-shadow:6px 4px 24px rgba(0,0,0,.5);padding:6px 0;overflow:hidden}
+  .cfg-flyout-title{font-size:10px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.08em;padding:8px 14px 6px;border-bottom:1px solid #334155;margin-bottom:4px;display:block}
+  .cfg-flyout-item{display:block;padding:9px 16px;font-size:13px;color:#94a3b8;text-decoration:none;transition:all .15s;white-space:nowrap}
+  .cfg-flyout-item:hover{background:rgba(255,255,255,.08);color:#f1f5f9}
 </style>
 </head>
 <body>
@@ -190,17 +189,9 @@
       <div class="nav-label">Gestão</div>
       <a class="nav-item" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
       <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
-      <div class="nav-sub-wrap">
+      <div class="nav-sub-wrap" id="cfg-nav-trigger">
     <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
-    <div class="nav-sub-list">
-      <a class="nav-sub-item" href="configuracoes.html?sec=lojas">↳ Lojas / Filiais</a>
-      <a class="nav-sub-item" href="configuracoes.html?sec=usuarios">↳ Usuários</a>
-      <a class="nav-sub-item" href="configuracoes.html?sec=cat-insumo">↳ Categorias</a>
-      <a class="nav-sub-item" href="configuracoes.html?sec=grupos-compra">↳ Grupos de Compra</a>
-      <a class="nav-sub-item" href="configuracoes.html?sec=inventarios">↳ Inventários</a>
-      <a class="nav-sub-item" href="configuracoes.html?sec=fornecedores">↳ Fornecedores</a>
     </div>
-  </div>
     </div>
   <div class="nav-user" style="padding:12px 18px;border-top:1px solid #e2e8f0;margin-top:auto">
     <div style="font-size:12px;font-weight:600;color:#0f172a" id="sb-user-nome">—</div>
@@ -1044,5 +1035,29 @@ carregar();
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
+<div id="cfg-flyout">
+  <span class="cfg-flyout-title">Configurações</span>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=lojas">Lojas / Filiais</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=usuarios">Usuários</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-insumo">Categorias de Insumos</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-ficha">Categorias de Fichas</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=unidades">Unidades de Medida</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=grupos-compra">Grupos de Compra</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=inventarios">Inventários</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=motivos">Motivos de Perda</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=fornecedores">Fornecedores</a>
+  <a class="cfg-flyout-item" href="configuracoes.html?sec=vinculos">Vínculo Insumo → Forn.</a>
+</div>
+<script>
+(function(){
+  var tr=document.querySelector('.nav-sub-wrap'),fl=document.getElementById('cfg-flyout');
+  if(!tr||!fl)return;
+  var t;
+  function show(){clearTimeout(t);var r=tr.getBoundingClientRect();fl.style.top=r.top+'px';fl.style.display='block';}
+  function hide(){t=setTimeout(function(){fl.style.display='none';},200);}
+  tr.addEventListener('mouseenter',show);tr.addEventListener('mouseleave',hide);
+  fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
+})();
+<\/script>
 </body>
 </html>
