@@ -202,11 +202,9 @@
 <script>
 const SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
-const SUPA_ANON = 'sb_publishable_GJqQ_qWVg5Y8GWaKy1qe7w_VvZiIQ3i';
-
 const { createClient } = supabase;
-const sb  = createClient(SUPA_URL, SUPA_KEY);
-const sbAuth = createClient(SUPA_URL, SUPA_ANON);
+const sb = createClient(SUPA_URL, SUPA_KEY);
+const sbAuth = sb;
 
 function showAlert(panelId, msg, tipo) {
   const el = document.getElementById('alert-' + panelId);
