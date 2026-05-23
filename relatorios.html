@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatórios · Aiko</title>
+<style>
+  :root{
+    --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
+    --border2:#e2e8f0;
+    --teal:#0d9488;--teal2:#0f766e;--teal-dim:rgba(13,148,136,.12);
+    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#16a34a;
+    --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+
+  .sidebar{width:220px;min-height:100vh;background:#0f172a;border-right:1px solid #1e293b;
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid #1e293b;margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:#f1f5f9}
+  .logo-sub{font-size:11px;color:var(--teal);font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin-bottom:20px}
+  .nav-label{font-size:10px;font-weight:600;color:#475569;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#94a3b8;font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:rgba(255,255,255,.06);color:#f1f5f9}
+  .nav-item.active{background:rgba(13,148,136,.15);color:#2dd4bf}
+  .nav-icon{width:15px;height:15px;flex-shrink:0;stroke-width:1.8}
+
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid var(--border2);display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .content{padding:24px;flex:1}
+
+  /* SUB-TABS */
+  .sub-tabs{display:flex;gap:2px;border-bottom:2px solid var(--border2);margin-bottom:24px;
+    position:sticky;top:56px;z-index:50;background:var(--bg1);padding-top:8px}
+  .sub-tab{padding:9px 18px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;
+    border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;
+    transition:all .15s;font-family:inherit;white-space:nowrap}
+  .sub-tab:hover{color:var(--text2)}
+  .sub-tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+  .rel-pane{display:none}.rel-pane.active{display:block}
+
+  /* TABLES */
+  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
+  .tbl-scroll{overflow-x:auto}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl thead tr{background:var(--bg3);border-bottom:2px solid var(--border2)}
+  .tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .tbl th.r,.tbl td.r{text-align:right}
+  .tbl th.c,.tbl td.c{text-align:center}
+  .tbl td{padding:10px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
+  .tbl tbody tr:last-child td{border-bottom:none}
+  .tbl tbody tr:hover{background:var(--bg3)}
+  .mono{font-family:'DM Mono',monospace}
+
+  /* KPIs */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+  .kpi{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:18px 20px}
+  .kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .kpi-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+  .c-green{color:var(--green)}.c-blue{color:var(--blue)}.c-amber{color:var(--amber)}.c-red{color:var(--red)}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+  .b-A{background:rgba(22,163,74,.15);color:#15803d}
+  .b-B{background:rgba(59,130,246,.15);color:#1d4ed8}
+  .b-C{background:rgba(148,163,184,.15);color:#64748b}
+
+  /* MISC */
+  .rep-sec{margin-bottom:28px}
+  .rep-title{font-size:14px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border2)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+  .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .field{background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
+    padding:7px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit;cursor:pointer}
+  .field:focus{border-color:var(--teal)}
+  .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
+  .skeleton{animation:pulse 1.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.35}50%{opacity:.7}}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text1);color:#fff;border-radius:var(--radius);
+    padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:360px}
+  .toast.show{opacity:1;transform:translateY(0)}.toast.err{background:var(--red)}
+  ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+  @media(max-width:700px){.sidebar{display:none}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Aiko</div>
+    <div class="logo-sub">sistema</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard" class="nav-icon"></i>Dashboard</a>
+    <a class="nav-item" href="insumos.html"><i data-lucide="package" class="nav-icon"></i>Insumos</a>
+    <a class="nav-item" href="fichas_tecnicas.html"><i data-lucide="clipboard-list" class="nav-icon"></i>Fichas técnicas</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Análise</div>
+    <a class="nav-item" href="estoque.html"><i data-lucide="archive" class="nav-icon"></i>Estoque</a>
+    <a class="nav-item" href="producao.html"><i data-lucide="chef-hat" class="nav-icon"></i>Produção</a>
+    <a class="nav-item" href="rendimento.html"><i data-lucide="trending-up" class="nav-icon"></i>Rendimento</a>
+    <a class="nav-item" href="pdv.html"><i data-lucide="receipt" class="nav-icon"></i>PDV / Vendas</a>
+    <a class="nav-item" href="cmv.html"><i data-lucide="bar-chart-2" class="nav-icon"></i>CMV teórico x real</a>
+    <a class="nav-item active" href="relatorios.html"><i data-lucide="file-bar-chart" class="nav-icon"></i>Relatórios</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
+    <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Relatórios</div>
+    <select id="sel-loja" onchange="carregar()" class="field" style="font-size:12px;padding:5px 10px">
+      <option value="">Todas as lojas</option>
+    </select>
+    <span id="last-updated" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+  </div>
+  <div class="content">
+
+    <div class="sub-tabs">
+      <button class="sub-tab active" id="tab-resumo"   onclick="switchTab('resumo')">Resumo</button>
+      <button class="sub-tab"        id="tab-abc"      onclick="switchTab('abc')">Curva ABC</button>
+      <button class="sub-tab"        id="tab-inflacao" onclick="switchTab('inflacao')">Inflação</button>
+    </div>
+
+    <!-- RESUMO -->
+    <div id="pane-resumo" class="rel-pane active">
+      <div class="kpi-grid" id="kpis">
+        <div class="kpi skeleton"><div class="kpi-label">Valor em estoque</div><div class="kpi-val">—</div></div>
+        <div class="kpi skeleton"><div class="kpi-label">Entradas (30d)</div><div class="kpi-val">—</div></div>
+        <div class="kpi skeleton"><div class="kpi-label">Giro de estoque</div><div class="kpi-val">—</div></div>
+        <div class="kpi skeleton"><div class="kpi-label">Cobertura estimada</div><div class="kpi-val">—</div></div>
+      </div>
+      <div class="row2">
+        <div class="rep-sec">
+          <div class="rep-title">Valor por categoria</div>
+          <div class="tbl-wrap"><table class="tbl">
+            <thead><tr><th>Categoria</th><th class="r">Itens</th><th class="r">Valor Total</th></tr></thead>
+            <tbody id="cat-body"><tr><td colspan="3" class="empty skeleton">Carregando...</td></tr></tbody>
+          </table></div>
+        </div>
+        <div class="rep-sec">
+          <div class="rep-title">Maiores custos médios</div>
+          <div class="tbl-wrap"><table class="tbl">
+            <thead><tr><th>Insumo</th><th class="r">Custo Médio</th><th class="r">Saldo</th></tr></thead>
+            <tbody id="cm-body"><tr><td colspan="3" class="empty skeleton">Carregando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CURVA ABC -->
+    <div id="pane-abc" class="rel-pane">
+      <div class="rep-sec">
+        <div class="rep-title">Curva ABC — por valor em estoque &nbsp;<span style="font-size:11px;font-weight:400;color:var(--text3)">(A = 80% do valor · B = 15% · C = 5%)</span></div>
+        <div class="tbl-wrap"><div class="tbl-scroll"><table class="tbl">
+          <thead><tr>
+            <th class="c">#</th><th>Insumo</th><th>Categoria</th><th class="c">Classe</th>
+            <th class="r">Valor</th><th class="r">% Individual</th><th class="r">% Acumulada</th>
+          </tr></thead>
+          <tbody id="abc-body"><tr><td colspan="7" class="empty skeleton">Carregando...</td></tr></tbody>
+        </table></div></div>
+      </div>
+    </div>
+
+    <!-- INFLAÇÃO -->
+    <div id="pane-inflacao" class="rel-pane">
+      <div class="rep-sec">
+        <div class="toolbar">
+          <div class="rep-title" style="margin:0;border:none;padding:0">Variação de Preço por Insumo</div>
+          <select id="inf-meses" onchange="renderInflacao()" class="field" style="font-size:12px;padding:5px 10px">
+            <option value="6">Últimos 6 meses</option>
+            <option value="12" selected>Últimos 12 meses</option>
+          </select>
+          <input type="text" id="inf-busca" placeholder="Filtrar insumo..." oninput="renderInflacao()" class="field" style="width:180px">
+        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll" id="inf-wrap">
+          <div class="empty skeleton">Carregando...</div>
+        </div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}
+  try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');
+    if(u&&u.perfil==='gerente'){window.location.href='loja.html';}}catch{}
+})();
+
+const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+async function api(endpoint, opts={}) {
+  const method = (opts.method||'GET').toUpperCase();
+  const headers = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+  if (opts.body) headers['Content-Type']='application/json';
+  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers,body:opts.body||undefined});
+  if (!res.ok){let m=res.statusText;try{const j=await res.json();m=j.message||j.error||m;}catch{}throw new Error(`[${res.status}] ${m}`);}
+  const ct=res.headers.get('content-type')||'';
+  if(ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
+  return [];
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtQtd(v){const n=Number(v)||0;return n%1===0?n.toLocaleString('pt-BR'):n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3});}
+let toastT;
+function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3500);}
+
+// ── STATE ─────────────────────────────────────────────────────────
+let insumos=[], saldos=[], entradas=[], saidas=[], lojas=[];
+let tabAtual = 'resumo';
+
+// ── TABS ──────────────────────────────────────────────────────────
+function switchTab(nome) {
+  tabAtual = nome;
+  document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+nome).classList.add('active');
+  ['resumo','abc','inflacao'].forEach(t=>
+    document.getElementById('tab-'+t).classList.toggle('active',t===nome));
+  if (nome==='resumo')   renderResumo();
+  if (nome==='abc')      renderABC();
+  if (nome==='inflacao') renderInflacao();
+}
+
+// ── LOAD ──────────────────────────────────────────────────────────
+async function carregar() {
+  const lojaId = document.getElementById('sel-loja').value;
+  const lojaFiltro = lojaId ? `&loja_id=eq.${lojaId}` : '';
+  const ini30 = new Date(); ini30.setDate(ini30.getDate()-30);
+  const ini30s = ini30.toISOString().split('T')[0];
+  const ini13m = new Date(); ini13m.setMonth(ini13m.getMonth()-13);
+  const ini13s = ini13m.toISOString().split('T')[0];
+
+  try {
+    [insumos, saldos, entradas, saidas] = await Promise.all([
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${ini13s}T00:00:00&order=criado_em.asc`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${ini30s}T00:00:00`),
+    ]);
+
+    // Agrega saldo por insumo (soma de lojas se "todas")
+    const saldoMap = {};
+    saldos.forEach(s => {
+      if (!saldoMap[s.insumo_id]) saldoMap[s.insumo_id] = {quantidade:0,custo_medio:0,_n:0};
+      saldoMap[s.insumo_id].quantidade += Number(s.quantidade)||0;
+      saldoMap[s.insumo_id].custo_medio += Number(s.custo_medio)||0;
+      saldoMap[s.insumo_id]._n++;
+    });
+    Object.values(saldoMap).forEach(s=>{ if(s._n>1) s.custo_medio/=s._n; });
+    saldos = Object.entries(saldoMap).map(([insumo_id,s])=>({insumo_id,...s}));
+
+    document.getElementById('last-updated').textContent =
+      'Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+    switchTab(tabAtual);
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+}
+
+// ── RESUMO ────────────────────────────────────────────────────────
+function renderResumo() {
+  const getSaldo = id => saldos.find(s=>s.insumo_id===id)||{quantidade:0,custo_medio:0};
+  const valTotal = insumos.reduce((s,i)=>{const sd=getSaldo(i.id);return s+(sd.quantidade||0)*(sd.custo_medio||0);},0);
+  const now = new Date();
+  const sai30 = saidas.filter(s=>(now-new Date(s.criado_em))/864e5<=30);
+  const valSai30 = sai30.reduce((s,sd)=>s+sd.quantidade*(getSaldo(sd.insumo_id).custo_medio||0),0);
+  const ent30 = entradas.filter(e=>(now-new Date(e.criado_em))/864e5<=30);
+  const valEnt30 = ent30.reduce((s,e)=>s+(e.custo_total||0),0);
+  const giro = valTotal>0?parseFloat((valSai30/valTotal).toFixed(2)):0;
+  const cobDias = valSai30>0?Math.round(valTotal/(valSai30/30)):null;
+
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-label">Valor em estoque</div><div class="kpi-val">${brl(valTotal)}</div></div>
+    <div class="kpi"><div class="kpi-label">Entradas (30 dias)</div><div class="kpi-val c-green">${brl(valEnt30)}</div></div>
+    <div class="kpi"><div class="kpi-label">Giro de estoque</div><div class="kpi-val c-blue">${giro}×</div></div>
+    <div class="kpi"><div class="kpi-label">Cobertura estimada</div><div class="kpi-val c-amber">${cobDias!=null?cobDias+' dias':'—'}</div></div>`;
+
+  // Por categoria
+  const porCat={};
+  insumos.forEach(i=>{
+    const cat=i.categoria||'sem categoria';
+    const s=getSaldo(i.id);const val=(s.quantidade||0)*(s.custo_medio||0);
+    if(!porCat[cat])porCat[cat]={n:0,val:0};
+    porCat[cat].n++;porCat[cat].val+=val;
+  });
+  document.getElementById('cat-body').innerHTML=Object.entries(porCat)
+    .sort((a,b)=>b[1].val-a[1].val)
+    .map(([cat,d])=>`<tr><td style="text-transform:capitalize">${esc(cat)}</td>
+      <td class="r">${d.n}</td><td class="r mono">${brl(d.val)}</td></tr>`).join('')
+    ||'<tr><td colspan="3" class="empty">Sem dados</td></tr>';
+
+  // Maiores custos médios
+  document.getElementById('cm-body').innerHTML=saldos
+    .filter(s=>s.custo_medio>0).sort((a,b)=>b.custo_medio-a.custo_medio).slice(0,10)
+    .map(s=>{const ins=insumos.find(i=>i.id===s.insumo_id);
+      return `<tr><td style="font-weight:500">${ins?esc(ins.nome):'—'}</td>
+        <td class="r mono">${brl(s.custo_medio)}</td>
+        <td class="r mono">${fmtQtd(s.quantidade)}</td></tr>`;}).join('')
+    ||'<tr><td colspan="3" class="empty">Sem dados</td></tr>';
+}
+
+// ── CURVA ABC ─────────────────────────────────────────────────────
+function renderABC() {
+  const getSaldo = id => saldos.find(s=>s.insumo_id===id)||{quantidade:0,custo_medio:0};
+  const valIns = insumos.map(i=>{
+    const s=getSaldo(i.id);
+    return{id:i.id,nome:i.nome,cat:i.categoria||'—',val:(s.quantidade||0)*(s.custo_medio||0)};
+  }).sort((a,b)=>b.val-a.val);
+  const totalV=valIns.reduce((s,v)=>s+v.val,0)||1;
+  let acum=0;
+  document.getElementById('abc-body').innerHTML=valIns.map((v,i)=>{
+    const pct=v.val/totalV*100;acum+=pct;
+    const cl=acum<=80?'A':acum<=95?'B':'C';
+    return `<tr>
+      <td class="c mono">${i+1}</td>
+      <td style="font-weight:500">${esc(v.nome)}</td>
+      <td style="color:var(--text3);font-size:12px;text-transform:capitalize">${esc(v.cat)}</td>
+      <td class="c"><span class="badge b-${cl}">${cl}</span></td>
+      <td class="r mono">${brl(v.val)}</td>
+      <td class="r mono">${pct.toFixed(1)}%</td>
+      <td class="r mono">${acum.toFixed(1)}%</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" class="empty">Sem dados</td></tr>';
+}
+
+// ── INFLAÇÃO ──────────────────────────────────────────────────────
+function renderInflacao() {
+  const nMeses = parseInt(document.getElementById('inf-meses')?.value)||12;
+  const busca  = (document.getElementById('inf-busca')?.value||'').toLowerCase();
+  const wrap   = document.getElementById('inf-wrap');
+
+  const meses=[];
+  const hoje=new Date();
+  for(let i=nMeses-1;i>=0;i--){
+    const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
+    meses.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+
+  const mapa={};
+  entradas.forEach(e=>{
+    if(!e.criado_em||!e.custo_unitario||!e.fator_conversao)return;
+    const mes=e.criado_em.substring(0,7);
+    if(!meses.includes(mes))return;
+    const precoUnit=e.custo_unitario/(e.fator_conversao||1);
+    if(!mapa[e.insumo_id])mapa[e.insumo_id]={};
+    if(!mapa[e.insumo_id][mes])mapa[e.insumo_id][mes]=[];
+    mapa[e.insumo_id][mes].push(precoUnit);
+  });
+
+  let linhas=Object.entries(mapa).map(([insId,porMes])=>{
+    const ins=insumos.find(i=>i.id===insId);
+    if(!ins)return null;
+    if(busca&&!ins.nome.toLowerCase().includes(busca))return null;
+    const precos=meses.map(m=>{
+      const arr=porMes[m];
+      return arr?arr.reduce((a,v)=>a+v,0)/arr.length:null;
+    });
+    const comDados=precos.filter(p=>p!==null);
+    if(comDados.length<1)return null;
+    const primeiro=comDados[0],ultimo=comDados[comDados.length-1];
+    const varTotal=primeiro>0?((ultimo-primeiro)/primeiro)*100:null;
+    return{ins,precos,varTotal};
+  }).filter(Boolean).sort((a,b)=>(b.varTotal||0)-(a.varTotal||0));
+
+  if(!linhas.length){
+    wrap.innerHTML='<div class="empty">Nenhum dado de preço no período.</div>';
+    return;
+  }
+
+  const nomeMes=m=>{
+    const [y,mo]=m.split('-');
+    return new Date(y,mo-1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.','');
+  };
+
+  let ths=`<th>Insumo</th><th>Un.</th>`;
+  meses.forEach((m,i)=>{
+    ths+=`<th class="r" style="white-space:nowrap">${nomeMes(m)}</th>`;
+    if(i<meses.length-1)ths+=`<th class="c" style="width:52px;font-size:10px">Δ</th>`;
+  });
+  ths+=`<th class="r" style="white-space:nowrap">Var. Total</th>`;
+
+  const rows=linhas.map(({ins,precos,varTotal})=>{
+    let tds=`<td style="font-weight:500;white-space:nowrap">${esc(ins.nome)}</td>`;
+    tds+=`<td style="color:var(--text3);font-size:11px">${esc(ins.unidade_medida||ins.unidade_compra||'un')}</td>`;
+    precos.forEach((p,i)=>{
+      tds+=p!==null
+        ?`<td class="r mono" style="font-size:12px">${brl(p)}</td>`
+        :`<td class="r" style="color:var(--text3)">—</td>`;
+      if(i<precos.length-1){
+        const prev=[...precos].slice(0,i+1).reverse().find(x=>x!==null);
+        if(prev&&p){
+          const delta=((p-prev)/prev)*100;
+          const cor=delta>2?'#dc2626':delta<-2?'#16a34a':'var(--text3)';
+          const sinal=delta>0?'+':'';
+          tds+=`<td class="c" style="font-size:11px;font-weight:600;color:${cor};white-space:nowrap">${sinal}${delta.toFixed(1)}%</td>`;
+        }else{tds+=`<td class="c" style="color:var(--text3)">—</td>`;}
+      }
+    });
+    if(varTotal!==null){
+      const cor=varTotal>5?'#dc2626':varTotal<-5?'#16a34a':'var(--text3)';
+      const sinal=varTotal>0?'+':'';
+      tds+=`<td class="r mono" style="font-weight:700;color:${cor}">${sinal}${varTotal.toFixed(1)}%</td>`;
+    }else{tds+=`<td class="r" style="color:var(--text3)">—</td>`;}
+    return`<tr>${tds}</tr>`;
+  }).join('');
+
+  wrap.innerHTML=`<table class="tbl" style="min-width:700px">
+    <thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+async function init() {
+  try {
+    lojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    const sel = document.getElementById('sel-loja');
+    sel.innerHTML = '<option value="">Todas as lojas</option>' +
+      lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+  } catch {}
+  await carregar();
+}
+
+init();
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>
