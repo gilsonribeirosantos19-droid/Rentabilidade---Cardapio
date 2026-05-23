@@ -772,7 +772,7 @@ carregar();
   var tr=document.querySelector('.nav-sub-wrap'),fl=document.getElementById('cfg-flyout');
   if(!tr||!fl)return;
   var t;
-  function show(){clearTimeout(t);var r=tr.getBoundingClientRect();fl.style.top=r.top+'px';fl.style.display='block';}
+  function show(){clearTimeout(t);var r=tr.getBoundingClientRect();fl.style.display='block';var fh=fl.offsetHeight;var top=r.top;if(top+fh>window.innerHeight-8)top=Math.max(8,window.innerHeight-fh-8);fl.style.top=top+'px';}
   function hide(){t=setTimeout(function(){fl.style.display='none';},200);}
   tr.addEventListener('mouseenter',show);tr.addEventListener('mouseleave',hide);
   fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
