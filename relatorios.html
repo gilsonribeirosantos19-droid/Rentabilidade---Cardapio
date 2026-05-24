@@ -208,12 +208,7 @@
     <!-- EVOLUÇÃO MENSAL -->
     <div id="pane-evolucao" class="rel-pane">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-        <div style="font-size:15px;font-weight:700;color:var(--text1)">Evolução Mensal de Entradas e Saídas</div>
-        <select id="ev-meses" onchange="renderEvolucao()" class="field" style="font-size:12px;padding:5px 10px;width:auto">
-          <option value="3">Últimos 3 meses</option>
-          <option value="6" selected>Últimos 6 meses</option>
-          <option value="12">Últimos 12 meses</option>
-        </select>
+        <div style="font-size:15px;font-weight:700;color:var(--text1)">Saídas por Mês — 2026</div>
         <input type="text" id="ev-busca" placeholder="Filtrar insumo..." oninput="renderEvolucao()" class="field" style="width:180px;font-size:12px;padding:5px 10px">
         <div style="position:relative;margin-left:auto">
           <button class="btn btn-ghost btn-sm" onclick="toggleEvCols()" id="btn-ev-cols">⊞ Colunas</button>
@@ -479,118 +474,84 @@ async function init() {
 }
 
 // ── EVOLUÇÃO MENSAL ───────────────────────────────────────────────
-function getMeses(n) {
-  const meses = [];
-  const now = new Date();
-  for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const label = d.toLocaleDateString('pt-BR', {month:'short', year:'2-digit'}).replace('. de ',' ').replace('.','');
-    meses.push({key, label});
-  }
-  return meses;
-}
+const EV_MESES_2026 = [
+  {key:'2026-01',label:'Jan'},{key:'2026-02',label:'Fev'},{key:'2026-03',label:'Mar'},
+  {key:'2026-04',label:'Abr'},{key:'2026-05',label:'Mai'},{key:'2026-06',label:'Jun'},
+  {key:'2026-07',label:'Jul'},{key:'2026-08',label:'Ago'},{key:'2026-09',label:'Set'},
+  {key:'2026-10',label:'Out'},{key:'2026-11',label:'Nov'},{key:'2026-12',label:'Dez'},
+];
 
-function loadEvCols(meses) {
-  try { return JSON.parse(localStorage.getItem('ev_cols')||'null'); } catch { return null; }
-}
+function loadEvCols(){try{return JSON.parse(localStorage.getItem('ev_cols')||'null');}catch{return null;}}
 
-function applyEvCols(meses) {
-  const saved = loadEvCols();
-  meses.forEach(m => {
-    const vis = saved ? (saved[m.key] !== false) : true;
-    document.querySelectorAll(`[data-mes="${m.key}"]`).forEach(el => {
-      el.style.display = vis ? '' : 'none';
-    });
+function applyEvCols(){
+  const saved=loadEvCols();
+  EV_MESES_2026.forEach(m=>{
+    const vis=saved?(saved[m.key]!==false):true;
+    document.querySelectorAll(`[data-mes="${m.key}"]`).forEach(el=>el.style.display=vis?'':'none');
   });
 }
 
-function renderEvColsDropdown(meses) {
-  const saved = loadEvCols();
-  document.getElementById('ev-cols-list').innerHTML = meses.map(m => {
-    const vis = saved ? (saved[m.key] !== false) : true;
-    return `<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;cursor:pointer">
-      <input type="checkbox" ${vis?'checked':''} onchange="toggleEvCol('${m.key}',this.checked)">
-      ${m.label}
+function renderEvColsDropdown(){
+  const saved=loadEvCols();
+  document.getElementById('ev-cols-list').innerHTML=EV_MESES_2026.map(m=>{
+    const vis=saved?(saved[m.key]!==false):true;
+    return `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;cursor:pointer">
+      <input type="checkbox" ${vis?'checked':''} onchange="toggleEvCol('${m.key}',this.checked)"> ${m.label} 2026
     </label>`;
   }).join('');
 }
 
-function toggleEvCol(key, visible) {
-  const saved = loadEvCols() || {};
-  saved[key] = visible;
-  localStorage.setItem('ev_cols', JSON.stringify(saved));
-  const meses = getMeses(Number(document.getElementById('ev-meses').value)||6);
-  applyEvCols(meses);
+function toggleEvCol(key,visible){
+  const saved=loadEvCols()||{};
+  saved[key]=visible;
+  localStorage.setItem('ev_cols',JSON.stringify(saved));
+  applyEvCols();
 }
 
-function toggleEvCols() {
-  const d = document.getElementById('ev-cols-dropdown');
-  if (d.style.display === 'none') {
-    const meses = getMeses(Number(document.getElementById('ev-meses').value)||6);
-    renderEvColsDropdown(meses);
-    d.style.display = '';
-  } else {
-    d.style.display = 'none';
-  }
+function toggleEvCols(){
+  const d=document.getElementById('ev-cols-dropdown');
+  if(d.style.display==='none'){renderEvColsDropdown();d.style.display='';}
+  else d.style.display='none';
 }
 
-document.addEventListener('click', e => {
-  const dd = document.getElementById('ev-cols-dropdown');
-  const btn = document.getElementById('btn-ev-cols');
-  if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target)) dd.style.display = 'none';
+document.addEventListener('click',e=>{
+  const dd=document.getElementById('ev-cols-dropdown');
+  const btn=document.getElementById('btn-ev-cols');
+  if(dd&&btn&&!dd.contains(e.target)&&!btn.contains(e.target))dd.style.display='none';
 });
 
-async function renderEvolucao() {
-  const n = Number(document.getElementById('ev-meses').value) || 6;
-  const busca = document.getElementById('ev-busca').value.toLowerCase();
-  const meses = getMeses(n);
-  const thead = document.getElementById('ev-thead');
-  const tbody = document.getElementById('ev-body');
+async function renderEvolucao(){
+  const busca=document.getElementById('ev-busca').value.toLowerCase();
+  const thead=document.getElementById('ev-thead');
+  const tbody=document.getElementById('ev-body');
 
-  // Monta cabeçalho
-  thead.innerHTML = `<th>Insumo</th>` +
-    meses.map(m => `<th data-mes="${m.key}" colspan="2" class="r" style="text-align:center;border-left:2px solid var(--border2)">${m.label}</th>`).join('');
+  thead.innerHTML=`<th style="min-width:140px">Insumo</th>` +
+    EV_MESES_2026.map(m=>`<th data-mes="${m.key}" class="r">${m.label}</th>`).join('');
 
-  // Linha de sub-cabeçalho
-  const subHead = document.createElement('tr');
-  subHead.style.cssText = 'font-size:10px;color:var(--text3)';
-  subHead.innerHTML = `<th></th>` +
-    meses.map(m => `<th data-mes="${m.key}" class="r" style="border-left:2px solid var(--border2)">ENT</th><th data-mes="${m.key}" class="r">SAÍ</th>`).join('');
-  thead.after(subHead);
+  tbody.innerHTML='<tr><td colspan="13" class="empty">Calculando...</td></tr>';
 
-  tbody.innerHTML = '<tr><td colspan="99" class="empty">Calculando...</td></tr>';
+  try{
+    const saisAll=await api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.2026-01-01&criado_em=lte.2026-12-31T23:59:59`);
 
-  try {
-    const inicio = meses[0].key + '-01';
-    const fimMes = new Date(); fimMes.setMonth(fimMes.getMonth()+1); fimMes.setDate(0);
-    const fim = fimMes.toISOString().split('T')[0];
+    let insFilt=insumos.filter(i=>i.ativo!==false);
+    if(busca)insFilt=insFilt.filter(i=>i.nome.toLowerCase().includes(busca));
 
-    const [entsAll, saisAll] = await Promise.all([
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${inicio}&criado_em=lte.${fim}T23:59:59`),
-      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${inicio}&criado_em=lte.${fim}T23:59:59`)
-    ]);
-
-    let insFilt = insumos.filter(i => i.ativo !== false);
-    if (busca) insFilt = insFilt.filter(i => i.nome.toLowerCase().includes(busca));
-
-    const rows = insFilt.map(ins => {
-      const cols = meses.map(m => {
-        const ent = entsAll.filter(e => e.insumo_id===ins.id && (e.criado_em||'').startsWith(m.key))
-          .reduce((a,e)=>a+(e.quantidade||0),0);
-        const sai = saisAll.filter(s => s.insumo_id===ins.id && (s.criado_em||'').startsWith(m.key))
-          .reduce((a,s)=>a+(s.quantidade||0),0);
-        const entStr = ent>0 ? `<span style="color:var(--green)">${fmtQtd(ent)}</span>` : `<span style="color:var(--text3)">—</span>`;
-        const saiStr = sai>0 ? `<span style="color:var(--red)">${fmtQtd(sai)}</span>` : `<span style="color:var(--text3)">—</span>`;
-        return `<td data-mes="${m.key}" class="r mono" style="border-left:2px solid var(--border2)">${entStr}</td><td data-mes="${m.key}" class="r mono">${saiStr}</td>`;
+    const rows=insFilt.map(ins=>{
+      const total=EV_MESES_2026.reduce((a,m)=>{
+        return a+saisAll.filter(s=>s.insumo_id===ins.id&&(s.criado_em||'').startsWith(m.key)).reduce((b,s)=>b+(s.quantidade||0),0);
+      },0);
+      if(total===0)return null;
+      const cols=EV_MESES_2026.map(m=>{
+        const sai=saisAll.filter(s=>s.insumo_id===ins.id&&(s.criado_em||'').startsWith(m.key)).reduce((a,s)=>a+(s.quantidade||0),0);
+        return `<td data-mes="${m.key}" class="r mono">${sai>0?`<span style="color:var(--red)">${fmtQtd(sai)}</span>`:'<span style="color:var(--text3)">—</span>'}</td>`;
       }).join('');
       return `<tr><td style="font-weight:500">${esc(ins.nome)}</td>${cols}</tr>`;
-    });
+    }).filter(Boolean);
 
-    tbody.innerHTML = rows.join('') || '<tr><td colspan="99" class="empty">Nenhum dado encontrado</td></tr>';
-    applyEvCols(meses);
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="99" class="empty">Erro: ${esc(e.message)}</td></tr>`;
+    tbody.innerHTML=rows.join('')||'<tr><td colspan="13" class="empty">Nenhuma saída encontrada em 2026</td></tr>';
+    applyEvCols();
+  }catch(e){
+    tbody.innerHTML=`<tr><td colspan="13" class="empty">Erro: ${esc(e.message)}</td></tr>`;
   }
 }
 
