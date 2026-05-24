@@ -374,10 +374,11 @@
           <div style="font-size:14px;font-weight:700;margin-bottom:16px">Registrar Perda</div>
           <div class="fg">
             <label>Tipo de item</label>
-            <select id="p-tipo" onchange="onTipoChange()" class="field" style="width:100%">
-              <option value="insumo">Insumo (matéria-prima)</option>
-              <option value="produto">Produto acabado (ficha técnica)</option>
-            </select>
+            <div style="display:flex;gap:8px">
+              <button id="p-tipo-insumo" class="cat-btn active" onclick="setTipoPerda('insumo')">Insumo</button>
+              <button id="p-tipo-produto" class="cat-btn" onclick="setTipoPerda('produto')">Produto acabado</button>
+            </div>
+            <input type="hidden" id="p-tipo" value="insumo">
           </div>
           <div class="fg">
             <label id="p-item-label">Insumo *</label>
@@ -813,6 +814,13 @@ function iniciarPerdas() {
   // Insumos no select
   popularItemPerda('insumo');
   carregarHistoricoPerdas();
+}
+
+function setTipoPerda(tipo) {
+  document.getElementById('p-tipo').value = tipo;
+  document.getElementById('p-tipo-insumo').classList.toggle('active', tipo==='insumo');
+  document.getElementById('p-tipo-produto').classList.toggle('active', tipo==='produto');
+  onTipoChange();
 }
 
 function onTipoChange() {
