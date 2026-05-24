@@ -6,7 +6,9 @@
       "Bash(git push *)",
       "Bash(git checkout *)",
       "Bash(git merge *)",
-      "Bash(Select-String \"grupos_\")"
+      "Bash(Select-String \"grupos_\")",
+      "Read(//c/Users/gilso/OneDrive/Área de Trabalho/Codigo/**)",
+      "Bash(npx create-next-app@latest aiko-next --js --no-tailwind --no-eslint --no-src-dir --no-app --import-alias \"@/*\")"
     ]
   }
 }

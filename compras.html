@@ -197,11 +197,6 @@
     <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
     </div>
   </div>
-  <div class="nav-user">
-    <div class="nav-user-nome" id="sb-user-nome">—</div>
-    <div class="nav-user-perfil" id="sb-user-perfil">—</div>
-    <span class="nav-user-sair" onclick="sair()">← Sair</span>
-  </div>
 </nav>
 
 <!-- MAIN -->
@@ -209,6 +204,10 @@
   <div class="topbar">
     <span class="topbar-title">Pedidos de Compra</span>
     <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+    <div id="topbar-user" style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
+      <span onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:12px;color:#dc2626;cursor:pointer;border:1px solid #fca5a5;padding:4px 12px;border-radius:20px;font-weight:600;white-space:nowrap">← Sair</span>
+    </div>
   </div>
   <div class="content">
 
@@ -471,8 +470,10 @@ async function carregar() {
   userProfile = getUser();
   const isGerente = userProfile?.perfil === 'gerente';
 
-  document.getElementById('sb-user-nome').textContent = userProfile?.nome || 'Usuário';
-  document.getElementById('sb-user-perfil').textContent = userProfile?.perfil || 'admin';
+  const _sbNome = document.getElementById('sb-user-nome');
+  const _sbPerfil = document.getElementById('sb-user-perfil');
+  if (_sbNome) _sbNome.textContent = userProfile?.nome || 'Usuário';
+  if (_sbPerfil) _sbPerfil.textContent = userProfile?.perfil || 'admin';
 
   document.getElementById('conn-status').textContent = 'carregando...';
   try {
