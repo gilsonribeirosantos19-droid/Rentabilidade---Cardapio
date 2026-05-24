@@ -418,8 +418,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   const user = userRaw ? JSON.parse(userRaw) : null;
   const perfil = user?.perfil || '';
 
-  document.getElementById('sb-user-nome').textContent = user?.nome || '—';
-  document.getElementById('sb-user-perfil').textContent = perfil || '—';
+  const elNome = document.getElementById('sb-user-nome');
+  if (elNome) elNome.textContent = user?.nome || '—';
 
   if (perfil !== 'admin') {
     document.getElementById('conteudo-admin').style.display = 'none';
