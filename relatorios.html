@@ -146,6 +146,7 @@
       <button class="sub-tab"        id="tab-abc"      onclick="switchTab('abc')">Curva ABC</button>
       <button class="sub-tab"        id="tab-inflacao" onclick="switchTab('inflacao')">Inflação</button>
       <button class="sub-tab"        id="tab-evolucao" onclick="switchTab('evolucao')">Evolução Mensal</button>
+      <button class="sub-tab"        id="tab-entradas" onclick="switchTab('entradas')">Entradas</button>
     </div>
 
     <!-- RESUMO -->
@@ -227,6 +228,57 @@
       </div><!-- /position:relative -->
     </div>
 
+    <!-- ENTRADAS -->
+    <div id="pane-entradas" class="rel-pane">
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:16px;align-items:end">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Inicial</label>
+            <input type="date" id="ent-ini" class="field" style="width:100%">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Final</label>
+            <input type="date" id="ent-fim" class="field" style="width:100%">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Fornecedor</label>
+            <select id="ent-forn" class="field" style="width:100%">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Insumo</label>
+            <select id="ent-ins" class="field" style="width:100%">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="renderEntradas()" style="height:40px">Consultar</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div id="ent-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px"></div>
+
+      <!-- Tabela -->
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr>
+            <th>Data</th>
+            <th>Fornecedor</th>
+            <th>Insumo</th>
+            <th>Un. Compra</th>
+            <th class="r">Qtd</th>
+            <th class="r">Custo Unit.</th>
+            <th class="r">Total</th>
+            <th>NF-e</th>
+            <th>Loja</th>
+          </tr></thead>
+          <tbody id="ent-body"><tr><td colspan="9" class="empty">Selecione o período e clique em Consultar.</td></tr></tbody>
+          <tfoot id="ent-foot"></tfoot>
+        </table>
+      </div></div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -269,12 +321,13 @@ function switchTab(nome) {
   tabAtual = nome;
   document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-'+nome).classList.add('active');
-  ['resumo','abc','inflacao','evolucao'].forEach(t=>
+  ['resumo','abc','inflacao','evolucao','entradas'].forEach(t=>
     document.getElementById('tab-'+t).classList.toggle('active',t===nome));
   if (nome==='resumo')   renderResumo();
   if (nome==='abc')      renderABC();
   if (nome==='inflacao') renderInflacao();
   if (nome==='evolucao') renderEvolucao();
+  if (nome==='entradas') iniciarEntradas();
 }
 
 // ── LOAD ──────────────────────────────────────────────────────────
@@ -559,6 +612,105 @@ async function renderEvolucao(){
     tbody.innerHTML=`<tr><td colspan="13" class="empty">Erro: ${esc(e.message)}</td></tr>`;
   }
 }
+
+// ── ENTRADAS ──────────────────────────────────────────────────────
+let _fornecedores = [];
+
+async function iniciarEntradas() {
+  // Datas padrão
+  const ini = document.getElementById('ent-ini');
+  const fim = document.getElementById('ent-fim');
+  if (!ini.value) ini.value = primeiroDiaMes();
+  if (!fim.value) fim.value = hoje();
+
+  // Popula fornecedores
+  if (!_fornecedores.length) {
+    try { _fornecedores = await api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`); } catch {}
+    const sel = document.getElementById('ent-forn');
+    sel.innerHTML = '<option value="">Todos</option>' +
+      _fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('');
+  }
+
+  // Popula insumos
+  const selIns = document.getElementById('ent-ins');
+  selIns.innerHTML = '<option value="">Todos</option>' +
+    insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
+}
+
+async function renderEntradas() {
+  const ini    = document.getElementById('ent-ini').value;
+  const fim    = document.getElementById('ent-fim').value;
+  const fornId = document.getElementById('ent-forn').value;
+  const insId  = document.getElementById('ent-ins').value;
+  const tbody  = document.getElementById('ent-body');
+  const tfoot  = document.getElementById('ent-foot');
+
+  if (!ini || !fim) { toast('Selecione o período.','err'); return; }
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Carregando...</td></tr>';
+
+  try {
+    let q = `entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${ini}&criado_em=lte.${fim}T23:59:59&order=criado_em.desc`;
+    if (fornId) q += `&fornecedor_id=eq.${fornId}`;
+    if (insId)  q += `&insumo_id=eq.${insId}`;
+
+    const ents = await api(q);
+    const lojasData = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true`);
+
+    if (!ents.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty">Nenhuma entrada encontrada.</td></tr>';
+      document.getElementById('ent-kpis').innerHTML = '';
+      return;
+    }
+
+    const totalQtd   = ents.reduce((a,e)=>a+(e.quantidade||0),0);
+    const totalValor = ents.reduce((a,e)=>a+(e.custo_total||0),0);
+    const totalNF    = new Set(ents.filter(e=>e.nfe_numero).map(e=>e.nfe_numero)).size;
+
+    document.getElementById('ent-kpis').innerHTML = `
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total de lançamentos</div>
+        <div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace">${ents.length}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Valor total entrado</div>
+        <div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green)">${brl(totalValor)}</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">NF-e lançadas</div>
+        <div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace">${totalNF}</div>
+      </div>`;
+
+    tbody.innerHTML = ents.map(e => {
+      const ins  = insumos.find(i=>i.id===e.insumo_id);
+      const forn = _fornecedores.find(f=>f.id===e.fornecedor_id);
+      const loja = lojasData.find(l=>l.id===e.loja_id);
+      const data = e.criado_em ? new Date(e.criado_em).toLocaleDateString('pt-BR') : '—';
+      return `<tr>
+        <td class="mono">${data}</td>
+        <td>${esc(forn?.nome||e.fornecedor_nome||'—')}</td>
+        <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+        <td style="color:var(--text3)">${esc(e.unidade_compra||'—')}</td>
+        <td class="r mono">${fmtQtd(e.quantidade)}</td>
+        <td class="r mono">${brl(e.custo_unitario)}</td>
+        <td class="r mono" style="font-weight:600">${brl(e.custo_total)}</td>
+        <td style="font-size:12px;color:var(--text3)">${esc(e.nfe_numero||'—')}</td>
+        <td style="font-size:12px;color:var(--text3)">${esc(loja?.nome||'—')}</td>
+      </tr>`;
+    }).join('');
+
+    tfoot.innerHTML = `<tr style="background:var(--bg3);font-weight:700">
+      <td colspan="6">Total</td>
+      <td class="r mono">${brl(totalValor)}</td>
+      <td colspan="2"></td>
+    </tr>`;
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Erro: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function primeiroDiaMes(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;}
+function hoje(){return new Date().toISOString().split('T')[0];}
 
 init();
 </script>
