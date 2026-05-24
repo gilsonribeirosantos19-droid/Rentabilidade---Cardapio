@@ -368,18 +368,42 @@
 
       <!-- LISTA -->
       <div id="inv-lista">
-        <div class="toolbar">
+        <!-- Ações -->
+        <div class="toolbar" style="margin-bottom:16px">
           <button class="btn btn-primary" onclick="abrirModalNovoInv()">+ Novo inventário</button>
-          <select class="field field-sm" id="inv-fil-status" onchange="renderInvLista()">
-            <option value="">Todos os status</option>
-            <option value="ativo">Ativos</option>
-            <option value="encerrado">Encerrados</option>
-          </select>
-          <select class="field field-sm" id="inv-fil-loja" onchange="renderInvLista()">
-            <option value="">Todas as lojas</option>
-          </select>
-          <button class="btn btn-ghost btn-sm ml" onclick="renderInvLista()">↻ Atualizar</button>
-          <button class="btn btn-ghost btn-sm" onclick="abrirModalGrupos()">⚙ Grupos</button>
+          <button class="btn btn-ghost btn-sm ml" onclick="abrirModalGrupos()">⚙ Grupos</button>
+        </div>
+        <!-- Filtros -->
+        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:16px;align-items:end">
+            <div class="fg" style="margin:0">
+              <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Loja</label>
+              <select id="inv-fil-loja" class="field" style="width:100%">
+                <option value="">Todas as lojas</option>
+              </select>
+            </div>
+            <div class="fg" style="margin:0">
+              <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Inicial</label>
+              <input type="date" id="inv-fil-ini" class="field" style="width:100%">
+            </div>
+            <div class="fg" style="margin:0">
+              <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Final</label>
+              <input type="date" id="inv-fil-fim" class="field" style="width:100%">
+            </div>
+            <button class="btn btn-primary" onclick="renderInvLista()" style="height:40px;white-space:nowrap">Consultar</button>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:20px;align-items:center">
+            <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Situação</span>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="inv-sit-ativo" checked> Ativo
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="inv-sit-encerrado" checked> Encerrado
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="inv-sit-cancelado"> Cancelado
+            </label>
+          </div>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
@@ -1827,14 +1851,24 @@ async function renderInvLista() {
     sel.innerHTML = '<option value="">Todas as lojas</option>' +
       _invLojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
   }
-  const statusFil = document.getElementById('inv-fil-status')?.value||'';
   const lojaFil   = document.getElementById('inv-fil-loja')?.value||'';
+  const dataIni   = document.getElementById('inv-fil-ini')?.value||'';
+  const dataFim   = document.getElementById('inv-fil-fim')?.value||'';
+  const sitAtivo     = document.getElementById('inv-sit-ativo')?.checked;
+  const sitEncerrado = document.getElementById('inv-sit-encerrado')?.checked;
+  const sitCancelado = document.getElementById('inv-sit-cancelado')?.checked;
+  const situacoes = [];
+  if (sitAtivo)     situacoes.push('ativo');
+  if (sitEncerrado) situacoes.push('encerrado','fechado');
+  if (sitCancelado) situacoes.push('cancelado');
   const tbody = document.getElementById('inv-lista-body');
   tbody.innerHTML = '<tr><td colspan="7" class="empty">Carregando...</td></tr>';
   try {
     let q = `inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`;
-    if (statusFil) q += `&status=eq.${statusFil}`;
+    if (situacoes.length) q += `&status=in.(${situacoes.join(',')})`;
     if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
+    if (dataIni)   q += `&criado_em=gte.${dataIni}`;
+    if (dataFim)   q += `&criado_em=lte.${dataFim}T23:59:59`;
     const lista = await api(q);
     if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
     const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso'};
