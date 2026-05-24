@@ -483,17 +483,31 @@
           <select class="field field-sm" id="mov-ins"><option value="">Todos os insumos</option></select>
           <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
           <button class="btn btn-ghost btn-sm" onclick="exportMovCSV()">↓ CSV</button>
+          <div style="position:relative;margin-left:auto">
+            <button class="btn btn-ghost btn-sm" onclick="toggleColsDropdown()" id="btn-cols">⊞ Colunas</button>
+            <div id="cols-dropdown" style="display:none;position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--border2);border-radius:10px;padding:12px;z-index:100;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,.1)">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Colunas visíveis</div>
+              <div id="cols-list"></div>
+            </div>
+          </div>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr>
-              <th>Descrição</th><th>Un.</th><th>Grupo</th>
-              <th class="r">Q.Anterior</th><th class="r">V.Anterior</th>
-              <th class="r">Q.Entradas</th><th class="r">V.Entradas</th>
-              <th class="r">Q.Consumo</th><th class="r">V.Consumo</th>
-              <th class="r">Q.Perdas</th><th class="r">V.Perdas</th>
-              <th class="r">Q.Final</th><th class="r">V.Final</th>
-              <th class="r">C.Médio</th>
+          <table class="tbl" id="mov-tbl">
+            <thead><tr id="mov-thead">
+              <th data-col="descricao">Descrição</th>
+              <th data-col="un">Un.</th>
+              <th data-col="grupo">Grupo</th>
+              <th data-col="q-anterior" class="r">Q.Anterior</th>
+              <th data-col="v-anterior" class="r">V.Anterior</th>
+              <th data-col="q-entradas" class="r">Q.Entradas</th>
+              <th data-col="v-entradas" class="r">V.Entradas</th>
+              <th data-col="q-consumo" class="r">Q.Consumo</th>
+              <th data-col="v-consumo" class="r">V.Consumo</th>
+              <th data-col="q-perdas" class="r">Q.Perdas</th>
+              <th data-col="v-perdas" class="r">V.Perdas</th>
+              <th data-col="q-final" class="r">Q.Final</th>
+              <th data-col="v-final" class="r">V.Final</th>
+              <th data-col="c-medio" class="r">C.Médio</th>
             </tr></thead>
             <tbody id="mov-body"><tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr></tbody>
             <tfoot id="mov-foot"></tfoot>
@@ -2187,29 +2201,104 @@ async function renderMovimentacao() {
     tQAnt+=qAnt;tVAnt+=vAnt;tQEnt+=qEnt;tVEnt+=vEnt;tQCon+=qCon;tVCon+=vCon;
     tQPerd+=qPerd;tVPerd+=vPerd;tQFin+=qFin;tVFin+=vFin;
     return `<tr>
-      <td style="font-weight:500">${esc(ins.nome)}</td>
-      <td style="color:var(--text3)">${ins.unidade_medida||ins.unidade_compra||'—'}</td>
-      <td style="color:var(--text3)">${esc(ins.categoria||'—')}</td>
-      <td class="r mono">${qtd(qAnt)}</td><td class="r mono">${brl(vAnt)}</td>
-      <td class="r mono">${qtd(qEnt)}</td><td class="r mono">${brl(vEnt)}</td>
-      <td class="r mono">${qtd(qCon)}</td><td class="r mono">${brl(vCon)}</td>
-      <td class="r mono">${qtd(qPerd)}</td><td class="r mono">${brl(vPerd)}</td>
-      <td class="r mono">${qtd(qFin)}</td><td class="r mono">${brl(vFin)}</td>
-      <td class="r mono">${brl(cm)}</td>
+      <td data-col="descricao" style="font-weight:500">${esc(ins.nome)}</td>
+      <td data-col="un" style="color:var(--text3)">${ins.unidade_medida||ins.unidade_compra||'—'}</td>
+      <td data-col="grupo" style="color:var(--text3)">${esc(ins.categoria||'—')}</td>
+      <td data-col="q-anterior" class="r mono">${qtd(qAnt)}</td>
+      <td data-col="v-anterior" class="r mono">${brl(vAnt)}</td>
+      <td data-col="q-entradas" class="r mono">${qtd(qEnt)}</td>
+      <td data-col="v-entradas" class="r mono">${brl(vEnt)}</td>
+      <td data-col="q-consumo" class="r mono">${qtd(qCon)}</td>
+      <td data-col="v-consumo" class="r mono">${brl(vCon)}</td>
+      <td data-col="q-perdas" class="r mono">${qtd(qPerd)}</td>
+      <td data-col="v-perdas" class="r mono">${brl(vPerd)}</td>
+      <td data-col="q-final" class="r mono">${qtd(qFin)}</td>
+      <td data-col="v-final" class="r mono">${brl(vFin)}</td>
+      <td data-col="c-medio" class="r mono">${brl(cm)}</td>
     </tr>`;
   });
   tbody.innerHTML = rows.join('') || '<tr><td colspan="14" class="empty"><b>Nenhum dado encontrado</b></td></tr>';
   tfoot.innerHTML = `<tr style="background:var(--bg3);font-weight:700">
-    <td colspan="3">Total</td>
-    <td class="r mono">${qtd(tQAnt)}</td><td class="r mono">${brl(tVAnt)}</td>
-    <td class="r mono">${qtd(tQEnt)}</td><td class="r mono">${brl(tVEnt)}</td>
-    <td class="r mono">${qtd(tQCon)}</td><td class="r mono">${brl(tVCon)}</td>
-    <td class="r mono">${qtd(tQPerd)}</td><td class="r mono">${brl(tVPerd)}</td>
-    <td class="r mono">${qtd(tQFin)}</td><td class="r mono">${brl(tVFin)}</td>
-    <td></td>
+    <td data-col="descricao">Total</td>
+    <td data-col="un"></td><td data-col="grupo"></td>
+    <td data-col="q-anterior" class="r mono">${qtd(tQAnt)}</td>
+    <td data-col="v-anterior" class="r mono">${brl(tVAnt)}</td>
+    <td data-col="q-entradas" class="r mono">${qtd(tQEnt)}</td>
+    <td data-col="v-entradas" class="r mono">${brl(tVEnt)}</td>
+    <td data-col="q-consumo" class="r mono">${qtd(tQCon)}</td>
+    <td data-col="v-consumo" class="r mono">${brl(tVCon)}</td>
+    <td data-col="q-perdas" class="r mono">${qtd(tQPerd)}</td>
+    <td data-col="v-perdas" class="r mono">${brl(tVPerd)}</td>
+    <td data-col="q-final" class="r mono">${qtd(tQFin)}</td>
+    <td data-col="v-final" class="r mono">${brl(tVFin)}</td>
+    <td data-col="c-medio"></td>
   </tr>`;
+  applyMovCols();
   window._movRows = { insFilt, invIni, entsPer, saisPer, de, ate };
 }
+
+// ── TOGGLE COLUNAS MOVIMENTAÇÃO ────────────────────────────────────
+const MOV_COLS = [
+  {id:'descricao', label:'Descrição', fixed:true},
+  {id:'un',        label:'Un.',       def:true},
+  {id:'grupo',     label:'Grupo',     def:true},
+  {id:'q-anterior',label:'Q.Anterior',def:false},
+  {id:'v-anterior',label:'V.Anterior',def:false},
+  {id:'q-entradas',label:'Q.Entradas',def:true},
+  {id:'v-entradas',label:'V.Entradas',def:false},
+  {id:'q-consumo', label:'Q.Consumo', def:true},
+  {id:'v-consumo', label:'V.Consumo', def:false},
+  {id:'q-perdas',  label:'Q.Perdas',  def:true},
+  {id:'v-perdas',  label:'V.Perdas',  def:false},
+  {id:'q-final',   label:'Q.Final',   def:true},
+  {id:'v-final',   label:'V.Final',   def:false},
+  {id:'c-medio',   label:'C.Médio',   def:true},
+];
+
+function loadMovColsState() {
+  try { return JSON.parse(localStorage.getItem('mov_cols')||'null'); } catch { return null; }
+}
+
+function applyMovCols() {
+  const saved = loadMovColsState();
+  MOV_COLS.forEach(col => {
+    const visible = col.fixed ? true : (saved ? (saved[col.id] !== false) : col.def);
+    document.querySelectorAll(`[data-col="${col.id}"]`).forEach(el => {
+      el.style.display = visible ? '' : 'none';
+    });
+  });
+}
+
+function renderColsDropdown() {
+  const saved = loadMovColsState();
+  const list = document.getElementById('cols-list');
+  list.innerHTML = MOV_COLS.map(col => {
+    const visible = col.fixed ? true : (saved ? (saved[col.id] !== false) : col.def);
+    return `<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;cursor:${col.fixed?'default':'pointer'}">
+      <input type="checkbox" ${visible?'checked':''} ${col.fixed?'disabled':''} onchange="toggleMovCol('${col.id}',this.checked)">
+      ${col.label}
+    </label>`;
+  }).join('');
+}
+
+function toggleMovCol(colId, visible) {
+  const saved = loadMovColsState() || {};
+  saved[colId] = visible;
+  localStorage.setItem('mov_cols', JSON.stringify(saved));
+  applyMovCols();
+}
+
+function toggleColsDropdown() {
+  const d = document.getElementById('cols-dropdown');
+  if (d.style.display === 'none') { renderColsDropdown(); d.style.display = ''; }
+  else d.style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  const dd = document.getElementById('cols-dropdown');
+  const btn = document.getElementById('btn-cols');
+  if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target)) dd.style.display = 'none';
+});
 
 function exportMovCSV() {
   if (!window._movRows) return;
