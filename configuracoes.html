@@ -177,6 +177,11 @@
     <a class="nav-item active" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
     </div>
     </div>
+  <div class="nav-user" style="padding:12px 18px;border-top:1px solid #e2e8f0;margin-top:auto">
+    <div style="font-size:12px;font-weight:600;color:#0f172a" id="sb-user-nome">—</div>
+    <div style="font-size:11px;color:#94a3b8;text-transform:capitalize" id="sb-user-perfil">—</div>
+    <span onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:11px;color:#dc2626;cursor:pointer;margin-top:4px;display:inline-block">← Sair</span>
+  </div>
   </nav>
 
   <!-- MAIN -->
