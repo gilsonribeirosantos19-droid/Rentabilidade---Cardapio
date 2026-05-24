@@ -1021,7 +1021,7 @@ function switchTab(tab) {
   const el = document.getElementById('tab-'+tab);
   if (el) el.classList.add('active');
   if (tab==='kardex') renderKardex();
-  if (tab==='inventario') renderInvLista();
+  if (tab==='inventario') iniciarAbaInventario();
   if (tab==='movimentacao') renderMovimentacao();
   if (tab==='relatorios') { switchRelTab('resumo'); }
   if (tab==='compras') { renderCompras(); }
@@ -1852,14 +1852,19 @@ async function iniciarInventario() {
 let invAberto = null; // inventário atual no detalhe
 let _invLojas = [];
 
-async function renderInvLista() {
+async function iniciarAbaInventario() {
   await carregarGrupos();
   if (!_invLojas.length) {
     try { _invLojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`); } catch{}
     const sel = document.getElementById('inv-fil-loja');
-    sel.innerHTML = '<option value="">Todas as lojas</option>' +
+    if (sel) sel.innerHTML = '<option value="">Todas as lojas</option>' +
       _invLojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
   }
+  document.getElementById('inv-lista-body').innerHTML =
+    '<tr><td colspan="7" class="empty">Selecione os filtros e clique em Consultar.</td></tr>';
+}
+
+async function renderInvLista() {
   const lojaFil   = document.getElementById('inv-fil-loja')?.value||'';
   const dataIni   = document.getElementById('inv-fil-ini')?.value||'';
   const dataFim   = document.getElementById('inv-fil-fim')?.value||'';
