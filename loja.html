@@ -1021,7 +1021,7 @@ function popularInsumosMov() {
   const lista = getInsumosFiltrados(movCatAtual);
   const sel = document.getElementById('mov-insumo');
   sel.innerHTML = '<option value="">Selecione...</option>' +
-    lista.map(i=>`<option value="${i.id}" data-un="${esc(i.unidade_medida||'un')}">${esc(i.nome)}</option>`).join('');
+    lista.map(i=>`<option value="${i.id}" data-un="${esc(i.unidade_compra||'un')}">${esc(i.nome)}</option>`).join('');
   document.getElementById('mov-un').textContent = '';
 }
 
