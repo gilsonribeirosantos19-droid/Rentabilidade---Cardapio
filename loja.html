@@ -216,8 +216,12 @@
       <!-- Etapa 1: grupos e itens -->
       <div id="sol-etapa1">
         <div style="margin-bottom:20px">
-          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Grupo de itens</div>
-          <div id="sol-grupos-btns" class="grupo-btns"></div>
+          <div class="fg">
+            <label>Grupo de itens</label>
+            <select id="sol-grupos-btns" class="field" style="width:100%" onchange="selecionarGrupoSol(this.value)">
+              <option value="">Selecione um grupo...</option>
+            </select>
+          </div>
         </div>
         <div id="sol-itens-wrap" style="display:none">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
@@ -374,11 +378,10 @@
           <div style="font-size:14px;font-weight:700;margin-bottom:16px">Registrar Perda</div>
           <div class="fg">
             <label>Tipo de item</label>
-            <div style="display:flex;gap:8px">
-              <button id="p-tipo-insumo" class="cat-btn active" onclick="setTipoPerda('insumo')">Insumo</button>
-              <button id="p-tipo-produto" class="cat-btn" onclick="setTipoPerda('produto')">Produto acabado</button>
-            </div>
-            <input type="hidden" id="p-tipo" value="insumo">
+            <select id="p-tipo" onchange="onTipoChange()" class="field" style="width:100%">
+              <option value="insumo">Insumo (matéria-prima)</option>
+              <option value="produto">Produto acabado (ficha técnica)</option>
+            </select>
           </div>
           <div class="fg">
             <label id="p-item-label">Insumo *</label>
@@ -691,27 +694,23 @@ async function confirmarInventario() {
 // SOLICITAÇÃO DE COMPRA
 // ══════════════════════════════════════════════════════════════════
 function renderGruposSol() {
-  const btns = document.getElementById('sol-grupos-btns');
+  const sel = document.getElementById('sol-grupos-btns');
   const sem = document.getElementById('sol-sem-grupos');
   const gruposComItens = grupos.filter(g => {
     const ids = gruposItens[g.id]||[];
     return insumos.some(i=>ids.includes(i.id));
   });
-  if (!gruposComItens.length) { btns.innerHTML=''; sem.style.display=''; return; }
+  if (!gruposComItens.length) { sel.innerHTML='<option value="">Nenhum grupo cadastrado</option>'; sem.style.display=''; return; }
   sem.style.display='none';
-  btns.innerHTML = gruposComItens.map(g=>`
-    <button class="btn btn-ghost" id="gbtn-${g.id}" onclick="selecionarGrupoSol('${g.id}')"
-      style="font-size:13px;padding:8px 18px">${esc(g.nome)}</button>`).join('');
-  if (gruposComItens.length) selecionarGrupoSol(gruposComItens[0].id);
+  sel.innerHTML = '<option value="">Selecione um grupo...</option>' +
+    gruposComItens.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
+  if (gruposComItens.length) { sel.value = gruposComItens[0].id; selecionarGrupoSol(gruposComItens[0].id); }
 }
 
 function selecionarGrupoSol(grupoId) {
+  if (!grupoId) return;
   solGrupoAtual = grupoId;
   solChecked.clear();
-  document.querySelectorAll('[id^="gbtn-"]').forEach(b => {
-    b.className = b.id===`gbtn-${grupoId}` ? 'btn btn-primary' : 'btn btn-ghost';
-    b.style.cssText = 'font-size:13px;padding:8px 18px';
-  });
   document.getElementById('sol-grupo-titulo').textContent = grupos.find(g=>g.id===grupoId)?.nome||'';
   document.getElementById('sol-itens-wrap').style.display='';
   document.getElementById('sol-chk-all').checked = false;
