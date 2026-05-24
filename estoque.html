@@ -814,7 +814,7 @@
     </div>
     <div class="fg">
       <label>Tipo</label>
-      <select id="ni-tipo">
+      <select id="ni-tipo" onchange="ajustarDatasInv()">
         <option value="mensal">Mensal</option>
         <option value="quinzenal">Quinzenal</option>
         <option value="semanal">Semanal</option>
@@ -1784,8 +1784,7 @@ async function abrirModalNovoInv() {
   const sel = document.getElementById('ni-grupo');
   sel.innerHTML = '<option value="">Selecione o grupo...</option>' +
     grupos.map(g => `<option value="${g.id}">${esc(g.nome)} (${g.tipo||'mensal'} · ${g.itens?.length||0} itens)</option>`).join('');
-  document.getElementById('ni-data-ini').value = primeiroDiaMes();
-  document.getElementById('ni-data-fim').value = hoje();
+  ajustarDatasInv();
   abrirModal('m-novo-inv');
 }
 
@@ -2330,7 +2329,36 @@ async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maxi
 function abrirModal(id) {document.getElementById(id).classList.add('open')}
 function fecharModal(id){document.getElementById(id).classList.remove('open')}
 function hoje(){return new Date().toISOString().split('T')[0]}
-function primeiroDiaMes(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().split('T')[0];}
+function primeiroDiaMes(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;}
+function ultimoDiaMes(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0];}
+function ajustarDatasInv(){
+  const tipo=document.getElementById('ni-tipo')?.value;
+  const ini=document.getElementById('ni-data-ini');
+  const fim=document.getElementById('ni-data-fim');
+  if(!ini||!fim)return;
+  const d=new Date();
+  if(tipo==='mensal'){
+    ini.value=primeiroDiaMes();
+    fim.value=ultimoDiaMes();
+  } else if(tipo==='quinzenal'){
+    const dia=d.getDate();
+    if(dia<=15){
+      ini.value=primeiroDiaMes();
+      fim.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-15`;
+    } else {
+      ini.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-16`;
+      fim.value=ultimoDiaMes();
+    }
+  } else if(tipo==='semanal'){
+    const dow=d.getDay()||7;
+    const seg=new Date(d);seg.setDate(d.getDate()-(dow-1));
+    const dom=new Date(seg);dom.setDate(seg.getDate()+6);
+    ini.value=seg.toISOString().split('T')[0];
+    fim.value=dom.toISOString().split('T')[0];
+  } else {
+    ini.value=hoje();fim.value=hoje();
+  }
+}
 function norm(s){return(s||'').toLowerCase().trim()}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function brl(v){if(v==null||v==='')return'—';return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
