@@ -2330,6 +2330,7 @@ async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maxi
 function abrirModal(id) {document.getElementById(id).classList.add('open')}
 function fecharModal(id){document.getElementById(id).classList.remove('open')}
 function hoje(){return new Date().toISOString().split('T')[0]}
+function primeiroDiaMes(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().split('T')[0];}
 function norm(s){return(s||'').toLowerCase().trim()}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function brl(v){if(v==null||v==='')return'—';return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
