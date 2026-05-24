@@ -265,15 +265,12 @@
           <thead><tr>
             <th>Data</th>
             <th>Fornecedor</th>
-            <th>Insumo</th>
-            <th>Un. Compra</th>
-            <th class="r">Qtd</th>
-            <th class="r">Custo Unit.</th>
-            <th class="r">Total</th>
             <th>NF-e</th>
+            <th>Itens</th>
+            <th class="r">Total</th>
             <th>Loja</th>
           </tr></thead>
-          <tbody id="ent-body"><tr><td colspan="9" class="empty">Selecione o período e clique em Consultar.</td></tr></tbody>
+          <tbody id="ent-body"><tr><td colspan="6" class="empty">Selecione o período e clique em Consultar.</td></tr></tbody>
           <tfoot id="ent-foot"></tfoot>
         </table>
       </div></div>
@@ -705,32 +702,38 @@ async function renderEntradas() {
 
     window._entradasData = { ents, lojasData };
 
-    tbody.innerHTML = ents.map(e => {
-      const ins  = insumos.find(i=>i.id===e.insumo_id);
-      const forn = _fornecedores.find(f=>f.id===e.fornecedor_id);
-      const loja = lojasData.find(l=>l.id===e.loja_id);
-      const data = e.criado_em ? new Date(e.criado_em).toLocaleDateString('pt-BR') : '—';
-      const temNFe = e.nfe_numero;
-      const nfeCell = temNFe
-        ? `<span style="color:var(--teal);cursor:pointer;text-decoration:underline;font-size:12px" onclick="abrirNFe('${e.nfe_numero}')">${esc(e.nfe_numero)}</span>`
-        : `<span style="color:var(--text3)">—</span>`;
-      return `<tr>
+    // Agrupa por NF-e (ou por id individual se não tiver NF-e)
+    const grupos = {};
+    ents.forEach(e => {
+      const key = e.nfe_numero || `__sem__${e.id}`;
+      if (!grupos[key]) grupos[key] = [];
+      grupos[key].push(e);
+    });
+
+    tbody.innerHTML = Object.entries(grupos).map(([key, itens]) => {
+      const primeiro = itens[0];
+      const forn = _fornecedores.find(f=>f.id===primeiro.fornecedor_id);
+      const loja = lojasData.find(l=>l.id===primeiro.loja_id);
+      const data = primeiro.criado_em ? new Date(primeiro.criado_em).toLocaleDateString('pt-BR') : '—';
+      const total = itens.reduce((a,e)=>a+(e.custo_total||0),0);
+      const temNFe = primeiro.nfe_numero;
+      const nfeLabel = temNFe ? esc(primeiro.nfe_numero) : '—';
+      const clicavel = temNFe ? `style="cursor:pointer" onclick="abrirNFe('${primeiro.nfe_numero}')"` : '';
+      const itensTxt = `${itens.length} item${itens.length>1?'s':''}`;
+      return `<tr ${clicavel} ${temNFe?'class="tr-hover"':''}>
         <td class="mono">${data}</td>
-        <td>${esc(forn?.nome||e.fornecedor_nome||'—')}</td>
-        <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
-        <td style="color:var(--text3)">${esc(e.unidade_compra||'—')}</td>
-        <td class="r mono">${fmtQtd(e.quantidade)}</td>
-        <td class="r mono">${brl(e.custo_unitario)}</td>
-        <td class="r mono" style="font-weight:600">${brl(e.custo_total)}</td>
-        <td>${nfeCell}</td>
+        <td style="font-weight:500">${esc(forn?.nome||primeiro.fornecedor_nome||'—')}</td>
+        <td style="color:var(--teal);font-size:12px">${nfeLabel}</td>
+        <td style="color:var(--text3);font-size:12px">${itensTxt}</td>
+        <td class="r mono" style="font-weight:600">${brl(total)}</td>
         <td style="font-size:12px;color:var(--text3)">${esc(loja?.nome||'—')}</td>
       </tr>`;
     }).join('');
 
     tfoot.innerHTML = `<tr style="background:var(--bg3);font-weight:700">
-      <td colspan="6">Total</td>
+      <td colspan="4">Total</td>
       <td class="r mono">${brl(totalValor)}</td>
-      <td colspan="2"></td>
+      <td></td>
     </tr>`;
 
   } catch(e) {
