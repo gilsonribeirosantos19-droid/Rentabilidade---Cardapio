@@ -196,6 +196,27 @@
     <button class="btn-primary" id="btn-reset" onclick="enviarReset()">Enviar link</button>
     <button class="btn-ghost" onclick="mostrarLogin()">← Voltar ao login</button>
   </div>
+
+  <!-- PAINEL NOVA SENHA -->
+  <div id="panel-nova-senha" style="display:none">
+    <div class="card-title">Nova senha</div>
+    <div class="card-sub">Digite sua nova senha</div>
+
+    <div id="alert-nova-senha" class="alert"></div>
+
+    <div class="form-group">
+      <label>Nova senha</label>
+      <input type="password" id="nova-senha" placeholder="••••••••" autocomplete="new-password"
+        onkeydown="if(event.key==='Enter')salvarNovaSenha()">
+    </div>
+    <div class="form-group">
+      <label>Confirmar senha</label>
+      <input type="password" id="nova-senha-confirm" placeholder="••••••••" autocomplete="new-password"
+        onkeydown="if(event.key==='Enter')salvarNovaSenha()">
+    </div>
+
+    <button class="btn-primary" id="btn-nova-senha" onclick="salvarNovaSenha()">Salvar nova senha</button>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -279,7 +300,7 @@ async function enviarReset() {
 
   try {
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/dashboard.html',
+      redirectTo: window.location.origin + '/login.html',
     });
     if (error) throw error;
     showAlert('reset', 'Link enviado! Verifique sua caixa de entrada.', 'ok');
@@ -290,6 +311,38 @@ async function enviarReset() {
     btn.textContent = 'Enviar link';
   }
 }
+
+async function salvarNovaSenha() {
+  const senha = document.getElementById('nova-senha').value;
+  const confirm = document.getElementById('nova-senha-confirm').value;
+  if (!senha) { showAlert('nova-senha', 'Digite a nova senha.', 'err'); return; }
+  if (senha !== confirm) { showAlert('nova-senha', 'As senhas não coincidem.', 'err'); return; }
+  if (senha.length < 6) { showAlert('nova-senha', 'Senha deve ter ao menos 6 caracteres.', 'err'); return; }
+
+  const btn = document.getElementById('btn-nova-senha');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  try {
+    const { error } = await sbAuth.auth.updateUser({ password: senha });
+    if (error) throw error;
+    showAlert('nova-senha', 'Senha alterada! Redirecionando...', 'ok');
+    setTimeout(() => window.location.href = 'login.html', 2000);
+  } catch (e) {
+    showAlert('nova-senha', e.message, 'err');
+    btn.disabled = false;
+    btn.textContent = 'Salvar nova senha';
+  }
+}
+
+// Detecta token de recuperação na URL
+(function() {
+  const hash = window.location.hash;
+  if (hash.includes('type=recovery')) {
+    document.getElementById('panel-login').style.display = 'none';
+    document.getElementById('panel-nova-senha').style.display = '';
+  }
+})();
 </script>
 <script>
 (function(){
