@@ -245,7 +245,6 @@
       <button class="tab-btn" data-tab="inventario" onclick="switchTab('inventario')">Inventário</button>
       <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')">Fechamento</button>
       <button class="tab-btn" data-tab="movimentacao" onclick="switchTab('movimentacao')">Movimentação</button>
-      <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">Relatórios</button>
       <button class="tab-btn" data-tab="compras" onclick="switchTab('compras')">Sugestão de Compras</button>
     </div>
 
@@ -528,73 +527,6 @@
     </div>
 
     <!-- TAB: RELATÓRIOS -->
-    <div id="tab-relatorios" class="tab-pane">
-      <!-- Sub-abas -->
-      <div style="display:flex;gap:2px;border-bottom:2px solid var(--border2);margin-bottom:20px;position:sticky;top:112px;z-index:40;background:var(--bg1);padding-top:6px">
-        <button class="tab-btn active" id="reltab-resumo"     onclick="switchRelTab('resumo')">Resumo</button>
-        <button class="tab-btn"        id="reltab-abc"        onclick="switchRelTab('abc')">Curva ABC</button>
-        <button class="tab-btn"        id="reltab-inflacao"   onclick="switchRelTab('inflacao')">Inflação</button>
-      </div>
-
-      <!-- SUB: RESUMO -->
-      <div id="rel-resumo" class="rel-pane active">
-        <div class="kpi-grid" id="kpis"></div>
-        <div class="row2">
-          <div class="rep-sec">
-            <div class="rep-title">Valor por categoria</div>
-            <div class="tbl-wrap">
-              <table class="tbl">
-                <thead><tr><th>Categoria</th><th class="r">Itens</th><th class="r">Valor Total</th></tr></thead>
-                <tbody id="cat-body"></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="rep-sec">
-            <div class="rep-title">Maiores custos médios</div>
-            <div class="tbl-wrap">
-              <table class="tbl">
-                <thead><tr><th>Insumo</th><th class="r">Custo Médio</th><th class="r">Saldo</th></tr></thead>
-                <tbody id="cm-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUB: CURVA ABC -->
-      <div id="rel-abc" class="rel-pane">
-        <div class="rep-sec">
-          <div class="rep-title">Curva ABC — por valor em estoque (A=80% · B=15% · C=5%)</div>
-          <div class="tbl-wrap"><div class="tbl-scroll">
-            <table class="tbl">
-              <thead><tr>
-                <th class="c">#</th><th>Insumo</th><th class="c">Classe</th>
-                <th class="r">Valor</th><th class="r">% Individual</th><th class="r">% Acumulada</th>
-              </tr></thead>
-              <tbody id="abc-body"><tr><td colspan="6" class="empty"><b>Carregando...</b></td></tr></tbody>
-            </table>
-          </div></div>
-        </div>
-      </div>
-
-      <!-- SUB: INFLAÇÃO -->
-      <div id="rel-inflacao" class="rel-pane">
-        <div class="rep-sec">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-            <div class="rep-title" style="margin:0">Variação de Preço por Insumo</div>
-            <select id="inf-meses" onchange="renderInflacao()" style="border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;background:var(--bg2);color:var(--text1);cursor:pointer">
-              <option value="6">Últimos 6 meses</option>
-              <option value="12" selected>Últimos 12 meses</option>
-            </select>
-            <input type="text" id="inf-busca" placeholder="Filtrar insumo..." oninput="renderInflacao()"
-              style="border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;background:var(--bg2);color:var(--text1);outline:none;width:160px">
-          </div>
-          <div class="tbl-wrap"><div class="tbl-scroll" id="inf-wrap">
-            <div class="empty"><b>Carregando...</b></div>
-          </div></div>
-        </div>
-      </div>
-    </div>
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /shell -->
