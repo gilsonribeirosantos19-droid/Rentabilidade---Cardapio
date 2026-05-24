@@ -45,10 +45,22 @@
   .tab-btn.active{background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:600}
   .tab-pane{display:none}.tab-pane.active{display:block}
 
+  /* LAYOUT DOIS COLUNAS */
+  .split{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
+  @media(max-width:900px){.split{grid-template-columns:1fr}}
+
   /* CARDS */
-  .card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:20px}
-  .card-title{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text1)}
+  .card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .card-title{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text1)}
   .card-sub{font-size:12px;color:var(--text3);margin-bottom:20px}
+
+  /* HISTORICO */
+  .hist-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .hist-header{padding:16px 18px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .hist-title{font-size:14px;font-weight:700;color:var(--text1)}
+  .hist-filter{display:flex;align-items:center;gap:6px}
+  .hist-filter input[type=date]{background:var(--bg3);border:1px solid var(--border2);color:var(--text1);padding:5px 8px;border-radius:7px;font-size:12px;outline:none;font-family:inherit}
+  .hist-filter input[type=date]:focus{border-color:#f97316}
 
   /* FORM */
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
@@ -209,86 +221,100 @@
 
       <!-- TAB: AJUSTE DE ESTOQUE -->
       <div id="tab-estoque" class="tab-pane active">
-        <div class="card">
-          <div class="card-title">Ajuste de Estoque</div>
-          <div class="card-sub">Use para corrigir saldo quando uma nota errada afetou a quantidade em estoque. O histórico é mantido.</div>
+        <div class="split">
+          <!-- FORMULÁRIO -->
+          <div class="card">
+            <div class="card-title">Ajuste de Estoque</div>
+            <div class="card-sub">Corrija o saldo quando uma nota errada afetou a quantidade.</div>
 
-          <div class="fg">
-            <label>Insumo</label>
-            <select id="ae-insumo" onchange="onAeInsumoChange()">
-              <option value="">Selecione um insumo...</option>
-            </select>
-          </div>
-
-          <div id="ae-saldo-preview" class="saldo-preview"></div>
-
-          <div class="tipo-wrap">
-            <button class="tipo-btn pos" id="ae-btn-pos" onclick="selecionarTipo('pos')">＋ Entrada (acréscimo)</button>
-            <button class="tipo-btn neg" id="ae-btn-neg" onclick="selecionarTipo('neg')">－ Saída (redução)</button>
-          </div>
-
-          <div class="row2">
-            <div class="fg" style="margin-bottom:0">
-              <label>Quantidade ajustada</label>
-              <input type="number" id="ae-qtd" min="0.001" step="0.001" placeholder="0.000" oninput="calcPreview()">
+            <div class="fg">
+              <label>Loja</label>
+              <select id="ae-loja" onchange="onAeLojaChange()">
+                <option value="">Selecione a loja...</option>
+              </select>
             </div>
-            <div class="fg" style="margin-bottom:0">
-              <label>Unidade</label>
-              <input type="text" id="ae-un" readonly style="background:var(--bg3);color:var(--text3)">
+
+            <div class="fg">
+              <label>Insumo</label>
+              <select id="ae-insumo" onchange="onAeInsumoChange()">
+                <option value="">Selecione um insumo...</option>
+              </select>
             </div>
+
+            <div id="ae-saldo-preview" class="saldo-preview"></div>
+
+            <div class="tipo-wrap">
+              <button class="tipo-btn pos" id="ae-btn-pos" onclick="selecionarTipo('pos')">＋ Acréscimo</button>
+              <button class="tipo-btn neg" id="ae-btn-neg" onclick="selecionarTipo('neg')">－ Redução</button>
+            </div>
+
+            <div class="row2">
+              <div class="fg" style="margin-bottom:0">
+                <label>Quantidade</label>
+                <input type="number" id="ae-qtd" min="0.001" step="0.001" placeholder="0.000" oninput="calcPreview()">
+              </div>
+              <div class="fg" style="margin-bottom:0">
+                <label>Unidade</label>
+                <input type="text" id="ae-un" readonly style="background:var(--bg3);color:var(--text3)">
+              </div>
+            </div>
+            <div style="margin-bottom:14px"></div>
+
+            <div id="ae-novo-saldo" class="infobox"></div>
+
+            <div class="fg">
+              <label>Motivo</label>
+              <select id="ae-motivo">
+                <option value="nota_errada">Nota fiscal errada</option>
+                <option value="contagem">Correção de contagem</option>
+                <option value="perda">Perda / Quebra</option>
+                <option value="furto">Furto / Extravio</option>
+                <option value="outro">Outro</option>
+              </select>
+            </div>
+
+            <div class="fg">
+              <label>Observação (opcional)</label>
+              <textarea id="ae-obs" rows="2" placeholder="Opcional..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" style="width:100%" onclick="salvarAjusteEstoque()" id="btn-ae">Confirmar ajuste</button>
           </div>
-          <div style="margin-bottom:14px"></div>
 
-          <div id="ae-novo-saldo" class="infobox"></div>
-
-          <div class="fg">
-            <label>Motivo do ajuste</label>
-            <select id="ae-motivo">
-              <option value="nota_errada">Nota fiscal errada</option>
-              <option value="contagem">Correção de contagem</option>
-              <option value="perda">Perda / Quebra</option>
-              <option value="furto">Furto / Extravio</option>
-              <option value="outro">Outro</option>
-            </select>
+          <!-- HISTÓRICO -->
+          <div class="hist-card">
+            <div class="hist-header">
+              <span class="hist-title">Histórico</span>
+              <div class="hist-filter">
+                <input type="date" id="ae-filtro-ini" onchange="filtrarAeLog()">
+                <span style="font-size:12px;color:var(--text3)">até</span>
+                <input type="date" id="ae-filtro-fim" onchange="filtrarAeLog()">
+              </div>
+            </div>
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Insumo</th>
+                  <th>Tipo</th>
+                  <th class="r">Qtd</th>
+                  <th>Motivo</th>
+                </tr>
+              </thead>
+              <tbody id="ae-log-body">
+                <tr><td colspan="5" class="empty">Carregando...</td></tr>
+              </tbody>
+            </table>
           </div>
-
-          <div class="fg">
-            <label>Observação (opcional)</label>
-            <textarea id="ae-obs" rows="2" placeholder="Descreva o motivo com mais detalhes..."></textarea>
-          </div>
-
-          <div style="display:flex;gap:10px">
-            <button class="btn btn-primary" onclick="salvarAjusteEstoque()" id="btn-ae">Confirmar ajuste</button>
-            <button class="btn btn-ghost" onclick="limparAeForm()">Limpar</button>
-          </div>
-        </div>
-
-        <!-- LOG DE AJUSTES DE ESTOQUE -->
-        <div class="tbl-wrap">
-          <div class="tbl-title">Histórico de ajustes de estoque</div>
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Insumo</th>
-                <th>Tipo</th>
-                <th class="r">Quantidade</th>
-                <th>Motivo</th>
-                <th>Observação</th>
-              </tr>
-            </thead>
-            <tbody id="ae-log-body">
-              <tr><td colspan="6" class="empty">Carregando...</td></tr>
-            </tbody>
-          </table>
         </div>
       </div>
 
       <!-- TAB: AJUSTE DE CUSTO MÉDIO -->
       <div id="tab-custo" class="tab-pane">
+        <div class="split">
         <div class="card">
           <div class="card-title">Ajuste de Custo Médio</div>
-          <div class="card-sub">Selecione o insumo, informe o novo custo e escolha em quais lojas aplicar. O saldo não é alterado.</div>
+          <div class="card-sub">Informe o novo custo e escolha em quais lojas aplicar. O saldo não é alterado.</div>
 
           <div class="row2">
             <div class="fg" style="margin-bottom:0">
@@ -350,31 +376,35 @@
             <textarea id="cm-obs" rows="2" placeholder="Descreva o motivo com mais detalhes..."></textarea>
           </div>
 
-          <div style="display:flex;gap:10px">
-            <button class="btn btn-primary" onclick="salvarAjusteCusto()" id="btn-cm">Confirmar ajuste</button>
-            <button class="btn btn-ghost" onclick="limparCmForm()">Limpar</button>
-          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="salvarAjusteCusto()" id="btn-cm">Confirmar ajuste</button>
         </div>
 
-        <!-- LOG DE AJUSTES DE CUSTO -->
-        <div class="tbl-wrap">
-          <div class="tbl-title">Histórico de ajustes de custo médio</div>
+        <!-- HISTÓRICO -->
+        <div class="hist-card">
+          <div class="hist-header">
+            <span class="hist-title">Histórico</span>
+            <div class="hist-filter">
+              <input type="date" id="cm-filtro-ini" onchange="filtrarCmLog()">
+              <span style="font-size:12px;color:var(--text3)">até</span>
+              <input type="date" id="cm-filtro-fim" onchange="filtrarCmLog()">
+            </div>
+          </div>
           <table class="tbl">
             <thead>
               <tr>
                 <th>Data</th>
                 <th>Insumo</th>
                 <th>Loja</th>
-                <th class="r">Custo anterior</th>
-                <th class="r">Novo custo</th>
-                <th>Motivo</th>
+                <th class="r">Anterior</th>
+                <th class="r">Novo</th>
               </tr>
             </thead>
             <tbody id="cm-log-body">
-              <tr><td colspan="6" class="empty">Carregando...</td></tr>
+              <tr><td colspan="5" class="empty">Carregando...</td></tr>
             </tbody>
           </table>
         </div>
+        </div><!-- fim split -->
       </div>
 
     </div><!-- fim conteudo-admin -->
@@ -434,7 +464,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     ]);
     popularLojas();
     popularInsumos();
-    document.getElementById('cm-data').value = new Date().toISOString().split('T')[0];
+    const hoje = new Date();
+    const ini = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
+    const fim = hoje.toISOString().split('T')[0];
+    document.getElementById('cm-data').value = fim;
+    document.getElementById('ae-filtro-ini').value = ini;
+    document.getElementById('ae-filtro-fim').value = fim;
+    document.getElementById('cm-filtro-ini').value = ini;
+    document.getElementById('cm-filtro-fim').value = fim;
     await carregarLogs();
   } catch(e) { toast('Erro ao carregar dados: '+e.message, 'err'); }
 
@@ -450,9 +487,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 function popularLojas() {
-  const sel = document.getElementById('sel-loja');
-  sel.innerHTML = '<option value="">Todas as lojas</option>' +
+  const opts = '<option value="">Selecione a loja...</option>' +
     lojas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+  const selTop = document.getElementById('sel-loja');
+  if (selTop) selTop.innerHTML = opts.replace('Selecione a loja...','Todas as lojas');
+  const selAe = document.getElementById('ae-loja');
+  if (selAe) selAe.innerHTML = opts;
+}
+
+function onAeLojaChange() {
+  lojaId = document.getElementById('ae-loja').value || null;
+  saldos = [];
+  onAeInsumoChange();
 }
 
 function popularInsumos() {
@@ -482,7 +528,7 @@ function switchTab(tab) {
 }
 
 // ── AJUSTE DE ESTOQUE ──────────────────────────────────────────────────
-function onAeInsumoChange() {
+async function onAeInsumoChange() {
   aeInsumoId = document.getElementById('ae-insumo').value || null;
   aetipoSel = null;
   document.getElementById('ae-btn-pos').classList.remove('sel');
@@ -491,7 +537,10 @@ function onAeInsumoChange() {
   document.getElementById('ae-novo-saldo').classList.remove('show');
 
   const prev = document.getElementById('ae-saldo-preview');
-  if (!aeInsumoId) { prev.classList.remove('show'); document.getElementById('ae-un').value=''; return; }
+  if (!aeInsumoId || !lojaId) { prev.classList.remove('show'); document.getElementById('ae-un').value=''; return; }
+
+  if (!saldos.length) saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`).catch(()=>[]);
+
   const ins = insumos.find(i => i.id === aeInsumoId);
   const s = getSaldo(aeInsumoId);
   document.getElementById('ae-un').value = ins?.unidade_medida || ins?.unidade_compra || 'un';
@@ -679,52 +728,78 @@ async function upsertSaldo(insId, quantidade, custoMedio) {
 
 // ── LOGS ───────────────────────────────────────────────────────────────
 async function carregarLogs() {
-  const filtroLoja = lojaId ? `&loja_id=eq.${lojaId}` : '';
   try {
     const [ents, sais] = await Promise.all([
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}${filtroLoja}&tipo=eq.ajuste&order=criado_em.desc&limit=30`),
-      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}${filtroLoja}&tipo=eq.ajuste&order=criado_em.desc&limit=30`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&tipo=eq.ajuste&order=criado_em.desc&limit=50`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&tipo=eq.ajuste&order=criado_em.desc&limit=50`),
     ]);
-
-    const todos = [
+    aeLogCache = [
       ...ents.map(e => ({...e, dir:'pos'})),
       ...sais.map(e => ({...e, dir:'neg'})),
-    ].sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em)).slice(0,30);
-
-    document.getElementById('ae-log-body').innerHTML = todos.length ? todos.map(r => {
-      const ins = insumos.find(i=>i.id===r.insumo_id);
-      return `<tr>
-        <td class="mono" style="font-size:12px">${fmtDataHora(r.criado_em)}</td>
-        <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
-        <td><span class="badge ${r.dir==='pos'?'b-pos':'b-neg'}">${r.dir==='pos'?'＋ Entrada':'－ Saída'}</span></td>
-        <td class="r mono">${fmtQtd(r.quantidade)}</td>
-        <td style="color:var(--text2)">${esc(r.motivo||'—')}</td>
-        <td style="color:var(--text3);font-size:12px">${esc(r.observacao||'—')}</td>
-      </tr>`;
-    }).join('') : '<tr><td colspan="6" class="empty">Nenhum ajuste de estoque registrado.</td></tr>';
-
+    ].sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em));
+    filtrarAeLog();
   } catch(e) {
-    document.getElementById('ae-log-body').innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar histórico.</td></tr>';
+    document.getElementById('ae-log-body').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar histórico.</td></tr>';
   }
 
-  // Log de custo médio (tabela opcional)
   try {
-    const filtroLojaCm = lojaId ? `&loja_id=eq.${lojaId}` : '';
-    const logs = await api(`ajustes_custo_medio?tenant_id=eq.${TENANT_ID}${filtroLojaCm}&order=criado_em.desc&limit=30`);
-    document.getElementById('cm-log-body').innerHTML = logs.length ? logs.map(r => {
-      const ins = insumos.find(i=>i.id===r.insumo_id);
-      return `<tr>
-        <td class="mono" style="font-size:12px">${fmtDataHora(r.criado_em)}</td>
-        <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
-        <td class="r mono">${brl(r.custo_anterior)}</td>
-        <td class="r mono"><span class="badge b-cm">${brl(r.custo_novo)}</span></td>
-        <td style="color:var(--text2)">${esc(r.motivo||'—')}</td>
-        <td style="color:var(--text3);font-size:12px">${esc(r.observacao||'—')}</td>
-      </tr>`;
-    }).join('') : '<tr><td colspan="6" class="empty">Nenhum ajuste de custo registrado.</td></tr>';
+    const logs = await api(`ajustes_custo_medio?tenant_id=eq.${TENANT_ID}&order=criado_em.desc&limit=50`);
+    cmLogCache = logs;
+    filtrarCmLog();
   } catch {
-    document.getElementById('cm-log-body').innerHTML = '<tr><td colspan="6" class="empty">Tabela de log de custo não encontrada. Histórico indisponível.</td></tr>';
+    cmLogCache = [];
+    document.getElementById('cm-log-body').innerHTML = '<tr><td colspan="5" class="empty">Histórico indisponível.</td></tr>';
   }
+}
+
+// ── FILTROS DE LOG ─────────────────────────────────────────────────────
+let aeLogCache = [], cmLogCache = [];
+
+function filtrarAeLog() {
+  const ini = document.getElementById('ae-filtro-ini').value;
+  const fim = document.getElementById('ae-filtro-fim').value;
+  const filtered = aeLogCache.filter(r => {
+    const d = r.criado_em?.split('T')[0] || '';
+    return (!ini || d >= ini) && (!fim || d <= fim);
+  });
+  renderAeLog(filtered);
+}
+
+function filtrarCmLog() {
+  const ini = document.getElementById('cm-filtro-ini').value;
+  const fim = document.getElementById('cm-filtro-fim').value;
+  const filtered = cmLogCache.filter(r => {
+    const d = r.criado_em?.split('T')[0] || '';
+    return (!ini || d >= ini) && (!fim || d <= fim);
+  });
+  renderCmLog(filtered);
+}
+
+function renderAeLog(rows) {
+  document.getElementById('ae-log-body').innerHTML = rows.length ? rows.map(r => {
+    const ins = insumos.find(i=>i.id===r.insumo_id);
+    return `<tr>
+      <td class="mono" style="font-size:12px">${fmtDataHora(r.criado_em)}</td>
+      <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+      <td><span class="badge ${r.dir==='pos'?'b-pos':'b-neg'}">${r.dir==='pos'?'＋ Entrada':'－ Saída'}</span></td>
+      <td class="r mono">${fmtQtd(r.quantidade)}</td>
+      <td style="color:var(--text2);font-size:12px">${esc(r.motivo||'—')}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" class="empty">Nenhum ajuste encontrado.</td></tr>';
+}
+
+function renderCmLog(rows) {
+  document.getElementById('cm-log-body').innerHTML = rows.length ? rows.map(r => {
+    const ins = insumos.find(i=>i.id===r.insumo_id);
+    const lj = lojas.find(l=>l.id===r.loja_id);
+    return `<tr>
+      <td class="mono" style="font-size:12px">${fmtDataHora(r.criado_em)}</td>
+      <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(lj?.nome||'—')}</td>
+      <td class="r mono" style="color:var(--text3)">${brl(r.custo_anterior)}</td>
+      <td class="r mono"><span class="badge b-cm">${brl(r.custo_novo)}</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" class="empty">Nenhum ajuste encontrado.</td></tr>';
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────────
