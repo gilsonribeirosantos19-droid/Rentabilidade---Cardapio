@@ -475,31 +475,11 @@
 
     <!-- TAB: MOVIMENTAÇÃO -->
     <div id="tab-movimentacao" class="tab-pane">
-      <div class="rep-sec">
-        <div class="rep-title">Movimentação de Estoque no Período</div>
-        <div class="toolbar" style="margin-bottom:12px;flex-wrap:wrap">
-          <input class="field field-sm" type="date" id="mov-de">
-          <input class="field field-sm" type="date" id="mov-ate">
-          <select class="field field-sm" id="mov-cat"><option value="">Todas categorias</option></select>
-          <select class="field field-sm" id="mov-ins"><option value="">Todos os insumos</option></select>
-          <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
-          <button class="btn btn-ghost btn-sm" onclick="exportMovCSV()">↓ CSV</button>
-        </div>
-        <div class="tbl-wrap"><div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr>
-              <th>Descrição</th><th>Un.</th><th>Grupo</th>
-              <th class="r">Q.Anterior</th><th class="r">V.Anterior</th>
-              <th class="r">Q.Entradas</th><th class="r">V.Entradas</th>
-              <th class="r">Q.Consumo</th><th class="r">V.Consumo</th>
-              <th class="r">Q.Perdas</th><th class="r">V.Perdas</th>
-              <th class="r">Q.Final</th><th class="r">V.Final</th>
-              <th class="r">C.Médio</th>
-            </tr></thead>
-            <tbody id="mov-body"><tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr></tbody>
-            <tfoot id="mov-foot"></tfoot>
-          </table>
-        </div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:16px;text-align:center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="var(--teal)" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <div style="font-size:16px;font-weight:700;color:var(--text1)">Relatório de Movimentação</div>
+        <div style="font-size:13px;color:var(--text2);max-width:360px">Este relatório foi movido para a página de Relatórios, onde você encontra também Curva ABC e Inflação.</div>
+        <a href="relatorios.html" class="btn btn-primary" style="margin-top:8px">Ir para Relatórios →</a>
       </div>
     </div>
 
