@@ -169,6 +169,8 @@
     .grupo-btns{display:grid;grid-template-columns:repeat(2,1fr)}
     .grupo-btns .btn{justify-content:center}
     .mov-grid{grid-template-columns:1fr!important}
+    .inv-filtros-grid{grid-template-columns:1fr 1fr!important}
+    .inv-filtros-grid .btn{grid-column:1/-1}
   }
 </style>
 </head>
@@ -204,11 +206,37 @@
 
     <!-- ══ INVENTÁRIO ══ -->
     <div id="tab-inventario" class="tab-pane active">
-      <div class="toolbar">
-        <span style="font-size:13px;color:var(--text2)">Inventários ativos para sua loja</span>
-        <button class="btn btn-ghost btn-sm ml" onclick="carregarInventarios()">↻ Atualizar</button>
+      <!-- Filtros -->
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:16px;align-items:end" class="inv-filtros-grid">
+          <div class="fg" style="margin:0">
+            <label>Empresa</label>
+            <div id="inv-empresa-label" class="field" style="background:var(--bg3);color:var(--text2);cursor:default">—</div>
+          </div>
+          <div class="fg" style="margin:0">
+            <label>D. Inicial</label>
+            <input type="date" id="inv-data-ini" class="field">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>D. Final</label>
+            <input type="date" id="inv-data-fim" class="field">
+          </div>
+          <button class="btn btn-primary" onclick="carregarInventarios()" style="height:40px">Consultar</button>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:20px;align-items:center">
+          <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Situação</span>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="inv-sit-ativo" checked> Ativo
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="inv-sit-encerrado"> Encerrado
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" id="inv-sit-cancelado"> Cancelado
+          </label>
+        </div>
       </div>
-      <div id="inv-lista"><div class="empty">Carregando...</div></div>
+      <div id="inv-lista"><div class="empty">Configure os filtros e clique em Consultar.</div></div>
     </div>
 
     <!-- ══ SOLICITAÇÃO DE COMPRA ══ -->
@@ -580,7 +608,7 @@ function switchTab(tab) {
     const mn = document.getElementById('mnav-'+t);
     if (mn) mn.classList.toggle('active', t===tab);
   });
-  if (tab==='inventario') carregarInventarios();
+  if (tab==='inventario') iniciarInventario();
   if (tab==='perdas') carregarHistoricoPerdas();
   if (tab==='estoque') iniciarEstoque();
   window.scrollTo(0,0);
@@ -589,16 +617,48 @@ function switchTab(tab) {
 // ══════════════════════════════════════════════════════════════════
 // INVENTÁRIO
 // ══════════════════════════════════════════════════════════════════
+function iniciarInventario() {
+  const ini = document.getElementById('inv-data-ini');
+  const fim = document.getElementById('inv-data-fim');
+  if (ini && !ini.value) ini.value = primeiroDiaMes();
+  if (fim && !fim.value) fim.value = hoje();
+  const lojaNome = document.getElementById('sb-loja-nome')?.textContent || '—';
+  const labelEl = document.getElementById('inv-empresa-label');
+  if (labelEl) labelEl.textContent = lojaNome;
+}
+
 async function carregarInventarios() {
   const container = document.getElementById('inv-lista');
   container.innerHTML = '<div class="empty">Carregando...</div>';
   try {
     const lojaId = userProfile?.loja_id;
-    let q = `inventarios?tenant_id=eq.${TENANT_ID}&status=eq.ativo&order=criado_em.desc`;
+    const lojaNome = userProfile?.loja_nome || document.getElementById('sb-loja-nome').textContent || '—';
+    const labelEl = document.getElementById('inv-empresa-label');
+    if (labelEl) labelEl.textContent = lojaNome || '—';
+
+    // Lê filtros
+    const dataIni = document.getElementById('inv-data-ini')?.value;
+    const dataFim = document.getElementById('inv-data-fim')?.value;
+    const sitAtivo     = document.getElementById('inv-sit-ativo')?.checked;
+    const sitEncerrado = document.getElementById('inv-sit-encerrado')?.checked;
+    const sitCancelado = document.getElementById('inv-sit-cancelado')?.checked;
+
+    const situacoes = [];
+    if (sitAtivo)     situacoes.push('ativo');
+    if (sitEncerrado) situacoes.push('encerrado');
+    if (sitCancelado) situacoes.push('cancelado');
+    if (!situacoes.length) { container.innerHTML = '<div class="empty">Selecione ao menos uma situação.</div>'; return; }
+
+    let q = `inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`;
     if (lojaId) q += `&loja_id=eq.${lojaId}`;
+    if (situacoes.length === 1) q += `&status=eq.${situacoes[0]}`;
+    else q += `&status=in.(${situacoes.join(',')})`;
+    if (dataIni) q += `&data_inicial=gte.${dataIni}`;
+    if (dataFim)  q += `&data_final=lte.${dataFim}`;
+
     const invs = await api(q);
     if (!invs.length) {
-      container.innerHTML = '<div class="empty">Nenhum inventário ativo para sua loja.</div>';
+      container.innerHTML = '<div class="empty">Nenhum inventário encontrado.</div>';
       return;
     }
     container.innerHTML = invs.map(inv => `
@@ -608,12 +668,10 @@ async function carregarInventarios() {
             ${inv.numero ? `Nº ${inv.numero} — ` : ''}${esc(inv.descricao||'Inventário')}
           </div>
           <div style="font-size:12px;color:var(--text3)">
-            ${inv.data_inicial?`${fmtData(inv.data_inicial)} a ${fmtData(inv.data_final)}`:''}
+            ${inv.data_inicial?`${fmtData(inv.data_inicial)} → ${fmtData(inv.data_final)}`:''}
           </div>
           <span class="badge b-${inv.status}">${inv.status}</span>
-          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();abrirInventario('${inv.id}')">
-            Preencher →
-          </button>
+          ${inv.status==='ativo'?`<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();abrirInventario('${inv.id}')">Preencher →</button>`:'<span style="font-size:12px;color:var(--text3)">—</span>'}
         </div>
       </div>`).join('');
   } catch(e) { container.innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; }
