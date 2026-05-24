@@ -526,7 +526,7 @@ async function renderEvolucao(){
   const thead=document.getElementById('ev-thead');
   const tbody=document.getElementById('ev-body');
 
-  thead.innerHTML=`<th style="min-width:140px;white-space:nowrap">Insumo</th><th style="width:28px;padding:0"><button onclick="toggleEvCols()" id="btn-ev-cols" title="Ocultar/exibir meses" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:4px;line-height:1">⊞</button></th>` +
+  thead.innerHTML=`<th style="min-width:140px;white-space:nowrap">Insumo <button onclick="toggleEvCols()" id="btn-ev-cols" title="Ocultar/exibir meses" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0 2px;line-height:1;vertical-align:middle;font-weight:400">*</button></th>` +
     EV_MESES_2026.map(m=>`<th data-mes="${m.key}" class="r">${m.label}</th>`).join('');
 
   tbody.innerHTML='<tr><td colspan="13" class="empty">Calculando...</td></tr>';
