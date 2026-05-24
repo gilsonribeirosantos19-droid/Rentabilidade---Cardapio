@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajustes · Aiko</title>
+<style>
+  :root{
+    --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
+    --border1:#e2e8f0;--border2:#e2e8f0;
+    --teal:#0d9488;--teal2:#0f766e;--teal-dim:rgba(13,148,136,.12);
+    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#22c55e;
+    --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+
+  /* SIDEBAR */
+  .sidebar{width:220px;min-height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
+  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:8px 10px;margin:0 8px 12px;background:#f8fafc;border-radius:10px;box-shadow:0 4px 12px rgba(15,45,92,.15)}
+  .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
+  .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
+  .nav-icon{width:15px;height:15px;flex-shrink:0;stroke-width:1.8}
+
+  /* MAIN */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:56px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:#ffffff;position:sticky;top:0;z-index:60}
+  .topbar-title{font-size:15px;font-weight:600;flex:1}
+  .content{padding:24px;flex:1}
+
+  /* TABS */
+  .tabs{display:flex;gap:6px;margin-bottom:24px;background:#f8fafc;padding:10px 12px;border-bottom:1px solid #e2e8f0}
+  .tab-btn{padding:7px 18px;font-size:13px;font-weight:500;color:#ffffff;cursor:pointer;border:none;background:#0f2d5c;border-radius:20px;transition:all .2s;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .tab-btn:hover{background:#1a3f7a}
+  .tab-btn.active{background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:600}
+  .tab-pane{display:none}.tab-pane.active{display:block}
+
+  /* CARDS */
+  .card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:20px}
+  .card-title{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text1)}
+  .card-sub{font-size:12px;color:var(--text3);margin-bottom:20px}
+
+  /* FORM */
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .fg{margin-bottom:14px}
+  .fg label{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+  .fg input,.fg select,.fg textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);
+    color:var(--text1);padding:9px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
+  .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#f97316}
+  .fg select option{background:var(--bg2)}
+
+  /* INFO BOX */
+  .infobox{padding:10px 14px;background:#fff7ed;border-left:3px solid #f97316;border-radius:8px;
+    font-size:12px;color:#9a3412;margin-bottom:16px;display:none}
+  .infobox.show{display:block}
+
+  /* AVISO ADMIN */
+  .acesso-negado{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    height:60vh;gap:12px;color:var(--text3)}
+  .acesso-negado svg{width:48px;height:48px;stroke:var(--text3)}
+  .acesso-negado h2{font-size:16px;color:var(--text2)}
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
+    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .btn-primary{background:#f97316;color:#fff}.btn-primary:hover{background:#ea6c00}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* TABLE */
+  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .tbl-title{padding:14px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border2);color:var(--text2)}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl thead tr{background:#0f2d5c;border-bottom:none}
+  .tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .tbl th.r,.tbl td.r{text-align:right}
+  .tbl td{padding:10px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
+  .tbl tbody tr:last-child td{border-bottom:none}
+  .tbl tbody tr:hover{background:var(--bg3)}
+  .mono{font-family:'DM Mono',monospace}
+  .empty{padding:28px;text-align:center;color:var(--text3);font-size:13px}
+
+  /* BADGE */
+  .badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .b-pos{background:#dcfce7;color:#16a34a}
+  .b-neg{background:#fde8ea;color:#dc2626}
+  .b-cm{background:#dbeafe;color:#1d4ed8}
+
+  /* TIPO SELECTOR */
+  .tipo-wrap{display:flex;gap:8px;margin-bottom:14px}
+  .tipo-btn{flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--bg3);
+    cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:all .15s;text-align:center}
+  .tipo-btn.pos.sel{background:#dcfce7;border-color:#16a34a;color:#16a34a;font-weight:700}
+  .tipo-btn.neg.sel{background:#fde8ea;border-color:#dc2626;color:#dc2626;font-weight:700}
+  .tipo-btn:not(.sel):hover{border-color:var(--text3)}
+
+  /* SALDO PREVIEW */
+  .saldo-preview{background:var(--bg3);border-radius:8px;padding:10px 14px;font-size:12px;
+    color:var(--text2);margin-bottom:14px;display:none;font-family:'DM Mono',monospace}
+  .saldo-preview.show{display:block}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);
+    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;
+    transform:translateY(8px);transition:all .25s;max-width:380px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.ok{border-color:var(--green);color:#16a34a}
+  .toast.err{border-color:var(--red);color:var(--red)}
+
+  /* FLYOUT CONFIGURAÇÕES */
+  .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
+  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;
+    border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:hidden}
+  .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;
+    padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
+  .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;
+    transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
+  .cfg-flyout-item:last-child{border-bottom:none}
+  .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Aiko</div>
+    <div class="logo-sub">sistema</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard" class="nav-icon"></i>Dashboard</a>
+    <a class="nav-item" href="insumos.html"><i data-lucide="package" class="nav-icon"></i>Insumos</a>
+    <a class="nav-item" href="fichas_tecnicas.html"><i data-lucide="clipboard-list" class="nav-icon"></i>Fichas técnicas</a>
+    <a class="nav-item" href="#"><i data-lucide="tag" class="nav-icon"></i>Precificação</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Análise</div>
+    <a class="nav-item" href="estoque.html"><i data-lucide="archive" class="nav-icon"></i>Estoque</a>
+    <a class="nav-item" href="producao.html"><i data-lucide="chef-hat" class="nav-icon"></i>Produção</a>
+    <a class="nav-item" href="rendimento.html"><i data-lucide="trending-up" class="nav-icon"></i>Rendimento</a>
+    <a class="nav-item" href="pdv.html"><i data-lucide="receipt" class="nav-icon"></i>PDV / Vendas</a>
+    <a class="nav-item" href="cmv.html"><i data-lucide="bar-chart-2" class="nav-icon"></i>CMV teórico x real</a>
+    <a class="nav-item" href="relatorios.html"><i data-lucide="file-bar-chart" class="nav-icon"></i>Relatórios</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
+    <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
+    <a class="nav-item active" href="ajustes.html"><i data-lucide="sliders-horizontal" class="nav-icon"></i>Ajustes</a>
+    <div class="nav-sub-wrap" id="cfg-nav-trigger">
+      <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
+    </div>
+  </div>
+  <div class="nav-user" style="padding:12px 18px;border-top:1px solid #e2e8f0;margin-top:auto">
+    <div style="font-size:12px;font-weight:600;color:#0f172a" id="sb-user-nome">—</div>
+    <div style="font-size:11px;color:#94a3b8;text-transform:capitalize" id="sb-user-perfil">—</div>
+    <span onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:11px;color:#dc2626;cursor:pointer;margin-top:4px;display:inline-block">← Sair</span>
+  </div>
+</nav>
+
+<!-- FLYOUT CFG -->
+<div id="cfg-flyout">
+  <span class="cfg-flyout-title">Configurações</span>
+  <a class="cfg-flyout-item" href="configuracoes.html">Categorias de Insumos</a>
+  <a class="cfg-flyout-item" href="configuracoes.html">Unidades de Medida</a>
+  <a class="cfg-flyout-item" href="configuracoes.html">Lojas / Filiais</a>
+  <a class="cfg-flyout-item" href="configuracoes.html">Usuários</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">Ajustes</span>
+    <select id="sel-loja" style="font-size:13px;padding:7px 14px;min-width:180px;border:1.5px solid #f97316;border-radius:8px;background:var(--bg2);color:var(--text1);cursor:pointer;outline:none;font-family:inherit"
+      onchange="onLojaChange()">
+      <option value="">Selecione a loja...</option>
+    </select>
+  </div>
+  <div class="content" id="conteudo-principal">
+
+    <!-- BLOQUEIO PARA NÃO-ADMIN -->
+    <div id="acesso-negado" class="acesso-negado" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      <h2>Acesso restrito</h2>
+      <p style="font-size:13px">Esta tela é exclusiva para administradores.</p>
+      <a href="dashboard.html" class="btn btn-ghost" style="margin-top:8px">← Voltar ao início</a>
+    </div>
+
+    <!-- CONTEÚDO ADMIN -->
+    <div id="conteudo-admin">
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('estoque')">Ajuste de Estoque</button>
+        <button class="tab-btn" onclick="switchTab('custo')">Ajuste de Custo Médio</button>
+      </div>
+
+      <!-- TAB: AJUSTE DE ESTOQUE -->
+      <div id="tab-estoque" class="tab-pane active">
+        <div class="card">
+          <div class="card-title">Ajuste de Estoque</div>
+          <div class="card-sub">Use para corrigir saldo quando uma nota errada afetou a quantidade em estoque. O histórico é mantido.</div>
+
+          <div class="fg">
+            <label>Insumo</label>
+            <select id="ae-insumo" onchange="onAeInsumoChange()">
+              <option value="">Selecione um insumo...</option>
+            </select>
+          </div>
+
+          <div id="ae-saldo-preview" class="saldo-preview"></div>
+
+          <div class="tipo-wrap">
+            <button class="tipo-btn pos" id="ae-btn-pos" onclick="selecionarTipo('pos')">＋ Entrada (acréscimo)</button>
+            <button class="tipo-btn neg" id="ae-btn-neg" onclick="selecionarTipo('neg')">－ Saída (redução)</button>
+          </div>
+
+          <div class="row2">
+            <div class="fg" style="margin-bottom:0">
+              <label>Quantidade ajustada</label>
+              <input type="number" id="ae-qtd" min="0.001" step="0.001" placeholder="0.000" oninput="calcPreview()">
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label>Unidade</label>
+              <input type="text" id="ae-un" readonly style="background:var(--bg3);color:var(--text3)">
+            </div>
+          </div>
+          <div style="margin-bottom:14px"></div>
+
+          <div id="ae-novo-saldo" class="infobox"></div>
+
+          <div class="fg">
+            <label>Motivo do ajuste</label>
+            <select id="ae-motivo">
+              <option value="nota_errada">Nota fiscal errada</option>
+              <option value="contagem">Correção de contagem</option>
+              <option value="perda">Perda / Quebra</option>
+              <option value="furto">Furto / Extravio</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+
+          <div class="fg">
+            <label>Observação (opcional)</label>
+            <textarea id="ae-obs" rows="2" placeholder="Descreva o motivo com mais detalhes..."></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="salvarAjusteEstoque()" id="btn-ae">Confirmar ajuste</button>
+            <button class="btn btn-ghost" onclick="limparAeForm()">Limpar</button>
+          </div>
+        </div>
+
+        <!-- LOG DE AJUSTES DE ESTOQUE -->
+        <div class="tbl-wrap">
+          <div class="tbl-title">Histórico de ajustes de estoque</div>
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Insumo</th>
+                <th>Tipo</th>
+                <th class="r">Quantidade</th>
+                <th>Motivo</th>
+                <th>Observação</th>
+              </tr>
+            </thead>
+            <tbody id="ae-log-body">
+              <tr><td colspan="6" class="empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: AJUSTE DE CUSTO MÉDIO -->
+      <div id="tab-custo" class="tab-pane">
+        <div class="card">
+          <div class="card-title">Ajuste de Custo Médio</div>
+          <div class="card-sub">Use para corrigir o custo médio distorcido por uma entrada com valor incorreto. Apenas o custo é alterado — o saldo permanece o mesmo.</div>
+
+          <div class="fg">
+            <label>Insumo</label>
+            <select id="cm-insumo" onchange="onCmInsumoChange()">
+              <option value="">Selecione um insumo...</option>
+            </select>
+          </div>
+
+          <div id="cm-saldo-preview" class="saldo-preview"></div>
+
+          <div class="row2">
+            <div class="fg" style="margin-bottom:0">
+              <label>Custo médio atual (R$/kg)</label>
+              <input type="number" id="cm-atual" readonly style="background:var(--bg3);color:var(--text3)">
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label>Novo custo médio (R$/kg)</label>
+              <input type="number" id="cm-novo" min="0.01" step="0.01" placeholder="0.00">
+            </div>
+          </div>
+          <div style="margin-bottom:14px"></div>
+
+          <div class="fg">
+            <label>Motivo do ajuste</label>
+            <select id="cm-motivo">
+              <option value="nota_errada">Nota fiscal com valor errado</option>
+              <option value="correcao_manual">Correção manual</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+
+          <div class="fg">
+            <label>Observação (opcional)</label>
+            <textarea id="cm-obs" rows="2" placeholder="Descreva o motivo com mais detalhes..."></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="salvarAjusteCusto()" id="btn-cm">Confirmar ajuste</button>
+            <button class="btn btn-ghost" onclick="limparCmForm()">Limpar</button>
+          </div>
+        </div>
+
+        <!-- LOG DE AJUSTES DE CUSTO -->
+        <div class="tbl-wrap">
+          <div class="tbl-title">Histórico de ajustes de custo médio</div>
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Insumo</th>
+                <th class="r">Custo anterior</th>
+                <th class="r">Novo custo</th>
+                <th>Motivo</th>
+                <th>Observação</th>
+              </tr>
+            </thead>
+            <tbody id="cm-log-body">
+              <tr><td colspan="6" class="empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- fim conteudo-admin -->
+  </div><!-- fim content -->
+</div><!-- fim main -->
+</div><!-- fim shell -->
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
+
+async function api(endpoint, opts={}) {
+  const method = (opts.method||'GET').toUpperCase();
+  const headers = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer '+SUPA_KEY };
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  if (opts.prefer) headers['Prefer'] = opts.prefer;
+  else if (method==='POST') headers['Prefer'] = 'return=representation';
+  else if (method==='PATCH') headers['Prefer'] = 'return=representation';
+  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`, {method, headers, body: opts.body||undefined});
+  if (!res.ok) { let msg=res.statusText; try{const j=await res.json();msg=j.message||j.error||msg;}catch{} throw new Error(`[${res.status}] ${msg}`); }
+  const ct = res.headers.get('content-type')||'';
+  if (ct.includes('application/json')) { const t=await res.text(); return t?JSON.parse(t):[]; }
+  return [];
+}
+
+let insumos = [], saldos = [], lojas = [], lojaId = null;
+let aeInsumoId = null, aetipoSel = null;
+let cmInsumoId = null;
+let aeLog = [], cmLog = [];
+
+// ── INIT ──────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  lucide.createIcons();
+
+  // Verificar perfil
+  const userRaw = localStorage.getItem('sb_user');
+  const user = userRaw ? JSON.parse(userRaw) : null;
+  const perfil = user?.perfil || '';
+
+  document.getElementById('sb-user-nome').textContent = user?.nome || '—';
+  document.getElementById('sb-user-perfil').textContent = perfil || '—';
+
+  if (perfil !== 'admin') {
+    document.getElementById('conteudo-admin').style.display = 'none';
+    document.getElementById('acesso-negado').style.display = 'flex';
+    return;
+  }
+
+  try {
+    [insumos, lojas] = await Promise.all([
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+    ]);
+    popularLojas();
+    popularInsumos();
+    await carregarLogs();
+  } catch(e) { toast('Erro ao carregar dados: '+e.message, 'err'); }
+
+  // Flyout configurações
+  document.getElementById('cfg-nav-trigger').addEventListener('click', () => {
+    const f = document.getElementById('cfg-flyout');
+    f.style.display = f.style.display === 'block' ? 'none' : 'block';
+  });
+  document.addEventListener('click', e => {
+    if (!document.getElementById('cfg-flyout').contains(e.target) && !document.getElementById('cfg-nav-trigger').contains(e.target))
+      document.getElementById('cfg-flyout').style.display = 'none';
+  });
+});
+
+function popularLojas() {
+  const sel = document.getElementById('sel-loja');
+  sel.innerHTML = '<option value="">Todas as lojas</option>' +
+    lojas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+}
+
+function popularInsumos() {
+  const opts = '<option value="">Selecione um insumo...</option>' +
+    insumos.map(i => `<option value="${i.id}">${esc(i.nome)}</option>`).join('');
+  document.getElementById('ae-insumo').innerHTML = opts;
+  document.getElementById('cm-insumo').innerHTML = opts;
+}
+
+async function onLojaChange() {
+  lojaId = document.getElementById('sel-loja').value || null;
+  saldos = lojaId ? await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`) : [];
+  onAeInsumoChange();
+  onCmInsumoChange();
+  await carregarLogs();
+}
+
+function getSaldo(insId) {
+  return saldos.find(s => s.insumo_id === insId) || { quantidade: 0, custo_medio: 0 };
+}
+
+// ── TAB SWITCH ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='estoque')||(i===1&&tab==='custo')));
+  document.getElementById('tab-estoque').classList.toggle('active', tab==='estoque');
+  document.getElementById('tab-custo').classList.toggle('active', tab==='custo');
+}
+
+// ── AJUSTE DE ESTOQUE ──────────────────────────────────────────────────
+function onAeInsumoChange() {
+  aeInsumoId = document.getElementById('ae-insumo').value || null;
+  aetipoSel = null;
+  document.getElementById('ae-btn-pos').classList.remove('sel');
+  document.getElementById('ae-btn-neg').classList.remove('sel');
+  document.getElementById('ae-qtd').value = '';
+  document.getElementById('ae-novo-saldo').classList.remove('show');
+
+  const prev = document.getElementById('ae-saldo-preview');
+  if (!aeInsumoId) { prev.classList.remove('show'); document.getElementById('ae-un').value=''; return; }
+  const ins = insumos.find(i => i.id === aeInsumoId);
+  const s = getSaldo(aeInsumoId);
+  document.getElementById('ae-un').value = ins?.unidade_medida || ins?.unidade_compra || 'un';
+  prev.textContent = `Saldo atual: ${fmtQtd(s.quantidade)}  ·  Custo médio: ${s.custo_medio ? brl(s.custo_medio) : '—'}`;
+  prev.classList.add('show');
+}
+
+function selecionarTipo(tipo) {
+  aetipoSel = tipo;
+  document.getElementById('ae-btn-pos').classList.toggle('sel', tipo==='pos');
+  document.getElementById('ae-btn-neg').classList.toggle('sel', tipo==='neg');
+  calcPreview();
+}
+
+function calcPreview() {
+  if (!aeInsumoId || !aetipoSel) return;
+  const qtd = parseFloat(document.getElementById('ae-qtd').value);
+  if (!qtd || qtd <= 0) { document.getElementById('ae-novo-saldo').classList.remove('show'); return; }
+  const s = getSaldo(aeInsumoId);
+  const novoSaldo = aetipoSel === 'pos' ? (s.quantidade||0) + qtd : Math.max(0,(s.quantidade||0) - qtd);
+  const el = document.getElementById('ae-novo-saldo');
+  el.textContent = `Novo saldo após ajuste: ${fmtQtd(novoSaldo)}`;
+  el.classList.add('show');
+}
+
+async function salvarAjusteEstoque() {
+  if (!lojaId) { toast('Selecione uma loja primeiro.','err'); return; }
+  if (!aeInsumoId) { toast('Selecione um insumo.','err'); return; }
+  if (!aetipoSel) { toast('Selecione o tipo: entrada ou saída.','err'); return; }
+  const qtd = parseFloat(document.getElementById('ae-qtd').value);
+  if (!qtd || qtd <= 0) { toast('Informe a quantidade.','err'); return; }
+
+  const btn = document.getElementById('btn-ae');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+
+  try {
+    const motivo = document.getElementById('ae-motivo').value;
+    const obs = document.getElementById('ae-obs').value.trim() || null;
+    const agora = new Date().toISOString();
+    const s = getSaldo(aeInsumoId);
+
+    if (aetipoSel === 'pos') {
+      await api('entradas_estoque', { method:'POST', prefer:'return=minimal',
+        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:aeInsumoId, loja_id:lojaId,
+          quantidade:qtd, tipo:'ajuste', motivo, observacao:obs, criado_em:agora }) });
+      await upsertSaldo(aeInsumoId, (s.quantidade||0)+qtd, s.custo_medio||0);
+    } else {
+      const novaQtd = Math.max(0,(s.quantidade||0)-qtd);
+      await api('saidas_estoque', { method:'POST', prefer:'return=minimal',
+        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:aeInsumoId, loja_id:lojaId,
+          quantidade:qtd, tipo:'ajuste', motivo, observacao:obs, criado_em:agora }) });
+      await upsertSaldo(aeInsumoId, novaQtd, s.custo_medio||0);
+    }
+
+    toast('Ajuste de estoque salvo!', 'ok');
+    limparAeForm();
+    await carregarLogs();
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  finally { btn.disabled=false; btn.textContent='Confirmar ajuste'; }
+}
+
+function limparAeForm() {
+  document.getElementById('ae-insumo').value = '';
+  document.getElementById('ae-qtd').value = '';
+  document.getElementById('ae-obs').value = '';
+  document.getElementById('ae-un').value = '';
+  document.getElementById('ae-saldo-preview').classList.remove('show');
+  document.getElementById('ae-novo-saldo').classList.remove('show');
+  document.getElementById('ae-btn-pos').classList.remove('sel');
+  document.getElementById('ae-btn-neg').classList.remove('sel');
+  aeInsumoId = null; aetipoSel = null;
+}
+
+// ── AJUSTE DE CUSTO MÉDIO ──────────────────────────────────────────────
+function onCmInsumoChange() {
+  cmInsumoId = document.getElementById('cm-insumo').value || null;
+  const prev = document.getElementById('cm-saldo-preview');
+  if (!cmInsumoId) { prev.classList.remove('show'); document.getElementById('cm-atual').value=''; return; }
+  const s = getSaldo(cmInsumoId);
+  document.getElementById('cm-atual').value = s.custo_medio ? Number(s.custo_medio).toFixed(4) : '0.0000';
+  prev.textContent = `Saldo em estoque: ${fmtQtd(s.quantidade)}  ·  Valor total atual: ${brl((s.quantidade||0)*(s.custo_medio||0))}`;
+  prev.classList.add('show');
+}
+
+async function salvarAjusteCusto() {
+  if (!lojaId) { toast('Selecione uma loja primeiro.','err'); return; }
+  if (!cmInsumoId) { toast('Selecione um insumo.','err'); return; }
+  const novoCusto = parseFloat(document.getElementById('cm-novo').value);
+  if (!novoCusto || novoCusto <= 0) { toast('Informe o novo custo médio.','err'); return; }
+
+  const btn = document.getElementById('btn-cm');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+
+  try {
+    const motivo = document.getElementById('cm-motivo').value;
+    const obs = document.getElementById('cm-obs').value.trim() || null;
+    const s = getSaldo(cmInsumoId);
+    const custoAnterior = s.custo_medio || 0;
+
+    // Grava log na tabela saidas com tipo=ajuste_custo para rastrear o histórico
+    await api('ajustes_custo_medio', { method:'POST', prefer:'return=minimal',
+      body: JSON.stringify({
+        tenant_id: TENANT_ID, insumo_id: cmInsumoId, loja_id: lojaId,
+        custo_anterior: custoAnterior, custo_novo: novoCusto,
+        motivo, observacao: obs, criado_em: new Date().toISOString()
+      })
+    }).catch(() => null); // tabela opcional — não bloqueia se não existir
+
+    await upsertSaldo(cmInsumoId, s.quantidade||0, novoCusto);
+
+    toast('Custo médio ajustado!', 'ok');
+    limparCmForm();
+    await carregarLogs();
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  finally { btn.disabled=false; btn.textContent='Confirmar ajuste'; }
+}
+
+function limparCmForm() {
+  document.getElementById('cm-insumo').value = '';
+  document.getElementById('cm-novo').value = '';
+  document.getElementById('cm-obs').value = '';
+  document.getElementById('cm-atual').value = '';
+  document.getElementById('cm-saldo-preview').classList.remove('show');
+  cmInsumoId = null;
+}
+
+// ── SALDO UPSERT ───────────────────────────────────────────────────────
+async function upsertSaldo(insId, quantidade, custoMedio) {
+  const payload = {
+    tenant_id: TENANT_ID, insumo_id: insId, loja_id: lojaId,
+    quantidade: parseFloat(Number(quantidade).toFixed(4)),
+    custo_medio: parseFloat(Number(custoMedio).toFixed(6)),
+    atualizado_em: new Date().toISOString()
+  };
+  await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
+    method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+    body: JSON.stringify(payload)
+  });
+  const ex = saldos.find(s=>s.insumo_id===insId&&s.loja_id===lojaId);
+  if (ex) Object.assign(ex, payload); else saldos.push({...payload});
+  onAeInsumoChange(); onCmInsumoChange();
+}
+
+// ── LOGS ───────────────────────────────────────────────────────────────
+async function carregarLogs() {
+  const filtroLoja = lojaId ? `&loja_id=eq.${lojaId}` : '';
+  try {
+    const [ents, sais] = await Promise.all([
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}${filtroLoja}&tipo=eq.ajuste&order=criado_em.desc&limit=30`),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}${filtroLoja}&tipo=eq.ajuste&order=criado_em.desc&limit=30`),
+    ]);
+
+    const todos = [
+      ...ents.map(e => ({...e, dir:'pos'})),
+      ...sais.map(e => ({...e, dir:'neg'})),
+    ].sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em)).slice(0,30);
+
+    document.getElementById('ae-log-body').innerHTML = todos.length ? todos.map(r => {
+      const ins = insumos.find(i=>i.id===r.insumo_id);
+      return `<tr>
+        <td class="mono" style="font-size:12px">${fmtDataHora(r.criado_em)}</td>
+        <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+        <td><span class="badge ${r.dir==='pos'?'b-pos':'b-neg'}">${r.dir==='pos'?'＋ Entrada':'－ Saída'}</span></td>
+        <td class="r mono">${fmtQtd(r.quantidade)}</td>
+        <td style="color:var(--text2)">${esc(r.motivo||'—')}</td>
+        <td style="color:var(--text3);font-size:12px">${esc(r.observacao||'—')}</td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="6" class="empty">Nenhum ajuste de estoque registrado.</td></tr>';
+
+  } catch(e) {
+    document.getElementById('ae-log-body').innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar histórico.</td></tr>';
+  }
+
+  // Log de custo médio (tabela opcional)
+  try {
+    const filtroLojaCm = lojaId ? `&loja_id=eq.${lojaId}` : '';
+    const logs = await api(`ajustes_custo_medio?tenant_id=eq.${TENANT_ID}${filtroLojaCm}&order=criado_em.desc&limit=30`);
+    document.getElementById('cm-log-body').innerHTML = logs.length ? logs.map(r => {
+      const ins = insumos.find(i=>i.id===r.insumo_id);
+      return `<tr>
+        <td class="mono" style="font-size:12px">${fmtDataHora(r.criado_em)}</td>
+        <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+        <td class="r mono">${brl(r.custo_anterior)}</td>
+        <td class="r mono"><span class="badge b-cm">${brl(r.custo_novo)}</span></td>
+        <td style="color:var(--text2)">${esc(r.motivo||'—')}</td>
+        <td style="color:var(--text3);font-size:12px">${esc(r.observacao||'—')}</td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="6" class="empty">Nenhum ajuste de custo registrado.</td></tr>';
+  } catch {
+    document.getElementById('cm-log-body').innerHTML = '<tr><td colspan="6" class="empty">Tabela de log de custo não encontrada. Histórico indisponível.</td></tr>';
+  }
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────
+function esc(s){ const d=document.createElement('div');d.textContent=s??'';return d.innerHTML; }
+function brl(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtQtd(v){ return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}); }
+function fmtDataHora(s){ if(!s)return'—'; const d=new Date(s); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+
+function toast(msg, tipo='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${tipo}`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
