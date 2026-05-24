@@ -430,7 +430,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   try {
     [insumos, lojas] = await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
     ]);
     popularLojas();
     popularInsumos();
