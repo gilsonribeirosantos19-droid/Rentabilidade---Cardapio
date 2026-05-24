@@ -288,36 +288,61 @@
       <div id="tab-custo" class="tab-pane">
         <div class="card">
           <div class="card-title">Ajuste de Custo Médio</div>
-          <div class="card-sub">Use para corrigir o custo médio distorcido por uma entrada com valor incorreto. Apenas o custo é alterado — o saldo permanece o mesmo.</div>
-
-          <div class="fg">
-            <label>Insumo</label>
-            <select id="cm-insumo" onchange="onCmInsumoChange()">
-              <option value="">Selecione um insumo...</option>
-            </select>
-          </div>
-
-          <div id="cm-saldo-preview" class="saldo-preview"></div>
+          <div class="card-sub">Selecione o insumo, informe o novo custo e escolha em quais lojas aplicar. O saldo não é alterado.</div>
 
           <div class="row2">
             <div class="fg" style="margin-bottom:0">
-              <label>Custo médio atual (R$/kg)</label>
-              <input type="number" id="cm-atual" readonly style="background:var(--bg3);color:var(--text3)">
+              <label>Insumo</label>
+              <select id="cm-insumo" onchange="onCmInsumoChange()">
+                <option value="">Selecione um insumo...</option>
+              </select>
             </div>
             <div class="fg" style="margin-bottom:0">
-              <label>Novo custo médio (R$/kg)</label>
-              <input type="number" id="cm-novo" min="0.01" step="0.01" placeholder="0.00">
+              <label>Data do ajuste</label>
+              <input type="date" id="cm-data">
             </div>
           </div>
           <div style="margin-bottom:14px"></div>
 
+          <div class="row2">
+            <div class="fg" style="margin-bottom:0">
+              <label>Novo custo médio (R$/kg)</label>
+              <input type="number" id="cm-novo" min="0.01" step="0.01" placeholder="0.00">
+            </div>
+            <div class="fg" style="margin-bottom:0">
+              <label>Motivo</label>
+              <select id="cm-motivo">
+                <option value="nota_errada">Nota fiscal com valor errado</option>
+                <option value="correcao_manual">Correção manual</option>
+                <option value="outro">Outro</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:14px"></div>
+
+          <!-- LOJAS CHECKBOX -->
           <div class="fg">
-            <label>Motivo do ajuste</label>
-            <select id="cm-motivo">
-              <option value="nota_errada">Nota fiscal com valor errado</option>
-              <option value="correcao_manual">Correção manual</option>
-              <option value="outro">Outro</option>
-            </select>
+            <label style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+              <span>Lojas para aplicar</span>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;cursor:pointer">
+                <input type="checkbox" id="cm-chk-all" onchange="toggleTodasLojas(this.checked)"> Selecionar todas
+              </label>
+            </label>
+            <div id="cm-lojas-wrap" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;overflow:hidden">
+              <table class="tbl" style="font-size:13px">
+                <thead>
+                  <tr>
+                    <th style="width:40px">Sel.</th>
+                    <th>Loja</th>
+                    <th class="r">Custo atual</th>
+                    <th class="r">Saldo atual</th>
+                  </tr>
+                </thead>
+                <tbody id="cm-lojas-body">
+                  <tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div class="fg">
@@ -339,10 +364,10 @@
               <tr>
                 <th>Data</th>
                 <th>Insumo</th>
+                <th>Loja</th>
                 <th class="r">Custo anterior</th>
                 <th class="r">Novo custo</th>
                 <th>Motivo</th>
-                <th>Observação</th>
               </tr>
             </thead>
             <tbody id="cm-log-body">
@@ -409,6 +434,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     ]);
     popularLojas();
     popularInsumos();
+    document.getElementById('cm-data').value = new Date().toISOString().split('T')[0];
     await carregarLogs();
   } catch(e) { toast('Erro ao carregar dados: '+e.message, 'err'); }
 
@@ -540,21 +566,51 @@ function limparAeForm() {
 }
 
 // ── AJUSTE DE CUSTO MÉDIO ──────────────────────────────────────────────
-function onCmInsumoChange() {
+let todosSaldosCm = []; // saldos de todas as lojas para o insumo selecionado
+
+async function onCmInsumoChange() {
   cmInsumoId = document.getElementById('cm-insumo').value || null;
-  const prev = document.getElementById('cm-saldo-preview');
-  if (!cmInsumoId) { prev.classList.remove('show'); document.getElementById('cm-atual').value=''; return; }
-  const s = getSaldo(cmInsumoId);
-  document.getElementById('cm-atual').value = s.custo_medio ? Number(s.custo_medio).toFixed(4) : '0.0000';
-  prev.textContent = `Saldo em estoque: ${fmtQtd(s.quantidade)}  ·  Valor total atual: ${brl((s.quantidade||0)*(s.custo_medio||0))}`;
-  prev.classList.add('show');
+  document.getElementById('cm-chk-all').checked = false;
+
+  if (!cmInsumoId) {
+    document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>';
+    return;
+  }
+
+  document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Carregando...</td></tr>';
+  try {
+    todosSaldosCm = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${cmInsumoId}`);
+    renderizarLojasCheckbox();
+  } catch(e) {
+    document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Erro ao carregar lojas.</td></tr>';
+  }
+}
+
+function renderizarLojasCheckbox() {
+  const tbody = document.getElementById('cm-lojas-body');
+  if (!lojas.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhuma loja cadastrada.</td></tr>'; return; }
+  tbody.innerHTML = lojas.map(l => {
+    const s = todosSaldosCm.find(x => x.loja_id === l.id) || { quantidade: 0, custo_medio: 0 };
+    return `<tr>
+      <td><input type="checkbox" class="cm-loja-chk" value="${l.id}" style="cursor:pointer;width:auto"></td>
+      <td style="font-weight:500">${esc(l.nome)}</td>
+      <td class="r mono" style="color:var(--text2)">${s.custo_medio ? brl(s.custo_medio) : '—'}</td>
+      <td class="r mono" style="color:var(--text3)">${fmtQtd(s.quantidade)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleTodasLojas(checked) {
+  document.querySelectorAll('.cm-loja-chk').forEach(c => c.checked = checked);
 }
 
 async function salvarAjusteCusto() {
-  if (!lojaId) { toast('Selecione uma loja primeiro.','err'); return; }
   if (!cmInsumoId) { toast('Selecione um insumo.','err'); return; }
   const novoCusto = parseFloat(document.getElementById('cm-novo').value);
   if (!novoCusto || novoCusto <= 0) { toast('Informe o novo custo médio.','err'); return; }
+
+  const selecionadas = [...document.querySelectorAll('.cm-loja-chk:checked')].map(c => c.value);
+  if (!selecionadas.length) { toast('Selecione ao menos uma loja.','err'); return; }
 
   const btn = document.getElementById('btn-cm');
   btn.disabled = true; btn.textContent = 'Salvando…';
@@ -562,21 +618,27 @@ async function salvarAjusteCusto() {
   try {
     const motivo = document.getElementById('cm-motivo').value;
     const obs = document.getElementById('cm-obs').value.trim() || null;
-    const s = getSaldo(cmInsumoId);
-    const custoAnterior = s.custo_medio || 0;
+    const dataAjuste = document.getElementById('cm-data').value || new Date().toISOString().split('T')[0];
+    const agora = dataAjuste + 'T12:00:00.000Z';
 
-    // Grava log na tabela saidas com tipo=ajuste_custo para rastrear o histórico
-    await api('ajustes_custo_medio', { method:'POST', prefer:'return=minimal',
-      body: JSON.stringify({
-        tenant_id: TENANT_ID, insumo_id: cmInsumoId, loja_id: lojaId,
-        custo_anterior: custoAnterior, custo_novo: novoCusto,
-        motivo, observacao: obs, criado_em: new Date().toISOString()
-      })
-    }).catch(() => null); // tabela opcional — não bloqueia se não existir
+    await Promise.all(selecionadas.map(async lId => {
+      const s = todosSaldosCm.find(x => x.loja_id === lId) || { quantidade: 0, custo_medio: 0 };
+      const payload = {
+        tenant_id: TENANT_ID, insumo_id: cmInsumoId, loja_id: lId,
+        quantidade: parseFloat(Number(s.quantidade||0).toFixed(4)),
+        custo_medio: parseFloat(Number(novoCusto).toFixed(6)),
+        atualizado_em: agora
+      };
+      await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
+        method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+        body: JSON.stringify(payload)
+      });
+      // atualiza cache local
+      const ex = todosSaldosCm.find(x => x.insumo_id === cmInsumoId && x.loja_id === lId);
+      if (ex) Object.assign(ex, payload); else todosSaldosCm.push({...payload});
+    }));
 
-    await upsertSaldo(cmInsumoId, s.quantidade||0, novoCusto);
-
-    toast('Custo médio ajustado!', 'ok');
+    toast(`Custo médio ajustado em ${selecionadas.length} loja(s)!`, 'ok');
     limparCmForm();
     await carregarLogs();
   } catch(e) { toast('Erro: '+e.message,'err'); }
@@ -587,9 +649,9 @@ function limparCmForm() {
   document.getElementById('cm-insumo').value = '';
   document.getElementById('cm-novo').value = '';
   document.getElementById('cm-obs').value = '';
-  document.getElementById('cm-atual').value = '';
-  document.getElementById('cm-saldo-preview').classList.remove('show');
-  cmInsumoId = null;
+  document.getElementById('cm-chk-all').checked = false;
+  document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>';
+  cmInsumoId = null; todosSaldosCm = [];
 }
 
 // ── SALDO UPSERT ───────────────────────────────────────────────────────
