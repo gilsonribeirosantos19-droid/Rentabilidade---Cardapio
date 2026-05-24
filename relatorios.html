@@ -151,7 +151,8 @@
       <button class="sub-tab"        id="tab-abc"      onclick="switchTab('abc')">Curva ABC</button>
       <button class="sub-tab"        id="tab-inflacao" onclick="switchTab('inflacao')">Inflação</button>
       <button class="sub-tab"        id="tab-evolucao" onclick="switchTab('evolucao')">Evolução Mensal</button>
-      <button class="sub-tab"        id="tab-entradas" onclick="switchTab('entradas')">Entradas</button>
+      <button class="sub-tab"        id="tab-entradas"  onclick="switchTab('entradas')">Entradas</button>
+      <button class="sub-tab"        id="tab-auditoria" onclick="switchTab('auditoria')">Auditoria de Conversão</button>
     </div>
 
     <!-- RESUMO -->
@@ -281,6 +282,64 @@
       </div></div>
     </div>
 
+    <!-- AUDITORIA DE CONVERSÃO -->
+    <div id="pane-auditoria" class="rel-pane">
+
+      <!-- FILTROS -->
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:16px;align-items:end">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Inicial</label>
+            <input type="date" id="aud-ini" class="field" style="width:100%">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Final</label>
+            <input type="date" id="aud-fim" class="field" style="width:100%">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Insumo</label>
+            <select id="aud-ins" class="field" style="width:100%">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Mostrar</label>
+            <select id="aud-filtro" class="field" style="width:100%">
+              <option value="todos">Todos os lançamentos</option>
+              <option value="suspeitos">Apenas suspeitos (fator = 1)</option>
+            </select>
+          </div>
+          <button onclick="renderAuditoria()" style="height:40px;padding:0 20px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;align-self:end;transition:background .15s" onmouseover="this.style.background='#ea6c00'" onmouseout="this.style.background='#f97316'">Consultar</button>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--text3)">
+          <span style="display:inline-flex;align-items:center;gap:5px;margin-right:16px"><span style="width:10px;height:10px;border-radius:50%;background:#fef3c7;border:1px solid #f59e0b;display:inline-block"></span>Suspeito — fator de conversão igual a 1 com embalagem declarada</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#fde8ea;border:1px solid #dc2626;display:inline-block"></span>Erro — diferença entre esperado e lançado</span>
+        </div>
+      </div>
+
+      <!-- TABELA -->
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr>
+            <th>Data / Hora</th>
+            <th>Insumo</th>
+            <th>Loja</th>
+            <th>Fornecedor</th>
+            <th class="r">Qtd Fornecedor</th>
+            <th>Embalagem</th>
+            <th class="r">Fator</th>
+            <th class="r">Qtd Estoque</th>
+            <th class="r">Esperado</th>
+            <th class="r">Diferença</th>
+            <th>Responsável</th>
+          </tr></thead>
+          <tbody id="aud-body">
+            <tr><td colspan="11" class="empty">Selecione o período e clique em Consultar.</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -346,13 +405,14 @@ function switchTab(nome) {
   tabAtual = nome;
   document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-'+nome).classList.add('active');
-  ['resumo','abc','inflacao','evolucao','entradas'].forEach(t=>
+  ['resumo','abc','inflacao','evolucao','entradas','auditoria'].forEach(t=>
     document.getElementById('tab-'+t).classList.toggle('active',t===nome));
-  if (nome==='resumo')   renderResumo();
-  if (nome==='abc')      renderABC();
-  if (nome==='inflacao') renderInflacao();
-  if (nome==='evolucao') renderEvolucao();
-  if (nome==='entradas') iniciarEntradas();
+  if (nome==='resumo')    renderResumo();
+  if (nome==='abc')       renderABC();
+  if (nome==='inflacao')  renderInflacao();
+  if (nome==='evolucao')  renderEvolucao();
+  if (nome==='entradas')  iniciarEntradas();
+  if (nome==='auditoria') iniciarAuditoria();
 }
 
 // ── LOAD ──────────────────────────────────────────────────────────
@@ -792,6 +852,84 @@ function fecharNFe() {
 
 function primeiroDiaMes(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;}
 function hoje(){return new Date().toISOString().split('T')[0];}
+
+// ── AUDITORIA DE CONVERSÃO ─────────────────────────────────────────────
+function iniciarAuditoria() {
+  if (!document.getElementById('aud-ini').value) {
+    document.getElementById('aud-ini').value = primeiroDiaMes();
+    document.getElementById('aud-fim').value = hoje();
+  }
+  // popular insumos no filtro
+  const sel = document.getElementById('aud-ins');
+  if (sel.options.length <= 1) {
+    insumos.forEach(i => { const o=document.createElement('option'); o.value=i.id; o.textContent=i.nome; sel.appendChild(o); });
+  }
+}
+
+async function renderAuditoria() {
+  const ini = document.getElementById('aud-ini').value;
+  const fim = document.getElementById('aud-fim').value;
+  const insId = document.getElementById('aud-ins').value;
+  const filtro = document.getElementById('aud-filtro').value;
+  const lojaId = document.getElementById('sel-loja').value;
+  const lojaFiltro = lojaId ? `&loja_id=eq.${lojaId}` : '';
+
+  const tbody = document.getElementById('aud-body');
+  tbody.innerHTML = '<tr><td colspan="11" class="empty">Carregando...</td></tr>';
+
+  try {
+    let q = `entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&tipo=eq.manual&order=criado_em.desc`;
+    if (ini) q += `&criado_em=gte.${ini}T00:00:00`;
+    if (fim) q += `&criado_em=lte.${fim}T23:59:59`;
+    if (insId) q += `&insumo_id=eq.${insId}`;
+
+    const ents = await api(q);
+    const lojasData = await api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]);
+
+    let rows = ents.map(e => {
+      const ins    = insumos.find(i => i.id === e.insumo_id);
+      const loja   = lojasData.find(l => l.id === e.loja_id);
+      const fator  = Number(e.fator_conversao) || 1;
+      // qtd_fornecedor: campo novo ou derivado de registros antigos
+      const qtdForn = Number(e.quantidade_fornecedor) || parseFloat((Number(e.quantidade) / fator).toFixed(4));
+      const qtdEst  = Number(e.quantidade) || 0;
+      const esperado = parseFloat((qtdForn * fator).toFixed(4));
+      const dif      = parseFloat((qtdEst - esperado).toFixed(4));
+      const suspeito = fator === 1 && e.unidade_compra && e.unidade_compra.toLowerCase() !== (ins?.unidade_medida||'').toLowerCase();
+      const erro     = Math.abs(dif) > 0.001;
+      return { e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro };
+    });
+
+    if (filtro === 'suspeitos') rows = rows.filter(r => r.suspeito || r.erro);
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="11" class="empty">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(({e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro}) => {
+      const rowStyle = erro ? 'background:#fde8ea' : suspeito ? 'background:#fefce8' : '';
+      const difStyle = erro ? 'color:#dc2626;font-weight:700' : 'color:var(--text3)';
+      const fatorStyle = (fator === 1 && e.unidade_compra) ? 'color:#b45309;font-weight:700' : '';
+      const dataHora = e.criado_em ? new Date(e.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+      return `<tr style="${rowStyle}">
+        <td class="mono" style="font-size:12px">${dataHora}</td>
+        <td style="font-weight:500">${esc(ins?.nome||e.insumo_id||'—')}</td>
+        <td style="font-size:12px;color:var(--text2)">${esc(loja?.nome||'—')}</td>
+        <td style="font-size:12px;color:var(--text2)">${esc(e.fornecedor_nome||'—')}</td>
+        <td class="r mono">${Number(qtdForn).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+        <td style="font-size:12px">${esc(e.unidade_compra||'—')}</td>
+        <td class="r mono" style="${fatorStyle}">${fator}</td>
+        <td class="r mono">${Number(qtdEst).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+        <td class="r mono" style="color:var(--text3)">${Number(esperado).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+        <td class="r mono" style="${difStyle}">${dif === 0 ? '—' : (dif > 0 ? '+' : '') + Number(dif).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+        <td style="font-size:12px;color:var(--text2)">${esc(e.responsavel||'—')}</td>
+      </tr>`;
+    }).join('');
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="11" class="empty">Erro: ${esc(err.message)}</td></tr>`;
+  }
+}
 
 init();
 </script>

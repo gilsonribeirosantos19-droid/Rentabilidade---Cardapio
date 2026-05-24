@@ -1094,13 +1094,17 @@ async function salvarEntrada() {
     const custoUnit = parseFloat((custo/fator).toFixed(6));
     const dataStr = document.getElementById('ef-data').value||hoje();
 
+    const _u = JSON.parse(localStorage.getItem('sb_user')||'{}');
     await registrarEntrada(insId, {
       fornecedor_id: fornId, fornecedor_nome: fornNome,
-      quantidade: qtdEst, unidade_compra: document.getElementById('ef-unid').value.trim()||null,
+      quantidade: qtdEst,
+      quantidade_fornecedor: qtd_,
+      unidade_compra: document.getElementById('ef-unid').value.trim()||null,
       fator_conversao: fator, custo_unitario: custo,
       lote: document.getElementById('ef-lote').value.trim()||null,
       validade: document.getElementById('ef-val').value||null,
       tipo: 'manual',
+      responsavel: _u?.nome || null,
       observacao: document.getElementById('ef-obs').value.trim()||null,
       criado_em: dataStr+'T12:00:00.000Z',
     }, custoUnit);
