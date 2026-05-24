@@ -579,10 +579,16 @@ async function onCmInsumoChange() {
 
   document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Carregando...</td></tr>';
   try {
-    todosSaldosCm = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${cmInsumoId}`);
+    // Busca lojas e saldos em paralelo, sem filtro ativo
+    const [lojasAtual, saldosInsumo] = await Promise.all([
+      api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${cmInsumoId}`),
+    ]);
+    if (lojasAtual.length) lojas = lojasAtual; // atualiza cache global
+    todosSaldosCm = saldosInsumo;
     renderizarLojasCheckbox();
   } catch(e) {
-    document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Erro ao carregar lojas.</td></tr>';
+    document.getElementById('cm-lojas-body').innerHTML = `<tr><td colspan="4" class="empty">Erro: ${esc(e.message)}</td></tr>`;
   }
 }
 
