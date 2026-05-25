@@ -563,7 +563,25 @@
     <!-- TAB: KARDEX -->
     <div id="tab-kardex" class="tab-pane">
 
-      <!-- KPI CARDS -->
+      <!-- FILTROS — ficam ACIMA dos cards -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="field field-sm" id="kx-ins" onchange="renderKardex()" style="min-width:220px">
+          <option value="">Selecione um insumo...</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input type="date" id="kx-de" class="field field-sm" onchange="renderKardex()" style="border:none;padding:0;background:transparent;width:110px">
+          <span style="color:#94a3b8">–</span>
+          <input type="date" id="kx-ate" class="field field-sm" onchange="renderKardex()" style="border:none;padding:0;background:transparent;width:110px">
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="exportKardexCSV()" style="display:flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV
+        </button>
+        <span id="kx-info" style="font-size:12px;color:#94a3b8;margin-left:4px"></span>
+      </div>
+
+      <!-- KPI CARDS — ficam ABAIXO dos filtros -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e2e8f0;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:18px">
         <div style="background:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
@@ -597,24 +615,6 @@
             <div style="font-size:11px;color:#94a3b8;margin-top:3px">por kg / litro / un</div>
           </div>
         </div>
-      </div>
-
-      <!-- FILTROS -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <select class="field field-sm" id="kx-ins" onchange="renderKardex()" style="min-width:240px">
-          <option value="">Selecione um insumo...</option>
-        </select>
-        <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <input type="date" id="kx-de" class="field field-sm" onchange="renderKardex()" style="border:none;padding:0;background:transparent;width:110px">
-          <span style="color:#94a3b8">–</span>
-          <input type="date" id="kx-ate" class="field field-sm" onchange="renderKardex()" style="border:none;padding:0;background:transparent;width:110px">
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="exportKardexCSV()" style="display:flex;align-items:center;gap:6px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          CSV
-        </button>
-        <span id="kx-info" style="font-size:12px;color:#94a3b8;margin-left:4px"></span>
       </div>
 
       <!-- TABELA -->
@@ -2427,20 +2427,18 @@ function renderKardex() {
 
   rows += movs.map(m => {
     const isSaida = m.tipo === 'saida';
-    const badge = isSaida
-      ? `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#fff1f2;color:#e11d48">Saída</span>`
-      : `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#f0fdf4;color:#16a34a">Entrada</span>`;
+    const tipoTxt = isSaida ? 'Saída' : 'Entrada';
     return `<tr>
-      <td class="mono" style="color:#64748b;white-space:nowrap">${fmtData(m.data)}</td>
-      <td class="c">${badge}</td>
-      <td style="color:#64748b;font-size:12px">${esc(m.desc)}</td>
-      <td class="r mono" style="font-weight:600;color:${isSaida?'#e11d48':'#16a34a'}">${isSaida?'−':'+'}${qtd(m.qMov)}</td>
-      <td class="r mono" style="color:#64748b">${m.vUnit?brl(m.vUnit):'—'}</td>
-      <td class="r mono" style="color:#16a34a">${m.vEntrada?brl(m.vEntrada):'—'}</td>
-      <td class="r mono" style="color:#e11d48">${m.vSaida?brl(m.vSaida):'—'}</td>
-      <td class="r mono" style="font-weight:600">${qtd(m.qAcum)}</td>
-      <td class="r mono">${brl(m.vAcum)}</td>
-      <td class="r mono" style="font-weight:700;color:#7c3aed">${brl(m.cmedio)}</td>
+      <td class="mono" style="color:#334155;white-space:nowrap">${fmtData(m.data)}</td>
+      <td style="color:#334155;font-size:13px">${tipoTxt}</td>
+      <td style="color:#334155;font-size:13px">${esc(m.desc)}</td>
+      <td class="r mono" style="color:#334155">${isSaida?'−':'+'}${qtd(m.qMov)}</td>
+      <td class="r mono" style="color:#334155">${m.vUnit?brl(m.vUnit):'—'}</td>
+      <td class="r mono" style="color:#334155">${m.vEntrada?brl(m.vEntrada):'—'}</td>
+      <td class="r mono" style="color:#334155">${m.vSaida?brl(m.vSaida):'—'}</td>
+      <td class="r mono" style="color:#334155;font-weight:600">${qtd(m.qAcum)}</td>
+      <td class="r mono" style="color:#334155">${brl(m.vAcum)}</td>
+      <td class="r mono" style="color:#334155">${brl(m.cmedio)}</td>
     </tr>`;
   }).join('');
 
@@ -2449,11 +2447,11 @@ function renderKardex() {
   // Rodapé com totais
   tfoot.innerHTML = ultimo ? `<tr style="background:#f8fafc;font-weight:700;border-top:2px solid #e2e8f0">
     <td colspan="5" style="color:#0f172a">Total do período</td>
-    <td class="r mono" style="color:#16a34a">${brl(totEnt)}</td>
-    <td class="r mono" style="color:#e11d48">${brl(totSai)}</td>
-    <td class="r mono">${qtd(ultimo.qAcum)}</td>
-    <td class="r mono">${brl(ultimo.vAcum)}</td>
-    <td class="r mono" style="color:#7c3aed">${brl(ultimo.cmedio)}</td>
+    <td class="r mono" style="color:#0f172a">${brl(totEnt)}</td>
+    <td class="r mono" style="color:#0f172a">${brl(totSai)}</td>
+    <td class="r mono" style="color:#0f172a">${qtd(ultimo.qAcum)}</td>
+    <td class="r mono" style="color:#0f172a">${brl(ultimo.vAcum)}</td>
+    <td class="r mono" style="color:#0f172a">${brl(ultimo.cmedio)}</td>
   </tr>` : '';
 }
 
