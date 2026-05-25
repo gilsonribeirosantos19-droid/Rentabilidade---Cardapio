@@ -40,14 +40,40 @@
   .sel-loja-top:focus{border-color:#f97316}
 
   /* SUB-TABS */
-  .sub-tabs{display:flex;gap:6px;border-bottom:1px solid #e2e8f0;margin-bottom:24px;
-    position:sticky;top:40px;z-index:50;background:#f8fafc;padding:10px 12px}
-  .sub-tab{padding:7px 18px;font-size:13px;font-weight:500;color:#ffffff;cursor:pointer;
-    border:none;background:#0f2d5c;border-radius:20px;margin-bottom:0;
-    transition:all .2s;font-family:inherit;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.12)}
-  .sub-tab:hover{background:#1a3f7a;box-shadow:0 2px 8px rgba(15,45,92,.25)}
-  .sub-tab.active{color:#fff;background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:600}
+  .sub-tabs{display:flex;align-items:center;border-bottom:1px solid #e2e8f0;margin-bottom:20px;
+    position:sticky;top:58px;z-index:50;background:#fff;padding:0 24px}
+  .sub-tab{padding:14px 16px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;
+    border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-1px;
+    transition:all .18s;font-family:inherit;white-space:nowrap}
+  .sub-tab:hover{color:#0f172a}
+  .sub-tab.active{color:#f97316;border-bottom-color:#f97316;font-weight:600}
+  .tab-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .tab-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .tab-btn:hover{background:#f8fafc;border-color:#94a3b8;color:#0f172a}
   .rel-pane{display:none}.rel-pane.active{display:block}
+  /* ABC KPI BAR */
+  .abc-kpi-bar{display:flex;align-items:stretch;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .abc-kpi-item{padding:14px 20px;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;gap:3px;white-space:nowrap}
+  .abc-kpi-item:last-child{border-right:none}
+  .abc-kpi-lbl{font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+  .abc-kpi-val{font-size:16px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a}
+  .abc-kpi-sub{font-size:11px;color:#94a3b8}
+  /* PROGRESS BAR */
+  .prog-wrap{display:flex;align-items:center;gap:8px}
+  .prog-bar-bg{flex:1;height:6px;background:#f1f5f9;border-radius:3px;min-width:60px}
+  .prog-bar-fill{height:100%;border-radius:3px;background:#e11d48;transition:width .3s}
+  /* PAGINATION */
+  .pag-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #f1f5f9;font-size:12px;color:#64748b;flex-wrap:wrap;gap:8px}
+  .pag-btns{display:flex;align-items:center;gap:4px}
+  .pag-btn{min-width:30px;height:30px;padding:0 6px;border:1px solid #e2e8f0;background:#fff;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#64748b;transition:all .15s;font-family:inherit}
+  .pag-btn:hover{background:#f8fafc;border-color:#94a3b8}
+  .pag-btn.active{background:#0f2d5c;border-color:#0f2d5c;color:#fff;font-weight:700}
+  .pag-btn:disabled{opacity:.4;cursor:not-allowed}
+  /* ABC FOOTER */
+  .abc-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 0;flex-wrap:wrap;gap:8px}
+  .abc-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .abc-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
+  .abc-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
   /* TABLES */
   .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
@@ -73,10 +99,10 @@
   .c-green{color:#22c55e}.c-blue{color:#3b82f6}.c-amber{color:#f97316}.c-red{color:var(--red)}
 
   /* BADGES */
-  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
-  .b-A{background:rgba(22,163,74,.15);color:#15803d}
-  .b-B{background:rgba(59,130,246,.15);color:#1d4ed8}
-  .b-C{background:rgba(148,163,184,.15);color:#64748b}
+  .badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:22px;border-radius:5px;font-size:11px;font-weight:800;letter-spacing:.03em}
+  .b-A{background:#fee2e2;color:#e11d48}
+  .b-B{background:#fef3c7;color:#d97706}
+  .b-C{background:#f1f5f9;color:#64748b}
 
   /* MISC */
   .rep-sec{margin-bottom:28px}
@@ -140,7 +166,10 @@
 
 <div class="main">
   <div class="topbar">
-    <div class="topbar-title">Relatórios</div>
+    <div>
+      <div class="topbar-title">Relatórios</div>
+      <div id="topbar-sub" style="font-size:12px;color:#94a3b8;margin-top:2px">Visão geral de estoque e rentabilidade.</div>
+    </div>
     <div style="display:flex;align-items:center;gap:10px">
       <select id="sel-loja" onchange="carregar()" class="sel-loja-top">
         <option value="">Todas as lojas</option>
@@ -162,6 +191,17 @@
       <button class="sub-tab"        id="tab-evolucao" onclick="switchTab('evolucao')">Evolução Mensal</button>
       <button class="sub-tab"        id="tab-entradas"  onclick="switchTab('entradas')">Entradas</button>
       <button class="sub-tab"        id="tab-auditoria" onclick="switchTab('auditoria')">Auditoria de Conversão</button>
+      <div class="tab-actions">
+        <button class="tab-btn" id="btn-filtros" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtros
+        </button>
+        <button class="tab-btn" id="btn-exportar" style="display:none" onclick="exportarABC()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- RESUMO -->
@@ -198,15 +238,67 @@
 
     <!-- CURVA ABC -->
     <div id="pane-abc" class="rel-pane">
-      <div class="rep-sec">
-        <div class="rep-title">Curva ABC — por valor em estoque &nbsp;<span style="font-size:11px;font-weight:400;color:var(--text3)">(A = 80% do valor · B = 15% · C = 5%)</span></div>
-        <div class="tbl-wrap"><div class="tbl-scroll"><table class="tbl">
+      <div class="abc-kpi-bar" id="abc-kpi-bar">
+        <div class="abc-kpi-item"><div class="abc-kpi-lbl">Total de itens</div><div class="abc-kpi-val" id="abc-k-total">—</div></div>
+        <div class="abc-kpi-item"><div class="abc-kpi-lbl">Valor total em estoque</div><div class="abc-kpi-val" id="abc-k-valor">—</div></div>
+        <div class="abc-kpi-item" style="border-left:3px solid #fee2e2">
+          <div class="abc-kpi-lbl">Classe A</div>
+          <div class="abc-kpi-val" id="abc-k-a-n" style="color:#e11d48">—</div>
+        </div>
+        <div class="abc-kpi-item">
+          <div class="abc-kpi-lbl">Valor Classe A</div>
+          <div class="abc-kpi-val" id="abc-k-a-v" style="color:#e11d48">—</div>
+        </div>
+        <div class="abc-kpi-item" style="border-left:3px solid #fef3c7">
+          <div class="abc-kpi-lbl">Classe B</div>
+          <div class="abc-kpi-val" id="abc-k-b-n" style="color:#d97706">—</div>
+        </div>
+        <div class="abc-kpi-item">
+          <div class="abc-kpi-lbl">Valor Classe B</div>
+          <div class="abc-kpi-val" id="abc-k-b-v" style="color:#d97706">—</div>
+        </div>
+        <div class="abc-kpi-item" style="border-left:3px solid #f1f5f9">
+          <div class="abc-kpi-lbl">Classe C</div>
+          <div class="abc-kpi-val" id="abc-k-c-n" style="color:#64748b">—</div>
+        </div>
+        <div class="abc-kpi-item">
+          <div class="abc-kpi-lbl">Valor Classe C</div>
+          <div class="abc-kpi-val" id="abc-k-c-v" style="color:#64748b">—</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-scroll"><table class="tbl">
           <thead><tr>
-            <th class="c">#</th><th>Insumo</th><th>Categoria</th><th class="c">Classe</th>
-            <th class="r">Valor</th><th class="r">% Individual</th><th class="r">% Acumulada</th>
+            <th class="c" style="width:44px">#</th>
+            <th>Insumo</th>
+            <th>Categoria</th>
+            <th class="c" style="width:60px">Classe</th>
+            <th class="r">Valor</th>
+            <th class="r">% Individual</th>
+            <th class="r" style="min-width:160px">% Acumulada</th>
+            <th style="width:70px">Ações</th>
           </tr></thead>
-          <tbody id="abc-body"><tr><td colspan="7" class="empty skeleton">Carregando...</td></tr></tbody>
-        </table></div></div>
+          <tbody id="abc-body"><tr><td colspan="8" class="empty skeleton">Carregando...</td></tr></tbody>
+        </table></div>
+        <div class="pag-bar">
+          <span id="abc-pag-info" style="font-size:12px;color:#64748b"></span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pag-btns" id="abc-pag-btns"></div>
+            <select id="abc-por-pag" style="font-size:12px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#64748b" onchange="_abcPorPag=+this.value;_abcPag=1;_renderAbcPage()">
+              <option value="14">14 por página</option>
+              <option value="25" selected>25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="abc-footer">
+        <div class="abc-legend">
+          <div class="abc-leg-item"><span class="abc-leg-dot" style="background:#e11d48"></span>A = itens que representam até 80% do valor total</div>
+          <div class="abc-leg-item"><span class="abc-leg-dot" style="background:#d97706"></span>B = itens que representam de 80% a 95% do valor total</div>
+          <div class="abc-leg-item"><span class="abc-leg-dot" style="background:#94a3b8"></span>C = itens que representam acima de 95% do valor total</div>
+        </div>
+        <span style="font-size:11px;color:#94a3b8" id="abc-ref"></span>
       </div>
     </div>
 
@@ -416,6 +508,15 @@ function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textC
 let insumos=[], saldos=[], entradas=[], saidas=[], lojas=[];
 let tabAtual = 'resumo';
 
+const _tabSubs={
+  resumo:'Visão geral de estoque e rentabilidade.',
+  abc:'Análise da curva ABC dos insumos por valor em estoque.',
+  inflacao:'Variação de preço de compra por insumo ao longo do tempo.',
+  evolucao:'Saídas mensais de estoque por insumo.',
+  entradas:'Histórico de entradas de estoque por período.',
+  auditoria:'Auditoria de fator de conversão nas entradas de NF-e.',
+};
+
 // ── TABS ──────────────────────────────────────────────────────────
 function switchTab(nome) {
   tabAtual = nome;
@@ -423,6 +524,12 @@ function switchTab(nome) {
   document.getElementById('pane-'+nome).classList.add('active');
   ['resumo','abc','inflacao','evolucao','entradas','auditoria'].forEach(t=>
     document.getElementById('tab-'+t).classList.toggle('active',t===nome));
+  const sub=document.getElementById('topbar-sub');
+  if(sub)sub.textContent=_tabSubs[nome]||'';
+  const bFilt=document.getElementById('btn-filtros');
+  const bExp=document.getElementById('btn-exportar');
+  if(bFilt)bFilt.style.display=nome==='abc'?'':'none';
+  if(bExp)bExp.style.display=nome==='abc'?'':'none';
   if (nome==='resumo')    renderResumo();
   if (nome==='abc')       renderABC();
   if (nome==='inflacao')  renderInflacao();
@@ -543,6 +650,8 @@ function renderResumo() {
 }
 
 // ── CURVA ABC ─────────────────────────────────────────────────────
+let _abcRows=[], _abcPag=1, _abcPorPag=25;
+
 function renderABC() {
   const getSaldo = id => saldos.find(s=>s.insumo_id===id)||{quantidade:0,custo_medio:0};
   const valIns = insumos.map(i=>{
@@ -551,19 +660,95 @@ function renderABC() {
   }).sort((a,b)=>b.val-a.val);
   const totalV=valIns.reduce((s,v)=>s+v.val,0)||1;
   let acum=0;
-  document.getElementById('abc-body').innerHTML=valIns.map((v,i)=>{
+  _abcRows=valIns.map((v,i)=>{
     const pct=v.val/totalV*100;acum+=pct;
     const cl=acum<=80?'A':acum<=95?'B':'C';
+    return{...v,idx:i+1,pct,acum,cl};
+  });
+
+  // KPIs
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const clA=_abcRows.filter(r=>r.cl==='A'), clB=_abcRows.filter(r=>r.cl==='B'), clC=_abcRows.filter(r=>r.cl==='C');
+  const vA=clA.reduce((s,r)=>s+r.val,0), vB=clB.reduce((s,r)=>s+r.val,0), vC=clC.reduce((s,r)=>s+r.val,0);
+  const pctN=(n,t)=>t?'('+((n/t)*100).toFixed(1)+'%)':'';
+  set('abc-k-total',_abcRows.length);
+  set('abc-k-valor',brl(totalV-1)); // totalV already +1
+  document.getElementById('abc-k-valor').textContent=brl(valIns.reduce((s,v)=>s+v.val,0));
+  set('abc-k-a-n',`${clA.length} itens ${pctN(clA.length,_abcRows.length)}`);
+  set('abc-k-a-v',`${brl(vA)} (${(vA/(totalV)*100).toFixed(1)}%)`);
+  set('abc-k-b-n',`${clB.length} itens ${pctN(clB.length,_abcRows.length)}`);
+  set('abc-k-b-v',`${brl(vB)} (${(vB/(totalV)*100).toFixed(1)}%)`);
+  set('abc-k-c-n',`${clC.length} itens ${pctN(clC.length,_abcRows.length)}`);
+  set('abc-k-c-v',`${brl(vC)} (${(vC/(totalV)*100).toFixed(1)}%)`);
+  const ref=document.getElementById('abc-ref');
+  if(ref)ref.textContent='Referência: '+new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  _abcPag=1;
+  _renderAbcPage();
+}
+
+function _renderAbcPage(){
+  const start=(_abcPag-1)*_abcPorPag;
+  const slice=_abcRows.slice(start,start+_abcPorPag);
+  const tbody=document.getElementById('abc-body');
+  if(!slice.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Sem dados</td></tr>';return;}
+  tbody.innerHTML=slice.map(v=>{
+    const barW=Math.min(v.acum,100).toFixed(1);
+    const barColor=v.cl==='A'?'#e11d48':v.cl==='B'?'#d97706':'#94a3b8';
     return `<tr>
-      <td class="c mono">${i+1}</td>
-      <td style="font-weight:500">${esc(v.nome)}</td>
-      <td style="color:var(--text3);font-size:12px;text-transform:capitalize">${esc(v.cat)}</td>
-      <td class="c"><span class="badge b-${cl}">${cl}</span></td>
+      <td class="c mono" style="color:#94a3b8;font-size:12px">${v.idx}</td>
+      <td style="font-weight:600">${esc(v.nome)}</td>
+      <td style="color:#94a3b8;font-size:12px;text-transform:capitalize">${esc(v.cat)}</td>
+      <td class="c"><span class="badge b-${v.cl}">${v.cl}</span></td>
       <td class="r mono">${brl(v.val)}</td>
-      <td class="r mono">${pct.toFixed(1)}%</td>
-      <td class="r mono">${acum.toFixed(1)}%</td>
+      <td class="r mono">${v.pct.toFixed(1)}%</td>
+      <td class="r">
+        <div class="prog-wrap">
+          <span class="mono" style="font-size:12px;min-width:40px;text-align:right">${v.acum.toFixed(1)}%</span>
+          <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${barW}%;background:${barColor}"></div></div>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button style="width:26px;height:26px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b" title="Ver detalhes" onclick="toast('Detalhes em breve')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button style="width:26px;height:26px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b" title="Ver gráfico" onclick="toast('Gráfico em breve')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </button>
+        </div>
+      </td>
     </tr>`;
-  }).join('')||'<tr><td colspan="7" class="empty">Sem dados</td></tr>';
+  }).join('');
+
+  // Paginação
+  const total=_abcRows.length;
+  const totalPags=Math.max(1,Math.ceil(total/_abcPorPag));
+  const end=Math.min(start+_abcPorPag,total);
+  const info=document.getElementById('abc-pag-info');
+  if(info)info.textContent=total?`Mostrando ${start+1} a ${end} de ${total} itens`:'';
+  const btns=document.getElementById('abc-pag-btns');
+  if(!btns)return;
+  let h=`<button class="pag-btn" onclick="_abcPag=Math.max(1,_abcPag-1);_renderAbcPage()" ${_abcPag===1?'disabled':''}>‹</button>`;
+  for(let p=1;p<=totalPags;p++){
+    if(totalPags>7&&Math.abs(p-_abcPag)>2&&p!==1&&p!==totalPags){
+      if(p===2||p===totalPags-1)h+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
+      continue;
+    }
+    h+=`<button class="pag-btn${p===_abcPag?' active':''}" onclick="_abcPag=${p};_renderAbcPage()">${p}</button>`;
+  }
+  h+=`<button class="pag-btn" onclick="_abcPag=Math.min(${totalPags},_abcPag+1);_renderAbcPage()" ${_abcPag===totalPags?'disabled':''}>›</button>`;
+  btns.innerHTML=h;
+}
+
+function exportarABC(){
+  if(!_abcRows.length){toast('Calcule primeiro.','err');return;}
+  let csv='#;Insumo;Categoria;Classe;Valor;% Individual;% Acumulada\n';
+  _abcRows.forEach(r=>{csv+=`${r.idx};${r.nome};${r.cat};${r.cl};${r.val.toFixed(2)};${r.pct.toFixed(2)};${r.acum.toFixed(2)}\n`;});
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='curva_abc.csv';a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── INFLAÇÃO ──────────────────────────────────────────────────────
