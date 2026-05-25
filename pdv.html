@@ -943,26 +943,148 @@
 
       <!-- SUB-PANE: ENGENHARIA DE CARDÁPIO -->
       <div id="srel-pane-engenharia" class="srel-pane">
-        <div class="matriz" id="eng-matriz">
-          <div class="quadrante" style="border-color:#fbbf24">
-            <div class="quad-titulo" style="color:#b45309">⭐ Estrela</div>
-            <div class="quad-sub">Alta venda · Alta margem — Manter e promover</div>
-            <div id="eng-estrela"><div class="empty" style="padding:12px">Clique em Calcular</div></div>
+
+        <!-- KPIs -->
+        <div class="kpi-row" style="margin-bottom:16px">
+          <div class="kpi-card">
+            <div class="kpi-icon ki-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Total de Itens</div><div class="kpi-val" id="eng-kpi-total">—</div><div class="kpi-sub">itens analisados</div></div>
           </div>
-          <div class="quadrante" style="border-color:#86efac">
-            <div class="quad-titulo" style="color:#16a34a">🐄 Vaca Leiteira</div>
-            <div class="quad-sub">Alta venda · Baixa margem — Rever preço ou custo</div>
-            <div id="eng-vaca"><div class="empty" style="padding:12px">Clique em Calcular</div></div>
+          <div class="kpi-card">
+            <div class="kpi-icon ki-blue"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Faturamento Total</div><div class="kpi-val" id="eng-kpi-fat">—</div><div class="kpi-sub">período selecionado</div></div>
           </div>
-          <div class="quadrante" style="border-color:#93c5fd">
-            <div class="quad-titulo" style="color:#1d4ed8">🧩 Puzzle</div>
-            <div class="quad-sub">Baixa venda · Alta margem — Promover mais</div>
-            <div id="eng-puzzle"><div class="empty" style="padding:12px">Clique em Calcular</div></div>
+          <div class="kpi-card">
+            <div class="kpi-icon ki-orange"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Custo Total (CMV)</div><div class="kpi-val" id="eng-kpi-custo">—</div><div class="kpi-sub" id="eng-kpi-custo-pct">—</div></div>
           </div>
-          <div class="quadrante" style="border-color:#fca5a5">
-            <div class="quad-titulo" style="color:#dc2626">🍍 Abacaxi</div>
-            <div class="quad-sub">Baixa venda · Baixa margem — Avaliar eliminação</div>
-            <div id="eng-abacaxi"><div class="empty" style="padding:12px">Clique em Calcular</div></div>
+          <div class="kpi-card">
+            <div class="kpi-icon ki-green"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Margem Bruta</div><div class="kpi-val" id="eng-kpi-margem">—</div><div class="kpi-sub" id="eng-kpi-margem-pct">—</div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon ki-teal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Ticket Médio</div><div class="kpi-val" id="eng-kpi-ticket">—</div><div class="kpi-sub">por pedido</div></div>
+          </div>
+        </div>
+
+        <!-- MATRIZ + DONUT -->
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px">
+
+          <!-- MATRIZ 2x2 -->
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-head-title">Matriz de Engenharia de Cardápio</span></div>
+            <div class="dash-body" style="padding-bottom:16px">
+              <div style="display:flex;gap:12px">
+                <!-- EIXO Y -->
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:18px">
+                  <span style="font-size:9px;font-weight:600;color:var(--text3)">Alta</span>
+                  <span style="font-size:9px;font-weight:700;color:var(--text2);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.05em;text-transform:uppercase">POPULARIDADE</span>
+                  <span style="font-size:9px;font-weight:600;color:var(--text3)">Baixa</span>
+                </div>
+                <div style="flex:1">
+                  <!-- GRID 2x2 -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+                    <!-- Estrela: Alta pop, Baixa margem -->
+                    <div style="background:#fef3c7;border:1.5px solid #f59e0b;border-radius:12px;padding:16px;text-align:center">
+                      <div style="font-size:12px;font-weight:700;color:#b45309;margin-bottom:8px">⭐ ESTRELA</div>
+                      <div style="font-size:24px;font-weight:800;color:#0f172a" id="eng-n-estrela">—</div>
+                      <div style="font-size:10px;color:#64748b;margin-top:2px">itens</div>
+                      <div style="font-size:11px;font-weight:600;color:#b45309;margin-top:6px" id="eng-pct-estrela">—% do faturamento</div>
+                    </div>
+                    <!-- Joias: Alta pop, Alta margem -->
+                    <div style="background:#d1fae5;border:1.5px solid #10b981;border-radius:12px;padding:16px;text-align:center">
+                      <div style="font-size:12px;font-weight:700;color:#065f46;margin-bottom:8px">💎 JOIAS</div>
+                      <div style="font-size:24px;font-weight:800;color:#0f172a" id="eng-n-joias">—</div>
+                      <div style="font-size:10px;color:#64748b;margin-top:2px">itens</div>
+                      <div style="font-size:11px;font-weight:600;color:#065f46;margin-top:6px" id="eng-pct-joias">—% do faturamento</div>
+                    </div>
+                    <!-- Quebra-cabeças: Baixa pop, Baixa margem -->
+                    <div style="background:#fee2e2;border:1.5px solid #ef4444;border-radius:12px;padding:16px;text-align:center">
+                      <div style="font-size:12px;font-weight:700;color:#991b1b;margin-bottom:8px">🧩 QUEBRA-CABEÇAS</div>
+                      <div style="font-size:24px;font-weight:800;color:#0f172a" id="eng-n-quebra">—</div>
+                      <div style="font-size:10px;color:#64748b;margin-top:2px">itens</div>
+                      <div style="font-size:11px;font-weight:600;color:#991b1b;margin-top:6px" id="eng-pct-quebra">—% do faturamento</div>
+                    </div>
+                    <!-- Abacaxi: Baixa pop, Alta margem -->
+                    <div style="background:#ffedd5;border:1.5px solid #f97316;border-radius:12px;padding:16px;text-align:center">
+                      <div style="font-size:12px;font-weight:700;color:#9a3412;margin-bottom:8px">🍍 ABACAXI</div>
+                      <div style="font-size:24px;font-weight:800;color:#0f172a" id="eng-n-abacaxi">—</div>
+                      <div style="font-size:10px;color:#64748b;margin-top:2px">itens</div>
+                      <div style="font-size:11px;font-weight:600;color:#9a3412;margin-top:6px" id="eng-pct-abacaxi">—% do faturamento</div>
+                    </div>
+                  </div>
+                  <!-- EIXO X -->
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px">
+                    <span style="font-size:9px;font-weight:600;color:var(--text3)">Baixa</span>
+                    <span style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em">Margem de Contribuição</span>
+                    <span style="font-size:9px;font-weight:600;color:var(--text3)">Alta</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DONUT POR QUADRANTE -->
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-head-title">Distribuição do Faturamento por Quadrante</span></div>
+            <div class="dash-body">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+                <div style="position:relative;width:150px;height:150px">
+                  <canvas id="chart-eng-donut"></canvas>
+                  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+                    <div style="font-size:10px;color:var(--text3)">Total</div>
+                    <div style="font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1);text-align:center" id="eng-donut-total">—</div>
+                  </div>
+                </div>
+                <div style="width:100%" id="eng-donut-legend"></div>
+                <div id="eng-insight" style="font-size:11px;color:#1d4ed8;background:#eff6ff;border-radius:8px;padding:10px 12px;line-height:1.5;display:none"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABELA DESEMPENHO DOS ITENS -->
+        <div class="dash-card">
+          <div class="dash-head">
+            <span class="dash-head-title">Desempenho dos Itens</span>
+            <div style="display:flex;gap:8px">
+              <input class="field field-sm" id="eng-busca" placeholder="Buscar produto..." oninput="filtrarEngTab()" style="width:180px">
+              <select class="field field-sm" id="eng-filtro-quad" onchange="filtrarEngTab()" style="width:auto;padding:5px 8px;font-size:12px">
+                <option value="">Todos os quadrantes</option>
+                <option value="joias">💎 Joias</option>
+                <option value="estrela">⭐ Estrelas</option>
+                <option value="abacaxi">🍍 Abacaxis</option>
+                <option value="quebra">🧩 Quebra-cabeças</option>
+              </select>
+            </div>
+          </div>
+          <div class="tbl-scroll">
+            <table class="tbl" style="font-size:12px">
+              <thead><tr>
+                <th class="c" style="width:36px">#</th>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Quadrante</th>
+                <th class="r">Qtd Vendida</th>
+                <th class="r">Faturamento</th>
+                <th class="r">CMV (R$)</th>
+                <th class="r">Margem (%)</th>
+                <th class="r">Participação (%)</th>
+                <th class="r">Ticket Médio</th>
+                <th class="c">Status</th>
+              </tr></thead>
+              <tbody id="eng-body"><tr><td colspan="11" class="empty">Clique em Calcular</td></tr></tbody>
+            </table>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #f1f5f9;font-size:12px;color:var(--text3)">
+            <span id="eng-pag-info">—</span>
+            <div style="display:flex;align-items:center;gap:4px" id="eng-pag-btns"></div>
+            <select class="field field-sm" id="eng-por-pag" onchange="renderPagEng()" style="padding:3px 8px;font-size:11px;width:auto">
+              <option value="10">10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
           </div>
         </div>
       </div>
@@ -1849,6 +1971,113 @@ function exportVendasCSV() {
 }
 
 // ── RELATÓRIOS ─────────────────────────────────────────────────────
+// ── ENGENHARIA HELPERS ─────────────────────────────────────────────
+let _engData=[], _engPagAtual=1, _chartEngDonut=null;
+const ENG_CORES={joias:'#10b981',estrela:'#f59e0b',abacaxi:'#f97316',quebra:'#ef4444'};
+const ENG_LABELS={joias:'Joias',estrela:'Estrelas',abacaxi:'Abacaxis',quebra:'Quebra-cabeças'};
+
+function renderEngDonut(qFat, totalFat) {
+  const ctx=document.getElementById('chart-eng-donut')?.getContext('2d');
+  if(!ctx) return;
+  if(_chartEngDonut) _chartEngDonut.destroy();
+  document.getElementById('eng-donut-total').textContent=brl(totalFat);
+  const keys=['joias','estrela','abacaxi','quebra'];
+  _chartEngDonut=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:keys.map(k=>ENG_LABELS[k]),
+      datasets:[{data:keys.map(k=>qFat(k)),
+        backgroundColor:keys.map(k=>ENG_CORES[k]),borderWidth:2,borderColor:'#fff',hoverOffset:4}]},
+    options:{responsive:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>`${brl(ctx.raw)} (${totalFat>0?(ctx.raw/totalFat*100).toFixed(1):0}%)`}}},
+      cutout:'70%'}
+  });
+  document.getElementById('eng-donut-legend').innerHTML=[
+    ...keys.map(k=>{const v=qFat(k);return `<div class="cat-leg-row">
+      <div style="width:10px;height:10px;border-radius:50%;background:${ENG_CORES[k]};flex-shrink:0"></div>
+      <span style="flex:1">${ENG_LABELS[k]}</span>
+      <span class="mono" style="font-weight:600">${brl(v)}</span>
+      <span style="color:var(--text3);min-width:36px;text-align:right">${totalFat>0?(v/totalFat*100).toFixed(1):0}%</span>
+    </div>`;}),
+    `<div class="cat-leg-row" style="border-top:1px solid #e2e8f0;margin-top:4px">
+      <span style="flex:1;font-weight:700">Total</span>
+      <span class="mono" style="font-weight:700">${brl(totalFat)}</span>
+      <span style="color:var(--text3);min-width:36px;text-align:right">100%</span>
+    </div>`
+  ].join('');
+  // Insight automático
+  const joiasFat=qFat('joias'); const elI=document.getElementById('eng-insight');
+  if(elI&&joiasFat>0){
+    elI.textContent=`💎 Itens classificados como Joias são os mais desejados: alta popularidade e alta margem de contribuição.`;
+    elI.style.display='block';
+  }
+}
+
+function filtrarEngTab(){_engPagAtual=1;renderPagEng();}
+
+function renderPagEng(){
+  const busca=(document.getElementById('eng-busca')?.value||'').toLowerCase();
+  const quad=document.getElementById('eng-filtro-quad')?.value||'';
+  const porPag=parseInt(document.getElementById('eng-por-pag')?.value||10);
+  const totalFat=_engData.reduce((s,p)=>s+p.fat,0);
+
+  let filtrado=_engData;
+  if(busca) filtrado=filtrado.filter(p=>p.nome.toLowerCase().includes(busca));
+  if(quad)  filtrado=filtrado.filter(p=>p.quad===quad);
+  filtrado=[...filtrado].sort((a,b)=>b.fat-a.fat);
+
+  const totalPags=Math.max(1,Math.ceil(filtrado.length/porPag));
+  _engPagAtual=Math.min(_engPagAtual,totalPags);
+  const slice=filtrado.slice((_engPagAtual-1)*porPag,_engPagAtual*porPag);
+  const offset=(_engPagAtual-1)*porPag;
+  const totalFatFiltrado=_engData.reduce((s,p)=>s+p.fat,0);
+
+  document.getElementById('eng-pag-info').textContent=
+    filtrado.length?`Mostrando ${offset+1} a ${Math.min(offset+porPag,filtrado.length)} de ${filtrado.length} itens`:'Nenhum item';
+
+  document.getElementById('eng-body').innerHTML=slice.length?slice.map((p,i)=>{
+    const catCor=getCatCor(p.cat||'');
+    const ticket=p.qtd>0?p.fat/p.qtd:0;
+    const marPct=p.margemPct*100;
+    const partPct=totalFatFiltrado>0?p.fat/totalFatFiltrado*100:0;
+    return `<tr>
+      <td class="c mono" style="color:var(--text3)">${offset+i+1}</td>
+      <td style="font-weight:500;color:#3b82f6">${esc(p.nome)}</td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${catCor}22;color:${catCor};font-weight:600">${esc(p.cat||'—')}</span></td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${p.quadBg};color:${p.quadCor};font-weight:600">${p.quadLabel}</span></td>
+      <td class="r mono">${Math.round(p.qtd).toLocaleString('pt-BR')}</td>
+      <td class="r mono" style="font-weight:600">${brl(p.fat)}</td>
+      <td class="r mono">${p.custo>0?brl(p.custo):'—'}</td>
+      <td class="r mono" style="${marPct>=60?'color:#16a34a':marPct>=50?'color:#f97316':'color:#ef4444'};font-weight:700">${p.custo>0?marPct.toFixed(2)+'%':'—'}</td>
+      <td class="r">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:4px;background:#e2e8f0;border-radius:2px">
+            <div style="height:4px;border-radius:2px;background:#3b82f6;width:${Math.min(partPct,100).toFixed(1)}%"></div>
+          </div>
+          <span class="mono" style="font-size:11px;min-width:38px">${partPct.toFixed(2)}%</span>
+        </div>
+      </td>
+      <td class="r mono">${brl(ticket)}</td>
+      <td class="c"><span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:${p.statusCor}">
+        <span style="width:6px;height:6px;border-radius:50%;background:${p.statusCor};display:inline-block"></span>
+        ${p.status}
+      </span></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="11" class="empty">Nenhum item encontrado</td></tr>`;
+
+  const btns=document.getElementById('eng-pag-btns');
+  if(!btns) return;
+  let html=`<button class="pag-btn" ${_engPagAtual===1?'disabled':''} onclick="_engPagAtual--;renderPagEng()">‹</button>`;
+  for(let p=1;p<=totalPags;p++){
+    if(totalPags>7&&p>2&&p<totalPags-1&&Math.abs(p-_engPagAtual)>1){
+      if(p===3||p===totalPags-2) html+=`<span style="padding:0 4px;color:var(--text3)">…</span>`;
+      continue;
+    }
+    html+=`<button class="pag-btn ${p===_engPagAtual?'active':''}" onclick="_engPagAtual=${p};renderPagEng()">${p}</button>`;
+  }
+  html+=`<button class="pag-btn" ${_engPagAtual===totalPags?'disabled':''} onclick="_engPagAtual++;renderPagEng()">›</button>`;
+  btns.innerHTML=html;
+}
+
 // ── CMV HELPERS ────────────────────────────────────────────────────
 let _cmvData = [], _cmvPagAtual = 1;
 const CAT_BADGE_CORES = ['#3b82f6','#10b981','#0d9488','#f97316','#8b5cf6','#f59e0b','#06b6d4','#ec4899','#6b7280'];
@@ -2206,22 +2435,46 @@ async function renderRelatorios() {
     renderPagCmv();
 
     // ENGENHARIA DE CARDÁPIO
-    const estrela=[],vaca=[],puzzle=[],abacaxi=[];
-    prods.forEach(p=>{
-      const altaVenda = p.qtd>=mediaQtd;
-      const margem = p.fat>0?(p.fat-p.custo)/p.fat:0;
-      const altaMargem = margem>=mediaMargem;
-      const item = `<div class="quad-item"><span>${esc(p.nome)}</span><span class="mono" style="font-size:12px">${p.qtd.toFixed(0)} · ${brl(p.fat)}</span></div>`;
-      if(altaVenda&&altaMargem) estrela.push(item);
-      else if(altaVenda&&!altaMargem) vaca.push(item);
-      else if(!altaVenda&&altaMargem) puzzle.push(item);
-      else abacaxi.push(item);
+    const totalFatEng = prods.reduce((s,p)=>s+p.fat,0);
+    const totalCustoEng = prods.reduce((s,p)=>s+p.custo,0);
+    const totalPedEng = _dbFats.filter(f=>f.data>=de&&f.data<=ate).length||1;
+    document.getElementById('eng-kpi-total').textContent   = prods.length;
+    document.getElementById('eng-kpi-fat').textContent     = brl(totalFatEng);
+    document.getElementById('eng-kpi-custo').textContent   = brl(totalCustoEng);
+    document.getElementById('eng-kpi-custo-pct').textContent = totalFatEng>0?(totalCustoEng/totalFatEng*100).toFixed(2)+'% do faturamento':'—';
+    document.getElementById('eng-kpi-margem').textContent  = brl(totalFatEng-totalCustoEng);
+    document.getElementById('eng-kpi-margem-pct').textContent = totalFatEng>0?((1-totalCustoEng/totalFatEng)*100).toFixed(2)+'% do faturamento':'—';
+    document.getElementById('eng-kpi-ticket').textContent  = brl(totalFatEng/totalPedEng);
+
+    _engData = prods.map(p=>{
+      const altaVenda  = p.qtd >= mediaQtd;
+      const margemPct  = p.fat>0?(p.fat-p.custo)/p.fat:0;
+      const altaMargem = margemPct >= mediaMargem;
+      let quad, quadLabel, quadCor, quadBg, status, statusCor;
+      if (altaVenda&&altaMargem)  { quad='joias';   quadLabel='💎 Joias';          quadCor='#065f46'; quadBg='#d1fae5'; status='Excelente'; statusCor='#10b981'; }
+      else if (altaVenda)          { quad='estrela';  quadLabel='⭐ Estrela';         quadCor='#b45309'; quadBg='#fef3c7'; status='Ótimo';     statusCor='#16a34a'; }
+      else if (altaMargem)         { quad='abacaxi';  quadLabel='🍍 Abacaxi';         quadCor='#9a3412'; quadBg='#ffedd5'; status='Atenção';   statusCor='#f97316'; }
+      else                         { quad='quebra';   quadLabel='🧩 Quebra-cabeças';  quadCor='#991b1b'; quadBg='#fee2e2'; status='Revisar';   statusCor='#ef4444'; }
+      return {...p, quad, quadLabel, quadCor, quadBg, status, statusCor, margemPct};
     });
-    const renderQuad=(id,items)=>{document.getElementById(id).innerHTML=items.join('')||'<div class="empty" style="padding:12px">Nenhum produto</div>';};
-    renderQuad('eng-estrela',estrela);
-    renderQuad('eng-vaca',vaca);
-    renderQuad('eng-puzzle',puzzle);
-    renderQuad('eng-abacaxi',abacaxi);
+
+    // Quadrantes summary
+    const qGrp = {joias:[],estrela:[],abacaxi:[],quebra:[]};
+    _engData.forEach(p=>qGrp[p.quad].push(p));
+    const qFat = k=>qGrp[k].reduce((s,p)=>s+p.fat,0);
+    ['joias','estrela','abacaxi','quebra'].forEach(k=>{
+      const n = qGrp[k].length;
+      const f = qFat(k);
+      const pct = totalFatEng>0?(f/totalFatEng*100).toFixed(1):0;
+      const suffixes = {joias:'joias',estrela:'estrela',abacaxi:'abacaxi',quebra:'quebra'};
+      document.getElementById(`eng-n-${suffixes[k]}`).textContent   = n;
+      document.getElementById(`eng-pct-${suffixes[k]}`).textContent = `${pct}% do faturamento`;
+    });
+
+    // Donut por quadrante
+    renderEngDonut(qFat, totalFatEng);
+    _engPagAtual=1;
+    renderPagEng();
 
     toast('Relatórios calculados!','ok');
   } catch(e){toast('Erro relatórios: '+e.message,'err');}
