@@ -426,50 +426,89 @@
 
     <!-- ENTRADAS -->
     <div id="pane-entradas" class="rel-pane">
-      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:16px;align-items:end">
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Inicial</label>
-            <input type="date" id="ent-ini" class="field" style="width:100%">
+      <!-- Filtros -->
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Data inicial</div>
+          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px">
+            <input type="date" id="ent-ini" style="border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Final</label>
-            <input type="date" id="ent-fim" class="field" style="width:100%">
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Data final</div>
+          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px">
+            <input type="date" id="ent-fim" style="border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Fornecedor</label>
-            <select id="ent-forn" class="field" style="width:100%">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Insumo</label>
-            <select id="ent-ins" class="field" style="width:100%">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <button onclick="renderEntradas()" style="height:40px;padding:0 20px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;align-self:end;transition:background .15s" onmouseover="this.style.background='var(--teal2)'" onmouseout="this.style.background='var(--teal)'">Consultar</button>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Fornecedor</div>
+          <select id="ent-forn" class="field" style="min-width:150px"><option value="">Todos</option></select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Insumo</div>
+          <select id="ent-ins" class="field" style="min-width:150px"><option value="">Todos</option></select>
+        </div>
+        <button onclick="renderEntradas()" style="height:38px;padding:0 20px;background:#0f2d5c;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:background .15s" onmouseover="this.style.background='#162d52'" onmouseout="this.style.background='#0f2d5c'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Consultar
+        </button>
+      </div>
+
+      <!-- KPI bar horizontal -->
+      <div id="ent-kpis" style="display:flex;align-items:stretch;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+        <div style="padding:16px 24px;border-right:1px solid #e2e8f0;display:flex;align-items:center;gap:14px;flex:1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Total de notas</div><div id="ent-k-total" style="font-size:22px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1.2">—</div></div>
+        </div>
+        <div style="padding:16px 24px;border-right:1px solid #e2e8f0;display:flex;align-items:center;gap:14px;flex:2">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="18"/></svg>
+          <div><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Valor total das entradas</div><div id="ent-k-valor" style="font-size:22px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1.2">—</div></div>
+        </div>
+        <div style="padding:16px 24px;border-right:1px solid #e2e8f0;display:flex;align-items:center;gap:14px;flex:1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <div><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em">NF-e lançadas</div><div id="ent-k-nfe" style="font-size:22px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1.2">—</div></div>
+        </div>
+        <div style="padding:16px 24px;display:flex;align-items:center;gap:14px;flex:1">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          <div><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Notas manuais</div><div id="ent-k-manual" style="font-size:22px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1.2">—</div></div>
         </div>
       </div>
 
-      <!-- KPIs -->
-      <div id="ent-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px"></div>
-
       <!-- Tabela -->
-      <div class="tbl-wrap"><div class="tbl-scroll">
-        <table class="tbl">
-          <thead><tr>
-            <th>Data</th>
-            <th>Fornecedor</th>
-            <th>NF-e</th>
-            <th>Itens</th>
-            <th class="r">Total</th>
-            <th>Loja</th>
-          </tr></thead>
-          <tbody id="ent-body"><tr><td colspan="6" class="empty">Selecione o período e clique em Consultar.</td></tr></tbody>
-          <tfoot id="ent-foot"></tfoot>
-        </table>
-      </div></div>
+      <div class="tbl-wrap">
+        <div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="_entSortDir*=-1;_entGrupos.sort((a,b)=>_entSortDir*(b._data.localeCompare(a._data)));_entPag=1;_renderEntPage()">DATA <span id="ent-sort-arrow">↑</span></th>
+              <th>FORNECEDOR</th>
+              <th>Nº NF-e</th>
+              <th>TIPO</th>
+              <th>ITENS</th>
+              <th class="r">VALOR TOTAL</th>
+              <th>LOJA</th>
+              <th>STATUS</th>
+              <th>AÇÕES</th>
+            </tr></thead>
+            <tbody id="ent-body"><tr><td colspan="9" class="empty">Selecione o período e clique em Consultar.</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pag-bar">
+          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+            <span id="ent-pag-info" style="font-size:12px;color:#64748b"></span>
+            <span id="ent-total-geral" style="font-size:12px;color:#64748b;display:none">Total geral &nbsp;<strong id="ent-total-val" style="color:#0f172a;font-family:'DM Mono',monospace"></strong></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pag-btns" id="ent-pag-btns"></div>
+            <select id="ent-por-pag" style="font-size:12px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#64748b" onchange="_entPorPag=+this.value;_entPag=1;_renderEntPage()">
+              <option value="10" selected>10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- AUDITORIA DE CONVERSÃO -->
@@ -1159,26 +1198,37 @@ function exportarEvolucao(){
 
 // ── ENTRADAS ──────────────────────────────────────────────────────
 let _fornecedores = [];
+let _entRows = [], _entPag = 1, _entPorPag = 10, _entSortDir = -1, _entGrupos = [];
 
 async function iniciarEntradas() {
-  // Datas padrão
   const ini = document.getElementById('ent-ini');
   const fim = document.getElementById('ent-fim');
   if (!ini.value) ini.value = primeiroDiaMes();
   if (!fim.value) fim.value = hoje();
 
-  // Popula fornecedores
   if (!_fornecedores.length) {
     try { _fornecedores = await api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`); } catch {}
     const sel = document.getElementById('ent-forn');
     sel.innerHTML = '<option value="">Todos</option>' +
       _fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('');
   }
-
-  // Popula insumos
   const selIns = document.getElementById('ent-ins');
-  selIns.innerHTML = '<option value="">Todos</option>' +
-    insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
+  if (selIns.options.length <= 1) {
+    selIns.innerHTML = '<option value="">Todos</option>' +
+      insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
+  }
+}
+
+function _entStatusBadge(status) {
+  if (!status) return '<span style="color:#94a3b8">—</span>';
+  const cfg = {
+    'Conferida':{'bg':'#dcfce7','color':'#16a34a'},
+    'Importada':{'bg':'#dbeafe','color':'#2563eb'},
+    'Pendente vínculo':{'bg':'#ffedd5','color':'#ea580c'},
+    'Divergência':{'bg':'#fee2e2','color':'#dc2626'},
+  };
+  const s = cfg[status] || {'bg':'#f1f5f9','color':'#64748b'};
+  return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color}">${esc(status)}</span>`;
 }
 
 async function renderEntradas() {
@@ -1187,82 +1237,117 @@ async function renderEntradas() {
   const fornId = document.getElementById('ent-forn').value;
   const insId  = document.getElementById('ent-ins').value;
   const tbody  = document.getElementById('ent-body');
-  const tfoot  = document.getElementById('ent-foot');
 
   if (!ini || !fim) { toast('Selecione o período.','err'); return; }
   tbody.innerHTML = '<tr><td colspan="9" class="empty">Carregando...</td></tr>';
 
   try {
-    let q = `entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${ini}&criado_em=lte.${fim}T23:59:59&order=criado_em.desc`;
+    let q = `entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${ini}T00:00:00&criado_em=lte.${fim}T23:59:59&order=criado_em.desc`;
     if (fornId) q += `&fornecedor_id=eq.${fornId}`;
     if (insId)  q += `&insumo_id=eq.${insId}`;
 
     const ents = await api(q);
     const lojasData = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true`);
-
-    if (!ents.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty">Nenhuma entrada encontrada.</td></tr>';
-      document.getElementById('ent-kpis').innerHTML = '';
-      return;
-    }
-
-    const totalQtd   = ents.reduce((a,e)=>a+(e.quantidade||0),0);
-    const totalValor = ents.reduce((a,e)=>a+(e.custo_total||0),0);
-    const totalNF    = new Set(ents.filter(e=>e.nfe_numero).map(e=>e.nfe_numero)).size;
-
-    document.getElementById('ent-kpis').innerHTML = `
-      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px">
-        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total de lançamentos</div>
-        <div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace">${ents.length}</div>
-      </div>
-      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px">
-        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Valor total entrado</div>
-        <div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace;color:var(--green)">${brl(totalValor)}</div>
-      </div>
-      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px">
-        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">NF-e lançadas</div>
-        <div style="font-size:24px;font-weight:700;font-family:'DM Mono',monospace">${totalNF}</div>
-      </div>`;
-
     window._entradasData = { ents, lojasData };
 
-    // Agrupa por NF-e (ou por id individual se não tiver NF-e)
+    // Agrupa por NF-e ou por lançamento individual
     const grupos = {};
     ents.forEach(e => {
-      const key = e.nfe_numero || `__sem__${e.id}`;
+      const key = e.nfe_numero || `__manual__${e.id}`;
       if (!grupos[key]) grupos[key] = [];
       grupos[key].push(e);
     });
 
-    tbody.innerHTML = Object.entries(grupos).map(([key, itens]) => {
+    _entGrupos = Object.entries(grupos).map(([key, itens]) => {
       const primeiro = itens[0];
       const forn = _fornecedores.find(f=>f.id===primeiro.fornecedor_id);
       const loja = lojasData.find(l=>l.id===primeiro.loja_id);
-      const data = primeiro.criado_em ? new Date(primeiro.criado_em).toLocaleDateString('pt-BR') : '—';
       const total = itens.reduce((a,e)=>a+(e.custo_total||0),0);
-      const temNFe = primeiro.nfe_numero;
-      const nfeLabel = temNFe ? esc(primeiro.nfe_numero) : '—';
-      const clicavel = temNFe ? `style="cursor:pointer" onclick="abrirNFe('${primeiro.nfe_numero}')"` : '';
-      const itensTxt = `${itens.length} item${itens.length>1?'s':''}`;
-      return `<tr ${clicavel} ${temNFe?'class="tr-hover"':''}>
-        <td class="mono">${data}</td>
-        <td style="font-weight:500">${esc(forn?.nome||primeiro.fornecedor_nome||'—')}</td>
-        <td style="color:var(--teal);font-size:12px">${nfeLabel}</td>
-        <td style="color:var(--text3);font-size:12px">${itensTxt}</td>
-        <td class="r mono" style="font-weight:600">${brl(total)}</td>
-        <td style="font-size:12px;color:var(--text3)">${esc(loja?.nome||'—')}</td>
-      </tr>`;
-    }).join('');
+      const temNFe = !!primeiro.nfe_numero;
+      return { key, itens, primeiro, forn, loja, total, temNFe, _data: primeiro.criado_em||'' };
+    });
+    _entGrupos.sort((a,b)=>_entSortDir*(b._data.localeCompare(a._data)));
 
-    tfoot.innerHTML = `<tr style="background:var(--bg3);font-weight:700">
-      <td colspan="4">Total</td>
-      <td class="r mono">${brl(totalValor)}</td>
-      <td></td>
-    </tr>`;
+    // KPIs
+    const totalNotas = _entGrupos.length;
+    const totalValor = ents.reduce((a,e)=>a+(e.custo_total||0),0);
+    const nfeCount   = _entGrupos.filter(g=>g.temNFe).length;
+    const manualCount= _entGrupos.filter(g=>!g.temNFe).length;
 
+    const k1=document.getElementById('ent-k-total');if(k1)k1.textContent=totalNotas;
+    const k2=document.getElementById('ent-k-valor');if(k2)k2.textContent=brl(totalValor);
+    const k3=document.getElementById('ent-k-nfe');if(k3)k3.textContent=nfeCount;
+    const k4=document.getElementById('ent-k-manual');if(k4)k4.textContent=manualCount;
+
+    const tgEl=document.getElementById('ent-total-geral');if(tgEl)tgEl.style.display='inline';
+    const tvEl=document.getElementById('ent-total-val');if(tvEl)tvEl.textContent=brl(totalValor);
+
+    _entPag = 1;
+    _renderEntPage();
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="9" class="empty">Erro: ${esc(e.message)}</td></tr>`;
+    document.getElementById('ent-body').innerHTML = `<tr><td colspan="9" class="empty">Erro: ${esc(e.message)}</td></tr>`;
   }
+}
+
+function _renderEntPage() {
+  const tbody = document.getElementById('ent-body');
+  if (!tbody) return;
+  if (!_entGrupos.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Nenhuma entrada encontrada.</td></tr>';
+    document.getElementById('ent-pag-info').textContent = '';
+    document.getElementById('ent-pag-btns').innerHTML = '';
+    return;
+  }
+  const start = (_entPag-1)*_entPorPag;
+  const slice = _entGrupos.slice(start, start+_entPorPag);
+  tbody.innerHTML = slice.map(({itens, primeiro, forn, loja, total, temNFe}) => {
+    const data = primeiro.criado_em ? new Date(primeiro.criado_em).toLocaleDateString('pt-BR') : '—';
+    const fornNome = esc(forn?.nome || primeiro.fornecedor_nome || '—');
+    const nfeNum = esc(primeiro.nfe_numero||'');
+    const nfeLabel = temNFe
+      ? `<span style="color:#0d9488;cursor:pointer;font-size:12px;font-weight:600" onclick="abrirNFe('${nfeNum}')">${nfeNum}</span>`
+      : '<span style="color:#94a3b8">—</span>';
+    const tipoIcon = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+    const tipo = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#334155">${tipoIcon}${temNFe?'NF-e':'Manual'}</span>`;
+    const itensTxt = `${itens.length} item${itens.length>1?'s':''}`;
+    const status = primeiro.status || null;
+    const eyeBtn = temNFe
+      ? `<button style="width:28px;height:28px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b" title="Ver NF-e" onclick="abrirNFe('${nfeNum}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>`
+      : `<span style="display:inline-block;width:28px"></span>`;
+    return `<tr>
+      <td class="mono" style="font-size:12px;color:#334155">${data}</td>
+      <td style="font-weight:500;color:#334155">${fornNome}</td>
+      <td>${nfeLabel}</td>
+      <td>${tipo}</td>
+      <td style="font-size:12px;color:#64748b">${itensTxt}</td>
+      <td class="r mono" style="font-weight:600;color:#334155">${brl(total)}</td>
+      <td style="font-size:12px;color:#64748b">${esc(loja?.nome||'—')}</td>
+      <td>${_entStatusBadge(status)}</td>
+      <td><div style="display:flex;gap:4px;align-items:center">
+        ${eyeBtn}
+        <button style="width:28px;height:28px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b" title="Detalhes" onclick="toast('Detalhes em breve')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
+        <button style="width:28px;height:28px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;line-height:1" title="Mais opções">⋮</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  const total = _entGrupos.length;
+  const totalPags = Math.max(1,Math.ceil(total/_entPorPag));
+  const end = Math.min(start+_entPorPag,total);
+  const info = document.getElementById('ent-pag-info');
+  if (info) info.textContent = total ? `Mostrando ${start+1} a ${end} de ${total} registros` : '';
+  const btns = document.getElementById('ent-pag-btns');
+  if (!btns) return;
+  let h = `<button class="pag-btn" onclick="_entPag=Math.max(1,_entPag-1);_renderEntPage()" ${_entPag===1?'disabled':''}>‹</button>`;
+  for (let p=1;p<=totalPags;p++) {
+    if (totalPags>7&&Math.abs(p-_entPag)>2&&p!==1&&p!==totalPags) {
+      if (p===2||p===totalPags-1) h+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
+      continue;
+    }
+    h+=`<button class="pag-btn${p===_entPag?' active':''}" onclick="_entPag=${p};_renderEntPage()">${p}</button>`;
+  }
+  h+=`<button class="pag-btn" onclick="_entPag=Math.min(${totalPags},_entPag+1);_renderEntPage()" ${_entPag===totalPags?'disabled':''}>›</button>`;
+  btns.innerHTML = h;
 }
 
 function abrirNFe(numero) {
