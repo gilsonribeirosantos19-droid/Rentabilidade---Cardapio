@@ -819,45 +819,128 @@
 
     <!-- TAB: SUGESTÃO DE COMPRAS -->
     <div id="tab-compras" class="tab-pane">
-      <div class="rep-sec">
-        <div class="rep-title">Sugestão de Compras — baseada no consumo médio diário</div>
-        <div class="toolbar" style="margin-bottom:16px;flex-wrap:wrap;align-items:center">
-          <label style="font-size:13px;color:var(--text2)">Cobertura desejada:</label>
-          <select class="field field-sm" id="comp-dias" onchange="renderCompras()">
+
+      <!-- TÍTULO + FILTROS -->
+      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
+        Sugestão de Compras <span style="font-weight:400;color:#94a3b8;font-size:13px">— baseada no consumo médio diário</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cobertura desejada</div>
+          <select class="field field-sm" id="comp-dias" onchange="renderCompras()" style="min-width:110px">
             <option value="7">7 dias</option>
             <option value="15" selected>15 dias</option>
             <option value="30">30 dias</option>
             <option value="60">60 dias</option>
           </select>
-          <label style="font-size:13px;color:var(--text2)">Período de consumo:</label>
-          <select class="field field-sm" id="comp-periodo" onchange="renderCompras()">
-            <option value="30" selected>Últimos 30 dias</option>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Período de consumo</div>
+          <select class="field field-sm" id="comp-periodo" onchange="renderCompras()" style="min-width:140px">
+            <option value="30">Últimos 30 dias</option>
             <option value="60">Últimos 60 dias</option>
             <option value="90">Últimos 90 dias</option>
           </select>
-          <label style="font-size:13px;color:var(--text2)">Exibir:</label>
-          <select class="field field-sm" id="comp-filtro" onchange="renderCompras()">
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Categoria</div>
+          <select class="field field-sm" id="comp-cat" onchange="renderCompras()" style="min-width:160px">
+            <option value="">Todas as categorias</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Exibir</div>
+          <select class="field field-sm" id="comp-filtro" onchange="renderCompras()" style="min-width:160px">
             <option value="necessidade">Apenas com necessidade</option>
             <option value="todos">Todos com consumo</option>
           </select>
-          <button class="btn btn-ghost btn-sm ml" onclick="exportComprasCSV()">↓ CSV</button>
         </div>
-        <div class="tbl-wrap"><div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr>
-              <th>Insumo</th>
-              <th>Un.</th>
-              <th class="r">Estoque atual</th>
-              <th class="r">Consumo (período)</th>
-              <th class="r">Média/dia</th>
-              <th class="r">Cobertura atual</th>
-              <th class="r">Sugestão de compra</th>
-              <th class="r">Custo estimado</th>
-            </tr></thead>
-            <tbody id="comp-body"><tr><td colspan="8" class="empty"><b>Clique na aba para calcular</b></td></tr></tbody>
-            <tfoot id="comp-foot"></tfoot>
-          </table>
-        </div></div>
+        <div style="margin-left:auto">
+          <button class="btn btn-ghost btn-sm" onclick="exportComprasCSV()" style="display:inline-flex;align-items:center;gap:5px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-3"/><path d="M9 12h6M9 16h4"/></svg>
+          </div>
+          <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Itens analisados</div>
+          <div style="font-size:24px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="comp-kpi-total">—</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #fee2e2;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Comprar urgente</div>
+          <div style="font-size:24px;font-weight:800;font-family:'DM Mono',monospace;color:#e11d48;line-height:1" id="comp-kpi-urg">—</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #fed7aa;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#fff7ed;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Atenção (até 3 dias)</div>
+          <div style="font-size:24px;font-weight:800;font-family:'DM Mono',monospace;color:#f97316;line-height:1" id="comp-kpi-aten">—</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #bbf7d0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Estoque saudável</div>
+          <div style="font-size:24px;font-weight:800;font-family:'DM Mono',monospace;color:#16a34a;line-height:1" id="comp-kpi-ok">—</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Custo estimado total</div>
+          <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#2563eb;line-height:1" id="comp-kpi-custo">—</div></div>
+        </div>
+      </div>
+
+      <!-- GRID: TABELA + SIDEBAR -->
+      <div style="display:grid;grid-template-columns:1fr 250px;gap:16px;align-items:start">
+
+        <!-- TABELA + PAGINAÇÃO -->
+        <div>
+          <div class="tbl-wrap"><div class="tbl-scroll">
+            <table class="tbl">
+              <thead><tr>
+                <th>Insumo</th><th>Un.</th>
+                <th class="r">Estoque Atual</th>
+                <th class="r">Consumo (Período)</th>
+                <th class="r">Média/Dia</th>
+                <th>Cobertura Atual</th>
+                <th>Status</th>
+                <th class="r">Sugestão de Compra</th>
+                <th class="r">Custo Estimado</th>
+                <th class="c">Ações</th>
+              </tr></thead>
+              <tbody id="comp-body"><tr><td colspan="10" class="empty"><b>Calculando...</b></td></tr></tbody>
+            </table>
+          </div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;font-size:12px;color:#94a3b8;margin-top:8px">
+            <span id="comp-pag-info">—</span>
+            <div style="display:flex;gap:4px" id="comp-pag-btns"></div>
+            <select class="field field-sm" id="comp-por-pag" onchange="_compPagAtual=1;_renderCompPage()" style="padding:3px 8px;font-size:11px;width:auto">
+              <option value="10">10 por página</option>
+              <option value="20">20 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- SIDEBAR RESUMO -->
+        <div id="comp-resumo" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:14px">Resumo da sugestão</div>
+          <div id="comp-resumo-body">
+            <div style="font-size:12px;color:#94a3b8;text-align:center;padding:12px 0">Calculando...</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3087,71 +3170,185 @@ function toast(msg,tipo='ok'){
 }
 
 // ── SUGESTÃO DE COMPRAS ───────────────────────────────────────────
+let _compRows = [], _compPagAtual = 1;
+
+function _renderCompPage() {
+  const tbody = document.getElementById('comp-body');
+  if (!tbody) return;
+  const porPag = parseInt(document.getElementById('comp-por-pag')?.value) || 10;
+  const total = _compRows.length;
+  const totalPags = Math.max(1, Math.ceil(total / porPag));
+  _compPagAtual = Math.min(_compPagAtual, totalPags);
+  const start = (_compPagAtual - 1) * porPag;
+  const page = _compRows.slice(start, start + porPag);
+
+  const pagInfo = document.getElementById('comp-pag-info');
+  if (pagInfo) pagInfo.textContent = total ? `Mostrando ${start+1} a ${Math.min(start+porPag,total)} de ${total} itens` : '0 itens';
+
+  const btnsEl = document.getElementById('comp-pag-btns');
+  if (btnsEl) {
+    let html = `<button class="pag-btn" ${_compPagAtual===1?'disabled':''} onclick="_compPagAtual=Math.max(1,_compPagAtual-1);_renderCompPage()">‹</button>`;
+    for (let p=1; p<=totalPags; p++) {
+      if (totalPags>7 && p>2 && p<totalPags-1 && Math.abs(p-_compPagAtual)>1){
+        if(p===3||p===totalPags-2) html+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
+        continue;
+      }
+      html+=`<button class="pag-btn ${p===_compPagAtual?'active':''}" onclick="_compPagAtual=${p};_renderCompPage()">${p}</button>`;
+    }
+    html+=`<button class="pag-btn" ${_compPagAtual===totalPags?'disabled':''} onclick="_compPagAtual=Math.min(${totalPags},_compPagAtual+1);_renderCompPage()">›</button>`;
+    btnsEl.innerHTML = html;
+  }
+
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty"><b>Nenhum item encontrado</b></td></tr>';
+    return;
+  }
+
+  const fmtQ = v => v === Infinity ? '—' : Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+  const fmtD = v => v === Infinity ? '∞' : v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+
+  tbody.innerHTML = page.map(r => {
+    const un = r.ins.unidade_medida || r.ins.unidade_compra || 'un';
+    let statusDot, statusTxt, statusColor, cobLabel, cobColor, sugestaoTxt;
+
+    if (r.coberturaDias < 2) {
+      statusDot = '#e11d48'; statusTxt = 'Comprar urgente'; statusColor = '#e11d48';
+      cobLabel = 'crítico'; cobColor = '#e11d48';
+    } else if (r.coberturaDias < r.diasCobertura) {
+      statusDot = '#f97316'; statusTxt = 'Atenção'; statusColor = '#f97316';
+      cobLabel = 'atenção'; cobColor = '#f97316';
+    } else {
+      statusDot = '#16a34a'; statusTxt = 'Saudável'; statusColor = '#16a34a';
+      cobLabel = 'acima do ideal'; cobColor = '#16a34a';
+    }
+
+    if (r.sugestao > 0) {
+      sugestaoTxt = `<span class="mono" style="font-weight:600">${fmtQ(r.sugestao)} ${un}</span>`;
+    } else {
+      sugestaoTxt = `<span style="color:#94a3b8;font-size:12px">Sem necessidade</span>`;
+    }
+
+    const cobStr = r.coberturaDias === Infinity ? '∞ dias' : `${fmtD(r.coberturaDias)} dias`;
+
+    return `<tr>
+      <td style="font-weight:500">${esc(r.ins.nome)}</td>
+      <td style="color:#64748b">${esc(un)}</td>
+      <td class="r mono">${fmtQ(r.estoqueAtual)}</td>
+      <td class="r mono">${fmtQ(r.consumoPeriodo)}</td>
+      <td class="r mono">${fmtQ(r.mediaDiaria)}</td>
+      <td>
+        <div style="font-weight:600;color:${cobColor};font-family:'DM Mono',monospace;font-size:13px">${cobStr}</div>
+        <div style="font-size:11px;color:${cobColor};opacity:.75">(${cobLabel})</div>
+      </td>
+      <td>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:${statusColor}">
+          <span style="width:7px;height:7px;border-radius:50%;background:${statusDot};flex-shrink:0;display:inline-block"></span>
+          ${statusTxt}
+        </span>
+      </td>
+      <td class="r">${sugestaoTxt}</td>
+      <td class="r mono">${r.custoEstimado > 0 ? brl(r.custoEstimado) : '<span style="color:#94a3b8">R$ 0,00</span>'}</td>
+      <td class="c">
+        <div style="display:flex;align-items:center;justify-content:center;gap:3px">
+          <button class="btn-icon" title="Adicionar ao pedido">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          </button>
+          <button class="btn-icon" title="Mais opções">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
 function renderCompras() {
   const diasCobertura = parseInt(document.getElementById('comp-dias')?.value) || 15;
   const periodoConsulta = parseInt(document.getElementById('comp-periodo')?.value) || 30;
+  const catF = document.getElementById('comp-cat')?.value || '';
   const filtro = document.getElementById('comp-filtro')?.value || 'necessidade';
   const corte = new Date();
   corte.setDate(corte.getDate() - periodoConsulta);
 
-  const rows = insumos.map(ins => {
-    const saldo = getSaldo(ins.id);
-    const estoqueAtual = saldo.quantidade || 0;
-
-    const consumoPeriodo = saidas
-      .filter(s => s.insumo_id === ins.id
-        && ['consumo','transferencia'].includes(s.tipo)
-        && new Date(s.criado_em) >= corte)
-      .reduce((acc, s) => acc + (s.quantidade || 0), 0);
-
-    const mediaDiaria = consumoPeriodo / periodoConsulta;
-    const consumoProjetado = mediaDiaria * diasCobertura;
-    const sugestao = Math.max(0, consumoProjetado - estoqueAtual);
-    const custoEstimado = sugestao * (ins.preco_compra || 0);
-    const coberturaDias = mediaDiaria > 0 ? estoqueAtual / mediaDiaria : Infinity;
-
-    return { ins, estoqueAtual, consumoPeriodo, mediaDiaria, coberturaDias, sugestao, custoEstimado };
-  }).filter(r => filtro === 'todos' ? r.consumoPeriodo > 0 : r.sugestao > 0);
-
-  rows.sort((a, b) => a.coberturaDias - b.coberturaDias);
-
-  const tbody = document.getElementById('comp-body');
-  const tfoot = document.getElementById('comp-foot');
-
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty"><b>Nenhum item necessita reposição no período</b></td></tr>`;
-    tfoot.innerHTML = '';
-    return;
+  // Popular categorias no dropdown
+  const compCat = document.getElementById('comp-cat');
+  if (compCat && compCat.options.length <= 1) {
+    const cats = [...new Set(insumos.map(i => i.categoria).filter(Boolean))].sort();
+    compCat.innerHTML = '<option value="">Todas as categorias</option>' +
+      cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    if (catF) compCat.value = catF;
   }
 
-  const um = ins => ins.unidade_medida || ins.unidade_compra || 'un';
-  const fmtQ = v => v === Infinity ? '—' : Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
-  const fmtD = v => v === Infinity ? '∞ dias' : v.toFixed(1) + ' dias';
+  let insFilt = insumos;
+  if (catF) insFilt = insFilt.filter(i => i.categoria === catF);
 
-  tbody.innerHTML = rows.map(r => {
-    const urgente = r.coberturaDias < 3;
-    const atencao = r.coberturaDias >= 3 && r.coberturaDias < 7;
-    const cor = urgente ? 'color:var(--red)' : atencao ? 'color:var(--amber)' : '';
-    return `<tr>
-      <td style="font-weight:500;${cor}">${esc(r.ins.nome)}</td>
-      <td style="color:var(--text2)">${um(r.ins)}</td>
-      <td class="r mono">${fmtQ(r.estoqueAtual)}</td>
-      <td class="r mono">${fmtQ(r.consumoPeriodo)}</td>
-      <td class="r mono">${fmtQ(r.mediaDiaria)}</td>
-      <td class="r mono" style="${cor}">${fmtD(r.coberturaDias)}</td>
-      <td class="r mono" style="font-weight:600;color:var(--teal)">${fmtQ(r.sugestao)}</td>
-      <td class="r mono">${r.custoEstimado > 0 ? brl(r.custoEstimado) : '—'}</td>
-    </tr>`;
-  }).join('');
+  const allRows = insFilt.map(ins => {
+    const saldo = getSaldo(ins.id);
+    const estoqueAtual = saldo.quantidade || 0;
+    const consumoPeriodo = saidas
+      .filter(s => s.insumo_id === ins.id && ['consumo','transferencia'].includes(s.tipo) && new Date(s.criado_em) >= corte)
+      .reduce((acc, s) => acc + (s.quantidade || 0), 0);
+    const mediaDiaria = consumoPeriodo / periodoConsulta;
+    const sugestao = Math.max(0, mediaDiaria * diasCobertura - estoqueAtual);
+    const custoEstimado = sugestao * (ins.preco_compra || saldo.custo_medio || 0);
+    const coberturaDias = mediaDiaria > 0 ? estoqueAtual / mediaDiaria : Infinity;
+    return { ins, estoqueAtual, consumoPeriodo, mediaDiaria, coberturaDias, sugestao, custoEstimado, diasCobertura };
+  }).filter(r => filtro === 'todos' ? r.consumoPeriodo > 0 : r.sugestao > 0 || r.coberturaDias < diasCobertura);
 
-  const totalCusto = rows.reduce((s, r) => s + r.custoEstimado, 0);
-  tfoot.innerHTML = `<tr style="background:var(--bg3);font-weight:600">
-    <td colspan="6" style="padding:10px 14px;font-size:12px;color:var(--text2)">
-      ${rows.length} item(s) · cobertura de ${diasCobertura} dias
-    </td>
-    <td class="r" style="padding:10px 14px">—</td>
-    <td class="r mono" style="padding:10px 14px;color:var(--teal)">${brl(totalCusto)}</td>
-  </tr>`;
+  allRows.sort((a, b) => (a.coberturaDias === Infinity ? 999999 : a.coberturaDias) - (b.coberturaDias === Infinity ? 999999 : b.coberturaDias));
+
+  // KPIs
+  const urgentes  = allRows.filter(r => r.coberturaDias < 2);
+  const atencao   = allRows.filter(r => r.coberturaDias >= 2 && r.coberturaDias < diasCobertura);
+  const saudaveis = allRows.filter(r => r.coberturaDias >= diasCobertura);
+  const custoTotal = allRows.reduce((s, r) => s + r.custoEstimado, 0);
+
+  const kSet = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  kSet('comp-kpi-total', allRows.length);
+  kSet('comp-kpi-urg', urgentes.length);
+  kSet('comp-kpi-aten', atencao.length);
+  kSet('comp-kpi-ok', saudaveis.length);
+  kSet('comp-kpi-custo', brl(custoTotal));
+
+  _compRows = allRows;
+  _compPagAtual = 1;
+  _renderCompPage();
+
+  // Sidebar resumo
+  const custoUrg  = urgentes.reduce((s,r) => s + r.custoEstimado, 0);
+  const custoAten = atencao.reduce((s,r) => s + r.custoEstimado, 0);
+  const totalSug  = urgentes.length + atencao.filter(r => r.sugestao > 0).length;
+  const totalCusto2 = custoUrg + custoAten;
+  const cobMedia  = allRows.filter(r => r.sugestao > 0).length > 0
+    ? (allRows.filter(r => r.sugestao > 0).reduce((s,r) => s + Math.min(r.coberturaDias + (r.sugestao / (r.mediaDiaria||1)), 365), 0) / allRows.filter(r => r.sugestao > 0).length)
+    : diasCobertura;
+
+  const resumoEl = document.getElementById('comp-resumo-body');
+  if (resumoEl) resumoEl.innerHTML = `
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px">Comprar urgente</div>
+      <div style="font-size:12px;color:#64748b">${urgentes.length} itens</div>
+      <div style="font-size:15px;font-weight:700;color:#e11d48;font-family:'DM Mono',monospace">${brl(custoUrg)}</div>
+    </div>
+    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #f1f5f9">
+      <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px">Atenção (até 3 dias)</div>
+      <div style="font-size:12px;color:#64748b">${atencao.length} itens</div>
+      <div style="font-size:15px;font-weight:700;color:#f97316;font-family:'DM Mono',monospace">${brl(custoAten)}</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:4px">Total sugerido</div>
+      <div style="font-size:12px;color:#64748b">${totalSug} itens</div>
+      <div style="font-size:17px;font-weight:800;color:#f97316;font-family:'DM Mono',monospace">${brl(totalCusto2)}</div>
+    </div>
+    <div style="background:#eff6ff;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:6px">Previsão de reposição</div>
+      <div style="font-size:12px;color:#3b82f6;line-height:1.4">Com as sugestões acima, a cobertura média será de</div>
+      <div style="font-size:18px;font-weight:800;color:#2563eb;font-family:'DM Mono',monospace;margin-top:4px">${Math.min(cobMedia, 365).toFixed(1)} dias</div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">Observação</div>
+      <div style="font-size:11px;color:#94a3b8;line-height:1.5">Sugestão baseada no consumo médio diário dos últimos ${periodoConsulta} dias.</div>
+    </div>`;
 }
 
 function exportComprasCSV() {
