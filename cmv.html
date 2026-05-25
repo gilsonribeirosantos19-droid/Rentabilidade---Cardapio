@@ -332,6 +332,22 @@ let _res=null;
 document.getElementById('fil-de').value=hoje().slice(0,7)+'-01';
 document.getElementById('fil-ate').value=hoje();
 
+async function carregarFiltros(){
+  // Lojas
+  try{
+    const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&select=id,nome&order=nome`).catch(()=>[]);
+    const sl=document.getElementById('fil-loja');
+    lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sl.appendChild(o);});
+  }catch(e){}
+  // Grupos de insumos
+  try{
+    const grupos=await api(`grupos_insumo?tenant_id=eq.${TENANT_ID}&select=id,nome&order=nome`).catch(()=>[]);
+    const sg=document.getElementById('fil-grupo');
+    grupos.forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.nome;sg.appendChild(o);});
+  }catch(e){}
+}
+carregarFiltros();
+
 function getStatus(pct){
   const a=Math.abs(pct);
   if(a>15)return'critico';
@@ -450,17 +466,21 @@ async function calcular(){
   const de=document.getElementById('fil-de').value;
   const ate=document.getElementById('fil-ate').value;
   if(!de||!ate){toast('Selecione o período.','err');return;}
+  const lojaId=document.getElementById('fil-loja').value;
+  const grupoId=document.getElementById('fil-grupo').value;
+  const lojaQ=lojaId?`&loja_id=eq.${lojaId}`:'';
+  const grupoQ=grupoId?`&grupo_id=eq.${grupoId}`:'';
   const cs=document.getElementById('conn-status');
   if(cs){cs.textContent='• calculando...';cs.style.color='#94a3b8';}
   try{
     const[fats,vendas,fichas,insumos,saldos,entradas,saidas]=await Promise.all([
-      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`).catch(()=>[]),
-      api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`).catch(()=>[]),
+      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}${lojaQ}`).catch(()=>[]),
+      api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}${lojaQ}`).catch(()=>[]),
       api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&select=*`),
-      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true`),
-      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`),
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59`),
-      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true${grupoQ}`).catch(()=>api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true`)),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}${lojaQ}`).catch(()=>api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`)),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59${lojaQ}`).catch(()=>[]),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59${lojaQ}`).catch(()=>[]),
     ]);
     const ids=fichas.map(f=>f.id);
     let itFichas=ids.length?await api(`itens_ficha?ficha_id=in.(${ids.join(',')})&select=*`):[];
