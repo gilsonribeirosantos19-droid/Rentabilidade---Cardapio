@@ -409,29 +409,103 @@
 
     <!-- TAB: SAÍDAS -->
     <div id="tab-saidas" class="tab-pane">
-      <div class="toolbar">
-        <button class="btn btn-primary" onclick="openSaida()">+ Nova saída</button>
-        <div class="ml" style="display:flex;gap:8px">
-          <select class="field field-sm" id="sai-f-ins" onchange="renderSaidas()">
-            <option value="">Todos os insumos</option>
-          </select>
-          <select class="field field-sm" id="sai-f-tipo" onchange="renderSaidas()">
-            <option value="">Todos os tipos</option>
-            <option value="consumo">Consumo</option><option value="perda">Perda</option>
-            <option value="vencimento">Vencimento</option>
-            <option value="transferencia">Transferência</option><option value="descarte">Descarte</option>
-          </select>
+
+      <!-- KPI CARDS -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><polyline points="16 17 12 21 8 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg></div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Saídas Hoje</div>
+            <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="sai-kpi-hoje">—</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px">movimentações</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border-radius:50%;background:#fff7ed;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Ajustes Manuais</div>
+            <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="sai-kpi-manual">—</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px">lançamentos</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Última Saída</div>
+            <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a;line-height:1.2" id="sai-kpi-ultima-hora">—</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px" id="sai-kpi-ultima-ins">—</div>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #fee2e2;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Divergências</div>
+            <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:#ef4444;line-height:1" id="sai-kpi-div">—</div>
+            <div style="font-size:11px;color:#ef4444;margin-top:2px">saídas sem motivo</div>
+          </div>
         </div>
       </div>
+
+      <!-- AÇÕES + FILTROS -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="openSaida()" style="gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova saída
+        </button>
+        <div style="position:relative">
+          <input class="field field-sm" id="sai-busca" placeholder="Buscar insumo..." oninput="renderSaidas()" style="padding-left:30px;width:170px">
+          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <select class="field field-sm" id="sai-f-tipo" onchange="renderSaidas()" style="width:auto">
+          <option value="">Tipo: Todos</option>
+          <option value="consumo">Consumo</option>
+          <option value="perda">Perda</option>
+          <option value="vencimento">Vencimento</option>
+          <option value="transferencia">Transferência</option>
+          <option value="descarte">Descarte</option>
+          <option value="ajuste">Ajuste</option>
+        </select>
+        <select class="field field-sm" id="sai-f-motivo" onchange="renderSaidas()" style="width:auto">
+          <option value="">Motivo: Todos</option>
+        </select>
+        <select class="field field-sm" id="sai-f-resp" onchange="renderSaidas()" style="width:auto">
+          <option value="">Responsável: Todos</option>
+        </select>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input type="date" id="sai-f-de" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
+          <span style="color:#94a3b8">–</span>
+          <input type="date" id="sai-f-ate" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
+        </div>
+      </div>
+
+      <!-- TABELA -->
       <div class="tbl-wrap"><div class="tbl-scroll">
         <table class="tbl">
           <thead><tr>
-            <th>Data</th><th>Insumo</th><th class="c">Tipo</th>
-            <th class="r">Quantidade</th><th>Motivo</th><th>Responsável</th>
+            <th>Data / Hora</th>
+            <th>Insumo</th>
+            <th class="c">Tipo</th>
+            <th>Motivo</th>
+            <th class="r">Quantidade</th>
+            <th>Unidade</th>
+            <th>Responsável</th>
+            <th class="c">Ações</th>
           </tr></thead>
-          <tbody id="sai-body"><tr><td colspan="6" class="empty"><b>Carregando...</b></td></tr></tbody>
+          <tbody id="sai-body"><tr><td colspan="8" class="empty"><b>Carregando...</b></td></tr></tbody>
         </table>
       </div></div>
+
+      <!-- PAGINAÇÃO -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;font-size:12px;color:#94a3b8;margin-top:8px">
+        <span id="sai-pag-info">—</span>
+        <div style="display:flex;gap:4px" id="sai-pag-btns"></div>
+        <select class="field field-sm" id="sai-por-pag" onchange="renderSaidas()" style="padding:3px 8px;font-size:11px;width:auto">
+          <option value="10">10 por página</option>
+          <option value="20">20 por página</option>
+          <option value="50">50 por página</option>
+        </select>
+      </div>
     </div>
 
     <!-- TAB: KARDEX -->
@@ -1052,8 +1126,8 @@ function popularSelects() {
     const el = document.getElementById(id);
     if (el) el.innerHTML = (id==='kx-ins'?'<option value="">Selecione um insumo...</option>':todos)+insOpts.replace(/<option/g, id==='kx-ins'?'<option':'<option');
   });
-  document.getElementById('ent-f-ins').innerHTML = todos;
-  document.getElementById('sai-f-ins').innerHTML = todos;
+  const entIns = document.getElementById('ent-f-ins'); if (entIns) entIns.innerHTML = todos;
+  const saiIns = document.getElementById('sai-f-ins'); if (saiIns) saiIns.innerHTML = todos;
   document.getElementById('kx-ins').innerHTML = '<option value="">Selecione um insumo…</option>'+insOpts;
   document.getElementById('mov-ins').innerHTML = todos;
   // categorias únicas
@@ -1120,10 +1194,11 @@ function renderDash() {
   const valor = insumos.reduce((s,i)=>{const sd=getSaldo(i.id);return s+(sd.quantidade||0)*(sd.custo_medio||0);},0);
   const baixos = insumos.filter(i=>statusOf(getSaldo(i.id))==='baixo').length;
 
-  document.getElementById('m-total').textContent = insumos.length;
-  document.getElementById('m-valor').textContent = brl(valor).replace('R$ ','');
-  document.getElementById('m-baixo').textContent = baixos;
-  document.getElementById('m-semMov').textContent = semMov;
+  const _set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  _set('m-total', insumos.length);
+  _set('m-valor', brl(valor).replace('R$ ',''));
+  _set('m-baixo', baixos);
+  _set('m-semMov', semMov);
 
   const rows = insumos.filter(i=>{
     if(busca&&!i.nome.toLowerCase().includes(busca)) return false;
@@ -1135,6 +1210,7 @@ function renderDash() {
   const lMap = {ok:'OK',baixo:'Baixo',zerado:'Zerado'};
 
   const tbody = document.getElementById('dash-body');
+  if(!tbody) return;
   if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty"><b>Nenhum insumo encontrado</b></td></tr>';return;}
   tbody.innerHTML = rows.map(i=>{
     const s = getSaldo(i.id);
@@ -1556,26 +1632,138 @@ async function salvarSaida() {
   finally{btn.disabled=false;btn.textContent='Registrar saída';}
 }
 
+let _saiPagAtual = 1;
+
 function renderSaidas() {
-  const fIns=document.getElementById('sai-f-ins')?.value||'';
-  const fTipo=document.getElementById('sai-f-tipo')?.value||'';
-  let rows=saidas;
-  if(fIns) rows=rows.filter(s=>s.insumo_id===fIns);
-  if(fTipo) rows=rows.filter(s=>s.tipo===fTipo);
-  const tbody=document.getElementById('sai-body');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="empty"><b>Nenhuma saída encontrada</b></td></tr>';return;}
-  const tl={consumo:'Consumo',perda:'Perda',vencimento:'Vencimento',transferencia:'Transferência',descarte:'Descarte'};
-  tbody.innerHTML=rows.map(s=>{
-    const ins=insumos.find(i=>i.id===s.insumo_id);
+  const todayStr = hoje();
+
+  const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+  // KPIs
+  const saidasHoje = saidas.filter(s => s.criado_em && s.criado_em.startsWith(todayStr));
+  setEl('sai-kpi-hoje', saidasHoje.length);
+  setEl('sai-kpi-manual', saidasHoje.filter(s => s.tipo !== 'consumo').length);
+
+  const ultima = saidas.length ? saidas.reduce((a,b) => a.criado_em > b.criado_em ? a : b) : null;
+  if (ultima) {
+    const partes = fmtDataHora(ultima.criado_em).split('\n');
+    setEl('sai-kpi-ultima-hora', partes[1] || partes[0]);
+    const insUlt = insumos.find(i => i.id === ultima.insumo_id);
+    setEl('sai-kpi-ultima-ins', insUlt ? insUlt.nome : '—');
+  } else {
+    setEl('sai-kpi-ultima-hora', '—');
+    setEl('sai-kpi-ultima-ins', '—');
+  }
+  setEl('sai-kpi-div', saidas.filter(s => !s.motivo).length);
+
+  // Populate motivo dropdown
+  const motivoSel = document.getElementById('sai-f-motivo');
+  const prevMotivo = motivoSel ? motivoSel.value : '';
+  const motivos = [...new Set(saidas.map(s => s.motivo).filter(Boolean))].sort();
+  if (motivoSel) {
+    motivoSel.innerHTML = '<option value="">Motivo: Todos</option>' + motivos.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+    if (motivos.includes(prevMotivo)) motivoSel.value = prevMotivo;
+  }
+
+  // Populate responsável dropdown
+  const respSel = document.getElementById('sai-f-resp');
+  const prevResp = respSel ? respSel.value : '';
+  const resps = [...new Set(saidas.map(s => s.responsavel).filter(Boolean))].sort();
+  if (respSel) {
+    respSel.innerHTML = '<option value="">Responsável: Todos</option>' + resps.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+    if (resps.includes(prevResp)) respSel.value = prevResp;
+  }
+
+  // Filters
+  const fBusca = (document.getElementById('sai-busca')?.value || '').toLowerCase().trim();
+  const fTipo  = document.getElementById('sai-f-tipo')?.value || '';
+  const fMotivo= document.getElementById('sai-f-motivo')?.value || '';
+  const fResp  = document.getElementById('sai-f-resp')?.value || '';
+  const fDe    = document.getElementById('sai-f-de')?.value || '';
+  const fAte   = document.getElementById('sai-f-ate')?.value || '';
+
+  let rows = [...saidas].sort((a,b) => b.criado_em < a.criado_em ? -1 : 1);
+  if (fBusca) rows = rows.filter(s => {
+    const ins = insumos.find(i => i.id === s.insumo_id);
+    return ins && ins.nome.toLowerCase().includes(fBusca);
+  });
+  if (fTipo)   rows = rows.filter(s => s.tipo === fTipo);
+  if (fMotivo) rows = rows.filter(s => s.motivo === fMotivo);
+  if (fResp)   rows = rows.filter(s => s.responsavel === fResp);
+  if (fDe)     rows = rows.filter(s => s.criado_em >= fDe);
+  if (fAte)    rows = rows.filter(s => s.criado_em <= fAte + 'T23:59:59');
+
+  // Pagination
+  const porPag = parseInt(document.getElementById('sai-por-pag')?.value) || 10;
+  const total = rows.length;
+  const totalPags = Math.max(1, Math.ceil(total / porPag));
+  _saiPagAtual = Math.min(_saiPagAtual, totalPags);
+  const start = (_saiPagAtual - 1) * porPag;
+  const page = rows.slice(start, start + porPag);
+
+  const pagInfo = document.getElementById('sai-pag-info');
+  if (pagInfo) pagInfo.textContent = total ? `${start+1}–${Math.min(start+porPag,total)} de ${total}` : '0 registros';
+
+  const btnsEl = document.getElementById('sai-pag-btns');
+  if (btnsEl) {
+    let html = `<button class="pag-btn" ${_saiPagAtual===1?'disabled':''} onclick="_saiPagAtual--;renderSaidas()">‹</button>`;
+    for (let p=1; p<=totalPags; p++) {
+      if (totalPags>7 && p>2 && p<totalPags-1 && Math.abs(p-_saiPagAtual)>1) {
+        if (p===3||p===totalPags-2) html+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
+        continue;
+      }
+      html+=`<button class="pag-btn ${p===_saiPagAtual?'active':''}" onclick="_saiPagAtual=${p};renderSaidas()">${p}</button>`;
+    }
+    html+=`<button class="pag-btn" ${_saiPagAtual===totalPags?'disabled':''} onclick="_saiPagAtual++;renderSaidas()">›</button>`;
+    btnsEl.innerHTML = html;
+  }
+
+  // Table
+  const tbody = document.getElementById('sai-body');
+  if (!tbody) return;
+  if (!page.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty"><b>Nenhuma saída encontrada</b></td></tr>';
+    return;
+  }
+
+  const tipoBadge = {
+    consumo:      {label:'Consumo',       color:'#f97316', bg:'#fff7ed'},
+    perda:        {label:'Perda',         color:'#ef4444', bg:'#fee2e2'},
+    vencimento:   {label:'Vencimento',    color:'#6366f1', bg:'#eef2ff'},
+    transferencia:{label:'Transferência', color:'#0ea5e9', bg:'#f0f9ff'},
+    descarte:     {label:'Descarte',      color:'#64748b', bg:'#f1f5f9'},
+    ajuste:       {label:'Ajuste',        color:'#d97706', bg:'#fffbeb'},
+  };
+
+  tbody.innerHTML = page.map(s => {
+    const ins = insumos.find(i => i.id === s.insumo_id);
+    const unid = ins?.unidade_medida || ins?.unidade_compra || 'un';
+    const tb = tipoBadge[s.tipo] || {label: s.tipo, color:'#64748b', bg:'#f1f5f9'};
     return `<tr>
-      <td class="mono" style="color:var(--text2)">${fmtData(s.criado_em)}</td>
-      <td style="font-weight:500">${ins?esc(ins.nome):'—'}</td>
-      <td class="c"><span class="badge b-sai">${tl[s.tipo]||s.tipo}</span></td>
+      <td class="mono" style="color:#64748b;white-space:nowrap">${fmtDataHora(s.criado_em)}</td>
+      <td style="font-weight:500">${ins ? esc(ins.nome) : '—'}</td>
+      <td class="c"><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${tb.bg};color:${tb.color}">${tb.label}</span></td>
+      <td style="color:#64748b">${esc(s.motivo || '—')}</td>
       <td class="r mono">${qtd(s.quantidade)}</td>
-      <td style="color:var(--text2)">${esc(s.motivo||'—')}</td>
-      <td style="color:var(--text3)">${esc(s.responsavel||'—')}</td>
+      <td style="color:#64748b">${esc(unid)}</td>
+      <td style="color:#64748b">${esc(s.responsavel || '—')}</td>
+      <td class="c">
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+          <button class="btn-icon" title="Ver detalhes" onclick="verSaida('${s.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
+}
+
+function verSaida(id) {
+  const s = saidas.find(x => x.id === id);
+  if (!s) return;
+  const ins = insumos.find(i => i.id === s.insumo_id);
+  const unid = ins?.unidade_medida || ins?.unidade_compra || 'un';
+  alert(`Saída\n\nInsumo: ${ins?.nome||'—'}\nQuantidade: ${qtd(s.quantidade)} ${unid}\nTipo: ${s.tipo}\nMotivo: ${s.motivo||'—'}\nResponsável: ${s.responsavel||'—'}\nData: ${fmtDataHora(s.criado_em)}`);
 }
 
 // ── KARDEX ────────────────────────────────────────────────────────
@@ -1732,6 +1920,7 @@ async function salvarMM() {
 
 // ── RELATÓRIOS ────────────────────────────────────────────────────
 function renderRelatorios() {
+  if (!document.getElementById('kpis')) return;
   // KPIs
   const valTotal=insumos.reduce((s,i)=>{const sd=getSaldo(i.id);return s+(sd.quantidade||0)*(sd.custo_medio||0);},0);
   const now=new Date();
