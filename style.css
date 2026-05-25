@@ -1,71 +1,67 @@
 /* ========================================================
    Aiko — Design System Global
-   Importado por todos os HTMLs. CSS inline de cada página
-   ainda pode sobrescrever via especificidade se necessário.
    ======================================================== */
 
-/* SIDEBAR — remove boxes sombreados dos grupos */
+/* SIDEBAR */
+.sidebar {
+  width: 220px !important;
+  background: #fff !important;
+  border-right: 1px solid #e2e8f0 !important;
+}
+
 .nav-group {
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  padding: 0 10px !important;
-  margin: 0 8px 2px !important;
+  padding: 0 12px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding-bottom: 8px !important;
+  margin-bottom: 0 !important;
+}
+
+.nav-group:last-of-type {
+  border-bottom: none !important;
 }
 
 .nav-label {
-  padding: 10px 8px 4px !important;
-  color: #94a3b8;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  padding: 14px 4px 6px !important;
+  color: #94a3b8 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 2px !important;
 }
 
 .nav-item {
-  padding: 7px 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
   border-radius: 8px !important;
-  color: #334155;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all .15s;
+  color: #475569 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  transition: all .15s !important;
+  margin-bottom: 1px !important;
 }
 
 .nav-item:hover {
-  background: rgba(249,115,22,.08) !important;
-  color: #f97316 !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
 }
 
 .nav-item.active {
-  background: rgba(249,115,22,.10) !important;
+  background: #fff7ed !important;
   color: #f97316 !important;
-  font-weight: 600;
+  font-weight: 600 !important;
+  border-left: 3px solid #f97316 !important;
+  padding-left: 7px !important;
 }
 
-/* Separador entre grupos */
-.nav-group + .nav-group {
-  border-top: 1px solid #f1f5f9;
-  margin-top: 4px !important;
-  padding-top: 4px !important;
-}
-
-/* TOPBAR — sombra leve e altura mínima */
-.topbar {
-  box-shadow: 0 1px 0 #e2e8f0;
-}
-
-/* TABELA — header levemente mais claro para melhor leitura */
-.tbl thead tr,
-thead tr {
-  background: #0f2d5c;
-}
-
-/* TOAST — versão limpa */
-.toast {
-  box-shadow: 0 4px 16px rgba(0,0,0,.10);
-}
-
-/* SCROLLBAR global */
+/* SCROLLBAR */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 3px; }
