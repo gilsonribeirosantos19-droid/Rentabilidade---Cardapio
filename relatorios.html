@@ -381,24 +381,47 @@
 
     <!-- EVOLUÇÃO MENSAL -->
     <div id="pane-evolucao" class="rel-pane">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-        <div style="font-size:15px;font-weight:700;color:var(--text1)">Saídas por Mês — 2026</div>
-        <input type="text" id="ev-busca" placeholder="Filtrar insumo..." oninput="renderEvolucao()" class="field" style="width:180px;font-size:12px;padding:5px 10px">
-        <div id="ev-cols-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid var(--border2);border-radius:10px;padding:12px;z-index:1000;min-width:200px;box-shadow:0 4px 20px rgba(0,0,0,.1)">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Meses visíveis</div>
-          <div id="ev-cols-list"></div>
+      <!-- Linha 1: insumo + período + exportar -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <select id="ev-insumo" class="field" style="min-width:200px" onchange="renderEvolucao()">
+          <option value="">Todos os insumos</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input type="month" id="ev-de" value="2026-01" onchange="renderEvolucao()" style="border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;cursor:pointer">
+          <span style="color:#94a3b8">—</span>
+          <input type="month" id="ev-ate" value="2026-12" onchange="renderEvolucao()" style="border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;cursor:pointer">
+        </div>
+        <button class="tab-btn" onclick="exportarEvolucao()" style="margin-left:auto;display:inline-flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV
+        </button>
+      </div>
+      <!-- Linha 2: busca -->
+      <div style="position:relative;width:280px;margin-bottom:12px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="ev-busca" placeholder="Filtrar insumo..." oninput="renderEvolucao()" class="field" style="width:100%;padding-left:32px">
+      </div>
+      <!-- Tabela -->
+      <div class="tbl-wrap">
+        <div class="tbl-scroll">
+          <table class="tbl" id="ev-tbl">
+            <thead><tr id="ev-thead"></tr></thead>
+            <tbody id="ev-body"><tr><td class="empty">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pag-bar">
+          <span id="ev-pag-info" style="font-size:12px;color:#64748b"></span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pag-btns" id="ev-pag-btns"></div>
+            <select id="ev-por-pag" style="font-size:12px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#64748b" onchange="_evPorPag=+this.value;_evPag=1;_renderEvPage()">
+              <option value="10" selected>10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div style="position:relative">
-        <button onclick="toggleEvCols()" id="btn-ev-cols" title="Ocultar/exibir meses"
-          style="position:absolute;top:10px;left:148px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0;line-height:1;z-index:10">*</button>
-      <div class="tbl-wrap"><div class="tbl-scroll">
-        <table class="tbl" id="ev-tbl">
-          <thead><tr id="ev-thead"></tr></thead>
-          <tbody id="ev-body"><tr><td class="empty">Carregando...</td></tr></tbody>
-        </table>
-      </div></div>
-      </div><!-- /position:relative -->
     </div>
 
     <!-- ENTRADAS -->
@@ -1020,89 +1043,118 @@ async function init() {
 }
 
 // ── EVOLUÇÃO MENSAL ───────────────────────────────────────────────
-const EV_MESES_2026 = [
-  {key:'2026-01',label:'Jan'},{key:'2026-02',label:'Fev'},{key:'2026-03',label:'Mar'},
-  {key:'2026-04',label:'Abr'},{key:'2026-05',label:'Mai'},{key:'2026-06',label:'Jun'},
-  {key:'2026-07',label:'Jul'},{key:'2026-08',label:'Ago'},{key:'2026-09',label:'Set'},
-  {key:'2026-10',label:'Out'},{key:'2026-11',label:'Nov'},{key:'2026-12',label:'Dez'},
-];
+let _evRows=[], _evPag=1, _evPorPag=10, _evMeses=[];
 
-function loadEvCols(){try{return JSON.parse(localStorage.getItem('ev_cols')||'null');}catch{return null;}}
-
-function applyEvCols(){
-  const saved=loadEvCols();
-  EV_MESES_2026.forEach(m=>{
-    const vis=saved?(saved[m.key]!==false):true;
-    document.querySelectorAll(`[data-mes="${m.key}"]`).forEach(el=>el.style.display=vis?'':'none');
-  });
+function _evGetMeses(){
+  const de=document.getElementById('ev-de')?.value||'2026-01';
+  const ate=document.getElementById('ev-ate')?.value||'2026-12';
+  const meses=[];
+  const LABELS=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  let cur=de;
+  while(cur<=ate){
+    const [y,m]=cur.split('-').map(Number);
+    meses.push({key:cur,label:LABELS[m-1]});
+    const next=new Date(y,m,1);
+    cur=`${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
+  }
+  return meses;
 }
 
-function renderEvColsDropdown(){
-  const saved=loadEvCols();
-  document.getElementById('ev-cols-list').innerHTML=EV_MESES_2026.map(m=>{
-    const vis=saved?(saved[m.key]!==false):true;
-    return `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;cursor:pointer">
-      <input type="checkbox" ${vis?'checked':''} onchange="toggleEvCol('${m.key}',this.checked)"> ${m.label} 2026
-    </label>`;
-  }).join('');
+function _evPopularInsumos(){
+  const sel=document.getElementById('ev-insumo');
+  if(sel&&sel.options.length<=1){
+    insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;sel.appendChild(o);});
+  }
 }
-
-function toggleEvCol(key,visible){
-  const saved=loadEvCols()||{};
-  saved[key]=visible;
-  localStorage.setItem('ev_cols',JSON.stringify(saved));
-  applyEvCols();
-}
-
-function toggleEvCols(){
-  const d=document.getElementById('ev-cols-dropdown');
-  if(d.style.display==='none'){
-    renderEvColsDropdown();
-    const btn=document.getElementById('btn-ev-cols');
-    if(btn){const r=btn.getBoundingClientRect();d.style.top=(r.bottom+4)+'px';d.style.left=r.left+'px';}
-    d.style.display='';
-  } else d.style.display='none';
-}
-
-document.addEventListener('click',e=>{
-  const dd=document.getElementById('ev-cols-dropdown');
-  const btn=document.getElementById('btn-ev-cols');
-  if(dd&&btn&&!dd.contains(e.target)&&!btn.contains(e.target))dd.style.display='none';
-});
 
 async function renderEvolucao(){
-  const busca=document.getElementById('ev-busca').value.toLowerCase();
+  _evPopularInsumos();
+  const busca=(document.getElementById('ev-busca')?.value||'').toLowerCase();
+  const insId=document.getElementById('ev-insumo')?.value||'';
+  _evMeses=_evGetMeses();
+  const ncols=2+_evMeses.length;
+
   const thead=document.getElementById('ev-thead');
   const tbody=document.getElementById('ev-body');
+  if(!thead||!tbody)return;
 
-  thead.innerHTML=`<th style="min-width:140px">Insumo</th>` +
-    EV_MESES_2026.map(m=>`<th data-mes="${m.key}" class="r">${m.label}</th>`).join('');
+  thead.innerHTML=`<th style="min-width:160px;font-size:11px">INSUMO</th>`+
+    _evMeses.map(m=>`<th class="r" style="font-size:11px">${m.label}</th>`).join('')+
+    `<th class="r" style="font-size:11px">TOTAL</th>`;
 
-  tbody.innerHTML='<tr><td colspan="13" class="empty">Calculando...</td></tr>';
+  tbody.innerHTML=`<tr><td colspan="${ncols}" class="empty">Calculando...</td></tr>`;
 
   try{
-    const saisAll=await api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.2026-01-01&criado_em=lte.2026-12-31T23:59:59`);
+    const de=document.getElementById('ev-de')?.value||'2026-01';
+    const ate=document.getElementById('ev-ate')?.value||'2026-12';
+    const saisAll=await api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}-01&criado_em=lte.${ate}-31T23:59:59`);
 
     let insFilt=insumos.filter(i=>i.ativo!==false);
+    if(insId)insFilt=insFilt.filter(i=>i.id===insId);
     if(busca)insFilt=insFilt.filter(i=>i.nome.toLowerCase().includes(busca));
 
-    const rows=insFilt.map(ins=>{
-      const total=EV_MESES_2026.reduce((a,m)=>{
-        return a+saisAll.filter(s=>s.insumo_id===ins.id&&(s.criado_em||'').startsWith(m.key)).reduce((b,s)=>b+(s.quantidade||0),0);
-      },0);
+    _evRows=insFilt.map(ins=>{
+      const porMes=_evMeses.map(m=>
+        saisAll.filter(s=>s.insumo_id===ins.id&&(s.criado_em||'').startsWith(m.key)).reduce((a,s)=>a+(s.quantidade||0),0)
+      );
+      const total=porMes.reduce((a,v)=>a+v,0);
       if(total===0)return null;
-      const cols=EV_MESES_2026.map(m=>{
-        const sai=saisAll.filter(s=>s.insumo_id===ins.id&&(s.criado_em||'').startsWith(m.key)).reduce((a,s)=>a+(s.quantidade||0),0);
-        return `<td data-mes="${m.key}" class="r mono">${sai>0?`<span style="color:var(--red)">${fmtQtd(sai)}</span>`:'<span style="color:var(--text3)">—</span>'}</td>`;
-      }).join('');
-      return `<tr><td style="font-weight:500">${esc(ins.nome)}</td>${cols}</tr>`;
+      return{ins,porMes,total};
     }).filter(Boolean);
 
-    tbody.innerHTML=rows.join('')||'<tr><td colspan="13" class="empty">Nenhuma saída encontrada em 2026</td></tr>';
-    applyEvCols();
+    _evPag=1;
+    _renderEvPage();
   }catch(e){
-    tbody.innerHTML=`<tr><td colspan="13" class="empty">Erro: ${esc(e.message)}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="${ncols}" class="empty">Erro: ${esc(e.message)}</td></tr>`;
   }
+}
+
+function _renderEvPage(){
+  const tbody=document.getElementById('ev-body');
+  if(!tbody)return;
+  const ncols=2+_evMeses.length;
+  if(!_evRows.length){
+    tbody.innerHTML=`<tr><td colspan="${ncols}" class="empty">Nenhuma saída encontrada no período.</td></tr>`;
+    document.getElementById('ev-pag-info').textContent='';
+    document.getElementById('ev-pag-btns').innerHTML='';
+    return;
+  }
+  const start=(_evPag-1)*_evPorPag;
+  const slice=_evRows.slice(start,start+_evPorPag);
+  tbody.innerHTML=slice.map(({ins,porMes,total})=>{
+    const cols=porMes.map(v=>`<td class="r mono" style="color:#334155">${v>0?fmtQtd(v):'–'}</td>`).join('');
+    return `<tr><td style="font-weight:600;color:#334155">${esc(ins.nome)}</td>${cols}<td class="r mono" style="font-weight:700;color:#334155">${fmtQtd(total)}</td></tr>`;
+  }).join('');
+
+  const total=_evRows.length;
+  const totalPags=Math.max(1,Math.ceil(total/_evPorPag));
+  const end=Math.min(start+_evPorPag,total);
+  const info=document.getElementById('ev-pag-info');
+  if(info)info.textContent=total?`Mostrando ${start+1} a ${end} de ${total} registros`:'';
+  const btns=document.getElementById('ev-pag-btns');
+  if(!btns)return;
+  let h=`<button class="pag-btn" onclick="_evPag=Math.max(1,_evPag-1);_renderEvPage()" ${_evPag===1?'disabled':''}>‹</button>`;
+  for(let p=1;p<=totalPags;p++){
+    if(totalPags>7&&Math.abs(p-_evPag)>2&&p!==1&&p!==totalPags){
+      if(p===2||p===totalPags-1)h+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
+      continue;
+    }
+    h+=`<button class="pag-btn${p===_evPag?' active':''}" onclick="_evPag=${p};_renderEvPage()">${p}</button>`;
+  }
+  h+=`<button class="pag-btn" onclick="_evPag=Math.min(${totalPags},_evPag+1);_renderEvPage()" ${_evPag===totalPags?'disabled':''}>›</button>`;
+  btns.innerHTML=h;
+}
+
+function exportarEvolucao(){
+  if(!_evRows.length){toast('Sem dados para exportar.','err');return;}
+  const header=['Insumo',..._evMeses.map(m=>m.label),'TOTAL'];
+  const rows=_evRows.map(({ins,porMes,total})=>[`"${ins.nome}"`,...porMes.map(v=>v>0?v.toFixed(3):''),total.toFixed(3)].join(';'));
+  const csv='﻿'+header.join(';')+'\n'+rows.join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='evolucao_mensal_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+  toast('CSV exportado.','ok');
 }
 
 // ── ENTRADAS ──────────────────────────────────────────────────────
