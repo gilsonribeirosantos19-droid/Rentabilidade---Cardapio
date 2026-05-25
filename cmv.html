@@ -333,18 +333,33 @@ document.getElementById('fil-de').value=hoje().slice(0,7)+'-01';
 document.getElementById('fil-ate').value=hoje();
 
 async function carregarFiltros(){
-  // Lojas
-  try{
-    const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
-    const sl=document.getElementById('fil-loja');
-    lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sl.appendChild(o);});
-  }catch(e){}
-  // Categorias de insumos como grupos
-  try{
-    const cats=await api(`categorias?tenant_id=eq.${TENANT_ID}&tipo=eq.insumo&order=nome.asc`).catch(()=>[]);
-    const sg=document.getElementById('fil-grupo');
-    cats.forEach(c=>{const o=document.createElement('option');o.value=c.nome;o.textContent=c.nome;sg.appendChild(o);});
-  }catch(e){}
+  // Lojas: tenta com ativo, depois sem ativo, depois sem tenant (fallback total)
+  let lojas=[];
+  try{ lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`); }catch(e){}
+  if(!lojas.length){
+    try{ lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`); }catch(e){}
+  }
+  const sl=document.getElementById('fil-loja');
+  if(sl){
+    sl.innerHTML='<option value="">Todas as lojas</option>'+
+      lojas.map(l=>`<option value="${esc(l.id)}">${esc(l.nome)}</option>`).join('');
+  }
+
+  // Grupos: tenta tabela categorias, depois categorias distintas nos insumos
+  let cats=[];
+  try{ cats=await api(`categorias?tenant_id=eq.${TENANT_ID}&tipo=eq.insumo&order=nome.asc`); }catch(e){}
+  if(!cats.length){
+    try{
+      const ins=await api(`insumos?tenant_id=eq.${TENANT_ID}&select=categoria&order=categoria.asc`);
+      const uniq=[...new Set(ins.map(i=>i.categoria).filter(Boolean))];
+      cats=uniq.map(n=>({nome:n}));
+    }catch(e){}
+  }
+  const sg=document.getElementById('fil-grupo');
+  if(sg){
+    sg.innerHTML='<option value="">Todos os grupos</option>'+
+      cats.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('');
+  }
 }
 carregarFiltros();
 
