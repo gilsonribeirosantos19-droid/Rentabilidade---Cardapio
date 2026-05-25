@@ -2066,21 +2066,7 @@ function renderNfeMap(itens) {
         <button style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;border-radius:4px" title="Mais opções">⋮</button>
       </td>
     </tr>
-    <tr class="summary-row">
-      <td colspan="7">
-        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:6px">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            <span style="font-weight:600">Resumo da conversão deste item</span>
-          </div>
-          <span>Custo total na NF-e: <strong style="font-family:'DM Mono',monospace">${brl(it.valorUnit*it.quantidade)}</strong></span>
-          <span>Quantidade comprada: <strong style="font-family:'DM Mono',monospace">${it.quantidade.toFixed(2)} ${esc(it.unidade)}</strong></span>
-          <span>Entrada no estoque: <strong style="font-family:'DM Mono',monospace;color:#0d9488">${qtdEst.toFixed(3)} UN</strong></span>
-          <span>Custo total no estoque: <strong style="font-family:'DM Mono',monospace">${brl(it.valorUnit*it.quantidade)}</strong></span>
-          <span>Custo unitário no estoque: <strong style="font-family:'DM Mono',monospace;color:#0d9488">${brl(it.valorUnit/fator)} / UN</strong></span>
-        </div>
-      </td>
-    </tr>`;
+    `;
   }).join('');
 }
 
