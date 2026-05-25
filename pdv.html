@@ -141,6 +141,14 @@
     padding:16px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:12px;word-break:break-all}
 
   /* REP */
+  /* SUB-ABAS RELATÓRIOS */
+  .sub-rel-btn{padding:6px 16px;font-size:12px;font-weight:500;color:#ffffff;cursor:pointer;border:none;
+    background:#0f2d5c;border-radius:20px;transition:all .2s;font-family:inherit;white-space:nowrap;
+    box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .sub-rel-btn:hover{background:#1a3f7a}
+  .sub-rel-btn.active{background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:600}
+  .srel-pane{display:none}.srel-pane.active{display:block}
+
   .rep-sec{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
     padding:20px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
   .rep-title{font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text1)}
@@ -308,16 +316,22 @@
 
     <!-- TAB: RELATÓRIOS -->
     <div id="tab-relatorios" class="tab-pane">
-      <div class="toolbar" style="margin-bottom:20px">
+
+      <!-- FILTRO + SUB-ABAS -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
         <input class="field field-sm" type="date" id="rel-de">
         <input class="field field-sm" type="date" id="rel-ate">
         <button class="btn btn-primary btn-sm" onclick="renderRelatorios()">Calcular</button>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="sub-rel-btn active" id="srel-abc"      onclick="switchRelTab('abc')">Curva ABC</button>
+          <button class="sub-rel-btn"        id="srel-cmv"      onclick="switchRelTab('cmv')">CMV por Produto</button>
+          <button class="sub-rel-btn"        id="srel-engenharia" onclick="switchRelTab('engenharia')">Engenharia de Cardápio</button>
+        </div>
       </div>
 
-      <!-- CURVA ABC -->
-      <div class="rep-sec">
-        <div class="rep-title">Curva ABC — por faturamento (A=80% · B=15% · C=5%)</div>
-        <div class="tbl-wrap" style="margin-bottom:0"><div class="tbl-scroll">
+      <!-- SUB-PANE: CURVA ABC -->
+      <div id="srel-pane-abc" class="srel-pane active">
+        <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
               <th class="c">#</th><th>Produto</th><th>Categoria</th>
@@ -329,10 +343,9 @@
         </div></div>
       </div>
 
-      <!-- CMV POR PRODUTO -->
-      <div class="rep-sec">
-        <div class="rep-title">CMV por Produto</div>
-        <div class="tbl-wrap" style="margin-bottom:0"><div class="tbl-scroll">
+      <!-- SUB-PANE: CMV POR PRODUTO -->
+      <div id="srel-pane-cmv" class="srel-pane">
+        <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
               <th>Produto</th><th>Categoria</th>
@@ -344,9 +357,8 @@
         </div></div>
       </div>
 
-      <!-- ENGENHARIA DE CARDÁPIO -->
-      <div class="rep-sec">
-        <div class="rep-title">Engenharia de Cardápio</div>
+      <!-- SUB-PANE: ENGENHARIA DE CARDÁPIO -->
+      <div id="srel-pane-engenharia" class="srel-pane">
         <div class="matriz" id="eng-matriz">
           <div class="quadrante" style="border-color:#fbbf24">
             <div class="quad-titulo" style="color:#b45309">⭐ Estrela</div>
@@ -607,6 +619,13 @@ function switchTab(tab) {
   if (tab==='faturamento') renderFaturamento();
   if (tab==='vendas') renderVendas();
   if (tab==='relatorios') renderRelatorios();
+}
+
+function switchRelTab(nome) {
+  ['abc','cmv','engenharia'].forEach(t => {
+    document.getElementById('srel-'+t).classList.toggle('active', t===nome);
+    document.getElementById('srel-pane-'+t).classList.toggle('active', t===nome);
+  });
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
