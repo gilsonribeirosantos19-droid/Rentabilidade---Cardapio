@@ -304,18 +304,62 @@
 
     <!-- INFLAÇÃO -->
     <div id="pane-inflacao" class="rel-pane">
-      <div class="rep-sec">
-        <div class="toolbar">
-          <div class="rep-title" style="margin:0;border:none;padding:0">Variação de Preço por Insumo</div>
-          <select id="inf-meses" onchange="renderInflacao()" class="field" style="font-size:12px;padding:5px 10px">
+      <!-- FILTROS -->
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Período</div>
+          <select id="inf-meses" onchange="renderInflacao()" class="field" style="min-width:150px">
             <option value="6">Últimos 6 meses</option>
             <option value="12" selected>Últimos 12 meses</option>
           </select>
-          <input type="text" id="inf-busca" placeholder="Filtrar insumo..." oninput="renderInflacao()" class="field" style="width:180px">
         </div>
-        <div class="tbl-wrap"><div class="tbl-scroll" id="inf-wrap">
-          <div class="empty skeleton">Carregando...</div>
-        </div></div>
+        <input type="text" id="inf-busca" placeholder="Filtrar insumo, categoria ou fornecedor..." oninput="renderInflacao()" class="field" style="flex:1;min-width:220px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Grupo</div>
+          <select id="inf-grupo" onchange="renderInflacao()" class="field" style="min-width:110px"><option value="">Todos</option></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Categoria</div>
+          <select id="inf-cat" onchange="renderInflacao()" class="field" style="min-width:110px"><option value="">Todas</option></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Fornecedor</div>
+          <select id="inf-forn" onchange="renderInflacao()" class="field" style="min-width:110px"><option value="">Todos</option></select>
+        </div>
+        <button class="tab-btn" style="height:36px" onclick="toast('Mais filtros em breve')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Mais filtros
+        </button>
+        <button class="tab-btn" style="height:36px" onclick="exportarInflacao()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+        </button>
+      </div>
+      <!-- SUMMARY BAR -->
+      <div id="inf-summary" style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 16px;margin-bottom:12px;display:none;align-items:center;gap:20px;flex-wrap:wrap;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+        <span>Maior alta: <strong id="inf-s-alta" style="color:#f97316;cursor:pointer">—</strong></span>
+        <span>Maior queda: <strong id="inf-s-queda" style="color:#16a34a;cursor:pointer">—</strong></span>
+        <span>Média da variação no período: <strong id="inf-s-media" style="color:#f97316">—</strong></span>
+        <span style="margin-left:auto;display:flex;align-items:center;gap:16px">
+          <span>Itens com alta: <strong id="inf-s-naltas" style="color:#e11d48">0</strong></span>
+          <span>Itens com queda: <strong id="inf-s-nquedas" style="color:#16a34a">0</strong></span>
+          <span>Itens estáveis: <strong id="inf-s-estaveis" style="color:#64748b">0</strong></span>
+        </span>
+      </div>
+      <!-- TABLE -->
+      <div class="tbl-wrap">
+        <div class="tbl-scroll" id="inf-wrap"><div class="empty skeleton">Carregando...</div></div>
+        <div class="pag-bar">
+          <span id="inf-pag-info" style="font-size:12px;color:#64748b"></span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pag-btns" id="inf-pag-btns"></div>
+            <select id="inf-por-pag" style="font-size:12px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#64748b" onchange="_infPorPag=+this.value;_infPag=1;_renderInfPage()">
+              <option value="12" selected>12 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -529,7 +573,8 @@ function switchTab(nome) {
   const bFilt=document.getElementById('btn-filtros');
   const bExp=document.getElementById('btn-exportar');
   if(bFilt)bFilt.style.display=nome==='abc'?'':'none';
-  if(bExp)bExp.style.display=nome==='abc'?'':'none';
+  if(bExp){bExp.style.display=(nome==='abc'||nome==='inflacao')?'':'none';
+    bExp.onclick=nome==='abc'?exportarABC:exportarInflacao;}
   if (nome==='resumo')    renderResumo();
   if (nome==='abc')       renderABC();
   if (nome==='inflacao')  renderInflacao();
@@ -752,88 +797,191 @@ function exportarABC(){
 }
 
 // ── INFLAÇÃO ──────────────────────────────────────────────────────
-function renderInflacao() {
-  const nMeses = parseInt(document.getElementById('inf-meses')?.value)||12;
-  const busca  = (document.getElementById('inf-busca')?.value||'').toLowerCase();
-  const wrap   = document.getElementById('inf-wrap');
+let _infLinhas=[], _infPag=1, _infPorPag=12, _infMeses=[];
 
-  const meses=[];
+function renderInflacao() {
+  const nMeses=parseInt(document.getElementById('inf-meses')?.value)||12;
+  const busca=(document.getElementById('inf-busca')?.value||'').toLowerCase();
+  const catFil=(document.getElementById('inf-cat')?.value||'').toLowerCase();
+  const fornFil=document.getElementById('inf-forn')?.value||'';
+
+  // Popular categorias e fornecedores nos selects
+  _infPopularFiltros();
+
   const hoje=new Date();
+  _infMeses=[];
   for(let i=nMeses-1;i>=0;i--){
     const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
-    meses.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    _infMeses.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
   }
 
   const mapa={};
   entradas.forEach(e=>{
-    if(!e.criado_em||!e.custo_unitario||!e.fator_conversao)return;
+    if(!e.criado_em||!e.custo_unitario)return;
     const mes=e.criado_em.substring(0,7);
-    if(!meses.includes(mes))return;
+    if(!_infMeses.includes(mes))return;
+    if(fornFil&&e.fornecedor_id!==fornFil)return;
     const precoUnit=e.custo_unitario/(e.fator_conversao||1);
     if(!mapa[e.insumo_id])mapa[e.insumo_id]={};
     if(!mapa[e.insumo_id][mes])mapa[e.insumo_id][mes]=[];
     mapa[e.insumo_id][mes].push(precoUnit);
   });
 
-  let linhas=Object.entries(mapa).map(([insId,porMes])=>{
+  _infLinhas=Object.entries(mapa).map(([insId,porMes])=>{
     const ins=insumos.find(i=>i.id===insId);
     if(!ins)return null;
-    if(busca&&!ins.nome.toLowerCase().includes(busca))return null;
-    const precos=meses.map(m=>{
+    if(busca&&!ins.nome.toLowerCase().includes(busca)&&!(ins.categoria||'').toLowerCase().includes(busca))return null;
+    if(catFil&&(ins.categoria||'').toLowerCase()!==catFil)return null;
+    const precos=_infMeses.map(m=>{
       const arr=porMes[m];
       return arr?arr.reduce((a,v)=>a+v,0)/arr.length:null;
     });
     const comDados=precos.filter(p=>p!==null);
-    if(comDados.length<1)return null;
+    if(!comDados.length)return null;
     const primeiro=comDados[0],ultimo=comDados[comDados.length-1];
     const varTotal=primeiro>0?((ultimo-primeiro)/primeiro)*100:null;
     return{ins,precos,varTotal};
   }).filter(Boolean).sort((a,b)=>(b.varTotal||0)-(a.varTotal||0));
 
-  if(!linhas.length){
-    wrap.innerHTML='<div class="empty">Nenhum dado de preço no período.</div>';
+  // Summary bar
+  const sumEl=document.getElementById('inf-summary');
+  if(sumEl&&_infLinhas.length){
+    sumEl.style.display='flex';
+    const comVar=_infLinhas.filter(l=>l.varTotal!=null);
+    const alta=comVar.reduce((a,b)=>(!a||b.varTotal>a.varTotal)?b:a,null);
+    const queda=comVar.reduce((a,b)=>(!a||b.varTotal<a.varTotal)?b:a,null);
+    const media=comVar.length?comVar.reduce((s,l)=>s+(l.varTotal||0),0)/comVar.length:0;
+    const naltas=comVar.filter(l=>l.varTotal>0.5).length;
+    const nquedas=comVar.filter(l=>l.varTotal<-0.5).length;
+    const estaveis=comVar.length-naltas-nquedas;
+    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    set('inf-s-alta',alta?`${esc(alta.ins.nome)} (+${alta.varTotal.toFixed(1)}%)`:'—');
+    set('inf-s-queda',queda?`${esc(queda.ins.nome)} (${queda.varTotal.toFixed(1)}%)`:'—');
+    set('inf-s-media',(media>=0?'+':'')+media.toFixed(1)+'%');
+    const mediaSub=document.getElementById('inf-s-media');
+    if(mediaSub)mediaSub.style.color=media>0?'#f97316':'#16a34a';
+    set('inf-s-naltas',naltas);set('inf-s-nquedas',nquedas);set('inf-s-estaveis',estaveis);
+  }else if(sumEl)sumEl.style.display='none';
+
+  _infPag=1;
+  _renderInfPage();
+}
+
+function _infPopularFiltros(){
+  const selCat=document.getElementById('inf-cat');
+  const selForn=document.getElementById('inf-forn');
+  if(selCat&&selCat.options.length<=1){
+    const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c.toLowerCase();o.textContent=c;selCat.appendChild(o);});
+  }
+  if(selForn&&selForn.options.length<=1){
+    // Collect unique fornecedores from entradas
+    const fornIds=[...new Set(entradas.map(e=>e.fornecedor_id).filter(Boolean))];
+    fornIds.forEach(id=>{
+      // Try to get name from fornecedor_nome field or _fornecedores
+      const nome=(entradas.find(e=>e.fornecedor_id===id)||{}).fornecedor_nome||id;
+      const o=document.createElement('option');o.value=id;o.textContent=nome;selForn.appendChild(o);
+    });
+  }
+}
+
+function _renderInfPage(){
+  const wrap=document.getElementById('inf-wrap');
+  if(!_infLinhas.length){
+    wrap.innerHTML='<div class="empty" style="padding:32px;text-align:center;color:#94a3b8">Nenhum dado de preço no período.</div>';
+    document.getElementById('inf-pag-info').textContent='';
+    document.getElementById('inf-pag-btns').innerHTML='';
     return;
   }
 
   const nomeMes=m=>{
-    const [y,mo]=m.split('-');
-    return new Date(y,mo-1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.','');
+    const[y,mo]=m.split('-');
+    const d=new Date(y,mo-1);
+    return d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.','').toUpperCase().replace(' ','/<br>');
+  };
+  const nomeMesPlain=m=>{
+    const[y,mo]=m.split('-');
+    return new Date(y,mo-1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('.','').toUpperCase();
   };
 
-  let ths=`<th>Insumo</th><th>Un.</th>`;
-  meses.forEach((m,i)=>{
-    ths+=`<th class="r" style="white-space:nowrap">${nomeMes(m)}</th>`;
-    if(i<meses.length-1)ths+=`<th class="c" style="width:52px;font-size:10px">Δ</th>`;
+  // Header
+  let thsR1=`<th rowspan="2" style="min-width:140px">Insumo</th><th rowspan="2" style="width:40px">UN.</th>`;
+  _infMeses.forEach(m=>{
+    thsR1+=`<th colspan="2" style="text-align:center;border-left:1px solid rgba(255,255,255,.1)">${nomeMesPlain(m)}</th>`;
   });
-  ths+=`<th class="r" style="white-space:nowrap">Var. Total</th>`;
+  let thsR2='';
+  _infMeses.forEach(()=>{
+    thsR2+=`<th style="border-left:1px solid rgba(255,255,255,.08);font-size:9px">PREÇO</th><th style="font-size:9px;min-width:55px">Δ %</th>`;
+  });
 
-  const rows=linhas.map(({ins,precos,varTotal})=>{
-    let tds=`<td style="font-weight:500;white-space:nowrap">${esc(ins.nome)}</td>`;
-    tds+=`<td style="color:var(--text3);font-size:11px">${esc(ins.unidade_medida||ins.unidade_compra||'un')}</td>`;
+  // Rows (paginated)
+  const start=(_infPag-1)*_infPorPag;
+  const slice=_infLinhas.slice(start,start+_infPorPag);
+  const rows=slice.map(({ins,precos})=>{
+    const un=esc(ins.unidade_medida||ins.unidade_compra||'un');
+    let tds=`<td style="font-weight:600">${esc(ins.nome)}</td><td style="color:#94a3b8;font-size:11px">${un}</td>`;
     precos.forEach((p,i)=>{
-      tds+=p!==null
-        ?`<td class="r mono" style="font-size:12px">${brl(p)}</td>`
-        :`<td class="r" style="color:var(--text3)">—</td>`;
-      if(i<precos.length-1){
-        const prev=[...precos].slice(0,i+1).reverse().find(x=>x!==null);
-        if(prev&&p){
-          const delta=((p-prev)/prev)*100;
-          const cor=delta>2?'#dc2626':delta<-2?'#16a34a':'var(--text3)';
-          const sinal=delta>0?'+':'';
-          tds+=`<td class="c" style="font-size:11px;font-weight:600;color:${cor};white-space:nowrap">${sinal}${delta.toFixed(1)}%</td>`;
-        }else{tds+=`<td class="c" style="color:var(--text3)">—</td>`;}
+      // Price
+      tds+=p!=null
+        ?`<td class="r mono" style="font-size:12px;border-left:1px solid #f1f5f9">${'R$ '+Number(p).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`
+        :`<td class="r" style="color:#94a3b8;border-left:1px solid #f1f5f9">—</td>`;
+      // Delta
+      const prev=[...precos].slice(0,i).reverse().find(x=>x!=null);
+      if(prev!=null&&p!=null&&Math.abs(p-prev)>0.001){
+        const delta=((p-prev)/prev)*100;
+        if(Math.abs(delta)<0.05){
+          tds+=`<td style="color:#94a3b8;font-size:11px">—</td>`;
+        }else if(delta>0){
+          tds+=`<td style="color:#e11d48;font-size:11px;font-weight:600;white-space:nowrap">▲ ${delta.toFixed(1)}%</td>`;
+        }else{
+          tds+=`<td style="color:#16a34a;font-size:11px;font-weight:600;white-space:nowrap">▼ ${Math.abs(delta).toFixed(1)}%</td>`;
+        }
+      }else{
+        tds+=`<td style="color:#94a3b8;font-size:11px">—</td>`;
       }
     });
-    if(varTotal!==null){
-      const cor=varTotal>5?'#dc2626':varTotal<-5?'#16a34a':'var(--text3)';
-      const sinal=varTotal>0?'+':'';
-      tds+=`<td class="r mono" style="font-weight:700;color:${cor}">${sinal}${varTotal.toFixed(1)}%</td>`;
-    }else{tds+=`<td class="r" style="color:var(--text3)">—</td>`;}
     return`<tr>${tds}</tr>`;
   }).join('');
 
   wrap.innerHTML=`<table class="tbl" style="min-width:700px">
-    <thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table>`;
+    <thead>
+      <tr class="th-main" style="background:#0f2d5c">${thsR1}</tr>
+      <tr style="background:#162d52">${thsR2}</tr>
+    </thead>
+    <tbody>${rows||'<tr><td colspan="'+(2+_infMeses.length*2)+'" class="empty">Sem dados</td></tr>'}</tbody>
+  </table>`;
+
+  // Paginação
+  const total=_infLinhas.length;
+  const totalPags=Math.max(1,Math.ceil(total/_infPorPag));
+  const end=Math.min(start+_infPorPag,total);
+  const info=document.getElementById('inf-pag-info');
+  if(info)info.textContent=`Mostrando ${start+1} a ${end} de ${total} itens`;
+  const btns=document.getElementById('inf-pag-btns');
+  if(!btns)return;
+  let h=`<button class="pag-btn" onclick="_infPag=Math.max(1,_infPag-1);_renderInfPage()" ${_infPag===1?'disabled':''}>‹</button>`;
+  for(let p=1;p<=totalPags;p++){
+    if(totalPags>7&&Math.abs(p-_infPag)>2&&p!==1&&p!==totalPags){
+      if(p===2||p===totalPags-1)h+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
+      continue;
+    }
+    h+=`<button class="pag-btn${p===_infPag?' active':''}" onclick="_infPag=${p};_renderInfPage()">${p}</button>`;
+  }
+  h+=`<button class="pag-btn" onclick="_infPag=Math.min(${totalPags},_infPag+1);_renderInfPage()" ${_infPag===totalPags?'disabled':''}>›</button>`;
+  btns.innerHTML=h;
+}
+
+function exportarInflacao(){
+  if(!_infLinhas.length){toast('Sem dados para exportar.','err');return;}
+  let csv='Insumo;UN;'+_infMeses.join(';')+'\n';
+  _infLinhas.forEach(({ins,precos})=>{
+    const un=ins.unidade_medida||ins.unidade_compra||'un';
+    csv+=`${ins.nome};${un};`+precos.map(p=>p!=null?p.toFixed(2):'').join(';')+'\n';
+  });
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='inflacao.csv';a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
