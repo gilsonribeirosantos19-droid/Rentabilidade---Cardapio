@@ -864,16 +864,81 @@
 
       <!-- SUB-PANE: CMV POR PRODUTO -->
       <div id="srel-pane-cmv" class="srel-pane">
-        <div class="tbl-wrap"><div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr>
-              <th>Produto</th><th>Categoria</th>
-              <th class="r">Qtd vendida</th><th class="r">Faturado</th>
-              <th class="r">Custo total</th><th class="r">CMV%</th><th class="r">Margem</th>
-            </tr></thead>
-            <tbody id="cmv-body"><tr><td colspan="7" class="empty">Clique em Calcular</td></tr></tbody>
-          </table>
-        </div></div>
+
+        <!-- KPI CARDS CMV -->
+        <div class="kpi-row" style="margin-bottom:16px">
+          <div class="kpi-card">
+            <div class="kpi-icon ki-blue"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Faturamento Total</div><div class="kpi-val" id="cmv-kpi-fat">—</div><div class="kpi-sub">período selecionado</div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon ki-orange"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Custo Total (CMV)</div><div class="kpi-val" id="cmv-kpi-custo">—</div><div class="kpi-sub" id="cmv-kpi-custo-pct">—</div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon ki-green"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Margem Bruta</div><div class="kpi-val" id="cmv-kpi-margem">—</div><div class="kpi-sub" id="cmv-kpi-margem-pct">—</div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon ki-teal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Ticket Médio</div><div class="kpi-val" id="cmv-kpi-ticket">—</div><div class="kpi-sub">por pedido</div></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon ki-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+            <div class="kpi-body"><div class="kpi-lbl">Produtos Analisados</div><div class="kpi-val" id="cmv-kpi-prods">—</div><div class="kpi-sub">itens diferentes</div></div>
+          </div>
+        </div>
+
+        <!-- FILTROS -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="position:relative">
+            <input class="field field-sm" id="cmv-busca" placeholder="Buscar produto..." oninput="filtrarCmvTab()" style="padding-left:30px;width:200px">
+            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <select class="field field-sm" id="cmv-filtro-cat" onchange="filtrarCmvTab()" style="width:auto">
+            <option value="">Categoria: Todas</option>
+          </select>
+          <select class="field field-sm" id="cmv-ordenar" onchange="filtrarCmvTab()" style="width:auto">
+            <option value="fat">Ordenar: Faturamento</option>
+            <option value="cmv_desc" selected>CMV (%) maior</option>
+            <option value="cmv_asc">CMV (%) menor</option>
+            <option value="margem_desc">Margem maior</option>
+            <option value="qtd">Qtd vendida</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="exportCmvCSV()">↓ Exportar relatório</button>
+        </div>
+
+        <!-- TABELA -->
+        <div class="dash-card" style="overflow:hidden">
+          <div class="tbl-scroll">
+            <table class="tbl" style="font-size:12px">
+              <thead><tr>
+                <th class="c" style="width:36px">#</th>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th class="r">Qtd Vendida</th>
+                <th class="r">Faturamento</th>
+                <th class="r">Custo Total</th>
+                <th class="r">CMV (%)</th>
+                <th class="r">Margem (%)</th>
+                <th class="r">Margem (R$)</th>
+                <th class="r">Ticket Médio</th>
+                <th class="r">Participação</th>
+              </tr></thead>
+              <tbody id="cmv-body"><tr><td colspan="11" class="empty">Clique em Calcular</td></tr></tbody>
+              <tfoot id="cmv-foot"></tfoot>
+            </table>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #f1f5f9;font-size:12px;color:var(--text3)">
+            <span id="cmv-pag-info">—</span>
+            <div style="display:flex;align-items:center;gap:4px" id="cmv-pag-btns"></div>
+            <select class="field field-sm" id="cmv-por-pag" onchange="renderPagCmv()" style="padding:3px 8px;font-size:11px;width:auto">
+              <option value="10">10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- SUB-PANE: ENGENHARIA DE CARDÁPIO -->
@@ -1784,6 +1849,133 @@ function exportVendasCSV() {
 }
 
 // ── RELATÓRIOS ─────────────────────────────────────────────────────
+// ── CMV HELPERS ────────────────────────────────────────────────────
+let _cmvData = [], _cmvPagAtual = 1;
+const CAT_BADGE_CORES = ['#3b82f6','#10b981','#0d9488','#f97316','#8b5cf6','#f59e0b','#06b6d4','#ec4899','#6b7280'];
+let _catCorMap = {};
+function getCatCor(cat) {
+  if (!_catCorMap[cat]) {
+    const idx = Object.keys(_catCorMap).length % CAT_BADGE_CORES.length;
+    _catCorMap[cat] = CAT_BADGE_CORES[idx];
+  }
+  return _catCorMap[cat];
+}
+
+function filtrarCmvTab() { _cmvPagAtual=1; renderPagCmv(); }
+
+function renderPagCmv() {
+  const busca   = (document.getElementById('cmv-busca')?.value||'').toLowerCase();
+  const filtCat = document.getElementById('cmv-filtro-cat')?.value||'';
+  const ordem   = document.getElementById('cmv-ordenar')?.value||'fat';
+  const porPag  = parseInt(document.getElementById('cmv-por-pag')?.value||10);
+  const totalFat = _cmvData.reduce((s,p)=>s+p.fat,0);
+  const totalCusto = _cmvData.reduce((s,p)=>s+p.custo,0);
+  const totalQtd = _cmvData.reduce((s,p)=>s+p.qtd,0);
+  const totalPeds = _dbFats.length||1;
+
+  let filtrado = _cmvData;
+  if (busca)   filtrado = filtrado.filter(p=>p.nome.toLowerCase().includes(busca));
+  if (filtCat) filtrado = filtrado.filter(p=>p.cat===filtCat);
+
+  filtrado = [...filtrado].sort((a,b)=>{
+    if (ordem==='fat')        return b.fat-a.fat;
+    if (ordem==='cmv_desc')   return (b.fat>0?b.custo/b.fat:0)-(a.fat>0?a.custo/a.fat:0);
+    if (ordem==='cmv_asc')    return (a.fat>0?a.custo/a.fat:0)-(b.fat>0?b.custo/b.fat:0);
+    if (ordem==='margem_desc')return ((b.fat-b.custo)/Math.max(b.fat,1))-((a.fat-a.custo)/Math.max(a.fat,1));
+    if (ordem==='qtd')        return b.qtd-a.qtd;
+    return b.fat-a.fat;
+  });
+
+  const totalPags = Math.max(1,Math.ceil(filtrado.length/porPag));
+  _cmvPagAtual = Math.min(_cmvPagAtual,totalPags);
+  const slice  = filtrado.slice((_cmvPagAtual-1)*porPag,_cmvPagAtual*porPag);
+  const offset = (_cmvPagAtual-1)*porPag;
+
+  document.getElementById('cmv-pag-info').textContent =
+    filtrado.length ? `Mostrando ${offset+1} a ${Math.min(offset+porPag,filtrado.length)} de ${filtrado.length} produtos` : 'Nenhum produto';
+
+  document.getElementById('cmv-body').innerHTML = slice.length ? slice.map((p,i)=>{
+    const cmvPct  = p.fat>0 ? p.custo/p.fat*100 : null;
+    const marPct  = p.fat>0 ? (p.fat-p.custo)/p.fat*100 : null;
+    const marVal  = p.fat-p.custo;
+    const ticket  = p.qtd>0 ? p.fat/p.qtd : 0;
+    const partPct = totalFat>0 ? p.fat/totalFat*100 : 0;
+    const cmvCor  = cmvPct===null?'var(--text3)':cmvPct<=30?'#16a34a':cmvPct<=40?'#f97316':'#ef4444';
+    const marCor  = marPct===null?'var(--text3)':marPct>=60?'#16a34a':marPct>=50?'#f97316':'#ef4444';
+    const catCor  = getCatCor(p.cat||'');
+    return `<tr>
+      <td class="c mono" style="color:var(--text3)">${offset+i+1}</td>
+      <td style="font-weight:500;color:#3b82f6;cursor:pointer">${esc(p.nome)}</td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${catCor}22;color:${catCor};font-weight:600">${esc(p.cat||'—')}</span></td>
+      <td class="r mono">${Math.round(p.qtd).toLocaleString('pt-BR')}</td>
+      <td class="r mono" style="font-weight:600">${brl(p.fat)}</td>
+      <td class="r mono">${p.custo>0?brl(p.custo):'—'}</td>
+      <td class="r mono" style="color:${cmvCor};font-weight:700">${cmvPct!==null?cmvPct.toFixed(2)+'%':'—'}</td>
+      <td class="r mono" style="color:${marCor};font-weight:700">${marPct!==null?marPct.toFixed(2)+'%':'—'}</td>
+      <td class="r mono" style="${marVal>=0?'color:#16a34a':'color:#ef4444'}">${brl(marVal)}</td>
+      <td class="r mono">${brl(ticket)}</td>
+      <td class="r" style="min-width:90px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:4px;background:#e2e8f0;border-radius:2px">
+            <div style="height:4px;border-radius:2px;background:#3b82f6;width:${Math.min(partPct,100).toFixed(1)}%"></div>
+          </div>
+          <span class="mono" style="font-size:11px;min-width:38px">${partPct.toFixed(2)}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="11" class="empty">Nenhum produto encontrado</td></tr>`;
+
+  // Rodapé total
+  const cmvTotalPct = totalFat>0?(totalCusto/totalFat*100):0;
+  const marTotalPct = totalFat>0?((totalFat-totalCusto)/totalFat*100):0;
+  document.getElementById('cmv-foot').innerHTML = `<tr style="background:#f8fafc;font-weight:700;font-size:12px">
+    <td colspan="3" style="padding:10px 14px">TOTAL GERAL</td>
+    <td class="r mono" style="padding:10px 14px">${Math.round(totalQtd).toLocaleString('pt-BR')}</td>
+    <td class="r mono" style="padding:10px 14px">${brl(totalFat)}</td>
+    <td class="r mono" style="padding:10px 14px">${brl(totalCusto)}</td>
+    <td class="r mono" style="padding:10px 14px;color:${cmvTotalPct<=30?'#16a34a':cmvTotalPct<=40?'#f97316':'#ef4444'}">${cmvTotalPct.toFixed(2)}%</td>
+    <td class="r mono" style="padding:10px 14px;color:${marTotalPct>=60?'#16a34a':marTotalPct>=50?'#f97316':'#ef4444'}">${marTotalPct.toFixed(2)}%</td>
+    <td class="r mono" style="padding:10px 14px">${brl(totalFat-totalCusto)}</td>
+    <td class="r mono" style="padding:10px 14px">${brl(totalFat/totalPeds)}</td>
+    <td style="padding:10px 14px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:4px;background:#e2e8f0;border-radius:2px">
+          <div style="height:4px;border-radius:2px;background:#3b82f6;width:100%"></div>
+        </div>
+        <span class="mono" style="font-size:11px">100%</span>
+      </div>
+    </td>
+  </tr>`;
+
+  // Paginação
+  const btns = document.getElementById('cmv-pag-btns');
+  if (!btns) return;
+  let html=`<button class="pag-btn" ${_cmvPagAtual===1?'disabled':''} onclick="_cmvPagAtual--;renderPagCmv()">‹</button>`;
+  for(let p=1;p<=totalPags;p++){
+    if(totalPags>7&&p>2&&p<totalPags-1&&Math.abs(p-_cmvPagAtual)>1){
+      if(p===3||p===totalPags-2) html+=`<span style="padding:0 4px;color:var(--text3)">…</span>`;
+      continue;
+    }
+    html+=`<button class="pag-btn ${p===_cmvPagAtual?'active':''}" onclick="_cmvPagAtual=${p};renderPagCmv()">${p}</button>`;
+  }
+  html+=`<button class="pag-btn" ${_cmvPagAtual===totalPags?'disabled':''} onclick="_cmvPagAtual++;renderPagCmv()">›</button>`;
+  btns.innerHTML=html;
+}
+
+function exportCmvCSV() {
+  if (!_cmvData.length) { toast('Sem dados para exportar','err'); return; }
+  const h='Produto,Categoria,Qtd Vendida,Faturamento,Custo,CMV%,Margem%,Margem R$';
+  const rows=_cmvData.map(p=>{
+    const cmv=p.fat>0?(p.custo/p.fat*100):0;
+    const mar=p.fat>0?((p.fat-p.custo)/p.fat*100):0;
+    return `"${p.nome}","${p.cat}",${p.qtd},${p.fat},${p.custo},${cmv.toFixed(2)},${mar.toFixed(2)},${p.fat-p.custo}`;
+  });
+  const blob=new Blob([h+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='cmv_produtos.csv';a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ── ABC HELPERS ────────────────────────────────────────────────────
 let _abcData = [], _abcPagAtual = 1, _chartAbc = null, _chartAbcDonut = null;
 
@@ -1994,21 +2186,24 @@ async function renderRelatorios() {
     // TABELA
     renderPagAbc();
 
-    // CMV POR PRODUTO
-    document.getElementById('cmv-body').innerHTML = prods.map(p=>{
-      const margem=p.fat-p.custo;
-      const cmvPct=p.fat>0?(p.custo/p.fat*100):null;
-      const cor=cmvPct===null?'':cmvPct<=30?'color:#16a34a':cmvPct<=38?'color:var(--amber)':'color:var(--red)';
-      return `<tr>
-        <td style="font-weight:500">${esc(p.nome)}</td>
-        <td style="color:var(--text3)">${esc(p.cat)}</td>
-        <td class="r mono">${p.qtd.toFixed(0)}</td>
-        <td class="r mono">${brl(p.fat)}</td>
-        <td class="r mono">${p.custo>0?brl(p.custo):'—'}</td>
-        <td class="r mono" style="${cor}">${cmvPct!==null?cmvPct.toFixed(1)+'%':'—'}</td>
-        <td class="r mono" style="${margem>=0?'color:#16a34a':'color:var(--red)'}">${brl(margem)}</td>
-      </tr>`;
-    }).join('');
+    // CMV POR PRODUTO — popular dados e KPIs
+    _cmvData = prods;
+    const totalFatCmv = prods.reduce((s,p)=>s+p.fat,0);
+    const totalCustoCmv = prods.reduce((s,p)=>s+p.custo,0);
+    const totalPedCmv = _dbFats.filter(f=>f.data>=de&&f.data<=ate).length||1;
+    document.getElementById('cmv-kpi-fat').textContent    = brl(totalFatCmv);
+    document.getElementById('cmv-kpi-custo').textContent  = brl(totalCustoCmv);
+    document.getElementById('cmv-kpi-custo-pct').textContent = totalFatCmv>0?(totalCustoCmv/totalFatCmv*100).toFixed(2)+'% do faturamento':'—';
+    document.getElementById('cmv-kpi-margem').textContent = brl(totalFatCmv-totalCustoCmv);
+    document.getElementById('cmv-kpi-margem-pct').textContent = totalFatCmv>0?((1-totalCustoCmv/totalFatCmv)*100).toFixed(2)+'% do faturamento':'—';
+    document.getElementById('cmv-kpi-ticket').textContent = brl(totalFatCmv/totalPedCmv);
+    document.getElementById('cmv-kpi-prods').textContent  = prods.length;
+    // Popular select de categorias
+    const cats = [...new Set(prods.map(p=>p.cat).filter(Boolean))].sort();
+    const selCat = document.getElementById('cmv-filtro-cat');
+    if (selCat) { selCat.innerHTML='<option value="">Categoria: Todas</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join(''); }
+    _cmvPagAtual=1;
+    renderPagCmv();
 
     // ENGENHARIA DE CARDÁPIO
     const estrela=[],vaca=[],puzzle=[],abacaxi=[];
