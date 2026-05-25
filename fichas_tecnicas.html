@@ -217,6 +217,9 @@
       <div style="font-size:12px;color:#94a3b8;margin-top:3px">Cadastre e gerencie as fichas técnicas de produção.</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
+      <select id="sel-loja" onchange="filtrar()" style="font-size:13px;padding:6px 12px;min-width:160px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;cursor:pointer;outline:none;font-family:inherit"><option value="">Todas as lojas</option></select>
+      <span id="ft-atualizado" style="font-size:12px;color:#94a3b8;white-space:nowrap"></span>
+      <button onclick="carregar()" title="Atualizar" style="background:none;border:none;cursor:pointer;padding:4px;color:#94a3b8;display:inline-flex;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg></button>
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <button onclick="sair()" style="font-size:12px;color:#dc2626;background:#fff;border:1px solid #fca5a5;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
@@ -230,73 +233,68 @@
 
     <!-- 6 KPI CARDS -->
     <div class="kpi-6">
-      <div class="kpi-card">
-        <div class="kpi-label">Total de Fichas</div>
-        <div class="kpi-val" style="color:#2563eb" id="m-total">—</div>
-        <div class="kpi-sub">cadastradas</div>
-        <div class="kpi-cmp neutral" id="m-total-cmp"><span>—</span></div>
+      <div class="kpi-card" style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:36px;height:36px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div><div class="kpi-label">Total de Fichas</div><div class="kpi-val" style="color:#2563eb" id="m-total">—</div><div class="kpi-sub">cadastradas</div></div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Fichas Ativas</div>
-        <div class="kpi-val" style="color:#16a34a" id="m-ativas">—</div>
-        <div class="kpi-sub">em uso</div>
-        <div class="kpi-cmp neutral" id="m-ativas-sub"><span>—</span></div>
+      <div class="kpi-card" style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div><div class="kpi-label">Fichas Ativas</div><div class="kpi-val" style="color:#16a34a" id="m-ativas">—</div><div class="kpi-sub">em uso</div><div class="kpi-cmp neutral" id="m-ativas-sub" style="font-size:11px;color:#94a3b8;margin-top:2px">—</div></div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">CMV Médio</div>
-        <div class="kpi-val" style="color:#f97316" id="m-cmv">—</div>
-        <div class="kpi-sub">do cardápio</div>
-        <div class="kpi-cmp neutral"><span>meta: até 30%</span></div>
+      <div class="kpi-card" style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:36px;height:36px;border-radius:8px;background:#fff7ed;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div><div class="kpi-label">CMV Médio</div><div class="kpi-val" style="color:#f97316" id="m-cmv">—</div><div class="kpi-sub">do cardápio</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">meta: até 30%</div></div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Fichas Críticas</div>
-        <div class="kpi-val" style="color:#e11d48" id="m-criticas">—</div>
-        <div class="kpi-sub">CMV acima da meta</div>
-        <div class="kpi-cmp neutral"><span>meta: até 30%</span></div>
+      <div class="kpi-card" style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:36px;height:36px;border-radius:8px;background:#fff7ed;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div><div class="kpi-label">Fichas Críticas</div><div class="kpi-val" style="color:#e11d48" id="m-criticas">—</div><div class="kpi-sub">CMV acima da meta</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">meta: até 30%</div></div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Margem Média</div>
-        <div class="kpi-val" style="color:#16a34a" id="m-margem">—</div>
-        <div class="kpi-sub">do cardápio</div>
-        <div class="kpi-cmp neutral" id="m-margem-sub"><span>—</span></div>
+      <div class="kpi-card" style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:36px;height:36px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <div><div class="kpi-label">Margem Média</div><div class="kpi-val" style="color:#1d4ed8" id="m-margem">—</div><div class="kpi-sub">do cardápio</div></div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Custo Médio</div>
-        <div class="kpi-val" style="font-size:18px" id="m-custo">—</div>
-        <div class="kpi-sub">por ficha</div>
+      <div class="kpi-card" style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:36px;height:36px;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8"/></svg></div>
+        <div><div class="kpi-label">Custo Médio</div><div class="kpi-val" style="font-size:18px;color:#0f172a" id="m-custo">—</div><div class="kpi-sub">por ficha</div></div>
       </div>
     </div>
 
     <!-- TOOLBAR -->
-    <div class="toolbar">
-      <div class="search-wrap">
-        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="filtro-busca" placeholder="Buscar ficha..." oninput="filtrar()">
+    <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="position:relative">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="filtro-busca" placeholder="Buscar ficha..." oninput="filtrar()" style="padding:8px 12px 8px 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;width:220px">
       </div>
-      <select class="field-sm" id="filtro-cat" onchange="filtrar()" style="min-width:160px">
-        <option value="">Todas categorias</option>
-      </select>
-      <select class="field-sm" id="filtro-status" onchange="filtrar()" style="min-width:130px">
-        <option value="">Todos status</option>
-        <option value="ativa">Ativa</option>
-        <option value="rascunho">Rascunho</option>
-        <option value="arquivada">Arquivada</option>
-      </select>
-      <button class="btn btn-blue" onclick="carregar()" style="margin-left:auto">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg>
-        Atualizar custos
-      </button>
-    </div>
-
-    <!-- CATEGORY CHIPS -->
-    <div class="chips-row">
-      <div class="chips-left" id="cat-chips">
-        <button class="cat-chip-all active" onclick="setCatChip('',this)">Todas</button>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Categoria</div>
+        <select id="filtro-cat" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:150px;cursor:pointer"><option value="">Selecione</option></select>
       </div>
-      <button class="mais-filtros">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Status</div>
+        <select id="filtro-status" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:120px;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="ativa">Ativa</option>
+          <option value="rascunho">Rascunho</option>
+          <option value="arquivada">Arquivada</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">CMV</div>
+        <select id="filtro-cmv" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:120px;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="ok">OK (≤30%)</option>
+          <option value="alerta">Alerta (≤38%)</option>
+          <option value="critico">Crítico (&gt;38%)</option>
+        </select>
+      </div>
+      <button style="padding:7px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;align-self:flex-end">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
         Mais filtros
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <button class="btn btn-blue" onclick="abrirModalNova()" style="margin-left:auto;align-self:flex-end;padding:7px 18px;background:#2563eb;border-color:#2563eb;border-radius:8px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova ficha
       </button>
     </div>
 
@@ -310,18 +308,16 @@
                 <th style="width:28px"></th>
                 <th>Nome da Ficha</th>
                 <th>Categoria</th>
-                <th class="r">Rendimento</th>
+                <th>Rendimento</th>
                 <th class="r">Custo</th>
                 <th class="r">Preço Venda</th>
                 <th class="r">CMV%</th>
-                <th class="r">Markup</th>
-                <th class="r">Margem (R$)</th>
                 <th class="r">Margem%</th>
-                <th class="r">Status</th>
-                <th class="r">Ações</th>
+                <th>Status</th>
+                <th>Ações</th>
               </tr></thead>
               <tbody id="fichas-tbody">
-                <tr><td colspan="12" class="empty">Carregando...</td></tr>
+                <tr><td colspan="10" class="empty">Carregando...</td></tr>
               </tbody>
             </table>
           </div>
@@ -346,25 +342,24 @@
           <button class="btn-ghost" onclick="fecharDetalhe()" style="border-radius:6px;padding:4px 8px;font-size:16px">✕</button>
         </div>
         <div class="dp-tabs">
-          <button class="dp-tab active" onclick="switchDpTab('resumo',this)">Resumo</button>
-          <button class="dp-tab" onclick="switchDpTab('ingredientes',this)">Ingredientes</button>
+          <button class="dp-tab active" onclick="switchDpTab('resumo',this)">Visão geral</button>
+          <button class="dp-tab" id="dp-tab-ing" onclick="switchDpTab('ingredientes',this)">Ingredientes</button>
+          <button class="dp-tab" onclick="switchDpTab('rendimento',this)">Rendimento</button>
+          <button class="dp-tab" onclick="switchDpTab('financeiro',this)">Preços e custos</button>
           <button class="dp-tab" onclick="switchDpTab('historico',this)">Histórico</button>
-          <button class="dp-tab" onclick="switchDpTab('anexos',this)">Anexos</button>
         </div>
         <div class="dp-body" id="dp-body"></div>
         <div class="dp-ftr">
-          <button class="btn" onclick="duplicarFicha()" style="flex:1;justify-content:center">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Duplicar ficha
-          </button>
           <button class="btn btn-act primary" onclick="editarDpFicha()" style="flex:1.4;justify-content:center">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Editar ficha
           </button>
+          <button class="btn" onclick="fecharDetalhe()" style="flex:1;justify-content:center">Fechar</button>
         </div>
       </div>
 
     </div>
+  <div style="padding:16px 0 4px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;margin-top:16px">© 2026 Aiko Sistema</div>
   </div>
 </div>
 </div>
@@ -488,6 +483,8 @@ async function carregar(){
     renderCatChips();
     atualizarMetricas();
     filtrar();
+    const atu=document.getElementById('ft-atualizado');
+    if(atu)atu.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     if(cs){cs.textContent='• conectado';cs.style.color='#16a34a';}
   }catch(e){
     if(cs){cs.textContent='• erro';cs.style.color='#e11d48';}
@@ -549,11 +546,19 @@ function filtrar(){
   const busca=document.getElementById('filtro-busca').value.toLowerCase();
   const cat=document.getElementById('filtro-cat').value;
   const status=document.getElementById('filtro-status').value;
+  const cmvFiltro=(document.getElementById('filtro-cmv')||{value:''}).value;
   fichasFilt=todasFichas.filter(f=>{
     if(busca&&!f.nome.toLowerCase().includes(busca))return false;
     if(cat&&f.categoria!==cat)return false;
     if(catChipAtiva&&f.categoria!==catChipAtiva)return false;
     if(status&&f.status!==status)return false;
+    if(cmvFiltro){
+      const custo=custoFicha(f);const pv=f.preco_venda||0;
+      const cmv=(custo>0&&pv>0)?(custo/pv*100):null;
+      if(cmvFiltro==='ok'&&(cmv===null||cmv>30))return false;
+      if(cmvFiltro==='alerta'&&(cmv===null||cmv<=30||cmv>38))return false;
+      if(cmvFiltro==='critico'&&(cmv===null||cmv<=38))return false;
+    }
     return true;
   });
   _pagAtual=1;
@@ -588,21 +593,22 @@ function renderPagina(){
 
 function renderTabela(lista){
   const tbody=document.getElementById('fichas-tbody');
-  if(!lista.length){tbody.innerHTML='<tr><td colspan="12" class="empty">Nenhuma ficha encontrada</td></tr>';return;}
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="10" class="empty">Nenhuma ficha encontrada</td></tr>';return;}
   tbody.innerHTML=lista.map(f=>{
     const custo=custoFicha(f);
     const pv=f.preco_venda||0;
     const cmv=(custo>0&&pv>0)?(custo/pv*100):null;
-    const markup=(custo>0&&pv>0)?(pv/custo):null;
-    const margem=(pv>0&&custo>0)?(pv-custo):null;
     const margemPct=(pv>0&&custo>0)?((pv-custo)/pv*100):null;
-    const cmvClass=cmv===null?'':cmv<=30?'cmv-ok':cmv<=38?'cmv-warn':'cmv-bad';
-    // Status
-    let stBadge,stCls;
-    if(!pv){stBadge='Sem preço';stCls='b-sempreco';}
-    else if(cmv>38){stBadge='Crítica';stCls='b-critica';}
-    else if(cmv>30){stBadge='Atenção';stCls='b-atencao';}
-    else{stBadge='Ativa';stCls='b-ativa';}
+    const cmvColor=cmv===null?'#64748b':cmv<=30?'#16a34a':cmv<=38?'#f59e0b':'#e11d48';
+    const margemColor=margemPct!==null&&margemPct>0?'#16a34a':'#e11d48';
+    // Status badge
+    let stBadge,stBg,stColor;
+    if(f.status==='rascunho'){stBadge='Rascunho';stBg='#f1f5f9';stColor='#64748b';}
+    else if(f.status==='arquivada'){stBadge='Arquivada';stBg='#f1f5f9';stColor='#94a3b8';}
+    else if(!pv){stBadge='Sem preço';stBg='#f1f5f9';stColor='#64748b';}
+    else if(cmv>38){stBadge='Crítica';stBg='#fee2e2';stColor='#e11d48';}
+    else if(cmv>30){stBadge='Atenção';stBg='#fef3c7';stColor='#f59e0b';}
+    else{stBadge='Ativa';stBg='#dcfce7';stColor='#16a34a';}
     const rend=f.rendimento_porcoes;
     const rendStr=rend===1?'1 un':`${rend} un`;
     const isSel=fichaDetalhe?.id===f.id?' selected':'';
@@ -610,16 +616,14 @@ function renderTabela(lista){
       <td><button class="star-btn" onclick="event.stopPropagation()">☆</button></td>
       <td style="font-weight:600">${esc(f.nome)}</td>
       <td><span class="tbl-cat">${esc(f.categoria||'—')}</span></td>
-      <td class="r" style="color:#64748b;font-size:12px">${rendStr}</td>
+      <td style="color:#64748b;font-size:12px">${rendStr}</td>
       <td class="r mono">${custo>0?fmt(custo):'—'}</td>
       <td class="r mono">${pv>0?fmt(pv):'—'}</td>
-      <td class="r"><span class="${cmvClass}">${cmv!==null?cmv.toFixed(1)+'%':'—'}</span></td>
-      <td class="r mono">${markup!==null?markup.toFixed(2)+'x':'—'}</td>
-      <td class="r mono">${margem!==null?fmt(margem):'—'}</td>
-      <td class="r"><span class="${cmvClass}">${margemPct!==null?margemPct.toFixed(1)+'%':'—'}</span></td>
-      <td class="r"><span class="badge ${stCls}">${stBadge}</span></td>
-      <td class="r">
-        <div class="tbl-actions" style="justify-content:flex-end">
+      <td class="r"><span style="font-weight:600;color:${cmvColor}">${cmv!==null?cmv.toFixed(1)+'%':'—'}</span></td>
+      <td class="r"><span style="font-weight:600;color:${margemColor}">${margemPct!==null?margemPct.toFixed(1)+'%':'—'}</span></td>
+      <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${stBg};color:${stColor}">${stBadge}</span></td>
+      <td>
+        <div class="tbl-actions">
           <button class="btn-act" onclick="event.stopPropagation();editarFicha('${f.id}')">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Editar
@@ -919,6 +923,17 @@ async function salvarFicha(){
   finally{btn.disabled=false;btn.textContent='Salvar ficha';}
 }
 
+async function carregarLojas(){
+  try{
+    const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    const sel=document.getElementById('sel-loja');
+    if(sel) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sel.appendChild(o);});
+  }catch{}
+}
+
+function abrirModalNova(){ abrirModalNovo(); }
+
+carregarLojas();
 carregar();
 </script>
 
