@@ -175,6 +175,9 @@
       <div style="font-size:12px;color:#94a3b8;margin-top:3px">Gerencie os insumos e matérias-primas do sistema.</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
+      <select id="sel-loja" onchange="filtrar()" style="font-size:13px;padding:6px 12px;min-width:160px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;cursor:pointer;outline:none;font-family:inherit"><option value="">Todas as lojas</option></select>
+      <span id="ins-atualizado" style="font-size:12px;color:#94a3b8;white-space:nowrap"></span>
+      <button onclick="carregarInsumos()" title="Atualizar" style="background:none;border:none;cursor:pointer;padding:4px;color:#94a3b8;display:inline-flex;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg></button>
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <button onclick="sair()" style="font-size:12px;color:#dc2626;background:#fff;border:1px solid #fca5a5;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
@@ -187,23 +190,42 @@
   <div class="content">
 
     <!-- TOOLBAR -->
-    <div class="toolbar">
-      <div class="search-wrap">
-        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="busca" placeholder="Buscar insumo..." oninput="filtrar()">
+    <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="position:relative">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="busca" placeholder="Buscar insumo..." oninput="filtrar()" style="padding:8px 12px 8px 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;width:220px">
       </div>
-      <div class="chips" id="chips">
-        <button class="chip active" onclick="setFiltroStatus('todos')">Todos</button>
-        <button class="chip" onclick="setFiltroStatus('ativo')">Em estoque</button>
-        <button class="chip" onclick="setFiltroStatus('critico')">Críticos</button>
-        <button class="chip" onclick="setFiltroStatus('sem')">Sem estoque</button>
-        <button class="chip" onclick="setFiltroStatus('atencao')">Estoque baixo</button>
-        <button class="chip chip-more">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
-          Mais filtros
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Categoria</div>
+        <select id="fil-cat" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:150px;cursor:pointer"><option value="">Selecione</option></select>
       </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Status</div>
+        <select id="fil-status" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="ativo">Ativo</option>
+          <option value="atencao">Estoque baixo</option>
+          <option value="critico">Crítico</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Estoque</div>
+        <select id="fil-estoque" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="em">Em estoque</option>
+          <option value="baixo">Estoque baixo</option>
+          <option value="sem">Sem estoque</option>
+        </select>
+      </div>
+      <button style="padding:7px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;align-self:flex-end">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Mais filtros
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <button class="btn btn-primary" onclick="abrirModalNovo()" style="margin-left:auto;align-self:flex-end;padding:7px 18px;background:#1d4ed8;border-color:#1d4ed8;border-radius:8px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo insumo
+      </button>
     </div>
 
     <!-- BODY: TABELA + PAINEL LATERAL -->
@@ -275,6 +297,7 @@
 
     </div>
   </div>
+  <div style="padding:16px 0 4px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;margin-top:16px">© 2026 Aiko Sistema</div>
 </div>
 </div>
 
@@ -397,13 +420,16 @@ function setFiltroStatus(f){
 
 function filtrar(){
   const q=(document.getElementById('busca')?.value||'').toLowerCase();
+  const filCat=document.getElementById('fil-cat')?.value||'';
+  const filStatus=document.getElementById('fil-status')?.value||'';
+  const filEstoque=document.getElementById('fil-estoque')?.value||'';
   let lista=todos;
   if(q) lista=lista.filter(i=>i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q));
-  if(filtroStatus==='ativo') lista=lista.filter(i=>getStatus(i)==='ativo');
-  else if(filtroStatus==='critico') lista=lista.filter(i=>getStatus(i)==='critico');
-  else if(filtroStatus==='atencao') lista=lista.filter(i=>getStatus(i)==='atencao');
-  else if(filtroStatus==='sem') lista=lista.filter(i=>(parseFloat(i.rendimento_pct||100))<40);
-  if(_insStatusFiltro) lista=lista.filter(i=>getStatus(i)===_insStatusFiltro);
+  if(filCat) lista=lista.filter(i=>(i.categoria||'')===filCat);
+  if(filStatus) lista=lista.filter(i=>getStatus(i)===filStatus);
+  if(filEstoque==='em') lista=lista.filter(i=>getStatus(i)==='ativo');
+  else if(filEstoque==='baixo') lista=lista.filter(i=>getStatus(i)==='atencao');
+  else if(filEstoque==='sem') lista=lista.filter(i=>getStatus(i)==='critico');
   _filtrado=lista;
   _pagAtual=1;
   renderPagina();
@@ -436,13 +462,30 @@ function renderPagina(){
   renderTabela(page);
 }
 
+function _catBadge(cat){
+  const c=(cat||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const map={
+    'hortifruti':{bg:'#fef9c3',color:'#a16207'},
+    'mercearia':{bg:'#dbeafe',color:'#1d4ed8'},
+    'proteinas':{bg:'#dcfce7',color:'#15803d'},
+    'laticinios':{bg:'#f3e8ff',color:'#7e22ce'},
+    'estivas':{bg:'#d1fae5',color:'#065f46'},
+    'bebidas':{bg:'#e0f2fe',color:'#0369a1'},
+    'descartaveis':{bg:'#fce7f3',color:'#9d174d'},
+    'frios':{bg:'#e0f2fe',color:'#0284c7'},
+    'condimentos':{bg:'#fef3c7',color:'#b45309'},
+  };
+  const s=map[c]||{bg:'#f1f5f9',color:'#475569'};
+  return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color}">${esc(cat||'—')}</span>`;
+}
+
 function renderTabela(lista){
   const tbody=document.getElementById('tbody');
   if(!lista.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhum insumo encontrado</td></tr>';return;}
   const statusCfg={
-    ativo:{cls:'b-ativo',txt:'Ativo'},
-    atencao:{cls:'b-atencao',txt:'Atenção'},
-    critico:{cls:'b-critico',txt:'Crítico'},
+    ativo:{bg:'#dcfce7',color:'#16a34a',txt:'Ativo'},
+    atencao:{bg:'#ffedd5',color:'#ea580c',txt:'Estoque baixo'},
+    critico:{bg:'#fee2e2',color:'#dc2626',txt:'Crítico'},
   };
   tbody.innerHTML=lista.map(i=>{
     const rend=parseFloat(i.rendimento_pct||100);
@@ -451,14 +494,14 @@ function renderTabela(lista){
     const sc=statusCfg[st];
     const sel=insDetalhe?.id===i.id?' selected':'';
     return `<tr onclick="abrirDetalhe('${i.id}')" class="${sel}">
-      <td style="font-weight:600">${esc(i.nome)}</td>
-      <td><span class="badge b-cat">${esc(i.categoria||'—')}</span></td>
+      <td style="font-weight:600;color:#0f172a">${esc(i.nome)}</td>
+      <td>${_catBadge(i.categoria)}</td>
       <td style="color:#64748b">${esc(i.unidade_compra||i.unidade_medida||'—')}</td>
-      <td class="r td-mono">${brl(i.preco_compra)}</td>
-      <td class="r td-mono" style="font-weight:600">${brl(custo)}</td>
-      <td><span class="badge ${sc.cls}">${sc.txt}</span></td>
+      <td class="r td-mono" style="color:#334155">${brl(i.preco_compra)}</td>
+      <td class="r td-mono" style="color:#334155">${brl(custo)}</td>
+      <td><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.txt}</span></td>
       <td>
-        <button class="btn-ghost" onclick="event.stopPropagation();menuAcoes('${i.id}')" style="border-radius:6px;padding:4px 8px;font-size:16px;font-weight:700;letter-spacing:2px">···</button>
+        <button class="btn-ghost" onclick="event.stopPropagation();menuAcoes('${i.id}')" style="border-radius:6px;padding:4px 8px;font-size:18px;line-height:1;color:#94a3b8">⋮</button>
       </td>
     </tr>`;
   }).join('');
@@ -593,12 +636,29 @@ async function deletar(id,nome){
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
+async function carregarLojas(){
+  try{
+    const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    const sel=document.getElementById('sel-loja');
+    if(sel) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sel.appendChild(o);});
+  }catch{}
+}
+
 async function carregarInsumos(){
   const tbody=document.getElementById('tbody');
   if(tbody) tbody.innerHTML='<tr><td colspan="7" class="empty">Carregando...</td></tr>';
   try{
     const data=await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
-    todos=data;
+    todos=data.filter(i=>i.ativo!==false);
+    // popular categorias no filtro
+    const selCat=document.getElementById('fil-cat');
+    if(selCat){
+      const cats=[...new Set(todos.map(i=>i.categoria).filter(Boolean))].sort();
+      selCat.innerHTML='<option value="">Selecione</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    }
+    // timestamp
+    const atu=document.getElementById('ins-atualizado');
+    if(atu)atu.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     const cs=document.getElementById('conn-status');
     if(cs){cs.textContent='• conectado';cs.style.color='#16a34a';}
     atualizarMetricas();
@@ -612,7 +672,7 @@ async function carregarInsumos(){
 
 document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
 
-(async()=>{await carregarOpcoes();await carregarInsumos();})();
+(async()=>{await carregarLojas();await carregarOpcoes();await carregarInsumos();})();
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
