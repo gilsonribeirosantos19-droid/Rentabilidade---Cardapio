@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -6,22 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMV Teórico x Real · Aiko</title>
 <style>
-  :root{
-    --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
-    --border2:#e2e8f0;
-    --teal:#0d9488;--teal2:#0f766e;--teal-dim:rgba(13,148,136,.12);
-    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#16a34a;
-    --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
-    --radius:10px;--radius-lg:16px;
-  }
+  :root{--bg:#f8fafc;--bg2:#fff;--bg3:#f1f5f9;--border:#e2e8f0;--teal:#0d9488;--amber:#f59e0b;--red:#dc2626;--green:#16a34a;--text:#0f172a;--text2:#64748b;--text3:#94a3b8;--radius:10px;--radius-lg:16px;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
   .shell{display:flex;width:100%;min-height:100vh}
-
-  .sidebar{width:220px;min-height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;
-    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
+  /* SIDEBAR */
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e2e8f0;padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
   .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
-  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .logo-mark{font-size:16px;font-weight:800;color:#0f172a}
   .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
   .nav-group{padding:8px 10px;margin:0 8px 12px;background:#f8fafc;border-radius:10px;box-shadow:0 4px 12px rgba(15,45,92,.15)}
   .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
@@ -29,92 +21,97 @@
   .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
   .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
   .nav-icon{width:15px;height:15px;flex-shrink:0;stroke-width:1.8}
-  .nav-user{padding:12px 18px;border-top:1px solid #1e293b;margin-top:auto}
-  .nav-user-nome{font-size:12px;font-weight:600;color:#f1f5f9}
-  .nav-user-perfil{font-size:11px;color:#64748b;text-transform:capitalize}
-  .nav-user-sair{font-size:11px;color:var(--red);cursor:pointer;margin-top:4px;display:inline-block}
-
+  .nav-bottom{margin-top:auto;padding:16px 18px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8}
+  .nav-bottom a{color:#f97316;text-decoration:none}
+  .nav-sub-arrow{margin-left:auto;font-size:11px;color:#94a3b8}
+  /* MAIN */
   .main{flex:1;display:flex;flex-direction:column;min-width:0}
-  .topbar{height:40px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
-    padding:0 24px;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
-  .topbar-title{font-size:15px;font-weight:600;flex:1}
-  .content{padding:24px;flex:1}
-
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
-    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
-  .btn-primary{background:#f97316;color:#fff}.btn-primary:hover{background:#ea6c00}
-  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
-  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
-  .btn-sm{padding:5px 12px;font-size:12px}
-
-  .toolbar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
-  .field{background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
-    padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
-  .field:focus{border-color:var(--teal)}
-
+  .topbar{border-bottom:1px solid #e2e8f0;padding:10px 24px;display:flex;align-items:flex-start;justify-content:space-between;background:#fff;position:sticky;top:0;z-index:60}
+  .topbar-left{}
+  .topbar-title{font-size:18px;font-weight:700;color:#0f172a;line-height:1}
+  .topbar-sub{font-size:12px;color:#94a3b8;margin-top:3px}
+  .topbar-right{display:flex;align-items:center;gap:10px;padding-top:4px}
+  .content{padding:20px 24px;flex:1;overflow-y:auto}
+  /* FILTER ROW */
+  .filter-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap}
+  .field{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;transition:border-color .15s}
+  .field:focus{border-color:#0d9488}
+  .field-date{width:130px}
+  .toggle-wrap{display:flex;align-items:center;gap:8px;padding:0 8px}
+  .toggle{position:relative;width:40px;height:22px;cursor:pointer}
+  .toggle input{opacity:0;width:0;height:0}
+  .toggle-slider{position:absolute;inset:0;background:#cbd5e1;border-radius:11px;transition:.3s}
+  .toggle-slider:before{position:absolute;content:'';height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+  .toggle input:checked + .toggle-slider{background:#22c55e}
+  .toggle input:checked + .toggle-slider:before{transform:translateX(18px)}
+  .toggle-label{font-size:13px;font-weight:500;color:#0f172a;white-space:nowrap}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+  .btn:hover{background:#f8fafc}
+  .btn-primary{background:#f97316;border-color:#f97316;color:#fff;padding:9px 22px}
+  .btn-primary:hover{background:#ea6c00}
+  .btn-ghost{background:transparent;border:1px solid #e2e8f0;color:#64748b}
+  .btn-ghost:hover{border-color:#64748b;color:#0f172a}
+  .sep{color:#e2e8f0;font-size:18px}
   /* KPI CARDS */
-  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-bottom:28px}
-  .kpi{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px 22px}
-  .kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-  .kpi-value{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
-  .kpi-sub{font-size:12px;color:var(--text3);margin-top:5px}
-  .kpi-ok .kpi-value{color:var(--green)}
-  .kpi-warn .kpi-value{color:var(--amber)}
-  .kpi-danger .kpi-value{color:var(--red)}
-  .kpi-blue .kpi-value{color:var(--blue)}
-
-  /* SEÇÕES */
-  .section{margin-bottom:28px}
-  .section-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-  .section-title span{font-size:12px;font-weight:400;color:var(--text3)}
-
-  /* TABELA */
-  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden}
+  .kpi-6{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+  .kpi{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .kpi-label{font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+  .kpi-val{font-size:20px;font-weight:800;font-family:'DM Mono',monospace;line-height:1;color:#0f172a}
+  .kpi-sub{font-size:11px;color:#94a3b8;margin-top:3px}
+  /* ALERT BANNER */
+  .alert-banner{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .alert-banner-txt{flex:1;font-size:13px;font-weight:600;color:#c2410c}
+  .alert-banner-sub{font-size:12px;font-weight:400;color:#9a3412;margin-top:2px}
+  /* TABLE */
+  .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:16px}
   .tbl-scroll{overflow-x:auto}
-  .tbl{width:100%;border-collapse:collapse;font-size:13px}
-  .tbl thead tr{background:#0f2d5c;border-bottom:none}
-  .tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-  .tbl th.r,.tbl td.r{text-align:right}
-  .tbl td{padding:10px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
-  .tbl tbody tr:last-child td{border-bottom:none}
-  .tbl tbody tr:hover{background:var(--bg3)}
-  .tbl tfoot td{padding:10px 14px;font-weight:700;background:var(--bg3);border-top:2px solid var(--border2)}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  .thead-main tr:first-child{background:#0f2d5c}
+  .thead-main tr:first-child th{padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-right:1px solid rgba(255,255,255,.1)}
+  .thead-main tr:first-child th:last-child{border-right:none}
+  .thead-main tr:first-child th.center{text-align:center}
+  .thead-sub{background:#1e3a5f}
+  .thead-sub th{padding:7px 12px;font-size:10px;font-weight:600;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;text-align:right;border-right:1px solid rgba(255,255,255,.08)}
+  .thead-sub th:first-child,.thead-sub th.left{text-align:left}
+  .thead-sub th:last-child{border-right:none}
+  tbody td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fafbfc}
+  td.r{text-align:right}
+  td.c{text-align:center}
   .mono{font-family:'DM Mono',monospace}
-
-  /* CMV BADGE */
-  .cmv-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
-  .cmv-ok{background:#dcfce7;color:#16a34a}
-  .cmv-warn{background:#fef3c7;color:#b45309}
-  .cmv-danger{background:#fee2e2;color:#dc2626}
-
-  /* BARRA COMPARATIVA */
-  .bar-wrap{display:flex;gap:4px;align-items:center;height:8px;min-width:100px}
-  .bar-teo{height:8px;border-radius:4px;background:#3b82f6;min-width:2px}
-  .bar-real{height:8px;border-radius:4px;background:#dc2626;min-width:2px}
-
-  /* AVISO SEM DADOS */
-  .no-data{text-align:center;padding:48px;color:var(--text3);font-size:13px}
-  .no-data strong{display:block;font-size:15px;color:var(--text2);margin-bottom:8px}
-
-  .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--text1);color:#fff;
-    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;
-    opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
-  .toast.show{opacity:1;transform:translateY(0)}
-  .toast.err{background:var(--red)}
-  .toast.ok{background:var(--green)}
-  .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
-  .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
-  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:hidden}
+  /* STATUS DOT */
+  .status-dot{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;white-space:nowrap}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot-red{background:#e11d48}
+  .dot-amber{background:#f59e0b}
+  .dot-green{background:#22c55e}
+  /* DIFFERENCE COLORS */
+  .dif-pos{color:#e11d48;font-weight:600}
+  .dif-neg{color:#16a34a;font-weight:600}
+  .dif-neu{color:#64748b}
+  /* FOOTER ROW */
+  tfoot td{padding:10px 12px;background:#0f2d5c;font-size:12px;font-weight:700;color:#fff;border-bottom:none}
+  tfoot td.r{text-align:right}
+  /* BOTTOM SECTION */
+  .bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px}
+  .bottom-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px}
+  .bottom-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+  .legend-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b;margin-bottom:6px}
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:320px}
+  .toast.show{opacity:1;transform:translateY(0)}.toast.err{border-color:#e11d48;color:#e11d48}.toast.ok{border-color:#16a34a;color:#16a34a}
+  /* MISC */
+  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#fff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:auto}
   .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
-  .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
-  .cfg-flyout-item:last-child{border-bottom:none}
-  .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
+  .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;border-bottom:1px solid #f1f5f9}
+  .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488}
 </style>
 </head>
 <body>
 <div class="shell">
 
+<!-- SIDEBAR -->
 <nav class="sidebar">
   <div class="logo">
     <div class="logo-mark">Aiko</div>
@@ -140,86 +137,185 @@
     <div class="nav-label">Gestão</div>
     <a class="nav-item" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
     <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
-      <a class="nav-item" href="ajustes.html"><i data-lucide="sliders-horizontal" class="nav-icon"></i>Ajustes</a>
+    <a class="nav-item" href="ajustes.html"><i data-lucide="sliders-horizontal" class="nav-icon"></i>Ajustes</a>
     <div class="nav-sub-wrap" id="cfg-nav-trigger">
-    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
+      <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
     </div>
   </div>
+  <div class="nav-bottom">Precisa de ajuda?<br><a href="#">Acesse o suporte</a></div>
 </nav>
 
+<!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <span class="topbar-title">CMV Teórico x Real</span>
-    <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
-    <div id="topbar-user" style="display:flex;align-items:center;gap:10px">
+    <div class="topbar-left">
+      <div class="topbar-title">CMV Teórico x Real</div>
+      <div class="topbar-sub">Compare o consumo segundo a ficha técnica (teórico) com o consumo real do estoque.</div>
+    </div>
+    <div class="topbar-right">
+      <span id="conn-status" style="font-size:11px;font-weight:600;color:#16a34a">• calculado</span>
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
-      <span onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:12px;color:#dc2626;cursor:pointer;border:1px solid #fca5a5;padding:4px 12px;border-radius:20px;font-weight:600;white-space:nowrap">← Sair</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <button onclick="sair()" style="font-size:12px;color:#e11d48;background:#fff;border:1px solid #fca5a5;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
     </div>
   </div>
+
   <div class="content">
 
-    <!-- FILTROS -->
-    <div class="toolbar">
-      <input type="date" class="field" id="fil-de" style="font-size:13px">
-      <input type="date" class="field" id="fil-ate" style="font-size:13px">
-      <button class="btn btn-primary" onclick="calcular()">Calcular</button>
-      <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV</button>
+    <!-- FILTER ROW -->
+    <div class="filter-row">
+      <input type="date" id="fil-de" class="field field-date">
+      <span style="color:#94a3b8">—</span>
+      <input type="date" id="fil-ate" class="field field-date">
+      <select class="field" id="fil-loja" style="min-width:140px">
+        <option value="">Todas as lojas</option>
+      </select>
+      <select class="field" id="fil-grupo" style="min-width:140px">
+        <option value="">Todos os grupos</option>
+      </select>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="tog-div" checked onchange="renderTabela()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Apenas divergências</span>
+      </div>
+      <button class="btn btn-ghost" style="display:inline-flex;align-items:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filtros avançados
+      </button>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="calcular()">Calcular</button>
+        <button class="btn btn-ghost" onclick="exportCSV()" style="display:inline-flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV
+        </button>
+      </div>
     </div>
 
-    <!-- KPIs -->
-    <div class="kpi-grid" id="kpi-grid">
-      <div class="kpi"><div class="kpi-label">Faturamento</div><div class="kpi-value" id="k-fat">—</div><div class="kpi-sub">no período</div></div>
-      <div class="kpi kpi-blue"><div class="kpi-label">CMV Teórico</div><div class="kpi-value" id="k-teo">—</div><div class="kpi-sub" id="k-teo-pct">% do faturamento</div></div>
-      <div class="kpi"><div class="kpi-label">CMV Real</div><div class="kpi-value" id="k-real">—</div><div class="kpi-sub" id="k-real-pct">% do faturamento</div></div>
-      <div class="kpi"><div class="kpi-label">Diferença</div><div class="kpi-value" id="k-dif">—</div><div class="kpi-sub" id="k-dif-sub">teórico vs real</div></div>
-      <div class="kpi"><div class="kpi-label">Produtos vendidos</div><div class="kpi-value" id="k-prods">—</div><div class="kpi-sub">com ficha técnica</div></div>
+    <!-- 6 KPI CARDS -->
+    <div class="kpi-6">
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Faturamento
+        </div>
+        <div class="kpi-val" id="k-fat">R$ 0,00</div>
+        <div class="kpi-sub">no período</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          CMV Teórico
+        </div>
+        <div class="kpi-val" id="k-teo">R$ 0,00</div>
+        <div class="kpi-sub" id="k-teo-pct">0,0% do faturamento</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          CMV Real
+        </div>
+        <div class="kpi-val" id="k-real">R$ 0,00</div>
+        <div class="kpi-sub" id="k-real-pct">0,0% do faturamento</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Diferença
+        </div>
+        <div class="kpi-val" id="k-dif" style="color:#e11d48">+R$ 0,00</div>
+        <div class="kpi-sub" id="k-dif-sub">real acima do teórico</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          Divergência (%)
+        </div>
+        <div class="kpi-val" id="k-div-pct" style="color:#f97316">0,0%</div>
+        <div class="kpi-sub">acima do teórico</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Produtos com Divergência
+        </div>
+        <div class="kpi-val" id="k-prods-div" style="color:#f97316">0</div>
+        <div class="kpi-sub" id="k-prods-sub">de 0 insumos</div>
+      </div>
     </div>
 
-    <!-- TABELA POR PRODUTO -->
-    <div class="section" id="sec-produtos" style="display:none">
-      <div class="section-title">CMV por Produto <span>— baseado nas fichas técnicas × vendas</span></div>
-      <div class="tbl-wrap"><div class="tbl-scroll">
-        <table class="tbl">
-          <thead><tr>
-            <th>Produto</th>
-            <th class="r">Qtd vendida</th>
-            <th class="r">Receita</th>
-            <th class="r">Custo teórico</th>
-            <th class="r">CMV%</th>
-            <th>Status</th>
-          </tr></thead>
-          <tbody id="tbody-produtos"></tbody>
-          <tfoot id="tfoot-produtos"></tfoot>
+    <!-- ALERT BANNER -->
+    <div class="alert-banner" id="alert-banner" style="display:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div>
+        <div class="alert-banner-txt" id="alert-txt">—</div>
+        <div class="alert-banner-sub" id="alert-sub">—</div>
+      </div>
+      <button class="btn btn-ghost" style="margin-left:auto;font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px" onclick="document.getElementById('tog-div').checked=true;renderTabela()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Ver apenas divergências
+      </button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="tbl-card">
+      <div class="tbl-scroll">
+        <table>
+          <thead class="thead-main">
+            <tr>
+              <th rowspan="2" style="width:160px">Insumo</th>
+              <th rowspan="2" style="width:40px">UN.</th>
+              <th colspan="2" class="center" style="border-left:1px solid rgba(255,255,255,.15)">Consumo Teórico (Ficha)</th>
+              <th colspan="2" class="center" style="border-left:1px solid rgba(255,255,255,.15)">Consumo Real (Estoque)</th>
+              <th colspan="3" class="center" style="border-left:1px solid rgba(255,255,255,.15)">Diferença</th>
+              <th rowspan="2" style="border-left:1px solid rgba(255,255,255,.15);width:110px">Status</th>
+              <th rowspan="2" style="border-left:1px solid rgba(255,255,255,.15)">Possível Causa</th>
+              <th rowspan="2" class="center" style="border-left:1px solid rgba(255,255,255,.15)">Ações</th>
+            </tr>
+          </thead>
+          <thead class="thead-sub">
+            <tr>
+              <th style="border-left:1px solid rgba(255,255,255,.08)">Quantidade</th>
+              <th>Custo (R$)</th>
+              <th style="border-left:1px solid rgba(255,255,255,.08)">Quantidade</th>
+              <th>Custo (R$)</th>
+              <th style="border-left:1px solid rgba(255,255,255,.08)">Quantidade</th>
+              <th>%</th>
+              <th>Impacto (R$)</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-insumos">
+            <tr><td colspan="12" style="padding:32px;text-align:center;color:#94a3b8">Selecione o período e clique em <strong>Calcular</strong></td></tr>
+          </tbody>
+          <tfoot id="tfoot-insumos"></tfoot>
         </table>
-      </div></div>
+      </div>
     </div>
 
-    <!-- TABELA POR INSUMO -->
-    <div class="section" id="sec-insumos" style="display:none">
-      <div class="section-title">Consumo por Insumo <span>— teórico (fichas) vs real (estoque)</span></div>
-      <div class="tbl-wrap"><div class="tbl-scroll">
-        <table class="tbl">
-          <thead><tr>
-            <th>Insumo</th>
-            <th>Un.</th>
-            <th class="r">Consumo teórico</th>
-            <th class="r">Consumo real</th>
-            <th class="r">Diferença</th>
-            <th>Comparativo</th>
-          </tr></thead>
-          <tbody id="tbody-insumos"></tbody>
-        </table>
-      </div></div>
-    </div>
-
-    <!-- AVISO SEM DADOS -->
-    <div id="aviso-vazio" class="no-data">
-      <strong>Selecione o período e clique em Calcular</strong>
-      Os dados de CMV serão calculados com base nas vendas registradas no PDV e nas fichas técnicas cadastradas.
-      <br><br>
-      <span style="font-size:12px;color:var(--text3)">
-        Sem vendas no período? O CMV teórico será zero, mas o CMV real (compras − variação de estoque) será calculado normalmente.
-      </span>
+    <!-- BOTTOM INFO -->
+    <div class="bottom-grid">
+      <div class="bottom-card">
+        <div class="bottom-title">Entenda o status</div>
+        <div class="legend-row"><span class="dot dot-red"></span><span><strong>Crítico:</strong> divergência acima de 15%</span></div>
+        <div class="legend-row"><span class="dot dot-amber"></span><span><strong>Atenção:</strong> divergência entre 5% e 15%</span></div>
+        <div class="legend-row"><span class="dot dot-green"></span><span><strong>Dentro do padrão:</strong> divergência até 5%</span></div>
+      </div>
+      <div class="bottom-card" id="card-impacto">
+        <div class="bottom-title">Impacto financeiro total das divergências</div>
+        <div style="font-size:24px;font-weight:800;font-family:'DM Mono',monospace;color:#e11d48;margin-top:6px" id="impacto-val">+R$ 0,00</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:4px" id="impacto-sub">Real acima do teórico no período</div>
+      </div>
+      <div class="bottom-card" style="display:flex;gap:12px">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>
+          <div class="bottom-title" style="margin-bottom:6px">Dica</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.5">Clique em <strong>"Detalhes"</strong> para ver o histórico do insumo e possíveis causas do desvio.</div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -229,19 +325,21 @@
 <div id="toast" class="toast"></div>
 
 <script>
-(function(){if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u&&u.perfil==='gerente'){window.location.href='loja.html';}}catch{}})();
-(function(){try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u){document.getElementById('sb-user-nome').textContent=u.nome||'Usuário';document.getElementById('sb-user-perfil').textContent=u.perfil||'—';}}catch{}})();
+(function(){
+  if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}
+  try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u){const n=document.getElementById('sb-user-nome');if(n)n.textContent=u.nome||'—';}}catch{}
+})();
 
-const SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
-const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
+const SUPA_URL='https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
 
-async function api(endpoint, opts={}) {
-  const method = (opts.method||'GET').toUpperCase();
-  const headers = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
-  if (opts.body) headers['Content-Type']='application/json';
-  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers,body:opts.body||undefined});
-  if (!res.ok){let m=res.statusText;try{const j=await res.json();m=j.message||j.error||m;}catch{}throw new Error(m);}
+async function api(endpoint,opts={}){
+  const method=(opts.method||'GET').toUpperCase();
+  const headers={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+  if(opts.body)headers['Content-Type']='application/json';
+  const res=await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers,body:opts.body||undefined});
+  if(!res.ok){let m=res.statusText;try{const j=await res.json();m=j.message||j.error||m;}catch{}throw new Error(m);}
   const ct=res.headers.get('content-type')||'';
   if(ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
   return [];
@@ -250,33 +348,150 @@ async function api(endpoint, opts={}) {
 function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
 function hoje(minus=0){const d=new Date();d.setDate(d.getDate()-minus);return d.toISOString().split('T')[0];}
 function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function brlSigned(v){const abs=Math.abs(v);const s=v>=0?'+':'-';return s+'R$ '+abs.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtQtd(v){return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function fmtQtd(v,un=''){return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+(un?' '+un:'');}
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
 
-// Estado
-let _resultados = null;
+// State
+let _resultados=null;
 
-// Inicializa datas (mês atual)
-document.getElementById('fil-de').value  = hoje(0).slice(0,7)+'-01';
-document.getElementById('fil-ate').value = hoje(0);
+// Inicializa datas
+document.getElementById('fil-de').value=hoje(0).slice(0,7)+'-01';
+document.getElementById('fil-ate').value=hoje(0);
 
-async function calcular() {
-  const de  = document.getElementById('fil-de').value;
-  const ate = document.getElementById('fil-ate').value;
-  if (!de||!ate) { toast('Selecione o período.','err'); return; }
+function getStatus(difPct){
+  const abs=Math.abs(difPct);
+  if(abs>15)return'critico';
+  if(abs>5)return'atencao';
+  return'ok';
+}
 
-  document.getElementById('conn-status').textContent = 'calculando...';
-  document.getElementById('aviso-vazio').style.display = 'none';
-  document.getElementById('sec-produtos').style.display = 'none';
-  document.getElementById('sec-insumos').style.display = 'none';
+function getPossivel(difPct){
+  if(Math.abs(difPct)<=5)return'—';
+  if(difPct>200)return'Produção / Padrão';
+  if(difPct>50)return'Perda não lançada';
+  if(difPct>15)return difPct>30?'Rendimento / Perda':'Rendimento';
+  if(difPct>5)return'Rendimento';
+  return'—';
+}
 
-  try {
-    // Carrega dados em paralelo
-    const [faturamentos, vendas, fichas, insumos, saldos, entradas, saidas] = await Promise.all([
-      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`),
-      api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`),
+function renderTabela(){
+  if(!_resultados)return;
+  const apenasDiverg=document.getElementById('tog-div')?.checked;
+  const {insumos,consumoTeoMap,consumoRealMap,saldos}=_resultados;
+
+  const insComDados=insumos.filter(ins=>consumoTeoMap[ins.id]||consumoRealMap[ins.id]);
+
+  let rows=insComDados.map(ins=>{
+    const un=ins.unidade_medida||ins.unidade_compra||'un';
+    const divTeo=['kg','litro'].includes(un)?1000:1;
+    const qtdTeo=(consumoTeoMap[ins.id]||0)/divTeo;
+    const qtdReal=consumoRealMap[ins.id]||0;
+    const cm=saldos.find(s=>s.insumo_id===ins.id)?.custo_medio||ins.preco_compra||0;
+    const custoTeo=qtdTeo*(ins.preco_compra/(ins.rendimento_pct/100)||cm);
+    const custoReal=qtdReal*cm;
+    const difQtd=qtdReal-qtdTeo;
+    const difPct=qtdTeo>0?difQtd/qtdTeo*100:0;
+    const impacto=custoReal-custoTeo;
+    const status=getStatus(difPct);
+    return{ins,un,qtdTeo,qtdReal,custoTeo,custoReal,difQtd,difPct,impacto,status};
+  });
+
+  if(apenasDiverg) rows=rows.filter(r=>Math.abs(r.difPct)>5);
+  rows.sort((a,b)=>Math.abs(b.difPct)-Math.abs(a.difPct));
+
+  const tbody=document.getElementById('tbody-insumos');
+  const tfoot=document.getElementById('tfoot-insumos');
+
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="12" style="padding:24px;text-align:center;color:#94a3b8">Nenhum insumo com divergência no período</td></tr>';
+    tfoot.innerHTML='';return;
+  }
+
+  const statusCfg={
+    critico:{dot:'dot-red',txt:'Crítico',color:'#e11d48'},
+    atencao:{dot:'dot-amber',txt:'Atenção',color:'#f59e0b'},
+    ok:{dot:'dot-green',txt:'Dentro do padrão',color:'#16a34a'},
+  };
+
+  tbody.innerHTML=rows.map(r=>{
+    const sc=statusCfg[r.status];
+    const difCls=r.difPct>5?'dif-pos':r.difPct<-5?'dif-neg':'dif-neu';
+    const possCausa=getPossivel(r.difPct);
+    const difSign=r.difQtd>=0?'+':'';
+    const difPctSign=r.difPct>=0?'+':'';
+    const impSign=r.impacto>=0?'+':'';
+    return `<tr>
+      <td style="font-weight:600">${esc(r.ins.nome)}</td>
+      <td style="color:#64748b">${esc(r.un)}</td>
+      <td class="r mono">${fmtQtd(r.qtdTeo)}</td>
+      <td class="r mono">${brl(r.custoTeo)}</td>
+      <td class="r mono">${fmtQtd(r.qtdReal)}</td>
+      <td class="r mono">${brl(r.custoReal)}</td>
+      <td class="r mono ${difCls}">${difSign}${fmtQtd(r.difQtd)}</td>
+      <td class="r mono ${difCls}">${difPctSign}${r.difPct.toFixed(1)}%</td>
+      <td class="r mono ${difCls}">${impSign}${brl(Math.abs(r.impacto)).replace('R$ ','R$ ')}</td>
+      <td><span class="status-dot"><span class="dot ${sc.dot}"></span><span style="color:${sc.color}">${sc.txt}</span></span></td>
+      <td style="color:#64748b;font-size:12px">${possCausa}</td>
+      <td class="c">
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+          <button style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;font-size:11px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit" onclick="toast('Detalhes em breve')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Detalhes
+          </button>
+          <button style="width:28px;height:28px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;display:inline-flex;align-items:center;justify-content:center" onclick="toast('Gráfico em breve')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Footer totals
+  const totTeo=rows.reduce((s,r)=>s+r.custoTeo,0);
+  const totReal=rows.reduce((s,r)=>s+r.custoReal,0);
+  const totDifQtd=rows.reduce((s,r)=>s+r.difQtd,0);
+  const totPct=totTeo>0?(totDifQtd/rows.reduce((s,r)=>s+r.qtdTeo,0)*100):0;
+  const totImpacto=totReal-totTeo;
+  const criticos=rows.filter(r=>r.status==='critico').length;
+
+  tfoot.innerHTML=`<tr>
+    <td style="font-weight:700">TOTAL GERAL</td>
+    <td>—</td>
+    <td></td>
+    <td class="r mono">${brl(totTeo)}</td>
+    <td></td>
+    <td class="r mono">${brl(totReal)}</td>
+    <td class="r mono">${(totDifQtd>=0?'+':'')+fmtQtd(totDifQtd)}</td>
+    <td class="r mono">${(totPct>=0?'+':'')+totPct.toFixed(1)}%</td>
+    <td class="r mono">${brlSigned(totImpacto)}</td>
+    <td style="color:#fca5a5;font-size:12px">${criticos} crítico${criticos!==1?'s':''}</td>
+    <td></td>
+    <td></td>
+  </tr>`;
+
+  // Update impacto card
+  const el=document.getElementById('impacto-val');
+  if(el){el.textContent=brlSigned(totImpacto);el.style.color=totImpacto>=0?'#e11d48':'#16a34a';}
+  const sub=document.getElementById('impacto-sub');
+  if(sub)sub.textContent=totImpacto>=0?'Real acima do teórico no período':'Real abaixo do teórico no período';
+}
+
+async function calcular(){
+  const de=document.getElementById('fil-de').value;
+  const ate=document.getElementById('fil-ate').value;
+  if(!de||!ate){toast('Selecione o período.','err');return;}
+
+  const cs=document.getElementById('conn-status');
+  if(cs){cs.textContent='• calculando...';cs.style.color='#94a3b8';}
+  document.getElementById('alert-banner').style.display='none';
+
+  try{
+    const [faturamentos,vendas,fichas,insumos,saldos,entradas,saidas]=await Promise.all([
+      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`).catch(()=>[]),
+      api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`).catch(()=>[]),
       api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&select=*`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true`),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`),
@@ -284,179 +499,118 @@ async function calcular() {
       api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59`),
     ]);
 
-    // Carrega itens das fichas
-    const fichasIds = fichas.map(f=>f.id);
-    let itensFichas = [];
-    if (fichasIds.length) {
-      itensFichas = await api(`itens_ficha?ficha_id=in.(${fichasIds.join(',')})&select=*`);
-    }
+    const fichasIds=fichas.map(f=>f.id);
+    let itensFichas=[];
+    if(fichasIds.length) itensFichas=await api(`itens_ficha?ficha_id=in.(${fichasIds.join(',')})&select=*`);
 
-    // ── FATURAMENTO TOTAL ──────────────────────────────────
-    const totalFat = faturamentos.reduce((s,f)=>s+(f.total||f.valor_total||0),0)
-                   + vendas.reduce((s,v)=>s+(v.valor_total||0),0);
+    const totalFat=faturamentos.reduce((s,f)=>s+(f.total||f.valor_total||0),0)+vendas.reduce((s,v)=>s+(v.valor_total||0),0);
 
-    // ── CMV TEÓRICO ───────────────────────────────────────
-    // Para cada venda, calcula custo usando custo_unitario salvo OU ficha técnica
-    let totalTeo = 0;
-    const porProduto = {}; // ficha_id → { nome, qtd, receita, custo }
+    let totalTeo=0;
+    vendas.forEach(v=>{totalTeo+=(v.custo_unitario||0)*(v.quantidade||0);});
 
-    vendas.forEach(v => {
-      const custo = (v.custo_unitario||0) * (v.quantidade||0);
-      totalTeo += custo;
-
-      const fichaId = v.ficha_id||v.produto_id||'sem-ficha';
-      const ficha = fichas.find(f=>f.id===fichaId);
-      if (!porProduto[fichaId]) {
-        porProduto[fichaId] = { nome: ficha?.nome||v.nome_produto||'Produto', qtd:0, receita:0, custo:0 };
-      }
-      porProduto[fichaId].qtd     += v.quantidade||0;
-      porProduto[fichaId].receita += v.valor_total||0;
-      porProduto[fichaId].custo   += custo;
-    });
-
-    // ── CONSUMO TEÓRICO POR INSUMO ────────────────────────
-    const consumoTeoMap = {}; // insumo_id → g consumidos
-    vendas.forEach(v => {
-      const fichaId = v.ficha_id||v.produto_id;
-      if (!fichaId) return;
-      const ficha = fichas.find(f=>f.id===fichaId);
-      if (!ficha) return;
-      const itens = itensFichas.filter(it=>it.ficha_id===fichaId);
-      const porcoes = ficha.rendimento_porcoes||1;
-      const qtdVendida = v.quantidade||0;
-      itens.forEach(it => {
-        const gPorPorcao = (it.quantidade_g||0) / porcoes;
-        const gTotal = gPorPorcao * qtdVendida;
-        consumoTeoMap[it.insumo_id] = (consumoTeoMap[it.insumo_id]||0) + gTotal;
+    // Consumo teórico por insumo
+    const consumoTeoMap={};
+    vendas.forEach(v=>{
+      const fichaId=v.ficha_id||v.produto_id;if(!fichaId)return;
+      const ficha=fichas.find(f=>f.id===fichaId);if(!ficha)return;
+      const itens=itensFichas.filter(it=>it.ficha_id===fichaId);
+      const porcoes=ficha.rendimento_porcoes||1;
+      const qtdVendida=v.quantidade||0;
+      itens.forEach(it=>{
+        const gPorPorcao=(it.quantidade_g||0)/porcoes;
+        consumoTeoMap[it.insumo_id]=(consumoTeoMap[it.insumo_id]||0)+gPorPorcao*qtdVendida;
       });
     });
 
-    // ── CMV REAL ──────────────────────────────────────────
-    // Compras no período − variação de estoque
-    const totalCompras = entradas.reduce((s,e)=>s+(e.custo_total||0),0);
-    // Saídas por consumo no período (tipo consumo/transferencia)
-    const totalConsumoReal = saidas
-      .filter(s=>['consumo','transferencia','producao'].includes(s.tipo))
+    // CMV Real
+    const totalConsumoReal=saidas.filter(s=>['consumo','transferencia','producao'].includes(s.tipo))
       .reduce((s,x)=>s+(x.quantidade||0)*(x.custo_unitario||saldos.find(sl=>sl.insumo_id===x.insumo_id)?.custo_medio||0),0);
+    const totalCompras=entradas.reduce((s,e)=>s+(e.custo_total||0),0);
+    const totalReal=totalConsumoReal||totalCompras;
 
-    // CMV Real = total de saídas de consumo no período
-    const totalReal = totalConsumoReal || totalCompras;
-
-    // ── CONSUMO REAL POR INSUMO (saídas) ─────────────────
-    const consumoRealMap = {}; // insumo_id → qtd em unidade do estoque
+    // Consumo real por insumo
+    const consumoRealMap={};
     saidas.filter(s=>['consumo','transferencia','producao'].includes(s.tipo)).forEach(s=>{
-      consumoRealMap[s.insumo_id] = (consumoRealMap[s.insumo_id]||0) + (s.quantidade||0);
+      consumoRealMap[s.insumo_id]=(consumoRealMap[s.insumo_id]||0)+(s.quantidade||0);
     });
 
-    // ── ATUALIZA KPIs ─────────────────────────────────────
-    const pctTeo  = totalFat>0 ? (totalTeo/totalFat*100)  : 0;
-    const pctReal = totalFat>0 ? (totalReal/totalFat*100) : 0;
-    const dif     = totalReal - totalTeo;
+    // KPIs
+    const pctTeo=totalFat>0?(totalTeo/totalFat*100):0;
+    const pctReal=totalFat>0?(totalReal/totalFat*100):0;
+    const dif=totalReal-totalTeo;
+    const divPct=totalTeo>0?(dif/totalTeo*100):0;
 
-    document.getElementById('k-fat').textContent    = brl(totalFat);
-    document.getElementById('k-teo').textContent    = brl(totalTeo);
-    document.getElementById('k-teo-pct').textContent= pctTeo.toFixed(1)+'% do faturamento';
-    document.getElementById('k-real').textContent   = brl(totalReal);
-    document.getElementById('k-real-pct').textContent= pctReal.toFixed(1)+'% do faturamento';
-    document.getElementById('k-dif').textContent    = (dif>=0?'+':'')+brl(dif);
-    document.getElementById('k-dif-sub').textContent= dif>0?'real acima do teórico':dif<0?'real abaixo do teórico':'sem diferença';
-    document.getElementById('k-prods').textContent  = Object.keys(porProduto).length;
+    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+    set('k-fat',brl(totalFat));
+    set('k-teo',brl(totalTeo));
+    set('k-teo-pct',pctTeo.toFixed(1)+'% do faturamento');
+    set('k-real',brl(totalReal));
+    set('k-real-pct',pctReal.toFixed(1)+'% do faturamento');
+    const kDif=document.getElementById('k-dif');
+    if(kDif){kDif.textContent=(dif>=0?'+':'')+brl(dif);kDif.style.color=dif>0?'#e11d48':'#16a34a';}
+    set('k-dif-sub',dif>0?'real acima do teórico':dif<0?'real abaixo do teórico':'sem diferença');
+    const kDivPct=document.getElementById('k-div-pct');
+    if(kDivPct){kDivPct.textContent=(divPct>=0?'+':'')+divPct.toFixed(1)+'%';kDivPct.style.color=divPct>10?'#e11d48':divPct>5?'#f97316':'#16a34a';}
 
-    // Cor diferença
-    const kDif = document.getElementById('k-dif').parentElement;
-    kDif.className = 'kpi '+(Math.abs(dif)<totalTeo*0.05?'kpi-ok':dif>0?'kpi-danger':'kpi-warn');
+    // Produtos com divergência
+    const insComDados=insumos.filter(ins=>consumoTeoMap[ins.id]||consumoRealMap[ins.id]);
+    const comDiverg=insComDados.filter(ins=>{
+      const un=ins.unidade_medida||ins.unidade_compra||'un';
+      const divTeo=['kg','litro'].includes(un)?1000:1;
+      const qtdTeo=(consumoTeoMap[ins.id]||0)/divTeo;
+      const qtdReal=consumoRealMap[ins.id]||0;
+      const dp=qtdTeo>0?Math.abs((qtdReal-qtdTeo)/qtdTeo*100):0;
+      return dp>5;
+    });
+    set('k-prods-div',comDiverg.length);
+    set('k-prods-sub',`de ${insComDados.length} insumos`);
 
-    // ── TABELA POR PRODUTO ────────────────────────────────
-    const prodRows = Object.values(porProduto).sort((a,b)=>b.custo-a.custo);
-    const totQtd=prodRows.reduce((s,p)=>s+p.qtd,0);
-    const totRec=prodRows.reduce((s,p)=>s+p.receita,0);
-    const totCusto=prodRows.reduce((s,p)=>s+p.custo,0);
-
-    if (prodRows.length) {
-      document.getElementById('sec-produtos').style.display = '';
-      document.getElementById('tbody-produtos').innerHTML = prodRows.map(p=>{
-        const pct = p.receita>0 ? p.custo/p.receita*100 : 0;
-        const cls = pct<=30?'cmv-ok':pct<=38?'cmv-warn':'cmv-danger';
-        return `<tr>
-          <td style="font-weight:500">${esc(p.nome)}</td>
-          <td class="r mono">${p.qtd.toLocaleString('pt-BR')}</td>
-          <td class="r mono">${brl(p.receita)}</td>
-          <td class="r mono">${brl(p.custo)}</td>
-          <td class="r"><span class="cmv-badge ${cls}">${pct.toFixed(1)}%</span></td>
-          <td><span class="cmv-badge ${cls}">${pct<=30?'OK':pct<=38?'Atenção':'Crítico'}</span></td>
-        </tr>`;
-      }).join('');
-      const pctTot = totRec>0?totCusto/totRec*100:0;
-      document.getElementById('tfoot-produtos').innerHTML = `<tr>
-        <td>Total</td><td class="r mono">${totQtd.toLocaleString('pt-BR')}</td>
-        <td class="r mono">${brl(totRec)}</td><td class="r mono">${brl(totCusto)}</td>
-        <td class="r"><span class="cmv-badge ${pctTot<=30?'cmv-ok':pctTot<=38?'cmv-warn':'cmv-danger'}">${pctTot.toFixed(1)}%</span></td>
-        <td></td></tr>`;
+    // Alert banner
+    const banner=document.getElementById('alert-banner');
+    if(comDiverg.length>0&&banner){
+      banner.style.display='';
+      const custoImpacto=comDiverg.reduce((s,ins)=>{
+        const un=ins.unidade_medida||ins.unidade_compra||'un';
+        const divTeo=['kg','litro'].includes(un)?1000:1;
+        const qtdTeo=(consumoTeoMap[ins.id]||0)/divTeo;
+        const qtdReal=consumoRealMap[ins.id]||0;
+        const cm=saldos.find(sl=>sl.insumo_id===ins.id)?.custo_medio||ins.preco_compra||0;
+        const custoTeo=qtdTeo*(ins.preco_compra/(ins.rendimento_pct/100)||cm);
+        const custoReal=qtdReal*cm;
+        return s+(custoReal-custoTeo);
+      },0);
+      set('alert-txt',`${comDiverg.length} insumo${comDiverg.length!==1?'s':''} com divergência acima de 5%`);
+      set('alert-sub',`Total impacto financeiro: ${brlSigned(custoImpacto)}`);
     }
 
-    // ── TABELA POR INSUMO ─────────────────────────────────
-    const insumosComDados = insumos.filter(ins=>
-      consumoTeoMap[ins.id]||consumoRealMap[ins.id]
-    ).sort((a,b)=>(consumoTeoMap[b.id]||0)-(consumoTeoMap[a.id]||0));
+    _resultados={de,ate,totalFat,totalTeo,totalReal,insumos,consumoTeoMap,consumoRealMap,saldos};
+    renderTabela();
 
-    if (insumosComDados.length) {
-      document.getElementById('sec-insumos').style.display = '';
-      document.getElementById('tbody-insumos').innerHTML = insumosComDados.map(ins=>{
-        const un  = ins.unidade_medida||ins.unidade_compra||'un';
-        // Converte g → unidade do estoque (se kg divide por 1000, se g deixa)
-        const divTeo = ['kg','litro'].includes(un) ? 1000 : 1;
-        const teo  = (consumoTeoMap[ins.id]||0)/divTeo;
-        const real = consumoRealMap[ins.id]||0;
-        const dif  = real - teo;
-        const difPct = teo>0 ? dif/teo*100 : 0;
-        const maxBar = Math.max(teo,real)||1;
-        const wTeo  = Math.round(teo/maxBar*80);
-        const wReal = Math.round(real/maxBar*80);
-        return `<tr>
-          <td style="font-weight:500">${esc(ins.nome)}</td>
-          <td style="color:var(--text3)">${esc(un)}</td>
-          <td class="r mono">${fmtQtd(teo)}</td>
-          <td class="r mono">${fmtQtd(real)}</td>
-          <td class="r mono" style="color:${Math.abs(difPct)<10?'var(--green)':difPct>0?'var(--red)':'var(--amber)'}">
-            ${dif>=0?'+':''}${fmtQtd(dif)} <span style="font-size:11px">(${difPct>=0?'+':''}${difPct.toFixed(0)}%)</span>
-          </td>
-          <td>
-            <div class="bar-wrap">
-              <div class="bar-teo" style="width:${wTeo}px" title="Teórico"></div>
-              <div class="bar-real" style="width:${wReal}px" title="Real"></div>
-            </div>
-          </td>
-        </tr>`;
-      }).join('');
-    }
-
-    if (!prodRows.length && !insumosComDados.length) {
-      document.getElementById('aviso-vazio').style.display = '';
-    }
-
-    _resultados = { de, ate, totalFat, totalTeo, totalReal, porProduto, consumoTeoMap, consumoRealMap, insumos };
-    document.getElementById('conn-status').textContent = '● calculado';
-    document.getElementById('conn-status').style.color = 'var(--green)';
-  } catch(e) {
+    if(cs){cs.textContent='• calculado';cs.style.color='#16a34a';}
+  }catch(e){
     toast('Erro: '+e.message,'err');
-    document.getElementById('conn-status').textContent = '✕ erro';
-    document.getElementById('conn-status').style.color = 'var(--red)';
-    document.getElementById('aviso-vazio').style.display = '';
+    if(cs){cs.textContent='• erro';cs.style.color='#e11d48';}
   }
 }
 
-function exportCSV() {
-  if (!_resultados) { toast('Calcule primeiro.','err'); return; }
-  const { porProduto } = _resultados;
-  let csv = 'Produto;Qtd Vendida;Receita;Custo Teórico;CMV%\n';
-  Object.values(porProduto).forEach(p=>{
-    const pct = p.receita>0?p.custo/p.receita*100:0;
-    csv += `${p.nome};${p.qtd};${p.receita.toFixed(2)};${p.custo.toFixed(2)};${pct.toFixed(1)}\n`;
+function exportCSV(){
+  if(!_resultados){toast('Calcule primeiro.','err');return;}
+  const {insumos,consumoTeoMap,consumoRealMap,saldos}=_resultados;
+  let csv='Insumo;UN;Qtd Teórico;Custo Teórico;Qtd Real;Custo Real;Diferença Qtd;Diferença %;Impacto R$;Status\n';
+  insumos.filter(ins=>consumoTeoMap[ins.id]||consumoRealMap[ins.id]).forEach(ins=>{
+    const un=ins.unidade_medida||ins.unidade_compra||'un';
+    const divTeo=['kg','litro'].includes(un)?1000:1;
+    const qtdTeo=(consumoTeoMap[ins.id]||0)/divTeo;
+    const qtdReal=consumoRealMap[ins.id]||0;
+    const cm=saldos.find(s=>s.insumo_id===ins.id)?.custo_medio||ins.preco_compra||0;
+    const custoTeo=qtdTeo*(ins.preco_compra/(ins.rendimento_pct/100)||cm);
+    const custoReal=qtdReal*cm;
+    const difPct=qtdTeo>0?(qtdReal-qtdTeo)/qtdTeo*100:0;
+    csv+=`${ins.nome};${un};${qtdTeo.toFixed(3)};${custoTeo.toFixed(2)};${qtdReal.toFixed(3)};${custoReal.toFixed(2)};${(qtdReal-qtdTeo).toFixed(3)};${difPct.toFixed(1)};${(custoReal-custoTeo).toFixed(2)};${getStatus(difPct)}\n`;
   });
-  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=`cmv_${_resultados.de}_${_resultados.ate}.csv`; a.click();
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`cmv_${_resultados.de}_${_resultados.ate}.csv`;a.click();
   URL.revokeObjectURL(url);
 }
 </script>
