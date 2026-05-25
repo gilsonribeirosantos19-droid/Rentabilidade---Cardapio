@@ -158,9 +158,7 @@
     <!-- KPI CARDS -->
     <div class="kpi-row">
       <div class="kpi">
-        <div class="kpi-icon" style="background:#eff6ff">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         <div class="kpi-body">
           <div class="kpi-lbl">Total de Testes</div>
           <div class="kpi-val" id="k-total">—</div>
@@ -168,29 +166,23 @@
         </div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon" style="background:#f0fdf4">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2" style="flex-shrink:0"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         <div class="kpi-body">
           <div class="kpi-lbl">Média de Rendimento</div>
-          <div class="kpi-val" id="k-media" style="color:#22c55e">—</div>
+          <div class="kpi-val" id="k-media">—</div>
           <div class="kpi-sub">de todos os testes</div>
         </div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon" style="background:#fff7ed">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
-        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2" style="flex-shrink:0"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
         <div class="kpi-body">
           <div class="kpi-lbl">Menor Rendimento</div>
-          <div class="kpi-val" id="k-menor-pct" style="color:#f97316">—</div>
+          <div class="kpi-val" id="k-menor-pct">—</div>
           <div class="kpi-sub" id="k-menor-nome">—</div>
         </div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon" style="background:#fff7ed">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2" style="flex-shrink:0"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         <div class="kpi-body">
           <div class="kpi-lbl">Custo Total da Perda</div>
           <div class="kpi-val" id="k-custo-perda">R$ 0,00</div>
@@ -231,6 +223,10 @@
         Atualizar
       </button>
       <span id="count-label" style="margin-left:auto;font-size:12px;color:#94a3b8;font-weight:600"></span>
+      <button class="btn btn-ghost" onclick="exportarCSV()" style="display:inline-flex;align-items:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
     </div>
 
     <!-- TABLE -->
@@ -260,8 +256,8 @@
         <div style="display:flex;align-items:center;gap:8px">
           <span id="pag-info" style="font-size:12px;color:#64748b"></span>
           <select id="por-pagina" class="field" style="padding:4px 8px;font-size:12px" onchange="_porPag=+this.value;_pag=1;renderPagina()">
-            <option value="15">15 por página</option>
-            <option value="30">30 por página</option>
+            <option value="10" selected>10 por página</option>
+            <option value="25">25 por página</option>
             <option value="50">50 por página</option>
           </select>
         </div>
@@ -341,7 +337,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
 
-let todosInsumos=[], todosTestes=[], _filtrado=[], _pag=1, _porPag=15;
+let todosInsumos=[], todosTestes=[], _filtrado=[], _pag=1, _porPag=10;
 let editId=null;
 
 (function(){
@@ -496,22 +492,21 @@ function renderTabela(rows){
     const custoReal=ins&&ins.preco_compra&&rend>0?ins.preco_compra/(rend/100):null;
     const custoPerdaTotal=custoReal!=null?perdaKg*custoReal:null;
     const data=t.criado_em?new Date(t.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
-    const rendColor=rend>=95?'#22c55e':rend>=81?'#84cc16':rend>=61?'#f97316':'#e11d48';
-    const perdaColor=perdaPct>15?'#e11d48':perdaPct>5?'#f97316':'#94a3b8';
     return `<tr>
-      <td style="font-weight:600">${nome}</td>
-      <td style="color:#64748b">${data}</td>
-      <td class="r mono">${fmtKg(bruto)}</td>
-      <td class="r mono">${fmtKg(liquido)}</td>
-      <td class="r mono" style="font-weight:700;color:${rendColor}">${rend.toFixed(1)}%</td>
-      <td class="r mono" style="color:${perdaColor}">${fmtKg(perdaKg)}</td>
-      <td class="r mono" style="color:${perdaColor}">${perdaPct.toFixed(1)}%</td>
-      <td class="r mono" style="color:#f97316">${custoReal!=null?fmtBRL(custoReal):'—'}</td>
-      <td class="r mono" style="color:${custoPerdaTotal&&custoPerdaTotal>0?'#e11d48':'#94a3b8'}">${custoPerdaTotal!=null?fmtBRL(custoPerdaTotal):'R$ 0,00'}</td>
+      <td style="font-weight:600;color:#334155">${nome}</td>
+      <td class="mono" style="color:#334155">${data}</td>
+      <td class="r mono" style="color:#334155">${fmtKg(bruto)}</td>
+      <td class="r mono" style="color:#334155">${fmtKg(liquido)}</td>
+      <td class="r mono" style="font-weight:700;color:#334155">${rend.toFixed(1)}%</td>
+      <td class="r mono" style="color:#334155">${fmtKg(perdaKg)}</td>
+      <td class="r mono" style="color:#334155">${perdaPct.toFixed(1)}%</td>
+      <td class="r mono" style="color:#334155">${custoReal!=null?fmtBRL(custoReal):'—'}</td>
+      <td class="r mono" style="color:#334155">${custoPerdaTotal!=null?fmtBRL(custoPerdaTotal):'R$ 0,00'}</td>
       <td>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:4px;align-items:center">
           <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="editarTeste('${t.id}')">Editar</button>
           <button class="btn btn-danger" style="padding:5px 10px;font-size:11px" onclick="excluir('${t.id}')">Excluir</button>
+          <button class="btn btn-ghost" style="padding:5px 8px;font-size:14px;line-height:1" title="Mais opções">⋮</button>
         </div>
       </td>
     </tr>`;
@@ -612,6 +607,36 @@ async function excluir(id){
   }catch(e){
     toast('Erro: '+e.message,'err');
   }
+}
+
+function exportarCSV(){
+  if(!_filtrado.length){toast('Nenhum registro para exportar.','err');return;}
+  const header=['Insumo','Data','Peso Bruto (kg)','Peso Líquido (kg)','Rendimento (%)','Perda (kg)','Perda (%)','Custo Real/kg','Custo Total Perda'];
+  const rows=_filtrado.map(t=>{
+    const ins=todosInsumos.find(i=>i.id===t.insumo_id);
+    const nome=ins?ins.nome:'—';
+    const rend=t.rendimento_pct||0;
+    const bruto=t.peso_bruto||0;
+    const liquido=t.peso_liquido||0;
+    const perdaKg=bruto-liquido;
+    const perdaPct=bruto>0?(perdaKg/bruto*100):0;
+    const custoReal=ins&&ins.preco_compra&&rend>0?ins.preco_compra/(rend/100):null;
+    const custoPerdaTotal=custoReal!=null?perdaKg*custoReal:null;
+    const data=t.criado_em?new Date(t.criado_em).toLocaleDateString('pt-BR'):'—';
+    return [
+      `"${nome}"`,data,
+      bruto.toFixed(3),liquido.toFixed(3),
+      rend.toFixed(1),perdaKg.toFixed(3),perdaPct.toFixed(1),
+      custoReal!=null?custoReal.toFixed(2):'',
+      custoPerdaTotal!=null?custoPerdaTotal.toFixed(2):'',
+    ].join(';');
+  });
+  const csv='﻿'+header.join(';')+'\n'+rows.join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='rendimento_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+  toast('CSV exportado com sucesso.','ok');
 }
 
 carregar();
