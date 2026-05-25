@@ -225,6 +225,21 @@
     .grupo-btns .btn{justify-content:center}
     .mov-grid{grid-template-columns:1fr!important}
     .inv-filtros-grid{grid-template-columns:1fr 1fr!important}
+    /* sol mobile */
+    .sol-cat-pills{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none}
+    .sol-cat-pills::-webkit-scrollbar{display:none}
+    .sol-summary{flex-direction:column;border-radius:12px}
+    .sol-sum-item{border-right:none;border-bottom:1px solid #e2e8f0;padding:10px 14px}
+    .sol-sum-item:last-child{border-bottom:none}
+    .sol-item{flex-wrap:wrap;padding:12px}
+    .sol-item-right{width:100%;text-align:left;min-width:unset;margin-top:10px}
+    .qty-row{justify-content:flex-start}
+    .qty-btn{width:36px;height:36px;font-size:18px}
+    .qty-inp{width:52px;height:36px;font-size:15px}
+    .sol-bottom{flex-wrap:wrap;gap:10px;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+    .sol-bottom-total{margin-left:0;width:100%}
+    .sol-bottom .btn-primary{width:100%;justify-content:center;min-height:44px}
+    .sol-bottom div:last-child{order:3}
     .inv-filtros-grid .btn{grid-column:1/-1}
   }
 </style>
@@ -925,7 +940,6 @@ function renderSolicitacao() {
         <div class="sol-item-body">
           <div class="sol-item-nome">${esc(ins.nome)}</div>
           <span class="sol-item-cat">${esc(ins.categoria||g.nome)}</span>
-          <div class="sol-item-meta">Última compra: — &nbsp;&bull;&nbsp; Fornecedor: —</div>
         </div>
         <div class="sol-item-right">
           <div class="sol-item-estoque">Estoque atual: — ${un}</div>
