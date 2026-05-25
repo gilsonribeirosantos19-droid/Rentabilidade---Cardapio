@@ -238,34 +238,48 @@
 
     <!-- CURVA ABC -->
     <div id="pane-abc" class="rel-pane">
-      <div class="abc-kpi-bar" id="abc-kpi-bar">
-        <div class="abc-kpi-item"><div class="abc-kpi-lbl">Total de itens</div><div class="abc-kpi-val" id="abc-k-total">—</div></div>
-        <div class="abc-kpi-item"><div class="abc-kpi-lbl">Valor total em estoque</div><div class="abc-kpi-val" id="abc-k-valor">—</div></div>
-        <div class="abc-kpi-item" style="border-left:3px solid #fee2e2">
-          <div class="abc-kpi-lbl">Classe A</div>
-          <div class="abc-kpi-val" id="abc-k-a-n" style="color:#e11d48">—</div>
+      <!-- FILTROS -->
+      <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Grupo</div>
+          <select id="abc-grupo" onchange="renderABC()" class="field" style="min-width:120px"><option value="">Todos</option></select>
         </div>
-        <div class="abc-kpi-item">
-          <div class="abc-kpi-lbl">Valor Classe A</div>
-          <div class="abc-kpi-val" id="abc-k-a-v" style="color:#e11d48">—</div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Categoria</div>
+          <select id="abc-cat" onchange="renderABC()" class="field" style="min-width:120px"><option value="">Todas</option></select>
         </div>
-        <div class="abc-kpi-item" style="border-left:3px solid #fef3c7">
-          <div class="abc-kpi-lbl">Classe B</div>
-          <div class="abc-kpi-val" id="abc-k-b-n" style="color:#d97706">—</div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Fornecedor</div>
+          <select id="abc-forn" onchange="renderABC()" class="field" style="min-width:120px"><option value="">Todos</option></select>
         </div>
-        <div class="abc-kpi-item">
-          <div class="abc-kpi-lbl">Valor Classe B</div>
-          <div class="abc-kpi-val" id="abc-k-b-v" style="color:#d97706">—</div>
+        <div style="flex:1;min-width:180px;position:relative">
+          <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="abc-busca" placeholder="Buscar insumo..." oninput="renderABC()" class="field" style="width:100%;padding-left:32px">
         </div>
-        <div class="abc-kpi-item" style="border-left:3px solid #f1f5f9">
-          <div class="abc-kpi-lbl">Classe C</div>
-          <div class="abc-kpi-val" id="abc-k-c-n" style="color:#64748b">—</div>
-        </div>
-        <div class="abc-kpi-item">
-          <div class="abc-kpi-lbl">Valor Classe C</div>
-          <div class="abc-kpi-val" id="abc-k-c-v" style="color:#64748b">—</div>
-        </div>
+        <button class="tab-btn" onclick="toast('Filtros avançados em breve')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtros
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="tab-btn" onclick="exportarABC()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
       </div>
+      <!-- SUMMARY BAR -->
+      <div id="abc-summary" style="font-size:13px;color:#64748b;margin-bottom:12px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+        <span>Total de itens: <strong id="abc-s-total" style="color:#0f172a">—</strong></span>
+        <span style="color:#e2e8f0;margin:0 4px">|</span>
+        <span>Valor total em estoque: <strong id="abc-s-valor" style="color:#0f172a">—</strong></span>
+        <span style="color:#e2e8f0;margin:0 4px">|</span>
+        <span>Classe A: <strong id="abc-s-a" style="color:#e11d48">—</strong></span>
+        <span style="color:#e2e8f0;margin:0 4px">|</span>
+        <span>Classe B: <strong id="abc-s-b" style="color:#f97316">—</strong></span>
+        <span style="color:#e2e8f0;margin:0 4px">|</span>
+        <span>Classe C: <strong id="abc-s-c" style="color:#64748b">—</strong></span>
+      </div>
+      <!-- TABLE -->
       <div class="tbl-wrap">
         <div class="tbl-scroll"><table class="tbl">
           <thead><tr>
@@ -273,10 +287,10 @@
             <th>Insumo</th>
             <th>Categoria</th>
             <th class="c" style="width:60px">Classe</th>
-            <th class="r">Valor</th>
+            <th class="r">Valor (R$)</th>
             <th class="r">% Individual</th>
-            <th class="r" style="min-width:160px">% Acumulada</th>
-            <th style="width:70px">Ações</th>
+            <th class="r">% Acumulada</th>
+            <th style="width:80px">Ações</th>
           </tr></thead>
           <tbody id="abc-body"><tr><td colspan="8" class="empty skeleton">Carregando...</td></tr></tbody>
         </table></div>
@@ -286,17 +300,18 @@
             <div class="pag-btns" id="abc-pag-btns"></div>
             <select id="abc-por-pag" style="font-size:12px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#64748b" onchange="_abcPorPag=+this.value;_abcPag=1;_renderAbcPage()">
               <option value="14">14 por página</option>
-              <option value="25" selected>25 por página</option>
+              <option value="20" selected>20 por página</option>
               <option value="50">50 por página</option>
             </select>
           </div>
         </div>
       </div>
-      <div class="abc-footer">
-        <div class="abc-legend">
-          <div class="abc-leg-item"><span class="abc-leg-dot" style="background:#e11d48"></span>A = itens que representam até 80% do valor total</div>
-          <div class="abc-leg-item"><span class="abc-leg-dot" style="background:#d97706"></span>B = itens que representam de 80% a 95% do valor total</div>
-          <div class="abc-leg-item"><span class="abc-leg-dot" style="background:#94a3b8"></span>C = itens que representam acima de 95% do valor total</div>
+      <!-- FOOTER LEGEND -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b"><span style="width:10px;height:10px;border-radius:50%;background:#e11d48;display:inline-block"></span>A – Itens que representam até 80% do valor total</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b"><span style="width:10px;height:10px;border-radius:50%;background:#f97316;display:inline-block"></span>B – Itens que representam de 80% a 95% do valor total</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b"><span style="width:10px;height:10px;border-radius:50%;background:#94a3b8;display:inline-block"></span>C – Itens que representam acima de 95% do valor total</div>
         </div>
         <span style="font-size:11px;color:#94a3b8" id="abc-ref"></span>
       </div>
@@ -572,9 +587,8 @@ function switchTab(nome) {
   if(sub)sub.textContent=_tabSubs[nome]||'';
   const bFilt=document.getElementById('btn-filtros');
   const bExp=document.getElementById('btn-exportar');
-  if(bFilt)bFilt.style.display=nome==='abc'?'':'none';
-  if(bExp){bExp.style.display=(nome==='abc'||nome==='inflacao')?'':'none';
-    bExp.onclick=nome==='abc'?exportarABC:exportarInflacao;}
+  if(bFilt)bFilt.style.display='none';
+  if(bExp)bExp.style.display='none';
   if (nome==='resumo')    renderResumo();
   if (nome==='abc')       renderABC();
   if (nome==='inflacao')  renderInflacao();
@@ -695,38 +709,55 @@ function renderResumo() {
 }
 
 // ── CURVA ABC ─────────────────────────────────────────────────────
-let _abcRows=[], _abcPag=1, _abcPorPag=25;
+let _abcRows=[], _abcPag=1, _abcPorPag=20;
+
+function _abcPopularFiltros(){
+  const selCat=document.getElementById('abc-cat');
+  if(selCat&&selCat.options.length<=1){
+    const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o);});
+  }
+}
 
 function renderABC() {
+  _abcPopularFiltros();
+  const catFil=(document.getElementById('abc-cat')?.value||'');
+  const busca=(document.getElementById('abc-busca')?.value||'').toLowerCase();
+
   const getSaldo = id => saldos.find(s=>s.insumo_id===id)||{quantidade:0,custo_medio:0};
-  const valIns = insumos.map(i=>{
+
+  // Calcula a curva com TODOS os itens (para % acumulada correta)
+  const valTodos=insumos.map(i=>{
     const s=getSaldo(i.id);
     return{id:i.id,nome:i.nome,cat:i.categoria||'—',val:(s.quantidade||0)*(s.custo_medio||0)};
   }).sort((a,b)=>b.val-a.val);
-  const totalV=valIns.reduce((s,v)=>s+v.val,0)||1;
+  const totalV=valTodos.reduce((s,v)=>s+v.val,0)||1;
   let acum=0;
-  _abcRows=valIns.map((v,i)=>{
+  const todosComClasse=valTodos.map((v,i)=>{
     const pct=v.val/totalV*100;acum+=pct;
     const cl=acum<=80?'A':acum<=95?'B':'C';
     return{...v,idx:i+1,pct,acum,cl};
   });
 
-  // KPIs
+  // Summary (sempre sobre todos)
+  const clA=todosComClasse.filter(r=>r.cl==='A');
+  const clB=todosComClasse.filter(r=>r.cl==='B');
+  const clC=todosComClasse.filter(r=>r.cl==='C');
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  const clA=_abcRows.filter(r=>r.cl==='A'), clB=_abcRows.filter(r=>r.cl==='B'), clC=_abcRows.filter(r=>r.cl==='C');
-  const vA=clA.reduce((s,r)=>s+r.val,0), vB=clB.reduce((s,r)=>s+r.val,0), vC=clC.reduce((s,r)=>s+r.val,0);
-  const pctN=(n,t)=>t?'('+((n/t)*100).toFixed(1)+'%)':'';
-  set('abc-k-total',_abcRows.length);
-  set('abc-k-valor',brl(totalV-1)); // totalV already +1
-  document.getElementById('abc-k-valor').textContent=brl(valIns.reduce((s,v)=>s+v.val,0));
-  set('abc-k-a-n',`${clA.length} itens ${pctN(clA.length,_abcRows.length)}`);
-  set('abc-k-a-v',`${brl(vA)} (${(vA/(totalV)*100).toFixed(1)}%)`);
-  set('abc-k-b-n',`${clB.length} itens ${pctN(clB.length,_abcRows.length)}`);
-  set('abc-k-b-v',`${brl(vB)} (${(vB/(totalV)*100).toFixed(1)}%)`);
-  set('abc-k-c-n',`${clC.length} itens ${pctN(clC.length,_abcRows.length)}`);
-  set('abc-k-c-v',`${brl(vC)} (${(vC/(totalV)*100).toFixed(1)}%)`);
+  set('abc-s-total',todosComClasse.length);
+  set('abc-s-valor',brl(totalV));
+  set('abc-s-a',`${clA.length} itens (${(clA.length/todosComClasse.length*100).toFixed(1)}%)`);
+  set('abc-s-b',`${clB.length} itens (${(clB.length/todosComClasse.length*100).toFixed(1)}%)`);
+  set('abc-s-c',`${clC.length} itens (${(clC.length/todosComClasse.length*100).toFixed(1)}%)`);
   const ref=document.getElementById('abc-ref');
   if(ref)ref.textContent='Referência: '+new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  // Filtra para exibição
+  _abcRows=todosComClasse.filter(v=>{
+    if(catFil&&v.cat!==catFil)return false;
+    if(busca&&!v.nome.toLowerCase().includes(busca)&&!v.cat.toLowerCase().includes(busca))return false;
+    return true;
+  });
 
   _abcPag=1;
   _renderAbcPage();
@@ -738,8 +769,6 @@ function _renderAbcPage(){
   const tbody=document.getElementById('abc-body');
   if(!slice.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Sem dados</td></tr>';return;}
   tbody.innerHTML=slice.map(v=>{
-    const barW=Math.min(v.acum,100).toFixed(1);
-    const barColor=v.cl==='A'?'#e11d48':v.cl==='B'?'#d97706':'#94a3b8';
     return `<tr>
       <td class="c mono" style="color:#94a3b8;font-size:12px">${v.idx}</td>
       <td style="font-weight:600">${esc(v.nome)}</td>
@@ -747,26 +776,20 @@ function _renderAbcPage(){
       <td class="c"><span class="badge b-${v.cl}">${v.cl}</span></td>
       <td class="r mono">${brl(v.val)}</td>
       <td class="r mono">${v.pct.toFixed(1)}%</td>
-      <td class="r">
-        <div class="prog-wrap">
-          <span class="mono" style="font-size:12px;min-width:40px;text-align:right">${v.acum.toFixed(1)}%</span>
-          <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${barW}%;background:${barColor}"></div></div>
-        </div>
-      </td>
+      <td class="r mono">${v.acum.toFixed(1)}%</td>
       <td>
         <div style="display:flex;gap:6px;align-items:center">
-          <button style="width:26px;height:26px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b" title="Ver detalhes" onclick="toast('Detalhes em breve')">
+          <button style="width:28px;height:28px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b" title="Ver detalhes" onclick="toast('Detalhes em breve')">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
-          <button style="width:26px;height:26px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b" title="Ver gráfico" onclick="toast('Gráfico em breve')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <button style="width:28px;height:28px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b" title="Exportar linha" onclick="toast('Exportar em breve')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
         </div>
       </td>
     </tr>`;
   }).join('');
 
-  // Paginação
   const total=_abcRows.length;
   const totalPags=Math.max(1,Math.ceil(total/_abcPorPag));
   const end=Math.min(start+_abcPorPag,total);
@@ -787,7 +810,7 @@ function _renderAbcPage(){
 }
 
 function exportarABC(){
-  if(!_abcRows.length){toast('Calcule primeiro.','err');return;}
+  if(!_abcRows.length){toast('Sem dados.','err');return;}
   let csv='#;Insumo;Categoria;Classe;Valor;% Individual;% Acumulada\n';
   _abcRows.forEach(r=>{csv+=`${r.idx};${r.nome};${r.cat};${r.cl};${r.val.toFixed(2)};${r.pct.toFixed(2)};${r.acum.toFixed(2)}\n`;});
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
