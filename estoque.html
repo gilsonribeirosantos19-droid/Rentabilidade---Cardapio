@@ -47,7 +47,7 @@
   .tab-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-size:12px;font-weight:600;color:#ffffff;cursor:pointer;border:none;background:#0f2d5c;border-radius:8px;margin-bottom:0;transition:all .15s;font-family:inherit;white-space:nowrap}
   .tab-btn svg{flex-shrink:0;width:13px;height:13px}
   .tab-btn:hover{background:#1a3f7a}
-  .tab-btn.active{color:#fff;background:#162f57;font-weight:600;box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)}
+  .tab-btn.active{color:#fff;background:#f97316;font-weight:600}
   .tab-pane{display:none}
   .tab-pane.active{display:block}
 
@@ -340,91 +340,65 @@
     <div id="tab-entradas" class="tab-pane">
 
       <!-- AÇÕES -->
-      <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div style="display:flex;gap:10px;margin-bottom:14px">
         <button class="btn btn-primary" onclick="openEntrada()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Entrada manual
         </button>
-        <button class="btn btn-ghost" onclick="openNFe()" style="background:#0f2d5c;color:#fff;border:none">
+        <button class="btn btn-ghost" onclick="openNFe()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
           Entrada por NF-e XML
         </button>
       </div>
 
-      <!-- KPI CARDS -->
-      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px">
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:34px;height:34px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></div>
-            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Entradas Hoje</span>
-          </div>
-          <div style="font-size:26px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-hoje">—</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">lançamentos</div>
-        </div>
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:34px;height:34px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Valor Total (Hoje)</span>
-          </div>
-          <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-valor">—</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">em compras</div>
-        </div>
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:34px;height:34px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">NF-es Importadas</span>
-          </div>
-          <div style="font-size:26px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-nfe">—</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">arquivos</div>
-        </div>
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:34px;height:34px;border-radius:50%;background:#ffedd5;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
-            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Entradas Manuais</span>
-          </div>
-          <div style="font-size:26px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-manual">—</div>
-          <div style="font-size:11px;color:#94a3b8;margin-top:2px">lançamentos</div>
-        </div>
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:34px;height:34px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Última Entrada</span>
-          </div>
-          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a;line-height:1.2" id="ent-kpi-ultima">—</div>
-        </div>
-        <div style="background:#fff;border:1px solid #fee2e2;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="width:34px;height:34px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Pendências</span>
-          </div>
-          <div style="font-size:26px;font-weight:800;font-family:'DM Mono',monospace;color:#ef4444" id="ent-kpi-pend">—</div>
-          <div style="font-size:11px;color:#ef4444;margin-top:2px">itens divergentes</div>
-        </div>
-      </div>
-
-      <!-- FILTROS -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <!-- FILTROS — acima dos KPIs -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <div style="position:relative">
-          <input class="field field-sm" id="ent-busca" placeholder="Buscar insumo..." oninput="renderEntradas()" style="padding-left:30px;width:180px">
+          <input class="field field-sm" id="ent-busca" placeholder="Buscar insumo..." oninput="renderEntradas()" style="padding-left:30px;min-width:180px">
           <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
-        <select class="field field-sm" id="ent-f-cat" onchange="renderEntradas()" style="width:auto">
-          <option value="">Categoria: Todas</option>
+        <select class="field field-sm" id="ent-f-cat" onchange="renderEntradas()"><option value="">Categoria: Todas</option></select>
+        <select class="field field-sm" id="ent-f-tipo" onchange="renderEntradas()">
+          <option value="">Tipo: Todos</option><option value="manual">Manual</option><option value="nfe">NF-e</option><option value="ajuste">Ajuste</option>
         </select>
-        <select class="field field-sm" id="ent-f-tipo" onchange="renderEntradas()" style="width:auto">
-          <option value="">Tipo: Todos</option>
-          <option value="manual">Manual</option>
-          <option value="nfe">NF-e</option>
-          <option value="ajuste">Ajuste</option>
-        </select>
-        <select class="field field-sm" id="ent-f-forn" onchange="renderEntradas()" style="width:auto">
-          <option value="">Fornecedor: Todos</option>
-        </select>
+        <select class="field field-sm" id="ent-f-forn" onchange="renderEntradas()"><option value="">Fornecedor: Todos</option></select>
         <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <input type="date" id="ent-f-de" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
           <span style="color:#94a3b8">–</span>
           <input type="date" id="ent-f-ate" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+        </div>
+      </div>
+
+      <!-- KPI BAR — barra compacta horizontal, abaixo dos filtros -->
+      <div style="display:flex;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:14px;flex-wrap:wrap">
+        <div style="padding:12px 18px;border-right:1px solid #e2e8f0;min-width:0">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Entradas hoje</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-hoje">—</div>
+        </div>
+        <div style="padding:12px 18px;border-right:1px solid #e2e8f0;min-width:0">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Valor hoje</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-valor">—</div>
+        </div>
+        <div style="padding:12px 18px;border-right:1px solid #e2e8f0;min-width:0">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">NF-es</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-nfe">—</div>
+        </div>
+        <div style="padding:12px 18px;border-right:1px solid #e2e8f0;min-width:0">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Manuais</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-manual">—</div>
+        </div>
+        <div style="padding:12px 18px;border-right:1px solid #e2e8f0;min-width:0">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Pendências</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#e11d48" id="ent-kpi-pend">—</div>
+        </div>
+        <div style="padding:12px 18px;border-right:1px solid #e2e8f0;min-width:0">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Última entrada</div>
+          <div style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-ultima">—</div>
+        </div>
+        <div style="padding:12px 18px;flex:1;min-width:0">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Valor no período</div>
+          <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-periodo">—</div>
         </div>
       </div>
 
@@ -1769,12 +1743,14 @@ function renderEntradas() {
   const valorHoje = hoje_ents.reduce((s,e)=>s+(e.custo_total||0),0);
 
   const el=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  const valorPeriodo = entradas.reduce((s,e)=>s+(e.custo_total||0),0);
   el('ent-kpi-hoje', hoje_ents.length||0);
   el('ent-kpi-valor', brl(valorHoje));
   el('ent-kpi-nfe', nfe_total.length);
   el('ent-kpi-manual', manual_total.length);
   el('ent-kpi-ultima', ultima ? fmtDataHora(ultima.criado_em) : '—');
   el('ent-kpi-pend', pendencias.length);
+  el('ent-kpi-periodo', brl(valorPeriodo));
 
   // Popular filtro fornecedores
   const selForn = document.getElementById('ent-f-forn');
