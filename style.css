@@ -9,23 +9,18 @@
   border-right: 1px solid #e2e8f0 !important;
 }
 
+/* Remove os boxes azulados dos grupos */
 .nav-group {
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  padding: 0 12px !important;
+  padding: 4px 12px 8px !important;
   margin: 0 !important;
-  border-bottom: 1px solid #f1f5f9 !important;
-  padding-bottom: 8px !important;
-  margin-bottom: 0 !important;
 }
 
-.nav-group:last-of-type {
-  border-bottom: none !important;
-}
-
+/* Labels dos grupos (PRINCIPAL / ANÁLISE / GESTÃO) */
 .nav-label {
-  padding: 14px 4px 6px !important;
+  padding: 12px 4px 4px !important;
   color: #94a3b8 !important;
   font-size: 10px !important;
   font-weight: 700 !important;
@@ -34,13 +29,14 @@
   margin-bottom: 2px !important;
 }
 
+/* Itens do nav */
 .nav-item {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
   padding: 8px 10px !important;
   border-radius: 8px !important;
-  color: #475569 !important;
+  color: #334155 !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   text-decoration: none !important;
@@ -49,16 +45,16 @@
 }
 
 .nav-item:hover {
-  background: #f8fafc !important;
+  background: #f1f5f9 !important;
   color: #0f172a !important;
 }
 
+/* Item ATIVO: fundo azul-acinzentado suave, texto escuro — igual à referência */
 .nav-item.active {
-  background: #fff7ed !important;
-  color: #f97316 !important;
+  background: #e8edf5 !important;
+  color: #0f2d5c !important;
   font-weight: 600 !important;
-  border-left: 3px solid #f97316 !important;
-  padding-left: 7px !important;
+  border-left: none !important;
 }
 
 /* SCROLLBAR */
