@@ -335,15 +335,15 @@ document.getElementById('fil-ate').value=hoje();
 async function carregarFiltros(){
   // Lojas
   try{
-    const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&select=id,nome&order=nome`).catch(()=>[]);
+    const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
     const sl=document.getElementById('fil-loja');
     lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sl.appendChild(o);});
   }catch(e){}
-  // Grupos de insumos
+  // Categorias de insumos como grupos
   try{
-    const grupos=await api(`grupos_insumo?tenant_id=eq.${TENANT_ID}&select=id,nome&order=nome`).catch(()=>[]);
+    const cats=await api(`categorias?tenant_id=eq.${TENANT_ID}&tipo=eq.insumo&order=nome.asc`).catch(()=>[]);
     const sg=document.getElementById('fil-grupo');
-    grupos.forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.nome;sg.appendChild(o);});
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c.nome;o.textContent=c.nome;sg.appendChild(o);});
   }catch(e){}
 }
 carregarFiltros();
@@ -467,9 +467,9 @@ async function calcular(){
   const ate=document.getElementById('fil-ate').value;
   if(!de||!ate){toast('Selecione o período.','err');return;}
   const lojaId=document.getElementById('fil-loja').value;
-  const grupoId=document.getElementById('fil-grupo').value;
+  const catNome=document.getElementById('fil-grupo').value;
   const lojaQ=lojaId?`&loja_id=eq.${lojaId}`:'';
-  const grupoQ=grupoId?`&grupo_id=eq.${grupoId}`:'';
+  const catQ=catNome?`&categoria=eq.${encodeURIComponent(catNome)}`:'';
   const cs=document.getElementById('conn-status');
   if(cs){cs.textContent='• calculando...';cs.style.color='#94a3b8';}
   try{
@@ -477,7 +477,7 @@ async function calcular(){
       api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}${lojaQ}`).catch(()=>[]),
       api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}${lojaQ}`).catch(()=>[]),
       api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&select=*`),
-      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true${grupoQ}`).catch(()=>api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true`)),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true${catQ}`),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}${lojaQ}`).catch(()=>api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`)),
       api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59${lojaQ}`).catch(()=>[]),
       api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59${lojaQ}`).catch(()=>[]),
