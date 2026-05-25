@@ -244,8 +244,8 @@
                 <th>Unidade</th>
                 <th class="r">Preço Compra</th>
                 <th class="r">Custo Real/kg</th>
-                <th class="r">Status</th>
-                <th class="r">Ações</th>
+                <th>Status</th>
+                <th>Ações</th>
               </tr></thead>
               <tbody id="tbody">
                 <tr><td colspan="7" class="empty">Carregando...</td></tr>
@@ -462,9 +462,9 @@ function renderTabela(lista){
       <td style="color:#64748b">${esc(i.unidade_compra||i.unidade_medida||'—')}</td>
       <td class="r td-mono">${brl(i.preco_compra)}</td>
       <td class="r td-mono" style="font-weight:600">${brl(custo)}</td>
-      <td class="r"><span class="badge ${sc.cls}">${sc.txt}</span></td>
-      <td class="r">
-        <button class="btn-ghost" onclick="event.stopPropagation();menuAcoes('${i.id}')" style="border-radius:6px;padding:4px 8px;font-size:16px;font-weight:700">⋯</button>
+      <td><span class="badge ${sc.cls}">${sc.txt}</span></td>
+      <td>
+        <button class="btn-ghost" onclick="event.stopPropagation();menuAcoes('${i.id}')" style="border-radius:6px;padding:4px 8px;font-size:16px;font-weight:700;letter-spacing:2px">···</button>
       </td>
     </tr>`;
   }).join('');
