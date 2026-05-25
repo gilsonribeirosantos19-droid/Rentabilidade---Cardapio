@@ -42,9 +42,10 @@
   .content{padding:24px;flex:1}
 
   .tabs{display:flex;gap:6px;margin-bottom:24px;position:sticky;top:40px;z-index:50;background:#f8fafc;padding:10px 12px;border-radius:0;border-bottom:1px solid #e2e8f0}
-  .tab-btn{padding:7px 18px;font-size:13px;font-weight:500;color:#ffffff;cursor:pointer;border:none;background:#0f2d5c;border-radius:20px;margin-bottom:0;transition:all .2s;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .tab-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer;border:none;background:#0f2d5c;border-radius:22px;margin-bottom:0;transition:all .2s;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.12);white-space:nowrap}
+  .tab-btn svg{flex-shrink:0}
   .tab-btn:hover{background:#1a3f7a;box-shadow:0 2px 8px rgba(15,45,92,.25)}
-  .tab-btn.active{color:#fff;background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:600}
+  .tab-btn.active{color:#fff;background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:700}
   .tab-pane{display:none}
   .tab-pane.active{display:block}
 
@@ -171,6 +172,10 @@
   .toast.ok{border-color:var(--green);color:#16a34a}
   .toast.err{border-color:var(--red);color:var(--red)}
 
+  .pag-btn{min-width:28px;height:28px;padding:0 6px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+  .pag-btn:hover{border-color:#3b82f6;color:#3b82f6}
+  .pag-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;font-weight:700}
+  .pag-btn:disabled{opacity:.4;cursor:not-allowed}
   ::-webkit-scrollbar{width:6px;height:6px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
@@ -238,14 +243,14 @@
 
     <!-- TABS -->
     <div class="tabs">
-      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
-      <button class="tab-btn" data-tab="entradas" onclick="switchTab('entradas')">Entradas</button>
-      <button class="tab-btn" data-tab="saidas" onclick="switchTab('saidas')">Saídas</button>
-      <button class="tab-btn" data-tab="kardex" onclick="switchTab('kardex')">Kardex</button>
-      <button class="tab-btn" data-tab="inventario" onclick="switchTab('inventario')">Inventário</button>
-      <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')">Fechamento</button>
-      <button class="tab-btn" data-tab="movimentacao" onclick="switchTab('movimentacao')">Movimentação</button>
-      <button class="tab-btn" data-tab="compras" onclick="switchTab('compras')">Sugestão de Compras</button>
+      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</button>
+      <button class="tab-btn" data-tab="entradas" onclick="switchTab('entradas')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>Entradas</button>
+      <button class="tab-btn" data-tab="saidas" onclick="switchTab('saidas')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 17 12 21 8 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>Saídas</button>
+      <button class="tab-btn" data-tab="kardex" onclick="switchTab('kardex')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Kardex</button>
+      <button class="tab-btn" data-tab="inventario" onclick="switchTab('inventario')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Inventário</button>
+      <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Fechamento</button>
+      <button class="tab-btn" data-tab="movimentacao" onclick="switchTab('movimentacao')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Movimentação</button>
+      <button class="tab-btn" data-tab="compras" onclick="switchTab('compras')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sugestão de Compras</button>
     </div>
 
     <!-- TAB: DASHBOARD -->
@@ -281,29 +286,125 @@
 
     <!-- TAB: ENTRADAS -->
     <div id="tab-entradas" class="tab-pane">
-      <div class="toolbar">
-        <button class="btn btn-primary" onclick="openEntrada()">+ Entrada manual</button>
-        <button class="btn btn-blue" onclick="openNFe()">↑ Entrada por NF-e XML</button>
-        <div class="ml" style="display:flex;gap:8px">
-          <select class="field field-sm" id="ent-f-ins" onchange="renderEntradas()">
-            <option value="">Todos os insumos</option>
-          </select>
-          <select class="field field-sm" id="ent-f-tipo" onchange="renderEntradas()">
-            <option value="">Todos os tipos</option>
-            <option value="manual">Manual</option><option value="nfe">NF-e</option>
-          </select>
+
+      <!-- AÇÕES -->
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <button class="btn btn-primary" onclick="openEntrada()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Entrada manual
+        </button>
+        <button class="btn btn-ghost" onclick="openNFe()" style="background:#0f2d5c;color:#fff;border:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          Entrada por NF-e XML
+        </button>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px">
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:34px;height:34px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></div>
+            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Entradas Hoje</span>
+          </div>
+          <div style="font-size:26px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-hoje">—</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">lançamentos</div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:34px;height:34px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Valor Total (Hoje)</span>
+          </div>
+          <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-valor">—</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">em compras</div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:34px;height:34px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">NF-es Importadas</span>
+          </div>
+          <div style="font-size:26px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-nfe">—</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">arquivos</div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:34px;height:34px;border-radius:50%;background:#ffedd5;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Entradas Manuais</span>
+          </div>
+          <div style="font-size:26px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="ent-kpi-manual">—</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">lançamentos</div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:34px;height:34px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Última Entrada</span>
+          </div>
+          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a;line-height:1.2" id="ent-kpi-ultima">—</div>
+        </div>
+        <div style="background:#fff;border:1px solid #fee2e2;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:34px;height:34px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Pendências</span>
+          </div>
+          <div style="font-size:26px;font-weight:800;font-family:'DM Mono',monospace;color:#ef4444" id="ent-kpi-pend">—</div>
+          <div style="font-size:11px;color:#ef4444;margin-top:2px">itens divergentes</div>
         </div>
       </div>
+
+      <!-- FILTROS -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="position:relative">
+          <input class="field field-sm" id="ent-busca" placeholder="Buscar insumo..." oninput="renderEntradas()" style="padding-left:30px;width:180px">
+          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <select class="field field-sm" id="ent-f-cat" onchange="renderEntradas()" style="width:auto">
+          <option value="">Categoria: Todas</option>
+        </select>
+        <select class="field field-sm" id="ent-f-tipo" onchange="renderEntradas()" style="width:auto">
+          <option value="">Tipo: Todos</option>
+          <option value="manual">Manual</option>
+          <option value="nfe">NF-e</option>
+          <option value="ajuste">Ajuste</option>
+        </select>
+        <select class="field field-sm" id="ent-f-forn" onchange="renderEntradas()" style="width:auto">
+          <option value="">Fornecedor: Todos</option>
+        </select>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input type="date" id="ent-f-de" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+          <span style="color:#94a3b8">–</span>
+          <input type="date" id="ent-f-ate" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+        </div>
+      </div>
+
+      <!-- TABELA -->
       <div class="tbl-wrap"><div class="tbl-scroll">
         <table class="tbl">
           <thead><tr>
-            <th>Data</th><th>Insumo</th><th>Fornecedor</th><th class="c">Tipo</th>
-            <th class="r">Quantidade</th><th class="r">Custo Unit.</th>
-            <th class="r">Custo Total</th><th>Lote</th><th>Validade</th>
+            <th>Data / Hora</th>
+            <th>Insumo</th>
+            <th>Fornecedor</th>
+            <th class="c">Tipo</th>
+            <th class="r">Quantidade</th>
+            <th class="r">Custo Unit.</th>
+            <th class="r">Custo Total</th>
+            <th>Lote</th>
+            <th>Validade</th>
+            <th class="c">Ações</th>
           </tr></thead>
-          <tbody id="ent-body"><tr><td colspan="9" class="empty"><b>Carregando...</b></td></tr></tbody>
+          <tbody id="ent-body"><tr><td colspan="10" class="empty"><b>Carregando...</b></td></tr></tbody>
         </table>
       </div></div>
+
+      <!-- PAGINAÇÃO -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;font-size:12px;color:#94a3b8;margin-top:8px">
+        <span id="ent-pag-info">—</span>
+        <div style="display:flex;gap:4px" id="ent-pag-btns"></div>
+        <select class="field field-sm" id="ent-por-pag" onchange="renderEntradas()" style="padding:3px 8px;font-size:11px;width:auto">
+          <option value="20">20 por página</option>
+          <option value="50">50 por página</option>
+          <option value="100">100 por página</option>
+        </select>
+      </div>
     </div>
 
     <!-- TAB: SAÍDAS -->
@@ -916,6 +1017,10 @@ async function carregar() {
     ]);
     insumoFornVinculos = await api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
     popularSelects();
+    // Inicializar datas dos filtros de entradas
+    const _hoje=hoje(); const _ini=_hoje.slice(0,7)+'-01';
+    const de=document.getElementById('ent-f-de'); if(de&&!de.value) de.value=_ini;
+    const ate=document.getElementById('ent-f-ate'); if(ate&&!ate.value) ate.value=_hoje;
     renderDash(); renderEntradas(); renderSaidas();
     if (tabAtual==='kardex') renderKardex();
     if (tabAtual==='relatorios') renderRelatorios();
@@ -1132,31 +1237,125 @@ async function registrarEntrada(insId, dados, custoUnitEstoque) {
   }
 }
 
+let _entPagAtual = 1;
+
 function renderEntradas() {
-  const fIns = document.getElementById('ent-f-ins')?.value||'';
-  const fTipo = document.getElementById('ent-f-tipo')?.value||'';
+  const hoje = new Date().toISOString().split('T')[0];
+  const busca  = (document.getElementById('ent-busca')?.value||'').toLowerCase();
+  const fTipo  = document.getElementById('ent-f-tipo')?.value||'';
+  const fForn  = document.getElementById('ent-f-forn')?.value||'';
+  const fDe    = document.getElementById('ent-f-de')?.value||'';
+  const fAte   = document.getElementById('ent-f-ate')?.value||'';
+  const porPag = parseInt(document.getElementById('ent-por-pag')?.value||20);
+
+  // KPIs
+  const hoje_ents = entradas.filter(e=>e.criado_em&&e.criado_em.startsWith(hoje));
+  const nfe_total = entradas.filter(e=>e.tipo==='nfe'||e.tipo==='nfe_importada');
+  const manual_total = entradas.filter(e=>e.tipo==='manual');
+  const ultima = entradas.length>0 ? entradas.reduce((a,b)=>a.criado_em>b.criado_em?a:b) : null;
+  const pendencias = entradas.filter(e=>!e.custo_unitario||!insumos.find(i=>i.id===e.insumo_id));
+  const valorHoje = hoje_ents.reduce((s,e)=>s+(e.custo_total||0),0);
+
+  const el=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  el('ent-kpi-hoje', hoje_ents.length||0);
+  el('ent-kpi-valor', brl(valorHoje));
+  el('ent-kpi-nfe', nfe_total.length);
+  el('ent-kpi-manual', manual_total.length);
+  el('ent-kpi-ultima', ultima ? fmtDataHora(ultima.criado_em) : '—');
+  el('ent-kpi-pend', pendencias.length);
+
+  // Popular filtro fornecedores
+  const selForn = document.getElementById('ent-f-forn');
+  if (selForn && selForn.options.length<=1) {
+    const forns=[...new Set(entradas.map(e=>e.fornecedor_nome).filter(Boolean))].sort();
+    selForn.innerHTML='<option value="">Fornecedor: Todos</option>'+forns.map(f=>`<option value="${f}">${esc(f)}</option>`).join('');
+  }
+
+  // Filtrar
   let rows = entradas;
-  if(fIns) rows=rows.filter(e=>e.insumo_id===fIns);
-  if(fTipo) rows=rows.filter(e=>e.tipo===fTipo);
-  const tbody = document.getElementById('ent-body');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty"><b>Nenhuma entrada encontrada</b></td></tr>';return;}
-  tbody.innerHTML = rows.map(e=>{
+  if (busca)  rows=rows.filter(e=>{const ins=insumos.find(i=>i.id===e.insumo_id);return (ins?.nome||'').toLowerCase().includes(busca);});
+  if (fTipo)  rows=rows.filter(e=>e.tipo===fTipo||(fTipo==='nfe'&&e.tipo==='nfe_importada'));
+  if (fForn)  rows=rows.filter(e=>e.fornecedor_nome===fForn);
+  if (fDe)    rows=rows.filter(e=>e.criado_em>=fDe);
+  if (fAte)   rows=rows.filter(e=>e.criado_em<=fAte+'T23:59:59');
+  rows=[...rows].sort((a,b)=>(b.criado_em||'').localeCompare(a.criado_em||''));
+
+  // Paginação
+  const totalPags=Math.max(1,Math.ceil(rows.length/porPag));
+  _entPagAtual=Math.min(_entPagAtual,totalPags);
+  const slice=rows.slice((_entPagAtual-1)*porPag,_entPagAtual*porPag);
+  const offset=(_entPagAtual-1)*porPag;
+
+  const infoEl=document.getElementById('ent-pag-info');
+  if(infoEl) infoEl.textContent=rows.length?`Mostrando ${offset+1} a ${Math.min(offset+porPag,rows.length)} de ${rows.length} entradas`:'Nenhuma entrada encontrada';
+
+  const tbody=document.getElementById('ent-body');
+  if(!slice.length){tbody.innerHTML='<tr><td colspan="10" class="empty"><b>Nenhuma entrada encontrada</b></td></tr>';}
+  else tbody.innerHTML=slice.map((e,i)=>{
     const ins=insumos.find(i=>i.id===e.insumo_id);
     const forn=e.fornecedor_nome||(e.fornecedor_id?fornecedores.find(f=>f.id===e.fornecedor_id)?.nome:null)||'—';
     const val=e.validade?new Date(e.validade+'T12:00:00').toLocaleDateString('pt-BR'):'—';
+    const isNfe=e.tipo==='nfe'||e.tipo==='nfe_importada';
+    const tipoBadge=isNfe
+      ?'<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#dbeafe;color:#1d4ed8;font-weight:600">NF-e importada</span>'
+      :e.tipo==='ajuste'
+        ?'<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#f1f5f9;color:#64748b;font-weight:600">Ajuste</span>'
+        :'<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#ffedd5;color:#ea580c;font-weight:600">Manual</span>';
+    const dataHora=e.criado_em?new Date(e.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
     return `<tr>
-      <td class="mono" style="color:var(--text2)">${fmtData(e.criado_em)}</td>
-      <td style="font-weight:500">${ins?esc(ins.nome):'—'}</td>
-      <td style="color:var(--text2)">${esc(forn)}</td>
-      <td class="c"><span class="badge ${e.tipo==='nfe'?'b-nfe':'b-manual'}">${e.tipo==='nfe'?'NF-e':'Manual'}</span></td>
+      <td class="mono" style="color:var(--text2);font-size:12px">${dataHora}</td>
+      <td style="font-weight:600">${ins?esc(ins.nome):'<span style="color:#ef4444">Insumo não encontrado</span>'}</td>
+      <td style="color:var(--text2);font-size:12px">${esc(forn)}</td>
+      <td class="c">${tipoBadge}</td>
       <td class="r mono">${qtd(e.quantidade)}</td>
       <td class="r mono">${e.custo_unitario?brl(e.custo_unitario):'—'}</td>
-      <td class="r mono">${e.custo_total?brl(e.custo_total):'—'}</td>
-      <td style="color:var(--text3)">${esc(e.lote||'—')}</td>
-      <td style="color:var(--text3)">${val}</td>
+      <td class="r mono" style="font-weight:600">${e.custo_total?brl(e.custo_total):'—'}</td>
+      <td style="color:var(--text3);font-size:12px">${esc(e.lote||'—')}</td>
+      <td style="color:var(--text3);font-size:12px">${val}</td>
+      <td class="c">
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+          <button title="Ver detalhes" onclick="verEntrada('${e.id}')" style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#94a3b8'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button title="Duplicar" onclick="duplicarEntrada('${e.id}')" style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px" onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='#94a3b8'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
+
+  // Paginação botões
+  const btnsEl=document.getElementById('ent-pag-btns');
+  if(!btnsEl) return;
+  let html=`<button class="pag-btn" ${_entPagAtual===1?'disabled':''} onclick="_entPagAtual--;renderEntradas()">‹</button>`;
+  for(let p=1;p<=totalPags;p++){
+    if(totalPags>7&&p>2&&p<totalPags-1&&Math.abs(p-_entPagAtual)>1){
+      if(p===3||p===totalPags-2) html+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
+      continue;
+    }
+    html+=`<button class="pag-btn ${p===_entPagAtual?'active':''}" onclick="_entPagAtual=${p};renderEntradas()">${p}</button>`;
+  }
+  html+=`<button class="pag-btn" ${_entPagAtual===totalPags?'disabled':''} onclick="_entPagAtual++;renderEntradas()">›</button>`;
+  btnsEl.innerHTML=html;
 }
+
+function verEntrada(id) { const e=entradas.find(x=>x.id===id); if(e) abrirModal('m-entrada'); }
+function duplicarEntrada(id) {
+  const e=entradas.find(x=>x.id===id);
+  if(!e) return;
+  openEntrada();
+  setTimeout(()=>{
+    const el=(id,v)=>{const d=document.getElementById(id);if(d&&v!==undefined)d.value=v;};
+    el('ef-ins',e.insumo_id); el('ef-forn',e.fornecedor_id||'');
+    el('ef-qtd',e.quantidade_fornecedor||e.quantidade);
+    el('ef-fator',e.fator_conversao||1); el('ef-unid',e.unidade_compra||'');
+    el('ef-custo',e.custo_unitario); el('ef-lote',e.lote||'');
+    calcConv();
+  },100);
+}
+
+function fmtDataHora(s){ if(!s)return'—'; const d=new Date(s); return d.toLocaleDateString('pt-BR')+'\n'+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 
 // ── NF-e ─────────────────────────────────────────────────────────
 function openNFe() { resetNfe(); abrirModal('m-nfe'); }
