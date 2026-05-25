@@ -740,16 +740,126 @@
 
       <!-- SUB-PANE: CURVA ABC -->
       <div id="srel-pane-abc" class="srel-pane active">
-        <div class="tbl-wrap"><div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr>
-              <th class="c">#</th><th>Produto</th><th>Categoria</th>
-              <th class="c">Classe</th><th class="r">Qtd</th>
-              <th class="r">Faturado</th><th class="r">% Individual</th><th class="r">% Acumulada</th>
-            </tr></thead>
-            <tbody id="abc-body"><tr><td colspan="8" class="empty">Clique em Calcular</td></tr></tbody>
-          </table>
-        </div></div>
+
+        <!-- KPI CARDS ABC -->
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px" id="abc-kpis">
+          <div class="dash-card" style="margin:0;padding:14px 16px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+              <div style="width:28px;height:28px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              Faturamento Total
+            </div>
+            <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace" id="abc-kpi-fat">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">no período</div>
+          </div>
+          <div class="dash-card" style="margin:0;padding:14px 16px">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Total de Produtos</div>
+            <div style="font-size:22px;font-weight:700;font-family:'DM Mono',monospace" id="abc-kpi-total">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">no período</div>
+          </div>
+          <div class="dash-card" style="margin:0;padding:14px 16px;border-top:3px solid #3b82f6">
+            <div style="font-size:10px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🅐 Classe A</div>
+            <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace" id="abc-kpi-a-val">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px" id="abc-kpi-a-sub">—</div>
+          </div>
+          <div class="dash-card" style="margin:0;padding:14px 16px;border-top:3px solid #f97316">
+            <div style="font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🅑 Classe B</div>
+            <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace" id="abc-kpi-b-val">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px" id="abc-kpi-b-sub">—</div>
+          </div>
+          <div class="dash-card" style="margin:0;padding:14px 16px;border-top:3px solid #94a3b8">
+            <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🅒 Classe C</div>
+            <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace" id="abc-kpi-c-val">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px" id="abc-kpi-c-sub">—</div>
+          </div>
+          <div class="dash-card" style="margin:0;padding:14px 16px;border-top:3px solid #f59e0b">
+            <div style="font-size:10px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">⭐ Produto Líder</div>
+            <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="abc-kpi-lider-nome">—</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px" id="abc-kpi-lider-sub">—</div>
+          </div>
+        </div>
+
+        <!-- GRÁFICO + DONUT -->
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px">
+
+          <!-- GRÁFICO ABC MISTO -->
+          <div class="dash-card">
+            <div class="dash-head">
+              <span class="dash-head-title">Curva ABC de Produtos</span>
+              <div style="display:flex;gap:12px;font-size:11px;align-items:center">
+                <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#3b82f6;display:inline-block"></span>Classe A</span>
+                <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#f97316;display:inline-block"></span>Classe B</span>
+                <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#94a3b8;display:inline-block"></span>Classe C</span>
+                <span style="display:flex;align-items:center;gap:4px"><span style="width:20px;height:2px;background:#0f172a;display:inline-block;border-top:2px dashed #0f172a"></span>% Acumulada</span>
+              </div>
+            </div>
+            <div class="dash-body" style="padding-bottom:8px">
+              <div style="height:280px"><canvas id="chart-abc"></canvas></div>
+              <div id="abc-chart-info" style="margin-top:8px;font-size:12px;color:#1d4ed8;background:#eff6ff;border-radius:6px;padding:8px 12px;display:none"></div>
+            </div>
+          </div>
+
+          <!-- DONUT POR CLASSE -->
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-head-title">Distribuição do Faturamento por Classe</span></div>
+            <div class="dash-body">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+                <div style="position:relative;width:160px;height:160px;flex-shrink:0">
+                  <canvas id="chart-abc-donut"></canvas>
+                  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+                    <div style="font-size:10px;color:var(--text3)">Total</div>
+                    <div style="font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1);text-align:center" id="abc-donut-total">—</div>
+                  </div>
+                </div>
+                <div style="width:100%" id="abc-donut-legend"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INSIGHTS -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px" id="abc-insights"></div>
+
+        <!-- TABELA DETALHAMENTO -->
+        <div class="dash-card">
+          <div class="dash-head">
+            <span class="dash-head-title">Detalhamento dos Produtos</span>
+            <div style="display:flex;gap:8px">
+              <input class="field field-sm" id="abc-busca" placeholder="Buscar produto..." oninput="filtrarTabelaAbc()" style="width:180px">
+              <select class="field field-sm" id="abc-filtro-classe" onchange="filtrarTabelaAbc()" style="width:auto;padding:5px 8px;font-size:12px">
+                <option value="">Todas as classes</option>
+                <option value="A">Classe A</option>
+                <option value="B">Classe B</option>
+                <option value="C">Classe C</option>
+              </select>
+            </div>
+          </div>
+          <div class="tbl-scroll">
+            <table class="tbl" style="font-size:12px">
+              <thead><tr>
+                <th class="c" style="width:36px">#</th>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th class="r">Qtd Vendida</th>
+                <th class="r">Faturamento</th>
+                <th class="r">% Individual</th>
+                <th class="r">% Acumulada</th>
+                <th class="c">Classe</th>
+                <th class="r">Ticket Médio</th>
+                <th class="r">Margem (%)</th>
+              </tr></thead>
+              <tbody id="abc-body"><tr><td colspan="10" class="empty">Clique em Calcular</td></tr></tbody>
+            </table>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #f1f5f9;font-size:12px;color:var(--text3)">
+            <span id="abc-pag-info">—</span>
+            <div style="display:flex;align-items:center;gap:4px" id="abc-pag-btns"></div>
+            <select class="field field-sm" id="abc-por-pag" onchange="renderPagAbc()" style="padding:3px 8px;font-size:11px;width:auto">
+              <option value="10">10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- SUB-PANE: CMV POR PRODUTO -->
@@ -1674,6 +1784,134 @@ function exportVendasCSV() {
 }
 
 // ── RELATÓRIOS ─────────────────────────────────────────────────────
+// ── ABC HELPERS ────────────────────────────────────────────────────
+let _abcData = [], _abcPagAtual = 1, _chartAbc = null, _chartAbcDonut = null;
+
+function renderAbcChart(prods, totalFat) {
+  const ctx = document.getElementById('chart-abc')?.getContext('2d');
+  if (!ctx) return;
+  if (_chartAbc) _chartAbc.destroy();
+
+  const colors = prods.map(p=>p.classe==='A'?'#3b82f6':p.classe==='B'?'#f97316':'#cbd5e1');
+  _chartAbc = new Chart(ctx, {
+    data:{
+      labels: prods.map(p=>p.rank),
+      datasets:[
+        { type:'bar', label:'Faturamento', data:prods.map(p=>p.fat),
+          backgroundColor:colors, borderWidth:0, yAxisID:'y', order:2 },
+        { type:'line', label:'% Acumulada', data:prods.map(p=>p.acum),
+          borderColor:'#0f172a', borderWidth:2, borderDash:[4,3],
+          pointRadius:0, tension:0.1, fill:false, yAxisID:'y2', order:1 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:ctx=>ctx.datasetIndex===0?brl(ctx.raw):ctx.raw.toFixed(1)+'%'
+      }}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:9},color:'#94a3b8',maxTicksLimit:10,
+          callback:(v,i)=>i%Math.ceil(prods.length/10)===0?prods[i]?.rank:''}},
+        y:{position:'left',grid:{color:'#f1f5f9'},ticks:{font:{size:9},color:'#94a3b8',
+          callback:v=>v>=1000?Math.round(v/1000)+'K':v}},
+        y2:{position:'right',min:0,max:100,grid:{display:false},
+          ticks:{font:{size:9},color:'#94a3b8',callback:v=>v+'%'}}
+      }
+    }
+  });
+
+  // info abaixo do gráfico
+  const clsA = prods.filter(p=>p.classe==='A');
+  const fatA = clsA.reduce((s,p)=>s+p.fat,0);
+  const el = document.getElementById('abc-chart-info');
+  if (el) { el.textContent=`ℹ️  ${clsA.length} produto${clsA.length!==1?'s':''} da Classe A representam ${totalFat>0?(fatA/totalFat*100).toFixed(1):0}% do faturamento total.`; el.style.display='block'; }
+}
+
+function renderAbcDonut(fatA, fatB, fatC, totalFat) {
+  const ctx = document.getElementById('chart-abc-donut')?.getContext('2d');
+  if (!ctx) return;
+  if (_chartAbcDonut) _chartAbcDonut.destroy();
+  document.getElementById('abc-donut-total').textContent = brl(totalFat);
+  _chartAbcDonut = new Chart(ctx, {
+    type:'doughnut',
+    data:{labels:['Classe A','Classe B','Classe C'],
+      datasets:[{data:[fatA,fatB,fatC],backgroundColor:['#3b82f6','#f97316','#cbd5e1'],
+        borderWidth:2,borderColor:'#fff',hoverOffset:4}]},
+    options:{responsive:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>`${brl(ctx.raw)} (${totalFat>0?(ctx.raw/totalFat*100).toFixed(1):0}%)`}}},
+      cutout:'70%'}
+  });
+  const cores=['#3b82f6','#f97316','#cbd5e1'];
+  const labels=['Classe A','Classe B','Classe C'];
+  const vals=[fatA,fatB,fatC];
+  document.getElementById('abc-donut-legend').innerHTML=[...labels.map((l,i)=>`
+    <div class="cat-leg-row">
+      <div style="width:10px;height:10px;border-radius:50%;background:${cores[i]};flex-shrink:0"></div>
+      <span style="flex:1">${l}</span>
+      <span class="mono" style="font-weight:600">${brl(vals[i])}</span>
+      <span style="color:var(--text3);min-width:36px;text-align:right">${totalFat>0?(vals[i]/totalFat*100).toFixed(1):0}%</span>
+    </div>`),`<div class="cat-leg-row" style="border-top:1px solid #e2e8f0;margin-top:4px">
+      <span style="flex:1;font-weight:700">Total</span>
+      <span class="mono" style="font-weight:700">${brl(totalFat)}</span>
+      <span style="color:var(--text3);min-width:36px;text-align:right">100%</span>
+    </div>`].join('');
+}
+
+function filtrarTabelaAbc() { _abcPagAtual=1; renderPagAbc(); }
+
+function renderPagAbc() {
+  const busca = (document.getElementById('abc-busca')?.value||'').toLowerCase();
+  const filtroClasse = document.getElementById('abc-filtro-classe')?.value||'';
+  const porPag = parseInt(document.getElementById('abc-por-pag')?.value||10);
+  const totalFat = _abcData.reduce((s,p)=>s+p.fat,0);
+
+  let filtrado = _abcData;
+  if (busca) filtrado = filtrado.filter(p=>p.nome.toLowerCase().includes(busca));
+  if (filtroClasse) filtrado = filtrado.filter(p=>p.classe===filtroClasse);
+
+  const totalPags = Math.max(1,Math.ceil(filtrado.length/porPag));
+  _abcPagAtual = Math.min(_abcPagAtual,totalPags);
+  const slice = filtrado.slice((_abcPagAtual-1)*porPag, _abcPagAtual*porPag);
+  const offset = (_abcPagAtual-1)*porPag;
+
+  document.getElementById('abc-pag-info').textContent =
+    filtrado.length ? `Mostrando ${offset+1} a ${Math.min(offset+porPag,filtrado.length)} de ${filtrado.length} produtos` : 'Nenhum produto';
+
+  const classeCores = {A:'#3b82f6',B:'#f97316',C:'#64748b'};
+  const classeBg    = {A:'#dbeafe',B:'#ffedd5',C:'#f1f5f9'};
+  document.getElementById('abc-body').innerHTML = slice.length ? slice.map((p,i)=>{
+    const ticket = p.qtd>0?p.fat/p.qtd:0;
+    const margem = p.fat>0?(p.fat-p.custo)/p.fat*100:0;
+    return `<tr>
+      <td class="c mono" style="color:var(--text3)">${offset+i+1}</td>
+      <td style="font-weight:500">${esc(p.nome)}</td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#f1f5f9;color:#64748b">${esc(p.cat||'—')}</span></td>
+      <td class="r mono">${Math.round(p.qtd).toLocaleString('pt-BR')}</td>
+      <td class="r mono" style="font-weight:600">${brl(p.fat)}</td>
+      <td class="r mono">${p.pct.toFixed(2)}%</td>
+      <td class="r mono">${p.acum.toFixed(2)}%</td>
+      <td class="c"><span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${classeBg[p.classe]};color:${classeCores[p.classe]}">${p.classe}</span></td>
+      <td class="r mono">${brl(ticket)}</td>
+      <td class="r mono" style="${margem>=0?'color:#16a34a':'color:#ef4444'}">${p.custo>0?margem.toFixed(1)+'%':'—'}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="10" class="empty">Nenhum produto encontrado</td></tr>`;
+
+  // Paginação
+  const btns = document.getElementById('abc-pag-btns');
+  if (!btns) return;
+  let html=`<button class="pag-btn" ${_abcPagAtual===1?'disabled':''} onclick="_abcPagAtual--;renderPagAbc()">‹</button>`;
+  for(let p=1;p<=totalPags;p++){
+    if(totalPags>7&&p>2&&p<totalPags-1&&Math.abs(p-_abcPagAtual)>1){
+      if(p===3||p===totalPags-2) html+=`<span style="padding:0 4px;color:var(--text3)">…</span>`;
+      continue;
+    }
+    html+=`<button class="pag-btn ${p===_abcPagAtual?'active':''}" onclick="_abcPagAtual=${p};renderPagAbc()">${p}</button>`;
+  }
+  html+=`<button class="pag-btn" ${_abcPagAtual===totalPags?'disabled':''} onclick="_abcPagAtual++;renderPagAbc()">›</button>`;
+  btns.innerHTML=html;
+}
+
 async function renderRelatorios() {
   const de = document.getElementById('rel-de').value;
   const ate = document.getElementById('rel-ate').value;
@@ -1696,24 +1934,65 @@ async function renderRelatorios() {
     const mediaQtd = prods.reduce((s,p)=>s+p.qtd,0)/prods.length;
     const mediaMargem = prods.reduce((s,p)=>s+(p.fat>0?(p.fat-p.custo)/p.fat:0),0)/prods.length;
 
-    // CURVA ABC
+    // CURVA ABC — classificar produtos
     let acum=0;
-    const abcRows = prods.map((p,i)=>{
+    const abcProds = prods.map((p,i)=>{
       const pct = totalFat>0?p.fat/totalFat*100:0;
       acum+=pct;
       const classe = acum<=80?'A':acum<=95?'B':'C';
-      return `<tr>
-        <td class="c mono" style="color:var(--text3)">${i+1}</td>
-        <td style="font-weight:500">${esc(p.nome)}</td>
-        <td style="color:var(--text3)">${esc(p.cat)}</td>
-        <td class="c"><span class="badge b-${classe}">${classe}</span></td>
-        <td class="r mono">${p.qtd.toFixed(0)}</td>
-        <td class="r mono">${brl(p.fat)}</td>
-        <td class="r mono">${pct.toFixed(1)}%</td>
-        <td class="r mono">${acum.toFixed(1)}%</td>
-      </tr>`;
-    }).join('');
-    document.getElementById('abc-body').innerHTML = abcRows;
+      return {...p, pct, acum, classe, rank:i+1};
+    });
+    _abcData = abcProds;
+    _abcPagAtual = 1;
+
+    // KPI cards
+    const clsA = abcProds.filter(p=>p.classe==='A');
+    const clsB = abcProds.filter(p=>p.classe==='B');
+    const clsC = abcProds.filter(p=>p.classe==='C');
+    const fatA = clsA.reduce((s,p)=>s+p.fat,0);
+    const fatB = clsB.reduce((s,p)=>s+p.fat,0);
+    const fatC = clsC.reduce((s,p)=>s+p.fat,0);
+    const lider = abcProds[0];
+    document.getElementById('abc-kpi-fat').textContent   = brl(totalFat);
+    document.getElementById('abc-kpi-total').textContent = prods.length;
+    document.getElementById('abc-kpi-a-val').textContent = brl(fatA);
+    document.getElementById('abc-kpi-a-sub').textContent = `${totalFat>0?(fatA/totalFat*100).toFixed(1):0}% do faturamento · ${clsA.length} produtos`;
+    document.getElementById('abc-kpi-b-val').textContent = brl(fatB);
+    document.getElementById('abc-kpi-b-sub').textContent = `${totalFat>0?(fatB/totalFat*100).toFixed(1):0}% do faturamento · ${clsB.length} produtos`;
+    document.getElementById('abc-kpi-c-val').textContent = brl(fatC);
+    document.getElementById('abc-kpi-c-sub').textContent = `${totalFat>0?(fatC/totalFat*100).toFixed(1):0}% do faturamento · ${clsC.length} produtos`;
+    document.getElementById('abc-kpi-lider-nome').textContent = lider?.nome||'—';
+    document.getElementById('abc-kpi-lider-sub').textContent  = lider?`${brl(lider.fat)} · ${lider.pct.toFixed(2)}% do faturamento`:'—';
+
+    // GRÁFICO ABC MISTO (barras + linha)
+    renderAbcChart(abcProds, totalFat);
+
+    // DONUT POR CLASSE
+    renderAbcDonut(fatA, fatB, fatC, totalFat);
+
+    // INSIGHTS
+    const pctA = totalFat>0?(fatA/totalFat*100):0;
+    const insights = [
+      {cor:'#10b981',bg:'#d1fae5',icone:'📊',titulo:'Concentração alta',
+       texto:`${clsA.length} produto${clsA.length!==1?'s':''} representam ${pctA.toFixed(1)}% do faturamento.`},
+      {cor:'#f97316',bg:'#ffedd5',icone:'⚠️',titulo:'Atenção',
+       texto:`${clsC.length} produto${clsC.length!==1?'s':''} possuem baixa relevância financeira (Classe C).`},
+      {cor:'#ef4444',bg:'#fee2e2',icone:'🔗',titulo:'Dependência',
+       texto:`O produto "${lider?.nome||'—'}" sozinho representa ${lider?lider.pct.toFixed(2):0}% do faturamento.`},
+      {cor:'#3b82f6',bg:'#dbeafe',icone:'💡',titulo:'Oportunidade',
+       texto:'Revise os produtos da Classe C para otimizar o cardápio e reduzir a complexidade operacional.'},
+    ];
+    document.getElementById('abc-insights').innerHTML = insights.map(ins=>`
+      <div class="dash-card" style="margin:0;padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:32px;height:32px;border-radius:50%;background:${ins.bg};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${ins.icone}</div>
+          <span style="font-size:12px;font-weight:700;color:${ins.cor}">${ins.titulo}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.5">${ins.texto}</div>
+      </div>`).join('');
+
+    // TABELA
+    renderPagAbc();
 
     // CMV POR PRODUTO
     document.getElementById('cmv-body').innerHTML = prods.map(p=>{
