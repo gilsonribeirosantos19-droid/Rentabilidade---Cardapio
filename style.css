@@ -2,6 +2,11 @@
    Aiko — Design System Global
    ======================================================== */
 
+/* TESTE DE CARREGAMENTO — fundo levemente azul-cinza */
+body {
+  background: #f0f4f8 !important;
+}
+
 /* SIDEBAR */
 .sidebar {
   width: 220px !important;
