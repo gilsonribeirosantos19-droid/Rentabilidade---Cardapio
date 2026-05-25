@@ -18,23 +18,23 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI', system-ui, -apple-system, sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
   .shell{display:flex;width:100%;min-height:100vh}
-  .sidebar{width:220px;min-height:100vh;background:#1e1b4b;border-right:none;
+  .sidebar{width:220px;min-height:100vh;background:#fff;border-right:1px solid #e2e8f0;
     display:flex;flex-direction:column;padding:0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
-  .logo{padding:16px 18px 14px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px}
-  .logo-mark{font-size:16px;font-weight:800;color:#fff}
+  .logo{padding:16px 18px 14px;border-bottom:1px solid #e2e8f0;margin-bottom:8px}
+  .logo-mark{font-size:16px;font-weight:800;color:#0f172a}
   .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
-  .logo-loja{font-size:11px;color:#a5b4fc;margin-top:3px;font-weight:500}
+  .logo-loja{font-size:11px;color:#94a3b8;margin-top:3px;font-weight:500}
   .nav-group{padding:8px 12px;margin:0;background:transparent;border-radius:0;box-shadow:none}
-  .nav-label{font-size:10px;font-weight:700;color:#a5b4fc;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px 4px;margin-bottom:2px}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:#c7d2fe;font-size:13px;text-decoration:none;transition:all .15s;cursor:pointer;border:none;background:none;font-family:inherit;width:100%;font-weight:500}
-  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
-  .nav-item.active{background:#f97316;color:#fff;font-weight:700}
+  .nav-label{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.1em;text-transform:uppercase;padding:6px 8px 4px;margin-bottom:2px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:#334155;font-size:13px;text-decoration:none;transition:all .15s;cursor:pointer;border:none;background:none;font-family:inherit;width:100%;font-weight:500}
+  .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
+  .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:700}
   .nav-icon{width:16px;height:16px;flex-shrink:0;stroke-width:1.8}
-  .nav-user{padding:14px 18px;border-top:1px solid rgba(255,255,255,.1);margin-top:auto;display:flex;align-items:center;gap:10px}
+  .nav-user{padding:14px 18px;border-top:1px solid #e2e8f0;margin-top:auto;display:flex;align-items:center;gap:10px}
   .nav-user-info{flex:1}
-  .nav-user-nome{font-size:12px;font-weight:600;color:#f1f5f9}
-  .nav-user-perfil{font-size:11px;color:#a5b4fc;margin-top:1px}
-  .nav-user-sair{font-size:11px;color:#f87171;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-weight:600}
+  .nav-user-nome{font-size:12px;font-weight:600;color:#0f172a}
+  .nav-user-perfil{font-size:11px;color:#94a3b8;margin-top:1px}
+  .nav-user-sair{font-size:11px;color:#dc2626;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-weight:600}
   .main{flex:1;display:flex;flex-direction:column;min-width:0}
   .topbar{height:48px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
     padding:0 24px;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
@@ -215,8 +215,8 @@
     </button>
   </div>
   <div class="nav-user">
-    <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c7d2fe" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <div style="width:34px;height:34px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </div>
     <div class="nav-user-info">
       <div class="nav-user-nome" id="sb-user-nome">—</div>
