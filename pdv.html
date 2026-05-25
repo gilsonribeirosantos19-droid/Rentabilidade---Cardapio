@@ -217,6 +217,16 @@
     padding:16px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);margin-bottom:12px;word-break:break-all}
 
   /* REP */
+  /* PAGINAÇÃO */
+  .pag-btn{min-width:28px;height:28px;padding:0 6px;border-radius:6px;border:1px solid #e2e8f0;
+    background:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .pag-btn:hover{border-color:#3b82f6;color:#3b82f6}
+  .pag-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;font-weight:700}
+  .pag-btn:disabled{opacity:.4;cursor:not-allowed}
+  /* CAT LEGEND */
+  .cat-leg-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11px;border-bottom:1px solid #f8fafc}
+  .cat-leg-row:last-child{border-bottom:none;font-weight:700;padding-top:6px}
+
   /* RESUMO PERÍODO */
   .resumo-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
   .resumo-row:last-child{border-bottom:none;font-weight:700;font-size:14px;padding-top:12px}
@@ -590,12 +600,14 @@
 
     <!-- TAB: VENDAS POR PRODUTO -->
     <div id="tab-vendas" class="tab-pane">
-      <div class="toolbar">
-        <input class="field field-sm" type="date" id="vnd-de">
-        <input class="field field-sm" type="date" id="vnd-ate">
-        <select class="field field-sm" id="vnd-cat">
-          <option value="">Todas categorias</option>
-        </select>
+
+      <!-- FILTRO -->
+      <div class="db-filter">
+        <div class="db-date-range">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input type="date" id="vnd-de"> <span style="color:var(--text3)">–</span> <input type="date" id="vnd-ate">
+        </div>
+        <select class="field field-sm" id="vnd-cat"><option value="">Todas categorias</option></select>
         <select class="field field-sm" id="vnd-canal">
           <option value="">Todos os canais</option>
           <option value="salão">Salão</option>
@@ -604,20 +616,111 @@
           <option value="rappi">Rappi</option>
         </select>
         <button class="btn btn-primary btn-sm" onclick="renderVendas()">Filtrar</button>
-        <button class="btn btn-ghost btn-sm ml" onclick="abrirModalVenda()">+ Lançar venda</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportVendasCSV()">↓ CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalVenda()" style="margin-left:auto">+ Lançar venda</button>
       </div>
-      <div class="tbl-wrap"><div class="tbl-scroll">
-        <table class="tbl">
-          <thead><tr>
-            <th>Data</th><th>Produto</th><th>Categoria</th><th>Canal</th>
-            <th class="r">Qtd</th><th class="r">V.Unit</th><th class="r">Total</th>
-            <th class="r">Custo</th><th class="r">Margem</th><th></th>
-          </tr></thead>
-          <tbody id="vnd-body"><tr><td colspan="10" class="empty">Selecione o período e clique em Filtrar</td></tr></tbody>
-          <tfoot id="vnd-foot"></tfoot>
-        </table>
-      </div></div>
+
+      <!-- 5 KPI CARDS -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon ki-blue"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="kpi-body"><div class="kpi-lbl">Faturamento Total</div><div class="kpi-val" id="vnd-kpi-fat">—</div><div class="kpi-sub">no período</div><div class="kpi-trend" id="vnd-kpi-fat-t"></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon ki-green"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div class="kpi-body"><div class="kpi-lbl">Quantidade Vendida</div><div class="kpi-val" id="vnd-kpi-qtd">—</div><div class="kpi-sub">unidades</div><div class="kpi-trend" id="vnd-kpi-qtd-t"></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon ki-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+          <div class="kpi-body"><div class="kpi-lbl">Produtos Vendidos</div><div class="kpi-val" id="vnd-kpi-prods">—</div><div class="kpi-sub">itens diferentes</div><div class="kpi-trend" id="vnd-kpi-prods-t"></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon ki-orange"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg></div>
+          <div class="kpi-body"><div class="kpi-lbl">Ticket Médio</div><div class="kpi-val" id="vnd-kpi-ticket">—</div><div class="kpi-sub">por pedido</div><div class="kpi-trend" id="vnd-kpi-ticket-t"></div></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon ki-teal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+          <div class="kpi-body"><div class="kpi-lbl">Margem Média</div><div class="kpi-val" id="vnd-kpi-margem">—</div><div class="kpi-sub">sobre vendas</div><div class="kpi-trend" id="vnd-kpi-margem-t"></div></div>
+        </div>
+      </div>
+
+      <!-- GRID SUPERIOR: GRÁFICO + DONUT -->
+      <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px">
+
+        <!-- GRÁFICO HORIZONTAL TOP PRODUTOS -->
+        <div class="dash-card">
+          <div class="dash-head">
+            <span class="dash-head-title">Produtos Mais Vendidos</span>
+            <div style="display:flex;gap:6px">
+              <select class="field field-sm" id="vnd-top-n" onchange="atualizarTopProd()" style="padding:3px 8px;font-size:11px">
+                <option value="10">Top 10</option>
+                <option value="20">Top 20</option>
+                <option value="5">Top 5</option>
+              </select>
+              <select class="field field-sm" id="vnd-top-metrica" onchange="atualizarTopProd()" style="padding:3px 8px;font-size:11px">
+                <option value="fat">Faturamento</option>
+                <option value="qtd">Quantidade</option>
+              </select>
+            </div>
+          </div>
+          <div class="dash-body" style="padding-bottom:8px">
+            <div style="height:260px"><canvas id="chart-top-prod"></canvas></div>
+          </div>
+        </div>
+
+        <!-- DONUT POR CATEGORIA -->
+        <div class="dash-card">
+          <div class="dash-head"><span class="dash-head-title">Distribuição por Categoria</span></div>
+          <div class="dash-body">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+              <div style="position:relative;width:150px;height:150px;flex-shrink:0">
+                <canvas id="chart-vnd-cat"></canvas>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+                  <div style="font-size:10px;color:var(--text3)">Total</div>
+                  <div style="font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1);text-align:center" id="vnd-cat-total">—</div>
+                </div>
+              </div>
+              <div style="width:100%" id="vnd-cat-legend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABELA DESEMPENHO POR PRODUTO -->
+      <div class="dash-card">
+        <div class="dash-head">
+          <span class="dash-head-title">Desempenho por Produto</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="field field-sm" id="vnd-busca" placeholder="Buscar produto..." oninput="filtrarTabelaVnd()" style="width:180px">
+            <button class="btn btn-ghost btn-sm" onclick="exportVendasCSV()">↓ Exportar</button>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table class="tbl" style="font-size:12px">
+            <thead><tr>
+              <th class="c" style="width:36px">#</th>
+              <th>Produto</th>
+              <th>Categoria</th>
+              <th class="r">Qtd Vendida</th>
+              <th class="r">Faturamento</th>
+              <th class="r">% Faturamento</th>
+              <th class="r">Ticket Médio</th>
+              <th class="r">Custo (CMV)</th>
+              <th class="r">Margem (%)</th>
+            </tr></thead>
+            <tbody id="vnd-body"><tr><td colspan="9" class="empty">Selecione o período e clique em Filtrar</td></tr></tbody>
+          </table>
+        </div>
+        <!-- PAGINAÇÃO -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #f1f5f9;font-size:12px;color:var(--text3)">
+          <span id="vnd-pag-info">—</span>
+          <div style="display:flex;align-items:center;gap:4px" id="vnd-pag-btns"></div>
+          <select class="field field-sm" id="vnd-por-pag" onchange="renderPagVnd()" style="padding:3px 8px;font-size:11px;width:auto">
+            <option value="10">10 por página</option>
+            <option value="25">25 por página</option>
+            <option value="50">50 por página</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <!-- TAB: RELATÓRIOS -->
@@ -1318,6 +1421,9 @@ async function excluirFat(id) {
 }
 
 // ── VENDAS POR PRODUTO ─────────────────────────────────────────────
+let _vndData = [], _vndPorProd = [], _vndPagAtual = 1, _chartTopProd = null, _chartVndCat = null;
+const CAT_CORES = ['#3b82f6','#f97316','#10b981','#8b5cf6','#f59e0b','#06b6d4','#ec4899','#6b7280'];
+
 async function renderVendas() {
   const de = document.getElementById('vnd-de').value;
   const ate = document.getElementById('vnd-ate').value;
@@ -1326,39 +1432,171 @@ async function renderVendas() {
   if (!de||!ate) return;
   try {
     let q = `vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}&order=data.desc`;
-    if (cat) q += `&categoria=eq.${cat}`;
-    if (canal) q += `&canal=eq.${canal}`;
-    const data = await api(q);
-    const totalVnd = data.reduce((s,v)=>s+(v.valor_total||0),0);
+    if (cat)   q += `&categoria=eq.${encodeURIComponent(cat)}`;
+    if (canal) q += `&canal=eq.${encodeURIComponent(canal)}`;
+    _vndData = await api(q);
+    const data = _vndData;
+
+    const totalFat   = data.reduce((s,v)=>s+(v.valor_total||0),0);
+    const totalQtd   = data.reduce((s,v)=>s+(v.quantidade||0),0);
     const totalCusto = data.reduce((s,v)=>s+(v.custo_unitario||0)*(v.quantidade||0),0);
-    const totalMargem = totalVnd - totalCusto;
-    document.getElementById('vnd-body').innerHTML = data.length ? data.map(v=>{
-      const custo = (v.custo_unitario||0)*(v.quantidade||0);
-      const margem = (v.valor_total||0)-custo;
-      const margemPct = v.valor_total>0?(margem/v.valor_total*100):0;
-      return `<tr>
-        <td class="mono" style="color:var(--text2)">${fmtData(v.data)}</td>
-        <td style="font-weight:500">${esc(v.produto_nome)}</td>
-        <td style="color:var(--text3)">${esc(v.categoria||'—')}</td>
-        <td><span class="badge b-canal">${esc(v.canal||'—')}</span></td>
-        <td class="r mono">${Number(v.quantidade).toFixed(0)}</td>
-        <td class="r mono">${brl(v.valor_unitario)}</td>
-        <td class="r mono" style="font-weight:600">${brl(v.valor_total)}</td>
-        <td class="r mono">${custo>0?brl(custo):'—'}</td>
-        <td class="r mono" style="${margem>=0?'color:#16a34a':'color:var(--red)'}">${custo>0?margemPct.toFixed(1)+'%':'—'}</td>
-        <td style="display:flex;gap:4px">
-          <button class="btn btn-ghost btn-sm" onclick="excluirVenda('${v.id}')">✕</button>
-        </td>
-      </tr>`;
-    }).join('') : `<tr><td colspan="10" class="empty">Nenhuma venda no período</td></tr>`;
-    document.getElementById('vnd-foot').innerHTML = data.length ? `<tr style="background:var(--bg3);font-weight:700">
-      <td colspan="6" style="padding:10px 14px">Total</td>
-      <td class="r mono" style="padding:10px 14px;color:var(--teal)">${brl(totalVnd)}</td>
-      <td class="r mono" style="padding:10px 14px">${brl(totalCusto)}</td>
-      <td class="r mono" style="padding:10px 14px;color:#16a34a">${brl(totalMargem)}</td>
-      <td></td>
-    </tr>` : '';
+    const margemPct  = totalFat>0 ? (totalFat-totalCusto)/totalFat*100 : 0;
+    const prodsUniq  = new Set(data.map(v=>v.produto_nome)).size;
+
+    // Buscar total de faturamento para ticket médio (usa fat global do dashboard)
+    const totalPed = _dbFats.filter(f => f.data >= de && f.data <= ate).length || 1;
+
+    // KPIs
+    document.getElementById('vnd-kpi-fat').textContent    = brl(totalFat);
+    document.getElementById('vnd-kpi-qtd').textContent    = Math.round(totalQtd).toLocaleString('pt-BR');
+    document.getElementById('vnd-kpi-prods').textContent  = prodsUniq;
+    document.getElementById('vnd-kpi-ticket').textContent = brl(totalFat/totalPed);
+    document.getElementById('vnd-kpi-margem').textContent = margemPct.toFixed(1)+'%';
+
+    // Agrupar por produto
+    const porProd = {};
+    data.forEach(v => {
+      const n = v.produto_nome||'Sem nome';
+      if (!porProd[n]) porProd[n]={nome:n,cat:v.categoria||'',qtd:0,fat:0,custo:0};
+      porProd[n].qtd   += (v.quantidade||0);
+      porProd[n].fat   += (v.valor_total||0);
+      porProd[n].custo += (v.custo_unitario||0)*(v.quantidade||0);
+    });
+    _vndPorProd = Object.values(porProd).sort((a,b)=>b.fat-a.fat);
+
+    // Gráfico top produtos
+    atualizarTopProd();
+
+    // Donut por categoria
+    const porCat = {};
+    data.forEach(v => {
+      const c = v.categoria||'Outros';
+      if (!porCat[c]) porCat[c]=0;
+      porCat[c] += (v.valor_total||0);
+    });
+    const catsOrdenadas = Object.entries(porCat).sort((a,b)=>b[1]-a[1]);
+    document.getElementById('vnd-cat-total').textContent = brl(totalFat);
+
+    if (_chartVndCat) _chartVndCat.destroy();
+    const ctx3 = document.getElementById('chart-vnd-cat')?.getContext('2d');
+    if (ctx3) {
+      _chartVndCat = new Chart(ctx3, {
+        type:'doughnut',
+        data:{
+          labels: catsOrdenadas.map(([c])=>c),
+          datasets:[{data:catsOrdenadas.map(([,v])=>v),
+            backgroundColor:catsOrdenadas.map((_,i)=>CAT_CORES[i%CAT_CORES.length]),
+            borderWidth:2,borderColor:'#fff',hoverOffset:4}]
+        },
+        options:{responsive:false,plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:ctx=>`${brl(ctx.raw)} (${totalFat>0?(ctx.raw/totalFat*100).toFixed(1):0}%)`}}},
+          cutout:'70%'}
+      });
+    }
+    document.getElementById('vnd-cat-legend').innerHTML = [
+      ...catsOrdenadas,['__total__',totalFat]
+    ].map(([c,v],i)=>`
+      <div class="cat-leg-row">
+        ${c==='__total__'
+          ? `<span style="font-weight:700;flex:1">Total</span>`
+          : `<div style="width:8px;height:8px;border-radius:50%;background:${CAT_CORES[i%CAT_CORES.length]};flex-shrink:0"></div>
+             <span style="flex:1">${esc(c)}</span>`
+        }
+        <span class="mono" style="font-weight:600">${brl(v)}</span>
+        ${c!=='__total__'?`<span style="color:var(--text3);min-width:36px;text-align:right">${totalFat>0?(v/totalFat*100).toFixed(1):0}%</span>`:''}
+      </div>`).join('');
+
+    // Tabela paginada
+    _vndPagAtual = 1;
+    renderPagVnd();
+
   } catch(e){toast('Erro vendas: '+e.message,'err');}
+}
+
+function atualizarTopProd() {
+  const n = parseInt(document.getElementById('vnd-top-n')?.value||10);
+  const metrica = document.getElementById('vnd-top-metrica')?.value||'fat';
+  const top = [..._vndPorProd].sort((a,b)=>b[metrica]-a[metrica]).slice(0,n).reverse();
+  const totalFat = _vndPorProd.reduce((s,p)=>s+p.fat,0);
+
+  const ctx = document.getElementById('chart-top-prod')?.getContext('2d');
+  if (!ctx) return;
+  if (_chartTopProd) _chartTopProd.destroy();
+  _chartTopProd = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: top.map(p=>p.nome.length>30?p.nome.slice(0,28)+'…':p.nome),
+      datasets:[{
+        data: top.map(p=>p[metrica]),
+        backgroundColor:'rgba(59,130,246,.8)',
+        borderColor:'#3b82f6',
+        borderWidth:1,
+        borderRadius:4,
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:ctx=>metrica==='fat'?brl(ctx.raw):Math.round(ctx.raw).toLocaleString('pt-BR')+' un'
+      }}},
+      scales:{
+        x:{grid:{color:'#f1f5f9'},ticks:{font:{size:10},color:'#94a3b8',
+          callback:v=>metrica==='fat'?(v>=1000?Math.round(v/1000)+'K':v):v}},
+        y:{grid:{display:false},ticks:{font:{size:11},color:'#374151'}}
+      }
+    }
+  });
+}
+
+function filtrarTabelaVnd() {
+  _vndPagAtual = 1;
+  renderPagVnd();
+}
+
+function renderPagVnd() {
+  const busca = (document.getElementById('vnd-busca')?.value||'').toLowerCase();
+  const porPag = parseInt(document.getElementById('vnd-por-pag')?.value||10);
+  const totalFat = _vndPorProd.reduce((s,p)=>s+p.fat,0);
+
+  const filtrado = busca ? _vndPorProd.filter(p=>p.nome.toLowerCase().includes(busca)) : _vndPorProd;
+  const totalPags = Math.max(1,Math.ceil(filtrado.length/porPag));
+  _vndPagAtual = Math.min(_vndPagAtual, totalPags);
+  const slice = filtrado.slice((_vndPagAtual-1)*porPag, _vndPagAtual*porPag);
+  const offset = (_vndPagAtual-1)*porPag;
+
+  document.getElementById('vnd-pag-info').textContent =
+    filtrado.length ? `Mostrando ${offset+1} a ${Math.min(offset+porPag,filtrado.length)} de ${filtrado.length} produtos` : 'Nenhum produto';
+
+  document.getElementById('vnd-body').innerHTML = slice.length ? slice.map((p,i)=>{
+    const margem = p.fat>0?(p.fat-p.custo)/p.fat*100:0;
+    const ticket = p.qtd>0?p.fat/p.qtd:0;
+    return `<tr>
+      <td class="c mono" style="color:var(--text3)">${offset+i+1}</td>
+      <td style="font-weight:500">${esc(p.nome)}</td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#f1f5f9;color:#64748b">${esc(p.cat||'—')}</span></td>
+      <td class="r mono">${Math.round(p.qtd).toLocaleString('pt-BR')}</td>
+      <td class="r mono" style="font-weight:600">${brl(p.fat)}</td>
+      <td class="r mono" style="color:var(--text3)">${totalFat>0?(p.fat/totalFat*100).toFixed(2)+'%':'—'}</td>
+      <td class="r mono">${brl(ticket)}</td>
+      <td class="r mono">${p.custo>0?brl(p.custo):'—'}</td>
+      <td class="r mono" style="${margem>=0?'color:#16a34a':'color:#ef4444'}">${p.custo>0?margem.toFixed(1)+'%':'—'}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9" class="empty">Nenhum produto encontrado</td></tr>`;
+
+  // Botões de paginação
+  const btns = document.getElementById('vnd-pag-btns');
+  if (!btns) return;
+  let html = `<button class="pag-btn" ${_vndPagAtual===1?'disabled':''} onclick="_vndPagAtual--;renderPagVnd()">‹</button>`;
+  for (let p=1;p<=totalPags;p++) {
+    if (totalPags>7 && p>2 && p<totalPags-1 && Math.abs(p-_vndPagAtual)>1) {
+      if (p===3||p===totalPags-2) html+=`<span style="padding:0 4px;color:var(--text3)">…</span>`;
+      continue;
+    }
+    html+=`<button class="pag-btn ${p===_vndPagAtual?'active':''}" onclick="_vndPagAtual=${p};renderPagVnd()">${p}</button>`;
+  }
+  html+=`<button class="pag-btn" ${_vndPagAtual===totalPags?'disabled':''} onclick="_vndPagAtual++;renderPagVnd()">›</button>`;
+  btns.innerHTML = html;
 }
 
 function abrirModalVenda() {
