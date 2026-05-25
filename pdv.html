@@ -129,6 +129,82 @@
   /* BARRA CANAL */
   .canal-bar{height:8px;border-radius:4px;background:var(--teal);margin-top:4px}
 
+  /* ── DASHBOARD NOVO ─────────────────────────────────────── */
+  /* Filtro data */
+  .db-filter{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .db-date-range{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;
+    border-radius:8px;padding:6px 12px;font-size:13px;color:var(--text1);cursor:pointer}
+  .db-date-range input[type=date]{border:none;outline:none;font-size:13px;font-family:inherit;
+    color:var(--text1);background:transparent;cursor:pointer;width:105px}
+
+  /* KPI cards */
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+  @media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+  .kpi-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;
+    display:flex;align-items:flex-start;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .kpi-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;flex-shrink:0}
+  .kpi-icon svg{width:22px;height:22px;stroke:#fff;stroke-width:2;fill:none}
+  .ki-blue{background:#3b82f6} .ki-green{background:#10b981} .ki-orange{background:#f97316}
+  .ki-teal{background:#0d9488} .ki-indigo{background:#6366f1}
+  .kpi-body{flex:1;min-width:0}
+  .kpi-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+  .kpi-val{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;line-height:1.1;color:var(--text1)}
+  .kpi-sub{font-size:11px;color:var(--text3);margin-top:2px}
+  .kpi-trend{font-size:11px;font-weight:600;margin-top:6px;display:flex;align-items:center;gap:3px}
+  .trend-up{color:#10b981} .trend-dn{color:#ef4444} .trend-neu{color:var(--text3)}
+
+  /* Dashboard grid */
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
+
+  /* Dash card */
+  .dash-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;
+    overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:16px}
+  .dash-card:last-child{margin-bottom:0}
+  .dash-head{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;border-bottom:1px solid #f1f5f9}
+  .dash-head-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+  .dash-head-action{font-size:12px;color:#3b82f6;cursor:pointer;text-decoration:none;font-weight:500}
+  .dash-body{padding:16px 18px}
+
+  /* Chart */
+  .chart-wrap{position:relative;height:200px;padding:0 4px}
+
+  /* CMV boxes */
+  .cmv-boxes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+  .cmv-box{background:#f8fafc;border-radius:10px;padding:12px 14px}
+  .cmv-box-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .cmv-box-val{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1)}
+  .cmv-box-sub{font-size:11px;color:var(--text3);margin-top:3px}
+  .cmv-box-dif{background:#fde8ea}
+  .cmv-box-dif .cmv-box-val{color:#dc2626}
+  .cmv-link{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);
+    text-decoration:none;padding-top:10px;border-top:1px solid #f1f5f9}
+  .cmv-link:hover{color:var(--text1)}
+
+  /* Top produtos */
+  .top-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+  .top-row:last-child{border-bottom:none}
+  .top-num{width:20px;height:20px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;
+    justify-content:center;font-size:11px;font-weight:700;color:var(--text3);flex-shrink:0}
+  .top-num.gold{background:#fef3c7;color:#b45309}
+  .top-nome{flex:1;font-size:13px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .top-bar-wrap{width:80px;height:5px;background:#e2e8f0;border-radius:3px;flex-shrink:0}
+  .top-bar{height:5px;border-radius:3px;background:#3b82f6}
+  .top-fat{font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text1);white-space:nowrap}
+
+  /* Alertas */
+  .alert-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
+  .alert-row:last-child{border-bottom:none}
+  .alert-row:hover{opacity:.8}
+  .alert-ico{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+  .ai-red{background:#fde8ea} .ai-amber{background:#fef3c7} .ai-blue{background:#dbeafe}
+  .alert-text{flex:1}
+  .alert-title{font-size:13px;font-weight:600;color:var(--text1);margin-bottom:2px}
+  .alert-sub{font-size:11px;color:var(--text3)}
+  .alert-arrow{color:#e2e8f0;font-size:16px}
+
   /* IMPORTAR */
   .import-box{background:var(--bg2);border:2px dashed var(--border2);border-radius:var(--radius-lg);
     padding:40px;text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:24px}
@@ -227,40 +303,140 @@
 
     <!-- TAB: DASHBOARD -->
     <div id="tab-dashboard" class="tab-pane active">
-      <div class="toolbar">
-        <input class="field field-sm" type="date" id="db-de">
-        <input class="field field-sm" type="date" id="db-ate">
-        <button class="btn btn-primary btn-sm" onclick="renderDashboard()">Filtrar</button>
-      </div>
-      <div class="sc-grid" id="db-cards">
-        <div class="sc"><div class="sc-label">Faturamento</div><div class="sc-value c-green" id="db-fat">—</div></div>
-        <div class="sc"><div class="sc-label">Produtos vendidos</div><div class="sc-value c-blue" id="db-qtd">—</div></div>
-        <div class="sc"><div class="sc-label">Ticket médio</div><div class="sc-value c-amber" id="db-ticket">—</div></div>
-        <div class="sc"><div class="sc-label">CMV%</div><div class="sc-value" id="db-cmv">—</div></div>
-      </div>
-      <div class="row2">
-        <div class="rep-sec">
-          <div class="rep-title">Faturamento por canal</div>
-          <div id="db-canais"></div>
+
+      <!-- FILTRO DE PERÍODO -->
+      <div class="db-filter">
+        <div class="db-date-range">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input type="date" id="db-de"> <span style="color:var(--text3)">–</span> <input type="date" id="db-ate">
         </div>
-        <div class="rep-sec">
-          <div class="rep-title">Top 5 produtos mais vendidos</div>
-          <div class="tbl-scroll">
-            <table class="tbl">
-              <thead><tr><th>#</th><th>Produto</th><th class="r">Qtd</th><th class="r">Total</th></tr></thead>
-              <tbody id="db-top5"></tbody>
-            </table>
+        <button class="btn btn-primary btn-sm" onclick="renderDashboard()">Calcular</button>
+      </div>
+
+      <!-- 5 KPI CARDS -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon ki-blue"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">Faturamento</div>
+            <div class="kpi-val" id="db-fat">—</div>
+            <div class="kpi-sub">no período</div>
+            <div class="kpi-trend trend-neu" id="db-fat-trend"></div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon ki-green"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">CMV %</div>
+            <div class="kpi-val" id="db-cmv">—</div>
+            <div class="kpi-sub">média no período</div>
+            <div class="kpi-trend trend-neu" id="db-cmv-trend"></div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon ki-orange"><svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">Ticket Médio</div>
+            <div class="kpi-val" id="db-ticket">—</div>
+            <div class="kpi-sub">por pedido</div>
+            <div class="kpi-trend trend-neu" id="db-ticket-trend"></div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon ki-teal"><svg viewBox="0 0 24 24"><path d="M9 17H5a2 2 0 0 0-2 2v2h18v-2a2 2 0 0 0-2-2h-4"/><path d="M12 3a4 4 0 0 1 4 4v6H8V7a4 4 0 0 1 4-4z"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">Pedidos</div>
+            <div class="kpi-val" id="db-pedidos">—</div>
+            <div class="kpi-sub">no período</div>
+            <div class="kpi-trend trend-neu" id="db-ped-trend"></div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon ki-indigo"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-lbl">Itens Vendidos</div>
+            <div class="kpi-val" id="db-qtd">—</div>
+            <div class="kpi-sub">unidades</div>
+            <div class="kpi-trend trend-neu" id="db-qtd-trend"></div>
           </div>
         </div>
       </div>
-      <div class="rep-sec">
-        <div class="rep-title">Faturamento por categoria</div>
-        <div class="tbl-scroll">
-          <table class="tbl">
-            <thead><tr><th>Categoria</th><th class="r">Qtd itens</th><th class="r">Faturado</th><th class="r">% do total</th><th class="r">CMV</th><th class="r">Margem</th></tr></thead>
-            <tbody id="db-cats"></tbody>
-          </table>
+
+      <!-- GRID PRINCIPAL -->
+      <div class="dash-grid">
+
+        <!-- COLUNA ESQUERDA -->
+        <div>
+          <!-- GRÁFICO DIÁRIO -->
+          <div class="dash-card">
+            <div class="dash-head">
+              <span class="dash-head-title">Faturamento Diário</span>
+              <select class="field field-sm" id="db-chart-tipo" onchange="atualizarGrafico()" style="padding:3px 8px;font-size:11px">
+                <option value="fat">Faturamento</option>
+                <option value="qtd">Qtd Pedidos</option>
+              </select>
+            </div>
+            <div class="dash-body" style="padding-bottom:8px">
+              <div class="chart-wrap"><canvas id="chart-diario"></canvas></div>
+            </div>
+          </div>
+
+          <!-- CMV TEÓRICO X REAL -->
+          <div class="dash-card">
+            <div class="dash-head">
+              <span class="dash-head-title">CMV Teórico x Real</span>
+              <span class="dash-head-action" style="font-size:11px;color:var(--text3)">No período</span>
+            </div>
+            <div class="dash-body">
+              <div class="cmv-boxes">
+                <div class="cmv-box">
+                  <div class="cmv-box-lbl">CMV Teórico</div>
+                  <div class="cmv-box-val" id="db-cmv-teo">—</div>
+                  <div class="cmv-box-sub" id="db-cmv-teo-pct">— sobre vendas</div>
+                </div>
+                <div class="cmv-box">
+                  <div class="cmv-box-lbl">CMV Real</div>
+                  <div class="cmv-box-val" id="db-cmv-real">—</div>
+                  <div class="cmv-box-sub" id="db-cmv-real-pct">— sobre vendas</div>
+                </div>
+                <div class="cmv-box cmv-box-dif">
+                  <div class="cmv-box-lbl">Diferença</div>
+                  <div class="cmv-box-val" id="db-cmv-dif">—</div>
+                  <div class="cmv-box-sub" id="db-cmv-dif-pct">—</div>
+                </div>
+              </div>
+              <a class="cmv-link" href="cmv.html">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Ver análise completa
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+          </div>
         </div>
+
+        <!-- COLUNA DIREITA -->
+        <div>
+          <!-- TOP PRODUTOS -->
+          <div class="dash-card">
+            <div class="dash-head">
+              <span class="dash-head-title">Produtos Mais Vendidos</span>
+              <a class="dash-head-action" onclick="switchTab('vendas')">Ver todos</a>
+            </div>
+            <div class="dash-body" id="db-top5"></div>
+          </div>
+
+          <!-- ALERTAS -->
+          <div class="dash-card">
+            <div class="dash-head">
+              <span class="dash-head-title">Alertas Importantes</span>
+              <a class="dash-head-action" href="estoque.html">Ver todos</a>
+            </div>
+            <div class="dash-body" id="db-alertas">
+              <div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">Calculando alertas...</div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -639,82 +815,161 @@ function abrirModal(id){document.getElementById(id).classList.add('open')}
 function fecharModal(id){document.getElementById(id).classList.remove('open')}
 
 // ── DASHBOARD ──────────────────────────────────────────────────────
+let _chartDiario = null;
+let _dbFats = [], _dbVendas = [];
+
 async function renderDashboard() {
   const de = document.getElementById('db-de').value;
   const ate = document.getElementById('db-ate').value;
   if (!de || !ate) return;
   try {
-    const [fats, vendas] = await Promise.all([
-      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`),
+    [_dbFats, _dbVendas] = await Promise.all([
+      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}&order=data.asc`),
       api(`vendas_item?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}&order=data.desc`)
     ]);
+    const fats = _dbFats, vendas = _dbVendas;
 
-    const totalFat = fats.reduce((s,f)=>s+(f.valor||0),0);
-    const totalQtd = vendas.reduce((s,v)=>s+(v.quantidade||0),0);
-    const totalVnd = vendas.reduce((s,v)=>s+(v.valor_total||0),0);
+    const totalFat   = fats.reduce((s,f)=>s+(f.valor||0),0);
+    const totalQtd   = vendas.reduce((s,v)=>s+(v.quantidade||0),0);
     const totalCusto = vendas.reduce((s,v)=>s+(v.custo_unitario||0)*(v.quantidade||0),0);
-    const cmvPct = totalFat>0 ? (totalCusto/totalFat*100) : null;
-    const cmvCor = cmvPct===null?'':cmvPct<=30?'c-green':cmvPct<=38?'c-amber':'c-red';
+    const totalPed   = fats.length;
+    const cmvPct     = totalFat>0 ? (totalCusto/totalFat*100) : null;
+    const ticketMed  = totalPed>0 ? totalFat/totalPed : 0;
 
-    document.getElementById('db-fat').textContent = brl(totalFat||totalVnd);
-    document.getElementById('db-qtd').textContent = totalQtd.toLocaleString('pt-BR',{maximumFractionDigits:0});
-    const diasPeriodo = Math.max(1,(new Date(ate)-new Date(de))/(1000*60*60*24)+1);
-    document.getElementById('db-ticket').textContent = brl((totalFat||totalVnd)/diasPeriodo);
-    document.getElementById('db-cmv').className = 'sc-value '+cmvCor;
-    document.getElementById('db-cmv').textContent = cmvPct!==null ? cmvPct.toFixed(1)+'%' : '—';
+    // KPI cards
+    document.getElementById('db-fat').textContent     = brl(totalFat);
+    document.getElementById('db-qtd').textContent     = totalQtd.toLocaleString('pt-BR',{maximumFractionDigits:0});
+    document.getElementById('db-ticket').textContent  = brl(ticketMed);
+    document.getElementById('db-pedidos').textContent = totalPed.toLocaleString('pt-BR');
+    document.getElementById('db-cmv').textContent     = cmvPct!==null ? cmvPct.toFixed(2)+'%' : '—';
 
-    // Canais
-    const porCanal = {};
-    fats.forEach(f => { porCanal[f.canal]=(porCanal[f.canal]||0)+(f.valor||0); });
-    const canaisNomes = {salão:'Salão',delivery:'Delivery',ifood:'iFood',rappi:'Rappi',outros:'Outros'};
-    document.getElementById('db-canais').innerHTML = Object.entries(porCanal).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-          <span>${canaisNomes[c]||c}</span><span class="mono">${brl(v)} (${totalFat>0?(v/totalFat*100).toFixed(1):0}%)</span>
-        </div>
-        <div style="height:6px;background:var(--bg3);border-radius:3px">
-          <div style="height:6px;border-radius:3px;background:var(--teal);width:${totalFat>0?(v/totalFat*100):0}%"></div>
-        </div>
-      </div>`).join('') || '<div style="color:var(--text3);font-size:13px">Sem faturamento no período</div>';
+    // CMV teórico x real
+    const cmvTeo = totalCusto;
+    document.getElementById('db-cmv-teo').textContent     = brl(cmvTeo);
+    document.getElementById('db-cmv-teo-pct').textContent = totalFat>0 ? (cmvTeo/totalFat*100).toFixed(2)+'% sobre vendas' : '—';
+    document.getElementById('db-cmv-real').textContent    = '—';
+    document.getElementById('db-cmv-real-pct').textContent= 'aguarda inventário';
+    document.getElementById('db-cmv-dif').textContent     = '—';
+    document.getElementById('db-cmv-dif-pct').textContent = '—';
+
+    // Gráfico diário
+    atualizarGrafico();
 
     // Top 5 produtos
-    const porProduto = {};
+    const porProd = {};
     vendas.forEach(v => {
-      if (!porProduto[v.produto_nome]) porProduto[v.produto_nome] = {qtd:0,total:0};
-      porProduto[v.produto_nome].qtd += (v.quantidade||0);
-      porProduto[v.produto_nome].total += (v.valor_total||0);
+      const n = v.produto_nome||'Sem nome';
+      if (!porProd[n]) porProd[n]={qtd:0,total:0};
+      porProd[n].qtd   += (v.quantidade||0);
+      porProd[n].total += (v.valor_total||0);
     });
-    const top5 = Object.entries(porProduto).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
-    document.getElementById('db-top5').innerHTML = top5.length ? top5.map(([nome,d],i)=>`<tr>
-      <td class="c mono" style="color:var(--text3)">${i+1}</td>
-      <td>${esc(nome)}</td>
-      <td class="r mono">${d.qtd.toFixed(0)}</td>
-      <td class="r mono" style="font-weight:600">${brl(d.total)}</td>
-    </tr>`).join('') : `<tr><td colspan="4" class="empty">Sem vendas no período</td></tr>`;
+    const top5 = Object.entries(porProd).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+    const maxFat = top5[0]?.[1]?.total || 1;
+    document.getElementById('db-top5').innerHTML = top5.length ? top5.map(([nome,d],i)=>`
+      <div class="top-row">
+        <div class="top-num ${i===0?'gold':''}">${i+1}</div>
+        <div class="top-nome" title="${esc(nome)}">${esc(nome)}</div>
+        <div class="top-bar-wrap"><div class="top-bar" style="width:${(d.total/maxFat*100).toFixed(0)}%"></div></div>
+        <div style="font-size:11px;color:var(--text3);min-width:30px;text-align:right">${Math.round(d.qtd)}</div>
+        <div class="top-fat">${brl(d.total)}</div>
+      </div>`).join('')
+    : '<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">Sem vendas no período</div>';
 
-    // Por categoria
-    const porCat = {};
-    vendas.forEach(v => {
-      const c = v.categoria||'Sem categoria';
-      if (!porCat[c]) porCat[c]={qtd:0,fat:0,custo:0};
-      porCat[c].qtd += (v.quantidade||0);
-      porCat[c].fat += (v.valor_total||0);
-      porCat[c].custo += (v.custo_unitario||0)*(v.quantidade||0);
-    });
-    const totalFatVnd = vendas.reduce((s,v)=>s+(v.valor_total||0),0);
-    document.getElementById('db-cats').innerHTML = Object.entries(porCat).sort((a,b)=>b[1].fat-a[1].fat).map(([cat,d])=>{
-      const margem = d.fat-d.custo;
-      return `<tr>
-        <td style="font-weight:500">${esc(cat)}</td>
-        <td class="r mono">${d.qtd.toFixed(0)}</td>
-        <td class="r mono">${brl(d.fat)}</td>
-        <td class="r mono">${totalFatVnd>0?(d.fat/totalFatVnd*100).toFixed(1):0}%</td>
-        <td class="r mono">${brl(d.custo)}</td>
-        <td class="r mono" style="${margem>=0?'color:#16a34a':'color:var(--red)'}">${brl(margem)}</td>
-      </tr>`;
-    }).join('') || `<tr><td colspan="6" class="empty">Sem vendas no período</td></tr>`;
+    // Alertas
+    renderAlertas(fats, vendas);
 
   } catch(e) { toast('Erro dashboard: '+e.message,'err'); }
+}
+
+function atualizarGrafico() {
+  const tipo = document.getElementById('db-chart-tipo')?.value || 'fat';
+  const fats = _dbFats;
+  if (!fats.length) return;
+
+  // Agrupar por data
+  const porData = {};
+  fats.forEach(f => {
+    const d = f.data;
+    if (!porData[d]) porData[d] = {fat:0, ped:0};
+    porData[d].fat += (f.valor||0);
+    porData[d].ped += 1;
+  });
+  const labels = Object.keys(porData).sort();
+  const values = labels.map(d => tipo==='fat' ? porData[d].fat : porData[d].ped);
+  const fmtLbl = labels.map(d => { const p=d.split('-'); return p[2]+'/'+p[1]; });
+
+  const ctx = document.getElementById('chart-diario')?.getContext('2d');
+  if (!ctx) return;
+  if (_chartDiario) _chartDiario.destroy();
+  _chartDiario = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: fmtLbl,
+      datasets: [{
+        data: values,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,.08)',
+        borderWidth: 2,
+        pointBackgroundColor: '#3b82f6',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.4,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false}, tooltip:{
+        callbacks:{ label: ctx => tipo==='fat' ? brl(ctx.raw) : ctx.raw+' pedidos' }
+      }},
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{size:10},color:'#94a3b8'} },
+        y: { grid:{color:'#f1f5f9'}, ticks:{font:{size:10},color:'#94a3b8',
+          callback: v => tipo==='fat' ? (v>=1000?Math.round(v/1000)+'K':v) : v
+        }}
+      }
+    }
+  });
+}
+
+async function renderAlertas(fats, vendas) {
+  try {
+    const saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
+    const insumos = await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true`).catch(()=>[]);
+    const alertas = [];
+
+    // Insumos abaixo do mínimo
+    const abaixoMin = saldos.filter(s => s.minimo!==null && s.quantidade < s.minimo);
+    if (abaixoMin.length)
+      alertas.push({cor:'ai-red',emoji:'🔴',titulo:`${abaixoMin.length} insumo${abaixoMin.length>1?'s':''} abaixo do mínimo`,sub:'Risco de ruptura de estoque',href:'estoque.html'});
+
+    // Insumos sem movimentação (saldo 0)
+    const semMov = saldos.filter(s => !s.quantidade || s.quantidade===0);
+    if (semMov.length)
+      alertas.push({cor:'ai-amber',emoji:'⚠️',titulo:`${semMov.length} insumo${semMov.length>1?'s':''} sem movimentação`,sub:'Sem entrada ou saída registrada',href:'estoque.html'});
+
+    // CMV acima do esperado (>38%)
+    const totalFat   = fats.reduce((s,f)=>s+(f.valor||0),0);
+    const totalCusto = vendas.reduce((s,v)=>s+(v.custo_unitario||0)*(v.quantidade||0),0);
+    const cmvPct = totalFat>0 ? totalCusto/totalFat*100 : null;
+    if (cmvPct!==null && cmvPct>38)
+      alertas.push({cor:'ai-blue',emoji:'📊',titulo:'CMV acima do esperado',sub:`${cmvPct.toFixed(2)}% está acima do limite de 38%`,href:'cmv.html'});
+
+    const el = document.getElementById('db-alertas');
+    if (!alertas.length) {
+      el.innerHTML = '<div style="color:#10b981;font-size:13px;text-align:center;padding:12px 0">✓ Nenhum alerta no momento</div>';
+      return;
+    }
+    el.innerHTML = alertas.map(a=>`
+      <a class="alert-row" href="${a.href}" style="text-decoration:none">
+        <div class="alert-ico ${a.cor}">${a.emoji}</div>
+        <div class="alert-text">
+          <div class="alert-title">${esc(a.titulo)}</div>
+          <div class="alert-sub">${esc(a.sub)}</div>
+        </div>
+        <div class="alert-arrow">›</div>
+      </a>`).join('');
+  } catch {}
 }
 
 // ── FATURAMENTO ────────────────────────────────────────────────────
@@ -1054,6 +1309,7 @@ document.querySelectorAll('.tab-btn').forEach(b=>{
 carregar();
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script>lucide.createIcons();</script>
 <div id="cfg-flyout">
   <span class="cfg-flyout-title">Configurações</span>
