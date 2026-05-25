@@ -172,6 +172,48 @@
   .toast.ok{border-color:var(--green);color:#16a34a}
   .toast.err{border-color:var(--red);color:var(--red)}
 
+  /* NFE MODAL */
+  .modal-nfe{background:#fff;border-radius:12px;width:96vw;max-width:1100px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+  .modal-nfe.expanded{width:99vw;max-width:99vw;height:97vh;max-height:97vh;border-radius:8px}
+  .nfe-hdr{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+  .nfe-hdr-title{font-size:16px;font-weight:700;color:#0f172a}
+  .nfe-hdr-sub{font-size:12px;color:#94a3b8;margin-top:2px}
+  .nfe-steps{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;gap:0;overflow-x:auto;flex-shrink:0}
+  .nfe-step{display:flex;align-items:center;gap:0;flex-shrink:0}
+  .nfe-step-circle{width:28px;height:28px;border-radius:50%;border:2px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#94a3b8;flex-shrink:0}
+  .nfe-step.active .nfe-step-circle{background:#f97316;border-color:#f97316;color:#fff}
+  .nfe-step.done .nfe-step-circle{background:#16a34a;border-color:#16a34a;color:#fff}
+  .nfe-step-info{margin-left:8px}
+  .nfe-step-label{font-size:12px;font-weight:600;color:#0f172a}
+  .nfe-step.inactive .nfe-step-label{color:#94a3b8}
+  .nfe-step-desc{font-size:10px;color:#94a3b8;margin-top:1px;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nfe-step-sep{width:40px;height:2px;background:#e2e8f0;margin:0 8px;flex-shrink:0}
+  .nfe-step.done + .nfe-step .nfe-step-sep,.nfe-step.active + .nfe-step-sep{background:#f97316}
+  .nfe-body{flex:1;overflow-y:auto;padding:0}
+  .nfe-footer{padding:12px 20px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-shrink:0;background:#fff}
+  .nfe-banner{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:#1e40af;margin:14px 20px 0}
+  .nfe-info-bar{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin:12px 20px;display:flex;align-items:center;gap:24px;font-size:12px}
+  .nfe-info-lbl{font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+  .nfe-info-val{font-size:13px;font-weight:600;color:#0f172a}
+  .nfe-info-val.blue{color:#2563eb}
+  .nfe-layout{display:grid;grid-template-columns:1fr 260px;gap:0;flex:1}
+  .nfe-main{overflow-y:auto;padding:0 20px 16px}
+  .nfe-panel{background:#f8fafc;border-left:1px solid #e2e8f0;padding:16px;overflow-y:auto}
+  .nfe-sec-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0}
+  .nfe-tbl{width:100%;border-collapse:collapse;font-size:12px}
+  .nfe-tbl thead tr{background:#0f2d5c}
+  .nfe-tbl th{padding:9px 10px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .nfe-tbl th.r{text-align:right}
+  .nfe-tbl td{padding:10px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  .nfe-tbl tr.linked-row{background:#f0fdf4}
+  .nfe-tbl tr.summary-row td{background:#f8fafc;font-size:11px;color:#64748b;padding:8px 10px;border-bottom:1px solid #e2e8f0}
+  .nfe-tbl tr:last-child td{border-bottom:none}
+  .linked-badge{display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:12px}
+  .cod-badge{display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:600;padding:2px 8px;border-radius:12px}
+  .impact-row{display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b;margin-bottom:5px}
+  .impact-check{width:16px;height:16px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .nfe-drop{border:2px dashed #e2e8f0;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:border-color .15s;background:#fafbfc;margin:20px}
+  .nfe-drop:hover,.nfe-drop.drag{border-color:#f97316;background:#fff7ed}
   .pag-btn{min-width:28px;height:28px;padding:0 6px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
   .pag-btn:hover{border-color:#3b82f6;color:#3b82f6}
   .pag-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;font-weight:700}
@@ -1012,49 +1054,230 @@
 
 <!-- MODAL: NF-e XML -->
 <div id="m-nfe" class="overlay" onclick="if(event.target===this){fecharModal('m-nfe');resetNfe()}">
-  <div class="modal modal-lg" onclick="event.stopPropagation()">
-    <h2>Entrada por NF-e XML</h2>
-    <!-- view 1: upload -->
-    <div id="nfe-v1">
-      <div class="info">Selecione o arquivo XML da NF-e. Os itens serão extraídos para você vincular a cada insumo cadastrado.</div>
-      <div class="drop-area" id="drop" onclick="document.getElementById('nfe-file').click()"
+  <div class="modal-nfe" id="modal-nfe-inner" onclick="event.stopPropagation()">
+
+    <!-- HEADER -->
+    <div class="nfe-hdr">
+      <div>
+        <div class="nfe-hdr-title">Entrada por NF-e / XML</div>
+        <div class="nfe-hdr-sub">Configure a conversão das embalagens de compra para as unidades de estoque.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="toggleNfeExpand()" title="Expandir" style="width:30px;height:30px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b" id="btn-nfe-expand">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+        <button onclick="fecharModal('m-nfe');resetNfe()" style="width:30px;height:30px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:16px">✕</button>
+      </div>
+    </div>
+
+    <!-- STEPS -->
+    <div class="nfe-steps" id="nfe-steps">
+      <div class="nfe-step active" id="nfe-step-1">
+        <div class="nfe-step-circle">1</div>
+        <div class="nfe-step-info">
+          <div class="nfe-step-label">Vincular produto</div>
+          <div class="nfe-step-desc">Associe o item da NF-e ao produto do sistema</div>
+        </div>
+      </div>
+      <div class="nfe-step-sep"></div>
+      <div class="nfe-step inactive" id="nfe-step-2">
+        <div class="nfe-step-circle">2</div>
+        <div class="nfe-step-info">
+          <div class="nfe-step-label" style="color:#94a3b8">Definir embalagem</div>
+          <div class="nfe-step-desc">Informe a unidade de compra (fornecedor)</div>
+        </div>
+      </div>
+      <div class="nfe-step-sep"></div>
+      <div class="nfe-step inactive" id="nfe-step-3">
+        <div class="nfe-step-circle">3</div>
+        <div class="nfe-step-info">
+          <div class="nfe-step-label" style="color:#94a3b8">Definir conversão</div>
+          <div class="nfe-step-desc">Configure o fator de conversão</div>
+        </div>
+      </div>
+      <div class="nfe-step-sep"></div>
+      <div class="nfe-step inactive" id="nfe-step-4">
+        <div class="nfe-step-circle">4</div>
+        <div class="nfe-step-info">
+          <div class="nfe-step-label" style="color:#94a3b8">Prévia de entrada</div>
+          <div class="nfe-step-desc">Confira a quantidade e o custo unitário</div>
+        </div>
+      </div>
+      <div class="nfe-step-sep"></div>
+      <div class="nfe-step inactive" id="nfe-step-5">
+        <div class="nfe-step-circle">5</div>
+        <div class="nfe-step-info">
+          <div class="nfe-step-label" style="color:#94a3b8">Confirmar entrada</div>
+          <div class="nfe-step-desc">Finalize e registre a entrada no estoque</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 1: UPLOAD -->
+    <div id="nfe-v1" class="nfe-body">
+      <div class="nfe-drop" id="drop"
+        onclick="document.getElementById('nfe-file').click()"
         ondragover="event.preventDefault();this.classList.add('drag')"
         ondragleave="this.classList.remove('drag')"
         ondrop="event.preventDefault();this.classList.remove('drag');handleNfeFile(event.dataTransfer.files[0])">
-        <strong style="font-size:15px">📄 Clique ou arraste o arquivo XML</strong>
-        <p>Suporta NF-e padrão SEFAZ</p>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 12px;display:block"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px">Clique ou arraste o arquivo XML</div>
+        <div style="font-size:12px;color:#94a3b8">Suporta NF-e padrão SEFAZ · formatos .xml</div>
         <input type="file" id="nfe-file" accept=".xml" style="display:none" onchange="handleNfeFile(this.files[0])">
       </div>
     </div>
-    <!-- view 2: mapeamento -->
-    <div id="nfe-v2" style="display:none">
-      <div class="info" id="nfe-info"></div>
-      <div class="tbl-wrap" style="margin-bottom:14px;max-height:340px;overflow-y:auto">
-        <table class="tbl">
-          <thead><tr>
-            <th>Descrição NF-e</th><th>Cód.</th><th>Un.</th><th class="r">Qtd</th>
-            <th class="r">Vl.Unit.</th><th>Insumo</th><th class="r">Fator conv.</th><th class="c">✓</th>
-          </tr></thead>
-          <tbody id="nfe-body"></tbody>
-        </table>
+
+    <!-- VIEW 2: MAPEAMENTO -->
+    <div id="nfe-v2" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+
+      <!-- BANNER INFO -->
+      <div class="nfe-banner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Vincule o produto da NF-e ao seu produto interno. A conversão será salva e aplicada automaticamente nas próximas entradas.</span>
+        <a href="#" style="margin-left:auto;font-size:12px;color:#2563eb;white-space:nowrap;text-decoration:none;font-weight:600">Saiba mais</a>
       </div>
-      <div class="row2">
-        <div class="fg" style="margin:0">
-          <label>Fornecedor</label>
-          <select id="nfe-forn"><option value="">Sem fornecedor</option></select>
+
+      <!-- NF-e INFO BAR -->
+      <div class="nfe-info-bar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <div class="nfe-info-val blue" id="nfe-num">NF-e —</div>
+            <div style="font-size:11px;color:#64748b" id="nfe-emit">—</div>
+          </div>
         </div>
-        <div class="fg" style="margin:0">
-          <label>Data da entrada</label>
-          <input type="date" id="nfe-data">
+        <div style="margin-left:20px">
+          <div class="nfe-info-lbl">Data de emissão</div>
+          <div class="nfe-info-val blue" id="nfe-data-emissao">—</div>
         </div>
+        <div style="margin-left:20px">
+          <div class="nfe-info-lbl">Natureza da operação</div>
+          <div class="nfe-info-val">Compra de mercadoria</div>
+        </div>
+        <div style="margin-left:20px">
+          <div class="nfe-info-lbl">Fornecedor</div>
+          <select class="field field-sm" id="nfe-forn" style="min-width:160px;margin-top:2px"><option value="">Sem fornecedor</option></select>
+        </div>
+        <div style="margin-left:auto">
+          <input type="date" id="nfe-data" class="field field-sm">
+        </div>
+      </div>
+
+      <!-- LAYOUT: TABELA + PAINEL LATERAL -->
+      <div style="display:flex;flex:1;overflow:hidden">
+
+        <!-- MAIN TABLE AREA -->
+        <div style="flex:1;overflow-y:auto;padding:0 20px 16px">
+
+          <div class="nfe-sec-title" style="margin-top:12px">1. Vincular produto da NF-e ao produto do sistema</div>
+
+          <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+            <table class="nfe-tbl">
+              <thead><tr>
+                <th style="width:200px">Produto na NF-e<br><span style="font-weight:400;opacity:.7">(Fornecedor)</span></th>
+                <th style="width:80px">Cód. Forn.<br>/ EAN</th>
+                <th>Produto do sistema<br><span style="font-weight:400;opacity:.7">(Seu cadastro)</span></th>
+                <th style="width:130px">Embalagem de compra<br><span style="font-weight:400;opacity:.7">(Unidade da NF-e)</span></th>
+                <th style="width:150px">Conversão<br><span style="font-weight:400;opacity:.7">(Compra → Estoque)</span></th>
+                <th style="width:110px">Entrada no estoque<br><span style="font-weight:400;opacity:.7">(Unidade de estoque)</span></th>
+                <th style="width:36px"></th>
+              </tr></thead>
+              <tbody id="nfe-body"></tbody>
+            </table>
+          </div>
+
+          <!-- CONVERSÕES SALVAS -->
+          <div class="nfe-sec-title" style="margin-top:18px">Conversões salvas para este produto do fornecedor
+            <span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 10px;border-radius:12px;margin-left:8px">Vínculo será salvo</span>
+          </div>
+          <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+            <table class="nfe-tbl">
+              <thead><tr>
+                <th>Cód. Forn. / EAN</th>
+                <th>Descrição do produto (fornecedor)</th>
+                <th>Produto do sistema</th>
+                <th>Embalagem compra</th>
+                <th>Conversão</th>
+                <th>Unid. estoque</th>
+                <th style="width:36px"></th>
+              </tr></thead>
+              <tbody id="nfe-vinculos-body">
+                <tr><td colspan="7" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">Selecione um insumo para ver os vínculos salvos</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:12px">
+            <button style="display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:#2563eb;font-size:12px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo vínculo
+            </button>
+            <a href="#" style="font-size:12px;color:#64748b;text-decoration:none;margin-left:auto">Gerenciar todos os vínculos ↗</a>
+          </div>
+
+          <!-- BOTTOM: OBSERVAÇÕES + CONFERÊNCIA + OUTRAS AÇÕES -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:18px">
+            <div>
+              <div class="nfe-info-lbl" style="margin-bottom:6px">Observações (opcional)</div>
+              <textarea id="nfe-obs" placeholder="Adicione alguma observação sobre esta entrada..." maxlength="200" style="width:100%;height:70px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;resize:none;outline:none;color:#0f172a"></textarea>
+              <div style="font-size:10px;color:#94a3b8;margin-top:2px">0 / 200 caracteres</div>
+            </div>
+            <div>
+              <div class="nfe-info-lbl" style="margin-bottom:6px">Conferência</div>
+              <div id="nfe-conf-status" style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b;padding:8px 0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Vincule os itens para conferir
+              </div>
+            </div>
+            <div>
+              <div class="nfe-info-lbl" style="margin-bottom:6px">Outras ações</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <button style="display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid #e2e8f0;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;color:#0f172a">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  Salvar rascunho
+                  <span style="font-size:10px;color:#94a3b8;display:block;margin-top:0">Salvar e continuar depois</span>
+                </button>
+                <button onclick="resetNfe()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid #e2e8f0;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;color:#0f172a">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  Importar outro XML
+                  <span style="font-size:10px;color:#94a3b8;display:block;margin-top:0">Selecionar outro arquivo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT PANEL: PRÉVIA -->
+        <div style="width:240px;flex-shrink:0;background:#f8fafc;border-left:1px solid #e2e8f0;padding:16px;overflow-y:auto">
+          <div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:12px">Impacto no estoque (prévia)</div>
+          <div id="nfe-preview-panel">
+            <div style="font-size:12px;color:#94a3b8;text-align:center;padding:16px 0">Selecione um insumo e fator para ver a prévia</div>
+          </div>
+        </div>
+
       </div>
     </div>
-    <div class="modal-foot">
+
+    <!-- FOOTER -->
+    <div class="nfe-footer">
       <button class="btn btn-ghost" onclick="fecharModal('m-nfe');resetNfe()">Cancelar</button>
-      <button class="btn btn-ghost" id="btn-nfe-outro" style="display:none" onclick="resetNfe()">← Outro arquivo</button>
+      <button class="btn btn-ghost" id="btn-nfe-outro" style="display:none;align-items:center;gap:6px" onclick="resetNfe()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Outro arquivo
+      </button>
       <div style="flex:1"></div>
-      <button class="btn btn-primary" id="btn-nfe-conf" style="display:none" onclick="confirmarNfe()">Confirmar entradas</button>
+      <button class="btn btn-ghost" id="btn-nfe-voltar" style="display:none" onclick="">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Voltar
+      </button>
+      <button class="btn btn-primary" id="btn-nfe-conf" style="display:none;align-items:center;gap:6px" onclick="confirmarNfe()">
+        Continuar
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
+
   </div>
 </div>
 
@@ -1645,13 +1868,26 @@ function fmtDataHora(s){ if(!s)return'—'; const d=new Date(s); return d.toLoca
 // ── NF-e ─────────────────────────────────────────────────────────
 function openNFe() { resetNfe(); abrirModal('m-nfe'); }
 
+function toggleNfeExpand() {
+  const modal=document.getElementById('modal-nfe-inner');
+  const btn=document.getElementById('btn-nfe-expand');
+  modal.classList.toggle('expanded');
+  const exp=modal.classList.contains('expanded');
+  btn.innerHTML=exp
+    ?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>'
+    :'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+}
+
 function resetNfe() {
   document.getElementById('nfe-v1').style.display='';
-  document.getElementById('nfe-v2').style.display='none';
+  const v2=document.getElementById('nfe-v2');
+  v2.style.display='none';
   document.getElementById('btn-nfe-outro').style.display='none';
   document.getElementById('btn-nfe-conf').style.display='none';
+  const bv=document.getElementById('btn-nfe-voltar');if(bv)bv.style.display='none';
   document.getElementById('nfe-file').value='';
   nfeItens=[];
+  for(let i=1;i<=5;i++){const s=document.getElementById(`nfe-step-${i}`);if(s){s.className='nfe-step '+(i===1?'active':'inactive');const l=s.querySelector('.nfe-step-label');if(l)l.style.color=i===1?'':'#94a3b8';}}
 }
 
 function handleNfeFile(file) {
@@ -1659,19 +1895,31 @@ function handleNfeFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const itens = parseNfeXml(e.target.result);
+      const itens=parseNfeXml(e.target.result);
       if(!itens.length){toast('Nenhum item encontrado no XML.','err');return;}
-      nfeItens = itens;
+      nfeItens=itens;
       renderNfeMap(itens);
       document.getElementById('nfe-v1').style.display='none';
-      document.getElementById('nfe-v2').style.display='';
-      document.getElementById('btn-nfe-outro').style.display='';
-      document.getElementById('btn-nfe-conf').style.display='';
+      const v2=document.getElementById('nfe-v2');
+      v2.style.display='flex';v2.style.flexDirection='column';
+      document.getElementById('btn-nfe-outro').style.display='inline-flex';
+      document.getElementById('btn-nfe-conf').style.display='inline-flex';
+      const bv=document.getElementById('btn-nfe-voltar');if(bv)bv.style.display='inline-flex';
       document.getElementById('nfe-data').value=hoje();
-      // auto-fill fornecedor from NF-e
-      const emitNome=itens[0]?.emitNome||'';
+      // NF-e info bar
+      const pi=itens[0]||{};
+      const numEl=document.getElementById('nfe-num');
+      const emitEl=document.getElementById('nfe-emit');
+      const dataEl=document.getElementById('nfe-data-emissao');
+      if(numEl) numEl.textContent=`NF-e ${pi.nNF||'?'}/${pi.serie||'?'} · Série ${pi.serie||'?'} · ${itens.length} item(ns)`;
+      if(emitEl) emitEl.textContent=`Emitente: ${pi.emitNome||'—'}`;
+      if(dataEl) dataEl.textContent=hoje().split('-').reverse().join('/');
+      // auto-fill fornecedor
+      const emitNome=pi.emitNome||'';
       const fornMatch=fornecedores.find(f=>f.nome.toLowerCase()===emitNome.toLowerCase());
       if(fornMatch) document.getElementById('nfe-forn').value=fornMatch.id;
+      // step 1 active
+      const s1=document.getElementById('nfe-step-1');if(s1)s1.className='nfe-step active';
     } catch(err){toast('Erro ao ler XML: '+err.message,'err');}
   };
   reader.readAsText(file,'utf-8');
@@ -1698,44 +1946,140 @@ function parseNfeXml(xml) {
   return itens;
 }
 
+function calcNfePreview(idx) {
+  const it=nfeItens[idx]; if(!it) return;
+  const insId=document.getElementById(`ns-${idx}`)?.value;
+  const fator=parseFloat(document.getElementById(`nf-${idx}`)?.value)||1;
+  const ins=insId?insumos.find(x=>x.id===insId):null;
+  const qtdEst=it.quantidade*fator;
+  const custoUnit=it.valorUnit/fator;
+  const panel=document.getElementById('nfe-preview-panel');
+  const confEl=document.getElementById('nfe-conf-status');
+  if(!ins||!insId){
+    if(panel) panel.innerHTML='<div style="font-size:12px;color:#94a3b8;text-align:center;padding:16px 0">Selecione um insumo e fator para ver a prévia</div>';
+    return;
+  }
+  if(panel) panel.innerHTML=`
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Quantidade que entrará</div>
+      <div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">${qtdEst.toFixed(3)}</div>
+      <div style="font-size:11px;color:#64748b">Unidade(s)</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Custo unitário no estoque</div>
+      <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${brl(custoUnit)}</div>
+      <div style="font-size:11px;color:#64748b">/ Unidade</div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px">Este item impactará:</div>
+    ${['Estoque','Custo médio','Fichas técnicas','CMV'].map(l=>`
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px;color:#64748b">
+        <span style="width:16px;height:16px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>${l}
+      </div>`).join('')}
+  `;
+  if(confEl) confEl.innerHTML=`
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <div><div style="font-weight:600;color:#16a34a">${nfeItens.filter((_,j)=>document.getElementById(`ns-${j}`)?.value).length} item conferido</div><div style="font-size:11px;color:#64748b">Tudo certo para confirmar a entrada.</div></div>
+  `;
+  // Atualiza vinculos salvos
+  renderNfeVinculos(insId);
+}
+
+function renderNfeVinculos(insId) {
+  const tbody=document.getElementById('nfe-vinculos-body'); if(!tbody) return;
+  const ins=insumos.find(x=>x.id===insId);
+  const vins=vinculos.filter(v=>v.insumo_id===insId);
+  const fornId=document.getElementById('nfe-forn')?.value;
+  const ifvs=insumoFornVinculos.filter(v=>v.insumo_id===insId);
+  const todos=[...vins.map(v=>({cod:v.codigo_nfe||'—',desc:v.descricao_nfe||'—',ins:ins?.nome||'—',insCode:insId.slice(-5).toUpperCase(),emb:v.unidade_compra||'—',conv:`1 ${v.unidade_compra||'?'} = ${(v.fator_conversao||1).toFixed(3)}`,un:ins?.unidade_medida||ins?.unidade_compra||'un',id:v.id}))];
+  if(!todos.length){tbody.innerHTML='<tr><td colspan="7" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Nenhuma conversão salva para este insumo</td></tr>';return;}
+  tbody.innerHTML=todos.map((v,idx)=>`<tr>
+    <td><span class="cod-badge">${esc(v.cod)}</span></td>
+    <td style="font-size:12px">${esc(v.desc)}</td>
+    <td style="font-size:12px">${esc(v.ins)} <span style="color:#94a3b8">(INS-${v.insCode})</span></td>
+    <td style="font-size:12px">${esc(v.emb)}</td>
+    <td style="font-size:12px;font-family:'DM Mono',monospace">${esc(v.conv)}</td>
+    <td style="font-size:12px">${esc(v.un)}</td>
+    <td class="c"><button style="background:none;border:none;cursor:pointer;color:#94a3b8" onclick="" title="Remover">—</button></td>
+  </tr>`).join('');
+}
+
 function renderNfeMap(itens) {
   const pi=itens[0]||{};
-  document.getElementById('nfe-info').textContent=
-    `NF-e ${pi.nNF||'?'}/${pi.serie||'?'} · ${itens.length} item(s) · Emitente: ${pi.emitNome||'—'}`;
+  const fornMatch=fornecedores.find(f=>f.nome.toLowerCase()===(pi.emitNome||'').toLowerCase());
+  const fornId=fornMatch?.id||null;
 
-  // Detecta fornecedor pelo nome do emitente
-  const fornMatch = fornecedores.find(f=>f.nome.toLowerCase()===(pi.emitNome||'').toLowerCase());
-  const fornId = fornMatch?.id||null;
-
-  const insOpts='<option value="">— não importar —</option>'+
+  const insOpts='<option value="">— Selecione o produto —</option>'+
     insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
 
-  document.getElementById('nfe-body').innerHTML = itens.map((it,i)=>{
-    // 1. Match por código em vinculos_nfe (aprendizado anterior)
-    let vin = it.codigo ? vinculos.find(v=>v.codigo_nfe&&v.codigo_nfe===it.codigo) : null;
-    // 2. Match por código em insumo_fornecedores (cadastro manual)
-    if (!vin?.insumo_id && it.codigo) {
-      const ifv = insumoFornVinculos.find(v=>
-        v.codigo_fornecedor===it.codigo && (!fornId||v.fornecedor_id===fornId)
-      );
-      if (ifv) vin = { insumo_id:ifv.insumo_id, fator_conversao:ifv.qtd_por_embalagem||1 };
+  document.getElementById('nfe-body').innerHTML=itens.map((it,i)=>{
+    let vin=it.codigo?vinculos.find(v=>v.codigo_nfe&&v.codigo_nfe===it.codigo):null;
+    if(!vin?.insumo_id&&it.codigo){
+      const ifv=insumoFornVinculos.find(v=>v.codigo_fornecedor===it.codigo&&(!fornId||v.fornecedor_id===fornId));
+      if(ifv) vin={insumo_id:ifv.insumo_id,fator_conversao:ifv.qtd_por_embalagem||1};
     }
-    // 3. Fallback: match por descrição
-    if (!vin?.insumo_id) vin = vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
+    if(!vin?.insumo_id) vin=vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
 
-    const selVal = vin?.insumo_id||'';
-    const fator = vin?.fator_conversao||1;
-    const autoFill = !!vin?.insumo_id;
-    const opts = insOpts.replace(`value="${selVal}"`,`value="${selVal}" selected`);
-    return `<tr ${autoFill?'style="background:#f0fdf4"':''}>
-      <td title="${esc(it.descricao)}">${esc(it.descricao.substring(0,38))}${it.descricao.length>38?'…':''}</td>
-      <td class="mono" style="color:var(--text3);font-size:11px">${esc(it.codigo||'—')}</td>
-      <td class="mono" style="color:var(--text3)">${esc(it.unidade)}</td>
-      <td class="r mono">${it.quantidade.toFixed(3)}</td>
-      <td class="r mono">${brl(it.valorUnit)}</td>
-      <td><select class="field field-sm" id="ns-${i}" style="width:100%" onchange="checkNfeInc(${i})">${opts}</select></td>
-      <td class="r"><input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:70px"></td>
-      <td class="c"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''}></td>
+    const selVal=vin?.insumo_id||'';
+    const fator=vin?.fator_conversao||1;
+    const autoFill=!!vin?.insumo_id;
+    const opts=insOpts.replace(`value="${selVal}"`,`value="${selVal}" selected`);
+    const ins=selVal?insumos.find(x=>x.id===selVal):null;
+    const qtdEst=it.quantidade*fator;
+    const linkedHtml=autoFill&&ins?`
+      <span class="linked-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Produto vinculado</span>
+      <div style="font-size:11px;color:#64748b;margin-top:3px">Código interno: INS-${ins.id.slice(-5).toUpperCase()}</div>`:'';
+
+    return `<tr class="${autoFill?'linked-row':''}">
+      <td>
+        <div style="font-weight:700;font-size:12px">${esc(it.descricao.substring(0,40))}${it.descricao.length>40?'…':''}</div>
+        ${it.codigo?`<span class="cod-badge" style="margin-top:4px;display:inline-block">Cód. fornecedor: ${esc(it.codigo)}</span>`:''}
+      </td>
+      <td><span class="mono" style="color:#64748b;font-size:11px">${esc(it.codigo||'—')}</span></td>
+      <td>
+        <select class="field field-sm" id="ns-${i}" style="width:100%;margin-bottom:4px" onchange="checkNfeInc(${i});calcNfePreview(${i})">${opts}</select>
+        ${linkedHtml}
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:28px;height:28px;background:#eff6ff;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600">${esc(it.unidade)}</div>
+            <div style="font-size:10px;color:#94a3b8">Unidade de compra</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div style="font-size:11px;color:#64748b;margin-bottom:4px">1 ${esc(it.unidade)} =</div>
+        <input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:90px" oninput="calcNfePreview(${i})">
+        <div style="font-size:10px;color:#94a3b8;margin-top:2px">UN Unidade de estoque</div>
+      </td>
+      <td>
+        <div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${qtdEst.toFixed(3)}</div>
+        <div style="font-size:10px;color:#94a3b8">UN Unidade de estoque</div>
+        <div style="margin-top:4px"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''} style="accent-color:#f97316"></div>
+      </td>
+      <td>
+        <button style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;border-radius:4px" title="Mais opções">⋮</button>
+      </td>
+    </tr>
+    <tr class="summary-row">
+      <td colspan="7">
+        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <span style="font-weight:600">Resumo da conversão deste item</span>
+          </div>
+          <span>Custo total na NF-e: <strong style="font-family:'DM Mono',monospace">${brl(it.valorUnit*it.quantidade)}</strong></span>
+          <span>Quantidade comprada: <strong style="font-family:'DM Mono',monospace">${it.quantidade.toFixed(2)} ${esc(it.unidade)}</strong></span>
+          <span>Entrada no estoque: <strong style="font-family:'DM Mono',monospace;color:#0d9488">${qtdEst.toFixed(3)} UN</strong></span>
+          <span>Custo total no estoque: <strong style="font-family:'DM Mono',monospace">${brl(it.valorUnit*it.quantidade)}</strong></span>
+          <span>Custo unitário no estoque: <strong style="font-family:'DM Mono',monospace;color:#0d9488">${brl(it.valorUnit/fator)} / UN</strong></span>
+        </div>
+      </td>
     </tr>`;
   }).join('');
 }
