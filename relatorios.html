@@ -513,60 +513,102 @@
 
     <!-- AUDITORIA DE CONVERSÃO -->
     <div id="pane-auditoria" class="rel-pane">
-
-      <!-- FILTROS -->
-      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:16px;align-items:end">
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Inicial</label>
-            <input type="date" id="aud-ini" class="field" style="width:100%">
+      <!-- Filtros -->
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">D. Inicial</div>
+          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px">
+            <input type="date" id="aud-ini" style="border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">D. Final</label>
-            <input type="date" id="aud-fim" class="field" style="width:100%">
-          </div>
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Insumo</label>
-            <select id="aud-ins" class="field" style="width:100%">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Mostrar</label>
-            <select id="aud-filtro" class="field" style="width:100%">
-              <option value="todos">Todos os lançamentos</option>
-              <option value="suspeitos">Apenas suspeitos (fator = 1)</option>
-            </select>
-          </div>
-          <button onclick="renderAuditoria()" style="height:40px;padding:0 20px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;align-self:end;transition:background .15s" onmouseover="this.style.background='#ea6c00'" onmouseout="this.style.background='#f97316'">Consultar</button>
         </div>
-        <div style="margin-top:12px;font-size:12px;color:var(--text3)">
-          <span style="display:inline-flex;align-items:center;gap:5px;margin-right:16px"><span style="width:10px;height:10px;border-radius:50%;background:#fef3c7;border:1px solid #f59e0b;display:inline-block"></span>Suspeito — fator de conversão igual a 1 com embalagem declarada</span>
-          <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:#fde8ea;border:1px solid #dc2626;display:inline-block"></span>Erro — diferença entre esperado e lançado</span>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">D. Final</div>
+          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px">
+            <input type="date" id="aud-fim" style="border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Insumo</div>
+          <select id="aud-ins" class="field" style="min-width:180px"><option value="">Todos</option></select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Mostrar</div>
+          <select id="aud-filtro" class="field" style="min-width:200px">
+            <option value="todos">Todos os lançamentos</option>
+            <option value="suspeitos">Apenas suspeitos / erros</option>
+          </select>
+        </div>
+        <button onclick="renderAuditoria()" style="height:38px;padding:0 20px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:background .15s" onmouseover="this.style.background='#ea6c00'" onmouseout="this.style.background='#f97316'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Consultar
+        </button>
+      </div>
+      <!-- Legenda -->
+      <div style="font-size:12px;color:#64748b;margin-bottom:14px;display:flex;gap:20px;flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block"></span>Suspeito — fator de conversão igual a 1 com embalagem declarada</span>
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#e11d48;display:inline-block"></span>Erro — diferença entre esperado e lançado</span>
+      </div>
+      <!-- KPI bar -->
+      <div style="display:flex;align-items:stretch;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+        <div style="padding:14px 20px;border-right:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;flex:1.2">
+          <div style="width:38px;height:38px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Total de lançamentos</div><div id="aud-k-total" style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#3b82f6;line-height:1.2">—</div></div>
+        </div>
+        <div style="padding:14px 20px;border-right:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;flex:1">
+          <div style="width:38px;height:38px;border-radius:10px;background:#fff7ed;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Suspeitos</div><div id="aud-k-susp" style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#f97316;line-height:1.2">—</div></div>
+        </div>
+        <div style="padding:14px 20px;border-right:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;flex:1">
+          <div style="width:38px;height:38px;border-radius:10px;background:#fef2f2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Erros</div><div id="aud-k-err" style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#e11d48;line-height:1.2">—</div></div>
+        </div>
+        <div style="padding:14px 20px;border-right:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;flex:1.3">
+          <div style="width:38px;height:38px;border-radius:10px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Dentro do esperado</div><div id="aud-k-ok" style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#16a34a;line-height:1.2">—</div></div>
+        </div>
+        <div style="padding:14px 20px;display:flex;align-items:center;gap:12px;flex:1">
+          <div style="width:38px;height:38px;border-radius:10px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+          <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Desvio médio</div><div id="aud-k-dev" style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#7c3aed;line-height:1.2">—</div></div>
         </div>
       </div>
-
-      <!-- TABELA -->
-      <div class="tbl-wrap"><div class="tbl-scroll">
-        <table class="tbl">
-          <thead><tr>
-            <th>Data / Hora</th>
-            <th>Insumo</th>
-            <th>Loja</th>
-            <th>Fornecedor</th>
-            <th class="r">Qtd Fornecedor</th>
-            <th>Embalagem</th>
-            <th class="r">Fator</th>
-            <th class="r">Qtd Estoque</th>
-            <th class="r">Esperado</th>
-            <th class="r">Diferença</th>
-            <th>Responsável</th>
-          </tr></thead>
-          <tbody id="aud-body">
-            <tr><td colspan="11" class="empty">Selecione o período e clique em Consultar.</td></tr>
-          </tbody>
-        </table>
-      </div></div>
+      <!-- Tabela -->
+      <div class="tbl-wrap">
+        <div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th style="white-space:nowrap">DATA / HORA</th>
+              <th>INSUMO</th>
+              <th>LOJA</th>
+              <th>FORNECEDOR</th>
+              <th class="r">QTD FORNECEDOR</th>
+              <th>EMBALAGEM</th>
+              <th class="r">FATOR</th>
+              <th class="r">QTD ESTOQUE</th>
+              <th class="r">ESPERADO</th>
+              <th class="r">DIFERENÇA</th>
+              <th>RESPONSÁVEL</th>
+              <th>STATUS</th>
+              <th>AÇÕES</th>
+            </tr></thead>
+            <tbody id="aud-body">
+              <tr><td colspan="13" class="empty">Selecione o período e clique em Consultar.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pag-bar">
+          <span id="aud-pag-info" style="font-size:12px;color:#64748b"></span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pag-btns" id="aud-pag-btns"></div>
+            <select id="aud-por-pag" style="font-size:12px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;font-family:inherit;color:#64748b" onchange="_audPorPag=+this.value;_audPag=1;_renderAudPage()">
+              <option value="10" selected>10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -1398,31 +1440,47 @@ function primeiroDiaMes(){const d=new Date();return `${d.getFullYear()}-${String
 function hoje(){return new Date().toISOString().split('T')[0];}
 
 // ── AUDITORIA DE CONVERSÃO ─────────────────────────────────────────────
+let _audRows = [], _audPag = 1, _audPorPag = 10;
+
 function iniciarAuditoria() {
   if (!document.getElementById('aud-ini').value) {
     document.getElementById('aud-ini').value = primeiroDiaMes();
     document.getElementById('aud-fim').value = hoje();
   }
-  // popular insumos no filtro
   const sel = document.getElementById('aud-ins');
   if (sel.options.length <= 1) {
     insumos.forEach(i => { const o=document.createElement('option'); o.value=i.id; o.textContent=i.nome; sel.appendChild(o); });
   }
 }
 
+function _audStatusLabel(suspeito, erro) {
+  if (erro) return `<span style="color:#e11d48;font-weight:700;font-size:12px">Erro</span>`;
+  if (suspeito) return `<span style="color:#f97316;font-weight:700;font-size:12px">Suspeito</span>`;
+  return `<span style="color:#16a34a;font-weight:700;font-size:12px">OK</span>`;
+}
+
+function _audFmtDif(dif, esperado) {
+  const fmt3 = v => Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+  if (Math.abs(dif) < 0.001) return `<span style="color:#94a3b8">${fmt3(0)} (0%)</span>`;
+  const pct = esperado > 0 ? dif/esperado*100 : 0;
+  const sign = dif > 0 ? '+' : '';
+  const pctStr = (pct > 0 ? '+' : '') + pct.toFixed(0);
+  const color = dif < 0 ? '#e11d48' : '#16a34a';
+  return `<span style="color:${color};font-size:12px;font-weight:600">${sign}${fmt3(dif)} (${pctStr}%)</span>`;
+}
+
 async function renderAuditoria() {
-  const ini = document.getElementById('aud-ini').value;
-  const fim = document.getElementById('aud-fim').value;
-  const insId = document.getElementById('aud-ins').value;
+  const ini    = document.getElementById('aud-ini').value;
+  const fim    = document.getElementById('aud-fim').value;
+  const insId  = document.getElementById('aud-ins').value;
   const filtro = document.getElementById('aud-filtro').value;
   const lojaId = document.getElementById('sel-loja').value;
   const lojaFiltro = lojaId ? `&loja_id=eq.${lojaId}` : '';
-
-  const tbody = document.getElementById('aud-body');
-  tbody.innerHTML = '<tr><td colspan="11" class="empty">Carregando...</td></tr>';
+  const tbody  = document.getElementById('aud-body');
+  tbody.innerHTML = '<tr><td colspan="13" class="empty">Carregando...</td></tr>';
 
   try {
-    let q = `entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&tipo=eq.manual&order=criado_em.desc`;
+    let q = `entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`;
     if (ini) q += `&criado_em=gte.${ini}T00:00:00`;
     if (fim) q += `&criado_em=lte.${fim}T23:59:59`;
     if (insId) q += `&insumo_id=eq.${insId}`;
@@ -1430,13 +1488,12 @@ async function renderAuditoria() {
     const ents = await api(q);
     const lojasData = await api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]);
 
-    let rows = ents.map(e => {
-      const ins    = insumos.find(i => i.id === e.insumo_id);
-      const loja   = lojasData.find(l => l.id === e.loja_id);
-      const fator  = Number(e.fator_conversao) || 1;
-      // qtd_fornecedor: campo novo ou derivado de registros antigos
-      const qtdForn = Number(e.quantidade_fornecedor) || parseFloat((Number(e.quantidade) / fator).toFixed(4));
-      const qtdEst  = Number(e.quantidade) || 0;
+    _audRows = ents.map(e => {
+      const ins      = insumos.find(i => i.id === e.insumo_id);
+      const loja     = lojasData.find(l => l.id === e.loja_id);
+      const fator    = Number(e.fator_conversao) || 1;
+      const qtdForn  = Number(e.quantidade_fornecedor) || parseFloat((Number(e.quantidade) / fator).toFixed(4));
+      const qtdEst   = Number(e.quantidade) || 0;
       const esperado = parseFloat((qtdForn * fator).toFixed(4));
       const dif      = parseFloat((qtdEst - esperado).toFixed(4));
       const suspeito = fator === 1 && e.unidade_compra && e.unidade_compra.toLowerCase() !== (ins?.unidade_medida||'').toLowerCase();
@@ -1444,35 +1501,79 @@ async function renderAuditoria() {
       return { e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro };
     });
 
-    if (filtro === 'suspeitos') rows = rows.filter(r => r.suspeito || r.erro);
+    if (filtro === 'suspeitos') _audRows = _audRows.filter(r => r.suspeito || r.erro);
 
-    if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="11" class="empty">Nenhum lançamento encontrado para os filtros selecionados.</td></tr>';
-      return;
-    }
+    // KPIs
+    const nTotal   = _audRows.length;
+    const nSusp    = _audRows.filter(r => r.suspeito && !r.erro).length;
+    const nErr     = _audRows.filter(r => r.erro).length;
+    const nOk      = _audRows.filter(r => !r.suspeito && !r.erro).length;
+    const desvios  = _audRows.filter(r => r.erro && r.esperado > 0).map(r => Math.abs(r.dif / r.esperado * 100));
+    const devMedio = desvios.length ? desvios.reduce((a,v)=>a+v,0)/desvios.length : 0;
 
-    tbody.innerHTML = rows.map(({e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro}) => {
-      const rowStyle = erro ? 'background:#fde8ea' : suspeito ? 'background:#fefce8' : '';
-      const difStyle = erro ? 'color:#dc2626;font-weight:700' : 'color:var(--text3)';
-      const fatorStyle = (fator === 1 && e.unidade_compra) ? 'color:#b45309;font-weight:700' : '';
-      const dataHora = e.criado_em ? new Date(e.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
-      return `<tr style="${rowStyle}">
-        <td class="mono" style="font-size:12px">${dataHora}</td>
-        <td style="font-weight:500">${esc(ins?.nome||e.insumo_id||'—')}</td>
-        <td style="font-size:12px;color:var(--text2)">${esc(loja?.nome||'—')}</td>
-        <td style="font-size:12px;color:var(--text2)">${esc(e.fornecedor_nome||'—')}</td>
-        <td class="r mono">${Number(qtdForn).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
-        <td style="font-size:12px">${esc(e.unidade_compra||'—')}</td>
-        <td class="r mono" style="${fatorStyle}">${fator}</td>
-        <td class="r mono">${Number(qtdEst).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
-        <td class="r mono" style="color:var(--text3)">${Number(esperado).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
-        <td class="r mono" style="${difStyle}">${dif === 0 ? '—' : (dif > 0 ? '+' : '') + Number(dif).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
-        <td style="font-size:12px;color:var(--text2)">${esc(e.responsavel||'—')}</td>
-      </tr>`;
-    }).join('');
+    const setK = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    setK('aud-k-total', nTotal.toLocaleString('pt-BR'));
+    setK('aud-k-susp',  nSusp.toLocaleString('pt-BR'));
+    setK('aud-k-err',   nErr.toLocaleString('pt-BR'));
+    setK('aud-k-ok',    nOk.toLocaleString('pt-BR'));
+    setK('aud-k-dev',   devMedio.toFixed(2).replace('.',',')+'%');
+
+    _audPag = 1;
+    _renderAudPage();
   } catch(err) {
-    tbody.innerHTML = `<tr><td colspan="11" class="empty">Erro: ${esc(err.message)}</td></tr>`;
+    document.getElementById('aud-body').innerHTML = `<tr><td colspan="13" class="empty">Erro: ${esc(err.message)}</td></tr>`;
   }
+}
+
+function _renderAudPage() {
+  const tbody = document.getElementById('aud-body');
+  if (!tbody) return;
+  if (!_audRows.length) {
+    tbody.innerHTML = '<tr><td colspan="13" class="empty">Nenhum lançamento encontrado.</td></tr>';
+    document.getElementById('aud-pag-info').textContent = '';
+    document.getElementById('aud-pag-btns').innerHTML = '';
+    return;
+  }
+  const start = (_audPag-1)*_audPorPag;
+  const slice = _audRows.slice(start, start+_audPorPag);
+  const fmt3  = v => Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+
+  tbody.innerHTML = slice.map(({e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro}) => {
+    const dataHora = e.criado_em ? new Date(e.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    return `<tr>
+      <td class="mono" style="font-size:11px;color:#334155;white-space:nowrap">${dataHora}</td>
+      <td style="font-weight:600;color:#334155">${esc(ins?.nome||'—')}</td>
+      <td style="font-size:12px;color:#64748b">${esc(loja?.nome||'—')}</td>
+      <td style="font-size:12px;color:#334155">${esc(e.fornecedor_nome||'—')}</td>
+      <td class="r mono" style="color:#334155">${fmt3(qtdForn)}</td>
+      <td style="font-size:12px;color:#64748b">${esc(e.unidade_compra||'—')}</td>
+      <td class="r mono" style="color:#334155">${Number(fator).toLocaleString('pt-BR',{maximumFractionDigits:3})}</td>
+      <td class="r mono" style="color:#334155">${fmt3(qtdEst)}</td>
+      <td class="r mono" style="color:#64748b">${fmt3(esperado)}</td>
+      <td class="r">${_audFmtDif(dif, esperado)}</td>
+      <td style="font-size:12px;color:#64748b">${esc(e.responsavel||'—')}</td>
+      <td>${_audStatusLabel(suspeito, erro)}</td>
+      <td><button style="width:28px;height:28px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;line-height:1" title="Mais opções">⋮</button></td>
+    </tr>`;
+  }).join('');
+
+  const total = _audRows.length;
+  const totalPags = Math.max(1,Math.ceil(total/_audPorPag));
+  const end = Math.min(start+_audPorPag,total);
+  const info = document.getElementById('aud-pag-info');
+  if (info) info.textContent = `Mostrando ${start+1} a ${end} de ${total.toLocaleString('pt-BR')} registros`;
+  const btns = document.getElementById('aud-pag-btns');
+  if (!btns) return;
+  let h = `<button class="pag-btn" onclick="_audPag=Math.max(1,_audPag-1);_renderAudPage()" ${_audPag===1?'disabled':''}>‹</button>`;
+  for (let p=1;p<=totalPags;p++) {
+    if (totalPags>7&&Math.abs(p-_audPag)>2&&p!==1&&p!==totalPags) {
+      if (p===2||p===totalPags-1) h+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
+      continue;
+    }
+    h+=`<button class="pag-btn${p===_audPag?' active':''}" onclick="_audPag=${p};_renderAudPage()">${p}</button>`;
+  }
+  h+=`<button class="pag-btn" onclick="_audPag=Math.min(${totalPags},_audPag+1);_renderAudPage()" ${_audPag===totalPags?'disabled':''}>›</button>`;
+  btns.innerHTML = h;
 }
 
 init();
