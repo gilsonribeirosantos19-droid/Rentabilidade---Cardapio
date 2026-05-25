@@ -618,7 +618,7 @@
     </div>
     <div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr><th>Item</th><th class="r">Quantidade *</th><th>Embalagem</th></tr></thead>
+        <thead><tr><th>Item</th><th class="r" style="color:rgba(255,255,255,.6);font-size:10px">Sugestão</th><th class="r">Quantidade *</th><th>Embalagem</th></tr></thead>
         <tbody id="qtd-body"></tbody>
       </table>
     </div>
@@ -942,15 +942,8 @@ function renderSolicitacao() {
           <span class="sol-item-cat">${esc(ins.categoria||g.nome)}</span>
         </div>
         <div class="sol-item-right">
-          <div class="sol-item-estoque">Estoque atual: — ${un}</div>
-          <div class="sol-item-sug${sel?' active':''}">Sugestão: ${sug} ${un}</div>
-          <div class="qty-row">
-            <button class="qty-btn" onclick="changeSolQty('${ins.id}','${un}',-1)">−</button>
-            <input class="qty-inp" type="number" min="0" step="0.001" value="${qty||0}"
-              id="sol-qty-${ins.id}" onchange="setSolQtyDirect('${ins.id}','${un}',this.value)">
-            <span class="qty-un">${esc(un)}</span>
-            <button class="qty-btn" onclick="changeSolQty('${ins.id}','${un}',1)">+</button>
-          </div>
+          <div class="sol-item-estoque" style="color:#64748b">Estoque atual: — ${un}</div>
+          <div class="sol-item-sug${sel?' active':''}" data-sug="${sug}" data-un="${esc(un)}">Sugestão: ${sug} ${un}</div>
         </div>
       </div>`;
     }).join('');
@@ -1071,13 +1064,18 @@ function abrirModalQtd() {
   document.getElementById('qtd-body').innerHTML = [...solChecked].map(insId=>{
     const ins=insumos.find(i=>i.id===insId);
     const unPadrao=ins?.unidade_medida||ins?.unidade_compra||'un';
+    // pega sugestão do card se existir
+    const sugEl=document.querySelector(`#sol-card-${insId} .sol-item-sug`);
+    const sug=sugEl?.dataset?.sug||'0';
+    const sugUn=sugEl?.dataset?.un||unPadrao;
     const opts=UNIDADES_PEDIDO.map(u=>`<option value="${u}"${u===unPadrao?' selected':''}>${u}</option>`).join('');
     return `<tr>
-      <td style="font-weight:500">${esc(ins?.nome||insId)}</td>
+      <td style="font-weight:600;color:#0f172a">${esc(ins?.nome||insId)}<br><span style="font-size:11px;color:#94a3b8;font-weight:400">${esc(ins?.categoria||'')}</span></td>
+      <td class="r"><span style="font-size:13px;font-weight:700;color:#f97316;font-family:'DM Mono',monospace">${sug} ${sugUn}</span></td>
       <td class="r"><input type="number" class="field field-sm" id="mq-${insId}"
-        min="0" step="0.001" placeholder="0.000"
-        style="width:100px;text-align:right"></td>
-      <td><select class="field field-sm" id="mu-${insId}" style="width:80px">${opts}</select></td>
+        min="0" step="0.001" value="${sug}"
+        style="width:90px;text-align:right"></td>
+      <td><select class="field field-sm" id="mu-${insId}" style="width:72px">${opts}</select></td>
     </tr>`;
   }).join('');
   abrirModal('m-qtd');
