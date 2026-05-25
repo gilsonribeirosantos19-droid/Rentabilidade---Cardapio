@@ -186,30 +186,6 @@
 
   <div class="content">
 
-    <!-- MÉTRICAS -->
-    <div class="metrics">
-      <div class="metric">
-        <div class="metric-label">Total Cadastrados</div>
-        <div class="metric-val c-green" id="m-total">—</div>
-        <div class="metric-sub">insumos ativos</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Em Atenção</div>
-        <div class="metric-val c-amber" id="m-atencao">—</div>
-        <div class="metric-sub">revisar cadastros</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Críticos</div>
-        <div class="metric-val c-red" id="m-criticos">—</div>
-        <div class="metric-sub">ruptura ou estoque baixo</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Categorias</div>
-        <div class="metric-val" id="m-cats">—</div>
-        <div class="metric-sub">tipos de insumos</div>
-      </div>
-    </div>
-
     <!-- TOOLBAR -->
     <div class="toolbar">
       <div class="search-wrap">
@@ -244,7 +220,17 @@
                 <th>Unidade</th>
                 <th class="r">Preço Compra</th>
                 <th class="r">Custo Real/kg</th>
-                <th>Status</th>
+                <th style="min-width:100px">
+                  <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+                    <span>Status</span>
+                    <select id="ins-status-fil" onchange="filtrarStatus(this.value)" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:10px;border-radius:4px;padding:2px 6px;font-family:inherit;cursor:pointer;outline:none;width:100%">
+                      <option value="">Todos</option>
+                      <option value="ativo">Ativo</option>
+                      <option value="atencao">Atenção</option>
+                      <option value="critico">Crítico</option>
+                    </select>
+                  </div>
+                </th>
                 <th>Ações</th>
               </tr></thead>
               <tbody id="tbody">
@@ -392,6 +378,13 @@ function atualizarMetricas(){
   set('m-cats',cats);
 }
 
+let _insStatusFiltro = '';
+function filtrarStatus(v){
+  _insStatusFiltro = v;
+  _pagAtual = 1;
+  filtrar();
+}
+
 function setFiltroStatus(f){
   filtroStatus=f;
   document.querySelectorAll('.chip').forEach(c=>{
@@ -410,6 +403,7 @@ function filtrar(){
   else if(filtroStatus==='critico') lista=lista.filter(i=>getStatus(i)==='critico');
   else if(filtroStatus==='atencao') lista=lista.filter(i=>getStatus(i)==='atencao');
   else if(filtroStatus==='sem') lista=lista.filter(i=>(parseFloat(i.rendimento_pct||100))<40);
+  if(_insStatusFiltro) lista=lista.filter(i=>getStatus(i)===_insStatusFiltro);
   _filtrado=lista;
   _pagAtual=1;
   renderPagina();
