@@ -125,6 +125,26 @@
   /* UTILS */
   .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
   .nav-sub-arrow{margin-left:auto;font-size:11px;color:#94a3b8}
+  /* MODULE TABS */
+  .mod-tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid #e2e8f0;padding-bottom:0}
+  .mod-tab{padding:8px 18px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;font-family:inherit;margin-bottom:-1px;transition:all .15s}
+  .mod-tab.active{color:#f97316;border-bottom-color:#f97316}
+  .mod-tab:hover{color:#0f172a}
+  .mod-pane{display:none}
+  /* CADASTRO FORM */
+  .form-section{margin-bottom:24px}
+  .form-section-title{font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e2e8f0}
+  .form-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .form-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin-bottom:16px}
+  .form-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:16px;border-top:1px solid #e2e8f0}
+  /* PRODUTOS TOOLBAR */
+  .prod-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .prod-search{position:relative}
+  .prod-search input{padding:8px 12px 8px 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;width:220px}
+  .prod-search input:focus{border-color:#f97316}
+  .prod-search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none}
+  .prod-filter{padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:inherit;color:#64748b;outline:none;background:#fff;cursor:pointer}
+  .prod-filter:focus{border-color:#f97316}
   #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#fff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:auto}
   .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
   .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;border-bottom:1px solid #f1f5f9}
@@ -189,6 +209,171 @@
   </div>
 
   <div class="content">
+
+    <!-- MODULE TABS -->
+    <div class="mod-tabs">
+      <button class="mod-tab" data-tab="cadastro" onclick="switchModulo('cadastro')">Cadastro de Item</button>
+      <button class="mod-tab active" data-tab="produtos" onclick="switchModulo('produtos')">Produtos / Itens</button>
+      <button class="mod-tab" data-tab="custos" onclick="switchModulo('custos')">Base de Custos da Ficha Técnica</button>
+    </div>
+
+    <!-- PANE 1: CADASTRO DE ITEM -->
+    <div class="mod-pane" id="pane-cadastro">
+      <div class="form-card">
+        <div class="form-section">
+          <div class="form-section-title">1. Identificação</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Código interno</label><input class="form-input" id="cad-codigo" type="text" readonly placeholder="Gerado automaticamente" style="background:#f1f5f9;color:#94a3b8"></div>
+            <div class="form-group" style="grid-column:span 2"><label class="form-label">Descrição do item *</label><input class="form-input" id="cad-nome" type="text" placeholder="Ex: Salmão fresco"></div>
+            <div class="form-group"><label class="form-label">Código de barras</label><input class="form-input" id="cad-ean" type="text" placeholder="EAN/GTIN"></div>
+            <div class="form-group"><label class="form-label">Referência do fabricante</label><input class="form-input" id="cad-ref" type="text" placeholder="Ref. do fornecedor"></div>
+            <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="cad-marca" type="text" placeholder="Ex: Seara"></div>
+            <div class="form-group"><label class="form-label">NCM</label><input class="form-input" id="cad-ncm" type="text" placeholder="00000000"></div>
+            <div class="form-group"><label class="form-label">Status *</label>
+              <select class="form-select" id="cad-ativo">
+                <option value="true">Ativo</option>
+                <option value="false">Inativo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">2. Classificação</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Tipo do item *</label>
+              <select class="form-select" id="cad-tipo">
+                <option value="">Selecione...</option>
+                <option value="materia-prima">Matéria-prima</option>
+                <option value="produto-acabado">Produto acabado</option>
+                <option value="embalagem">Embalagem</option>
+                <option value="servico">Serviço</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Família</label>
+              <select class="form-select" id="cad-familia"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Grupo (Categoria)</label>
+              <select class="form-select" id="cad-grupo"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Subgrupo</label><input class="form-input" id="cad-subgrupo" type="text" placeholder="Subgrupo"></div>
+            <div class="form-group"><label class="form-label">Participa do CMV</label>
+              <select class="form-select" id="cad-cmv">
+                <option value="sim">Sim</option>
+                <option value="nao">Não</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">3. Unidade e Embalagem</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Unidade de estoque *</label>
+              <select class="form-select" id="cad-und-med">
+                <option value="">Selecione...</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="litro">litro</option>
+                <option value="ml">ml</option>
+                <option value="un">un</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Embalagem padrão</label>
+              <select class="form-select" id="cad-und-compra">
+                <option value="">Selecione...</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="litro">litro</option>
+                <option value="ml">ml</option>
+                <option value="un">un</option>
+                <option value="caixa">caixa</option>
+                <option value="fardo">fardo</option>
+                <option value="pacote">pacote</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Quantidade por embalagem</label><input class="form-input" id="cad-qtd-emb" type="number" min="0" step="0.001" placeholder="Ex: 5"></div>
+            <div class="form-group"><label class="form-label">Controla lote</label>
+              <select class="form-select" id="cad-lote">
+                <option value="nao">Não</option>
+                <option value="sim">Sim</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Controla validade</label>
+              <select class="form-select" id="cad-validade">
+                <option value="nao">Não</option>
+                <option value="sim">Sim</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Validade padrão (dias)</label><input class="form-input" id="cad-val-dias" type="number" min="0" placeholder="Ex: 30"></div>
+            <div class="form-group" style="grid-column:span 2"><label class="form-label">Local / Depósito padrão</label><input class="form-input" id="cad-deposito" type="text" placeholder="Ex: Câmara fria"></div>
+          </div>
+        </div>
+        <div class="form-footer">
+          <button class="btn" onclick="limparCadastro()">Cancelar</button>
+          <button class="btn btn-primary" onclick="salvarCadastro()" style="background:#f97316;border-color:#f97316">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 2: PRODUTOS / ITENS -->
+    <div class="mod-pane" id="pane-produtos" style="display:block">
+      <div class="prod-toolbar">
+        <div class="prod-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="prod-busca" placeholder="🔍 Buscar item..." oninput="filtrarProdutos()">
+        </div>
+        <select class="prod-filter" id="prod-tipo" onchange="filtrarProdutos()">
+          <option value="">Tipo do item ▾</option>
+          <option value="materia-prima">Matéria-prima</option>
+          <option value="produto-acabado">Produto acabado</option>
+          <option value="embalagem">Embalagem</option>
+          <option value="servico">Serviço</option>
+        </select>
+        <select class="prod-filter" id="prod-familia" onchange="filtrarProdutos()"><option value="">Família ▾</option></select>
+        <select class="prod-filter" id="prod-grupo" onchange="filtrarProdutos()"><option value="">Grupo ▾</option></select>
+        <select class="prod-filter" id="prod-subgrupo" onchange="filtrarProdutos()"><option value="">Subgrupo ▾</option></select>
+        <select class="prod-filter" id="prod-status" onchange="filtrarProdutos()">
+          <option value="">Status ▾</option>
+          <option value="true">Ativo</option>
+          <option value="false">Inativo</option>
+        </select>
+        <select class="prod-filter" id="prod-estq" onchange="filtrarProdutos()">
+          <option value="">Situação de estoque ▾</option>
+          <option value="ativo">Em estoque</option>
+          <option value="atencao">Estoque baixo</option>
+          <option value="critico">Crítico</option>
+        </select>
+        <button class="btn btn-primary" onclick="novoItemCadastro()" style="margin-left:auto;background:#f97316;border-color:#f97316;font-size:13px;padding:7px 18px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Item
+        </button>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th>Código Interno</th>
+              <th>Descrição</th>
+              <th>Tipo do Item</th>
+              <th>Família</th>
+              <th>Grupo</th>
+              <th>Subgrupo</th>
+              <th>Unidade</th>
+              <th>Embalagem Padrão</th>
+              <th class="r">Qtd. Emb.</th>
+              <th>Código de Barras</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr></thead>
+            <tbody id="prod-tbody">
+              <tr><td colspan="12" class="empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 3: BASE DE CUSTOS -->
+    <div class="mod-pane" id="pane-custos">
 
     <!-- TOOLBAR -->
     <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:14px;flex-wrap:wrap">
@@ -287,6 +472,8 @@
       </div>
 
     </div>
+
+    </div><!-- /pane-custos -->
   </div>
   <div style="padding:16px 0 4px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;margin-top:16px">© 2026 Aiko Sistema</div>
 </div>
@@ -371,7 +558,7 @@ function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${tipo} show`;setTimeout(()=>el.classList.remove('show'),3000);}
 
 let todos=[], filtroStatus='todos', insDetalhe=null, categoriasInsumo=[], unidadesMedida=[];
-let _pagAtual=1, _filtrado=[];
+let _pagAtual=1, _filtrado=[], _prodFiltrado=[], _cadEditId=null;
 
 // STATUS dos insumos
 function getStatus(ins){
@@ -654,11 +841,159 @@ async function carregarInsumos(){
     if(cs){cs.textContent='• conectado';cs.style.color='#16a34a';}
     atualizarMetricas();
     filtrar();
+    _popularGruposProd();
+    _prodFiltrado=todos.slice();
+    renderProdutos();
   }catch(e){
     if(tbody) tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
     const cs=document.getElementById('conn-status');
     if(cs){cs.textContent='• erro';cs.style.color='#e11d48';}
   }
+}
+
+// MODULE TABS
+function switchModulo(tab) {
+  document.querySelectorAll('.mod-pane').forEach(p => p.style.display='none');
+  document.getElementById('pane-'+tab).style.display='block';
+  document.querySelectorAll('.mod-tab').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+}
+
+// PANE 1 — CADASTRO
+function limparCadastro(){
+  _cadEditId = null;
+  ['cad-codigo','cad-nome','cad-ean','cad-ref','cad-marca','cad-ncm','cad-subgrupo','cad-deposito','cad-val-dias','cad-qtd-emb'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.value='';
+  });
+  const code=document.getElementById('cad-codigo');
+  if(code) code.value='Gerado automaticamente';
+  const setVal=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  setVal('cad-ativo','true'); setVal('cad-tipo',''); setVal('cad-grupo',''); setVal('cad-cmv','sim');
+  setVal('cad-lote','nao'); setVal('cad-validade','nao'); setVal('cad-und-med',''); setVal('cad-und-compra','');
+}
+
+function novoItemCadastro(){
+  limparCadastro();
+  switchModulo('cadastro');
+}
+
+function editarItemCadastro(id){
+  const ins=todos.find(x=>x.id===id);
+  if(!ins) return;
+  _cadEditId = id;
+  const idx = todos.indexOf(ins);
+  const setVal=(elId,v)=>{const e=document.getElementById(elId);if(e)e.value=v!=null?v:'';};
+  setVal('cad-codigo', 'MP-'+String(idx+1).padStart(6,'0'));
+  setVal('cad-nome', ins.nome||'');
+  setVal('cad-ativo', ins.ativo===false?'false':'true');
+  setVal('cad-grupo', ins.categoria||'');
+  setVal('cad-und-med', ins.unidade_medida||'');
+  setVal('cad-und-compra', ins.unidade_compra||'');
+  setVal('cad-qtd-emb', ins.rendimento_pct||'');
+  document.getElementById('cad-ean').value='';
+  document.getElementById('cad-ref').value='';
+  document.getElementById('cad-marca').value='';
+  document.getElementById('cad-ncm').value='';
+  document.getElementById('cad-subgrupo').value='';
+  document.getElementById('cad-deposito').value='';
+  document.getElementById('cad-val-dias').value='';
+  switchModulo('cadastro');
+}
+
+async function salvarCadastro(){
+  const nome=document.getElementById('cad-nome').value.trim();
+  if(!nome){toast('Informe a descrição do item.','err');return;}
+  const payload={
+    tenant_id: TENANT_ID,
+    nome,
+    categoria: document.getElementById('cad-grupo').value||null,
+    unidade_medida: document.getElementById('cad-und-med').value||null,
+    unidade_compra: document.getElementById('cad-und-compra').value||null,
+    rendimento_pct: parseFloat(document.getElementById('cad-qtd-emb').value)||100,
+    ativo: document.getElementById('cad-ativo').value!=='false',
+  };
+  if(!_cadEditId) payload.preco_compra=0;
+  try{
+    if(_cadEditId){
+      await api(`insumos?id=eq.${_cadEditId}`,{method:'PATCH',body:JSON.stringify(payload)});
+      toast('Item atualizado.','ok');
+    } else {
+      await api('insumos',{method:'POST',body:JSON.stringify(payload)});
+      toast(`${nome} cadastrado.`,'ok');
+    }
+    await carregarInsumos();
+    switchModulo('produtos');
+    limparCadastro();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+// PANE 2 — PRODUTOS
+function _gerarCodigo(idx){ return 'MP-'+String(idx+1).padStart(6,'0'); }
+
+function filtrarProdutos(){
+  const q=(document.getElementById('prod-busca')?.value||'').toLowerCase();
+  const filGrupo=document.getElementById('prod-grupo')?.value||'';
+  const filStatus=document.getElementById('prod-status')?.value;
+  const filEstq=document.getElementById('prod-estq')?.value||'';
+  let lista=todos;
+  if(q) lista=lista.filter(i=>i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q));
+  if(filGrupo) lista=lista.filter(i=>(i.categoria||'')==filGrupo);
+  if(filStatus!==''&&filStatus!=null) lista=lista.filter(i=>String(i.ativo!==false)===filStatus);
+  if(filEstq) lista=lista.filter(i=>getStatus(i)===filEstq);
+  _prodFiltrado=lista;
+  renderProdutos();
+}
+
+function renderProdutos(){
+  const tbody=document.getElementById('prod-tbody');
+  if(!tbody) return;
+  if(!_prodFiltrado.length){
+    tbody.innerHTML='<tr><td colspan="12" class="empty">Nenhum item encontrado</td></tr>';return;
+  }
+  const stCfg={
+    ativo:{bg:'#dcfce7',color:'#16a34a',txt:'Ativo'},
+    atencao:{bg:'#ffedd5',color:'#ea580c',txt:'Estoque baixo'},
+    critico:{bg:'#fee2e2',color:'#dc2626',txt:'Crítico'},
+  };
+  tbody.innerHTML=_prodFiltrado.map((ins,idx)=>{
+    const realIdx=todos.indexOf(ins);
+    const codigo=_gerarCodigo(realIdx);
+    const st=getStatus(ins);
+    const sc=stCfg[st];
+    return `<tr>
+      <td class="td-mono" style="color:#64748b;font-size:11px">${esc(codigo)}</td>
+      <td style="font-weight:600;color:#0f172a">${esc(ins.nome)}</td>
+      <td style="color:#64748b">—</td>
+      <td style="color:#64748b">—</td>
+      <td>${_catBadge(ins.categoria)}</td>
+      <td style="color:#64748b">—</td>
+      <td style="color:#64748b">${esc(ins.unidade_medida||'—')}</td>
+      <td style="color:#64748b">${esc(ins.unidade_compra||'—')}</td>
+      <td class="r td-mono" style="color:#64748b">${ins.rendimento_pct!=null?ins.rendimento_pct:'—'}</td>
+      <td style="color:#64748b">—</td>
+      <td><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.txt}</span></td>
+      <td>
+        <button class="btn-ghost" onclick="menuProduto('${ins.id}')" style="border-radius:6px;padding:4px 8px;font-size:18px;line-height:1;color:#94a3b8">⋮</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function menuProduto(id){
+  const ins=todos.find(x=>x.id===id);
+  if(!ins) return;
+  const acao=prompt(`Ação para "${ins.nome}":\n1 - Editar cadastro\n2 - Ver custos\n3 - Excluir\n\nDigite o número:`);
+  if(acao==='1') editarItemCadastro(id);
+  else if(acao==='2') { switchModulo('custos'); abrirDetalhe(id); }
+  else if(acao==='3'){ if(confirm(`Desativar "${ins.nome}"?`)) deletar(id,ins.nome); }
+}
+
+function _popularGruposProd(){
+  const sel=document.getElementById('prod-grupo');
+  if(!sel) return;
+  const cats=[...new Set(todos.map(i=>i.categoria).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">Grupo ▾</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  const cadGrupo=document.getElementById('cad-grupo');
+  if(cadGrupo) cadGrupo.innerHTML='<option value="">Selecione...</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 
 document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
