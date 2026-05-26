@@ -227,7 +227,6 @@
             <div class="form-group" style="grid-column:span 2"><label class="form-label">Descrição do item *</label><input class="form-input" id="cad-nome" type="text" placeholder="Ex: Salmão fresco"></div>
             <div class="form-group"><label class="form-label">Código de barras</label><input class="form-input" id="cad-ean" type="text" placeholder="EAN/GTIN"></div>
             <div class="form-group"><label class="form-label">Referência do fabricante</label><input class="form-input" id="cad-ref" type="text" placeholder="Ref. do fornecedor"></div>
-            <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="cad-marca" type="text" placeholder="Ex: Seara"></div>
             <div class="form-group"><label class="form-label">NCM</label><input class="form-input" id="cad-ncm" type="text" placeholder="00000000"></div>
             <div class="form-group"><label class="form-label">Status *</label>
               <select class="form-select" id="cad-ativo">
@@ -277,7 +276,7 @@
                 <option value="un">un</option>
               </select>
             </div>
-            <div class="form-group"><label class="form-label">Embalagem padrão</label>
+            <div class="form-group"><label class="form-label">Embalagem fornecedor</label>
               <select class="form-select" id="cad-und-compra">
                 <option value="">Selecione...</option>
                 <option value="kg">kg</option>
@@ -290,21 +289,7 @@
                 <option value="pacote">pacote</option>
               </select>
             </div>
-            <div class="form-group"><label class="form-label">Quantidade por embalagem</label><input class="form-input" id="cad-qtd-emb" type="number" min="0" step="0.001" placeholder="Ex: 5"></div>
-            <div class="form-group"><label class="form-label">Controla lote</label>
-              <select class="form-select" id="cad-lote">
-                <option value="nao">Não</option>
-                <option value="sim">Sim</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label">Controla validade</label>
-              <select class="form-select" id="cad-validade">
-                <option value="nao">Não</option>
-                <option value="sim">Sim</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label">Validade padrão (dias)</label><input class="form-input" id="cad-val-dias" type="number" min="0" placeholder="Ex: 30"></div>
-            <div class="form-group" style="grid-column:span 2"><label class="form-label">Local / Depósito padrão</label><input class="form-input" id="cad-deposito" type="text" placeholder="Ex: Câmara fria"></div>
+            <div class="form-group" style="grid-column:span 1"><label class="form-label">Local / Depósito padrão</label><input class="form-input" id="cad-deposito" type="text" placeholder="Ex: Câmara fria"></div>
           </div>
         </div>
         <div class="form-footer">
