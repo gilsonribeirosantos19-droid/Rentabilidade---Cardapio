@@ -197,6 +197,13 @@
       <div class="cfg-nav-outer" id="cfg-nav-outer">
         <nav class="cfg-nav"><div class="cfg-nav-inner">
           <div class="cfg-nav-group">
+            <span class="cfg-nav-label">Estrutura de Itens</span>
+            <button class="cfg-nav-item" id="cfg-btn-tipo-item" onclick="switchConfig('tipo-item')">Tipo do Item</button>
+            <button class="cfg-nav-item" id="cfg-btn-familia"   onclick="switchConfig('familia')">Família</button>
+            <button class="cfg-nav-item" id="cfg-btn-grupo"     onclick="switchConfig('grupo')">Grupo</button>
+            <button class="cfg-nav-item" id="cfg-btn-subgrupo"  onclick="switchConfig('subgrupo')">Subgrupo</button>
+          </div>
+          <div class="cfg-nav-group">
             <span class="cfg-nav-label">Cadastros</span>
             <button class="cfg-nav-item active" id="cfg-btn-cat-insumo"  onclick="switchConfig('cat-insumo')">Categorias de Insumos</button>
             <button class="cfg-nav-item"         id="cfg-btn-cat-ficha"   onclick="switchConfig('cat-ficha')">Categorias de Fichas</button>
@@ -221,6 +228,62 @@
 
       <!-- PAINEL DIREITO -->
       <div class="cfg-body">
+
+        <!-- Tipo do Item -->
+        <div class="cfg-pane" id="cfg-tipo-item">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Tipo do Item</div><div class="section-sub">Ex: Matéria-prima, Produto acabado, Embalagem, Serviço</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModal('tipo_item')">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-tipo-item"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Família -->
+        <div class="cfg-pane" id="cfg-familia">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Família</div><div class="section-sub">Agrupamento amplo de itens. Ex: Proteínas, Hortifruti, Bebidas</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModal('familia')">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-familia"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grupo -->
+        <div class="cfg-pane" id="cfg-grupo">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Grupo</div><div class="section-sub">Subdivisão dentro da família. Ex: Peixes, Frango, Folhosos</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModal('grupo')">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-grupo"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subgrupo -->
+        <div class="cfg-pane" id="cfg-subgrupo">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Subgrupo</div><div class="section-sub">Nível mais específico de classificação. Ex: Salmão, Filé, Costela</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModal('subgrupo')">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-subgrupo"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
 
         <!-- Categorias de Insumos -->
         <div class="cfg-pane active" id="cfg-cat-insumo">
@@ -535,20 +598,31 @@
     cat_insumo: 'categorias',
     cat_ficha:  'categorias',
     unidade:    'unidades_medida',
+    tipo_item:  'item_classificacoes',
+    familia:    'item_classificacoes',
+    grupo:      'item_classificacoes',
+    subgrupo:   'item_classificacoes',
   };
 
   const TIPO_TITULO = {
     cat_insumo: 'Categoria de Insumo',
     cat_ficha:  'Categoria de Ficha',
     unidade:    'Unidade de Medida',
+    tipo_item:  'Tipo do Item',
+    familia:    'Família',
+    grupo:      'Grupo',
+    subgrupo:   'Subgrupo',
   };
+
+  const CLSF_TIPOS = ['tipo_item','familia','grupo','subgrupo'];
 
   // ── CARREGAR DADOS ────────────────────────────────────────
   async function carregar() {
     try {
-      const [cats, unidades] = await Promise.all([
+      const [cats, unidades, classificacoes] = await Promise.all([
         api(`categorias?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=*`),
         api(`unidades_medida?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=*`),
+        api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=*`).catch(()=>[]),
       ]);
       document.getElementById('conn-status').textContent = '● conectado';
       document.getElementById('conn-status').style.color = 'var(--teal)';
@@ -558,6 +632,11 @@
       renderCats('tbody-cat-insumo', catInsumos, 'cat_insumo');
       renderCats('tbody-cat-ficha',  catFichas,  'cat_ficha');
       renderUnidades(unidades);
+
+      renderCats('tbody-tipo-item', classificacoes.filter(c=>c.tipo==='tipo_item'), 'tipo_item');
+      renderCats('tbody-familia',   classificacoes.filter(c=>c.tipo==='familia'),   'familia');
+      renderCats('tbody-grupo',     classificacoes.filter(c=>c.tipo==='grupo'),     'grupo');
+      renderCats('tbody-subgrupo',  classificacoes.filter(c=>c.tipo==='subgrupo'),  'subgrupo');
     } catch (e) {
       document.getElementById('conn-status').textContent = '● desconectado';
       document.getElementById('conn-status').style.color = 'var(--red)';
@@ -657,7 +736,9 @@
       const table = TIPO_TABLE[modalTipo];
       const body  = modalTipo === 'unidade'
         ? { nome, abreviacao: abrev, tenant_id: TENANT_ID }
-        : { nome, tipo: modalTipo === 'cat_insumo' ? 'insumo' : 'ficha', tenant_id: TENANT_ID };
+        : CLSF_TIPOS.includes(modalTipo)
+          ? { nome, tipo: modalTipo, ativo: true, tenant_id: TENANT_ID }
+          : { nome, tipo: modalTipo === 'cat_insumo' ? 'insumo' : 'ficha', tenant_id: TENANT_ID };
 
       if (editId) {
         await api(`${table}?id=eq.${editId}`, {

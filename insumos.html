@@ -252,13 +252,7 @@
           <div class="form-section-title">2. Classificação</div>
           <div class="form-grid-3">
             <div class="form-group"><label class="form-label">Tipo do item *</label>
-              <select class="form-select" id="cad-tipo">
-                <option value="">Selecione...</option>
-                <option value="materia-prima">Matéria-prima</option>
-                <option value="produto-acabado">Produto acabado</option>
-                <option value="embalagem">Embalagem</option>
-                <option value="servico">Serviço</option>
-              </select>
+              <select class="form-select" id="cad-tipo"><option value="">Selecione...</option></select>
             </div>
             <div class="form-group"><label class="form-label">Família</label>
               <select class="form-select" id="cad-familia"><option value="">Selecione...</option></select>
@@ -266,7 +260,9 @@
             <div class="form-group"><label class="form-label">Grupo (Categoria)</label>
               <select class="form-select" id="cad-grupo"><option value="">Selecione...</option></select>
             </div>
-            <div class="form-group"><label class="form-label">Subgrupo</label><input class="form-input" id="cad-subgrupo" type="text" placeholder="Subgrupo"></div>
+            <div class="form-group"><label class="form-label">Subgrupo</label>
+              <select class="form-select" id="cad-subgrupo"><option value="">Selecione...</option></select>
+            </div>
             <div class="form-group"><label class="form-label">Participa do CMV</label>
               <select class="form-select" id="cad-cmv">
                 <option value="sim">Sim</option>
@@ -321,10 +317,6 @@
           </div>
           <select class="prod-filter" id="prod-tipo" onchange="filtrarProdutos()">
             <option value="">Tipo do item ▾</option>
-            <option value="materia-prima">Matéria-prima</option>
-            <option value="produto-acabado">Produto acabado</option>
-            <option value="embalagem">Embalagem</option>
-            <option value="servico">Serviço</option>
           </select>
           <select class="prod-filter" id="prod-familia" onchange="filtrarProdutos()"><option value="">Família ▾</option></select>
           <select class="prod-filter" id="prod-grupo" onchange="filtrarProdutos()"><option value="">Grupo ▾</option></select>
@@ -954,13 +946,35 @@ function _popularGruposProd(){
   if(!sel) return;
   const cats=[...new Set(todos.map(i=>i.categoria).filter(Boolean))].sort();
   sel.innerHTML='<option value="">Grupo ▾</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
-  const cadGrupo=document.getElementById('cad-grupo');
-  if(cadGrupo) cadGrupo.innerHTML='<option value="">Selecione...</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+
+async function carregarClassificacoes(){
+  try{
+    const list=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    const byTipo=(t)=>list.filter(c=>c.tipo===t);
+
+    const fill=(id, items, placeholder)=>{
+      const el=document.getElementById(id);
+      if(!el) return;
+      const cur=el.value;
+      el.innerHTML=`<option value="">${placeholder}</option>`+
+        items.map(i=>`<option value="${esc(i.nome)}">${esc(i.nome)}</option>`).join('');
+      if(cur) el.value=cur;
+    };
+
+    fill('cad-tipo',     byTipo('tipo_item'), 'Selecione...');
+    fill('cad-familia',  byTipo('familia'),   'Selecione...');
+    fill('cad-grupo',    byTipo('grupo'),     'Selecione...');
+    fill('cad-subgrupo', byTipo('subgrupo'),  'Selecione...');
+    fill('prod-tipo',    byTipo('tipo_item'), 'Tipo do item ▾');
+    fill('prod-familia', byTipo('familia'),   'Família ▾');
+    fill('prod-subgrupo',byTipo('subgrupo'),  'Subgrupo ▾');
+  }catch{}
 }
 
 document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
 
-(async()=>{await carregarLojas();await carregarOpcoes();await carregarInsumos();})();
+(async()=>{await carregarLojas();await Promise.all([carregarOpcoes(),carregarClassificacoes()]);await carregarInsumos();})();
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
