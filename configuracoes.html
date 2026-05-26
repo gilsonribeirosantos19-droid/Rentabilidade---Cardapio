@@ -211,8 +211,6 @@
           <div class="cfg-nav-group">
             <span class="cfg-nav-label">Empresa</span>
             <button class="cfg-nav-item" id="cfg-btn-lojas"        onclick="switchConfig('lojas')">Lojas / Filiais</button>
-            <button class="cfg-nav-item" id="cfg-btn-fornecedores" onclick="switchConfig('fornecedores')">Fornecedores</button>
-            <button class="cfg-nav-item" id="cfg-btn-vinculos"     onclick="switchConfig('vinculos')">Vínculo Insumo → Forn.</button>
           </div>
           <div class="cfg-nav-group">
             <span class="cfg-nav-label">Acesso</span>
@@ -318,34 +316,6 @@
             <div class="section-body">
               <table><thead><tr><th>Nome</th><th>Endereço</th><th>WhatsApp</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
               <tbody id="tbody-lojas"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Fornecedores -->
-        <div class="cfg-pane" id="cfg-fornecedores">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Fornecedores</div><div class="section-sub">Cadastre os fornecedores para vincular aos insumos</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModalForn()">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Contato</th><th>WhatsApp</th><th>Email</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-fornecedores"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Vínculo Insumo → Fornecedor -->
-        <div class="cfg-pane" id="cfg-vinculos">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Vínculo Insumo → Fornecedor</div><div class="section-sub">Define qual fornecedor abastece cada insumo e o preço negociado</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModalVinculo()">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Insumo</th><th>Fornecedor</th><th>Preço unit.</th><th>Principal</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-vinculos"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
             </div>
           </div>
         </div>
@@ -482,65 +452,6 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModalExtra('m-loja')">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarLoja()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: FORNECEDOR -->
-<div id="m-forn" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-forn')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><span class="modal-title" id="forn-titulo">Novo Fornecedor</span><button class="modal-close" onclick="fecharModalExtra('m-forn')">✕</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label>Nome *</label><input type="text" id="forn-nome" placeholder="Ex: Distribuidora Frutos do Mar"></div>
-      <div class="form-group"><label>Contato (nome da pessoa)</label><input type="text" id="forn-contato" placeholder="Ex: João"></div>
-      <div class="form-group"><label>WhatsApp</label><input type="text" id="forn-wpp" placeholder="84 9 9999-9999"></div>
-      <div class="form-group"><label>Email</label><input type="email" id="forn-email" placeholder="email@fornecedor.com"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModalExtra('m-forn')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarForn()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: VÍNCULO INSUMO → FORNECEDOR -->
-<div id="m-vinculo" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-vinculo')">
-  <div class="modal" style="max-width:700px" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <span class="modal-title">Vincular Insumos ao Fornecedor</span>
-      <button class="modal-close" onclick="fecharModalExtra('m-vinculo')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Fornecedor *</label>
-        <select id="vinculo-forn" onchange="renderVinculoInsumos()"></select>
-      </div>
-      <div id="vinculo-insumos-wrap" style="display:none">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-          <span style="font-size:13px;font-weight:600;color:var(--text1)">Insumos</span>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer">
-            <input type="checkbox" id="vinculo-todos" onchange="selecionarTodosVinculos(this.checked)" style="width:auto">
-            Selecionar todos
-          </label>
-          <span id="vinculo-count" style="font-size:12px;color:var(--text3);margin-left:auto"></span>
-        </div>
-        <div style="max-height:380px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)">
-          <table class="tbl" style="font-size:13px">
-            <thead><tr>
-              <th style="width:36px"></th>
-              <th>Insumo</th>
-              <th>Un.</th>
-              <th class="r">Preço/un (R$)</th>
-              <th style="text-align:center">Principal</th>
-            </tr></thead>
-            <tbody id="vinculo-ins-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModalExtra('m-vinculo')">Cancelar</button>
-      <button class="btn btn-primary" id="btn-salvar-vinculos" onclick="salvarVinculos()">Salvar vínculos</button>
     </div>
   </div>
 </div>
@@ -829,8 +740,8 @@
   });
 
   // ── LOJAS ─────────────────────────────────────────────────
-  let lojas = [], fornecedores = [], insumos = [], vinculos = [], usuarios = [];
-  let editLojaId = null, editFornId = null, editVincId = null, editUserId = null;
+  let lojas = [], usuarios = [];
+  let editLojaId = null, editUserId = null;
 
   function fecharModalExtra(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -845,14 +756,11 @@
   }
 
   async function carregarExtras() {
-    [lojas, fornecedores, insumos, vinculos, usuarios] = await Promise.all([
+    [lojas, usuarios] = await Promise.all([
       api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
-      api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
-      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`),
       api(`usuarios?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
     ]);
-    renderLojas(); renderFornecedores(); renderVinculos(); renderUsuarios();
+    renderLojas(); renderUsuarios();
   }
 
   function renderLojas() {
@@ -889,172 +797,6 @@
       else await api('lojas',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
       toast('Loja salva!','ok'); fecharModalExtra('m-loja'); await carregarExtras();
     } catch(e) { toast('Erro: '+e.message,'err'); }
-  }
-
-  // ── FORNECEDORES ───────────────────────────────────────────
-  function renderFornecedores() {
-    const tbody = document.getElementById('tbody-fornecedores');
-    tbody.innerHTML = fornecedores.length ? fornecedores.map(f => `<tr>
-      <td style="font-weight:500">${escHtml(f.nome)}</td>
-      <td>${escHtml(f.contato||'—')}</td>
-      <td class="td-mono">${escHtml(f.whatsapp||'—')}</td>
-      <td class="td-mono">${escHtml(f.email||'—')}</td>
-      <td><div class="td-actions">
-        <button class="btn btn-ghost btn-sm" onclick="abrirModalForn('${f.id}')">Editar</button>
-        <button class="btn btn-danger btn-sm" onclick="excluirItem('fornecedores','${f.id}','${escHtml(f.nome)}')">Excluir</button>
-      </div></td>
-    </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhum fornecedor cadastrado</td></tr>';
-  }
-
-  function abrirModalForn(id) {
-    editFornId = id||null;
-    const f = id ? fornecedores.find(x=>x.id===id) : null;
-    document.getElementById('forn-titulo').textContent = id ? 'Editar Fornecedor' : 'Novo Fornecedor';
-    document.getElementById('forn-nome').value = f?.nome||'';
-    document.getElementById('forn-contato').value = f?.contato||'';
-    document.getElementById('forn-wpp').value = f?.whatsapp||'';
-    document.getElementById('forn-email').value = f?.email||'';
-    document.getElementById('m-forn').classList.add('open');
-  }
-
-  async function salvarForn() {
-    const nome = document.getElementById('forn-nome').value.trim();
-    if (!nome) { toast('Informe o nome.','err'); return; }
-    const payload = { nome, contato: document.getElementById('forn-contato').value.trim()||null,
-      whatsapp: document.getElementById('forn-wpp').value.trim()||null,
-      email: document.getElementById('forn-email').value.trim()||null,
-      tenant_id: TENANT_ID, ativo: true };
-    try {
-      if (editFornId) await api(`fornecedores?id=eq.${editFornId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
-      else await api('fornecedores',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
-      toast('Fornecedor salvo!','ok'); fecharModalExtra('m-forn'); await carregarExtras();
-    } catch(e) { toast('Erro: '+e.message,'err'); }
-  }
-
-  // ── VÍNCULOS ───────────────────────────────────────────────
-  function renderVinculos() {
-    const tbody = document.getElementById('tbody-vinculos');
-    tbody.innerHTML = vinculos.length ? vinculos.map(v => {
-      const ins = insumos.find(i=>i.id===v.insumo_id);
-      const forn = fornecedores.find(f=>f.id===v.fornecedor_id);
-      return `<tr>
-        <td style="font-weight:500">${escHtml(ins?.nome||'—')}</td>
-        <td>${escHtml(forn?.nome||'—')}</td>
-        <td class="td-mono">${v.preco_unitario?'R$ '+Number(v.preco_unitario).toFixed(2):'—'}</td>
-        <td>${v.principal?'<span style="color:#16a34a;font-weight:600">✓ Principal</span>':'—'}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-sm" onclick="abrirModalVinculo('${v.id}')">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="excluirItem('insumo_fornecedores','${v.id}','vínculo')">Excluir</button>
-        </div></td>
-      </tr>`;
-    }).join('') : '<tr class="empty-row"><td colspan="5">Nenhum vínculo cadastrado</td></tr>';
-  }
-
-  function abrirModalVinculo(fornPreselId) {
-    document.getElementById('vinculo-forn').innerHTML =
-      '<option value="">— Selecione o fornecedor —</option>' +
-      fornecedores.map(f=>`<option value="${f.id}">${escHtml(f.nome)}</option>`).join('');
-    if (fornPreselId) {
-      // Se veio de um vínculo existente, pré-seleciona o fornecedor desse vínculo
-      const v = vinculos.find(x=>x.id===fornPreselId);
-      const fid = v?.fornecedor_id || fornPreselId;
-      document.getElementById('vinculo-forn').value = fid;
-      renderVinculoInsumos();
-    } else {
-      document.getElementById('vinculo-insumos-wrap').style.display = 'none';
-    }
-    document.getElementById('m-vinculo').classList.add('open');
-  }
-
-  function renderVinculoInsumos() {
-    const fornId = document.getElementById('vinculo-forn').value;
-    const wrap = document.getElementById('vinculo-insumos-wrap');
-    if (!fornId) { wrap.style.display = 'none'; return; }
-
-    const vincsForn = vinculos.filter(v=>v.fornecedor_id===fornId);
-    wrap.style.display = '';
-    document.getElementById('vinculo-todos').checked = false;
-
-    const tbody = document.getElementById('vinculo-ins-body');
-    tbody.innerHTML = insumos.map(ins => {
-      const ex = vincsForn.find(v=>v.insumo_id===ins.id);
-      const chk = !!ex;
-      const preco = ex?.preco_unitario||'';
-      const prin = ex?.principal||false;
-      const un = ins.unidade_medida||ins.unidade_compra||'un';
-      return `<tr id="vrow-${ins.id}" style="${chk?'background:#f0fdf4':''}">
-        <td style="text-align:center">
-          <input type="checkbox" id="vi-chk-${ins.id}" ${chk?'checked':''}
-            onchange="toggleVinculoRow('${ins.id}',this.checked)" style="width:auto;cursor:pointer">
-        </td>
-        <td style="font-weight:${chk?600:400}">${escHtml(ins.nome)}</td>
-        <td style="color:var(--text3)">${escHtml(un)}</td>
-        <td style="text-align:right">
-          <input type="number" id="vi-preco-${ins.id}" value="${preco}" min="0" step="0.01" placeholder="—"
-            ${!chk?'disabled':''}
-            style="width:90px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;
-                   font-size:12px;text-align:right;font-family:inherit;outline:none;
-                   background:${chk?'#fff':'var(--bg3)'}">
-        </td>
-        <td style="text-align:center">
-          <input type="checkbox" id="vi-prin-${ins.id}" ${prin?'checked':''} ${!chk?'disabled':''}
-            style="width:auto;cursor:pointer">
-        </td>
-      </tr>`;
-    }).join('');
-    atualizarContadorVinculo();
-  }
-
-  function toggleVinculoRow(insId, checked) {
-    const row = document.getElementById('vrow-'+insId);
-    const preco = document.getElementById('vi-preco-'+insId);
-    const prin = document.getElementById('vi-prin-'+insId);
-    if (row) row.style.background = checked ? '#f0fdf4' : '';
-    if (preco) { preco.disabled = !checked; preco.style.background = checked?'#fff':'var(--bg3)'; }
-    if (prin) { prin.disabled = !checked; if (!checked) prin.checked = false; }
-    atualizarContadorVinculo();
-  }
-
-  function selecionarTodosVinculos(checked) {
-    insumos.forEach(ins => {
-      const chk = document.getElementById('vi-chk-'+ins.id);
-      if (chk) { chk.checked = checked; toggleVinculoRow(ins.id, checked); }
-    });
-  }
-
-  function atualizarContadorVinculo() {
-    const total = insumos.filter(ins => document.getElementById('vi-chk-'+ins.id)?.checked).length;
-    document.getElementById('vinculo-count').textContent = total > 0 ? `${total} selecionado(s)` : '';
-  }
-
-  async function salvarVinculos() {
-    const fornId = document.getElementById('vinculo-forn').value;
-    if (!fornId) { toast('Selecione um fornecedor.','err'); return; }
-    const btn = document.getElementById('btn-salvar-vinculos');
-    btn.disabled = true; btn.textContent = 'Salvando...';
-    try {
-      for (const ins of insumos) {
-        const chk = document.getElementById('vi-chk-'+ins.id);
-        if (!chk) continue;
-        const checked = chk.checked;
-        const preco = parseFloat(document.getElementById('vi-preco-'+ins.id)?.value)||null;
-        const principal = document.getElementById('vi-prin-'+ins.id)?.checked||false;
-        const existing = vinculos.find(v=>v.fornecedor_id===fornId&&v.insumo_id===ins.id);
-        if (checked && !existing) {
-          await api('insumo_fornecedores',{method:'POST',prefer:'return=minimal',
-            body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:ins.id,fornecedor_id:fornId,preco_unitario:preco,principal})});
-        } else if (checked && existing) {
-          await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'PATCH',prefer:'return=minimal',
-            body:JSON.stringify({preco_unitario:preco,principal})});
-        } else if (!checked && existing) {
-          await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'DELETE',prefer:'return=minimal'});
-        }
-      }
-      toast('Vínculos salvos!','ok');
-      fecharModalExtra('m-vinculo');
-      await carregarExtras();
-    } catch(e) { toast('Erro: '+e.message,'err'); }
-    finally { btn.disabled=false; btn.textContent='Salvar vínculos'; }
   }
 
   // ── USUÁRIOS ───────────────────────────────────────────────
@@ -1349,8 +1091,6 @@
   <a class="cfg-flyout-item" href="configuracoes.html?sec=grupos-compra">Grupos de Compra</a>
   <a class="cfg-flyout-item" href="configuracoes.html?sec=inventarios">Inventários</a>
   <a class="cfg-flyout-item" href="configuracoes.html?sec=motivos">Motivos de Perda</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=fornecedores">Fornecedores</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=vinculos">Vínculo Insumo → Forn.</a>
 </div>
 <script>
 (function(){
