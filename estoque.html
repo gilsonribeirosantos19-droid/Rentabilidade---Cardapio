@@ -218,9 +218,9 @@
   .nfe-sec-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0}
   .nfe-tbl{width:100%;border-collapse:collapse;font-size:12px}
   .nfe-tbl thead tr{background:#0f2d5c}
-  .nfe-tbl th{padding:9px 10px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .nfe-tbl th{padding:7px 8px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
   .nfe-tbl th.r{text-align:right}
-  .nfe-tbl td{padding:10px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  .nfe-tbl td{padding:6px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
   .nfe-tbl tr.linked-row{background:#f0fdf4}
   .nfe-tbl tr.summary-row td{background:#f8fafc;font-size:11px;color:#64748b;padding:8px 10px;border-bottom:1px solid #e2e8f0}
   .nfe-tbl tr:last-child td{border-bottom:none}
@@ -1292,14 +1292,15 @@
           <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
             <table class="nfe-tbl">
               <thead><tr>
-                <th style="width:190px">Produto na NF-e</th>
+                <th style="width:170px">Produto NF-e</th>
+                <th style="width:62px">Cód.</th>
                 <th>Produto do sistema</th>
-                <th class="r" style="width:75px">Qtd. NF-e</th>
-                <th style="width:85px">Embalagem</th>
-                <th style="width:155px">Conversão<br><span style="font-weight:400;opacity:.7">(Compra → Estoque)</span></th>
-                <th class="r" style="width:95px">Qtd. convertida</th>
-                <th style="width:75px">Un. estoque</th>
-                <th style="width:36px"></th>
+                <th class="r" style="width:58px">Qtd.</th>
+                <th style="width:65px">Emb.</th>
+                <th style="width:130px">Conversão</th>
+                <th class="r" style="width:72px">Convertido</th>
+                <th style="width:55px">Un.</th>
+                <th style="width:30px"></th>
               </tr></thead>
               <tbody id="nfe-body"></tbody>
             </table>
@@ -2215,38 +2216,28 @@ function renderNfeMap(itens) {
     const unEst=ins?.unidade_medida||ins?.unidade_compra||'—';
 
     return `<tr class="${autoFill?'linked-row':''}">
-      <td>
-        <div style="font-weight:700;font-size:12px">${esc(it.descricao.substring(0,45))}${it.descricao.length>45?'…':''}</div>
+      <td style="padding:6px 8px"><div style="font-weight:600;font-size:11px;line-height:1.3">${esc(it.descricao.substring(0,38))}${it.descricao.length>38?'…':''}</div></td>
+      <td style="padding:6px 8px"><span style="font-family:'DM Mono',monospace;font-size:10px;color:#64748b">${esc(it.codigo||'—')}</span></td>
+      <td style="padding:6px 8px">
+        <select class="field field-sm" id="ns-${i}" style="width:100%;font-size:11px;padding:4px 6px" onchange="checkNfeInc(${i});calcNfePreview(${i})">${opts}</select>
+        ${autoFill?`<span class="linked-badge" style="margin-top:2px;display:inline-flex;font-size:9px;padding:1px 6px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Vinculado</span>`:''}
       </td>
-      <td>
-        <select class="field field-sm" id="ns-${i}" style="width:100%" onchange="checkNfeInc(${i});calcNfePreview(${i})">${opts}</select>
-        ${autoFill?`<span class="linked-badge" style="margin-top:3px;display:inline-flex"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Vinculado</span>`:''}
-      </td>
-      <td style="text-align:right">
-        <span style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px">${fmtQtd(it.quantidade)}</span>
-      </td>
-      <td>
-        <span style="font-size:12px;font-weight:600;color:#334155">${esc(it.unidade)}</span>
-      </td>
-      <td>
-        <div style="font-size:11px;color:#64748b;margin-bottom:4px">1 ${esc(it.unidade)} =</div>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:80px" oninput="calcNfePreview(${i})">
-          <span id="nu-${i}" style="font-size:12px;color:#64748b;white-space:nowrap">${esc(unEst)}</span>
+      <td style="text-align:right;padding:6px 8px"><span style="font-family:'DM Mono',monospace;font-weight:600;font-size:12px">${fmtQtd(it.quantidade)}</span></td>
+      <td style="padding:6px 8px"><span style="font-size:11px;font-weight:600;color:#334155">${esc(it.unidade)}</span></td>
+      <td style="padding:6px 8px">
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:2px">1 ${esc(it.unidade)} =</div>
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:60px;font-size:11px;padding:3px 5px" oninput="calcNfePreview(${i})">
+          <span id="nu-${i}" style="font-size:11px;color:#64748b">${esc(unEst)}</span>
         </div>
       </td>
-      <td style="text-align:right">
-        <div id="nq-${i}" style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${fmtQtd(qtdEst)}</div>
-        <div style="margin-top:4px"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''} style="accent-color:#f97316"></div>
+      <td style="text-align:right;padding:6px 8px">
+        <span id="nq-${i}" style="font-family:'DM Mono',monospace;font-weight:700;font-size:12px;color:#0f172a">${fmtQtd(qtdEst)}</span>
+        <div style="margin-top:3px"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''} style="accent-color:#f97316"></div>
       </td>
-      <td>
-        <span id="ne-${i}" style="font-size:12px;font-weight:600;color:#334155">${esc(unEst)}</span>
-      </td>
-      <td>
-        <button style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;border-radius:4px" title="Mais opções">⋮</button>
-      </td>
-    </tr>
-    `;
+      <td style="padding:6px 8px"><span id="ne-${i}" style="font-size:11px;font-weight:600;color:#334155">${esc(unEst)}</span></td>
+      <td style="padding:4px"><button style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:2px;border-radius:4px">⋮</button></td>
+    </tr>`;
   }).join('');
 }
 
