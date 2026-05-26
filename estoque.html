@@ -166,6 +166,19 @@
   .inv-zero{color:var(--text3);font-family:'DM Mono',monospace}
   .b-aberto{background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
   .b-fechado{background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  /* Inventário — filtro estilo ERP */
+  .inv-fc{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .inv-fc-r1{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:14px}
+  .inv-fc-r2{display:flex;align-items:stretch;gap:12px}
+  .inv-flbl{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px}
+  .inv-freq{color:#f97316}
+  .inv-bbox{border:1px solid #e2e8f0;border-radius:10px;padding:10px 16px;position:relative}
+  .inv-bbox-ttl{position:absolute;top:-8px;left:10px;background:#fff;padding:0 6px;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em}
+  .inv-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-bottom:10px}
+  .inv-tbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:11px;font-weight:600;color:#64748b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase}
+  .inv-tbtn:hover{border-color:#cbd5e1;color:#0f172a}
+  .inv-slab{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:#334155;white-space:nowrap}
+  .inv-slab input[type=checkbox]{width:15px;height:15px;accent-color:#f97316;cursor:pointer}
 
   /* RELATÓRIOS */
   .rep-title{font-size:14px;font-weight:600;margin-bottom:12px;
@@ -687,74 +700,91 @@
       <!-- LISTA -->
       <div id="inv-lista">
 
-        <!-- AÇÕES TOP -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <button class="btn btn-primary" onclick="abrirModalNovoInv()" style="display:inline-flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Novo inventário
-          </button>
-          <button onclick="abrirModalGrupos()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:#0f172a;cursor:pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <!-- TOPO: botões -->
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:14px">
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalGrupos()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             Grupos
           </button>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalNovoInv()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo inventário
+          </button>
         </div>
 
-        <!-- FILTROS -->
-        <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-          <div>
-            <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Loja</label>
-            <select id="inv-fil-loja" class="field field-sm" style="min-width:180px"><option value="">Todas as lojas</option></select>
+        <!-- FILTROS — estilo ERP -->
+        <div class="inv-fc">
+          <div class="inv-fc-r1">
+            <div>
+              <span class="inv-flbl">Loja <span class="inv-freq">*</span></span>
+              <select id="inv-fil-loja" class="field field-sm" style="width:100%"><option value="">Todas as lojas</option></select>
+            </div>
+            <div>
+              <span class="inv-flbl">Grupo Inventário</span>
+              <select id="inv-fil-grupo" class="field field-sm" style="width:100%"><option value="">Todos os grupos</option></select>
+            </div>
+            <div>
+              <span class="inv-flbl">N. Inventário</span>
+              <input type="text" id="inv-fil-num" class="field field-sm" placeholder="[digite...]" style="width:100%">
+            </div>
           </div>
-          <div>
-            <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Inicial</label>
-            <input type="date" id="inv-fil-ini" class="field field-sm">
+          <div class="inv-fc-r2">
+            <div class="inv-bbox" style="flex:0 0 auto">
+              <span class="inv-bbox-ttl">Período</span>
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div>
+                  <span class="inv-flbl">D. Inicial <span class="inv-freq">*</span></span>
+                  <input type="date" id="inv-fil-ini" class="field field-sm">
+                </div>
+                <div>
+                  <span class="inv-flbl">D. Final <span class="inv-freq">*</span></span>
+                  <input type="date" id="inv-fil-fim" class="field field-sm">
+                </div>
+              </div>
+            </div>
+            <div class="inv-bbox" style="flex:1">
+              <span class="inv-bbox-ttl">Situação</span>
+              <div style="display:flex;align-items:center;gap:20px;height:100%;min-height:46px">
+                <label class="inv-slab"><input type="checkbox" id="inv-sit-ativo" checked> Ativo</label>
+                <label class="inv-slab"><input type="checkbox" id="inv-sit-encerrado" checked> Encerrado</label>
+                <label class="inv-slab"><input type="checkbox" id="inv-sit-cancelado"> Cancelado</label>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-end">
+              <button class="btn btn-primary" onclick="renderInvLista()" style="height:42px;padding:0 28px;border-radius:21px;white-space:nowrap">Consultar</button>
+            </div>
           </div>
-          <div>
-            <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Final</label>
-            <input type="date" id="inv-fil-fim" class="field field-sm">
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="renderInvLista()" style="white-space:nowrap;align-self:flex-end">Consultar</button>
-          <div style="display:flex;gap:16px;align-items:center;align-self:flex-end">
-            <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Situação</span>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#16a34a;font-weight:500">
-              <input type="checkbox" id="inv-sit-ativo" checked> Ativo
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#2563eb;font-weight:500">
-              <input type="checkbox" id="inv-sit-encerrado" checked> Encerrado
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#64748b;font-weight:500">
-              <input type="checkbox" id="inv-sit-cancelado"> Cancelado
-            </label>
-          </div>
-        </div>
-
-        <!-- SUB-ABAS -->
-        <div style="border-bottom:2px solid #e2e8f0;margin-bottom:16px;display:flex;gap:0">
-          <button id="inv-subtab-lista" onclick="switchInvSubtab('lista')"
-            style="padding:10px 18px;font-size:13px;font-weight:600;background:none;border:none;border-bottom:3px solid #f97316;color:#f97316;cursor:pointer;margin-bottom:-2px">
-            Inventários
-          </button>
-          <button id="inv-subtab-modelos" onclick="switchInvSubtab('modelos')"
-            style="padding:10px 18px;font-size:13px;font-weight:600;background:none;border:none;border-bottom:3px solid transparent;color:#94a3b8;cursor:pointer;margin-bottom:-2px">
-            Modelos de inventário
-          </button>
         </div>
 
         <!-- PAINEL INVENTÁRIOS -->
         <div id="inv-pane-lista">
+          <div class="inv-toolbar">
+            <button class="inv-tbtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Colunas
+            </button>
+            <button class="inv-tbtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filtros
+            </button>
+            <button class="inv-tbtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar
+            </button>
+          </div>
           <div class="tbl-wrap"><div class="tbl-scroll">
             <table class="tbl">
               <thead><tr>
                 <th>Loja</th><th>Grupo</th><th>Tipo</th>
-                <th class="c">Status</th>
-                <th class="r">Itens Contados</th>
+                <th>D. Inicial</th><th>D. Final</th>
+                <th class="c">Situação</th>
                 <th>Progresso</th>
                 <th class="c">Ações</th>
               </tr></thead>
-              <tbody id="inv-lista-body"><tr><td colspan="7" class="empty"><b>Selecione os filtros e clique em Consultar.</b></td></tr></tbody>
+              <tbody id="inv-lista-body"><tr><td colspan="8" class="empty">Selecione os filtros e clique em <b>Consultar</b>.</td></tr></tbody>
             </table>
           </div></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;font-size:12px;color:#94a3b8;margin-top:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;font-size:12px;color:#94a3b8;margin-top:6px">
             <span id="inv-pag-info">—</span>
             <div style="display:flex;gap:4px" id="inv-pag-btns"></div>
             <select class="field field-sm" id="inv-por-pag" onchange="_invPagAtual=1;_renderInvPage()" style="padding:3px 8px;font-size:11px;width:auto">
@@ -762,15 +792,6 @@
               <option value="20">20 por página</option>
               <option value="50">50 por página</option>
             </select>
-          </div>
-        </div>
-
-        <!-- PAINEL MODELOS -->
-        <div id="inv-pane-modelos" style="display:none">
-          <div style="padding:48px 0;text-align:center;color:#94a3b8">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 12px;display:block"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-            <div style="font-size:14px;font-weight:600;color:#64748b;margin-bottom:6px">Modelos de inventário</div>
-            <div style="font-size:13px">Em desenvolvimento</div>
           </div>
         </div>
 
@@ -2942,7 +2963,12 @@ async function iniciarAbaInventario() {
   }
   const invBody = document.getElementById('inv-lista-body');
   if (invBody) invBody.innerHTML =
-    '<tr><td colspan="7" class="empty">Selecione os filtros e clique em Consultar.</td></tr>';
+    '<tr><td colspan="8" class="empty">Selecione os filtros e clique em <b>Consultar</b>.</td></tr>';
+  const selGrupo = document.getElementById('inv-fil-grupo');
+  if (selGrupo && grupos.length) {
+    selGrupo.innerHTML = '<option value="">Todos os grupos</option>' +
+      grupos.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
+  }
 }
 
 let _invLista = [], _invPagAtual = 1;
@@ -3017,7 +3043,7 @@ function _renderInvPage() {
     btnsEl.innerHTML = html;
   }
 
-  if (!page.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
+  if (!page.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
 
   const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso',geral:'Geral',parcial:'Parcial'};
   const statusCfg = {
@@ -3031,19 +3057,21 @@ function _renderInvPage() {
     const sc = statusCfg[inv.status] || {label:inv.status, bg:'#f1f5f9', color:'#64748b', barColor:'#94a3b8'};
     const pct = inv._pct;
     const progressBar = `
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;min-width:80px">
-          <div style="height:100%;width:${pct}%;background:${sc.barColor};border-radius:3px;transition:width .3s"></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div style="flex:1;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden;min-width:60px">
+          <div style="height:100%;width:${pct}%;background:${sc.barColor};border-radius:3px"></div>
         </div>
-        <span style="font-size:12px;font-weight:600;color:#64748b;white-space:nowrap">${pct}%</span>
+        <span style="font-size:11px;font-weight:600;color:#64748b;white-space:nowrap">${pct}%</span>
       </div>`;
+    const fmtD = d => d ? new Date(d+'T12:00:00').toLocaleDateString('pt-BR') : '—';
     return `<tr>
-      <td style="font-weight:600">${esc(inv._loja?.nome||'—')}</td>
-      <td>${esc(inv._grupo?.nome||'—')}</td>
-      <td style="color:#64748b">${tipoLabel[inv.tipo]||inv.tipo||'—'}</td>
-      <td class="c"><span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.label}</span></td>
-      <td class="r mono" style="font-weight:600">${inv._cnt||'—'}</td>
-      <td style="min-width:140px">${progressBar}</td>
+      <td style="font-weight:600;font-size:12px">${esc(inv._loja?.nome||'—')}</td>
+      <td style="color:#64748b;font-size:12px">${esc(inv._grupo?.nome||'—')}</td>
+      <td style="color:#64748b;font-size:12px">${tipoLabel[inv.tipo]||inv.tipo||'—'}</td>
+      <td style="color:#64748b;font-size:12px;white-space:nowrap">${fmtD(inv.data_inicial)}</td>
+      <td style="color:#64748b;font-size:12px;white-space:nowrap">${fmtD(inv.data_final)}</td>
+      <td class="c"><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.label}</span></td>
+      <td style="min-width:120px">${progressBar}</td>
       <td class="c">
         <div style="display:flex;align-items:center;justify-content:center;gap:4px">
           <button class="btn-icon" title="Ver detalhes" onclick="abrirInvDetalhe('${inv.id}')">

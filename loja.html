@@ -312,45 +312,58 @@
     <div id="tab-inventario" class="tab-pane active">
       <div class="page-title">Inventário</div>
       <div class="page-sub">Consulte o inventário do estoque por período e situação.</div>
-      <!-- Filtros -->
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:16px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:14px;align-items:end" class="inv-filtros-grid">
-          <div style="margin:0">
-            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Empresa</div>
-            <div id="inv-empresa-label" class="field" style="background:#f8fafc;color:#64748b;cursor:default;border-radius:8px">—</div>
+      <!-- Filtros — estilo ERP -->
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Empresa <span style="color:#f97316">*</span></span>
+            <div id="inv-empresa-label" class="field" style="background:#f8fafc;color:#64748b;cursor:default">—</div>
           </div>
-          <div style="margin:0">
-            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Data inicial</div>
-            <div style="display:flex;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:0 10px">
-              <input type="date" id="inv-data-ini" style="border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;padding:8px 0;flex:1;cursor:pointer">
-            </div>
+          <div>
+            <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">N. Inventário</span>
+            <input type="text" id="inv-fil-num" class="field" placeholder="[digite...]">
           </div>
-          <div style="margin:0">
-            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Data final</div>
-            <div style="display:flex;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:0 10px">
-              <input type="date" id="inv-data-fim" style="border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;padding:8px 0;flex:1;cursor:pointer">
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="carregarInventarios()" style="height:40px;border-radius:8px;padding:0 24px;font-size:14px">Consultar</button>
         </div>
-        <div style="margin-top:14px;display:flex;gap:24px;align-items:center">
-          <span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Situação</span>
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:#334155">
-            <input type="checkbox" id="inv-sit-ativo" checked style="accent-color:#6366f1;width:16px;height:16px"> Ativo
-          </label>
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:#334155">
-            <input type="checkbox" id="inv-sit-encerrado" checked style="accent-color:#6366f1;width:16px;height:16px"> Encerrado
-          </label>
-          <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:#334155">
-            <input type="checkbox" id="inv-sit-cancelado" checked style="accent-color:#6366f1;width:16px;height:16px"> Cancelado
-          </label>
+        <div style="display:flex;align-items:stretch;gap:12px">
+          <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 16px;position:relative;flex:0 0 auto">
+            <span style="position:absolute;top:-8px;left:10px;background:#fff;padding:0 6px;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Período</span>
+            <div style="display:flex;gap:10px;align-items:flex-end">
+              <div>
+                <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Inicial <span style="color:#f97316">*</span></span>
+                <input type="date" id="inv-data-ini" class="field">
+              </div>
+              <div>
+                <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Final <span style="color:#f97316">*</span></span>
+                <input type="date" id="inv-data-fim" class="field">
+              </div>
+            </div>
+          </div>
+          <div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 16px;position:relative;flex:1">
+            <span style="position:absolute;top:-8px;left:10px;background:#fff;padding:0 6px;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Situação</span>
+            <div style="display:flex;align-items:center;gap:20px;height:100%;min-height:46px">
+              <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:#334155"><input type="checkbox" id="inv-sit-ativo" checked style="accent-color:#f97316;width:15px;height:15px"> Ativo</label>
+              <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:#334155"><input type="checkbox" id="inv-sit-encerrado" checked style="accent-color:#f97316;width:15px;height:15px"> Encerrado</label>
+              <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:#334155"><input type="checkbox" id="inv-sit-cancelado" style="accent-color:#f97316;width:15px;height:15px"> Cancelado</label>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button class="btn btn-primary" onclick="carregarInventarios()" style="height:42px;padding:0 28px;border-radius:21px;white-space:nowrap">Consultar</button>
+          </div>
         </div>
       </div>
+
+      <!-- Toolbar -->
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-bottom:10px">
+        <button style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:11px;font-weight:600;color:#64748b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+        </button>
+      </div>
+
       <div id="inv-lista">
         <div class="empty-state">
           <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
-          <div class="empty-title">Nenhum inventário encontrado.</div>
-          <div class="empty-sub">Ajuste os filtros acima e clique em Consultar para visualizar os registros.</div>
+          <div class="empty-title">Selecione os filtros e clique em Consultar.</div>
         </div>
       </div>
     </div>
@@ -796,19 +809,35 @@ async function carregarInventarios() {
       container.innerHTML = '<div class="empty">Nenhum inventário encontrado.</div>';
       return;
     }
-    container.innerHTML = invs.map(inv => `
-      <div class="inv-card">
-        <div class="inv-header" onclick="abrirInventario('${inv.id}')">
-          <div class="inv-titulo">
-            ${inv.numero ? `Nº ${inv.numero} — ` : ''}${esc(inv.descricao||'Inventário')}
-          </div>
-          <div style="font-size:12px;color:var(--text3)">
-            ${inv.data_inicial?`${fmtData(inv.data_inicial)} → ${fmtData(inv.data_final)}`:''}
-          </div>
-          <span class="badge b-${inv.status}">${inv.status}</span>
-          ${inv.status==='ativo'?`<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();abrirInventario('${inv.id}')">Preencher →</button>`:'<span style="font-size:12px;color:var(--text3)">—</span>'}
-        </div>
-      </div>`).join('');
+    const stCfg={ativo:{bg:'#f0fdf4',color:'#16a34a',label:'Ativo'},encerrado:{bg:'#eff6ff',color:'#2563eb',label:'Encerrado'},cancelado:{bg:'#fff1f2',color:'#e11d48',label:'Cancelado'}};
+    container.innerHTML = `
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:#0f2d5c">
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">N. Inventário</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Descrição</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">D. Inicial</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">D. Final</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Situação</th>
+            <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Ações</th>
+          </tr></thead>
+          <tbody>
+            ${invs.map(inv=>{
+              const sc=stCfg[inv.status]||{bg:'#f1f5f9',color:'#64748b',label:inv.status};
+              return `<tr style="border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="abrirInventario('${inv.id}')">
+                <td style="padding:8px 12px;font-family:'DM Mono',monospace;color:#64748b;font-size:12px">${inv.numero?`Nº ${inv.numero}`:'—'}</td>
+                <td style="padding:8px 12px;font-weight:600">${esc(inv.descricao||'Inventário')}</td>
+                <td style="padding:8px 12px;color:#64748b;font-size:12px;white-space:nowrap">${fmtData(inv.data_inicial)}</td>
+                <td style="padding:8px 12px;color:#64748b;font-size:12px;white-space:nowrap">${fmtData(inv.data_final)}</td>
+                <td style="padding:8px 12px"><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.label}</span></td>
+                <td style="padding:8px 12px;text-align:center">
+                  ${inv.status==='ativo'?`<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();abrirInventario('${inv.id}')">Preencher</button>`:'<span style="color:#94a3b8;font-size:12px">—</span>'}
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
   } catch(e) { container.innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; }
 }
 
