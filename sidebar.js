@@ -18,7 +18,7 @@
       id: 'operacao', label: 'Operação',
       items: [
         { href: 'estoque.html',  icon: 'archive',            label: 'Estoque' },
-        { href: 'producao.html', icon: 'chef-hat',           label: 'Produção' },
+        { href: 'pcp.html',      icon: 'chef-hat',           label: 'Produção / PCP' },
         { href: 'ajustes.html',  icon: 'sliders-horizontal', label: 'Ajustes' },
       ]
     },
