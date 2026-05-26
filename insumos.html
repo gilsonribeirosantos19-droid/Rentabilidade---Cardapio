@@ -869,15 +869,17 @@ async function salvarCadastro(){
   const nome=document.getElementById('cad-nome').value.trim();
   if(!nome){toast('Informe a descrição do item.','err');return;}
   const payload={
-    tenant_id: TENANT_ID,
     nome,
     categoria: document.getElementById('cad-grupo').value||null,
     unidade_medida: document.getElementById('cad-und-med').value||null,
     unidade_compra: document.getElementById('cad-und-compra').value||null,
-    rendimento_pct: parseFloat(document.getElementById('cad-qtd-emb').value)||100,
     ativo: document.getElementById('cad-ativo').value!=='false',
   };
-  if(!_cadEditId) payload.preco_compra=0;
+  if(!_cadEditId){
+    payload.tenant_id=TENANT_ID;
+    payload.preco_compra=0;
+    payload.rendimento_pct=100;
+  }
   try{
     if(_cadEditId){
       await api(`insumos?id=eq.${_cadEditId}`,{method:'PATCH',body:JSON.stringify(payload)});
