@@ -775,13 +775,12 @@
           <div class="tbl-wrap"><div class="tbl-scroll">
             <table class="tbl">
               <thead><tr>
-                <th>Loja</th><th>Grupo</th><th>Tipo</th>
+                <th>Loja</th><th>Tipo</th>
                 <th>D. Inicial</th><th>D. Final</th>
                 <th class="c">Situação</th>
-                <th>Progresso</th>
                 <th class="c">Ações</th>
               </tr></thead>
-              <tbody id="inv-lista-body"><tr><td colspan="8" class="empty">Selecione os filtros e clique em <b>Consultar</b>.</td></tr></tbody>
+              <tbody id="inv-lista-body"><tr><td colspan="6" class="empty">Selecione os filtros e clique em <b>Consultar</b>.</td></tr></tbody>
             </table>
           </div></div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;font-size:12px;color:#94a3b8;margin-top:6px">
@@ -3043,7 +3042,7 @@ function _renderInvPage() {
     btnsEl.innerHTML = html;
   }
 
-  if (!page.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
+  if (!page.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
 
   const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso',geral:'Geral',parcial:'Parcial'};
   const statusCfg = {
@@ -3055,23 +3054,13 @@ function _renderInvPage() {
 
   tbody.innerHTML = page.map(inv => {
     const sc = statusCfg[inv.status] || {label:inv.status, bg:'#f1f5f9', color:'#64748b', barColor:'#94a3b8'};
-    const pct = inv._pct;
-    const progressBar = `
-      <div style="display:flex;align-items:center;gap:6px">
-        <div style="flex:1;height:5px;background:#f1f5f9;border-radius:3px;overflow:hidden;min-width:60px">
-          <div style="height:100%;width:${pct}%;background:${sc.barColor};border-radius:3px"></div>
-        </div>
-        <span style="font-size:11px;font-weight:600;color:#64748b;white-space:nowrap">${pct}%</span>
-      </div>`;
     const fmtD = d => d ? new Date(d+'T12:00:00').toLocaleDateString('pt-BR') : '—';
     return `<tr>
       <td style="font-weight:600;font-size:12px">${esc(inv._loja?.nome||'—')}</td>
-      <td style="color:#64748b;font-size:12px">${esc(inv._grupo?.nome||'—')}</td>
       <td style="color:#64748b;font-size:12px">${tipoLabel[inv.tipo]||inv.tipo||'—'}</td>
       <td style="color:#64748b;font-size:12px;white-space:nowrap">${fmtD(inv.data_inicial)}</td>
       <td style="color:#64748b;font-size:12px;white-space:nowrap">${fmtD(inv.data_final)}</td>
       <td class="c"><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.label}</span></td>
-      <td style="min-width:120px">${progressBar}</td>
       <td class="c">
         <div style="display:flex;align-items:center;justify-content:center;gap:4px">
           <button class="btn-icon" title="Ver detalhes" onclick="abrirInvDetalhe('${inv.id}')">
