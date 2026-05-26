@@ -52,6 +52,19 @@
   .tab-pane{display:none}
   .tab-pane.active{display:block}
 
+  /* HUB */
+  .est-hub-section{margin-bottom:28px}
+  .est-hub-label{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+  .est-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .est-hub-card{display:flex;align-items:center;gap:16px;padding:18px 20px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s;user-select:none}
+  .est-hub-card:hover{border-color:#f97316}
+  .est-hub-icon{width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .est-hub-icon svg{width:20px;height:20px;stroke:#64748b;stroke-width:1.8;fill:none}
+  .est-hub-body{flex:1}
+  .est-hub-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px}
+  .est-hub-desc{font-size:12px;color:#64748b;line-height:1.4}
+  .est-hub-arrow{font-size:18px;color:#94a3b8;margin-left:auto;flex-shrink:0}
+
   /* CARDS */
   .sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:24px}
   .sc{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
@@ -277,8 +290,7 @@
 <div class="main">
   <div class="topbar">
     <div>
-      <div class="topbar-title">Estoque</div>
-      <div class="topbar-breadcrumb">Estoque &rsaquo; <span id="bc-tab">Dashboard</span></div>
+      <div id="topbar-heading" class="topbar-title">Estoque</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       <select id="sel-loja" style="font-size:13px;padding:7px 14px;min-width:160px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;cursor:pointer;outline:none;font-family:inherit"
@@ -295,8 +307,8 @@
   </div>
   <div class="content">
 
-    <!-- TABS -->
-    <div class="tabs">
+    <!-- TABS (oculta — navegação via HUB) -->
+    <div class="tabs" id="est-tab-strip" style="display:none">
       <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</button>
       <button class="tab-btn" data-tab="entradas" onclick="switchTab('entradas')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>Entradas</button>
       <button class="tab-btn" data-tab="saidas" onclick="switchTab('saidas')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 17 12 21 8 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>Saídas</button>
@@ -307,8 +319,72 @@
       <button class="tab-btn" data-tab="compras" onclick="switchTab('compras')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sugestão de Compras</button>
     </div>
 
+    <!-- HUB LANDING PAGE -->
+    <div id="tab-hub" class="tab-pane active">
+      <div class="est-hub-section">
+        <div class="est-hub-label">Geral</div>
+        <div class="est-hub-grid">
+          <div class="est-hub-card" onclick="switchTab('dashboard')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Dashboard</div><div class="est-hub-desc">Visão geral do estoque, alertas e indicadores.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('movimentacao')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Movimentação</div><div class="est-hub-desc">Histórico de todas as movimentações do período.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="est-hub-section">
+        <div class="est-hub-label">Lançamentos</div>
+        <div class="est-hub-grid">
+          <div class="est-hub-card" onclick="switchTab('entradas')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Entradas</div><div class="est-hub-desc">Registre entradas de insumos no estoque.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('saidas')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><polyline points="16 17 12 21 8 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Saídas</div><div class="est-hub-desc">Registre saídas e consumo de insumos.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="est-hub-section">
+        <div class="est-hub-label">Controle</div>
+        <div class="est-hub-grid">
+          <div class="est-hub-card" onclick="switchTab('inventario')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Inventário</div><div class="est-hub-desc">Contagem e conferência física do estoque.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('fechamento')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Fechamento</div><div class="est-hub-desc">Fechamento periódico e consolidação do estoque.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('kardex')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Kardex</div><div class="est-hub-desc">Rastreabilidade e saldo por insumo ao longo do tempo.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="est-hub-section">
+        <div class="est-hub-label">Análises</div>
+        <div class="est-hub-grid">
+          <div class="est-hub-card" onclick="switchTab('compras')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Sugestão de Compras</div><div class="est-hub-desc">Recomendações de compra baseadas no consumo.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- TAB: DASHBOARD -->
-    <div id="tab-dashboard" class="tab-pane active">
+    <div id="tab-dashboard" class="tab-pane">
       <div class="sc-grid">
         <div class="sc"><div class="sc-label">Total de insumos</div>
           <div class="sc-value c-blue" id="m-total">—</div><div class="sc-sub">cadastrados e ativos</div></div>
@@ -1536,7 +1612,7 @@ async function api(endpoint, opts={}) {
 // ── STATE ─────────────────────────────────────────────────────────
 let insumos=[], saldos=[], entradas=[], saidas=[], vinculos=[], fornecedores=[], insumoFornVinculos=[];
 let lojas=[], lojaAtual=null;
-let nfeItens=[], tabAtual='dashboard';
+let nfeItens=[], tabAtual='hub';
 
 function getLojaId() { return lojaAtual?.id||null; }
 
@@ -1616,8 +1692,16 @@ function popularSelects() {
     cats.map(c=>`<option value="${c}">${esc(c)}</option>`).join('');
 }
 
-// ── TABS ──────────────────────────────────────────────────────────
-const _tabLabels={dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras'};
+// ── TABS / HUB ────────────────────────────────────────────────────
+const _tabLabels={hub:'Estoque',dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras'};
+
+function goHub() {
+  tabAtual = 'hub';
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-hub').classList.add('active');
+  const h = document.getElementById('topbar-heading');
+  if (h) { h.style.fontSize='20px'; h.style.fontWeight='700'; h.innerHTML='Estoque'; }
+}
 
 function switchTab(tab) {
   tabAtual = tab;
@@ -1627,9 +1711,14 @@ function switchTab(tab) {
   });
   const el = document.getElementById('tab-'+tab);
   if (el) el.classList.add('active');
-  // Atualiza breadcrumb
-  const bc = document.getElementById('bc-tab');
-  if (bc) bc.textContent = _tabLabels[tab] || tab;
+  const h = document.getElementById('topbar-heading');
+  if (h) {
+    h.style.fontSize = '14px';
+    h.style.fontWeight = '400';
+    h.innerHTML = '<span style="color:#94a3b8;cursor:pointer;font-size:20px;font-weight:700" onclick="goHub()">Estoque</span>'
+      + '<span style="color:#94a3b8;margin:0 6px;font-size:16px">›</span>'
+      + '<span style="font-size:15px;font-weight:600;color:#0f172a">' + (_tabLabels[tab]||tab) + '</span>';
+  }
   if (tab==='kardex') renderKardex();
   if (tab==='inventario') iniciarAbaInventario();
   if (tab==='movimentacao') renderMovimentacao();
