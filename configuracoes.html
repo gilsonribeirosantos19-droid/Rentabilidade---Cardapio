@@ -205,8 +205,7 @@
           </div>
           <div class="cfg-nav-group">
             <span class="cfg-nav-label">Cadastros</span>
-            <button class="cfg-nav-item active" id="cfg-btn-cat-insumo"  onclick="switchConfig('cat-insumo')">Categorias de Insumos</button>
-            <button class="cfg-nav-item"         id="cfg-btn-cat-ficha"   onclick="switchConfig('cat-ficha')">Categorias de Fichas</button>
+            <button class="cfg-nav-item active" id="cfg-btn-cat-ficha" onclick="switchConfig('cat-ficha')">Categorias de Fichas</button>
             <button class="cfg-nav-item"         id="cfg-btn-unidades"    onclick="switchConfig('unidades')">Unidades de Medida</button>
           </div>
           <div class="cfg-nav-group">
@@ -281,20 +280,6 @@
             <div class="section-body">
               <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
               <tbody id="tbody-subgrupo"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Categorias de Insumos -->
-        <div class="cfg-pane active" id="cfg-cat-insumo">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Categorias de Insumos</div><div class="section-sub">Classifique os insumos por tipo de matéria-prima</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModal('cat_insumo')">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-cat-insumo"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
             </div>
           </div>
         </div>
@@ -627,10 +612,8 @@
       document.getElementById('conn-status').textContent = '● conectado';
       document.getElementById('conn-status').style.color = 'var(--teal)';
 
-      const catInsumos = cats.filter(c => c.tipo === 'insumo');
-      const catFichas  = cats.filter(c => c.tipo === 'ficha');
-      renderCats('tbody-cat-insumo', catInsumos, 'cat_insumo');
-      renderCats('tbody-cat-ficha',  catFichas,  'cat_ficha');
+      const catFichas = cats.filter(c => c.tipo === 'ficha');
+      renderCats('tbody-cat-ficha', catFichas, 'cat_ficha');
       renderUnidades(unidades);
 
       renderCats('tbody-tipo-item', classificacoes.filter(c=>c.tipo==='tipo_item'), 'tipo_item');
@@ -682,7 +665,7 @@
   }
 
   function mostrarErroTabelas(msg) {
-    ['tbody-cat-insumo','tbody-cat-ficha','tbody-unidade'].forEach(id => {
+    ['tbody-cat-ficha','tbody-unidade'].forEach(id => {
       const el = document.getElementById(id);
       const cols = id === 'tbody-unidade' ? 4 : 3;
       el.innerHTML = `<tr class="empty-row"><td colspan="${cols}">Erro ao carregar: ${escHtml(msg)}</td></tr>`;
@@ -1166,7 +1149,6 @@
   <span class="cfg-flyout-title">Configurações</span>
   <a class="cfg-flyout-item" href="configuracoes.html?sec=lojas">Lojas / Filiais</a>
   <a class="cfg-flyout-item" href="configuracoes.html?sec=usuarios">Usuários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-insumo">Categorias de Insumos</a>
   <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-ficha">Categorias de Fichas</a>
   <a class="cfg-flyout-item" href="configuracoes.html?sec=unidades">Unidades de Medida</a>
   <a class="cfg-flyout-item" href="configuracoes.html?sec=grupos-compra">Grupos de Compra</a>
