@@ -38,17 +38,36 @@
   .metric-val{font-size:28px;font-weight:700;line-height:1;font-family:'DM Mono',monospace}
   .metric-sub{font-size:11px;color:#94a3b8;margin-top:5px}
   .c-green{color:#16a34a}.c-amber{color:#f59e0b}.c-red{color:#e11d48}
-  /* TOOLBAR */
-  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-  .search-wrap{position:relative;min-width:200px}
-  .search-wrap input{width:200px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px 8px 34px;color:#0f172a;font-family:inherit;font-size:13px;outline:none;transition:border-color .15s}
-  .search-wrap input:focus{border-color:#0d9488}
-  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none}
-  .chips{display:flex;gap:5px;flex-wrap:wrap}
-  .chip{padding:6px 14px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
-  .chip:hover{border-color:#64748b;color:#0f172a}
+  /* FILTER BAR — global */
+  .filter-bar-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:18px}
+  .toolbar,.prod-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  /* Search */
+  .search-wrap,.prod-search{position:relative;flex:0 0 280px}
+  .search-wrap input,.prod-search input{
+    width:100%;height:44px!important;padding:0 14px 0 40px!important;
+    border:1.5px solid #e2e8f0!important;border-radius:10px!important;
+    font-size:13px!important;font-family:inherit!important;color:#0f172a!important;
+    background:#f8fafc!important;outline:none!important;transition:all .18s!important}
+  .search-wrap input:hover,.prod-search input:hover{border-color:#cbd5e1!important}
+  .search-wrap input:focus,.prod-search input:focus{border-color:#f97316!important;background:#fff!important}
+  .search-wrap input::placeholder,.prod-search input::placeholder{color:#94a3b8}
+  .search-icon,.prod-search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8}
+  /* Filter selects — todas as abas */
+  .fil-select,.prod-filter{
+    height:44px!important;padding:0 14px!important;
+    border:1.5px solid #e2e8f0!important;border-radius:10px!important;
+    font-size:13px!important;font-family:inherit!important;
+    color:#334155!important;font-weight:500!important;
+    background:#f8fafc!important;outline:none!important;
+    cursor:pointer!important;transition:all .18s!important;min-width:140px}
+  .fil-select:hover,.prod-filter:hover{border-color:#cbd5e1!important;background:#fff!important}
+  .fil-select:focus,.prod-filter:focus{border-color:#f97316!important;background:#fff!important}
+  /* Chips / tag filters */
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:0 16px;height:44px;border-radius:10px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#334155;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .18s;white-space:nowrap;display:inline-flex;align-items:center}
+  .chip:hover{border-color:#f97316;color:#f97316;background:#fff}
   .chip.active{background:#f97316;border-color:#f97316;color:#fff;font-weight:600}
-  .chip-more{background:#fff;border:1px solid #e2e8f0;color:#64748b;display:inline-flex;align-items:center;gap:4px}
+  .chip-more{display:inline-flex;align-items:center;gap:5px}
   /* BUTTONS */
   .btn{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
   .btn:hover{background:#f8fafc}
@@ -137,14 +156,7 @@
   .form-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
   .form-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin-bottom:16px}
   .form-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:16px;border-top:1px solid #e2e8f0}
-  /* PRODUTOS TOOLBAR */
-  .prod-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-  .prod-search{position:relative}
-  .prod-search input{padding:8px 12px 8px 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;width:220px}
-  .prod-search input:focus{border-color:#f97316}
-  .prod-search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none}
-  .prod-filter{padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:inherit;color:#64748b;outline:none;background:#fff;cursor:pointer}
-  .prod-filter:focus{border-color:#f97316}
+  .prod-toolbar{margin-bottom:0}
   #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#fff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:auto}
   .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
   .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;border-bottom:1px solid #f1f5f9}
@@ -301,32 +313,34 @@
 
     <!-- PANE 2: PRODUTOS / ITENS -->
     <div class="mod-pane" id="pane-produtos" style="display:block">
-      <div class="prod-toolbar">
-        <div class="prod-search">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="prod-busca" placeholder="🔍 Buscar item..." oninput="filtrarProdutos()">
+      <div class="filter-bar-wrap">
+        <div class="prod-toolbar">
+          <div class="prod-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="prod-busca" placeholder="Buscar item..." oninput="filtrarProdutos()">
+          </div>
+          <select class="prod-filter" id="prod-tipo" onchange="filtrarProdutos()">
+            <option value="">Tipo do item ▾</option>
+            <option value="materia-prima">Matéria-prima</option>
+            <option value="produto-acabado">Produto acabado</option>
+            <option value="embalagem">Embalagem</option>
+            <option value="servico">Serviço</option>
+          </select>
+          <select class="prod-filter" id="prod-familia" onchange="filtrarProdutos()"><option value="">Família ▾</option></select>
+          <select class="prod-filter" id="prod-grupo" onchange="filtrarProdutos()"><option value="">Grupo ▾</option></select>
+          <select class="prod-filter" id="prod-subgrupo" onchange="filtrarProdutos()"><option value="">Subgrupo ▾</option></select>
+          <select class="prod-filter" id="prod-status" onchange="filtrarProdutos()">
+            <option value="">Status ▾</option>
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+          <select class="prod-filter" id="prod-estq" onchange="filtrarProdutos()">
+            <option value="">Situação de estoque ▾</option>
+            <option value="ativo">Em estoque</option>
+            <option value="atencao">Estoque baixo</option>
+            <option value="critico">Crítico</option>
+          </select>
         </div>
-        <select class="prod-filter" id="prod-tipo" onchange="filtrarProdutos()">
-          <option value="">Tipo do item ▾</option>
-          <option value="materia-prima">Matéria-prima</option>
-          <option value="produto-acabado">Produto acabado</option>
-          <option value="embalagem">Embalagem</option>
-          <option value="servico">Serviço</option>
-        </select>
-        <select class="prod-filter" id="prod-familia" onchange="filtrarProdutos()"><option value="">Família ▾</option></select>
-        <select class="prod-filter" id="prod-grupo" onchange="filtrarProdutos()"><option value="">Grupo ▾</option></select>
-        <select class="prod-filter" id="prod-subgrupo" onchange="filtrarProdutos()"><option value="">Subgrupo ▾</option></select>
-        <select class="prod-filter" id="prod-status" onchange="filtrarProdutos()">
-          <option value="">Status ▾</option>
-          <option value="true">Ativo</option>
-          <option value="false">Inativo</option>
-        </select>
-        <select class="prod-filter" id="prod-estq" onchange="filtrarProdutos()">
-          <option value="">Situação de estoque ▾</option>
-          <option value="ativo">Em estoque</option>
-          <option value="atencao">Estoque baixo</option>
-          <option value="critico">Crítico</option>
-        </select>
       </div>
       <div class="tbl-card">
         <div class="tbl-scroll">
@@ -357,38 +371,30 @@
     <div class="mod-pane" id="pane-custos">
 
     <!-- TOOLBAR -->
-    <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div style="position:relative">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="busca" placeholder="Buscar insumo..." oninput="filtrar()" style="padding:8px 12px 8px 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;width:220px">
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Categoria</div>
-        <select id="fil-cat" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:150px;cursor:pointer"><option value="">Selecione</option></select>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Status</div>
-        <select id="fil-status" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer">
-          <option value="">Todos</option>
+    <div class="filter-bar-wrap">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="busca" placeholder="Buscar insumo..." oninput="filtrar()">
+        </div>
+        <select id="fil-cat" class="fil-select" onchange="filtrar()"><option value="">Categoria ▾</option></select>
+        <select id="fil-status" class="fil-select" onchange="filtrar()">
+          <option value="">Status ▾</option>
           <option value="ativo">Ativo</option>
           <option value="atencao">Estoque baixo</option>
           <option value="critico">Crítico</option>
         </select>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Estoque</div>
-        <select id="fil-estoque" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer">
-          <option value="">Todos</option>
+        <select id="fil-estoque" class="fil-select" onchange="filtrar()">
+          <option value="">Estoque ▾</option>
           <option value="em">Em estoque</option>
           <option value="baixo">Estoque baixo</option>
           <option value="sem">Sem estoque</option>
         </select>
+        <button class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Mais filtros
+        </button>
       </div>
-      <button style="padding:7px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;align-self:flex-end">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        Mais filtros
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
     </div>
 
     <!-- BODY: TABELA + PAINEL LATERAL -->
