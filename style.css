@@ -103,6 +103,9 @@ body {
   cursor:pointer;user-select:none}
 .ws-tab-close:hover{background:#e2e8f0;color:#0f172a}
 
+/* Espaço entre tab strip e conteúdo do workspace */
+.ws-tab-strip + * { margin-top: 18px; }
+
 /* SIDEBAR HIERÁRQUICO — COLLAPSE */
 .nav-group-header {
   display: flex !important;
