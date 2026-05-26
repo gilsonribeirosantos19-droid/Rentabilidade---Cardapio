@@ -189,7 +189,7 @@
 <div class="main">
   <div class="topbar">
     <div>
-      <div class="topbar-title">Relatórios</div>
+      <div id="topbar-breadcrumb" class="topbar-title">Relatórios</div>
       <div id="topbar-sub" style="font-size:12px;color:#94a3b8;margin-top:2px">Visão geral de estoque e rentabilidade.</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
@@ -205,30 +205,6 @@
     </div>
   </div>
   <div class="content">
-
-    <div class="sub-tabs" id="sub-tabs-bar" style="display:none">
-      <button class="tab-btn" onclick="goHome()" style="margin-right:8px;color:#64748b">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Relatórios
-      </button>
-      <button class="sub-tab" id="tab-resumo"   onclick="switchTab('resumo')">Resumo</button>
-      <button class="sub-tab"        id="tab-abc"      onclick="switchTab('abc')">Curva ABC</button>
-      <button class="sub-tab"        id="tab-inflacao" onclick="switchTab('inflacao')">Inflação</button>
-      <button class="sub-tab"        id="tab-evolucao" onclick="switchTab('evolucao')">Evolução Mensal</button>
-      <button class="sub-tab"        id="tab-entradas"  onclick="switchTab('entradas')">Entradas</button>
-      <button class="sub-tab"        id="tab-auditoria" onclick="switchTab('auditoria')">Auditoria de Conversão</button>
-      <div class="tab-actions">
-        <button class="tab-btn" id="btn-filtros" style="display:none">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          Filtros
-        </button>
-        <button class="tab-btn" id="btn-exportar" style="display:none" onclick="exportarABC()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-      </div>
-    </div>
 
     <!-- HOME LANDING PAGE -->
     <div id="pane-home" class="rel-pane active">
@@ -746,12 +722,17 @@ const _tabSubs={
 };
 
 // ── TABS ──────────────────────────────────────────────────────────
+const _tabNames = {
+  resumo:'Resumo', abc:'Curva ABC', inflacao:'Inflação',
+  evolucao:'Evolução Mensal', entradas:'Entradas', auditoria:'Auditoria de Conversão',
+};
+
 function goHome() {
   tabAtual = 'home';
   document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-home').classList.add('active');
-  const bar = document.getElementById('sub-tabs-bar');
-  if (bar) bar.style.display = 'none';
+  const bc = document.getElementById('topbar-breadcrumb');
+  if (bc) bc.innerHTML = 'Relatórios';
   const sub = document.getElementById('topbar-sub');
   if (sub) sub.textContent = _tabSubs.home;
 }
@@ -768,16 +749,11 @@ function switchTab(nome) {
   tabAtual = nome;
   document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-'+nome).classList.add('active');
-  const bar = document.getElementById('sub-tabs-bar');
-  if (bar) bar.style.display = 'flex';
-  ['resumo','abc','inflacao','evolucao','entradas','auditoria'].forEach(t=>
-    document.getElementById('tab-'+t).classList.toggle('active',t===nome));
-  const sub=document.getElementById('topbar-sub');
-  if(sub)sub.textContent=_tabSubs[nome]||'';
-  const bFilt=document.getElementById('btn-filtros');
-  const bExp=document.getElementById('btn-exportar');
-  if(bFilt)bFilt.style.display='none';
-  if(bExp)bExp.style.display='none';
+  const bc = document.getElementById('topbar-breadcrumb');
+  if (bc) bc.innerHTML = '<span style="color:#94a3b8;font-weight:500;cursor:pointer" onclick="goHome()">Relatórios</span>'
+    + ' <span style="color:#94a3b8;margin:0 4px">›</span> ' + (_tabNames[nome]||nome);
+  const sub = document.getElementById('topbar-sub');
+  if (sub) sub.textContent = _tabSubs[nome]||'';
   if (nome==='resumo')    renderResumo();
   if (nome==='abc')       renderABC();
   if (nome==='inflacao')  renderInflacao();
