@@ -1,0 +1,258 @@
+/* ================================================================
+   Aiko — Design System Global
+   Padronização de espaçamento, tipografia, tabelas e componentes
+   ================================================================ */
+
+/* ── TOKENS ─────────────────────────────────────────────────────── */
+:root {
+  --ds-primary:       #f97316;
+  --ds-primary-hover: #ea6c00;
+  --ds-navy:          #0f2d5c;
+  --ds-text-1:        #0f172a;
+  --ds-text-2:        #64748b;
+  --ds-text-3:        #94a3b8;
+  --ds-border:        #e2e8f0;
+  --ds-border-2:      #f1f5f9;
+  --ds-bg:            #f8fafc;
+  --ds-white:         #ffffff;
+  --ds-green:         #16a34a;
+  --ds-red:           #e11d48;
+  --ds-amber:         #f59e0b;
+  --ds-blue:          #2563eb;
+  --ds-radius:        8px;
+  --ds-radius-lg:     12px;
+  --ds-input-h:       38px;
+  --ds-font:          'Segoe UI', system-ui, -apple-system, sans-serif;
+  --ds-mono:          'DM Mono', monospace;
+}
+
+/* ── BODY / BASE ─────────────────────────────────────────────────── */
+body {
+  font-family: var(--ds-font);
+  font-size: 13px;
+  color: var(--ds-text-1);
+  background: var(--ds-bg);
+}
+
+/* ── TOPBAR ─────────────────────────────────────────────────────── */
+.topbar {
+  height: 54px !important;
+  padding: 0 24px !important;
+  background: #fff !important;
+  border-bottom: 1px solid var(--ds-border) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 60 !important;
+}
+
+/* ── TABELAS ─────────────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+thead tr,
+.tbl thead tr { background: var(--ds-navy) !important; }
+
+th, .tbl th {
+  padding: 10px 14px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: rgba(255,255,255,.82) !important;
+  text-transform: uppercase !important;
+  letter-spacing: .05em !important;
+  white-space: nowrap !important;
+  text-align: left;
+}
+th.r, .tbl th.r { text-align: right !important; }
+
+td, .tbl td {
+  padding: 10px 14px !important;
+  border-bottom: 1px solid var(--ds-border-2) !important;
+  vertical-align: middle !important;
+  font-size: 13px !important;
+  color: var(--ds-text-1);
+}
+td.r, .tbl td.r { text-align: right !important; }
+
+tbody tr:last-child td { border-bottom: none !important; }
+tbody tr:hover { background: #fafbfc !important; }
+
+/* ── INPUTS E SELECTS ────────────────────────────────────────────── */
+.field, input.field, select.field, .field-sm {
+  height: var(--ds-input-h) !important;
+  padding: 0 12px !important;
+  border: 1px solid var(--ds-border) !important;
+  border-radius: var(--ds-radius) !important;
+  font-size: 13px !important;
+  font-family: var(--ds-font) !important;
+  color: var(--ds-text-1) !important;
+  background: #fff !important;
+  outline: none !important;
+  transition: border-color .15s !important;
+}
+.field:focus, input.field:focus, select.field:focus {
+  border-color: var(--ds-primary) !important;
+}
+
+/* ── BOTÕES ──────────────────────────────────────────────────────── */
+.btn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: var(--ds-radius);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--ds-font);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+  border: 1px solid var(--ds-border);
+  background: #fff;
+  color: var(--ds-text-1);
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--ds-primary) !important;
+  border-color: var(--ds-primary) !important;
+  color: #fff !important;
+}
+.btn-primary:hover {
+  background: var(--ds-primary-hover) !important;
+  border-color: var(--ds-primary-hover) !important;
+}
+.btn-ghost {
+  background: transparent !important;
+  color: var(--ds-text-2) !important;
+  border-color: var(--ds-border) !important;
+}
+.btn-ghost:hover {
+  border-color: var(--ds-text-3) !important;
+  color: var(--ds-text-1) !important;
+  background: var(--ds-bg) !important;
+}
+.btn-danger {
+  background: transparent !important;
+  color: var(--ds-red) !important;
+  border-color: #fca5a5 !important;
+}
+.btn-danger:hover {
+  background: var(--ds-red) !important;
+  color: #fff !important;
+  border-color: var(--ds-red) !important;
+}
+
+/* ── BADGES ──────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 3px 10px !important;
+  border-radius: 20px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  line-height: 1.4 !important;
+}
+
+/* ── PAGINAÇÃO ───────────────────────────────────────────────────── */
+.pag-bar, .pag-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 14px !important;
+  border-top: 1px solid var(--ds-border-2) !important;
+  font-size: 12px !important;
+  color: var(--ds-text-2) !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  background: #fff !important;
+}
+.pag-btns { display: flex; align-items: center; gap: 4px; }
+.pag-btn {
+  min-width: 30px !important;
+  height: 30px !important;
+  padding: 0 6px !important;
+  border: 1px solid var(--ds-border) !important;
+  background: #fff !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  color: var(--ds-text-2) !important;
+  transition: all .15s !important;
+  font-family: var(--ds-font) !important;
+}
+.pag-btn:hover {
+  border-color: var(--ds-primary) !important;
+  color: var(--ds-primary) !important;
+}
+.pag-btn.active {
+  background: var(--ds-navy) !important;
+  border-color: var(--ds-navy) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+.pag-btn:disabled { opacity: .4 !important; cursor: not-allowed !important; }
+
+/* ── CARDS / PANELS ──────────────────────────────────────────────── */
+.tbl-card, .tbl-wrap {
+  background: #fff !important;
+  border: 1px solid var(--ds-border) !important;
+  border-radius: var(--ds-radius-lg) !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+
+/* ── LABEL DE FILTRO ─────────────────────────────────────────────── */
+.filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ds-text-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 5px;
+  display: block;
+}
+
+/* ── ESTADO VAZIO ─────────────────────────────────────────────────── */
+.empty {
+  padding: 32px !important;
+  text-align: center !important;
+  color: var(--ds-text-3) !important;
+  font-size: 13px !important;
+}
+
+/* ── MONO ─────────────────────────────────────────────────────────── */
+.mono { font-family: var(--ds-mono); font-size: 12px; }
+
+/* ── TOAST ────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  border-radius: var(--ds-radius-lg) !important;
+  padding: 12px 18px !important;
+  font-size: 13px !important;
+  z-index: 999 !important;
+  max-width: 360px !important;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all .25s;
+}
+.toast.show { opacity: 1 !important; transform: translateY(0) !important; }
+
+/* ── SCROLLBAR ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ds-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+
+/* ── MOBILE ───────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .topbar { padding: 0 16px !important; }
+  td, .tbl td { padding: 10px 10px !important; font-size: 12px !important; }
+  th, .tbl th { padding: 8px 10px !important; }
+  .btn { min-height: 44px; }
+  .field, input.field, select.field { font-size: 16px !important; min-height: 44px !important; }
+}
