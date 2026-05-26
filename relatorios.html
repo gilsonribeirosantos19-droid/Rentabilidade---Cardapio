@@ -765,7 +765,7 @@ function _renderTabStrip() {
     ${_openTabs.map(t=>`
       <button class="ws-tab ${t===_activeTab?'active':''}" onclick="activateTab('${t}')">
         ${_tabNames[t]||t}
-        <button class="ws-tab-close" onclick="closeTab('${t}',event)" title="Fechar">×</button>
+        <span class="ws-tab-close" onclick="closeTab('${t}',event);event.stopPropagation()" title="Fechar">×</span>
       </button>
     `).join('')}`;
 }
