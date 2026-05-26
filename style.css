@@ -62,6 +62,26 @@ body {
   border-left: none !important;
 }
 
+/* SIDEBAR HIERÁRQUICO — COLLAPSE */
+.nav-group-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 4px 4px !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+.nav-group-header:hover .nav-label { color: #64748b !important; }
+.nav-group-header .nav-label { padding: 0 !important; margin-bottom: 0 !important; }
+.nav-group-arrow {
+  transition: transform .18s !important;
+  flex-shrink: 0 !important;
+  color: #cbd5e1 !important;
+}
+.nav-group.collapsed .nav-group-arrow { transform: rotate(-90deg) !important; }
+.nav-group-items { overflow: hidden !important; }
+.nav-group.collapsed .nav-group-items { display: none !important; }
+
 /* SCROLLBAR */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }

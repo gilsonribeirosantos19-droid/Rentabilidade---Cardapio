@@ -1247,7 +1247,9 @@ function gerarImpressaoPorLoja(porLoja, dataRef) {
       @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    </body></html>`;
+    
+<script src="sidebar.js"></script>
+</body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
@@ -1361,7 +1363,9 @@ async function imprimirFornecedor(fornId, pedIdsStr) {
       @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    </body></html>`;
+    
+<script src="sidebar.js"></script>
+</body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
@@ -1480,7 +1484,9 @@ async function imprimirPedido(id) {
       }
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    </body></html>`;
+    
+<script src="sidebar.js"></script>
+</body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
@@ -1528,5 +1534,7 @@ carregar();
   fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
 })();
 </script>
+
+<script src="sidebar.js"></script>
 </body>
 </html>
