@@ -329,28 +329,8 @@
   </div>
   <div class="content">
 
-    <div class="tabs" id="pdv-tab-strip" style="display:none">
-      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Dashboard
-      </button>
-      <button class="tab-btn" data-tab="faturamento" onclick="switchTab('faturamento')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        Faturamento
-      </button>
-      <button class="tab-btn" data-tab="vendas" onclick="switchTab('vendas')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        Vendas por Produto
-      </button>
-      <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Relatórios
-      </button>
-      <button class="tab-btn" data-tab="importar" onclick="switchTab('importar')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-        Importar / API
-      </button>
-    </div>
+    <!-- WORKSPACE TAB STRIP -->
+    <div class="ws-tab-strip" id="pdv-tab-strip"></div>
 
     <!-- HUB LANDING PAGE -->
     <div id="tab-hub" class="tab-pane active">
@@ -1391,29 +1371,71 @@ function popularFichasSelect() {
 }
 
 // ── TABS ───────────────────────────────────────────────────────────
-function goHub() {
-  tabAtual = 'hub';
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-hub').classList.add('active');
-  const h = document.getElementById('topbar-heading');
-  if (h) { h.style.fontSize=''; h.style.fontWeight=''; h.innerHTML='PDV / Vendas'; }
+// ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
+const _tabNames = {dashboard:'Dashboard',faturamento:'Faturamento',vendas:'Vendas por Produto',relatorios:'Relatórios',importar:'Importar / API'};
+let _openTabs = [], _activeTab = null, _loadedTabs = {};
+
+function _renderTabStrip() {
+  const strip = document.getElementById('pdv-tab-strip');
+  if (!strip) return;
+  if (_openTabs.length === 0) { strip.style.display = 'none'; return; }
+  strip.style.display = 'flex';
+  strip.innerHTML = `<button class="ws-home-btn" onclick="goHub()" title="Hub do PDV">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </button>
+  ${_openTabs.map(t=>`<button class="ws-tab ${t===_activeTab?'active':''}" onclick="activateTab('${t}')">
+    ${_tabNames[t]||t}
+    <button class="ws-tab-close" onclick="closeTab('${t}',event)">×</button>
+  </button>`).join('')}`;
 }
 
-function switchTab(tab) {
-  tabAtual = tab;
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
-  const el = document.getElementById('tab-'+tab);
-  if (el) el.classList.add('active');
-  const _labels = {dashboard:'Dashboard',faturamento:'Faturamento',vendas:'Vendas por Produto',relatorios:'Relatórios',importar:'Importar / API'};
+function _setBreadcrumb(nome) {
   const h = document.getElementById('topbar-heading');
-  if (h) h.innerHTML = '<span style="color:#94a3b8;cursor:pointer;font-weight:700" onclick="goHub()">PDV / Vendas</span>'
+  if (!h) return;
+  if (!nome) { h.innerHTML='PDV / Vendas'; return; }
+  h.innerHTML = '<span style="color:#94a3b8;cursor:pointer;font-weight:700" onclick="goHub()">PDV / Vendas</span>'
     + '<span style="color:#94a3b8;margin:0 6px">›</span>'
-    + '<span style="font-size:15px;font-weight:600;color:#0f172a">' + (_labels[tab]||tab) + '</span>';
-  if (tab==='faturamento') renderFaturamento();
-  if (tab==='vendas') renderVendas();
-  if (tab==='relatorios') renderRelatorios();
+    + '<span style="font-size:15px;font-weight:600;color:#0f172a">' + (_tabNames[nome]||nome) + '</span>';
 }
+
+function goHub() {
+  tabAtual = 'hub'; _activeTab = null;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-hub').classList.add('active');
+  _setBreadcrumb(null);
+  _renderTabStrip();
+}
+
+function openTab(nome) {
+  if (!_openTabs.includes(nome)) _openTabs.push(nome);
+  activateTab(nome);
+}
+
+function activateTab(nome) {
+  tabAtual = nome; _activeTab = nome;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('tab-'+nome);
+  if (el) el.classList.add('active');
+  _setBreadcrumb(nome);
+  _renderTabStrip();
+  if (!_loadedTabs[nome]) {
+    _loadedTabs[nome] = true;
+    if (nome==='faturamento') renderFaturamento();
+    if (nome==='vendas') renderVendas();
+    if (nome==='relatorios') renderRelatorios();
+  }
+}
+
+function closeTab(nome, e) {
+  e.stopPropagation();
+  _openTabs = _openTabs.filter(t=>t!==nome);
+  delete _loadedTabs[nome];
+  if (_openTabs.length === 0) { goHub(); return; }
+  if (_activeTab === nome) activateTab(_openTabs[_openTabs.length-1]);
+  else _renderTabStrip();
+}
+
+function switchTab(tab) { openTab(tab); }
 
 function switchRelTab(nome) {
   ['abc','cmv','engenharia'].forEach(t => {
