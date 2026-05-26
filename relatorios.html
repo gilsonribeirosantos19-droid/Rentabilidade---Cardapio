@@ -131,6 +131,22 @@
   .cfg-flyout-item:last-child{border-bottom:none}
   .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
 
+  /* WORKSPACE MULTI-ABA */
+  .ws-tab-strip{display:none;align-items:center;border-bottom:1px solid #e2e8f0;background:#fff;
+    position:sticky;top:58px;z-index:50;padding:0 8px;overflow-x:auto;gap:0}
+  .ws-home-btn{display:flex;align-items:center;justify-content:center;width:34px;height:44px;
+    border:none;background:transparent;cursor:pointer;color:#94a3b8;flex-shrink:0;transition:color .12s;border-right:1px solid #e2e8f0;margin-right:4px;padding:0 10px}
+  .ws-home-btn:hover{color:#f97316}
+  .ws-tab{display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;font-size:13px;
+    color:#64748b;border:none;background:transparent;border-bottom:2px solid transparent;
+    cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s;margin-bottom:-1px}
+  .ws-tab:hover{color:#0f172a;background:#f8fafc}
+  .ws-tab.active{color:#f97316;border-bottom-color:#f97316;font-weight:600}
+  .ws-tab-close{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;
+    justify-content:center;font-size:14px;line-height:1;color:#94a3b8;transition:all .12s;
+    border:none;background:transparent;cursor:pointer;padding:0;font-family:inherit}
+  .ws-tab-close:hover{background:#e2e8f0;color:#0f172a}
+
   /* LANDING HOME */
   .rep-home-section{margin-bottom:28px}
   .rep-home-label{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
@@ -204,6 +220,13 @@
       </button>
     </div>
   </div>
+  <!-- WORKSPACE TAB STRIP -->
+  <div id="ws-tab-strip" class="ws-tab-strip">
+    <button class="ws-home-btn" onclick="goHome()" title="Hub de Relatórios">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+  </div>
+
   <div class="content">
 
     <!-- HOME LANDING PAGE -->
@@ -211,7 +234,7 @@
       <div id="sec-geral" class="rep-home-section">
         <div class="rep-home-label">Geral</div>
         <div class="rep-home-grid">
-          <div class="rep-home-card" onclick="switchTab('resumo')">
+          <div class="rep-home-card" onclick="openTab('resumo')">
             <div class="rep-home-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Resumo</div>
@@ -219,7 +242,7 @@
             </div>
             <div class="rep-home-arrow">›</div>
           </div>
-          <div class="rep-home-card" onclick="switchTab('evolucao')">
+          <div class="rep-home-card" onclick="openTab('evolucao')">
             <div class="rep-home-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Evolução Mensal</div>
@@ -232,7 +255,7 @@
       <div id="sec-analises" class="rep-home-section">
         <div class="rep-home-label">Análises</div>
         <div class="rep-home-grid">
-          <div class="rep-home-card" onclick="switchTab('abc')">
+          <div class="rep-home-card" onclick="openTab('abc')">
             <div class="rep-home-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Curva ABC</div>
@@ -240,7 +263,7 @@
             </div>
             <div class="rep-home-arrow">›</div>
           </div>
-          <div class="rep-home-card" onclick="switchTab('inflacao')">
+          <div class="rep-home-card" onclick="openTab('inflacao')">
             <div class="rep-home-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Inflação</div>
@@ -253,7 +276,7 @@
       <div id="sec-auditoria" class="rep-home-section">
         <div class="rep-home-label">Auditoria</div>
         <div class="rep-home-grid">
-          <div class="rep-home-card" onclick="switchTab('entradas')">
+          <div class="rep-home-card" onclick="openTab('entradas')">
             <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Entradas</div>
@@ -261,7 +284,7 @@
             </div>
             <div class="rep-home-arrow">›</div>
           </div>
-          <div class="rep-home-card" onclick="switchTab('auditoria')">
+          <div class="rep-home-card" onclick="openTab('auditoria')">
             <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Auditoria de Conversão</div>
@@ -721,39 +744,74 @@ const _tabSubs={
   auditoria:'Auditoria de fator de conversão nas entradas de NF-e.',
 };
 
-// ── TABS ──────────────────────────────────────────────────────────
+// ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
 const _tabNames = {
   resumo:'Resumo', abc:'Curva ABC', inflacao:'Inflação',
   evolucao:'Evolução Mensal', entradas:'Entradas', auditoria:'Auditoria de Conversão',
 };
 
+let _openTabs = [];   // abas abertas em ordem
+let _activeTab = null; // aba visível
+
+function _renderTabStrip() {
+  const strip = document.getElementById('ws-tab-strip');
+  if (!strip) return;
+  strip.style.display = _openTabs.length > 0 ? 'flex' : 'none';
+  // mantém o botão home + reconstrói abas
+  strip.innerHTML = `
+    <button class="ws-home-btn" onclick="goHome()" title="Hub de Relatórios">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+    ${_openTabs.map(t=>`
+      <button class="ws-tab ${t===_activeTab?'active':''}" onclick="activateTab('${t}')">
+        ${_tabNames[t]||t}
+        <button class="ws-tab-close" onclick="closeTab('${t}',event)" title="Fechar">×</button>
+      </button>
+    `).join('')}`;
+}
+
+function _setBreadcrumb(nome) {
+  const bc = document.getElementById('topbar-breadcrumb');
+  const sub = document.getElementById('topbar-sub');
+  if (nome === 'home') {
+    if (bc) bc.innerHTML = 'Relatórios';
+    if (sub) sub.textContent = _tabSubs.home;
+  } else {
+    if (bc) bc.innerHTML = '<span style="color:#94a3b8;font-weight:500;cursor:pointer" onclick="goHome()">Relatórios</span>'
+      + ' <span style="color:#94a3b8;margin:0 4px">›</span> ' + (_tabNames[nome]||nome);
+    if (sub) sub.textContent = _tabSubs[nome]||'';
+  }
+}
+
 function goHome() {
   tabAtual = 'home';
+  _activeTab = null;
   document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-home').classList.add('active');
-  const bc = document.getElementById('topbar-breadcrumb');
-  if (bc) bc.innerHTML = 'Relatórios';
-  const sub = document.getElementById('topbar-sub');
-  if (sub) sub.textContent = _tabSubs.home;
+  _setBreadcrumb('home');
+  _renderTabStrip();
 }
 
 function goSection(sec) {
   goHome();
-  setTimeout(() => {
+  setTimeout(()=>{
     const el = document.getElementById('sec-'+sec);
-    if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
   }, 50);
 }
 
-function switchTab(nome) {
+function openTab(nome) {
+  if (!_openTabs.includes(nome)) _openTabs.push(nome);
+  activateTab(nome);
+}
+
+function activateTab(nome) {
   tabAtual = nome;
+  _activeTab = nome;
   document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-'+nome).classList.add('active');
-  const bc = document.getElementById('topbar-breadcrumb');
-  if (bc) bc.innerHTML = '<span style="color:#94a3b8;font-weight:500;cursor:pointer" onclick="goHome()">Relatórios</span>'
-    + ' <span style="color:#94a3b8;margin:0 4px">›</span> ' + (_tabNames[nome]||nome);
-  const sub = document.getElementById('topbar-sub');
-  if (sub) sub.textContent = _tabSubs[nome]||'';
+  _setBreadcrumb(nome);
+  _renderTabStrip();
   if (nome==='resumo')    renderResumo();
   if (nome==='abc')       renderABC();
   if (nome==='inflacao')  renderInflacao();
@@ -761,6 +819,16 @@ function switchTab(nome) {
   if (nome==='entradas')  iniciarEntradas();
   if (nome==='auditoria') iniciarAuditoria();
 }
+
+function closeTab(nome, e) {
+  e.stopPropagation();
+  _openTabs = _openTabs.filter(t=>t!==nome);
+  if (_openTabs.length === 0) { goHome(); return; }
+  if (_activeTab === nome) activateTab(_openTabs[_openTabs.length-1]);
+  else _renderTabStrip();
+}
+
+function switchTab(nome) { openTab(nome); }
 
 // ── LOAD ──────────────────────────────────────────────────────────
 async function carregar() {
