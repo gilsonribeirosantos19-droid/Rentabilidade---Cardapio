@@ -224,12 +224,17 @@
 
       <!-- TAB: SOLICITAÇÕES -->
       <div id="tab-solicitacoes" class="tab-pane">
-        <div class="sc-grid" id="sol-cards"></div>
+        <div class="sc-grid" id="sol-cards" style="display:none"></div>
         <div class="toolbar">
           <select id="sol-fil-loja" onchange="renderSolicitacoes()" style="font-size:13px;padding:7px 14px;min-width:180px;border:1.5px solid var(--teal);border-radius:8px;background:var(--bg2);color:var(--text1);cursor:pointer;outline:none;font-family:inherit">
             <option value="">Todas as lojas</option>
           </select>
-          <input type="date" class="field field-sm" id="sol-fil-data" onchange="renderSolicitacoes()" title="Filtrar por data">
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="date" class="field field-sm" id="sol-fil-de" onchange="renderSolicitacoes()" title="Data inicial">
+            <span style="color:#94a3b8;font-size:12px">–</span>
+            <input type="date" class="field field-sm" id="sol-fil-ate" onchange="renderSolicitacoes()" title="Data final">
+          </div>
           <select class="field field-sm" id="sol-fil-status" onchange="renderSolicitacoes()">
             <option value="">Todas</option>
             <option value="solicitado">Aguardando</option>
@@ -528,28 +533,38 @@ function switchTab(tab) {
 // ══════════════════════════════════════════════════════════════════════
 function limparFiltrosSol() {
   document.getElementById('sol-fil-loja').value = '';
-  document.getElementById('sol-fil-data').value = '';
+  document.getElementById('sol-fil-de').value = '';
+  document.getElementById('sol-fil-ate').value = '';
   document.getElementById('sol-fil-status').value = '';
   renderSolicitacoes();
 }
 
 async function renderSolicitacoes() {
   const lojaFil   = document.getElementById('sol-fil-loja')?.value||'';
-  const dataFil   = document.getElementById('sol-fil-data')?.value||'';
+  const deFil     = document.getElementById('sol-fil-de')?.value||'';
+  const ateFil    = document.getElementById('sol-fil-ate')?.value||'';
   const statusFil = document.getElementById('sol-fil-status')?.value||'';
+  const temFiltro = lojaFil || deFil || ateFil || statusFil;
   try {
-    // Cards sempre mostram total de aguardando (sem filtros)
-    const totais = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id,loja_id`);
-    const lojaSet = new Set(totais.map(s=>s.loja_id).filter(Boolean));
-    document.getElementById('sol-cards').innerHTML = `
-      <div class="sc"><div class="sc-label">Aguardando</div><div class="sc-value c-amber">${totais.length}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">solicitações</div></div>
-      <div class="sc"><div class="sc-label">Lojas</div><div class="sc-value c-blue">${lojaSet.size}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">com pedidos</div></div>`;
+    const cardsEl = document.getElementById('sol-cards');
+    if (temFiltro) {
+      // Mostra cards só quando há filtro ativo
+      const totais = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id,loja_id`);
+      const lojaSet = new Set(totais.map(s=>s.loja_id).filter(Boolean));
+      cardsEl.innerHTML = `
+        <div class="sc"><div class="sc-label">Aguardando</div><div class="sc-value c-amber">${totais.length}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">solicitações</div></div>
+        <div class="sc"><div class="sc-label">Lojas</div><div class="sc-value c-blue">${lojaSet.size}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">com pedidos</div></div>`;
+      cardsEl.style.display = '';
+    } else {
+      cardsEl.style.display = 'none';
+    }
 
     // Lista com filtros aplicados
     let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&order=data_pedido.desc,created_at.desc`;
     if (statusFil) q += `&status=eq.${statusFil}`;
     if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
-    if (dataFil)   q += `&data_pedido=eq.${dataFil}`;
+    if (deFil)     q += `&data_pedido=gte.${deFil}`;
+    if (ateFil)    q += `&data_pedido=lte.${ateFil}`;
     solicitacoes = await api(q);
 
     const tbody = document.getElementById('sol-body');
