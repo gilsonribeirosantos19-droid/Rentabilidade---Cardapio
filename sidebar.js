@@ -7,10 +7,11 @@
 
   // Ícones SVG inline para os grupos (sem depender do Lucide)
   const GROUP_ICONS = {
-    operacao: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
+    operacao:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
     cadastros: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
     compras:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
     analises:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+    producao:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
   };
 
   const GROUPS = [
@@ -19,16 +20,6 @@
       items: [
         { href: 'estoque.html',  icon: 'archive',            label: 'Estoque' },
         { href: 'ajustes.html',  icon: 'sliders-horizontal', label: 'Ajustes' },
-      ]
-    },
-    {
-      id: 'producao', label: 'Produção / PCP',
-      items: [
-        { href: 'pcp.html', tab: 'producao-dia', icon: 'chef-hat',          label: 'Produção do Dia' },
-        { href: 'pcp.html', tab: 'sugerida',     icon: 'lightbulb',         label: 'Prod. Sugerida' },
-        { href: 'pcp.html', tab: 'sobras',       icon: 'activity',          label: 'Sobras e Perdas' },
-        { href: 'pcp.html', tab: 'consumo',      icon: 'bar-chart-2',       label: 'Consumo Médio' },
-        { href: 'pcp.html', tab: 'dashboard',    icon: 'layout-dashboard',  label: 'Dashboard PCP' },
       ]
     },
     {
@@ -52,6 +43,16 @@
         { href: 'cmv.html',        icon: 'bar-chart-2',    label: 'CMV teórico x real' },
         { href: 'rendimento.html', icon: 'trending-up',    label: 'Rendimento' },
         { href: 'pdv.html',        icon: 'receipt',        label: 'PDV / Vendas' },
+      ]
+    },
+    {
+      id: 'producao', label: 'Produção / PCP',
+      items: [
+        { href: 'pcp.html', tab: 'dashboard',    icon: 'layout-dashboard', label: 'Dashboard PCP' },
+        { href: 'pcp.html', tab: 'producao-dia', icon: 'chef-hat',         label: 'Produção do Dia' },
+        { href: 'pcp.html', tab: 'sugerida',     icon: 'lightbulb',        label: 'Prod. Sugerida' },
+        { href: 'pcp.html', tab: 'sobras',       icon: 'activity',         label: 'Sobras e Perdas' },
+        { href: 'pcp.html', tab: 'consumo',      icon: 'bar-chart-2',      label: 'Consumo Médio' },
       ]
     },
   ];
