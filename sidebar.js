@@ -5,6 +5,14 @@
   // Não sobrescreve páginas com sidebar próprio ou navegação interna especial
   if (page === 'loja.html' || page === 'login.html' || page === 'configuracoes.html') return;
 
+  // Ícones SVG inline para os grupos (sem depender do Lucide)
+  const GROUP_ICONS = {
+    operacao: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
+    cadastros: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
+    compras:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
+    analises:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  };
+
   const GROUPS = [
     {
       id: 'operacao', label: 'Operação',
@@ -55,7 +63,9 @@
     const collapsed = saved === '1' ? true : saved === '0' ? false : !hasActive;
     return `<div class="nav-group${collapsed ? ' collapsed' : ''}" id="${key}">
       <div class="nav-group-header" onclick="toggleNavGroup('${key}')">
-        <span class="nav-label">${g.label}</span>
+        <span class="nav-label" style="display:flex;align-items:center;gap:6px">
+          ${GROUP_ICONS[g.id] || ''}${g.label}
+        </span>
         <svg class="nav-group-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="nav-group-items">${g.items.map(navItem).join('')}</div>
@@ -74,8 +84,7 @@
       <a class="nav-item${isDash ? ' active' : ''}" href="dashboard.html">${ico('layout-dashboard')}Dashboard</a>
     </div>
     ${GROUPS.map(navGroup).join('')}
-    <div style="flex:1"></div>
-    <div class="nav-group" style="border-top:1px solid #e2e8f0;padding-top:8px">
+    <div class="nav-group" style="border-top:1px solid #e2e8f0;padding-top:8px;margin-top:8px">
       <a class="nav-item${isConfig ? ' active' : ''}" href="configuracoes.html">${ico('settings')}Configurações</a>
     </div>
     <div class="nav-bottom">Precisa de ajuda?<br>
