@@ -83,9 +83,9 @@
   .tbl-scroll{overflow-x:auto}
   table{width:100%;border-collapse:collapse;font-size:13px}
   thead tr{background:#0f2d5c}
-  th{padding:10px 14px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  th{padding:7px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
   th.r,td.r{text-align:right}
-  td{padding:11px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  td{padding:6px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
   tbody tr:last-child td{border-bottom:none}
   tbody tr{cursor:pointer;transition:background .1s}
   tbody tr:hover{background:#fafbfc}
@@ -624,43 +624,26 @@ function renderPagina(){
 }
 
 function _catBadge(cat){
-  const c=(cat||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-  const map={
-    'hortifruti':{bg:'#fef9c3',color:'#a16207'},
-    'mercearia':{bg:'#dbeafe',color:'#1d4ed8'},
-    'proteinas':{bg:'#dcfce7',color:'#15803d'},
-    'laticinios':{bg:'#f3e8ff',color:'#7e22ce'},
-    'estivas':{bg:'#d1fae5',color:'#065f46'},
-    'bebidas':{bg:'#e0f2fe',color:'#0369a1'},
-    'descartaveis':{bg:'#fce7f3',color:'#9d174d'},
-    'frios':{bg:'#e0f2fe',color:'#0284c7'},
-    'condimentos':{bg:'#fef3c7',color:'#b45309'},
-  };
-  const s=map[c]||{bg:'#f1f5f9',color:'#475569'};
-  return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color}">${esc(cat||'—')}</span>`;
+  return `<span class="badge b-cat">${esc(cat||'—')}</span>`;
 }
+
+const _stTxt={ativo:'Ativo',atencao:'Estoque baixo',critico:'Crítico'};
 
 function renderTabela(lista){
   const tbody=document.getElementById('tbody');
   if(!lista.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhum insumo encontrado</td></tr>';return;}
-  const statusCfg={
-    ativo:{bg:'#dcfce7',color:'#16a34a',txt:'Ativo'},
-    atencao:{bg:'#ffedd5',color:'#ea580c',txt:'Estoque baixo'},
-    critico:{bg:'#fee2e2',color:'#dc2626',txt:'Crítico'},
-  };
   tbody.innerHTML=lista.map(i=>{
     const rend=parseFloat(i.rendimento_pct||100);
     const custo=i.preco_compra/(rend/100);
     const st=getStatus(i);
-    const sc=statusCfg[st];
     const sel=insDetalhe?.id===i.id?' selected':'';
-    return `<tr onclick="abrirDetalhe('${i.id}')" class="${sel}">
+    return `<tr onclick="abrirDetalhe('${i.id}')" class="${sel}" style="cursor:pointer">
       <td style="font-weight:600;color:#0f172a">${esc(i.nome)}</td>
       <td>${_catBadge(i.categoria)}</td>
       <td style="color:#64748b">${esc(i.unidade_compra||i.unidade_medida||'—')}</td>
       <td class="r td-mono" style="color:#334155">${brl(i.preco_compra)}</td>
       <td class="r td-mono" style="color:#334155">${brl(custo)}</td>
-      <td><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.txt}</span></td>
+      <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
       <td>
         <button class="btn-ghost" onclick="event.stopPropagation();menuAcoes('${i.id}')" style="border-radius:6px;padding:4px 8px;font-size:18px;line-height:1;color:#94a3b8">⋮</button>
       </td>
@@ -844,14 +827,14 @@ function switchModulo(tab) {
 // PANE 1 — CADASTRO
 function limparCadastro(){
   _cadEditId = null;
-  ['cad-codigo','cad-nome','cad-ean','cad-ref','cad-marca','cad-ncm','cad-subgrupo','cad-deposito','cad-val-dias','cad-qtd-emb'].forEach(id=>{
+  ['cad-nome','cad-ean','cad-ref','cad-ncm','cad-subgrupo','cad-deposito'].forEach(id=>{
     const e=document.getElementById(id); if(e) e.value='';
   });
   const code=document.getElementById('cad-codigo');
   if(code) code.value='Gerado automaticamente';
   const setVal=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
-  setVal('cad-ativo','true'); setVal('cad-tipo',''); setVal('cad-grupo',''); setVal('cad-cmv','sim');
-  setVal('cad-lote','nao'); setVal('cad-validade','nao'); setVal('cad-und-med',''); setVal('cad-und-compra','');
+  setVal('cad-ativo','true'); setVal('cad-tipo',''); setVal('cad-familia','');
+  setVal('cad-grupo',''); setVal('cad-cmv','sim'); setVal('cad-und-med',''); setVal('cad-und-compra','');
 }
 
 function novoItemCadastro(){
@@ -868,17 +851,17 @@ function editarItemCadastro(id){
   setVal('cad-codigo', 'MP-'+String(idx+1).padStart(6,'0'));
   setVal('cad-nome', ins.nome||'');
   setVal('cad-ativo', ins.ativo===false?'false':'true');
+  setVal('cad-tipo', '');
+  setVal('cad-familia', '');
   setVal('cad-grupo', ins.categoria||'');
+  setVal('cad-subgrupo', '');
+  setVal('cad-cmv', 'sim');
   setVal('cad-und-med', ins.unidade_medida||'');
   setVal('cad-und-compra', ins.unidade_compra||'');
-  setVal('cad-qtd-emb', ins.rendimento_pct||'');
-  document.getElementById('cad-ean').value='';
-  document.getElementById('cad-ref').value='';
-  document.getElementById('cad-marca').value='';
-  document.getElementById('cad-ncm').value='';
-  document.getElementById('cad-subgrupo').value='';
-  document.getElementById('cad-deposito').value='';
-  document.getElementById('cad-val-dias').value='';
+  setVal('cad-deposito', '');
+  setVal('cad-ean', '');
+  setVal('cad-ref', '');
+  setVal('cad-ncm', '');
   switchModulo('cadastro');
 }
 
@@ -932,17 +915,11 @@ function renderProdutos(){
   if(!_prodFiltrado.length){
     tbody.innerHTML='<tr><td colspan="12" class="empty">Nenhum item encontrado</td></tr>';return;
   }
-  const stCfg={
-    ativo:{bg:'#dcfce7',color:'#16a34a',txt:'Ativo'},
-    atencao:{bg:'#ffedd5',color:'#ea580c',txt:'Estoque baixo'},
-    critico:{bg:'#fee2e2',color:'#dc2626',txt:'Crítico'},
-  };
-  tbody.innerHTML=_prodFiltrado.map((ins,idx)=>{
+  tbody.innerHTML=_prodFiltrado.map((ins)=>{
     const realIdx=todos.indexOf(ins);
     const codigo=_gerarCodigo(realIdx);
     const st=getStatus(ins);
-    const sc=stCfg[st];
-    return `<tr>
+    return `<tr onclick="editarItemCadastro('${ins.id}')" style="cursor:pointer">
       <td class="td-mono" style="color:#64748b;font-size:11px">${esc(codigo)}</td>
       <td style="font-weight:600;color:#0f172a">${esc(ins.nome)}</td>
       <td style="color:#64748b">—</td>
@@ -953,9 +930,9 @@ function renderProdutos(){
       <td style="color:#64748b">${esc(ins.unidade_compra||'—')}</td>
       <td class="r td-mono" style="color:#64748b">${ins.rendimento_pct!=null?ins.rendimento_pct:'—'}</td>
       <td style="color:#64748b">—</td>
-      <td><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.txt}</span></td>
+      <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
       <td>
-        <button class="btn-ghost" onclick="menuProduto('${ins.id}')" style="border-radius:6px;padding:4px 8px;font-size:18px;line-height:1;color:#94a3b8">⋮</button>
+        <button class="btn-ghost" onclick="event.stopPropagation();menuProduto('${ins.id}')" style="border-radius:6px;padding:4px 8px;font-size:18px;line-height:1;color:#94a3b8">⋮</button>
       </td>
     </tr>`;
   }).join('');
