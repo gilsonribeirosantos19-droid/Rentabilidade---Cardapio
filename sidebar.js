@@ -2,8 +2,8 @@
 (function () {
   const page = (location.pathname.split('/').pop() || 'dashboard.html').split('?')[0].split('#')[0];
 
-  // Não sobrescreve páginas com sidebar próprio ou navegação interna especial
-  if (page === 'loja.html' || page === 'login.html' || page === 'configuracoes.html') return;
+  // Não sobrescreve páginas com sidebar próprio
+  if (page === 'loja.html' || page === 'login.html') return;
 
   // Ícones SVG inline para os grupos (sem depender do Lucide)
   const GROUP_ICONS = {
