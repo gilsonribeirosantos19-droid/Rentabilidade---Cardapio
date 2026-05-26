@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -8,417 +8,1006 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fornecedores · Aiko</title>
 <style>
-  
-  :root{
-    --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
-    --border1:#e2e8f0;--border2:#e2e8f0;
-    --teal:#0d9488;--teal2:#0f766e;--teal-dim:rgba(13,148,136,.12);
-    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#22c55e;
-    --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
-    --radius:10px;--radius-lg:16px;
-  }
+  :root{--bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text2:#64748b;--text3:#94a3b8;--radius:10px;--radius-lg:16px;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI', system-ui, -apple-system, sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
   .shell{display:flex;width:100%;min-height:100vh}
-
   /* SIDEBAR */
-  .sidebar{width:220px;min-height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;
-    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e2e8f0;padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
   .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
-  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .logo-mark{font-size:16px;font-weight:800;color:#0f172a}
   .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
-  .nav-group{padding:8px 10px;margin:0 8px 12px;background:#f8fafc;border-radius:10px;box-shadow:0 4px 12px rgba(15,45,92,.15)}
+  .nav-group{padding:0 10px;margin:0 8px 4px}
   .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
   .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
   .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
   .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
   .nav-icon{width:15px;height:15px;flex-shrink:0;stroke-width:1.8}
-
+  .nav-bottom{margin-top:auto;padding:16px 18px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8}
+  .nav-bottom a{color:#f97316;text-decoration:none}
   /* MAIN */
-  .main{flex:1;display:flex;flex-direction:column;min-width:0}
-  .topbar{height:40px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
-    padding:0 24px;gap:12px;background:#ffffff;position:sticky;top:0;z-index:60}
-  .topbar-title{font-size:15px;font-weight:600;flex:1}
-  .content{padding:24px;flex:1}
-
-  /* LAYOUT DOIS PAINÉIS */
-  .two-panel{display:grid;grid-template-columns:300px 1fr;gap:20px;height:calc(100vh - 56px - 48px)}
-  .panel-left{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
-    overflow:hidden;display:flex;flex-direction:column}
-  .panel-right{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
-    overflow:hidden;display:flex;flex-direction:column}
-  .panel-header{padding:14px 16px;border-bottom:1px solid var(--border2);background:var(--bg3)}
-  .panel-title{font-size:13px;font-weight:600}
-  .panel-body{flex:1;overflow-y:hidden}
-
-  /* LISTA FORNECEDORES */
-  .forn-item{padding:12px 16px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s}
-  .forn-item:last-child{border-bottom:none}
-  .forn-item:hover{background:var(--bg1)}
-  .forn-item.active{background:var(--teal-dim);border-left:3px solid var(--teal)}
-  .forn-nome{font-size:13px;font-weight:600;color:var(--text1)}
-  .forn-contato{font-size:11px;color:var(--text3);margin-top:2px}
-  .forn-badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-  .badge-sm{font-size:10px;padding:1px 7px;border-radius:20px;background:var(--bg3);color:var(--text2);font-weight:500}
-  .badge-wpp{background:#dcfce7;color:#16a34a}
-
-  /* SEARCH */
-  .search-box{padding:10px 12px;border-bottom:1px solid var(--border2)}
-  .search-box input{width:100%;background:var(--bg3);border:1px solid var(--border2);
-    color:var(--text1);padding:7px 10px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
-  .search-box input:focus{border-color:var(--teal)}
-
-  /* DETALHE */
-  .forn-detail-header{padding:20px 24px;border-bottom:1px solid var(--border2)}
-  .forn-detail-nome{font-size:18px;font-weight:700;margin-bottom:8px}
-  .forn-detail-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
-  .info-label{color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
-  .info-value{font-weight:500}
-
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .topbar{height:56px;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
+  .content{flex:1;padding:20px 24px;overflow-y:auto}
+  /* MODULE TABS */
+  .mod-tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid #e2e8f0}
+  .mod-tab{padding:8px 18px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;font-family:inherit;margin-bottom:-1px;transition:all .15s}
+  .mod-tab.active{color:#f97316;border-bottom-color:#f97316}
+  .mod-tab:hover:not(.active){color:#0f172a}
+  .mod-pane{display:none}
+  /* FILTER BAR */
+  .filter-bar-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:18px}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .search-wrap{position:relative;flex:0 0 260px}
+  .search-wrap input{width:100%;height:44px;padding:0 14px 0 40px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;color:#0f172a;background:#f8fafc;outline:none;transition:all .18s}
+  .search-wrap input:focus{border-color:#f97316;background:#fff}
+  .search-wrap input::placeholder{color:#94a3b8}
+  .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8}
+  .fil-select{height:44px;padding:0 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;color:#334155;font-weight:500;background:#f8fafc;outline:none;cursor:pointer;transition:all .18s;min-width:140px}
+  .fil-select:hover{border-color:#cbd5e1;background:#fff}
+  .fil-select:focus{border-color:#f97316;background:#fff}
+  .fil-select-lg{min-width:220px}
+  /* BUTTONS */
+  .btn{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:#f8fafc}
+  .btn-primary{background:#f97316;border-color:#f97316;color:#fff}
+  .btn-primary:hover{background:#ea6c00;border-color:#ea6c00}
+  .btn-ghost{background:transparent;border:none;color:#64748b;padding:5px 8px}
+  .btn-ghost:hover{background:#f1f5f9;color:#0f172a}
+  .btn-sm{padding:5px 12px;font-size:12px}
+  .ml-auto{margin-left:auto}
   /* TABLE */
-  .tbl{width:100%;border-collapse:collapse;font-size:13px}
-  .tbl thead tr{background:#0f2d5c;border-bottom:none}
-  .tbl th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);
-    text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-  .tbl th.r,.tbl td.r{text-align:right}
-  .tbl td{padding:10px 16px;border-bottom:1px solid var(--border2);vertical-align:middle}
-  .tbl tbody tr:last-child td{border-bottom:none}
-  .tbl tbody tr:hover{background:var(--bg3)}
-  .mono{font-family:'DM Mono',monospace}
-
+  .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
+  .tbl-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead tr{background:#0f2d5c}
+  th{padding:7px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  th.r,td.r{text-align:right}
+  td{padding:7px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr{cursor:pointer;transition:background .1s}
+  tbody tr:hover{background:#fafbfc}
+  .td-mono{font-family:'DM Mono',monospace;font-size:12px}
+  .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .b-ativo{background:#dcfce7;color:#16a34a}
+  .b-inativo{background:#f1f5f9;color:#64748b}
+  .b-cat{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+  /* PAGINAÇÃO */
+  .pag-row{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;font-size:12px;color:#94a3b8;margin-top:8px}
+  .pag-btns{display:flex;gap:4px}
+  .pag-btn{min-width:30px;height:30px;padding:0 6px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+  .pag-btn:hover{border-color:#f97316;color:#f97316}
+  .pag-btn.active{background:#0f2d5c;color:#fff;border-color:#0f2d5c;font-weight:700}
+  .pag-btn:disabled{opacity:.4;cursor:not-allowed}
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto}
+  .modal-lg{max-width:720px}
+  .modal-header{padding:20px 24px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+  .modal-title{font-size:15px;font-weight:700}
+  .modal-close{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:2px 8px;border-radius:6px}
+  .modal-close:hover{background:#f1f5f9;color:#0f172a}
+  .modal-body{padding:20px 24px}
+  .modal-footer{padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:#fff}
+  /* FORM */
+  .form-section{margin-bottom:22px}
+  .form-section-title{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-group.full{grid-column:1/-1}
+  .form-group.span2{grid-column:span 2}
+  .form-label{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+  .form-input,.form-select{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;color:#0f172a;font-family:inherit;outline:none;transition:border-color .15s;width:100%}
+  .form-input:focus,.form-select:focus{border-color:#f97316}
+  .form-textarea{resize:vertical;min-height:72px}
+  .form-hint{font-size:11px;color:#94a3b8}
+  /* CONVERSÃO PREVIEW */
+  .conv-preview{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;font-size:12px;color:#0369a1;margin-top:10px;display:flex;align-items:center;gap:8px}
+  /* VINCULO FORNECEDOR HEADER */
+  .vin-header{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:14px}
+  .vin-header-info{flex:1;min-width:0}
+  .vin-header-nome{font-size:14px;font-weight:700;color:#0f172a}
+  .vin-header-sub{font-size:12px;color:#94a3b8;margin-top:2px}
   /* EMPTY */
-  .empty{padding:40px;text-align:center;color:var(--text3);font-size:13px}
-
+  .empty-state{padding:48px;text-align:center;color:#94a3b8;font-size:13px}
+  .empty-state svg{margin-bottom:12px;opacity:.4}
   /* TOAST */
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--text1);color:#fff;
-    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;
-    opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+  .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:320px}
   .toast.show{opacity:1;transform:translateY(0)}
-  .toast.err{background:var(--red)}
-
-  /* BTN */
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;
-    border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:all .15s}
-  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
-  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
-  .btn-green{background:#16a34a;color:#fff}
-  .btn-green:hover{background:#15803d}
-  .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
-  .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
-  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:hidden}
-  .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
-  .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
-  .cfg-flyout-item:last-child{border-bottom:none}
-  .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
+  .toast.err{border-color:#e11d48;color:#e11d48}
+  .toast.ok{border-color:#16a34a;color:#16a34a}
+  /* BASE CUSTOS */
+  .body-wrap{display:flex;gap:16px;flex:1;min-height:0}
+  .body-main{flex:1;min-width:0}
+  .detail-panel{width:340px;flex-shrink:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;display:none;flex-direction:column;overflow:hidden}
+  .detail-panel.open{display:flex}
+  .dp-header{padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px}
+  .dp-name{font-size:14px;font-weight:700;flex:1}
+  .dp-body{flex:1;overflow-y:auto;padding:14px 16px}
+  .dp-field{display:flex;align-items:baseline;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f8fafc}
+  .dp-field:last-child{border-bottom:none}
+  .dp-field-label{font-size:12px;color:#64748b}
+  .dp-field-val{font-size:12px;font-weight:600;color:#0f172a;text-align:right}
+  .dp-section{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin:12px 0 4px}
+  .dp-footer{padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;gap:8px}
 </style>
 </head>
 <body>
 <div class="shell">
 
 <!-- SIDEBAR -->
-  <nav class="sidebar">
-    <div class="logo">
-      <div class="logo-mark">Aiko</div>
-      <div class="logo-sub">sistema</div>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Principal</div>
-      <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard" class="nav-icon"></i>Dashboard</a>
-      <a class="nav-item" href="insumos.html"><i data-lucide="package" class="nav-icon"></i>Insumos</a>
-      <a class="nav-item" href="fichas_tecnicas.html"><i data-lucide="clipboard-list" class="nav-icon"></i>Fichas técnicas</a>
-      <a class="nav-item" href="#"><i data-lucide="tag" class="nav-icon"></i>Precificação</a>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Análise</div>
-      <a class="nav-item" href="estoque.html"><i data-lucide="archive" class="nav-icon"></i>Estoque</a>
-      <a class="nav-item" href="producao.html"><i data-lucide="chef-hat" class="nav-icon"></i>Produção</a>
-      <a class="nav-item" href="rendimento.html"><i data-lucide="trending-up" class="nav-icon"></i>Rendimento</a>
-      <a class="nav-item" href="pdv.html"><i data-lucide="receipt" class="nav-icon"></i>PDV / Vendas</a>
-      <a class="nav-item" href="cmv.html"><i data-lucide="bar-chart-2" class="nav-icon"></i>CMV teórico x real</a>
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">Aiko</div>
+    <div class="logo-sub">sistema</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard" class="nav-icon"></i>Dashboard</a>
+    <a class="nav-item" href="insumos.html"><i data-lucide="package" class="nav-icon"></i>Insumos</a>
+    <a class="nav-item" href="fichas_tecnicas.html"><i data-lucide="clipboard-list" class="nav-icon"></i>Fichas técnicas</a>
+    <a class="nav-item" href="#"><i data-lucide="tag" class="nav-icon"></i>Precificação</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Análise</div>
+    <a class="nav-item" href="estoque.html"><i data-lucide="archive" class="nav-icon"></i>Estoque</a>
+    <a class="nav-item" href="producao.html"><i data-lucide="chef-hat" class="nav-icon"></i>Produção</a>
+    <a class="nav-item" href="rendimento.html"><i data-lucide="trending-up" class="nav-icon"></i>Rendimento</a>
+    <a class="nav-item" href="pdv.html"><i data-lucide="receipt" class="nav-icon"></i>PDV / Vendas</a>
+    <a class="nav-item" href="cmv.html"><i data-lucide="bar-chart-2" class="nav-icon"></i>CMV teórico x real</a>
     <a class="nav-item" href="relatorios.html"><i data-lucide="file-bar-chart" class="nav-icon"></i>Relatórios</a>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Gestão</div>
-      <a class="nav-item active" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
-      <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
-      <a class="nav-item" href="ajustes.html"><i data-lucide="sliders-horizontal" class="nav-icon"></i>Ajustes</a>
-      <div class="nav-sub-wrap" id="cfg-nav-trigger">
-    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
-    </div>
-    </div>
-    <div class="nav-bottom">Precisa de ajuda?<br><a href="https://wa.me/5592994948230?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20sistema%20Aiko" target="_blank" rel="noopener">Acesse o suporte</a></div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Gestão</div>
+    <a class="nav-item active" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
+    <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
+    <a class="nav-item" href="ajustes.html"><i data-lucide="sliders-horizontal" class="nav-icon"></i>Ajustes</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações</a>
+  </div>
+  <div class="nav-bottom">Precisa de ajuda?<br><a href="https://wa.me/5592994948230?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20sistema%20Aiko" target="_blank" rel="noopener">Acesse o suporte</a></div>
 </nav>
 
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <span class="topbar-title">Fornecedores</span>
-    <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
-    <div id="topbar-user" style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    <div>
+      <div style="font-size:18px;font-weight:700;color:#0f172a;line-height:1">Fornecedores</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:2px">Cadastro, vínculos e base de custos.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
-      <span onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:12px;color:#dc2626;cursor:pointer;border:1px solid #fca5a5;padding:4px 12px;border-radius:20px;font-weight:600;white-space:nowrap">← Sair</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <button onclick="sair()" style="font-size:12px;color:#dc2626;background:#fff;border:1px solid #fca5a5;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
     </div>
   </div>
-  <div class="content">
-    <div class="two-panel">
 
-      <!-- PAINEL ESQUERDO: LISTA DE FORNECEDORES -->
-      <div class="panel-left">
-        <div class="search-box">
-          <input type="text" id="busca-forn" placeholder="Buscar fornecedor..." oninput="filtrarFornecedores()">
-        </div>
-        <div class="panel-body" id="lista-fornecedores">
-          <div class="empty">Carregando...</div>
+  <div class="content">
+
+    <!-- MODULE TABS -->
+    <div class="mod-tabs">
+      <button class="mod-tab active" data-tab="fornecedores" onclick="switchModulo('fornecedores')">Cadastro de Fornecedor</button>
+      <button class="mod-tab" data-tab="vinculos" onclick="switchModulo('vinculos')">Item × Fornecedor</button>
+      <button class="mod-tab" data-tab="custos" onclick="switchModulo('custos')">Base de Custos</button>
+    </div>
+
+    <!-- ===== PANE 1: CADASTRO DE FORNECEDOR ===== -->
+    <div class="mod-pane" id="pane-fornecedores" style="display:block">
+
+      <div class="filter-bar-wrap">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="forn-busca" placeholder="Buscar fornecedor..." oninput="filtrarFornecedores()">
+          </div>
+          <select id="forn-fil-cidade" class="fil-select" onchange="filtrarFornecedores()"><option value="">Cidade ▾</option></select>
+          <select id="forn-fil-status" class="fil-select" onchange="filtrarFornecedores()">
+            <option value="">Status ▾</option>
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+          <button class="btn ml-auto btn-primary" onclick="abrirModalForn()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo Fornecedor
+          </button>
         </div>
       </div>
 
-      <!-- PAINEL DIREITO: DETALHE DO FORNECEDOR -->
-      <div class="panel-right">
-        <div id="detalhe-vazio" class="empty" style="margin:auto;padding:60px">
-          ← Selecione um fornecedor para ver os detalhes
+      <div class="tbl-card">
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th>Fornecedor</th>
+              <th>CNPJ</th>
+              <th>Cidade / UF</th>
+              <th>Contato</th>
+              <th>Status</th>
+              <th class="r">Última compra</th>
+              <th class="r">Itens</th>
+              <th>Ações</th>
+            </tr></thead>
+            <tbody id="forn-tbody">
+              <tr><td colspan="8" class="empty-state">Carregando...</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div id="detalhe-forn" style="display:none;flex-direction:column;height:100%">
+      </div>
+      <div class="pag-row">
+        <span id="forn-pag-info">—</span>
+        <div class="pag-btns" id="forn-pag-btns"></div>
+        <select id="forn-por-pag" onchange="_fpagAtual=1;renderFornPagina()" style="font-size:11px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#64748b;font-family:inherit">
+          <option value="15">15 por página</option>
+          <option value="30">30 por página</option>
+          <option value="50">50 por página</option>
+        </select>
+      </div>
 
-          <!-- HEADER COM INFO DO FORNECEDOR -->
-          <div class="forn-detail-header">
-            <div style="display:flex;align-items:flex-start;gap:16px">
-              <div style="flex:1">
-                <div class="forn-detail-nome" id="det-nome"></div>
-                <div class="forn-detail-info">
-                  <div>
-                    <div class="info-label">Contato</div>
-                    <div class="info-value" id="det-contato">—</div>
-                  </div>
-                  <div>
-                    <div class="info-label">WhatsApp</div>
-                    <div class="info-value" id="det-wpp">—</div>
-                  </div>
-                  <div>
-                    <div class="info-label">Email</div>
-                    <div class="info-value" id="det-email">—</div>
-                  </div>
-                  <div>
-                    <div class="info-label">Insumos vinculados</div>
-                    <div class="info-value" id="det-count">—</div>
-                  </div>
-                </div>
-              </div>
-              <div style="display:flex;gap:8px;flex-shrink:0">
-                <button class="btn btn-ghost" id="btn-wpp-det" onclick="abrirWpp()" style="display:none">💬 WhatsApp</button>
-                <button class="btn btn-ghost" onclick="window.location.href='configuracoes.html'">⚙ Editar</button>
-              </div>
-            </div>
-          </div>
+    </div>
 
-          <!-- TABELA DE INSUMOS -->
-          <div style="padding:16px 24px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px">
-            <span style="font-size:13px;font-weight:600">Insumos fornecidos</span>
-            <input type="text" id="busca-ins-det" placeholder="Filtrar insumos..."
-              oninput="filtrarInsumosDetalhe()"
-              style="margin-left:auto;padding:6px 10px;border:1px solid var(--border2);border-radius:8px;font-size:12px;outline:none;font-family:inherit;background:var(--bg3)">
+    <!-- ===== PANE 2: ITEM × FORNECEDOR ===== -->
+    <div class="mod-pane" id="pane-vinculos">
+
+      <div class="filter-bar-wrap">
+        <div class="toolbar">
+          <select id="vin-sel-forn" class="fil-select fil-select-lg" onchange="onSelecionarFornVinculo()">
+            <option value="">Selecione um fornecedor...</option>
+          </select>
+          <div class="search-wrap">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="vin-busca" placeholder="Buscar item..." oninput="filtrarVinculos()">
           </div>
-          <div style="flex:1;overflow-y:auto">
-            <table class="tbl">
+          <button class="btn ml-auto btn-primary" id="btn-novo-vinculo" onclick="abrirModalVinculo()" style="display:none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Vincular Item
+          </button>
+        </div>
+      </div>
+
+      <!-- Info do fornecedor selecionado -->
+      <div class="vin-header" id="vin-header" style="display:none">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <div class="vin-header-info">
+          <div class="vin-header-nome" id="vin-forn-nome">—</div>
+          <div class="vin-header-sub" id="vin-forn-sub">—</div>
+        </div>
+        <span class="badge b-cat" id="vin-forn-qtd" style="font-size:12px">0 itens</span>
+      </div>
+
+      <div id="vin-empty-state" class="tbl-card" style="display:block">
+        <div class="empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <div>Selecione um fornecedor para ver os itens vinculados</div>
+        </div>
+      </div>
+
+      <div id="vin-tbl-wrap" style="display:none">
+        <div class="tbl-card">
+          <div class="tbl-scroll">
+            <table>
               <thead><tr>
-                <th>Insumo</th>
-                <th>Categoria</th>
-                <th>Un. medida</th>
-                <th class="r">Preço negociado</th>
+                <th>Item interno</th>
+                <th>Descrição no fornecedor</th>
+                <th>Código</th>
+                <th>Embalagem</th>
+                <th class="r">Qtd. Emb.</th>
+                <th>UM</th>
+                <th>Conversão</th>
+                <th class="r">Último preço</th>
                 <th class="r">Última entrada</th>
-                <th class="c">Principal</th>
+                <th>Ações</th>
               </tr></thead>
-              <tbody id="det-insumos">
-                <tr><td colspan="6" class="empty">Selecione um fornecedor</td></tr>
+              <tbody id="vin-tbody">
+                <tr><td colspan="10" class="empty-state">Nenhum item vinculado</td></tr>
               </tbody>
             </table>
           </div>
-
-          <!-- RODAPÉ COM TOTAIS -->
-          <div id="det-footer" style="padding:12px 24px;border-top:1px solid var(--border2);
-            background:var(--bg3);font-size:12px;color:var(--text2);display:flex;gap:24px"></div>
         </div>
       </div>
 
     </div>
+
+    <!-- ===== PANE 3: BASE DE CUSTOS ===== -->
+    <div class="mod-pane" id="pane-custos">
+
+      <div class="filter-bar-wrap">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="cus-busca" placeholder="Buscar insumo..." oninput="filtrarCustos()">
+          </div>
+          <select id="cus-fil-cat" class="fil-select" onchange="filtrarCustos()"><option value="">Categoria ▾</option></select>
+          <select id="cus-fil-status" class="fil-select" onchange="filtrarCustos()">
+            <option value="">Status ▾</option>
+            <option value="ativo">Ativo</option>
+            <option value="atencao">Estoque baixo</option>
+            <option value="critico">Crítico</option>
+          </select>
+          <select id="cus-fil-estoque" class="fil-select" onchange="filtrarCustos()">
+            <option value="">Estoque ▾</option>
+            <option value="em">Em estoque</option>
+            <option value="baixo">Estoque baixo</option>
+            <option value="sem">Sem estoque</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="body-wrap">
+        <div class="body-main">
+          <div class="tbl-card">
+            <div class="tbl-scroll">
+              <table>
+                <thead><tr>
+                  <th>Insumo</th>
+                  <th>Categoria</th>
+                  <th>Unidade</th>
+                  <th class="r">Preço Compra</th>
+                  <th class="r">Custo Real / kg</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr></thead>
+                <tbody id="cus-tbody">
+                  <tr><td colspan="7" class="empty-state">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="pag-row">
+            <span id="cus-pag-info">—</span>
+            <div class="pag-btns" id="cus-pag-btns"></div>
+            <select id="cus-por-pag" onchange="_cpagAtual=1;renderCusPagina()" style="font-size:11px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#64748b;font-family:inherit">
+              <option value="15">15 por página</option>
+              <option value="30">30 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- PAINEL DETALHE -->
+        <div class="detail-panel" id="cus-detail">
+          <div class="dp-header">
+            <div class="dp-name" id="cus-dp-nome">—</div>
+            <button class="btn-ghost" onclick="fecharDetalhe()" style="padding:3px 6px;font-size:16px">✕</button>
+          </div>
+          <div class="dp-body" id="cus-dp-body"></div>
+          <div class="dp-footer">
+            <button class="btn" style="flex:1" onclick="fecharDetalhe()">Fechar</button>
+            <button class="btn btn-primary" style="flex:2" onclick="irParaInsumo()">Editar insumo</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- ===== MODAL FORNECEDOR ===== -->
+<div class="modal-overlay" id="modal-forn">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-forn-titulo">Novo Fornecedor</span>
+      <button class="modal-close" onclick="fecharModalForn()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section">
+        <div class="form-section-title">Identificação</div>
+        <div class="form-grid">
+          <div class="form-group span2"><label class="form-label">Razão Social *</label><input class="form-input" id="f-razao" type="text" placeholder="Ex: Distribuidora de Alimentos Ltda"></div>
+          <div class="form-group"><label class="form-label">Nome Fantasia</label><input class="form-input" id="f-fantasia" type="text" placeholder="Ex: FrisFrios"></div>
+          <div class="form-group"><label class="form-label">CNPJ</label><input class="form-input" id="f-cnpj" type="text" placeholder="00.000.000/0001-00" maxlength="18"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Contato</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Nome do contato</label><input class="form-input" id="f-contato" type="text" placeholder="Ex: João Silva"></div>
+          <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" id="f-wpp" type="text" placeholder="(92) 9 9999-9999"></div>
+          <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" id="f-email" type="email" placeholder="contato@fornecedor.com"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Localização</div>
+        <div class="form-grid-3">
+          <div class="form-group span2"><label class="form-label">Cidade</label><input class="form-input" id="f-cidade" type="text" placeholder="Ex: Manaus"></div>
+          <div class="form-group"><label class="form-label">Estado (UF)</label><input class="form-input" id="f-estado" type="text" placeholder="AM" maxlength="2" style="text-transform:uppercase"></div>
+        </div>
+      </div>
+      <div class="form-section" style="margin-bottom:0">
+        <div class="form-section-title">Configuração</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Status</label>
+            <select class="form-select" id="f-status">
+              <option value="ativo">Ativo</option>
+              <option value="inativo">Inativo</option>
+            </select>
+          </div>
+          <div class="form-group full"><label class="form-label">Observações</label><textarea class="form-input form-textarea" id="f-obs" placeholder="Informações adicionais sobre o fornecedor..."></textarea></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModalForn()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-forn" onclick="salvarForn()">Salvar Fornecedor</button>
+    </div>
   </div>
 </div>
+
+<!-- ===== MODAL VÍNCULO ===== -->
+<div class="modal-overlay" id="modal-vinculo">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-vin-titulo">Vincular Item</span>
+      <button class="modal-close" onclick="fecharModalVinculo()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section">
+        <div class="form-section-title">Item interno</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Insumo / Matéria-prima *</label>
+            <select class="form-select" id="v-insumo" onchange="atualizarConversaoPreview()">
+              <option value="">Selecione o item interno...</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Descrição no fornecedor</label><input class="form-input" id="v-descricao" type="text" placeholder="Como o fornecedor chama o produto"></div>
+          <div class="form-group"><label class="form-label">Código no fornecedor</label><input class="form-input" id="v-codigo" type="text" placeholder="Cód. do produto no catálogo"></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Embalagem e Conversão</div>
+        <div class="form-grid-3">
+          <div class="form-group"><label class="form-label">Tipo de embalagem</label>
+            <select class="form-select" id="v-embalagem" onchange="atualizarConversaoPreview()">
+              <option value="">Selecione...</option>
+              <option value="CAIXA">CAIXA</option>
+              <option value="PACOTE">PACOTE</option>
+              <option value="FARDO">FARDO</option>
+              <option value="SACO">SACO</option>
+              <option value="LATA">LATA</option>
+              <option value="GALÃO">GALÃO</option>
+              <option value="FRASCO">FRASCO</option>
+              <option value="BANDEJA">BANDEJA</option>
+              <option value="UNIDADE">UNIDADE</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Quantidade na embalagem</label><input class="form-input" id="v-qtd-emb" type="number" step="0.001" min="0" placeholder="Ex: 10" oninput="atualizarConversaoPreview()"></div>
+          <div class="form-group"><label class="form-label">UM do fornecedor</label>
+            <select class="form-select" id="v-um" onchange="atualizarConversaoPreview()">
+              <option value="">Selecione...</option>
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+              <option value="litro">litro</option>
+              <option value="ml">ml</option>
+              <option value="un">un</option>
+            </select>
+          </div>
+        </div>
+        <div class="conv-preview" id="conv-preview" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <span id="conv-preview-txt">1 CAIXA = 10 kg em estoque</span>
+        </div>
+      </div>
+      <div class="form-section" style="margin-bottom:0">
+        <div class="form-section-title">Preço</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Último preço de compra (R$)</label><input class="form-input" id="v-preco" type="number" step="0.01" min="0" placeholder="0,00"></div>
+          <div class="form-group"><label class="form-label">Data da última entrada</label><input class="form-input" id="v-ultima-entrada" type="date"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModalVinculo()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-vin" onclick="salvarVinculo()">Salvar Vínculo</button>
+    </div>
+  </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-(function(){if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u&&u.perfil==='gerente'){window.location.href='loja.html';}}catch{}})();
 (function(){
-    try{
-      const u=JSON.parse(localStorage.getItem('sb_user')||'null');
-      if(u){
-        const n=document.getElementById('sb-user-nome');
-        const p=document.getElementById('sb-user-perfil');
-        if(n)n.textContent=u.nome||'Usuário';
-        if(p)p.textContent=u.perfil||'—';
-      }
-    }catch{}
-  })();
-const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
-const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
-const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
+  if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}
+  try{
+    const u=JSON.parse(localStorage.getItem('sb_user')||'null');
+    if(u){const n=document.getElementById('sb-user-nome');if(n)n.textContent=u.nome||'—';}
+  }catch{}
+})();
+
+const SUPA_URL='https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
 
 async function api(endpoint, opts={}) {
-  const method = (opts.method||'GET').toUpperCase();
-  const headers = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
-  if (opts.body) headers['Content-Type']='application/json';
-  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers,body:opts.body||undefined});
-  if (!res.ok){let m=res.statusText;try{const j=await res.json();m=j.message||j.error||m;}catch{}throw new Error(m);}
-  const ct=res.headers.get('content-type')||'';
-  if(ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
-  return [];
+  const method=(opts.method||'GET').toUpperCase();
+  const h={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+  if(opts.body) h['Content-Type']='application/json';
+  if(opts.prefer) h['Prefer']=opts.prefer;
+  else if(method==='POST') h['Prefer']='return=representation';
+  else if(method==='PATCH') h['Prefer']='return=representation';
+  const r=await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers:h,body:opts.body||undefined});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||e.hint||r.statusText);}
+  if(r.status===204) return null;
+  const t=await r.text(); return t?JSON.parse(t):[];
 }
 
-let fornecedores=[], insumos=[], vinculos=[], entradas=[], fornSelecionado=null, vinculosDet=[];
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function brl(v){if(v==null||v==='') return '—'; return 'R$ '+Number(v).toFixed(2).replace('.',',');}
+function fmtDate(d){if(!d)return'—';try{return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}catch{return d;}}
+function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
+let _toastTimer;
+function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${tipo} show`;clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>el.classList.remove('show'),3200);}
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fmtData(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
-let toastTimer;
-function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
+/* ---- ESTADO GLOBAL ---- */
+let fornecedores=[], insumos=[], vinculos=[];
+let _fornFiltrado=[], _vinFiltrado=[], _cusFiltrado=[];
+let _fpagAtual=1, _cpagAtual=1;
+let _fornEditing=null, _vinEditing=null, _vinFornSel=null, _cusDetalhe=null;
 
-async function carregar() {
-  document.getElementById('conn-status').textContent='carregando...';
-  try {
-    [fornecedores, insumos, vinculos, entradas] = await Promise.all([
-      api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`),
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
-    ]);
-    renderLista();
-    document.getElementById('conn-status').textContent='● conectado';
-    document.getElementById('conn-status').style.color='#16a34a';
-  } catch(e) {
-    document.getElementById('conn-status').textContent='✕ erro';
-    document.getElementById('conn-status').style.color='#dc2626';
-    toast('Erro ao carregar: '+e.message,'err');
+/* ---- MODULE TABS ---- */
+function switchModulo(tab){
+  document.querySelectorAll('.mod-pane').forEach(p=>p.style.display='none');
+  document.getElementById('pane-'+tab).style.display='block';
+  document.querySelectorAll('.mod-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  if(tab==='custos' && insumos.length) filtrarCustos();
+}
+
+/* ================================================================
+   ABA 1 — CADASTRO DE FORNECEDOR
+================================================================ */
+function filtrarFornecedores(){
+  const q=(document.getElementById('forn-busca')?.value||'').toLowerCase();
+  const cidade=document.getElementById('forn-fil-cidade')?.value||'';
+  const status=document.getElementById('forn-fil-status')?.value||'';
+  let lista=fornecedores;
+  if(q) lista=lista.filter(f=>(f.nome||f.razao_social||'').toLowerCase().includes(q)||(f.nome_fantasia||'').toLowerCase().includes(q)||(f.cnpj||'').includes(q));
+  if(cidade) lista=lista.filter(f=>(f.cidade||'')===cidade);
+  if(status) lista=lista.filter(f=>(f.status||'ativo')===status);
+  _fornFiltrado=lista;
+  _fpagAtual=1;
+  renderFornPagina();
+}
+
+function renderFornPagina(){
+  const pp=parseInt(document.getElementById('forn-por-pag')?.value)||15;
+  const total=_fornFiltrado.length;
+  const totalPags=Math.max(1,Math.ceil(total/pp));
+  _fpagAtual=Math.min(_fpagAtual,totalPags);
+  const start=(_fpagAtual-1)*pp;
+  const page=_fornFiltrado.slice(start,start+pp);
+
+  const info=document.getElementById('forn-pag-info');
+  if(info) info.textContent=total?`Mostrando ${start+1}–${Math.min(start+pp,total)} de ${total}`:'Nenhum fornecedor encontrado';
+
+  const btns=document.getElementById('forn-pag-btns');
+  if(btns){
+    let h=`<button class="pag-btn" ${_fpagAtual===1?'disabled':''} onclick="_fpagAtual=Math.max(1,_fpagAtual-1);renderFornPagina()">‹</button>`;
+    for(let p=1;p<=totalPags;p++){
+      if(totalPags>6 && p>2 && p<totalPags-1 && Math.abs(p-_fpagAtual)>1){if(p===3||p===totalPags-2)h+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;continue;}
+      h+=`<button class="pag-btn ${p===_fpagAtual?'active':''}" onclick="_fpagAtual=${p};renderFornPagina()">${p}</button>`;
+    }
+    h+=`<button class="pag-btn" ${_fpagAtual===totalPags?'disabled':''} onclick="_fpagAtual=Math.min(${totalPags},_fpagAtual+1);renderFornPagina()">›</button>`;
+    btns.innerHTML=h;
   }
+  renderFornTabela(page);
 }
 
-function renderLista() {
-  const busca = document.getElementById('busca-forn').value.toLowerCase();
-  const lista = fornecedores.filter(f=>!busca||f.nome.toLowerCase().includes(busca));
-  const container = document.getElementById('lista-fornecedores');
-  if (!lista.length) { container.innerHTML='<div class="empty">Nenhum fornecedor encontrado</div>'; return; }
-  container.innerHTML = lista.map(f => {
-    const qtdInsumos = vinculos.filter(v=>v.fornecedor_id===f.id).length;
-    const isActive = fornSelecionado?.id===f.id;
-    return `<div class="forn-item ${isActive?'active':''}" onclick="selecionarForn('${f.id}')">
-      <div class="forn-nome">${esc(f.nome)}</div>
-      <div class="forn-contato">${esc(f.contato||'Sem contato')}</div>
-      <div class="forn-badges">
-        <span class="badge-sm">${qtdInsumos} insumo(s)</span>
-        ${f.whatsapp?'<span class="badge-sm badge-wpp">💬 WPP</span>':''}
-        ${f.email?'<span class="badge-sm">✉ Email</span>':''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function filtrarFornecedores() { renderLista(); }
-
-function selecionarForn(id) {
-  fornSelecionado = fornecedores.find(f=>f.id===id);
-  renderLista();
-  renderDetalhe();
-}
-
-function renderDetalhe() {
-  if (!fornSelecionado) return;
-  const f = fornSelecionado;
-  vinculosDet = vinculos.filter(v=>v.fornecedor_id===f.id);
-
-  document.getElementById('detalhe-vazio').style.display='none';
-  const det = document.getElementById('detalhe-forn');
-  det.style.display='flex';
-
-  document.getElementById('det-nome').textContent = f.nome;
-  document.getElementById('det-contato').textContent = f.contato||'—';
-  document.getElementById('det-wpp').textContent = f.whatsapp||'—';
-  document.getElementById('det-email').textContent = f.email||'—';
-  document.getElementById('det-count').textContent = vinculosDet.length + ' insumo(s)';
-
-  const btnWpp = document.getElementById('btn-wpp-det');
-  btnWpp.style.display = f.whatsapp ? '' : 'none';
-
-  renderInsumosDetalhe();
-
-  // Rodapé
-  const precos = vinculosDet.filter(v=>v.preco_unitario).map(v=>v.preco_unitario);
-  const menorPreco = precos.length ? Math.min(...precos) : null;
-  const maiorPreco = precos.length ? Math.max(...precos) : null;
-  const ultiEnt = entradas.filter(e=>e.fornecedor_id===f.id).sort((a,b)=>b.criado_em.localeCompare(a.criado_em))[0];
-  document.getElementById('det-footer').innerHTML = `
-    <span>Preço mínimo: <strong>${menorPreco?brl(menorPreco):'—'}</strong></span>
-    <span>Preço máximo: <strong>${maiorPreco?brl(maiorPreco):'—'}</strong></span>
-    <span>Última compra: <strong>${ultiEnt?fmtData(ultiEnt.criado_em):'—'}</strong></span>`;
-}
-
-function filtrarInsumosDetalhe() { renderInsumosDetalhe(); }
-
-function renderInsumosDetalhe() {
-  const busca = (document.getElementById('busca-ins-det')?.value||'').toLowerCase();
-  const tbody = document.getElementById('det-insumos');
-  const lista = vinculosDet.filter(v=>{
-    const ins=insumos.find(i=>i.id===v.insumo_id);
-    return !busca||(ins?.nome||'').toLowerCase().includes(busca);
-  });
-  if (!lista.length) { tbody.innerHTML='<tr><td colspan="6" class="empty">Nenhum insumo vinculado</td></tr>'; return; }
-  tbody.innerHTML = lista.map(v => {
-    const ins = insumos.find(i=>i.id===v.insumo_id);
-    const ultimaEnt = entradas.filter(e=>e.insumo_id===v.insumo_id&&e.fornecedor_id===fornSelecionado.id)
-      .sort((a,b)=>b.criado_em.localeCompare(a.criado_em))[0];
-    return `<tr>
-      <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
-      <td style="color:var(--text3);font-size:12px">${esc(ins?.categoria||'—')}</td>
-      <td style="color:var(--text3)">${esc(ins?.unidade_medida||ins?.unidade_compra||'—')}</td>
-      <td class="r mono" style="font-weight:600;color:${v.preco_unitario?'var(--teal)':'var(--text3)'}">${brl(v.preco_unitario)}</td>
-      <td class="r mono" style="font-size:12px;color:var(--text3)">${fmtData(ultimaEnt?.criado_em)}</td>
-      <td class="c">${v.principal?'<span style="color:#16a34a;font-weight:700">✓</span>':'<span style="color:var(--text3)">—</span>'}</td>
+function renderFornTabela(lista){
+  const tbody=document.getElementById('forn-tbody');
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="8" class="empty-state">Nenhum fornecedor encontrado</td></tr>';return;}
+  tbody.innerHTML=lista.map(f=>{
+    const qtd=vinculos.filter(v=>v.fornecedor_id===f.id).length;
+    const stBadge=f.status==='inativo'?'b-inativo':'b-ativo';
+    const stTxt=f.status==='inativo'?'Inativo':'Ativo';
+    const cidUF=[(f.cidade||''),(f.estado||'')].filter(Boolean).join(' / ')||'—';
+    return `<tr onclick="abrirModalForn('${f.id}')">
+      <td>
+        <div style="font-weight:600;color:#0f172a">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</div>
+        ${f.razao_social&&(f.nome_fantasia||f.nome)?`<div style="font-size:11px;color:#94a3b8;margin-top:1px">${esc(f.razao_social)}</div>`:''}
+      </td>
+      <td class="td-mono" style="color:#64748b;font-size:12px">${esc(f.cnpj||'—')}</td>
+      <td style="color:#64748b">${esc(cidUF)}</td>
+      <td style="color:#64748b">${esc(f.contato||'—')}</td>
+      <td><span class="badge ${stBadge}">${stTxt}</span></td>
+      <td class="r td-mono" style="color:#64748b;font-size:12px">—</td>
+      <td class="r" style="color:#64748b">${qtd||'—'}</td>
+      <td>
+        <button class="btn-ghost" onclick="event.stopPropagation();confirmarExcluirForn('${f.id}')" style="padding:4px 8px;font-size:16px;color:#94a3b8" title="Desativar">⋮</button>
+      </td>
     </tr>`;
   }).join('');
 }
 
-function abrirWpp() {
-  if (!fornSelecionado?.whatsapp) return;
-  const wpp = fornSelecionado.whatsapp.replace(/\D/g,'');
-  window.open(`https://wa.me/55${wpp}`,'_blank');
+/* MODAL FORNECEDOR */
+function abrirModalForn(id){
+  _fornEditing = id ? (fornecedores.find(f=>f.id===id)||null) : null;
+  const f=_fornEditing;
+  const setVal=(el,v)=>{const e=document.getElementById(el);if(e)e.value=v!=null?v:'';};
+  setVal('f-razao', f?.razao_social||f?.nome||'');
+  setVal('f-fantasia', f?.nome_fantasia||'');
+  setVal('f-cnpj', f?.cnpj||'');
+  setVal('f-contato', f?.contato||'');
+  setVal('f-wpp', f?.whatsapp||'');
+  setVal('f-email', f?.email||'');
+  setVal('f-cidade', f?.cidade||'');
+  setVal('f-estado', f?.estado||'');
+  setVal('f-status', f?.status||'ativo');
+  setVal('f-obs', f?.observacoes||'');
+  document.getElementById('modal-forn-titulo').textContent=f?'Editar Fornecedor':'Novo Fornecedor';
+  document.getElementById('btn-salvar-forn').textContent='Salvar Fornecedor';
+  document.getElementById('modal-forn').classList.add('open');
 }
 
-carregar();
+function fecharModalForn(){
+  document.getElementById('modal-forn').classList.remove('open');
+  _fornEditing=null;
+}
+
+async function salvarForn(){
+  const razao=document.getElementById('f-razao').value.trim();
+  if(!razao){toast('Informe a Razão Social.','err');return;}
+  const payload={
+    razao_social: razao,
+    nome_fantasia: document.getElementById('f-fantasia').value.trim()||null,
+    nome: document.getElementById('f-fantasia').value.trim()||razao,
+    cnpj: document.getElementById('f-cnpj').value.trim()||null,
+    contato: document.getElementById('f-contato').value.trim()||null,
+    whatsapp: document.getElementById('f-wpp').value.trim()||null,
+    email: document.getElementById('f-email').value.trim()||null,
+    cidade: document.getElementById('f-cidade').value.trim()||null,
+    estado: document.getElementById('f-estado').value.trim().toUpperCase()||null,
+    status: document.getElementById('f-status').value,
+    observacoes: document.getElementById('f-obs').value.trim()||null,
+    ativo: document.getElementById('f-status').value!=='inativo',
+  };
+  const btn=document.getElementById('btn-salvar-forn');
+  btn.disabled=true; btn.textContent='Salvando...';
+  try{
+    if(_fornEditing){
+      await api(`fornecedores?id=eq.${_fornEditing.id}`,{method:'PATCH',body:JSON.stringify(payload)});
+      toast('Fornecedor atualizado.','ok');
+    } else {
+      payload.tenant_id=TENANT_ID;
+      await api('fornecedores',{method:'POST',body:JSON.stringify(payload)});
+      toast(`${payload.nome_fantasia||razao} cadastrado.`,'ok');
+    }
+    fecharModalForn();
+    await carregarTudo();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar Fornecedor';}
+}
+
+function confirmarExcluirForn(id){
+  const f=fornecedores.find(x=>x.id===id);
+  if(!f)return;
+  if(!confirm(`Desativar fornecedor "${f.nome_fantasia||f.nome||f.razao_social}"?`))return;
+  api(`fornecedores?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({ativo:false,status:'inativo'})})
+    .then(()=>{toast('Fornecedor desativado.','ok');carregarTudo();})
+    .catch(e=>toast('Erro: '+e.message,'err'));
+}
+
+/* ================================================================
+   ABA 2 — ITEM × FORNECEDOR
+================================================================ */
+function onSelecionarFornVinculo(){
+  const id=document.getElementById('vin-sel-forn').value;
+  _vinFornSel=id?fornecedores.find(f=>f.id===id):null;
+  const header=document.getElementById('vin-header');
+  const btnNovo=document.getElementById('btn-novo-vinculo');
+  const tblWrap=document.getElementById('vin-tbl-wrap');
+  const emptyState=document.getElementById('vin-empty-state');
+
+  if(!_vinFornSel){
+    header.style.display='none';
+    btnNovo.style.display='none';
+    tblWrap.style.display='none';
+    emptyState.style.display='block';
+    return;
+  }
+
+  const f=_vinFornSel;
+  document.getElementById('vin-forn-nome').textContent=f.nome_fantasia||f.nome||f.razao_social||'—';
+  document.getElementById('vin-forn-sub').textContent=[f.contato,f.whatsapp,f.cidade].filter(Boolean).join(' · ')||'Sem informações adicionais';
+  header.style.display='flex';
+  btnNovo.style.display='';
+  emptyState.style.display='none';
+  tblWrap.style.display='block';
+  filtrarVinculos();
+}
+
+function filtrarVinculos(){
+  const q=(document.getElementById('vin-busca')?.value||'').toLowerCase();
+  if(!_vinFornSel){renderVinculos([]);return;}
+  let lista=vinculos.filter(v=>v.fornecedor_id===_vinFornSel.id);
+  if(q) lista=lista.filter(v=>{
+    const ins=insumos.find(i=>i.id===v.insumo_id);
+    return (ins?.nome||'').toLowerCase().includes(q)||(v.descricao_fornecedor||'').toLowerCase().includes(q)||(v.codigo_fornecedor||'').toLowerCase().includes(q);
+  });
+  _vinFiltrado=lista;
+  const qtdEl=document.getElementById('vin-forn-qtd');
+  if(qtdEl) qtdEl.textContent=vinculos.filter(v=>v.fornecedor_id===_vinFornSel.id).length+' itens';
+  renderVinculos(lista);
+}
+
+function renderVinculos(lista){
+  const tbody=document.getElementById('vin-tbody');
+  if(!tbody)return;
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="10" class="empty-state">Nenhum item vinculado a este fornecedor</td></tr>';return;}
+  tbody.innerHTML=lista.map(v=>{
+    const ins=insumos.find(i=>i.id===v.insumo_id);
+    const conv=v.quantidade_embalagem&&v.um_fornecedor?
+      `1 ${v.embalagem_fornecedor||'EMB'} = ${v.quantidade_embalagem} ${v.um_fornecedor}`:'—';
+    return `<tr onclick="abrirModalVinculo('${v.id}')">
+      <td style="font-weight:600;color:#0f172a">${esc(ins?.nome||'—')}</td>
+      <td style="color:#64748b">${esc(v.descricao_fornecedor||'—')}</td>
+      <td class="td-mono" style="color:#64748b;font-size:11px">${esc(v.codigo_fornecedor||'—')}</td>
+      <td style="color:#64748b">${esc(v.embalagem_fornecedor||'—')}</td>
+      <td class="r td-mono" style="color:#64748b">${v.quantidade_embalagem!=null?v.quantidade_embalagem:'—'}</td>
+      <td style="color:#64748b">${esc(v.um_fornecedor||v.unidade_medida_fornecedor||'—')}</td>
+      <td style="color:#64748b;font-size:12px">${esc(conv)}</td>
+      <td class="r td-mono" style="font-weight:600;color:#0f172a">${brl(v.ultimo_preco||v.preco_unitario)}</td>
+      <td class="r td-mono" style="color:#64748b;font-size:12px">${fmtDate(v.ultima_entrada)}</td>
+      <td>
+        <button class="btn-ghost" onclick="event.stopPropagation();confirmarExcluirVin('${v.id}')" style="padding:4px 8px;font-size:16px;color:#94a3b8">⋮</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* MODAL VÍNCULO */
+function abrirModalVinculo(id){
+  _vinEditing=id?vinculos.find(v=>v.id===id):null;
+  const v=_vinEditing;
+  const setVal=(el,val)=>{const e=document.getElementById(el);if(e)e.value=val!=null?val:'';};
+  setVal('v-insumo', v?.insumo_id||'');
+  setVal('v-descricao', v?.descricao_fornecedor||'');
+  setVal('v-codigo', v?.codigo_fornecedor||'');
+  setVal('v-embalagem', v?.embalagem_fornecedor||'');
+  setVal('v-qtd-emb', v?.quantidade_embalagem||'');
+  setVal('v-um', v?.um_fornecedor||v?.unidade_medida_fornecedor||'');
+  setVal('v-preco', v?.ultimo_preco||v?.preco_unitario||'');
+  setVal('v-ultima-entrada', v?.ultima_entrada||'');
+  document.getElementById('modal-vin-titulo').textContent=v?'Editar Vínculo':'Vincular Item ao Fornecedor';
+  document.getElementById('btn-salvar-vin').textContent='Salvar Vínculo';
+  atualizarConversaoPreview();
+  document.getElementById('modal-vinculo').classList.add('open');
+}
+
+function fecharModalVinculo(){
+  document.getElementById('modal-vinculo').classList.remove('open');
+  _vinEditing=null;
+}
+
+function atualizarConversaoPreview(){
+  const emb=document.getElementById('v-embalagem')?.value||'';
+  const qtd=document.getElementById('v-qtd-emb')?.value||'';
+  const um=document.getElementById('v-um')?.value||'';
+  const prev=document.getElementById('conv-preview');
+  const txt=document.getElementById('conv-preview-txt');
+  if(emb&&qtd&&um){
+    if(txt) txt.textContent=`1 ${emb} = ${qtd} ${um} em estoque`;
+    if(prev) prev.style.display='flex';
+  } else {
+    if(prev) prev.style.display='none';
+  }
+}
+
+async function salvarVinculo(){
+  const insumoId=document.getElementById('v-insumo').value;
+  if(!insumoId){toast('Selecione o item interno.','err');return;}
+  if(!_vinFornSel){toast('Nenhum fornecedor selecionado.','err');return;}
+  const payload={
+    insumo_id: insumoId,
+    fornecedor_id: _vinFornSel.id,
+    descricao_fornecedor: document.getElementById('v-descricao').value.trim()||null,
+    codigo_fornecedor: document.getElementById('v-codigo').value.trim()||null,
+    embalagem_fornecedor: document.getElementById('v-embalagem').value||null,
+    quantidade_embalagem: parseFloat(document.getElementById('v-qtd-emb').value)||null,
+    um_fornecedor: document.getElementById('v-um').value||null,
+    unidade_medida_fornecedor: document.getElementById('v-um').value||null,
+    ultimo_preco: parseFloat(document.getElementById('v-preco').value)||null,
+    preco_unitario: parseFloat(document.getElementById('v-preco').value)||null,
+    ultima_entrada: document.getElementById('v-ultima-entrada').value||null,
+  };
+  const btn=document.getElementById('btn-salvar-vin');
+  btn.disabled=true; btn.textContent='Salvando...';
+  try{
+    if(_vinEditing){
+      await api(`isumo_fornecedores?id=eq.${_vinEditing.id}`,{method:'PATCH',body:JSON.stringify(payload)});
+      toast('Vínculo atualizado.','ok');
+    } else {
+      payload.tenant_id=TENANT_ID;
+      await api('isumo_fornecedores',{method:'POST',body:JSON.stringify(payload)});
+      toast('Item vinculado com sucesso.','ok');
+    }
+    fecharModalVinculo();
+    await carregarVinculos();
+    filtrarVinculos();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar Vínculo';}
+}
+
+function confirmarExcluirVin(id){
+  const v=vinculos.find(x=>x.id===id);
+  const ins=insumos.find(i=>i.id===v?.insumo_id);
+  if(!confirm(`Remover vínculo do item "${ins?.nome||'—'}"?`))return;
+  api(`isumo_fornecedores?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'})
+    .then(()=>{toast('Vínculo removido.','ok');carregarVinculos().then(filtrarVinculos);})
+    .catch(e=>toast('Erro: '+e.message,'err'));
+}
+
+/* ================================================================
+   ABA 3 — BASE DE CUSTOS
+================================================================ */
+function getCustoStatus(ins){
+  const r=parseFloat(ins.rendimento_pct||100);
+  if(r<60) return 'critico';
+  if(r<72) return 'atencao';
+  return 'ativo';
+}
+const _stTxt={ativo:'Ativo',atencao:'Estoque baixo',critico:'Crítico'};
+
+function filtrarCustos(){
+  const q=(document.getElementById('cus-busca')?.value||'').toLowerCase();
+  const filCat=document.getElementById('cus-fil-cat')?.value||'';
+  const filStatus=document.getElementById('cus-fil-status')?.value||'';
+  const filEstoque=document.getElementById('cus-fil-estoque')?.value||'';
+  let lista=insumos;
+  if(q) lista=lista.filter(i=>i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q));
+  if(filCat) lista=lista.filter(i=>(i.categoria||'')===filCat);
+  if(filStatus) lista=lista.filter(i=>getCustoStatus(i)===filStatus);
+  if(filEstoque==='em') lista=lista.filter(i=>getCustoStatus(i)==='ativo');
+  else if(filEstoque==='baixo') lista=lista.filter(i=>getCustoStatus(i)==='atencao');
+  else if(filEstoque==='sem') lista=lista.filter(i=>getCustoStatus(i)==='critico');
+  _cusFiltrado=lista;
+  _cpagAtual=1;
+  renderCusPagina();
+}
+
+function renderCusPagina(){
+  const pp=parseInt(document.getElementById('cus-por-pag')?.value)||15;
+  const total=_cusFiltrado.length;
+  const totalPags=Math.max(1,Math.ceil(total/pp));
+  _cpagAtual=Math.min(_cpagAtual,totalPags);
+  const start=(_cpagAtual-1)*pp;
+  const page=_cusFiltrado.slice(start,start+pp);
+
+  const info=document.getElementById('cus-pag-info');
+  if(info) info.textContent=total?`Mostrando ${start+1}–${Math.min(start+pp,total)} de ${total} insumos`:'Nenhum insumo encontrado';
+
+  const btns=document.getElementById('cus-pag-btns');
+  if(btns){
+    let h=`<button class="pag-btn" ${_cpagAtual===1?'disabled':''} onclick="_cpagAtual=Math.max(1,_cpagAtual-1);renderCusPagina()">‹</button>`;
+    for(let p=1;p<=totalPags;p++){
+      if(totalPags>6&&p>2&&p<totalPags-1&&Math.abs(p-_cpagAtual)>1){if(p===3||p===totalPags-2)h+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;continue;}
+      h+=`<button class="pag-btn ${p===_cpagAtual?'active':''}" onclick="_cpagAtual=${p};renderCusPagina()">${p}</button>`;
+    }
+    h+=`<button class="pag-btn" ${_cpagAtual===totalPags?'disabled':''} onclick="_cpagAtual=Math.min(${totalPags},_cpagAtual+1);renderCusPagina()">›</button>`;
+    btns.innerHTML=h;
+  }
+  renderCusTabela(page);
+}
+
+function renderCusTabela(lista){
+  const tbody=document.getElementById('cus-tbody');
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="7" class="empty-state">Nenhum insumo encontrado</td></tr>';return;}
+  tbody.innerHTML=lista.map(i=>{
+    const rend=parseFloat(i.rendimento_pct||100);
+    const custo=i.preco_compra/(rend/100);
+    const st=getCustoStatus(i);
+    const sel=_cusDetalhe?.id===i.id?' selected':'';
+    return `<tr onclick="abrirDetalhe('${i.id}')" class="${sel}" style="cursor:pointer">
+      <td style="font-weight:600;color:#0f172a">${esc(i.nome)}</td>
+      <td><span class="badge b-cat">${esc(i.categoria||'—')}</span></td>
+      <td style="color:#64748b">${esc(i.unidade_compra||i.unidade_medida||'—')}</td>
+      <td class="r td-mono" style="color:#334155">${brl(i.preco_compra)}</td>
+      <td class="r td-mono" style="color:#334155">${brl(custo)}</td>
+      <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
+      <td>
+        <button class="btn-ghost" onclick="event.stopPropagation();irParaInsumo('${i.id}')" style="padding:4px 8px;font-size:12px;color:#64748b" title="Editar">Editar</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirDetalhe(id){
+  _cusDetalhe=insumos.find(x=>x.id===id);
+  if(!_cusDetalhe)return;
+  const i=_cusDetalhe;
+  const rend=parseFloat(i.rendimento_pct||100);
+  const custo=i.preco_compra/(rend/100);
+  const st=getCustoStatus(i);
+  document.getElementById('cus-dp-nome').textContent=i.nome;
+  document.getElementById('cus-dp-body').innerHTML=`
+    <div class="dp-field"><span class="dp-field-label">Categoria</span><span class="dp-field-val">${esc(i.categoria||'—')}</span></div>
+    <div class="dp-field"><span class="dp-field-label">Unidade</span><span class="dp-field-val">${esc(i.unidade_compra||i.unidade_medida||'—')}</span></div>
+    <div class="dp-field"><span class="dp-field-label">Rendimento</span><span class="dp-field-val">${rend.toFixed(0)}%</span></div>
+    <div class="dp-section">Custos</div>
+    <div class="dp-field"><span class="dp-field-label">Preço de compra</span><span class="dp-field-val" style="font-family:'DM Mono',monospace">${brl(i.preco_compra)}</span></div>
+    <div class="dp-field"><span class="dp-field-label">Custo real / kg</span><span class="dp-field-val" style="font-family:'DM Mono',monospace">${brl(custo)}</span></div>
+    <div class="dp-section">Fornecedores vinculados</div>
+    ${_vincsForn(i.id)}
+  `;
+  document.getElementById('cus-detail').classList.add('open');
+  renderCusPagina();
+}
+
+function _vincsForn(insumoId){
+  const vs=vinculos.filter(v=>v.insumo_id===insumoId);
+  if(!vs.length) return '<div style="color:#94a3b8;font-size:12px;padding:6px 0">Nenhum fornecedor vinculado</div>';
+  return vs.map(v=>{
+    const f=fornecedores.find(x=>x.id===v.fornecedor_id);
+    return `<div class="dp-field"><span class="dp-field-label">${esc(f?.nome_fantasia||f?.nome||'—')}</span><span class="dp-field-val" style="font-family:'DM Mono',monospace">${brl(v.ultimo_preco||v.preco_unitario)}</span></div>`;
+  }).join('');
+}
+
+function fecharDetalhe(){
+  _cusDetalhe=null;
+  document.getElementById('cus-detail').classList.remove('open');
+  renderCusPagina();
+}
+
+function irParaInsumo(id){
+  const url='insumos.html'+(id?`#${id}`:'');
+  window.location.href=url;
+}
+
+/* ================================================================
+   INICIALIZAÇÃO
+================================================================ */
+async function carregarVinculos(){
+  try{
+    vinculos=await api(`isumo_fornecedores?tenant_id=eq.${TENANT_ID}`);
+  }catch{vinculos=[];}
+}
+
+async function carregarTudo(){
+  try{
+    [fornecedores, insumos] = await Promise.all([
+      api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+    ]);
+    await carregarVinculos();
+
+    // Popular filtro de cidades
+    const cidades=[...new Set(fornecedores.map(f=>f.cidade).filter(Boolean))].sort();
+    const selCid=document.getElementById('forn-fil-cidade');
+    if(selCid) selCid.innerHTML='<option value="">Cidade ▾</option>'+cidades.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+    // Popular select de fornecedores na aba 2
+    const selForn=document.getElementById('vin-sel-forn');
+    if(selForn) selForn.innerHTML='<option value="">Selecione um fornecedor...</option>'+
+      fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</option>`).join('');
+
+    // Popular select de insumos no modal de vínculo
+    const selIns=document.getElementById('v-insumo');
+    if(selIns) selIns.innerHTML='<option value="">Selecione o item interno...</option>'+
+      insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}${i.unidade_medida?' ('+i.unidade_medida+')':''}</option>`).join('');
+
+    // Popular filtro de categorias na aba 3
+    const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+    const selCat=document.getElementById('cus-fil-cat');
+    if(selCat) selCat.innerHTML='<option value="">Categoria ▾</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+    _fornFiltrado=fornecedores.slice();
+    renderFornPagina();
+    filtrarCustos();
+
+  }catch(e){
+    toast('Erro ao carregar dados: '+e.message,'err');
+  }
+}
+
+document.getElementById('modal-forn').addEventListener('click',function(e){if(e.target===this)fecharModalForn();});
+document.getElementById('modal-vinculo').addEventListener('click',function(e){if(e.target===this)fecharModalVinculo();});
+
+carregarTudo();
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
-<div id="cfg-flyout">
-  <span class="cfg-flyout-title">Configurações</span>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=lojas">Lojas / Filiais</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=usuarios">Usuários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-insumo">Categorias de Insumos</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-ficha">Categorias de Fichas</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=unidades">Unidades de Medida</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=grupos-compra">Grupos de Compra</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=inventarios">Inventários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=motivos">Motivos de Perda</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=fornecedores">Fornecedores</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=vinculos">Vínculo Insumo → Forn.</a>
-</div>
-<script>
-(function(){
-  var tr=document.querySelector('.nav-sub-wrap'),fl=document.getElementById('cfg-flyout');
-  if(!tr||!fl)return;
-  var t;
-  function show(){clearTimeout(t);fl.style.top='0';fl.style.display='block';}
-  function hide(){t=setTimeout(function(){fl.style.display='none';},200);}
-  tr.addEventListener('mouseenter',show);tr.addEventListener('mouseleave',hide);
-  fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
-})();
-</script>
 <script src="sidebar.js"></script>
 </body>
 </html>
