@@ -112,8 +112,16 @@ body {
   cursor: pointer !important;
   user-select: none !important;
 }
-.nav-group-header:hover .nav-label { color: #64748b !important; }
-.nav-group-header .nav-label { padding: 0 !important; margin-bottom: 0 !important; }
+.nav-group-header:hover .nav-label { color: #334155 !important; }
+.nav-group-header .nav-label {
+  padding: 0 !important;
+  margin-bottom: 0 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #334155 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
 .nav-group-arrow {
   transition: transform .18s !important;
   flex-shrink: 0 !important;
