@@ -72,7 +72,7 @@ thead tr,
 .tbl thead tr { background: var(--ds-navy) !important; }
 
 th, .tbl th {
-  padding: 8px 12px !important;
+  padding: 7px 12px !important;
   font-size: 11px !important;
   font-weight: 600 !important;
   color: rgba(255,255,255,.75) !important;
@@ -85,7 +85,7 @@ th.r, .tbl th.r,
 th.c, .tbl th.c { text-align: right !important; }
 
 td, .tbl td {
-  padding: 8px 12px !important;
+  padding: 7px 12px !important;
   border-bottom: 1px solid var(--ds-border-2) !important;
   vertical-align: middle !important;
   font-size: 13px !important;

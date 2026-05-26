@@ -633,23 +633,21 @@
         </div>
 
         <!-- FILTROS -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
-          <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:16px">
-            <div>
-              <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Loja</label>
-              <select id="inv-fil-loja" class="field" style="width:100%"><option value="">Todas as lojas</option></select>
-            </div>
-            <div>
-              <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Inicial</label>
-              <input type="date" id="inv-fil-ini" class="field" style="width:100%">
-            </div>
-            <div>
-              <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Final</label>
-              <input type="date" id="inv-fil-fim" class="field" style="width:100%">
-            </div>
-            <button class="btn btn-primary" onclick="renderInvLista()" style="height:40px;white-space:nowrap;padding:0 20px">Consultar</button>
+        <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Loja</label>
+            <select id="inv-fil-loja" class="field field-sm" style="min-width:180px"><option value="">Todas as lojas</option></select>
           </div>
-          <div style="display:flex;gap:20px;align-items:center">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Inicial</label>
+            <input type="date" id="inv-fil-ini" class="field field-sm">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Final</label>
+            <input type="date" id="inv-fil-fim" class="field field-sm">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="renderInvLista()" style="white-space:nowrap;align-self:flex-end">Consultar</button>
+          <div style="display:flex;gap:16px;align-items:center;align-self:flex-end">
             <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Situação</span>
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#16a34a;font-weight:500">
               <input type="checkbox" id="inv-sit-ativo" checked> Ativo
