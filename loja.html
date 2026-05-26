@@ -1286,7 +1286,7 @@ function popularFornMov() {
 function onMovTipoChange() {
   const tipo = document.getElementById('mov-tipo').value;
   document.getElementById('mov-campos-entrada').style.display = tipo==='entrada' ? '' : 'none';
-  document.getElementById('mov-qtd-label').textContent = tipo==='entrada' ? 'Quantidade (na embalagem) *' : 'Quantidade';
+  const lbl=document.getElementById('mov-qtd-label');if(lbl)lbl.textContent=tipo==='entrada'?'Quantidade (na embalagem) *':'Quantidade';
 }
 
 function primeiroDiaMes() {
