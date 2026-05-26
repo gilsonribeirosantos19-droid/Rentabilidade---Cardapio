@@ -1292,12 +1292,13 @@
           <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
             <table class="nfe-tbl">
               <thead><tr>
-                <th style="width:200px">Produto na NF-e<br><span style="font-weight:400;opacity:.7">(Fornecedor)</span></th>
-                <th style="width:80px">Cód. Forn.<br>/ EAN</th>
-                <th>Produto do sistema<br><span style="font-weight:400;opacity:.7">(Seu cadastro)</span></th>
-                <th style="width:130px">Embalagem de compra<br><span style="font-weight:400;opacity:.7">(Unidade da NF-e)</span></th>
-                <th style="width:150px">Conversão<br><span style="font-weight:400;opacity:.7">(Compra → Estoque)</span></th>
-                <th style="width:110px">Entrada no estoque<br><span style="font-weight:400;opacity:.7">(Unidade de estoque)</span></th>
+                <th style="width:190px">Produto na NF-e</th>
+                <th>Produto do sistema</th>
+                <th class="r" style="width:75px">Qtd. NF-e</th>
+                <th style="width:85px">Embalagem</th>
+                <th style="width:155px">Conversão<br><span style="font-weight:400;opacity:.7">(Compra → Estoque)</span></th>
+                <th class="r" style="width:95px">Qtd. convertida</th>
+                <th style="width:75px">Un. estoque</th>
                 <th style="width:36px"></th>
               </tr></thead>
               <tbody id="nfe-body"></tbody>
@@ -2114,6 +2115,12 @@ function parseNfeXml(xml) {
   return itens;
 }
 
+function fmtQtd(n) {
+  const v=parseFloat(n)||0;
+  if(Number.isInteger(v)) return v.toString();
+  return v.toFixed(3).replace(/\.?0+$/,'');
+}
+
 function calcNfePreview(idx) {
   const it=nfeItens[idx]; if(!it) return;
   const insId=document.getElementById(`ns-${idx}`)?.value;
@@ -2121,6 +2128,16 @@ function calcNfePreview(idx) {
   const ins=insId?insumos.find(x=>x.id===insId):null;
   const qtdEst=it.quantidade*fator;
   const custoUnit=it.valorUnit/fator;
+  const unEst=ins?.unidade_medida||ins?.unidade_compra||'un';
+
+  // Atualiza colunas da tabela inline
+  const nqEl=document.getElementById(`nq-${idx}`);
+  const nuEl=document.getElementById(`nu-${idx}`);
+  const neEl=document.getElementById(`ne-${idx}`);
+  if(nqEl) nqEl.textContent=fmtQtd(qtdEst);
+  if(nuEl) nuEl.textContent=ins?unEst:'—';
+  if(neEl) neEl.textContent=ins?unEst:'—';
+
   const panel=document.getElementById('nfe-preview-panel');
   const confEl=document.getElementById('nfe-conf-status');
   if(!ins||!insId){
@@ -2130,13 +2147,13 @@ function calcNfePreview(idx) {
   if(panel) panel.innerHTML=`
     <div style="margin-bottom:12px">
       <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Quantidade que entrará</div>
-      <div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">${qtdEst.toFixed(3)}</div>
-      <div style="font-size:11px;color:#64748b">Unidade(s)</div>
+      <div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">${fmtQtd(qtdEst)} <span style="font-size:13px;font-weight:600;color:#64748b">${unEst}</span></div>
+      <div style="font-size:11px;color:#64748b">${fmtQtd(it.quantidade)} ${esc(it.unidade)} × ${fmtQtd(fator)} = ${fmtQtd(qtdEst)} ${unEst}</div>
     </div>
     <div style="margin-bottom:14px">
       <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Custo unitário no estoque</div>
       <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${brl(custoUnit)}</div>
-      <div style="font-size:11px;color:#64748b">/ Unidade</div>
+      <div style="font-size:11px;color:#64748b">/ ${unEst}</div>
     </div>
     <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px">Este item impactará:</div>
     ${['Estoque','Custo médio','Fichas técnicas','CMV'].map(l=>`
@@ -2160,7 +2177,7 @@ function renderNfeVinculos(insId) {
   const vins=vinculos.filter(v=>v.insumo_id===insId);
   const fornId=document.getElementById('nfe-forn')?.value;
   const ifvs=insumoFornVinculos.filter(v=>v.insumo_id===insId);
-  const todos=[...vins.map(v=>({cod:v.codigo_nfe||'—',desc:v.descricao_nfe||'—',ins:ins?.nome||'—',insCode:insId.slice(-5).toUpperCase(),emb:v.unidade_compra||'—',conv:`1 ${v.unidade_compra||'?'} = ${(v.fator_conversao||1).toFixed(3)}`,un:ins?.unidade_medida||ins?.unidade_compra||'un',id:v.id}))];
+  const todos=[...vins.map(v=>({cod:v.codigo_nfe||'—',desc:v.descricao_nfe||'—',ins:ins?.nome||'—',insCode:insId.slice(-5).toUpperCase(),emb:v.unidade_compra||'—',conv:`1 ${v.unidade_compra||'?'} = ${fmtQtd(v.fator_conversao||1)} ${ins?.unidade_medida||'un'}`,un:ins?.unidade_medida||ins?.unidade_compra||'un',id:v.id}))];
   if(!todos.length){tbody.innerHTML='<tr><td colspan="7" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Nenhuma conversão salva para este insumo</td></tr>';return;}
   tbody.innerHTML=todos.map((v,idx)=>`<tr>
     <td><span class="cod-badge">${esc(v.cod)}</span></td>
@@ -2195,40 +2212,35 @@ function renderNfeMap(itens) {
     const opts=insOpts.replace(`value="${selVal}"`,`value="${selVal}" selected`);
     const ins=selVal?insumos.find(x=>x.id===selVal):null;
     const qtdEst=it.quantidade*fator;
-    const linkedHtml=autoFill&&ins?`
-      <span class="linked-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Produto vinculado</span>
-      <div style="font-size:11px;color:#64748b;margin-top:3px">Código interno: INS-${ins.id.slice(-5).toUpperCase()}</div>`:'';
+    const unEst=ins?.unidade_medida||ins?.unidade_compra||'—';
 
     return `<tr class="${autoFill?'linked-row':''}">
       <td>
-        <div style="font-weight:700;font-size:12px">${esc(it.descricao.substring(0,40))}${it.descricao.length>40?'…':''}</div>
-        ${it.codigo?`<span class="cod-badge" style="margin-top:4px;display:inline-block">Cód. fornecedor: ${esc(it.codigo)}</span>`:''}
-      </td>
-      <td><span class="mono" style="color:#64748b;font-size:11px">${esc(it.codigo||'—')}</span></td>
-      <td>
-        <select class="field field-sm" id="ns-${i}" style="width:100%;margin-bottom:4px" onchange="checkNfeInc(${i});calcNfePreview(${i})">${opts}</select>
-        ${linkedHtml}
+        <div style="font-weight:700;font-size:12px">${esc(it.descricao.substring(0,45))}${it.descricao.length>45?'…':''}</div>
       </td>
       <td>
-        <div style="display:flex;align-items:center;gap:6px">
-          <div style="width:28px;height:28px;background:#eff6ff;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-          </div>
-          <div>
-            <div style="font-size:12px;font-weight:600">${esc(it.unidade)}</div>
-            <div style="font-size:10px;color:#94a3b8">Unidade de compra</div>
-          </div>
-        </div>
+        <select class="field field-sm" id="ns-${i}" style="width:100%" onchange="checkNfeInc(${i});calcNfePreview(${i})">${opts}</select>
+        ${autoFill?`<span class="linked-badge" style="margin-top:3px;display:inline-flex"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Vinculado</span>`:''}
+      </td>
+      <td style="text-align:right">
+        <span style="font-family:'DM Mono',monospace;font-weight:600;font-size:13px">${fmtQtd(it.quantidade)}</span>
+      </td>
+      <td>
+        <span style="font-size:12px;font-weight:600;color:#334155">${esc(it.unidade)}</span>
       </td>
       <td>
         <div style="font-size:11px;color:#64748b;margin-bottom:4px">1 ${esc(it.unidade)} =</div>
-        <input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:90px" oninput="calcNfePreview(${i})">
-        <div style="font-size:10px;color:#94a3b8;margin-top:2px">UN Unidade de estoque</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:80px" oninput="calcNfePreview(${i})">
+          <span id="nu-${i}" style="font-size:12px;color:#64748b;white-space:nowrap">${esc(unEst)}</span>
+        </div>
+      </td>
+      <td style="text-align:right">
+        <div id="nq-${i}" style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${fmtQtd(qtdEst)}</div>
+        <div style="margin-top:4px"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''} style="accent-color:#f97316"></div>
       </td>
       <td>
-        <div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${qtdEst.toFixed(3)}</div>
-        <div style="font-size:10px;color:#94a3b8">UN Unidade de estoque</div>
-        <div style="margin-top:4px"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''} style="accent-color:#f97316"></div>
+        <span id="ne-${i}" style="font-size:12px;font-weight:600;color:#334155">${esc(unEst)}</span>
       </td>
       <td>
         <button style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;border-radius:4px" title="Mais opções">⋮</button>
@@ -2261,7 +2273,7 @@ async function confirmarNfe() {
   btn.disabled=true;btn.textContent='Importando…';
   try {
     for(const it of itensOk) {
-      const qtdEst=parseFloat((it.quantidade*it.fator).toFixed(4));
+      const qtdEst=parseFloat((it.quantidade*it.fator).toFixed(6));
       const custoUnitEst=parseFloat((it.valorUnit/it.fator).toFixed(6));
       await registrarEntrada(it.insId, {
         fornecedor_id:fornId, fornecedor_nome:fornNome,
