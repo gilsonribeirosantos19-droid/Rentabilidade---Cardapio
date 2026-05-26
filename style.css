@@ -7,6 +7,22 @@ body {
   background: #f0f4f8 !important;
 }
 
+/* NAV BOTTOM — suporte, padrao global */
+.nav-bottom {
+  margin-top: auto !important;
+  padding: 14px 18px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+  line-height: 1.6 !important;
+}
+.nav-bottom a {
+  color: #f97316 !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+}
+.nav-bottom a:hover { text-decoration: underline !important; }
+
 /* SIDEBAR */
 .sidebar {
   width: 220px !important;
