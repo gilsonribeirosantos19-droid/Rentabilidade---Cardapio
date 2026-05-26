@@ -18,8 +18,17 @@
       id: 'operacao', label: 'Operação',
       items: [
         { href: 'estoque.html',  icon: 'archive',            label: 'Estoque' },
-        { href: 'pcp.html',      icon: 'chef-hat',           label: 'Produção / PCP' },
         { href: 'ajustes.html',  icon: 'sliders-horizontal', label: 'Ajustes' },
+      ]
+    },
+    {
+      id: 'producao', label: 'Produção / PCP',
+      items: [
+        { href: 'pcp.html', tab: 'producao-dia', icon: 'chef-hat',          label: 'Produção do Dia' },
+        { href: 'pcp.html', tab: 'sugerida',     icon: 'lightbulb',         label: 'Prod. Sugerida' },
+        { href: 'pcp.html', tab: 'sobras',       icon: 'activity',          label: 'Sobras e Perdas' },
+        { href: 'pcp.html', tab: 'consumo',      icon: 'bar-chart-2',       label: 'Consumo Médio' },
+        { href: 'pcp.html', tab: 'dashboard',    icon: 'layout-dashboard',  label: 'Dashboard PCP' },
       ]
     },
     {
@@ -51,13 +60,21 @@
     return `<i data-lucide="${name}" class="nav-icon"></i>`;
   }
 
+  const _urlTab = new URLSearchParams(location.search).get('tab') || '';
+
   function navItem(item) {
-    const active = item.href === page ? ' active' : '';
-    return `<a class="nav-item${active}" href="${item.href}">${ico(item.icon)}${item.label}</a>`;
+    let active = false;
+    if (item.tab) {
+      active = item.href === page && item.tab === _urlTab;
+    } else {
+      active = item.href === page;
+    }
+    const href = item.tab ? `${item.href}?tab=${item.tab}` : item.href;
+    return `<a class="nav-item${active ? ' active' : ''}" href="${href}">${ico(item.icon)}${item.label}</a>`;
   }
 
   function navGroup(g) {
-    const hasActive = g.items.some(i => i.href === page);
+    const hasActive = g.items.some(i => i.tab ? (i.href === page && i.tab === _urlTab) : i.href === page);
     const key = 'nav-grp-' + g.id;
     const saved = localStorage.getItem(key);
     const collapsed = saved === '1' ? true : saved === '0' ? false : !hasActive;

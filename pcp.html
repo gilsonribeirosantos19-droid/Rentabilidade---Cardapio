@@ -1037,7 +1037,10 @@ async function renderConsumo(){
   document.getElementById(id)?.addEventListener('click',function(e){if(e.target===this){if(id==='modal-prod')fecharModalProd();else fecharModalSobra();}});
 });
 
-carregar();
+carregar().then(()=>{
+  const urlTab=new URLSearchParams(location.search).get('tab');
+  if(urlTab && _tabNames[urlTab]) switchTab(urlTab);
+});
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>if(window.lucide)lucide.createIcons();</script>
