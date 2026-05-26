@@ -311,6 +311,12 @@ input[type="date"]:focus, select:focus {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
 
+/* ── PDV: remover ícones coloridos dos kpi-cards ─────────────────── */
+.kpi-icon { display: none !important; }
+.kpi-card, .dash-card {
+  border-radius: var(--ds-radius-lg) !important;
+}
+
 /* ── MOBILE ──────────────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .topbar { padding: 0 16px !important; }
