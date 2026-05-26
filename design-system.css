@@ -258,12 +258,18 @@ input[type="date"]:focus, select:focus {
 }
 .pag-btn:disabled { opacity: .35 !important; cursor: not-allowed !important; }
 
-/* ── KPI CARDS: sem sombra, menos altura ─────────────────────────── */
-.kpi-card, .metric, .kpi {
-  padding: 12px 14px !important;
+/* ── KPI / STAT CARDS: compactos, estilo ERP ─────────────────────── */
+.kpi-card, .metric, .kpi, .sc {
+  padding: 10px 14px !important;
   box-shadow: none !important;
 }
-.kpi-val, .metric-val { font-size: 20px !important; }
+.kpi-val, .metric-val, .kpi-value, .sc-value { font-size: 18px !important; }
+.kpi-lbl, .metric-label, .kpi-label, .sc-label {
+  font-size: 10px !important;
+  margin-bottom: 4px !important;
+}
+.kpi-sub, .metric-sub, .sc-sub { font-size: 11px !important; margin-top: 2px !important; }
+.kpi-row, .kpi-5, .sc-grid { gap: 10px !important; margin-bottom: 16px !important; }
 
 /* ── FILTROS: sem card wrapper ───────────────────────────────────── */
 .filter-row {

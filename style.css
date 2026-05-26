@@ -63,20 +63,28 @@ body {
 }
 
 /* WORKSPACE MULTI-ABA (compartilhado) */
-.ws-tab-strip{display:none;align-items:center;border-bottom:1px solid #e2e8f0;background:#fff;
-  position:sticky;top:58px;z-index:50;padding:0 8px;overflow-x:auto;gap:0;flex-shrink:0}
-.ws-home-btn{display:flex;align-items:center;justify-content:center;width:34px;height:44px;
+.ws-tab-strip{display:none;align-items:center;border-bottom:1px solid #e2e8f0;background:#f1f5f9;
+  position:sticky;top:58px;z-index:50;padding:0 4px;overflow-x:auto;gap:0;flex-shrink:0}
+.ws-home-btn{display:flex;align-items:center;justify-content:center;width:32px;height:36px;
   border:none;background:transparent;cursor:pointer;color:#94a3b8;flex-shrink:0;
-  transition:color .12s;border-right:1px solid #e2e8f0;margin-right:4px;padding:0 10px}
+  transition:color .12s;border-right:1px solid #e2e8f0;margin-right:2px;padding:0 8px}
 .ws-home-btn:hover{color:#f97316}
-.ws-tab{display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;font-size:13px;
-  color:#64748b;border:none;background:transparent;border-bottom:2px solid transparent;
-  cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s;margin-bottom:-1px}
-.ws-tab:hover{color:#0f172a;background:#f8fafc}
-.ws-tab.active{color:#f97316;border-bottom-color:#f97316;font-weight:600}
-.ws-tab-close{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;
-  justify-content:center;font-size:14px;line-height:1;color:#94a3b8;transition:all .12s;
-  border:none;background:transparent;cursor:pointer;padding:0;font-family:inherit}
+.ws-tab{display:flex;align-items:center;gap:6px;padding:0 12px;height:36px;font-size:12px;
+  color:#64748b;border:none;background:transparent;
+  border-top:2px solid transparent;border-bottom:2px solid transparent;
+  cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .12s;
+  margin-bottom:-1px;position:relative}
+.ws-tab:hover{color:#0f172a;background:#fff}
+.ws-tab.active{
+  background:#fff !important;
+  color:#0f172a !important;
+  font-weight:600 !important;
+  border-top-color:#f97316 !important;
+  border-bottom-color:#fff !important;
+}
+.ws-tab-close{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;font-size:12px;line-height:1;color:#94a3b8;transition:all .12s;
+  cursor:pointer;user-select:none}
 .ws-tab-close:hover{background:#e2e8f0;color:#0f172a}
 
 /* SIDEBAR HIERÁRQUICO — COLLAPSE */
