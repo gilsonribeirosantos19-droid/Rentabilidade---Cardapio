@@ -130,6 +130,25 @@
   .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
   .cfg-flyout-item:last-child{border-bottom:none}
   .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
+
+  /* LANDING HOME */
+  .rep-home-section{margin-bottom:28px}
+  .rep-home-label{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+  .rep-home-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rep-home-card{display:flex;align-items:center;gap:16px;padding:18px 20px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s;user-select:none}
+  .rep-home-card:hover{border-color:#f97316}
+  .rep-home-icon{width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rep-home-icon svg{width:20px;height:20px;stroke:#64748b;stroke-width:1.8;fill:none}
+  .rep-home-body{flex:1}
+  .rep-home-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px}
+  .rep-home-desc{font-size:12px;color:#64748b;line-height:1.4}
+  .rep-home-arrow{font-size:18px;color:#94a3b8;margin-left:auto;flex-shrink:0}
+  /* SIDEBAR SUB-ITEMS */
+  .nav-sub-items{padding-left:23px;margin-top:2px;margin-bottom:4px}
+  .nav-sub-item{display:flex;align-items:center;gap:7px;padding:5px 8px;font-size:12px;color:#64748b;cursor:pointer;border-radius:5px;text-decoration:none;transition:all .12s}
+  .nav-sub-item:hover{color:#f97316;background:rgba(249,115,22,.07)}
+  .nav-sub-item.active{color:#f97316;font-weight:600}
+  .nav-sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -153,7 +172,12 @@
     <a class="nav-item" href="rendimento.html"><i data-lucide="trending-up" class="nav-icon"></i>Rendimento</a>
     <a class="nav-item" href="pdv.html"><i data-lucide="receipt" class="nav-icon"></i>PDV / Vendas</a>
     <a class="nav-item" href="cmv.html"><i data-lucide="bar-chart-2" class="nav-icon"></i>CMV teórico x real</a>
-    <a class="nav-item active" href="relatorios.html"><i data-lucide="file-bar-chart" class="nav-icon"></i>Relatórios</a>
+    <a class="nav-item active" href="#" onclick="goHome();return false"><i data-lucide="file-bar-chart" class="nav-icon"></i>Relatórios</a>
+    <div class="nav-sub-items">
+      <a class="nav-sub-item" id="subnav-geral" href="#" onclick="goSection('geral');return false"><span class="nav-sub-dot"></span>Geral</a>
+      <a class="nav-sub-item" id="subnav-analises" href="#" onclick="goSection('analises');return false"><span class="nav-sub-dot"></span>Análises</a>
+      <a class="nav-sub-item" id="subnav-auditoria" href="#" onclick="goSection('auditoria');return false"><span class="nav-sub-dot"></span>Auditoria</a>
+    </div>
   </div>
   <div class="nav-group">
     <div class="nav-label">Gestão</div>
@@ -187,8 +211,12 @@
   </div>
   <div class="content">
 
-    <div class="sub-tabs">
-      <button class="sub-tab active" id="tab-resumo"   onclick="switchTab('resumo')">Resumo</button>
+    <div class="sub-tabs" id="sub-tabs-bar" style="display:none">
+      <button class="tab-btn" onclick="goHome()" style="margin-right:8px;color:#64748b">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Relatórios
+      </button>
+      <button class="sub-tab" id="tab-resumo"   onclick="switchTab('resumo')">Resumo</button>
       <button class="sub-tab"        id="tab-abc"      onclick="switchTab('abc')">Curva ABC</button>
       <button class="sub-tab"        id="tab-inflacao" onclick="switchTab('inflacao')">Inflação</button>
       <button class="sub-tab"        id="tab-evolucao" onclick="switchTab('evolucao')">Evolução Mensal</button>
@@ -207,8 +235,75 @@
       </div>
     </div>
 
+    <!-- HOME LANDING PAGE -->
+    <div id="pane-home" class="rel-pane active">
+      <div id="sec-geral" class="rep-home-section">
+        <div class="rep-home-label">Geral</div>
+        <div class="rep-home-grid">
+          <div class="rep-home-card" onclick="switchTab('resumo')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Resumo</div>
+              <div class="rep-home-desc">Visão geral dos indicadores de estoque, compras e vendas.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+          <div class="rep-home-card" onclick="switchTab('evolucao')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Evolução Mensal</div>
+              <div class="rep-home-desc">Acompanhe a evolução dos principais indicadores mês a mês.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div id="sec-analises" class="rep-home-section">
+        <div class="rep-home-label">Análises</div>
+        <div class="rep-home-grid">
+          <div class="rep-home-card" onclick="switchTab('abc')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Curva ABC</div>
+              <div class="rep-home-desc">Classificação dos insumos por importância de consumo e valor.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+          <div class="rep-home-card" onclick="switchTab('inflacao')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Inflação</div>
+              <div class="rep-home-desc">Acompanhe a variação de preços dos insumos ao longo do tempo.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div id="sec-auditoria" class="rep-home-section">
+        <div class="rep-home-label">Auditoria</div>
+        <div class="rep-home-grid">
+          <div class="rep-home-card" onclick="switchTab('entradas')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Entradas</div>
+              <div class="rep-home-desc">Detalhamento de todas as entradas de insumos.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+          <div class="rep-home-card" onclick="switchTab('auditoria')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Auditoria de Conversão</div>
+              <div class="rep-home-desc">Audite as conversões e fatores aplicados nas entradas de insumos.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- RESUMO -->
-    <div id="pane-resumo" class="rel-pane active">
+    <div id="pane-resumo" class="rel-pane">
       <div class="row2">
         <div class="rep-sec">
           <div class="rep-title">Valor por categoria</div>
@@ -643,9 +738,10 @@ function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textC
 
 // ── STATE ─────────────────────────────────────────────────────────
 let insumos=[], saldos=[], entradas=[], saidas=[], lojas=[];
-let tabAtual = 'resumo';
+let tabAtual = 'home';
 
 const _tabSubs={
+  home:'Visão geral de estoque e rentabilidade.',
   resumo:'Visão geral de estoque e rentabilidade.',
   abc:'Análise da curva ABC dos insumos por valor em estoque.',
   inflacao:'Variação de preço de compra por insumo ao longo do tempo.',
@@ -655,10 +751,30 @@ const _tabSubs={
 };
 
 // ── TABS ──────────────────────────────────────────────────────────
+function goHome() {
+  tabAtual = 'home';
+  document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-home').classList.add('active');
+  const bar = document.getElementById('sub-tabs-bar');
+  if (bar) bar.style.display = 'none';
+  const sub = document.getElementById('topbar-sub');
+  if (sub) sub.textContent = _tabSubs.home;
+}
+
+function goSection(sec) {
+  goHome();
+  setTimeout(() => {
+    const el = document.getElementById('sec-'+sec);
+    if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 50);
+}
+
 function switchTab(nome) {
   tabAtual = nome;
   document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-'+nome).classList.add('active');
+  const bar = document.getElementById('sub-tabs-bar');
+  if (bar) bar.style.display = 'flex';
   ['resumo','abc','inflacao','evolucao','entradas','auditoria'].forEach(t=>
     document.getElementById('tab-'+t).classList.toggle('active',t===nome));
   const sub=document.getElementById('topbar-sub');
@@ -706,7 +822,7 @@ async function carregar() {
     document.getElementById('last-updated').textContent =
       'Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
-    switchTab(tabAtual);
+    if (tabAtual === 'home') goHome(); else switchTab(tabAtual);
   } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
