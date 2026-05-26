@@ -87,6 +87,7 @@
     <div class="nav-group" style="border-top:1px solid #e2e8f0;padding-top:8px;margin-top:8px">
       <a class="nav-item${isConfig ? ' active' : ''}" href="configuracoes.html">${ico('settings')}Configurações</a>
     </div>
+    <div style="flex:1"></div>
     <div class="nav-bottom">Precisa de ajuda?<br>
       <a href="https://wa.me/5592994948230?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20sistema%20Aiko" target="_blank" rel="noopener">Acesse o suporte</a>
     </div>`;
