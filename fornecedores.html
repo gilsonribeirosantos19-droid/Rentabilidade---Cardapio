@@ -459,36 +459,27 @@
       </div>
       <div class="form-section">
         <div class="form-section-title">Embalagem e Conversão</div>
-        <div class="form-grid-3">
-          <div class="form-group"><label class="form-label">Tipo de embalagem</label>
-            <select class="form-select" id="v-embalagem" onchange="atualizarConversaoPreview()">
-              <option value="">Selecione...</option>
-              <option value="CAIXA">CAIXA</option>
-              <option value="PACOTE">PACOTE</option>
-              <option value="FARDO">FARDO</option>
-              <option value="SACO">SACO</option>
-              <option value="LATA">LATA</option>
-              <option value="GALÃO">GALÃO</option>
-              <option value="FRASCO">FRASCO</option>
-              <option value="BANDEJA">BANDEJA</option>
-              <option value="UNIDADE">UNIDADE</option>
-            </select>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
+          <div class="form-group">
+            <label class="form-label">Embalagem fornecedor</label>
+            <input class="form-input" id="v-embalagem" type="text"
+              placeholder="Ex: CX 27x0,375 · UNI 0,375 · FARDO 20KG"
+              oninput="atualizarConversaoPreview(true)"
+              style="font-family:'DM Mono',monospace;letter-spacing:.02em">
+            <div style="font-size:11px;color:#94a3b8;margin-top:4px">
+              Descreva como vem na nota. Use NxN para auto-calcular (ex: 27x0,375).
+            </div>
           </div>
-          <div class="form-group"><label class="form-label">Quantidade na embalagem</label><input class="form-input" id="v-qtd-emb" type="number" step="0.001" min="0" placeholder="Ex: 10" oninput="atualizarConversaoPreview()"></div>
-          <div class="form-group"><label class="form-label">UM do fornecedor</label>
-            <select class="form-select" id="v-um" onchange="atualizarConversaoPreview()">
-              <option value="">Selecione...</option>
-              <option value="kg">kg</option>
-              <option value="g">g</option>
-              <option value="litro">litro</option>
-              <option value="ml">ml</option>
-              <option value="un">un</option>
-            </select>
+          <div class="form-group">
+            <label class="form-label">Qt. na Embalagem (un. estoque)</label>
+            <input class="form-input" id="v-qtd-emb" type="number" step="0.001" min="0"
+              placeholder="Auto" oninput="atualizarConversaoPreview(false)"
+              style="font-family:'DM Mono',monospace">
           </div>
         </div>
         <div class="conv-preview" id="conv-preview" style="display:none">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <span id="conv-preview-txt">1 CAIXA = 10 kg em estoque</span>
+          <span id="conv-preview-txt"></span>
         </div>
       </div>
       <div class="form-section" style="margin-bottom:0">
@@ -738,8 +729,9 @@ function renderVinculos(lista){
   if(!lista.length){tbody.innerHTML='<tr><td colspan="10" class="empty-state">Nenhum item vinculado a este fornecedor</td></tr>';return;}
   tbody.innerHTML=lista.map(v=>{
     const ins=insumos.find(i=>i.id===v.insumo_id);
-    const conv=v.quantidade_embalagem&&v.um_fornecedor?
-      `1 ${v.embalagem_fornecedor||'EMB'} = ${v.quantidade_embalagem} ${v.um_fornecedor}`:'—';
+    const und=ins?.unidade_medida||'';
+    const conv=v.quantidade_embalagem?
+      `1 ${v.embalagem_fornecedor||'EMB'} = ${Number(v.quantidade_embalagem).toLocaleString('pt-BR',{maximumFractionDigits:3})} ${und}`:'—';
     return `<tr onclick="abrirModalVinculo('${v.id}')">
       <td style="font-weight:600;color:#0f172a">${esc(ins?.nome||'—')}</td>
       <td style="color:#64748b">${esc(v.descricao_fornecedor||'—')}</td>
@@ -767,7 +759,6 @@ function abrirModalVinculo(id){
   setVal('v-codigo', v?.codigo_fornecedor||'');
   setVal('v-embalagem', v?.embalagem_fornecedor||'');
   setVal('v-qtd-emb', v?.quantidade_embalagem||'');
-  setVal('v-um', v?.um_fornecedor||v?.unidade_medida_fornecedor||'');
   setVal('v-preco', v?.ultimo_preco||v?.preco_unitario||'');
   setVal('v-ultima-entrada', v?.ultima_entrada||'');
   document.getElementById('modal-vin-titulo').textContent=v?'Editar Vínculo':'Vincular Item ao Fornecedor';
@@ -781,14 +772,38 @@ function fecharModalVinculo(){
   _vinEditing=null;
 }
 
-function atualizarConversaoPreview(){
+function _calcQtdEmb(desc){
+  const d=desc.trim();
+  // Padrão NxN ou N×N → multiplica (ex: "27x0,375" → 10,125)
+  const mult=d.replace(/,/g,'.').match(/(\d+\.?\d*)\s*[xX×]\s*(\d+\.?\d*)/);
+  if(mult) return Math.round(parseFloat(mult[1])*parseFloat(mult[2])*1000)/1000;
+  // Último número com unidade ml ou g → converte (ex: "965ML" → 0,965)
+  const withU=d.match(/(\d+(?:[.,]\d+)?)\s*(ml|g)\s*$/i);
+  if(withU) return Math.round(parseFloat(withU[1].replace(',','.'))/1000*1000)/1000;
+  // Último número da string (ex: "UNI 0,375" → 0,375 / "FARDO 20KG" → 20)
+  const nums=d.replace(/,/g,'.').match(/\d+\.?\d*/g);
+  if(nums&&nums.length) return parseFloat(nums[nums.length-1]);
+  return null;
+}
+
+function atualizarConversaoPreview(fromEmb=false){
   const emb=document.getElementById('v-embalagem')?.value||'';
-  const qtd=document.getElementById('v-qtd-emb')?.value||'';
-  const um=document.getElementById('v-um')?.value||'';
+  const qtdEl=document.getElementById('v-qtd-emb');
   const prev=document.getElementById('conv-preview');
   const txt=document.getElementById('conv-preview-txt');
-  if(emb&&qtd&&um){
-    if(txt) txt.textContent=`1 ${emb} = ${qtd} ${um} em estoque`;
+  // Auto-calcular Qt. na Emb SOMENTE quando o campo embalagem muda
+  if(fromEmb&&emb){
+    const calc=_calcQtdEmb(emb);
+    if(calc!==null&&qtdEl) qtdEl.value=calc;
+  }
+  const qtd=qtdEl?.value||'';
+  // Unidade de estoque do insumo selecionado
+  const insId=document.getElementById('v-insumo')?.value||'';
+  const ins=insumos.find(i=>i.id===insId);
+  const und=ins?.unidade_medida||'un. estoque';
+  if(emb&&qtd){
+    const v=parseFloat(qtd);
+    if(txt) txt.textContent=`1 ${emb} = ${v.toLocaleString('pt-BR',{maximumFractionDigits:3})} ${und}`;
     if(prev) prev.style.display='flex';
   } else {
     if(prev) prev.style.display='none';
@@ -806,8 +821,6 @@ async function salvarVinculo(){
     codigo_fornecedor: document.getElementById('v-codigo').value.trim()||null,
     embalagem_fornecedor: document.getElementById('v-embalagem').value||null,
     quantidade_embalagem: parseFloat(document.getElementById('v-qtd-emb').value)||null,
-    um_fornecedor: document.getElementById('v-um').value||null,
-    unidade_medida_fornecedor: document.getElementById('v-um').value||null,
     ultimo_preco: parseFloat(document.getElementById('v-preco').value)||null,
     preco_unitario: parseFloat(document.getElementById('v-preco').value)||null,
     ultima_entrada: document.getElementById('v-ultima-entrada').value||null,
