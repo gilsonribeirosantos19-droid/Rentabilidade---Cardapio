@@ -455,6 +455,7 @@
           </div>
           <div class="form-group"><label class="form-label">Descrição no fornecedor</label><input class="form-input" id="v-descricao" type="text" placeholder="Como o fornecedor chama o produto"></div>
           <div class="form-group"><label class="form-label">Código no fornecedor</label><input class="form-input" id="v-codigo" type="text" placeholder="Cód. do produto no catálogo"></div>
+          <div class="form-group"><label class="form-label">Código de barras (EAN/GTIN)</label><input class="form-input" id="v-ean" type="text" placeholder="EAN/GTIN" style="font-family:'DM Mono',monospace"></div>
         </div>
       </div>
       <div class="form-section">
@@ -759,6 +760,7 @@ function abrirModalVinculo(id){
   setVal('v-insumo', v?.insumo_id||'');
   setVal('v-descricao', v?.descricao_fornecedor||'');
   setVal('v-codigo', v?.codigo_fornecedor||'');
+  setVal('v-ean', v?.ean||'');
   setVal('v-embalagem', v?.embalagem_fornecedor||'');
   setVal('v-qtd-emb', v?.quantidade_embalagem||'');
   setVal('v-preco', v?.ultimo_preco||v?.preco_unitario||'');
@@ -821,6 +823,7 @@ async function salvarVinculo(){
     fornecedor_id: _vinFornSel.id,
     descricao_fornecedor: document.getElementById('v-descricao').value.trim()||null,
     codigo_fornecedor: document.getElementById('v-codigo').value.trim()||null,
+    ean: document.getElementById('v-ean').value.trim()||null,
     embalagem_fornecedor: document.getElementById('v-embalagem').value||null,
     quantidade_embalagem: parseFloat(document.getElementById('v-qtd-emb').value)||null,
     ultimo_preco: parseFloat(document.getElementById('v-preco').value)||null,
