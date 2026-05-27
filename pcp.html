@@ -251,7 +251,6 @@
             <option value="tarde">Tarde</option>
             <option value="noite">Noite</option>
           </select>
-          <select id="pd-loja" class="fil-select" onchange="renderProducaoDia()"><option value="">Todas as lojas</option></select>
           <button class="btn ml-auto btn-primary" onclick="abrirModalProd()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Registrar Produção
@@ -276,7 +275,6 @@
     <div id="tab-sugerida" class="tab-pane">
       <div class="filter-bar-wrap">
         <div class="toolbar">
-          <select id="sg-loja" class="fil-select" onchange="calcularSugestoes()"><option value="">Todas as lojas</option></select>
           <div>
             <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Período análise (dias)</div>
             <select id="sg-periodo" class="fil-select" style="height:40px" onchange="calcularSugestoes()">
@@ -324,7 +322,6 @@
             <option value="excesso">Excesso de produção</option>
             <option value="descarte">Descarte</option>
           </select>
-          <select id="sb-loja" class="fil-select" onchange="renderSobras()"><option value="">Todas as lojas</option></select>
           <button class="btn ml-auto btn-primary" onclick="abrirModalSobra()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Registrar Sobra / Perda
@@ -348,7 +345,6 @@
     <div id="tab-consumo" class="tab-pane">
       <div class="filter-bar-wrap">
         <div class="toolbar">
-          <select id="cm-loja" class="fil-select" onchange="renderConsumo()"><option value="">Todas as lojas</option></select>
           <select id="cm-periodo" class="fil-select" onchange="renderConsumo()">
             <option value="30" selected>Últimos 30 dias</option>
             <option value="60">Últimos 60 dias</option>
@@ -635,10 +631,12 @@ function _renderTabStrip(){
 
 function onChangeLoja(){
   const v=document.getElementById('sel-loja').value;
-  ['pd-loja','sg-loja','sb-loja','cm-loja','mp-loja','ms-loja'].forEach(id=>{
+  ['mp-loja','ms-loja'].forEach(id=>{
     const el=document.getElementById(id);if(el) el.value=v;
   });
 }
+
+function _lojaAtual(){return document.getElementById('sel-loja')?.value||'';}
 
 /* ── INICIALIZAÇÃO ───────────────────────────────────────── */
 async function carregar(){
@@ -649,7 +647,7 @@ async function carregar(){
     ]);
     // Popular selects de loja
     const lojaOpts='<option value="">Todas as lojas</option>'+lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
-    ['sel-loja','pd-loja','sg-loja','sb-loja','cm-loja'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=lojaOpts;});
+    const selLoja=document.getElementById('sel-loja');if(selLoja)selLoja.innerHTML=lojaOpts;
     const lojaOptsModal='<option value="">Sem loja</option>'+lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
     ['mp-loja','ms-loja'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=lojaOptsModal;});
     // Popular selects de ficha
@@ -722,7 +720,7 @@ function iniciarProducaoDia(){
 async function renderProducaoDia(){
   const data=document.getElementById('pd-data')?.value||hoje();
   const turno=document.getElementById('pd-turno')?.value||'';
-  const lojaId=document.getElementById('pd-loja')?.value||'';
+  const lojaId=_lojaAtual();
   const tbody=document.getElementById('pd-tbody');
   tbody.innerHTML='<tr><td colspan="11" class="empty-st">Carregando...</td></tr>';
   try{
@@ -766,7 +764,7 @@ function abrirModalProd(id){
   const set=(el,v)=>{const e=document.getElementById(el);if(e)e.value=v!=null?v:'';};
   set('mp-data',r?.data||document.getElementById('pd-data')?.value||hoje());
   set('mp-turno',r?.turno||'manha');
-  set('mp-loja',r?.loja_id||document.getElementById('pd-loja')?.value||'');
+  set('mp-loja',r?.loja_id||_lojaAtual());
   set('mp-ficha',r?.ficha_id||'');
   set('mp-resp',r?.responsavel||'');
   set('mp-produzido',r?.produzido||'');
@@ -913,7 +911,7 @@ async function deletarProd(id){
 /* ── PRODUÇÃO SUGERIDA ───────────────────────────────────── */
 async function calcularSugestoes(){
   const diasPeriodo=parseInt(document.getElementById('sg-periodo')?.value)||14;
-  const lojaId=document.getElementById('sg-loja')?.value||'';
+  const lojaId=_lojaAtual();
   const diaSemEl=document.getElementById('sg-dia');
   const diaSem=diaSemEl?.value!==''?parseInt(diaSemEl.value):new Date().getDay();
   const tbody=document.getElementById('sg-tbody');
@@ -987,7 +985,7 @@ function iniciarSobras(){
 async function renderSobras(){
   const data=document.getElementById('sb-data')?.value||hoje();
   const tipo=document.getElementById('sb-tipo')?.value||'';
-  const lojaId=document.getElementById('sb-loja')?.value||'';
+  const lojaId=_lojaAtual();
   const tbody=document.getElementById('sb-tbody');
   tbody.innerHTML='<tr><td colspan="9" class="empty-st">Carregando...</td></tr>';
   try{
@@ -1025,7 +1023,7 @@ function abrirModalSobra(id){
   const r=id?pcpSobras.find(x=>x.id===id):null;
   const set=(el,v)=>{const e=document.getElementById(el);if(e)e.value=v!=null?v:'';};
   set('ms-data',r?.data||document.getElementById('sb-data')?.value||hoje());
-  set('ms-loja',r?.loja_id||document.getElementById('sb-loja')?.value||'');
+  set('ms-loja',r?.loja_id||_lojaAtual());
   set('ms-ficha',r?.ficha_id||'');
   set('ms-tipo',r?.tipo||'');
   set('ms-qtd',r?.quantidade||'');
@@ -1083,7 +1081,7 @@ async function deletarSobra(id){
 /* ── CONSUMO MÉDIO ───────────────────────────────────────── */
 async function renderConsumo(){
   const diasPeriodo=parseInt(document.getElementById('cm-periodo')?.value)||30;
-  const lojaId=document.getElementById('cm-loja')?.value||'';
+  const lojaId=_lojaAtual();
   const turno=document.getElementById('cm-turno')?.value||'';
   const tbody=document.getElementById('cm-tbody');
   tbody.innerHTML='<tr><td colspan="10" class="empty-st">Calculando...</td></tr>';
