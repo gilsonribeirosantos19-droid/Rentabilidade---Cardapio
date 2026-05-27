@@ -836,11 +836,11 @@ async function salvarVinculo(){
   btn.disabled=true; btn.textContent='Salvando...';
   try{
     if(_vinEditing){
-      await api(`isumo_fornecedores?id=eq.${_vinEditing.id}`,{method:'PATCH',body:JSON.stringify(payload)});
+      await api(`insumo_fornecedores?id=eq.${_vinEditing.id}`,{method:'PATCH',body:JSON.stringify(payload)});
       toast('Vínculo atualizado.','ok');
     } else {
       payload.tenant_id=TENANT_ID;
-      await api('isumo_fornecedores',{method:'POST',body:JSON.stringify(payload)});
+      await api('insumo_fornecedores',{method:'POST',body:JSON.stringify(payload)});
       toast('Item vinculado com sucesso.','ok');
     }
     fecharModalVinculo();
@@ -854,7 +854,7 @@ function confirmarExcluirVin(id){
   const v=vinculos.find(x=>x.id===id);
   const ins=insumos.find(i=>i.id===v?.insumo_id);
   if(!confirm(`Remover vínculo do item "${ins?.nome||'—'}"?`))return;
-  api(`isumo_fornecedores?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'})
+  api(`insumo_fornecedores?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'})
     .then(()=>{toast('Vínculo removido.','ok');carregarVinculos().then(filtrarVinculos);})
     .catch(e=>toast('Erro: '+e.message,'err'));
 }
@@ -980,7 +980,7 @@ function irParaInsumo(id){
 ================================================================ */
 async function carregarVinculos(){
   try{
-    vinculos=await api(`isumo_fornecedores?tenant_id=eq.${TENANT_ID}`);
+    vinculos=await api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`);
   }catch{vinculos=[];}
 }
 
