@@ -71,7 +71,8 @@
       active = item.href === page;
     }
     const href = item.tab ? `${item.href}?tab=${item.tab}` : item.href;
-    return `<a class="nav-item${active ? ' active' : ''}" href="${href}">${ico(item.icon)}${item.label}</a>`;
+    const dot = `<span style="width:15px;height:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5;display:inline-block"></span></span>`;
+    return `<a class="nav-item${active ? ' active' : ''}" href="${href}">${dot}${item.label}</a>`;
   }
 
   function navGroup(g) {

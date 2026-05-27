@@ -28,6 +28,8 @@ body {
   width: 220px !important;
   background: #fff !important;
   border-right: 1px solid #e2e8f0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 /* Remove os boxes azulados dos grupos */
