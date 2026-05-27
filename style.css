@@ -108,6 +108,34 @@ body {
 /* Espaço entre tab strip e conteúdo do workspace */
 .ws-tab-strip + * { margin-top: 18px; }
 
+/* ── FILTROS STICKY ─────────────────────────────────────── */
+/* Filter bar fica presa no topo do conteúdo ao scrollar */
+.filter-bar-wrap {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+  background: #f8fafc !important;
+  /* Pequena sombra para separar visualmente do conteúdo abaixo */
+  box-shadow: 0 2px 8px rgba(0,0,0,.05) !important;
+}
+
+/* ── THEAD STICKY ───────────────────────────────────────── */
+/* Cabeçalho da tabela fica preso enquanto o corpo scrolla */
+.tbl-card {
+  overflow: visible !important;  /* permite sticky funcionar */
+}
+.tbl-scroll {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: calc(100vh - 280px) !important;
+}
+.tbl-scroll thead tr,
+table thead tr {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
 /* SIDEBAR HIERÁRQUICO — COLLAPSE */
 .nav-group-header {
   display: flex !important;
