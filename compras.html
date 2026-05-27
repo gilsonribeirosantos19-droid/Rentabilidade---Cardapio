@@ -545,6 +545,16 @@ async function renderSolicitacoes() {
   const ateFil    = document.getElementById('sol-fil-ate')?.value||'';
   const statusFil = document.getElementById('sol-fil-status')?.value||'';
   const temFiltro = lojaFil || deFil || ateFil || statusFil;
+
+  // Sem filtro: mostra estado vazio, não faz requisição
+  if (!temFiltro) {
+    const tbody = document.getElementById('sol-body');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding:36px;text-align:center;color:#94a3b8;font-size:13px">Selecione um filtro (loja, data ou status) e clique em <b>Atualizar</b> para consultar.</td></tr>`;
+    const cardsEl = document.getElementById('sol-cards');
+    if (cardsEl) cardsEl.style.display = 'none';
+    return;
+  }
+
   try {
     const cardsEl = document.getElementById('sol-cards');
     if (temFiltro) {
