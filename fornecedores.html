@@ -294,7 +294,6 @@
                 <th>Código</th>
                 <th>Embalagem</th>
                 <th class="r">Qtd. Emb.</th>
-                <th>UM</th>
                 <th>Conversão</th>
                 <th class="r">Último preço</th>
                 <th class="r">Última entrada</th>
@@ -733,17 +732,16 @@ function renderVinculos(lista){
   tbody.innerHTML=lista.map(v=>{
     const ins=insumos.find(i=>i.id===v.insumo_id);
     const und=ins?.unidade_medida||'';
-    const conv=v.quantidade_embalagem?
-      `1 ${v.embalagem_fornecedor||'EMB'} = ${Number(v.quantidade_embalagem).toLocaleString('pt-BR',{maximumFractionDigits:3})} ${und}`:'—';
+    const conv=v.qtd_por_embalagem?
+      `1 ${v.embalagem_descricao||'EMB'} = ${Number(v.qtd_por_embalagem).toLocaleString('pt-BR',{maximumFractionDigits:3})} ${und}`:'—';
     return `<tr onclick="abrirModalVinculo('${v.id}')">
       <td style="font-weight:600;color:#0f172a">${esc(ins?.nome||'—')}</td>
       <td style="color:#64748b">${esc(v.descricao_fornecedor||'—')}</td>
       <td class="td-mono" style="color:#64748b;font-size:11px">${esc(v.codigo_fornecedor||'—')}</td>
-      <td style="color:#64748b">${esc(v.embalagem_fornecedor||'—')}</td>
-      <td class="r td-mono" style="color:#64748b">${v.quantidade_embalagem!=null?v.quantidade_embalagem:'—'}</td>
-      <td style="color:#64748b">${esc(v.um_fornecedor||v.unidade_medida_fornecedor||'—')}</td>
+      <td style="color:#64748b">${esc(v.embalagem_descricao||'—')}</td>
+      <td class="r td-mono" style="color:#64748b">${v.qtd_por_embalagem!=null?v.qtd_por_embalagem:'—'}</td>
       <td style="color:#64748b;font-size:12px">${esc(conv)}</td>
-      <td class="r td-mono" style="font-weight:600;color:#0f172a">${brl(v.ultimo_preco||v.preco_unitario)}</td>
+      <td class="r td-mono" style="font-weight:600;color:#0f172a">${brl(v.preco_unitario)}</td>
       <td class="r td-mono" style="color:#64748b;font-size:12px">${fmtDate(v.ultima_entrada)}</td>
       <td>
         <button class="btn-ghost" onclick="event.stopPropagation();confirmarExcluirVin('${v.id}')" style="padding:4px 8px;font-size:16px;color:#94a3b8">⋮</button>
@@ -761,9 +759,9 @@ function abrirModalVinculo(id){
   setVal('v-descricao', v?.descricao_fornecedor||'');
   setVal('v-codigo', v?.codigo_fornecedor||'');
   setVal('v-ean', v?.ean||'');
-  setVal('v-embalagem', v?.embalagem_fornecedor||'');
-  setVal('v-qtd-emb', v?.quantidade_embalagem||'');
-  setVal('v-preco', v?.ultimo_preco||v?.preco_unitario||'');
+  setVal('v-embalagem', v?.embalagem_descricao||'');
+  setVal('v-qtd-emb', v?.qtd_por_embalagem||'');
+  setVal('v-preco', v?.preco_unitario||'');
   setVal('v-ultima-entrada', v?.ultima_entrada||'');
   document.getElementById('modal-vin-titulo').textContent=v?'Editar Vínculo':'Vincular Item ao Fornecedor';
   document.getElementById('btn-salvar-vin').textContent='Salvar Vínculo';
@@ -826,9 +824,8 @@ async function salvarVinculo(){
     descricao_fornecedor: document.getElementById('v-descricao').value.trim()||null,
     codigo_fornecedor: document.getElementById('v-codigo').value.trim()||null,
     ean: document.getElementById('v-ean').value.trim()||null,
-    embalagem_fornecedor: document.getElementById('v-embalagem').value||null,
-    quantidade_embalagem: parseFloat(document.getElementById('v-qtd-emb').value)||null,
-    ultimo_preco: parseFloat(document.getElementById('v-preco').value)||null,
+    embalagem_descricao: document.getElementById('v-embalagem').value||null,
+    qtd_por_embalagem: parseFloat(document.getElementById('v-qtd-emb').value)||null,
     preco_unitario: parseFloat(document.getElementById('v-preco').value)||null,
     ultima_entrada: document.getElementById('v-ultima-entrada').value||null,
   };
