@@ -781,12 +781,14 @@ function _calcQtdEmb(desc){
   // Padrão NxN ou N×N → multiplica (ex: "27x0,375" → 10,125)
   const mult=d.replace(/,/g,'.').match(/(\d+\.?\d*)\s*[xX×]\s*(\d+\.?\d*)/);
   if(mult) return Math.round(parseFloat(mult[1])*parseFloat(mult[2])*1000)/1000;
-  // Último número com unidade ml ou g → converte (ex: "965ML" → 0,965)
+  // Número seguido de ml ou g → converte para litro/kg (ex: "965ML" → 0,965)
   const withU=d.match(/(\d+(?:[.,]\d+)?)\s*(ml|g)\s*$/i);
   if(withU) return Math.round(parseFloat(withU[1].replace(',','.'))/1000*1000)/1000;
   // Último número da string (ex: "UNI 0,375" → 0,375 / "FARDO 20KG" → 20)
   const nums=d.replace(/,/g,'.').match(/\d+\.?\d*/g);
   if(nums&&nums.length) return parseFloat(nums[nums.length-1]);
+  // Sem número nenhum (ex: "Quilograma", "Litro", "Unidade") → assume 1
+  if(d.length>0) return 1;
   return null;
 }
 
