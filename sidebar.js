@@ -53,6 +53,7 @@
         { href: 'pcp.html', tab: 'sugerida',     icon: 'lightbulb',        label: 'Prod. Sugerida' },
         { href: 'pcp.html', tab: 'sobras',       icon: 'activity',         label: 'Sobras e Perdas' },
         { href: 'pcp.html', tab: 'consumo',      icon: 'bar-chart-2',      label: 'Consumo Médio' },
+        { href: 'porcionamento.html',             icon: 'scissors',         label: 'Porcionamento' },
       ]
     },
   ];
