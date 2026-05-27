@@ -465,7 +465,9 @@
             <input class="form-input" id="v-embalagem" type="text"
               placeholder="Ex: CX 27x0,375 · UNI 0,375 · FARDO 20KG"
               oninput="atualizarConversaoPreview(true)"
+              list="emb-datalist"
               style="font-family:'DM Mono',monospace;letter-spacing:.02em">
+            <datalist id="emb-datalist"></datalist>
             <div style="font-size:11px;color:#94a3b8;margin-top:4px">
               Descreva como vem na nota. Use NxN para auto-calcular (ex: 27x0,375).
             </div>
@@ -983,6 +985,12 @@ async function carregarTudo(){
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
     ]);
+    // Carregar embalagens cadastradas em Configurações e popular datalist
+    try{
+      const embs=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&tipo=eq.embalagem&ativo=eq.true&order=nome.asc`);
+      const dl=document.getElementById('emb-datalist');
+      if(dl) dl.innerHTML=embs.map(e=>`<option value="${esc(e.nome)}">`).join('');
+    }catch{}
     await carregarVinculos();
 
     // Popular filtro de cidades

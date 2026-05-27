@@ -202,6 +202,7 @@
             <button class="cfg-nav-item" id="cfg-btn-familia"   onclick="switchConfig('familia')">Família</button>
             <button class="cfg-nav-item" id="cfg-btn-grupo"     onclick="switchConfig('grupo')">Grupo</button>
             <button class="cfg-nav-item" id="cfg-btn-subgrupo"  onclick="switchConfig('subgrupo')">Subgrupo</button>
+            <button class="cfg-nav-item" id="cfg-btn-embalagem" onclick="switchConfig('embalagem')">Embalagens</button>
           </div>
           <div class="cfg-nav-group">
             <span class="cfg-nav-label">Cadastros</span>
@@ -280,6 +281,20 @@
             <div class="section-body">
               <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
               <tbody id="tbody-subgrupo"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Embalagens Fornecedor -->
+        <div class="cfg-pane" id="cfg-embalagem">
+          <div class="section">
+            <div class="section-header">
+              <div><div class="section-title">Embalagens Fornecedor</div><div class="section-sub">Tipos de embalagem usados no vínculo Item × Fornecedor. Ex: CX 27x0,375 · FARDO 20KG · UNI 0,375</div></div>
+              <button class="btn btn-primary btn-sm" onclick="abrirModal('embalagem')">+ Adicionar</button>
+            </div>
+            <div class="section-body">
+              <table><thead><tr><th>Embalagem</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
+              <tbody id="tbody-embalagem"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
             </div>
           </div>
         </div>
@@ -587,6 +602,7 @@
     familia:    'item_classificacoes',
     grupo:      'item_classificacoes',
     subgrupo:   'item_classificacoes',
+    embalagem:  'item_classificacoes',
   };
 
   const TIPO_TITULO = {
@@ -597,9 +613,10 @@
     familia:    'Família',
     grupo:      'Grupo',
     subgrupo:   'Subgrupo',
+    embalagem:  'Embalagem Fornecedor',
   };
 
-  const CLSF_TIPOS = ['tipo_item','familia','grupo','subgrupo'];
+  const CLSF_TIPOS = ['tipo_item','familia','grupo','subgrupo','embalagem'];
 
   // ── CARREGAR DADOS ────────────────────────────────────────
   async function carregar() {
@@ -620,6 +637,7 @@
       renderCats('tbody-familia',   classificacoes.filter(c=>c.tipo==='familia'),   'familia');
       renderCats('tbody-grupo',     classificacoes.filter(c=>c.tipo==='grupo'),     'grupo');
       renderCats('tbody-subgrupo',  classificacoes.filter(c=>c.tipo==='subgrupo'),  'subgrupo');
+      renderCats('tbody-embalagem', classificacoes.filter(c=>c.tipo==='embalagem'), 'embalagem');
     } catch (e) {
       document.getElementById('conn-status').textContent = '● desconectado';
       document.getElementById('conn-status').style.color = 'var(--red)';
