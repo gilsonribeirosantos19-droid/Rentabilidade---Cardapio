@@ -409,50 +409,79 @@
       <button class="modal-close" onclick="fecharModalProd()">✕</button>
     </div>
     <div class="modal-body">
+
+      <!-- IDENTIFICAÇÃO -->
       <div class="form-section">
         <div class="form-section-title">Identificação</div>
         <div class="form-grid">
-          <div class="form-group span2"><label class="form-label">Produto / Ficha Técnica *</label>
-            <select class="form-select" id="mp-ficha" onchange="calcProdPreview()"><option value="">Selecione...</option></select>
+          <div class="form-group span2">
+            <label class="form-label">Produto / Ficha Técnica *</label>
+            <select class="form-select" id="mp-ficha" onchange="onFichaChange()"><option value="">Selecione...</option></select>
           </div>
-          <div class="form-group"><label class="form-label">Data *</label><input class="form-input" type="date" id="mp-data"></div>
+          <div class="form-group"><label class="form-label">Data *</label><input class="form-input" type="date" id="mp-data" onchange="buscarSobraAnterior()"></div>
           <div class="form-group"><label class="form-label">Turno *</label>
-            <select class="form-select" id="mp-turno">
+            <select class="form-select" id="mp-turno" onchange="buscarSobraAnterior()">
               <option value="manha">Manhã</option><option value="tarde">Tarde</option><option value="noite">Noite</option>
             </select>
           </div>
           <div class="form-group"><label class="form-label">Loja</label>
-            <select class="form-select" id="mp-loja"><option value="">Sem loja</option></select>
+            <select class="form-select" id="mp-loja" onchange="buscarSobraAnterior()"><option value="">Sem loja</option></select>
           </div>
-          <div class="form-group"><label class="form-label">Responsável</label><input class="form-input" id="mp-resp" type="text" placeholder="Nome do responsável"></div>
+          <div class="form-group"><label class="form-label">Responsável</label>
+            <input class="form-input" id="mp-resp" type="text" placeholder="Nome do responsável">
+          </div>
         </div>
       </div>
+
+      <!-- PRODUÇÃO (campos manuais) -->
       <div class="form-section">
-        <div class="form-section-title">Quantidades</div>
-        <div class="form-grid-3">
-          <div class="form-group"><label class="form-label">Sobra Anterior</label><input class="form-input td-mono" id="mp-sobra-ant" type="number" step="0.01" min="0" value="0" oninput="calcProdPreview()"></div>
-          <div class="form-group"><label class="form-label">Produzido *</label><input class="form-input td-mono" id="mp-produzido" type="number" step="0.01" min="0" placeholder="0" oninput="calcProdPreview()"></div>
-          <div class="form-group"><label class="form-label">Unidade</label>
-            <select class="form-select" id="mp-unidade">
-              <option value="un">un</option><option value="kg">kg</option><option value="litro">litro</option>
-              <option value="porcao">porção</option><option value="bandeja">bandeja</option>
-            </select>
+        <div class="form-section-title">Produção</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Produzido *</label>
+            <input class="form-input td-mono" id="mp-produzido" type="number" step="0.01" min="0" placeholder="0" oninput="calcProdPreview()" style="font-size:16px;font-weight:700">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unidade <span style="color:#94a3b8;font-size:10px">(automático)</span></label>
+            <input class="form-input td-mono" id="mp-unidade" type="text" readonly placeholder="—" style="color:#64748b">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sobra Final</label>
+            <input class="form-input td-mono" id="mp-sobra-fin" type="number" step="0.01" min="0" placeholder="0" oninput="calcProdPreview()" style="font-size:16px;font-weight:700">
           </div>
         </div>
-        <div class="form-grid-3" style="margin-top:12px">
-          <div class="form-group"><label class="form-label">Disponível</label><input class="form-input td-mono" id="mp-disponivel" type="text" readonly></div>
-          <div class="form-group"><label class="form-label">Sobra Final</label><input class="form-input td-mono" id="mp-sobra-fin" type="number" step="0.01" min="0" placeholder="0" oninput="calcProdPreview()"></div>
-          <div class="form-group"><label class="form-label">Venda Estimada</label><input class="form-input td-mono" id="mp-venda" type="number" step="0.01" min="0" placeholder="0"></div>
-        </div>
-        <div class="calc-row" id="mp-calc" style="display:none">
-          <span class="calc-lbl" id="mp-calc-lbl">Aproveitamento</span>
-          <span class="calc-val" id="mp-calc-val">—</span>
-        </div>
       </div>
+
+      <!-- CONFERÊNCIA (campos automáticos) -->
       <div class="form-section" style="margin-bottom:0">
-        <div class="form-section-title">Observações</div>
-        <div class="form-group"><textarea class="form-input" id="mp-obs" rows="2" placeholder="Observações sobre a produção..." style="resize:vertical"></textarea></div>
+        <div class="form-section-title" style="display:flex;align-items:center;gap:8px">
+          Conferência automática
+          <span id="mp-sobra-loading" style="display:none;font-size:10px;color:#94a3b8;font-weight:400">⟳ buscando sobra anterior...</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Sobra anterior <span style="color:#94a3b8;font-size:10px">(auto)</span></label>
+            <input class="form-input td-mono" id="mp-sobra-ant" type="text" readonly placeholder="0" style="color:#64748b">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Disponível <span style="color:#94a3b8;font-size:10px">(auto)</span></label>
+            <input class="form-input td-mono" id="mp-disponivel" type="text" readonly placeholder="0" style="color:#2563eb;font-weight:600">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Venda estimada <span style="color:#94a3b8;font-size:10px">(auto)</span></label>
+            <input class="form-input td-mono" id="mp-venda" type="text" readonly placeholder="0" style="color:#16a34a;font-weight:600">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Aproveitamento <span style="color:#94a3b8;font-size:10px">(auto)</span></label>
+            <input class="form-input td-mono" id="mp-aprov-display" type="text" readonly placeholder="—" style="font-weight:700">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Observações</label>
+          <textarea class="form-input" id="mp-obs" rows="2" placeholder="Observações sobre a produção..." style="resize:vertical"></textarea>
+        </div>
       </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="fecharModalProd()">Cancelar</button>
@@ -740,33 +769,97 @@ function abrirModalProd(id){
   set('mp-loja',r?.loja_id||document.getElementById('pd-loja')?.value||'');
   set('mp-ficha',r?.ficha_id||'');
   set('mp-resp',r?.responsavel||'');
-  set('mp-sobra-ant',r?.sobra_anterior??0);
   set('mp-produzido',r?.produzido||'');
-  set('mp-unidade',r?.unidade||'un');
   set('mp-sobra-fin',r?.sobra_final??'');
-  set('mp-venda',r?.venda_estimada||'');
   set('mp-obs',r?.observacoes||'');
+  // campos automáticos
+  set('mp-sobra-ant',r?.sobra_anterior??'');
+  set('mp-unidade',r?.unidade||'');
+  set('mp-disponivel','');
+  set('mp-venda','');
+  set('mp-aprov-display','');
   document.getElementById('modal-prod-titulo').textContent=r?'Editar Produção':'Registrar Produção';
-  calcProdPreview();
+  if(r){
+    // edição: preenche campos automáticos direto do registro salvo
+    _preencherUnidadeFicha(r.ficha_id, r.unidade);
+    calcProdPreview();
+  } else {
+    // novo: busca sobra anterior automaticamente
+    _preencherUnidadeFicha(document.getElementById('mp-ficha').value);
+    buscarSobraAnterior();
+  }
   document.getElementById('modal-prod').classList.add('open');
 }
 function fecharModalProd(){document.getElementById('modal-prod').classList.remove('open');_editProdId=null;}
+
+function onFichaChange(){
+  _preencherUnidadeFicha(document.getElementById('mp-ficha').value);
+  buscarSobraAnterior();
+}
+
+function _preencherUnidadeFicha(fichaId, override){
+  const unEl=document.getElementById('mp-unidade');
+  if(!unEl) return;
+  if(override){unEl.value=override;return;}
+  const f=fichas.find(x=>x.id===fichaId);
+  // Tenta buscar unidade do insumo vinculado
+  if(f?.insumo_vinculado_id){
+    // busca do cache de insumos se disponível — senão usa 'un'
+    unEl.value='un';
+  } else {
+    unEl.value=f?'un':'';
+  }
+}
+
+async function buscarSobraAnterior(){
+  const fichaId=document.getElementById('mp-ficha')?.value;
+  const data=document.getElementById('mp-data')?.value;
+  const lojaId=document.getElementById('mp-loja')?.value;
+  const sobraEl=document.getElementById('mp-sobra-ant');
+  const loadEl=document.getElementById('mp-sobra-loading');
+  if(!fichaId||!data){if(sobraEl)sobraEl.value='0';calcProdPreview();return;}
+  if(loadEl) loadEl.style.display='inline';
+  if(sobraEl) sobraEl.value='…';
+  try{
+    let q=`pcp_producao?tenant_id=eq.${TENANT_ID}&ficha_id=eq.${fichaId}&data=lt.${data}&order=data.desc,created_at.desc&limit=1`;
+    if(lojaId) q+=`&loja_id=eq.${lojaId}`;
+    const res=await api(q).catch(()=>[]);
+    const ultimo=res[0];
+    const sobraAnt=ultimo?.sobra_final??0;
+    if(sobraEl) sobraEl.value=sobraAnt;
+    // aproveitamento unidade do registro anterior
+    if(ultimo?.unidade){
+      const unEl=document.getElementById('mp-unidade');
+      if(unEl&&!unEl.value) unEl.value=ultimo.unidade;
+    }
+  }catch{
+    if(sobraEl) sobraEl.value='0';
+  }finally{
+    if(loadEl) loadEl.style.display='none';
+    calcProdPreview();
+  }
+}
 
 function calcProdPreview(){
   const sobraAnt=parseFloat(document.getElementById('mp-sobra-ant')?.value)||0;
   const prod=parseFloat(document.getElementById('mp-produzido')?.value)||0;
   const sobraFin=parseFloat(document.getElementById('mp-sobra-fin')?.value)||0;
   const disp=sobraAnt+prod;
-  const dispEl=document.getElementById('mp-disponivel');
-  if(dispEl) dispEl.value=fmtN(disp);
-  const calcBox=document.getElementById('mp-calc');
-  const calcVal=document.getElementById('mp-calc-val');
-  if(disp>0){
-    const aprov=((disp-sobraFin)/disp*100);
-    if(calcBox) calcBox.style.display='flex';
-    if(calcVal) calcVal.textContent=fmtN(aprov,1)+'% aproveitamento';
-  } else {
-    if(calcBox) calcBox.style.display='none';
+  const venda=Math.max(0,disp-sobraFin);
+  const aprov=disp>0?(venda/disp*100):null;
+
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  set('mp-disponivel', disp>0?fmtN(disp):'');
+  set('mp-venda', disp>0?fmtN(venda):'');
+
+  const aprovEl=document.getElementById('mp-aprov-display');
+  if(aprovEl){
+    if(aprov!=null){
+      aprovEl.value=fmtN(aprov,1)+'%';
+      aprovEl.style.color=aprov>=85?'#16a34a':aprov>=70?'#f59e0b':'#dc2626';
+    } else {
+      aprovEl.value=''; aprovEl.style.color='';
+    }
   }
 }
 
@@ -777,7 +870,8 @@ async function salvarProd(){
   const sobraAnt=parseFloat(document.getElementById('mp-sobra-ant').value)||0;
   const sobraFin=parseFloat(document.getElementById('mp-sobra-fin').value)||0;
   const disp=sobraAnt+produzido;
-  const aprov=disp>0?parseFloat(((disp-sobraFin)/disp*100).toFixed(2)):null;
+  const venda=Math.max(0,disp-sobraFin);
+  const aprov=disp>0?parseFloat((venda/disp*100).toFixed(2)):null;
   const payload={
     tenant_id:TENANT_ID,
     ficha_id:fichaId,
@@ -788,9 +882,9 @@ async function salvarProd(){
     sobra_anterior:sobraAnt,
     produzido,
     sobra_final:sobraFin||0,
-    venda_estimada:parseFloat(document.getElementById('mp-venda').value)||null,
+    venda_estimada:venda||null,
     aproveitamento:aprov,
-    unidade:document.getElementById('mp-unidade').value,
+    unidade:document.getElementById('mp-unidade').value||'un',
     observacoes:document.getElementById('mp-obs').value.trim()||null,
   };
   const btn=document.getElementById('btn-salvar-prod');
