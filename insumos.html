@@ -237,8 +237,6 @@
           <div class="form-grid-3">
             <div class="form-group"><label class="form-label">Código interno</label><input class="form-input" id="cad-codigo" type="text" readonly placeholder="Gerado automaticamente" style="background:#f1f5f9;color:#94a3b8"></div>
             <div class="form-group" style="grid-column:span 2"><label class="form-label">Descrição do item *</label><input class="form-input" id="cad-nome" type="text" placeholder="Ex: Salmão fresco"></div>
-            <div class="form-group"><label class="form-label">Código de barras</label><input class="form-input" id="cad-ean" type="text" placeholder="EAN/GTIN"></div>
-            <div class="form-group"><label class="form-label">Referência do fabricante</label><input class="form-input" id="cad-ref" type="text" placeholder="Ref. do fornecedor"></div>
             <div class="form-group"><label class="form-label">NCM</label><input class="form-input" id="cad-ncm" type="text" placeholder="00000000"></div>
             <div class="form-group"><label class="form-label">Status *</label>
               <select class="form-select" id="cad-ativo">
@@ -269,6 +267,12 @@
                 <option value="nao">Não</option>
               </select>
             </div>
+            <div class="form-group"><label class="form-label">Tipo de baixa</label>
+              <select class="form-select" id="cad-tipo-baixa">
+                <option value="consumo">Consumo</option>
+                <option value="producao">Produção</option>
+              </select>
+            </div>
           </div>
         </div>
         <div class="form-section">
@@ -282,19 +286,6 @@
                 <option value="litro">litro</option>
                 <option value="ml">ml</option>
                 <option value="un">un</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label">Embalagem fornecedor</label>
-              <select class="form-select" id="cad-und-compra">
-                <option value="">Selecione...</option>
-                <option value="kg">kg</option>
-                <option value="g">g</option>
-                <option value="litro">litro</option>
-                <option value="ml">ml</option>
-                <option value="un">un</option>
-                <option value="caixa">caixa</option>
-                <option value="fardo">fardo</option>
-                <option value="pacote">pacote</option>
               </select>
             </div>
             <div class="form-group" style="grid-column:span 1"><label class="form-label">Local / Depósito padrão</label><input class="form-input" id="cad-deposito" type="text" placeholder="Ex: Câmara fria"></div>
@@ -819,14 +810,14 @@ function switchModulo(tab) {
 // PANE 1 — CADASTRO
 function limparCadastro(){
   _cadEditId = null;
-  ['cad-nome','cad-ean','cad-ref','cad-ncm','cad-subgrupo','cad-deposito'].forEach(id=>{
+  ['cad-nome','cad-ncm','cad-subgrupo','cad-deposito'].forEach(id=>{
     const e=document.getElementById(id); if(e) e.value='';
   });
   const code=document.getElementById('cad-codigo');
   if(code) code.value='Gerado automaticamente';
   const setVal=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
   setVal('cad-ativo','true'); setVal('cad-tipo',''); setVal('cad-familia','');
-  setVal('cad-grupo',''); setVal('cad-cmv','sim'); setVal('cad-und-med',''); setVal('cad-und-compra','');
+  setVal('cad-grupo',''); setVal('cad-cmv','sim'); setVal('cad-und-med',''); setVal('cad-tipo-baixa','consumo');
 }
 
 function novoItemCadastro(){
@@ -849,10 +840,8 @@ function editarItemCadastro(id){
   setVal('cad-subgrupo', '');
   setVal('cad-cmv', 'sim');
   setVal('cad-und-med', ins.unidade_medida||'');
-  setVal('cad-und-compra', ins.unidade_compra||'');
+  setVal('cad-tipo-baixa', ins.tipo_baixa||'consumo');
   setVal('cad-deposito', '');
-  setVal('cad-ean', '');
-  setVal('cad-ref', '');
   setVal('cad-ncm', '');
   switchModulo('cadastro');
 }
@@ -864,7 +853,7 @@ async function salvarCadastro(){
     nome,
     categoria: document.getElementById('cad-grupo').value||null,
     unidade_medida: document.getElementById('cad-und-med').value||null,
-    unidade_compra: document.getElementById('cad-und-compra').value||null,
+    tipo_baixa: document.getElementById('cad-tipo-baixa').value||'consumo',
     ativo: document.getElementById('cad-ativo').value!=='false',
   };
   if(!_cadEditId){
