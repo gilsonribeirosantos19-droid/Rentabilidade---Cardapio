@@ -109,31 +109,33 @@ body {
 .ws-tab-strip + * { margin-top: 18px; }
 
 /* ── FILTROS STICKY ─────────────────────────────────────── */
-/* Filter bar fica presa no topo do conteúdo ao scrollar */
+/* Cada página define --filter-top para o offset correto (topbar + tab strip) */
+:root { --filter-top: 0px; }
 .filter-bar-wrap {
   position: sticky !important;
-  top: 0 !important;
+  top: var(--filter-top) !important;
   z-index: 30 !important;
   background: #f8fafc !important;
-  /* Pequena sombra para separar visualmente do conteúdo abaixo */
   box-shadow: 0 2px 8px rgba(0,0,0,.05) !important;
 }
 
 /* ── THEAD STICKY ───────────────────────────────────────── */
-/* Cabeçalho da tabela fica preso enquanto o corpo scrolla */
-.tbl-card {
-  overflow: visible !important;  /* permite sticky funcionar */
+/* overflow:clip recorta visualmente mas não cria scroll context, mantendo sticky ativo */
+.tbl-card,
+.tbl-wrap {
+  overflow: clip !important;
 }
 .tbl-scroll {
   overflow-x: auto !important;
   overflow-y: auto !important;
   max-height: calc(100vh - 280px) !important;
 }
-.tbl-scroll thead tr,
-table thead tr {
+/* Sticky em th (não em tr) — funciona com border-collapse:collapse em todos os browsers */
+.tbl-scroll thead th {
   position: sticky !important;
   top: 0 !important;
   z-index: 10 !important;
+  background: inherit !important;
 }
 
 /* SIDEBAR HIERÁRQUICO — COLLAPSE */

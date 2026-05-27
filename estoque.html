@@ -260,6 +260,21 @@
   .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
   .cfg-flyout-item:last-child{border-bottom:none}
   .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
+  /* Sticky offset: topbar(~58px) + ws-tab-strip(36px) */
+  :root { --filter-top: 94px; }
+  .filter-bar-wrap {
+    position: sticky !important;
+    top: 94px !important;
+    z-index: 20 !important;
+    background: #f8fafc !important;
+  }
+  /* Inventário: card de filtro ERP também fica preso */
+  .inv-fc {
+    position: sticky !important;
+    top: 94px !important;
+    z-index: 20 !important;
+    background: #fff !important;
+  }
 </style>
 </head>
 <body>
@@ -434,7 +449,7 @@
       </div>
 
       <!-- FILTROS — acima dos KPIs -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <div style="position:relative">
           <input class="field field-sm" id="ent-busca" placeholder="Buscar insumo..." oninput="renderEntradas()" style="padding-left:30px;min-width:180px">
           <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
