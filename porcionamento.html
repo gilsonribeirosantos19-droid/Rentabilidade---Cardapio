@@ -393,6 +393,17 @@
   <div id="tab-relatorio" class="tab-pane">
     <div class="filter-bar-wrap">
       <div class="toolbar" style="flex-wrap:wrap;gap:14px 10px">
+        <!-- MODELO select -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Modelo</div>
+          <select class="fil-select" id="rel-modelo" onchange="setRelModeloSel(this.value)">
+            <option value="">Todos os modelos</option>
+            <option value="simples">Simples</option>
+            <option value="degelo">Degelo + Limpeza</option>
+            <option value="coccao">Cocção / Redução</option>
+            <option value="lote">Produção em Lote</option>
+          </select>
+        </div>
         <!-- TIPO select -->
         <div>
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Tipo</div>
@@ -850,37 +861,51 @@ async function excluirLanc(id,e){
    tipos: 'e'=entrada, 's'=saida, 'b'=ambos
 ================================================================ */
 const COLS=[
-  {id:'data',       lbl:'Data',                    on:true,  t:'b'},
-  {id:'tipo',       lbl:'Tipo',                    on:true,  t:'b'},
-  {id:'produto',    lbl:'Produto',                 on:true,  t:'b'},
-  {id:'fornecedor', lbl:'Fornecedor',              on:true,  t:'e'},
-  {id:'qtd_ent',    lbl:'Qtd. Recebida',           on:true,  t:'e'},
-  {id:'peso_bruto', lbl:'Peso Bruto Recebido',     on:true,  t:'e'},
-  {id:'cabeca',     lbl:'Cabeça (kg)',              on:true,  t:'e'},
-  {id:'liq_arm',    lbl:'Peso Líq. Armazenado',    on:true,  t:'e'},
-  {id:'qtd_sai',    lbl:'Qtd. Filetado',           on:true,  t:'s'},
-  {id:'peso_ent',   lbl:'Peso Entrada Filetagem',  on:true,  t:'s'},
-  {id:'file_limpo', lbl:'Filé Limpo',              on:true,  t:'s'},
-  {id:'pele',       lbl:'Pele',                    on:true,  t:'s'},
-  {id:'aparas',     lbl:'Aparas',                  on:true,  t:'s'},
-  {id:'perdas',     lbl:'Perdas',                  on:true,  t:'s'},
-  {id:'rend_op',    lbl:'Rendimento Op.',          on:true,  t:'s'},
-  {id:'custo_kg',   lbl:'Custo/kg',                on:true,  t:'b'},
-  {id:'responsavel',lbl:'Responsável',             on:true,  t:'b'},
+  // ── Comuns ──
+  {id:'data',           lbl:'Data',               on:true,  m:'*'},
+  {id:'modelo_col',     lbl:'Modelo',             on:true,  m:'*'},
+  {id:'produto',        lbl:'Produto',            on:true,  m:'*'},
+  {id:'loja_col',       lbl:'Loja',               on:false, m:'*'},
+  {id:'turno_col',      lbl:'Turno',              on:false, m:'*'},
+  // ── Simples ──
+  {id:'peso_bruto_s',   lbl:'Peso Bruto',         on:true,  m:'simples'},
+  {id:'p_cabeca',       lbl:'Cabeça (kg)',         on:true,  m:'simples'},
+  {id:'p_pele_s',       lbl:'Pele (kg)',           on:false, m:'simples'},
+  {id:'p_espinha',      lbl:'Espinha (kg)',        on:false, m:'simples'},
+  {id:'p_outros_s',     lbl:'Outros (kg)',         on:false, m:'simples'},
+  {id:'peso_limpo_s',   lbl:'Peso Limpo',         on:true,  m:'simples'},
+  // ── Degelo ──
+  {id:'p_congelado',    lbl:'Peso Congelado',     on:true,  m:'degelo'},
+  {id:'p_descongelado', lbl:'Peso Descongelado',  on:true,  m:'degelo'},
+  {id:'perda_deg',      lbl:'Perda Degelo',       on:true,  m:'degelo'},
+  {id:'peso_limpo_d',   lbl:'Peso Limpo',         on:true,  m:'degelo'},
+  {id:'perda_limp',     lbl:'Perda Limpeza',      on:true,  m:'degelo'},
+  // ── Cocção ──
+  {id:'peso_ini',       lbl:'Peso Inicial',       on:true,  m:'coccao'},
+  {id:'peso_fin',       lbl:'Peso Final',         on:true,  m:'coccao'},
+  {id:'reducao_col',    lbl:'Redução (kg)',       on:true,  m:'coccao'},
+  // ── Lote ──
+  {id:'qtd_prod',       lbl:'Qtd. Produzida',     on:true,  m:'lote'},
+  {id:'qtd_cons',       lbl:'Qtd. Consumida',     on:true,  m:'lote'},
+  {id:'sobra_col',      lbl:'Sobra',              on:true,  m:'lote'},
+  {id:'validade_col',   lbl:'Validade',           on:false, m:'lote'},
+  // ── Métricas comuns ──
+  {id:'rend_col',       lbl:'Rendimento %',       on:true,  m:'*'},
+  {id:'custo_kg',       lbl:'Custo/kg',           on:true,  m:'*'},
+  {id:'valor_total_col',lbl:'Valor Total',        on:false, m:'*'},
+  {id:'responsavel',    lbl:'Responsável',        on:true,  m:'*'},
+  {id:'fornecedor',     lbl:'Fornecedor',         on:false, m:'*'},
 ];
 
-let _relTipo=''; // ''=ambos, 'entrada', 'saida'
+let _relTipo='', _relModelo='';
 
-function setRelTipoSel(v){
-  _relTipo=v;
-  _autoAdjustCols(v);
-}
+function setRelTipoSel(v){_relTipo=v;_autoAdjustCols();}
+function setRelModeloSel(v){_relModelo=v;_autoAdjustCols();}
 
-function _autoAdjustCols(tipo){
+function _autoAdjustCols(){
   COLS.forEach(c=>{
-    if(tipo==='entrada')      c.on=c.t==='e'||c.t==='b';
-    else if(tipo==='saida')   c.on=c.t==='s'||c.t==='b';
-    else                      c.on=true;
+    if(_relModelo) c.on = c.m==='*' || c.m===_relModelo;
+    else           c.on = c.m==='*';
   });
   if(_relData.length) _renderRelTable();
   _renderColChecks();
@@ -918,6 +943,7 @@ async function filtrarRel(){
   if(insumoId) qs+=`&insumo_id=eq.${insumoId}`;
   if(lojaId) qs+=`&loja_id=eq.${lojaId}`;
   if(_relTipo) qs+=`&tipo=eq.${_relTipo}`;
+  if(_relModelo) qs+=`&modelo_processo=eq.${_relModelo}`;
   if(de) qs+=`&data=gte.${de}`;
   if(ate) qs+=`&data=lte.${ate}`;
   try{
@@ -930,8 +956,8 @@ async function filtrarRel(){
 }
 
 function limparRel(){
-  ['rel-tipo','rel-loja','rel-insumo','rel-de','rel-ate'].forEach(id=>sv(id,''));
-  _relTipo='';
+  ['rel-modelo','rel-tipo','rel-loja','rel-insumo','rel-de','rel-ate'].forEach(id=>sv(id,''));
+  _relTipo='';_relModelo='';
   _autoAdjustCols('');
   _relData=[];
   document.getElementById('rel-content').style.display='none';
@@ -949,47 +975,79 @@ function _renderRelTable(){
   tbody.innerHTML=_relData.map(l=>{
     const ins=_insumos.find(i=>i.id===l.insumo_id);
     const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
-    const isEnt=l.tipo==='entrada';
+    const loja=_lojas.find(lj=>lj.id===l.loja_id);
+    const mod=l.modelo||l.modelo_processo||'';
+    const isS=mod==='simples', isD=mod==='degelo', isC=mod==='coccao', isL=mod==='lote';
     const cells={
-      data:        fmtDate(l.data),
-      tipo:        isEnt?'<span class="badge b-ent">↓ Entrada</span>':'<span class="badge b-sai">↑ Saída</span>',
-      produto:     `<span style="font-weight:600">${esc(ins?.nome||'—')}</span>`,
-      fornecedor:  esc(forn?(forn.nome_fantasia||forn.nome||forn.razao_social||'—'):'—'),
-      qtd_ent:     isEnt&&l.qtd_peixes!=null?`<span class="mono">${l.qtd_peixes}</span>`:'—',
-      peso_bruto:  isEnt?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
-      cabeca:      isEnt?`<span class="mono">${kg(l.perda_cabeca)}</span>`:'—',
-      liq_arm:     isEnt?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
-      qtd_sai:     !isEnt&&l.qtd_peixes!=null?`<span class="mono">${l.qtd_peixes}</span>`:'—',
-      peso_ent:    !isEnt?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
-      file_limpo:  !isEnt?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
-      pele:        !isEnt?`<span class="mono">${kg(l.pele)}</span>`:'—',
-      aparas:      !isEnt?`<span class="mono">${kg(l.aparas)}</span>`:'—',
-      perdas:      !isEnt?`<span class="mono" style="color:var(--red)">${kg(l.perda_outros)}</span>`:'—',
-      rend_op:     !isEnt&&l.rendimento_pct!=null?`<span class="mono">${pct(l.rendimento_pct)}</span>`:'—',
-      custo_kg:    isEnt?(l.novo_custo_kg?brl(l.novo_custo_kg):brl(l.custo_unitario)):(l.custo_kg_file?brl(l.custo_kg_file):'—'),
-      responsavel: esc(l.responsavel||'—'),
+      data:           fmtDate(l.data),
+      modelo_col:     mod?`<span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:11px">${esc(_modeloLabel[mod]||mod)}</span>`:'—',
+      produto:        `<span style="font-weight:600">${esc(ins?.nome||'—')}</span>`,
+      loja_col:       esc(loja?.nome||'—'),
+      turno_col:      esc(l.turno||'—'),
+      // Simples
+      peso_bruto_s:   isS?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
+      p_cabeca:       isS?`<span class="mono">${kg(l.perda_cabeca)}</span>`:'—',
+      p_pele_s:       isS?`<span class="mono">${kg(l.perda_pele)}</span>`:'—',
+      p_espinha:      isS?`<span class="mono">${kg(l.perda_espinha)}</span>`:'—',
+      p_outros_s:     isS?`<span class="mono">${kg(l.perda_outros)}</span>`:'—',
+      peso_limpo_s:   isS?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
+      // Degelo
+      p_congelado:    isD?`<span class="mono">${kg(l.peso_congelado)}</span>`:'—',
+      p_descongelado: isD?`<span class="mono">${kg(l.peso_descongelado)}</span>`:'—',
+      perda_deg:      isD?`<span class="mono">${kg(r3((parseFloat(l.peso_congelado)||0)-(parseFloat(l.peso_descongelado)||0)))}</span>`:'—',
+      peso_limpo_d:   isD?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
+      perda_limp:     isD?`<span class="mono">${kg(r3((parseFloat(l.peso_descongelado)||0)-(parseFloat(l.peso_limpo)||0)))}</span>`:'—',
+      // Cocção
+      peso_ini:       isC?`<span class="mono">${kg(l.peso_inicial)}</span>`:'—',
+      peso_fin:       isC?`<span class="mono">${kg(l.peso_final)}</span>`:'—',
+      reducao_col:    isC?`<span class="mono" style="color:var(--red)">${kg(r3((parseFloat(l.peso_inicial)||0)-(parseFloat(l.peso_final)||0)))}</span>`:'—',
+      // Lote
+      qtd_prod:       isL?`<span class="mono">${kg(l.qtd_produzida)}</span>`:'—',
+      qtd_cons:       isL?`<span class="mono">${kg(l.qtd_consumida)}</span>`:'—',
+      sobra_col:      isL?`<span class="mono">${kg(l.sobra_lote)}</span>`:'—',
+      validade_col:   isL?(l.validade?fmtDate(l.validade):'—'):'—',
+      // Comuns
+      rend_col:       l.rendimento_pct!=null?`<span class="mono">${pct(l.rendimento_pct)}</span>`:'—',
+      custo_kg:       brl(l.custo_unitario),
+      valor_total_col:brl(l.valor_total),
+      responsavel:    esc(l.responsavel||'—'),
+      fornecedor:     esc(forn?(forn.nome_fantasia||forn.nome||forn.razao_social||'—'):'—'),
     };
-    return `<tr>${visCols.map(c=>`<td>${cells[c.id]||'—'}</td>`).join('')}</tr>`;
+    return `<tr>${visCols.map(c=>`<td>${cells[c.id]??'—'}</td>`).join('')}</tr>`;
   }).join('');
 
   // ── Linha de totais ──
-  const sum=(field,filterFn=()=>true)=>_relData.filter(filterFn).reduce((s,l)=>s+(parseFloat(l[field])||0),0);
-  const isEnt=l=>l.tipo==='entrada'||(l.modelo==='simples'&&!l.tipo)||(l.modelo_processo==='simples'&&!l.tipo);
+  const sumF=(field)=>_relData.reduce((s,l)=>s+(parseFloat(l[field])||0),0);
+  const avgF=(field)=>{const rs=_relData.filter(l=>l[field]!=null);return rs.length?rs.reduce((s,l)=>s+parseFloat(l[field]),0)/rs.length:null;};
+  const lbl='<span style="color:#0f2d5c;font-size:10px;letter-spacing:.06em;text-transform:uppercase">TOTAL</span>';
   const totals={
-    data:'<span style="color:#0f2d5c;font-size:10px;letter-spacing:.06em;text-transform:uppercase">TOTAL</span>',
-    tipo:'', produto:'', fornecedor:'',
-    qtd_ent: _relData.filter(l=>l.qtd_peixes!=null&&(l.tipo==='entrada'||!l.tipo)).reduce((s,l)=>s+(parseInt(l.qtd_peixes)||0),0)||'—',
-    peso_bruto: kg(r3(sum('peso_bruto',l=>l.tipo==='entrada'))),
-    cabeca:     kg(r3(sum('perda_cabeca',l=>l.tipo==='entrada'))),
-    liq_arm:    kg(r3(sum('peso_limpo',l=>l.tipo==='entrada'))),
-    qtd_sai:    _relData.filter(l=>l.qtd_peixes!=null&&l.tipo==='saida').reduce((s,l)=>s+(parseInt(l.qtd_peixes)||0),0)||'—',
-    peso_ent:   kg(r3(sum('peso_bruto',l=>l.tipo==='saida'))),
-    file_limpo: kg(r3(sum('peso_limpo',l=>l.tipo==='saida'))),
-    pele:       kg(r3(sum('pele',l=>l.tipo==='saida'))),
-    aparas:     kg(r3(sum('aparas',l=>l.tipo==='saida'))),
-    perdas:     `<span style="color:var(--red)">${kg(r3(sum('perda_outros',l=>l.tipo==='saida')))}</span>`,
-    rend_op: (()=>{const rs=_relData.filter(l=>l.tipo==='saida'&&l.rendimento_pct!=null);return rs.length?pct(r2(rs.reduce((s,l)=>s+parseFloat(l.rendimento_pct),0)/rs.length)):'—';})(),
-    custo_kg:'', responsavel:'',
+    data:lbl, modelo_col:'', produto:'', loja_col:'', turno_col:'',
+    // Simples
+    peso_bruto_s:   kg(r3(sumF('peso_bruto'))),
+    p_cabeca:       kg(r3(sumF('perda_cabeca'))),
+    p_pele_s:       kg(r3(sumF('perda_pele'))),
+    p_espinha:      kg(r3(sumF('perda_espinha'))),
+    p_outros_s:     kg(r3(sumF('perda_outros'))),
+    peso_limpo_s:   kg(r3(sumF('peso_limpo'))),
+    // Degelo
+    p_congelado:    kg(r3(sumF('peso_congelado'))),
+    p_descongelado: kg(r3(sumF('peso_descongelado'))),
+    perda_deg:      kg(r3(sumF('peso_congelado')-sumF('peso_descongelado'))),
+    peso_limpo_d:   kg(r3(sumF('peso_limpo'))),
+    perda_limp:     kg(r3(sumF('peso_descongelado')-sumF('peso_limpo'))),
+    // Cocção
+    peso_ini:       kg(r3(sumF('peso_inicial'))),
+    peso_fin:       kg(r3(sumF('peso_final'))),
+    reducao_col:    `<span style="color:var(--red)">${kg(r3(sumF('peso_inicial')-sumF('peso_final')))}</span>`,
+    // Lote
+    qtd_prod:       kg(r3(sumF('qtd_produzida'))),
+    qtd_cons:       kg(r3(sumF('qtd_consumida'))),
+    sobra_col:      kg(r3(sumF('sobra_lote'))),
+    validade_col:   '',
+    // Comuns
+    rend_col:(()=>{const v=avgF('rendimento_pct');return v!=null?pct(r2(v)):'—';})(),
+    custo_kg:'', valor_total_col: brl(r2(sumF('valor_total'))),
+    responsavel:'', fornecedor:'',
   };
   const tfoot=document.getElementById('rel-tfoot');
   tfoot.innerHTML=`<tr>${visCols.map(c=>`<td>${totals[c.id]??'—'}</td>`).join('')}</tr>`;
