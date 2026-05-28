@@ -273,6 +273,13 @@
       Estoque
     </button>
   </div>
+  <div class="nav-group">
+    <div class="nav-label">PCP</div>
+    <button class="nav-item" id="nav-pcp" onclick="switchTab('pcp')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      Produção
+    </button>
+  </div>
   <div class="nav-bottom">Precisa de ajuda?<br><a href="https://wa.me/5592994948230?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20sistema%20Aiko" target="_blank" rel="noopener">Acesse o suporte</a></div>
   <div class="nav-user">
     <div style="width:34px;height:34px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -605,8 +612,106 @@
       </div>
     </div>
 
+    <!-- PCP -->
+    <div id="tab-pcp" class="tab-pane">
+      <div class="page-title">PCP — Controle de Produção</div>
+      <div class="page-sub">Produção do dia, sobras, perdas e consumo médio</div>
+
+      <div class="tabs">
+        <button class="tab-btn active" id="pcptab-producao" onclick="setPcpTab('producao',this)">Produção do Dia</button>
+        <button class="tab-btn" id="pcptab-sobras" onclick="setPcpTab('sobras',this)">Sobras e Perdas</button>
+        <button class="tab-btn" id="pcptab-consumo" onclick="setPcpTab('consumo',this)">Consumo Médio</button>
+      </div>
+
+      <!-- PRODUÇÃO DO DIA -->
+      <div class="tab-pane active" id="pcppane-producao">
+        <div class="toolbar">
+          <input type="date" class="field" id="pcp-prod-data" onchange="carregarPcpProducao()">
+          <select class="field field-sm" id="pcp-prod-turno" onchange="carregarPcpProducao()">
+            <option value="">Todos os turnos</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+          </select>
+          <button class="btn btn-primary ml" onclick="abrirModalPcpProd()">+ Novo Lançamento</button>
+        </div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>Produto</th><th>Turno</th><th class="r">Qtd. Planejada</th><th class="r">Qtd. Produzida</th><th>Responsável</th><th>Status</th><th></th></tr></thead>
+          <tbody id="pcp-prod-tbody"><tr><td colspan="7" class="empty">Selecione uma data</td></tr></tbody>
+        </table></div>
+      </div>
+
+      <!-- SOBRAS E PERDAS -->
+      <div class="tab-pane" id="pcppane-sobras">
+        <div class="toolbar">
+          <input type="date" class="field" id="pcp-sob-data" onchange="carregarPcpSobras()">
+          <button class="btn btn-primary ml" onclick="abrirModalPcpSobra()">+ Registrar Sobra</button>
+        </div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>Produto</th><th>Turno</th><th class="r">Qtd. Inicial</th><th class="r">Sobra</th><th class="r">Perda</th><th class="r">% Perda</th><th></th></tr></thead>
+          <tbody id="pcp-sob-tbody"><tr><td colspan="7" class="empty">Selecione uma data</td></tr></tbody>
+        </table></div>
+      </div>
+
+      <!-- CONSUMO MÉDIO -->
+      <div class="tab-pane" id="pcppane-consumo">
+        <div class="toolbar">
+          <span style="font-size:13px;color:var(--text2)">Últimos</span>
+          <select class="field field-sm" id="pcp-cons-dias" onchange="carregarPcpConsumo()">
+            <option value="7">7 dias</option>
+            <option value="15">15 dias</option>
+            <option value="30" selected>30 dias</option>
+          </select>
+        </div>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>Produto</th><th class="r">Consumo Médio/dia</th><th class="r">Total Período</th><th class="r">Dias com Prod.</th></tr></thead>
+          <tbody id="pcp-cons-tbody"><tr><td colspan="4" class="empty">Carregando...</td></tr></tbody>
+        </table></div>
+      </div>
+    </div><!-- /tab-pcp -->
+
   </div>
 </div>
+</div>
+
+<!-- MODAL: PCP PRODUÇÃO -->
+<div id="m-pcp-prod" class="overlay" onclick="if(event.target===this)fecharModal('m-pcp-prod')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2 id="m-pcp-prod-titulo">Novo Lançamento de Produção</h2>
+    <div class="fg"><label>Produto *</label><select id="fp-insumo" class="field"></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label>Data *</label><input type="date" id="fp-data" class="field"></div>
+      <div class="fg"><label>Turno</label><select id="fp-turno" class="field"><option value="">Selecione</option><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div>
+      <div class="fg"><label>Qtd. Planejada</label><input type="number" id="fp-planejada" class="field" min="0" placeholder="0"></div>
+      <div class="fg"><label>Qtd. Produzida</label><input type="number" id="fp-produzida" class="field" min="0" placeholder="0"></div>
+    </div>
+    <div class="fg"><label>Responsável</label><input type="text" id="fp-responsavel" class="field" placeholder="Nome do colaborador"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModal('m-pcp-prod')">Cancelar</button>
+      <div class="ml"></div>
+      <button class="btn btn-primary" id="btn-salvar-pcp-prod" onclick="salvarPcpProd()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PCP SOBRA -->
+<div id="m-pcp-sob" class="overlay" onclick="if(event.target===this)fecharModal('m-pcp-sob')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>Registrar Sobra / Perda</h2>
+    <div class="fg"><label>Produto *</label><select id="fs-insumo" class="field"></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label>Data *</label><input type="date" id="fs-data" class="field"></div>
+      <div class="fg"><label>Turno</label><select id="fs-turno" class="field"><option value="">Selecione</option><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div>
+      <div class="fg"><label>Qtd. Inicial</label><input type="number" id="fs-inicial" class="field" step="0.001" min="0" placeholder="0,000"></div>
+      <div class="fg"><label>Sobra</label><input type="number" id="fs-sobra" class="field" step="0.001" min="0" placeholder="0,000" oninput="calcSobraPcp()"></div>
+      <div class="fg"><label>Perda (automático)</label><input type="number" id="fs-perda" class="field" readonly placeholder="0,000"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModal('m-pcp-sob')">Cancelar</button>
+      <div class="ml"></div>
+      <button class="btn btn-primary" id="btn-salvar-pcp-sob" onclick="salvarPcpSobra()">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: QUANTIDADES SOLICITAÇÃO -->
@@ -751,14 +856,15 @@ async function carregar() {
 function switchTab(tab) {
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  ['inventario','solicitacao','perdas','estoque'].forEach(t => {
-    document.getElementById('nav-'+t).classList.toggle('active', t===tab);
+  ['inventario','solicitacao','perdas','estoque','pcp'].forEach(t => {
+    document.getElementById('nav-'+t)?.classList.toggle('active', t===tab);
     const mn = document.getElementById('mnav-'+t);
     if (mn) mn.classList.toggle('active', t===tab);
   });
   if (tab==='inventario') iniciarInventario();
   if (tab==='perdas') carregarHistoricoPerdas();
   if (tab==='estoque') iniciarEstoque();
+  if (tab==='pcp') iniciarPcp();
   window.scrollTo(0,0);
 }
 
@@ -1604,6 +1710,165 @@ function toggleSidebar(){
 }
 
 carregar();
+
+/* ================================================================
+   PCP
+================================================================ */
+let _pcpInsumos=[], _pcpEditProdId=null, _pcpEditSobId=null;
+
+function setPcpTab(tab,btn){
+  document.querySelectorAll('#tab-pcp .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pcppane-'+tab).classList.add('active');
+  if(tab==='sobras') carregarPcpSobras();
+  if(tab==='consumo') carregarPcpConsumo();
+}
+
+async function iniciarPcp(){
+  const hoje=new Date().toISOString().slice(0,10);
+  if(!document.getElementById('pcp-prod-data').value) document.getElementById('pcp-prod-data').value=hoje;
+  if(!document.getElementById('pcp-sob-data').value) document.getElementById('pcp-sob-data').value=hoje;
+  if(!_pcpInsumos.length){
+    _pcpInsumos=await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
+    const opts='<option value="">Selecione...</option>'+_pcpInsumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
+    document.getElementById('fp-insumo').innerHTML=opts;
+    document.getElementById('fs-insumo').innerHTML=opts;
+  }
+  carregarPcpProducao();
+  carregarPcpConsumo();
+}
+
+async function carregarPcpProducao(){
+  const data=document.getElementById('pcp-prod-data').value;
+  const turno=document.getElementById('pcp-prod-turno').value;
+  const tbody=document.getElementById('pcp-prod-tbody');
+  if(!data){tbody.innerHTML='<tr><td colspan="7" class="empty">Selecione uma data</td></tr>';return;}
+  try{
+    let qs=`pcp_producao?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`;
+    if(turno) qs+=`&turno=eq.${encodeURIComponent(turno)}`;
+    const rows=await api(qs);
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma produção nesta data.</td></tr>';return;}
+    tbody.innerHTML=rows.map(r=>{
+      const ins=_pcpInsumos.find(i=>i.id===r.insumo_id);
+      const pct=r.qtd_planejada>0?Math.round((r.qtd_produzida||0)/r.qtd_planejada*100):null;
+      const status=pct==null?''
+        :pct>=100?'<span class="badge b-ativo">✓ OK</span>'
+        :pct>=80?`<span class="badge" style="background:#fef3c7;color:#b45309">${pct}%</span>`
+        :`<span class="badge" style="background:#fee2e2;color:#dc2626">${pct}%</span>`;
+      return `<tr><td style="font-weight:600">${esc(ins?.nome||'—')}</td><td>${esc(r.turno||'—')}</td><td class="r mono">${r.qtd_planejada??'—'}</td><td class="r mono">${r.qtd_produzida??'—'}</td><td>${esc(r.responsavel||'—')}</td><td>${status}</td><td><button class="btn btn-ghost btn-sm" onclick="editarPcpProd('${r.id}')">Editar</button></td></tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function abrirModalPcpProd(){
+  _pcpEditProdId=null;
+  ['fp-insumo','fp-turno','fp-responsavel','fp-planejada','fp-produzida'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('fp-data').value=document.getElementById('pcp-prod-data').value||new Date().toISOString().slice(0,10);
+  document.getElementById('m-pcp-prod-titulo').textContent='Novo Lançamento de Produção';
+  document.getElementById('m-pcp-prod').classList.add('open');
+}
+async function editarPcpProd(id){
+  try{
+    const r=(await api(`pcp_producao?id=eq.${id}`))[0];if(!r)return;
+    _pcpEditProdId=id;
+    document.getElementById('fp-insumo').value=r.insumo_id||'';
+    document.getElementById('fp-data').value=r.data||'';
+    document.getElementById('fp-turno').value=r.turno||'';
+    document.getElementById('fp-responsavel').value=r.responsavel||'';
+    document.getElementById('fp-planejada').value=r.qtd_planejada||'';
+    document.getElementById('fp-produzida').value=r.qtd_produzida||'';
+    document.getElementById('m-pcp-prod-titulo').textContent='Editar Lançamento';
+    document.getElementById('m-pcp-prod').classList.add('open');
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+async function salvarPcpProd(){
+  const insumoId=document.getElementById('fp-insumo').value;
+  const data=document.getElementById('fp-data').value;
+  if(!insumoId||!data){toast('Produto e data são obrigatórios.','err');return;}
+  const payload={insumo_id:insumoId,data,turno:document.getElementById('fp-turno').value||null,responsavel:document.getElementById('fp-responsavel').value.trim()||null,qtd_planejada:parseFloat(document.getElementById('fp-planejada').value)||null,qtd_produzida:parseFloat(document.getElementById('fp-produzida').value)||null};
+  const btn=document.getElementById('btn-salvar-pcp-prod');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(_pcpEditProdId) await api(`pcp_producao?id=eq.${_pcpEditProdId}`,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
+    else{payload.tenant_id=TENANT_ID;await api('pcp_producao',{method:'POST',body:JSON.stringify(payload)});}
+    fecharModal('m-pcp-prod');toast('Salvo.','ok');carregarPcpProducao();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+
+async function carregarPcpSobras(){
+  const data=document.getElementById('pcp-sob-data').value;
+  const tbody=document.getElementById('pcp-sob-tbody');
+  if(!data){tbody.innerHTML='<tr><td colspan="7" class="empty">Selecione uma data</td></tr>';return;}
+  try{
+    const rows=await api(`pcp_sobras?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`);
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma sobra nesta data.</td></tr>';return;}
+    tbody.innerHTML=rows.map(r=>{
+      const ins=_pcpInsumos.find(i=>i.id===r.insumo_id);
+      const pct=r.qtd_inicial>0?Math.round((r.qtd_perda||0)/r.qtd_inicial*100):null;
+      return `<tr><td style="font-weight:600">${esc(ins?.nome||'—')}</td><td>${esc(r.turno||'—')}</td><td class="r mono">${r.qtd_inicial??'—'}</td><td class="r mono">${r.qtd_sobra??'—'}</td><td class="r mono">${r.qtd_perda??'—'}</td><td class="r mono">${pct!=null?pct+'%':'—'}</td><td><button class="btn btn-ghost btn-sm" onclick="editarPcpSobra('${r.id}')">Editar</button></td></tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function calcSobraPcp(){
+  const ini=parseFloat(document.getElementById('fs-inicial').value)||0;
+  const sob=parseFloat(document.getElementById('fs-sobra').value)||0;
+  document.getElementById('fs-perda').value=Math.max(0,Math.round((ini-sob)*1000)/1000)||'';
+}
+function abrirModalPcpSobra(){
+  _pcpEditSobId=null;
+  ['fs-insumo','fs-turno','fs-inicial','fs-sobra','fs-perda'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('fs-data').value=document.getElementById('pcp-sob-data').value||new Date().toISOString().slice(0,10);
+  document.getElementById('m-pcp-sob').classList.add('open');
+}
+async function editarPcpSobra(id){
+  try{
+    const r=(await api(`pcp_sobras?id=eq.${id}`))[0];if(!r)return;
+    _pcpEditSobId=id;
+    document.getElementById('fs-insumo').value=r.insumo_id||'';
+    document.getElementById('fs-data').value=r.data||'';
+    document.getElementById('fs-turno').value=r.turno||'';
+    document.getElementById('fs-inicial').value=r.qtd_inicial||'';
+    document.getElementById('fs-sobra').value=r.qtd_sobra||'';
+    document.getElementById('fs-perda').value=r.qtd_perda||'';
+    document.getElementById('m-pcp-sob').classList.add('open');
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+async function salvarPcpSobra(){
+  const insumoId=document.getElementById('fs-insumo').value;
+  const data=document.getElementById('fs-data').value;
+  if(!insumoId||!data){toast('Produto e data são obrigatórios.','err');return;}
+  const ini=parseFloat(document.getElementById('fs-inicial').value)||0;
+  const sob=parseFloat(document.getElementById('fs-sobra').value)||0;
+  const payload={insumo_id:insumoId,data,turno:document.getElementById('fs-turno').value||null,qtd_inicial:ini||null,qtd_sobra:sob||null,qtd_perda:Math.max(0,Math.round((ini-sob)*1000)/1000)||null};
+  const btn=document.getElementById('btn-salvar-pcp-sob');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(_pcpEditSobId) await api(`pcp_sobras?id=eq.${_pcpEditSobId}`,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
+    else{payload.tenant_id=TENANT_ID;await api('pcp_sobras',{method:'POST',body:JSON.stringify(payload)});}
+    fecharModal('m-pcp-sob');toast('Salvo.','ok');carregarPcpSobras();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+
+async function carregarPcpConsumo(){
+  const dias=parseInt(document.getElementById('pcp-cons-dias').value)||30;
+  const tbody=document.getElementById('pcp-cons-tbody');
+  const de=new Date(Date.now()-dias*86400000).toISOString().slice(0,10);
+  try{
+    const rows=await api(`pcp_producao?tenant_id=eq.${TENANT_ID}&data=gte.${de}&order=insumo_id.asc`);
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="4" class="empty">Sem dados no período.</td></tr>';return;}
+    const map={};
+    rows.forEach(r=>{if(!map[r.insumo_id])map[r.insumo_id]={total:0,dias:new Set()};map[r.insumo_id].total+=(r.qtd_produzida||0);map[r.insumo_id].dias.add(r.data);});
+    tbody.innerHTML=Object.entries(map).map(([id,v])=>{
+      const ins=_pcpInsumos.find(i=>i.id===id);
+      const media=v.dias.size>0?Math.round(v.total/v.dias.size*100)/100:0;
+      return `<tr><td style="font-weight:600">${esc(ins?.nome||'—')}</td><td class="r mono">${media}</td><td class="r mono">${Math.round(v.total*100)/100}</td><td class="r mono">${v.dias.size}</td></tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="4" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
