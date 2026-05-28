@@ -123,6 +123,8 @@
   .rel-tp-pill{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;background:transparent;color:var(--text2);transition:all .15s;white-space:nowrap}
   .rel-tp-pill.active{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);color:var(--text1)}
 
+  /* FIELDS BLOCK */
+  .fields-block{display:none}.fields-block.active{display:block}
   /* TOAST / EMPTY */
   .empty-st{padding:40px;text-align:center;color:var(--text3);font-size:13px}
   .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:380px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
@@ -190,10 +192,17 @@
             <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input class="form-input" id="lanc-busca" placeholder="Buscar produto..." oninput="renderLanc()" style="height:38px">
           </div>
+          <select class="fil-select" id="lanc-f-modelo" onchange="renderLanc()">
+            <option value="">Todos os modelos</option>
+            <option value="simples">Simples</option>
+            <option value="degelo">Degelo + Limpeza</option>
+            <option value="coccao">Cocção / Redução</option>
+            <option value="lote">Produção em Lote</option>
+          </select>
           <select class="fil-select" id="lanc-f-tipo" onchange="renderLanc()">
-            <option value="">Tipo ▾</option>
-            <option value="entrada">Entrada</option>
-            <option value="saida">Saída</option>
+            <option value="">Entrada + Saída</option>
+            <option value="entrada">↓ Entrada</option>
+            <option value="saida">↑ Saída</option>
           </select>
           <input type="date" class="fil-date" id="lanc-f-de" onchange="renderLanc()" title="De">
           <span style="color:var(--text3);font-size:12px">–</span>
@@ -207,8 +216,8 @@
       <div class="tbl-card"><div class="tbl-scroll">
         <table>
           <thead><tr>
-            <th>Data</th><th>Tipo</th><th>Produto</th><th>Fornecedor</th>
-            <th class="r">Qtd. Peixes</th><th class="r">Peso Bruto</th><th class="r">Rendimento %</th>
+            <th>Data</th><th>Modelo</th><th>Produto</th><th>Loja</th>
+            <th>Turno</th><th class="r">Peso</th><th class="r">Rendimento %</th>
             <th>Responsável</th><th></th>
           </tr></thead>
           <tbody id="lanc-body"><tr><td colspan="9" class="empty-st">Carregando...</td></tr></tbody>
@@ -227,15 +236,6 @@
         <span id="form-breadcrumb" style="font-size:15px;font-weight:700;color:var(--text1)">Novo Lançamento</span>
       </div>
 
-      <!-- TIPO SELECTOR -->
-      <div class="tipo-wrap">
-        <span class="tipo-lbl">Tipo de lançamento</span>
-        <div class="tipo-pills">
-          <button class="tipo-pill active" id="pill-entrada" onclick="setTipo('entrada')">↓ Entrada</button>
-          <button class="tipo-pill" id="pill-saida" onclick="setTipo('saida')">↑ Saída</button>
-        </div>
-      </div>
-
       <!-- IDENTIFICAÇÃO -->
       <div class="form-card">
         <div class="form-card-title">
@@ -244,29 +244,49 @@
         </div>
         <div class="form-grid">
           <div class="form-group">
+            <label class="form-label">Item (insumo) *</label>
+            <select class="form-select" id="f-insumo"><option value="">Selecione...</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modelo de Processo *</label>
+            <select class="form-select" id="f-modelo" onchange="onModeloChange()">
+              <option value="simples">Simples (peixe, carne)</option>
+              <option value="degelo">Degelo + Limpeza (camarão, polvo)</option>
+              <option value="coccao">Cocção / Redução (shimeji, caldos)</option>
+              <option value="lote">Produção em Lote (shari, molhos)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid-3" style="margin-top:12px">
+          <div class="form-group">
             <label class="form-label">Data *</label>
             <input class="form-input" id="f-data" type="date">
           </div>
           <div class="form-group">
-            <label class="form-label">Loja</label>
-            <select class="form-select" id="f-loja"><option value="">Selecione...</option></select>
-          </div>
-          <div class="form-group" id="fg-fornecedor">
-            <label class="form-label">Fornecedor</label>
-            <select class="form-select" id="f-fornecedor"><option value="">Selecione...</option></select>
-          </div>
-          <div class="form-group" id="fg-turno" style="display:none">
             <label class="form-label">Turno</label>
             <select class="form-select" id="f-turno">
-              <option value="">Selecione...</option>
               <option value="Manhã">Manhã</option>
               <option value="Tarde">Tarde</option>
               <option value="Noite">Noite</option>
             </select>
           </div>
-          <div class="form-group col-full">
+          <div class="form-group">
+            <label class="form-label">Lote</label>
+            <input class="form-input" id="f-lote" type="text" placeholder="Auto">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:12px">
+          <div class="form-group">
+            <label class="form-label">Loja</label>
+            <select class="form-select" id="f-loja"><option value="">Selecione...</option></select>
+          </div>
+          <div class="form-group">
             <label class="form-label">Responsável</label>
             <input class="form-input" id="f-responsavel" type="text" placeholder="Nome do colaborador">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fornecedor</label>
+            <select class="form-select" id="f-fornecedor"><option value="">Nenhum</option></select>
           </div>
           <div class="form-group col-full">
             <label class="form-label">Observação</label>
@@ -275,124 +295,83 @@
         </div>
       </div>
 
-      <!-- ENTRADA: RECEBIMENTO -->
-      <div class="form-card" id="sec-recebimento">
-        <div class="form-card-title" style="color:#1d4ed8">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Recebimento
+      <!-- MODELO: SIMPLES -->
+      <div class="form-card fields-block active" id="fields-simples">
+        <div class="form-card-title">Pesos e Perdas</div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label class="form-label">Peso Bruto (kg) *</label>
+            <input class="form-input mono" id="f-peso-bruto" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()">
+          </div>
+          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg)</label>
+            <input class="form-input mono" id="f-custo-unit" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSimples()">
+          </div>
         </div>
-        <div class="form-grid" style="margin-bottom:14px">
-          <div class="form-group">
-            <label class="form-label">Produto recebido *</label>
-            <select class="form-select" id="f-insumo-ent"><option value="">Selecione o insumo...</option></select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Quantidade de peixes</label>
-            <input class="form-input mono" id="f-qtd-ent" type="number" min="1" step="1" placeholder="0">
-          </div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Perdas (kg)</div>
+        <div class="form-grid-3">
+          <div class="form-group"><label class="form-label">Cabeça</label><input class="form-input mono" id="f-p-cabeca" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
+          <div class="form-group"><label class="form-label">Pele</label><input class="form-input mono" id="f-p-pele" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
+          <div class="form-group"><label class="form-label">Espinha</label><input class="form-input mono" id="f-p-espinha" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
+          <div class="form-group"><label class="form-label">Outros</label><input class="form-input mono" id="f-p-outros" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
+          <div class="form-group"><label class="form-label">Peso Limpo (kg)</label><input class="form-input mono" id="f-peso-limpo" type="number" step="0.001" min="0" placeholder="auto" readonly></div>
+        </div>
+        <div class="calc-box">
+          <div class="calc-item"><div class="calc-lbl">Peso Limpo</div><div class="calc-val" id="cv-limpo">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Total Perdas</div><div class="calc-val c-red" id="cv-perdas">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Rendimento</div><div class="calc-val c-amber" id="cv-rend">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Valor Total</div><div class="calc-val c-blue" id="cv-valor">—</div></div>
+        </div>
+      </div>
+
+      <!-- MODELO: DEGELO -->
+      <div class="form-card fields-block" id="fields-degelo">
+        <div class="form-card-title" style="color:#1d4ed8">Degelo + Limpeza</div>
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg)</label><input class="form-input mono" id="fd-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcDegelo()"></div>
         </div>
         <div class="form-grid-3">
-          <div class="form-group">
-            <label class="form-label">Peso bruto total com cabeça (kg) *</label>
-            <input class="form-input mono" id="f-peso-bruto" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcEntrada()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Valor total da compra (R$)</label>
-            <input class="form-input mono" id="f-valor-total" type="number" step="0.01" min="0" placeholder="0,00" oninput="onValorChange()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Custo/kg entrada (R$/kg)</label>
-            <input class="form-input mono" id="f-custo-kg-ent" type="number" step="0.01" min="0" placeholder="0,00" oninput="onCustoKgEntChange()">
-          </div>
-        </div>
-      </div>
-
-      <!-- ENTRADA: QUEBRA INICIAL -->
-      <div class="form-card" id="sec-quebra">
-        <div class="form-card-title" style="color:#dc2626">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          Quebra Inicial — Cabeça
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Peso da cabeça descartada (kg)</label>
-            <input class="form-input mono" id="f-cabeca" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcEntrada()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Peso líquido armazenado (kg)</label>
-            <input class="form-input mono" id="f-liq-arm" type="number" step="0.001" min="0" placeholder="automático" readonly>
-            <span class="form-hint">= Peso bruto − Cabeça</span>
-          </div>
+          <div class="form-group"><label class="form-label">Peso Congelado (kg) *</label><input class="form-input mono" id="fd-congelado" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
+          <div class="form-group"><label class="form-label">Peso Descongelado (kg)</label><input class="form-input mono" id="fd-descongelado" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
+          <div class="form-group"><label class="form-label">Perda Degelo (kg)</label><input class="form-input mono" id="fd-p-degelo" type="number" step="0.001" placeholder="auto" readonly></div>
+          <div class="form-group"><label class="form-label">Peso Limpo (kg)</label><input class="form-input mono" id="fd-limpo" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
+          <div class="form-group"><label class="form-label">Perda Limpeza (kg)</label><input class="form-input mono" id="fd-p-limpeza" type="number" step="0.001" placeholder="auto" readonly></div>
         </div>
         <div class="calc-box">
-          <div class="calc-item"><div class="calc-lbl">% Cabeça</div><div class="calc-val c-amber" id="cv-pct-cab">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Peso Líq. Armazenado</div><div class="calc-val" id="cv-liq-arm">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Novo Custo/kg</div><div class="calc-val c-blue" id="cv-novo-custo">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Peso Final</div><div class="calc-val" id="dv-limpo">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Perda Total</div><div class="calc-val c-red" id="dv-perdas">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Rendimento</div><div class="calc-val c-amber" id="dv-rend">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Valor Total</div><div class="calc-val c-blue" id="dv-valor">—</div></div>
         </div>
       </div>
 
-      <!-- SAÍDA: PROCESSAMENTO -->
-      <div class="form-card" id="sec-processamento" style="display:none">
-        <div class="form-card-title" style="color:#c2410c">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Processamento
-        </div>
-        <div class="form-grid" style="margin-bottom:14px">
-          <div class="form-group">
-            <label class="form-label">Produto processado *</label>
-            <select class="form-select" id="f-insumo-sai" onchange="onInsumoSaiChange()"><option value="">Selecione o insumo...</option></select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Quantidade de peixes</label>
-            <input class="form-input mono" id="f-qtd-sai" type="number" min="1" step="1" placeholder="0">
-          </div>
-        </div>
+      <!-- MODELO: COCÇÃO -->
+      <div class="form-card fields-block" id="fields-coccao">
+        <div class="form-card-title" style="color:#c2410c">Cocção / Redução</div>
         <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Peso de entrada (kg) *</label>
-            <input class="form-input mono" id="f-peso-entrada" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSaida()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Custo/kg de entrada (R$/kg)</label>
-            <input class="form-input mono" id="f-custo-kg-sai" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSaida()">
-            <span class="form-hint">Preenchido automaticamente pelo insumo</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- SAÍDA: RESULTADOS -->
-      <div class="form-card" id="sec-resultados" style="display:none">
-        <div class="form-card-title" style="color:#16a34a">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          Resultados
-        </div>
-        <div class="form-grid-4">
-          <div class="form-group">
-            <label class="form-label">Filé limpo (kg)</label>
-            <input class="form-input mono" id="f-file-limpo" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSaida()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Pele (kg)</label>
-            <input class="form-input mono" id="f-pele" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSaida()">
-            <span class="form-hint">aproveitamento</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Aparas (kg)</label>
-            <input class="form-input mono" id="f-aparas" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSaida()">
-            <span class="form-hint">aproveitamento</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Perdas (kg)</label>
-            <input class="form-input mono" id="f-perdas" type="number" step="0.001" min="0" placeholder="automático" readonly>
-            <span class="form-hint">= Entrada − Aproveitável</span>
-          </div>
+          <div class="form-group"><label class="form-label">Peso Inicial (kg) *</label><input class="form-input mono" id="fc-inicial" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcCoccao()"></div>
+          <div class="form-group"><label class="form-label">Peso Final (kg) *</label><input class="form-input mono" id="fc-final" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcCoccao()"></div>
+          <div class="form-group"><label class="form-label">Redução (kg)</label><input class="form-input mono" id="fc-reducao" type="number" step="0.001" placeholder="auto" readonly></div>
+          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg)</label><input class="form-input mono" id="fc-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcCoccao()"></div>
         </div>
         <div class="calc-box">
-          <div class="calc-item"><div class="calc-lbl">Total Aprov.</div><div class="calc-val c-green" id="sv-aprov">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Perdas</div><div class="calc-val c-red" id="sv-perdas">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Rendimento Op.</div><div class="calc-val c-amber" id="sv-rend">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Custo/kg Filé</div><div class="calc-val" id="sv-custo-file">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Custo/kg Aprov.</div><div class="calc-val" id="sv-custo-aprov">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Redução</div><div class="calc-val c-red" id="ccv-red">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Rendimento</div><div class="calc-val c-amber" id="ccv-rend">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Valor Total</div><div class="calc-val c-blue" id="ccv-valor">—</div></div>
+        </div>
+      </div>
+
+      <!-- MODELO: LOTE -->
+      <div class="form-card fields-block" id="fields-lote">
+        <div class="form-card-title" style="color:#6d28d9">Produção em Lote</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Qtd. Produzida (kg/un) *</label><input class="form-input mono" id="fl-produzida" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcLote()"></div>
+          <div class="form-group"><label class="form-label">Qtd. Consumida (MP) (kg)</label><input class="form-input mono" id="fl-consumida" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcLote()"></div>
+          <div class="form-group"><label class="form-label">Sobra</label><input class="form-input mono" id="fl-sobra" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcLote()"></div>
+          <div class="form-group"><label class="form-label">Validade</label><input class="form-input" id="fl-validade" type="date"></div>
+          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg MP)</label><input class="form-input mono" id="fl-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcLote()"></div>
+        </div>
+        <div class="calc-box">
+          <div class="calc-item"><div class="calc-lbl">Rendimento</div><div class="calc-val c-amber" id="lv-rend">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Valor Total MP</div><div class="calc-val c-blue" id="lv-valor">—</div></div>
         </div>
       </div>
 
@@ -542,8 +521,9 @@ function sair(){localStorage.removeItem('sb_user');location.href='login.html';}
    STATE
 ================================================================ */
 let _lancs=[], _insumos=[], _fornecedores=[], _lojas=[];
-let _editId=null, _tipo='entrada';
+let _editId=null;
 let _relData=[];
+const _modeloLabel={simples:'Simples',degelo:'Degelo + Limpeza',coccao:'Cocção / Redução',lote:'Prod. em Lote'};
 
 /* ================================================================
    WORKSPACE TABS
@@ -600,10 +580,9 @@ async function carregar(){
 }
 
 function _populateSelects(){
-  const insumoOpts='<option value="">Selecione o insumo...</option>'+
+  const insumoOpts='<option value="">Selecione...</option>'+
     _insumos.map(i=>`<option value="${i.id}" data-custo="${i.preco_compra||0}">${esc(i.nome)}</option>`).join('');
-  document.getElementById('f-insumo-ent').innerHTML=insumoOpts;
-  document.getElementById('f-insumo-sai').innerHTML=insumoOpts;
+  document.getElementById('f-insumo').innerHTML=insumoOpts;
   document.getElementById('rel-insumo').innerHTML='<option value="">Todos os produtos</option>'+
     _insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
   const fornOpts='<option value="">Nenhum</option>'+
@@ -629,10 +608,13 @@ function _loadUser(){
 ================================================================ */
 function renderLanc(){
   const busca=(document.getElementById('lanc-busca')?.value||'').toLowerCase();
+  const modelo=document.getElementById('lanc-f-modelo')?.value||'';
   const tipo=document.getElementById('lanc-f-tipo')?.value||'';
   const de=document.getElementById('lanc-f-de')?.value||'';
   const ate=document.getElementById('lanc-f-ate')?.value||'';
   const rows=_lancs.filter(l=>{
+    const mod=l.modelo||l.modelo_processo||'';
+    if(modelo&&mod!==modelo)return false;
     if(tipo&&l.tipo!==tipo)return false;
     if(busca){const ins=_insumos.find(i=>i.id===l.insumo_id);if(!(ins?.nome||'').toLowerCase().includes(busca))return false;}
     if(de&&l.data<de)return false;
@@ -643,18 +625,17 @@ function renderLanc(){
   if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty-st">Nenhum lançamento encontrado.</td></tr>';return;}
   tbody.innerHTML=rows.map(l=>{
     const ins=_insumos.find(i=>i.id===l.insumo_id);
-    const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
-    const isEnt=l.tipo==='entrada';
-    const badge=isEnt?'<span class="badge b-ent">↓ Entrada</span>':'<span class="badge b-sai">↑ Saída</span>';
-    const rendVal=l.rendimento_pct!=null?`<span class="mono">${pct(l.rendimento_pct)}</span>`:'—';
+    const loja=_lojas.find(lj=>lj.id===l.loja_id);
+    const mod=l.modelo||l.modelo_processo||'simples';
+    const peso=l.peso_bruto||l.peso_congelado||l.peso_inicial||l.qtd_produzida;
     return `<tr>
       <td>${fmtDate(l.data)}</td>
-      <td>${badge}</td>
+      <td><span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:11px">${esc(_modeloLabel[mod]||mod)}</span></td>
       <td style="font-weight:600">${esc(ins?.nome||'—')}</td>
-      <td>${esc(forn?(forn.nome_fantasia||forn.nome||forn.razao_social||'—'):'—')}</td>
-      <td class="r mono">${l.qtd_peixes||'—'}</td>
-      <td class="r mono">${kg(l.peso_bruto)}</td>
-      <td class="r">${rendVal}</td>
+      <td>${esc(loja?.nome||'—')}</td>
+      <td>${esc(l.turno||'—')}</td>
+      <td class="r mono">${kg(peso)}</td>
+      <td class="r">${l.rendimento_pct!=null?`<span class="mono">${pct(l.rendimento_pct)}</span>`:'—'}</td>
       <td>${esc(l.responsavel||'—')}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="editarLanc('${l.id}')">Editar</button>
@@ -694,182 +675,149 @@ function editarLanc(id){
   showForm();
 }
 function _resetForm(){
-  const ids=['f-data','f-loja','f-turno','f-fornecedor','f-responsavel','f-obs',
-    'f-insumo-ent','f-qtd-ent','f-peso-bruto','f-valor-total','f-custo-kg-ent','f-cabeca','f-liq-arm',
-    'f-insumo-sai','f-qtd-sai','f-peso-entrada','f-custo-kg-sai','f-file-limpo','f-pele','f-aparas','f-perdas'];
-  ids.forEach(id=>sv(id,''));
+  ['f-insumo','f-modelo','f-data','f-loja','f-turno','f-lote','f-fornecedor','f-responsavel','f-obs',
+   'f-peso-bruto','f-custo-unit','f-p-cabeca','f-p-pele','f-p-espinha','f-p-outros','f-peso-limpo',
+   'fd-custo','fd-congelado','fd-descongelado','fd-p-degelo','fd-limpo','fd-p-limpeza',
+   'fc-inicial','fc-final','fc-reducao','fc-custo',
+   'fl-produzida','fl-consumida','fl-sobra','fl-validade','fl-custo']
+  .forEach(id=>sv(id,''));
   sv('f-data',new Date().toISOString().slice(0,10));
-  setTipo('entrada');
-  ['cv-pct-cab','cv-liq-arm','cv-novo-custo','sv-aprov','sv-perdas','sv-rend','sv-custo-file','sv-custo-aprov']
-    .forEach(id=>se(id,'—'));
+  sv('f-turno','Manhã');
+  sv('f-modelo','simples');
+  onModeloChange();
+  ['cv-limpo','cv-perdas','cv-rend','cv-valor',
+   'dv-limpo','dv-perdas','dv-rend','dv-valor',
+   'ccv-red','ccv-rend','ccv-valor','lv-rend','lv-valor'].forEach(id=>se(id,'—'));
 }
 function _populateForm(l){
-  setTipo(l.tipo||'entrada');
+  const mod=l.modelo||l.modelo_processo||'simples';
+  sv('f-insumo',l.insumo_id||'');
+  sv('f-modelo',mod);
   sv('f-data',l.data||'');
   sv('f-loja',l.loja_id||'');
+  sv('f-turno',l.turno||'Manhã');
+  sv('f-lote',l.lote||'');
   sv('f-responsavel',l.responsavel||'');
+  sv('f-fornecedor',l.fornecedor_id||'');
   sv('f-obs',l.observacoes||'');
-  if(l.tipo==='entrada'){
-    sv('f-insumo-ent',l.insumo_id||'');
-    sv('f-qtd-ent',l.qtd_peixes||'');
-    sv('f-peso-bruto',l.peso_bruto||'');
-    sv('f-valor-total',l.valor_total||'');
-    sv('f-custo-kg-ent',l.custo_unitario||'');
-    sv('f-cabeca',l.perda_cabeca||'');
-    sv('f-fornecedor',l.fornecedor_id||'');
-    calcEntrada();
-  } else {
-    sv('f-insumo-sai',l.insumo_id||'');
-    sv('f-qtd-sai',l.qtd_peixes||'');
-    sv('f-peso-entrada',l.peso_bruto||'');
-    sv('f-custo-kg-sai',l.custo_unitario||'');
-    sv('f-file-limpo',l.peso_limpo||'');
-    sv('f-pele',l.pele||'');
-    sv('f-aparas',l.aparas||'');
-    sv('f-turno',l.turno||'');
-    calcSaida();
+  if(mod==='simples'){
+    sv('f-peso-bruto',l.peso_bruto||'');sv('f-custo-unit',l.custo_unitario||'');
+    sv('f-p-cabeca',l.perda_cabeca||'');sv('f-p-pele',l.perda_pele||'');
+    sv('f-p-espinha',l.perda_espinha||'');sv('f-p-outros',l.perda_outros||'');
+    sv('f-peso-limpo',l.peso_limpo||'');calcSimples();
+  }else if(mod==='degelo'){
+    sv('fd-custo',l.custo_unitario||'');sv('fd-congelado',l.peso_congelado||'');
+    sv('fd-descongelado',l.peso_descongelado||'');sv('fd-limpo',l.peso_limpo||'');calcDegelo();
+  }else if(mod==='coccao'){
+    sv('fc-inicial',l.peso_inicial||'');sv('fc-final',l.peso_final||'');
+    sv('fc-custo',l.custo_unitario||'');calcCoccao();
+  }else if(mod==='lote'){
+    sv('fl-produzida',l.qtd_produzida||'');sv('fl-consumida',l.qtd_consumida||'');
+    sv('fl-sobra',l.sobra_lote||'');sv('fl-validade',l.validade||'');
+    sv('fl-custo',l.custo_unitario||'');calcLote();
   }
+  onModeloChange();
 }
 
 /* ================================================================
-   TIPO TOGGLE
+   MODELO CHANGE
 ================================================================ */
-function setTipo(tipo){
-  _tipo=tipo;
-  document.getElementById('pill-entrada').classList.toggle('active',tipo==='entrada');
-  document.getElementById('pill-saida').classList.toggle('active',tipo==='saida');
-  ['sec-recebimento','sec-quebra'].forEach(id=>{
-    document.getElementById(id).style.display=tipo==='entrada'?'':'none';
-  });
-  ['sec-processamento','sec-resultados'].forEach(id=>{
-    document.getElementById(id).style.display=tipo==='saida'?'':'none';
-  });
-  document.getElementById('fg-fornecedor').style.display=tipo==='entrada'?'':'none';
-  document.getElementById('fg-turno').style.display=tipo==='saida'?'':'none';
+function onModeloChange(){
+  const modelo=document.getElementById('f-modelo')?.value||'simples';
+  document.querySelectorAll('.fields-block').forEach(b=>b.classList.remove('active'));
+  const block=document.getElementById('fields-'+modelo);
+  if(block) block.classList.add('active');
 }
 
 /* ================================================================
-   CÁLCULOS — ENTRADA
+   CÁLCULOS
 ================================================================ */
-function calcEntrada(){
+function calcSimples(){
   const bruto=n('f-peso-bruto');
-  const cabeca=n('f-cabeca');
-  const liq=r3(bruto-cabeca);
-  const valor=n('f-valor-total');
-  sv('f-liq-arm',liq>0?liq:'');
-  se('cv-pct-cab',bruto>0?pct(r2(cabeca/bruto*100)):'—');
-  se('cv-liq-arm',liq>0?kg(liq):'—');
-  const novoCusto=liq>0&&valor>0?r2(valor/liq):null;
-  se('cv-novo-custo',novoCusto?brl(novoCusto):'—');
+  const perdas=[n('f-p-cabeca'),n('f-p-pele'),n('f-p-espinha'),n('f-p-outros')];
+  const totalP=r3(perdas.reduce((s,v)=>s+v,0));
+  const limpo=r3(bruto-totalP);
+  const rend=bruto>0?r2(limpo/bruto*100):0;
+  const custo=n('f-custo-unit');
+  sv('f-peso-limpo',limpo>=0?limpo:'');
+  se('cv-limpo',limpo>=0?kg(limpo):'—');
+  se('cv-perdas',kg(totalP));
+  se('cv-rend',pct(rend));
+  se('cv-valor',custo?brl(r2(bruto*custo)):'—');
 }
-function onValorChange(){
-  const bruto=n('f-peso-bruto'),val=n('f-valor-total');
-  if(bruto>0&&val>0) sv('f-custo-kg-ent',r2(val/bruto));
-  calcEntrada();
+function calcDegelo(){
+  const cong=n('fd-congelado'),desc=n('fd-descongelado'),limpo=n('fd-limpo');
+  const pDegelo=r3(cong-desc),pLimpo=desc>0?r3(desc-limpo):0;
+  const rend=cong>0?r2(limpo/cong*100):0,custo=n('fd-custo');
+  sv('fd-p-degelo',pDegelo>=0?pDegelo:'');sv('fd-p-limpeza',pLimpo>=0?pLimpo:'');
+  se('dv-limpo',kg(limpo));se('dv-perdas',kg(r3(cong-limpo)));
+  se('dv-rend',pct(rend));se('dv-valor',custo?brl(r2(cong*custo)):'—');
 }
-function onCustoKgEntChange(){
-  const bruto=n('f-peso-bruto'),custo=n('f-custo-kg-ent');
-  if(bruto>0&&custo>0) sv('f-valor-total',r2(bruto*custo));
-  calcEntrada();
+function calcCoccao(){
+  const ini=n('fc-inicial'),fin=n('fc-final'),red=r3(ini-fin),custo=n('fc-custo');
+  sv('fc-reducao',red>=0?red:'');
+  se('ccv-red',kg(red));se('ccv-rend',pct(ini>0?r2(fin/ini*100):0));
+  se('ccv-valor',custo?brl(r2(ini*custo)):'—');
 }
-
-/* ================================================================
-   CÁLCULOS — SAÍDA
-================================================================ */
-function onInsumoSaiChange(){
-  const sel=document.getElementById('f-insumo-sai');
-  const opt=sel.options[sel.selectedIndex];
-  const custo=parseFloat(opt?.dataset?.custo)||0;
-  if(custo>0) sv('f-custo-kg-sai',custo);
-  calcSaida();
-}
-function calcSaida(){
-  const entrada=n('f-peso-entrada');
-  const file=n('f-file-limpo');
-  const pele=n('f-pele');
-  const aparas=n('f-aparas');
-  const aprov=r3(file+pele+aparas);
-  const perdas=r3(Math.max(0,entrada-aprov));
-  const rend=entrada>0?r2(aprov/entrada*100):null;
-  const custoKg=n('f-custo-kg-sai');
-  const valorEnt=custoKg*entrada;
-  const custoFile=file>0&&custoKg>0?r2(valorEnt/file):null;
-  const custoAprov=aprov>0&&custoKg>0?r2(valorEnt/aprov):null;
-  sv('f-perdas',perdas>0?perdas:'');
-  se('sv-aprov',aprov>0?kg(aprov):'—');
-  se('sv-perdas',perdas>0?kg(perdas):'—');
-  se('sv-rend',rend!=null?pct(rend):'—');
-  se('sv-custo-file',custoFile?brl(custoFile):'—');
-  se('sv-custo-aprov',custoAprov?brl(custoAprov):'—');
+function calcLote(){
+  const prod=n('fl-produzida'),cons=n('fl-consumida'),custo=n('fl-custo');
+  se('lv-rend',pct(cons>0?r2(prod/cons*100):0));
+  se('lv-valor',custo?brl(r2(cons*custo)):'—');
 }
 
 /* ================================================================
    SALVAR
 ================================================================ */
 async function salvarLanc(){
+  const insumoId=document.getElementById('f-insumo').value;
+  if(!insumoId){toast('Selecione o item.','err');return;}
   const data=document.getElementById('f-data').value;
   if(!data){toast('Informe a data.','err');return;}
-  let payload={tipo:_tipo,data,
-    loja_id:document.getElementById('f-loja').value||null,
-    observacoes:document.getElementById('f-obs').value.trim()||null,
-    responsavel:document.getElementById('f-responsavel').value.trim()||null};
+  const modelo=document.getElementById('f-modelo').value;
 
-  if(_tipo==='entrada'){
-    const insumoId=document.getElementById('f-insumo-ent').value;
-    if(!insumoId){toast('Selecione o produto recebido.','err');return;}
-    const bruto=n('f-peso-bruto');
-    if(!bruto){toast('Informe o peso bruto total.','err');return;}
-    const cabeca=n('f-cabeca');
-    const liq=r3(bruto-cabeca);
-    const valor=n('f-valor-total');
-    const custoKg=n('f-custo-kg-ent');
-    Object.assign(payload,{
-      insumo_id:insumoId,
-      fornecedor_id:document.getElementById('f-fornecedor').value||null,
-      qtd_peixes:parseInt(document.getElementById('f-qtd-ent').value)||null,
-      peso_bruto:bruto||null,
-      valor_total:valor||null,
-      custo_unitario:custoKg||null,
-      perda_cabeca:cabeca||null,
-      peso_limpo:liq>0?liq:null,
-      pct_cabeca:bruto>0?r2(cabeca/bruto*100):null,
-      novo_custo_kg:(liq>0&&valor>0)?r2(valor/liq):null,
-    });
-  } else {
-    const insumoId=document.getElementById('f-insumo-sai').value;
-    if(!insumoId){toast('Selecione o produto processado.','err');return;}
-    const entrada=n('f-peso-entrada');
-    if(!entrada){toast('Informe o peso de entrada.','err');return;}
-    const file=n('f-file-limpo');
-    const peleV=n('f-pele');
-    const aparasV=n('f-aparas');
-    const aprov=r3(file+peleV+aparasV);
-    const perdas=r3(Math.max(0,entrada-aprov));
-    const rend=entrada>0?r2(aprov/entrada*100):null;
-    const custoKg=n('f-custo-kg-sai');
-    const valorEnt=custoKg*entrada;
-    Object.assign(payload,{
-      insumo_id:insumoId,
-      turno:document.getElementById('f-turno').value||null,
-      qtd_peixes:parseInt(document.getElementById('f-qtd-sai').value)||null,
-      peso_bruto:entrada||null,
-      custo_unitario:custoKg||null,
-      peso_limpo:file||null,
-      pele:peleV||null,
-      aparas:aparasV||null,
-      perda_outros:perdas>0?perdas:null,
-      rendimento_pct:rend,
-      custo_kg_file:(file>0&&custoKg>0)?r2(valorEnt/file):null,
-      custo_kg_aprov:(aprov>0&&custoKg>0)?r2(valorEnt/aprov):null,
-    });
+  let payload={
+    insumo_id:insumoId,modelo,modelo_processo:modelo,data,
+    loja_id:document.getElementById('f-loja').value||null,
+    turno:document.getElementById('f-turno').value||null,
+    lote:document.getElementById('f-lote').value.trim()||null,
+    responsavel:document.getElementById('f-responsavel').value.trim()||null,
+    fornecedor_id:document.getElementById('f-fornecedor').value||null,
+    observacoes:document.getElementById('f-obs').value.trim()||null,
+  };
+
+  if(modelo==='simples'){
+    const bruto=n('f-peso-bruto');if(!bruto){toast('Informe o peso bruto.','err');return;}
+    const limpo=n('f-peso-limpo'),custo=n('f-custo-unit');
+    Object.assign(payload,{peso_bruto:bruto,peso_limpo:limpo||null,
+      perda_cabeca:n('f-p-cabeca')||null,perda_pele:n('f-p-pele')||null,
+      perda_espinha:n('f-p-espinha')||null,perda_outros:n('f-p-outros')||null,
+      rendimento_pct:bruto>0?r2(limpo/bruto*100):null,
+      custo_unitario:custo||null,valor_total:custo?r2(bruto*custo):null});
+  }else if(modelo==='degelo'){
+    const cong=n('fd-congelado');if(!cong){toast('Informe o peso congelado.','err');return;}
+    const limpo=n('fd-limpo'),custo=n('fd-custo');
+    Object.assign(payload,{peso_congelado:cong,peso_descongelado:n('fd-descongelado')||null,
+      peso_limpo:limpo||null,rendimento_pct:cong>0?r2(limpo/cong*100):null,
+      custo_unitario:custo||null,valor_total:custo?r2(cong*custo):null});
+  }else if(modelo==='coccao'){
+    const ini=n('fc-inicial');if(!ini){toast('Informe o peso inicial.','err');return;}
+    const fin=n('fc-final'),custo=n('fc-custo');
+    Object.assign(payload,{peso_inicial:ini,peso_final:fin||null,
+      rendimento_pct:ini>0?r2(fin/ini*100):null,
+      custo_unitario:custo||null,valor_total:custo?r2(ini*custo):null});
+  }else if(modelo==='lote'){
+    const prod=n('fl-produzida');if(!prod){toast('Informe a quantidade produzida.','err');return;}
+    const cons=n('fl-consumida'),custo=n('fl-custo');
+    Object.assign(payload,{qtd_produzida:prod,qtd_consumida:cons||null,
+      sobra_lote:n('fl-sobra')||null,validade:document.getElementById('fl-validade').value||null,
+      rendimento_pct:cons>0?r2(prod/cons*100):null,
+      custo_unitario:custo||null,valor_total:custo?r2(cons*custo):null});
   }
 
   await Params.load();
   if(Params.bool('porcionamento','obrigar_responsavel')&&!payload.responsavel){
     toast('Responsável é obrigatório (Parâmetros).','err');return;}
-  if(_tipo==='entrada'&&Params.bool('porcionamento','obrigar_fornecedor')&&!payload.fornecedor_id){
-    toast('Fornecedor é obrigatório (Parâmetros).','err');return;}
-  if(_tipo==='saida'&&Params.bool('porcionamento','alertar_perda_alta')&&payload.rendimento_pct!=null){
+  if(Params.bool('porcionamento','alertar_perda_alta')&&payload.rendimento_pct!=null){
     const maxP=Params.num('porcionamento','pct_max_perda',40);
     const perdPct=100-payload.rendimento_pct;
     if(perdPct>maxP&&!confirm(`⚠️ Perda de ${perdPct.toFixed(1)}% acima do limite de ${maxP}%.\nSalvar mesmo assim?`))return;
@@ -881,7 +829,7 @@ async function salvarLanc(){
     if(_editId){
       await api(`porcao_lancamentos?id=eq.${_editId}`,{method:'PATCH',body:JSON.stringify(payload)});
       toast('Lançamento atualizado.','ok');
-    } else {
+    }else{
       payload.tenant_id=TENANT_ID;
       await api('porcao_lancamentos',{method:'POST',body:JSON.stringify(payload)});
       toast('Lançamento registrado.','ok');
