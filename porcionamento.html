@@ -817,18 +817,19 @@ async function salvarLanc(){
       custo_unitario:custo||null,valor_total:custo?r2(cons*custo):null});
   }
 
-  await Params.load();
-  if(Params.bool('porcionamento','obrigar_responsavel')&&!payload.responsavel){
-    toast('Responsável é obrigatório (Parâmetros).','err');return;}
-  if(Params.bool('porcionamento','alertar_perda_alta')&&payload.rendimento_pct!=null){
-    const maxP=Params.num('porcionamento','pct_max_perda',40);
-    const perdPct=100-payload.rendimento_pct;
-    if(perdPct>maxP&&!confirm(`⚠️ Perda de ${perdPct.toFixed(1)}% acima do limite de ${maxP}%.\nSalvar mesmo assim?`))return;
-  }
-
   const btn=document.getElementById('btn-salvar');
   btn.disabled=true;btn.textContent='Salvando...';
   try{
+    try{
+      await Params.load();
+      if(Params.bool('porcionamento','obrigar_responsavel')&&!payload.responsavel){
+        toast('Responsável é obrigatório (Parâmetros).','err');btn.disabled=false;btn.textContent='Salvar Lançamento';return;}
+      if(Params.bool('porcionamento','alertar_perda_alta')&&payload.rendimento_pct!=null){
+        const maxP=Params.num('porcionamento','pct_max_perda',40);
+        const perdPct=100-payload.rendimento_pct;
+        if(perdPct>maxP&&!confirm(`⚠️ Perda de ${perdPct.toFixed(1)}% acima do limite de ${maxP}%.\nSalvar mesmo assim?`)){btn.disabled=false;btn.textContent='Salvar Lançamento';return;}
+      }
+    }catch{}
     if(_editId){
       await api(`porcao_lancamentos?id=eq.${_editId}`,{method:'PATCH',body:JSON.stringify(payload)});
       toast('Lançamento atualizado.','ok');
