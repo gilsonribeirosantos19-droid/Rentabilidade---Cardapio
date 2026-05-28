@@ -17,9 +17,8 @@
     {
       id: 'operacao', label: 'Operação',
       items: [
-        { href: 'portal_gerente.html', label: 'Portal do Gerente' },
-        { href: 'estoque.html',        label: 'Estoque' },
-        { href: 'ajustes.html',        label: 'Ajustes' },
+        { href: 'estoque.html', label: 'Estoque' },
+        { href: 'ajustes.html', label: 'Ajustes' },
       ]
     },
     {
@@ -175,6 +174,10 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
       </a>
+      ${_canView('portal_gerente.html') ? `<a class="nav-item${page === 'portal_gerente.html' ? ' active' : ''}" href="portal_gerente.html" style="color:#f97316;font-weight:600">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Portal do Gerente
+      </a>` : ''}
     </div>
     ${GROUPS.map(navGroup).join('')}
     <div style="flex:1"></div>
