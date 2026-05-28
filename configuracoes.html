@@ -766,10 +766,22 @@ async function salvarVinculos(){
   if(!grp) return;
   const checkboxes=document.querySelectorAll('[id^="vu-"]');
   try{
-    await Promise.all(Array.from(checkboxes).map(chk=>{
+    const updates=[];
+    checkboxes.forEach(chk=>{
       const uid=chk.id.replace('vu-','');
-      return api(`usuarios?id=eq.${uid}`,{method:'PATCH',body:JSON.stringify({role:chk.checked?grp.nome:null}),prefer:'return=minimal'});
-    }));
+      if(chk.checked){
+        // Adiciona ao grupo
+        updates.push(api(`usuarios?id=eq.${uid}`,{method:'PATCH',body:JSON.stringify({role:grp.nome}),prefer:'return=minimal'}));
+      } else {
+        // Remove do grupo SOMENTE se o role atual for este grupo (não apaga role de outros grupos)
+        const tr=chk.closest('tr');
+        const roleAtual=tr?.querySelector('td:nth-child(4) span')?.textContent?.trim();
+        if(roleAtual===grp.nome){
+          updates.push(api(`usuarios?id=eq.${uid}`,{method:'PATCH',body:JSON.stringify({role:null}),prefer:'return=minimal'}));
+        }
+      }
+    });
+    await Promise.all(updates);
     window.Perms?.invalidate();
     toast('Vínculos salvos.','ok');
   }catch(e){toast('Erro: '+e.message,'err');}
