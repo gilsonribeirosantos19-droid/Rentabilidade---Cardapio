@@ -125,6 +125,8 @@
 
   /* FIELDS BLOCK */
   .fields-block{display:none}.fields-block.active{display:block}
+  /* TFOOT TOTAIS */
+  #rel-tfoot tr td{padding:9px 12px;border-top:2px solid #0f2d5c;background:#f8fafc;font-weight:700;font-size:12px;font-family:'DM Mono',monospace}
   /* TOAST / EMPTY */
   .empty-st{padding:40px;text-align:center;color:var(--text3);font-size:13px}
   .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:380px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
@@ -447,6 +449,7 @@
         <table id="rel-table">
           <thead><tr id="rel-thead"></tr></thead>
           <tbody id="rel-tbody"></tbody>
+          <tfoot id="rel-tfoot"></tfoot>
         </table>
       </div></div>
       <div style="display:flex;justify-content:flex-end;margin-top:12px">
@@ -942,6 +945,7 @@ function limparRel(){
   _relData=[];
   document.getElementById('rel-content').style.display='none';
   document.getElementById('rel-empty').style.display='';
+  document.getElementById('rel-tfoot').innerHTML='';
 }
 
 function _renderRelTable(){
@@ -976,6 +980,28 @@ function _renderRelTable(){
     };
     return `<tr>${visCols.map(c=>`<td>${cells[c.id]||'—'}</td>`).join('')}</tr>`;
   }).join('');
+
+  // ── Linha de totais ──
+  const sum=(field,filterFn=()=>true)=>_relData.filter(filterFn).reduce((s,l)=>s+(parseFloat(l[field])||0),0);
+  const isEnt=l=>l.tipo==='entrada'||(l.modelo==='simples'&&!l.tipo)||(l.modelo_processo==='simples'&&!l.tipo);
+  const totals={
+    data:'<span style="color:#0f2d5c;font-size:10px;letter-spacing:.06em;text-transform:uppercase">TOTAL</span>',
+    tipo:'', produto:'', fornecedor:'',
+    qtd_ent: _relData.filter(l=>l.qtd_peixes!=null&&(l.tipo==='entrada'||!l.tipo)).reduce((s,l)=>s+(parseInt(l.qtd_peixes)||0),0)||'—',
+    peso_bruto: kg(r3(sum('peso_bruto',l=>l.tipo==='entrada'))),
+    cabeca:     kg(r3(sum('perda_cabeca',l=>l.tipo==='entrada'))),
+    liq_arm:    kg(r3(sum('peso_limpo',l=>l.tipo==='entrada'))),
+    qtd_sai:    _relData.filter(l=>l.qtd_peixes!=null&&l.tipo==='saida').reduce((s,l)=>s+(parseInt(l.qtd_peixes)||0),0)||'—',
+    peso_ent:   kg(r3(sum('peso_bruto',l=>l.tipo==='saida'))),
+    file_limpo: kg(r3(sum('peso_limpo',l=>l.tipo==='saida'))),
+    pele:       kg(r3(sum('pele',l=>l.tipo==='saida'))),
+    aparas:     kg(r3(sum('aparas',l=>l.tipo==='saida'))),
+    perdas:     `<span style="color:var(--red)">${kg(r3(sum('perda_outros',l=>l.tipo==='saida')))}</span>`,
+    rend_op: (()=>{const rs=_relData.filter(l=>l.tipo==='saida'&&l.rendimento_pct!=null);return rs.length?pct(r2(rs.reduce((s,l)=>s+parseFloat(l.rendimento_pct),0)/rs.length)):'—';})(),
+    custo_kg:'', responsavel:'',
+  };
+  const tfoot=document.getElementById('rel-tfoot');
+  tfoot.innerHTML=`<tr>${visCols.map(c=>`<td>${totals[c.id]??'—'}</td>`).join('')}</tr>`;
 }
 
 function exportar(){
