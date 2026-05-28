@@ -243,6 +243,38 @@
     .sol-bottom div:last-child{order:3}
     .inv-filtros-grid .btn{grid-column:1/-1}
   }
+  /* ── PCP ── */
+  .filter-bar-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;margin-bottom:18px}
+  .fil-select{height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--text1);font-weight:500;background:var(--bg3);outline:none;cursor:pointer;min-width:130px}
+  .fil-select:focus{border-color:var(--teal)}
+  .filter-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+  .tbl-card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:8px}
+  .tbl-scroll{overflow-x:auto}
+  .empty-st{padding:40px;text-align:center;color:var(--text3);font-size:13px}
+  .b-ok{background:#dcfce7;color:#16a34a}.b-warn{background:#fef3c7;color:#b45309}
+  .b-danger{background:#fee2e2;color:#dc2626}.b-info{background:#dbeafe;color:#2563eb}
+  .b-neu{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+  .td-mono{font-family:'DM Mono',monospace;font-size:12px}
+  .sug-ok{color:#16a34a;font-weight:600}.sug-baixo{color:#f59e0b;font-weight:600}.sug-ruptura{color:#dc2626;font-weight:600}
+  /* PCP modal styles */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal-overlay .modal-box{background:#fff;border-radius:16px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto}
+  .modal-header{padding:18px 24px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+  .modal-title{font-size:15px;font-weight:700}
+  .modal-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;padding:2px 8px;border-radius:6px}
+  .modal-close:hover{background:var(--bg3);color:var(--text1)}
+  .modal-body{padding:20px 24px}
+  .modal-footer{padding:14px 24px;border-top:1px solid var(--border2);display:flex;justify-content:flex-end;gap:10px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-group.full{grid-column:1/-1}.form-group.span2{grid-column:span 2}
+  .form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+  .form-input,.form-select{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text1);font-family:inherit;outline:none;transition:border-color .15s;width:100%}
+  .form-input:focus,.form-select:focus{border-color:var(--teal)}
+  .form-input[readonly]{background:#f1f5f9;color:var(--text2);cursor:default}
+  .form-section{margin-bottom:20px}
+  .form-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px}
 </style>
 </head>
 <body>
@@ -619,54 +651,132 @@
 
       <div class="tabs">
         <button class="tab-btn active" id="pcptab-producao" onclick="setPcpTab('producao',this)">Produção do Dia</button>
+        <button class="tab-btn" id="pcptab-sugerida" onclick="setPcpTab('sugerida',this)">Prod. Sugerida</button>
         <button class="tab-btn" id="pcptab-sobras" onclick="setPcpTab('sobras',this)">Sobras e Perdas</button>
         <button class="tab-btn" id="pcptab-consumo" onclick="setPcpTab('consumo',this)">Consumo Médio</button>
       </div>
 
       <!-- PRODUÇÃO DO DIA -->
       <div class="tab-pane active" id="pcppane-producao">
-        <div class="toolbar">
-          <input type="date" class="field" id="pcp-prod-data" onchange="carregarPcpProducao()">
-          <select class="field field-sm" id="pcp-prod-turno" onchange="carregarPcpProducao()">
-            <option value="">Todos os turnos</option>
-            <option value="Manhã">Manhã</option>
-            <option value="Tarde">Tarde</option>
-            <option value="Noite">Noite</option>
-          </select>
-          <button class="btn btn-primary ml" onclick="abrirModalPcpProd()">+ Novo Lançamento</button>
+        <div class="filter-bar-wrap">
+          <div class="toolbar">
+            <div>
+              <div class="filter-label">Data</div>
+              <input type="date" id="pd-data" class="fil-select" style="height:40px" onchange="renderProducaoDia()">
+            </div>
+            <select id="pd-turno" class="fil-select" onchange="renderProducaoDia()">
+              <option value="">Todos os turnos</option>
+              <option value="manha">Manhã</option>
+              <option value="tarde">Tarde</option>
+              <option value="noite">Noite</option>
+            </select>
+            <button class="btn btn-primary ml" onclick="abrirModalProd()">+ Registrar Produção</button>
+          </div>
         </div>
-        <div class="tbl-wrap"><table class="tbl">
-          <thead><tr><th>Produto</th><th>Turno</th><th class="r">Qtd. Planejada</th><th class="r">Qtd. Produzida</th><th>Responsável</th><th>Status</th><th></th></tr></thead>
-          <tbody id="pcp-prod-tbody"><tr><td colspan="7" class="empty">Selecione uma data</td></tr></tbody>
-        </table></div>
+        <div class="tbl-card">
+          <div class="tbl-scroll"><table class="tbl">
+            <thead><tr>
+              <th>Produto / Ficha</th><th>Turno</th><th>Responsável</th>
+              <th class="r">Sobra Ant.</th><th class="r">Produzido</th><th class="r">Disponível</th>
+              <th class="r">Sobra Final</th><th class="r">Venda Est.</th><th class="r">Aprov.</th>
+              <th class="c">Status</th><th></th>
+            </tr></thead>
+            <tbody id="pd-tbody"><tr><td colspan="11" class="empty-st">Selecione a data e clique em Registrar Produção.</td></tr></tbody>
+          </table></div>
+        </div>
+        <div style="padding:8px 4px;font-size:12px;color:var(--text3)" id="pd-info">—</div>
+      </div>
+
+      <!-- PRODUÇÃO SUGERIDA -->
+      <div class="tab-pane" id="pcppane-sugerida">
+        <div class="filter-bar-wrap">
+          <div class="toolbar">
+            <select id="sg-periodo" class="fil-select" onchange="calcularSugestoes()">
+              <option value="7">Últimos 7 dias</option>
+              <option value="14" selected>Últimos 14 dias</option>
+              <option value="30">Últimos 30 dias</option>
+            </select>
+            <select id="sg-dia" class="fil-select" onchange="calcularSugestoes()">
+              <option value="">Dia da semana atual</option>
+              <option value="0">Domingo</option><option value="1">Segunda</option><option value="2">Terça</option>
+              <option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option>
+            </select>
+            <button class="btn btn-primary ml" onclick="calcularSugestoes()">Calcular Sugestões</button>
+          </div>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-scroll"><table class="tbl">
+            <thead><tr>
+              <th>Produto / Ficha</th><th class="r">Média Venda</th><th class="r">Sobra Média</th>
+              <th class="r">Sugestão</th><th class="r">Margem Seg.</th><th class="c">Status</th><th>Ação</th>
+            </tr></thead>
+            <tbody id="sg-tbody"><tr><td colspan="7" class="empty-st">Clique em Calcular Sugestões para gerar as recomendações.</td></tr></tbody>
+          </table></div>
+        </div>
       </div>
 
       <!-- SOBRAS E PERDAS -->
       <div class="tab-pane" id="pcppane-sobras">
-        <div class="toolbar">
-          <input type="date" class="field" id="pcp-sob-data" onchange="carregarPcpSobras()">
-          <button class="btn btn-primary ml" onclick="abrirModalPcpSobra()">+ Registrar Sobra</button>
+        <div class="filter-bar-wrap">
+          <div class="toolbar">
+            <div>
+              <div class="filter-label">Data</div>
+              <input type="date" id="sb-data" class="fil-select" style="height:40px" onchange="renderSobras()">
+            </div>
+            <select id="sb-tipo" class="fil-select" onchange="renderSobras()">
+              <option value="">Todos os tipos</option>
+              <option value="sobra_aproveitavel">Sobra aproveitável</option>
+              <option value="perda_real">Perda real</option>
+              <option value="vencimento">Vencimento</option>
+              <option value="erro_producao">Erro de produção</option>
+              <option value="excesso">Excesso de produção</option>
+              <option value="descarte">Descarte</option>
+            </select>
+            <button class="btn btn-primary ml" onclick="abrirModalSobra()">+ Registrar Sobra / Perda</button>
+          </div>
         </div>
-        <div class="tbl-wrap"><table class="tbl">
-          <thead><tr><th>Produto</th><th>Turno</th><th class="r">Qtd. Inicial</th><th class="r">Sobra</th><th class="r">Perda</th><th class="r">% Perda</th><th></th></tr></thead>
-          <tbody id="pcp-sob-tbody"><tr><td colspan="7" class="empty">Selecione uma data</td></tr></tbody>
-        </table></div>
+        <div class="tbl-card">
+          <div class="tbl-scroll"><table class="tbl">
+            <thead><tr>
+              <th>Data</th><th>Produto / Ficha</th><th>Tipo</th>
+              <th class="r">Qtd.</th><th>Un.</th><th class="r">Custo Est.</th>
+              <th>Motivo</th><th>Responsável</th><th></th>
+            </tr></thead>
+            <tbody id="sb-tbody"><tr><td colspan="9" class="empty-st">Selecione a data para visualizar os registros.</td></tr></tbody>
+          </table></div>
+        </div>
+        <div style="padding:8px 4px;font-size:12px;color:var(--text3)" id="sb-info">—</div>
       </div>
 
       <!-- CONSUMO MÉDIO -->
       <div class="tab-pane" id="pcppane-consumo">
-        <div class="toolbar">
-          <span style="font-size:13px;color:var(--text2)">Últimos</span>
-          <select class="field field-sm" id="pcp-cons-dias" onchange="carregarPcpConsumo()">
-            <option value="7">7 dias</option>
-            <option value="15">15 dias</option>
-            <option value="30" selected>30 dias</option>
-          </select>
+        <div class="filter-bar-wrap">
+          <div class="toolbar">
+            <select id="cm-periodo" class="fil-select" onchange="renderConsumo()">
+              <option value="30" selected>Últimos 30 dias</option>
+              <option value="60">Últimos 60 dias</option>
+              <option value="90">Últimos 90 dias</option>
+            </select>
+            <select id="cm-turno" class="fil-select" onchange="renderConsumo()">
+              <option value="">Todos os turnos</option>
+              <option value="manha">Manhã</option>
+              <option value="tarde">Tarde</option>
+              <option value="noite">Noite</option>
+            </select>
+            <button class="btn btn-primary ml" onclick="renderConsumo()">Gerar Relatório</button>
+          </div>
         </div>
-        <div class="tbl-wrap"><table class="tbl">
-          <thead><tr><th>Produto</th><th class="r">Consumo Médio/dia</th><th class="r">Total Período</th><th class="r">Dias com Prod.</th></tr></thead>
-          <tbody id="pcp-cons-tbody"><tr><td colspan="4" class="empty">Carregando...</td></tr></tbody>
-        </table></div>
+        <div class="tbl-card">
+          <div class="tbl-scroll"><table class="tbl">
+            <thead><tr>
+              <th>Produto / Ficha</th>
+              <th class="c">Dom</th><th class="c">Seg</th><th class="c">Ter</th>
+              <th class="c">Qua</th><th class="c">Qui</th><th class="c">Sex</th><th class="c">Sáb</th>
+              <th class="r">Média/dia</th><th class="r">Total</th>
+            </tr></thead>
+            <tbody id="cm-tbody"><tr><td colspan="10" class="empty-st">Clique em Gerar Relatório para visualizar o consumo médio.</td></tr></tbody>
+          </table></div>
+        </div>
       </div>
     </div><!-- /tab-pcp -->
 
@@ -675,41 +785,124 @@
 </div>
 
 <!-- MODAL: PCP PRODUÇÃO -->
-<div id="m-pcp-prod" class="overlay" onclick="if(event.target===this)fecharModal('m-pcp-prod')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h2 id="m-pcp-prod-titulo">Novo Lançamento de Produção</h2>
-    <div class="fg"><label>Produto *</label><select id="fp-insumo" class="field"></select></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="fg"><label>Data *</label><input type="date" id="fp-data" class="field"></div>
-      <div class="fg"><label>Turno</label><select id="fp-turno" class="field"><option value="">Selecione</option><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div>
-      <div class="fg"><label>Qtd. Planejada</label><input type="number" id="fp-planejada" class="field" min="0" placeholder="0"></div>
-      <div class="fg"><label>Qtd. Produzida</label><input type="number" id="fp-produzida" class="field" min="0" placeholder="0"></div>
+<div class="modal-overlay" id="modal-prod">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-prod-titulo">Registrar Produção</span>
+      <button class="modal-close" onclick="fecharModalProd()">✕</button>
     </div>
-    <div class="fg"><label>Responsável</label><input type="text" id="fp-responsavel" class="field" placeholder="Nome do colaborador"></div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModal('m-pcp-prod')">Cancelar</button>
-      <div class="ml"></div>
-      <button class="btn btn-primary" id="btn-salvar-pcp-prod" onclick="salvarPcpProd()">Salvar</button>
+    <div class="modal-body">
+      <div class="form-section">
+        <div class="form-section-title">Identificação</div>
+        <div class="form-grid">
+          <div class="form-group span2">
+            <label class="form-label">Produto / Ficha Técnica *</label>
+            <select class="form-select" id="mp-ficha" onchange="onFichaChange()"><option value="">Selecione...</option></select>
+          </div>
+          <div class="form-group"><label class="form-label">Data *</label><input class="form-input" type="date" id="mp-data" onchange="buscarSobraAnterior()"></div>
+          <div class="form-group"><label class="form-label">Turno *</label>
+            <select class="form-select" id="mp-turno" onchange="buscarSobraAnterior()">
+              <option value="manha">Manhã</option><option value="tarde">Tarde</option><option value="noite">Noite</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Responsável</label>
+            <input class="form-input" id="mp-resp" type="text" placeholder="Nome do responsável">
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Produção</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Produzido *</label>
+            <input class="form-input td-mono" id="mp-produzido" type="number" step="0.01" min="0" placeholder="0" oninput="calcProdPreview()" style="font-size:16px;font-weight:700">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unidade <span style="color:var(--text3);font-size:10px">(automático)</span></label>
+            <input class="form-input td-mono" id="mp-unidade" type="text" readonly placeholder="—" style="color:var(--text2)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sobra Final</label>
+            <input class="form-input td-mono" id="mp-sobra-fin" type="number" step="0.01" min="0" placeholder="0" oninput="calcProdPreview()" style="font-size:16px;font-weight:700">
+          </div>
+        </div>
+      </div>
+      <div class="form-section" style="margin-bottom:0">
+        <div class="form-section-title">
+          Conferência automática
+          <span id="mp-sobra-loading" style="display:none;font-size:10px;color:var(--text3);font-weight:400">⟳ buscando sobra anterior...</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Sobra anterior <span style="color:var(--text3);font-size:10px">(auto)</span></label>
+            <input class="form-input td-mono" id="mp-sobra-ant" type="text" readonly placeholder="0" style="color:var(--text2)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Disponível <span style="color:var(--text3);font-size:10px">(auto)</span></label>
+            <input class="form-input td-mono" id="mp-disponivel" type="text" readonly placeholder="0" style="color:#2563eb;font-weight:600">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Venda estimada <span style="color:var(--text3);font-size:10px">(auto)</span></label>
+            <input class="form-input td-mono" id="mp-venda" type="text" readonly placeholder="0" style="color:#16a34a;font-weight:600">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Aproveitamento <span style="color:var(--text3);font-size:10px">(auto)</span></label>
+            <input class="form-input td-mono" id="mp-aprov-display" type="text" readonly placeholder="—" style="font-weight:700">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Observações</label>
+          <textarea class="form-input" id="mp-obs" rows="2" placeholder="Observações sobre a produção..." style="resize:vertical"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalProd()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-prod" onclick="salvarProd()">Salvar Produção</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: PCP SOBRA -->
-<div id="m-pcp-sob" class="overlay" onclick="if(event.target===this)fecharModal('m-pcp-sob')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h2>Registrar Sobra / Perda</h2>
-    <div class="fg"><label>Produto *</label><select id="fs-insumo" class="field"></select></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="fg"><label>Data *</label><input type="date" id="fs-data" class="field"></div>
-      <div class="fg"><label>Turno</label><select id="fs-turno" class="field"><option value="">Selecione</option><option>Manhã</option><option>Tarde</option><option>Noite</option></select></div>
-      <div class="fg"><label>Qtd. Inicial</label><input type="number" id="fs-inicial" class="field" step="0.001" min="0" placeholder="0,000"></div>
-      <div class="fg"><label>Sobra</label><input type="number" id="fs-sobra" class="field" step="0.001" min="0" placeholder="0,000" oninput="calcSobraPcp()"></div>
-      <div class="fg"><label>Perda (automático)</label><input type="number" id="fs-perda" class="field" readonly placeholder="0,000"></div>
+<!-- MODAL: PCP SOBRA / PERDA -->
+<div class="modal-overlay" id="modal-sobra">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-sobra-titulo">Registrar Sobra / Perda</span>
+      <button class="modal-close" onclick="fecharModalSobra()">✕</button>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModal('m-pcp-sob')">Cancelar</button>
-      <div class="ml"></div>
-      <button class="btn btn-primary" id="btn-salvar-pcp-sob" onclick="salvarPcpSobra()">Salvar</button>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group span2"><label class="form-label">Produto / Ficha Técnica *</label>
+          <select class="form-select" id="ms-ficha"><option value="">Selecione...</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Data *</label><input class="form-input" type="date" id="ms-data"></div>
+        <div class="form-group"><label class="form-label">Tipo *</label>
+          <select class="form-select" id="ms-tipo">
+            <option value="">Selecione...</option>
+            <option value="sobra_aproveitavel">Sobra aproveitável</option>
+            <option value="perda_real">Perda real</option>
+            <option value="vencimento">Vencimento</option>
+            <option value="erro_producao">Erro de produção</option>
+            <option value="excesso">Excesso de produção</option>
+            <option value="descarte">Descarte</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Quantidade *</label><input class="form-input td-mono" id="ms-qtd" type="number" step="0.01" min="0" placeholder="0"></div>
+        <div class="form-group"><label class="form-label">Unidade</label>
+          <select class="form-select" id="ms-unidade">
+            <option value="un">un</option><option value="kg">kg</option><option value="litro">litro</option>
+            <option value="porcao">porção</option><option value="bandeja">bandeja</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Custo Estimado (R$)</label><input class="form-input td-mono" id="ms-custo" type="number" step="0.01" min="0" placeholder="0,00"></div>
+        <div class="form-group"><label class="form-label">Responsável</label><input class="form-input" id="ms-resp" type="text" placeholder="Nome"></div>
+        <div class="form-group full"><label class="form-label">Motivo</label><input class="form-input" id="ms-motivo" type="text" placeholder="Descreva o motivo..."></div>
+        <div class="form-group full"><label class="form-label">Observação</label><textarea class="form-input" id="ms-obs" rows="2" style="resize:vertical"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalSobra()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-sobra" onclick="salvarSobra()">Salvar</button>
     </div>
   </div>
 </div>
@@ -1712,163 +1905,415 @@ function toggleSidebar(){
 carregar();
 
 /* ================================================================
-   PCP
+   PCP — Controle de Produção (completo)
 ================================================================ */
-let _pcpInsumos=[], _pcpEditProdId=null, _pcpEditSobId=null;
+let fichas=[], pcpProd=[], pcpSobras=[];
+let _editProdId=null, _editSobraId=null;
+let _pcpIniciado=false;
+
+function _pcpLojaId(){return userProfile?.loja_id||null;}
 
 function setPcpTab(tab,btn){
   document.querySelectorAll('#tab-pcp .tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('pcppane-'+tab).classList.add('active');
-  if(tab==='sobras') carregarPcpSobras();
-  if(tab==='consumo') carregarPcpConsumo();
+  if(tab==='sugerida') calcularSugestoes();
+  if(tab==='sobras') iniciarSobras();
+  if(tab==='consumo') renderConsumo();
 }
 
 async function iniciarPcp(){
-  const hoje=new Date().toISOString().slice(0,10);
-  if(!document.getElementById('pcp-prod-data').value) document.getElementById('pcp-prod-data').value=hoje;
-  if(!document.getElementById('pcp-sob-data').value) document.getElementById('pcp-sob-data').value=hoje;
-  if(!_pcpInsumos.length){
-    _pcpInsumos=await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
-    const opts='<option value="">Selecione...</option>'+_pcpInsumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
-    document.getElementById('fp-insumo').innerHTML=opts;
-    document.getElementById('fs-insumo').innerHTML=opts;
+  const h=new Date().toISOString().slice(0,10);
+  const pdData=document.getElementById('pd-data');
+  if(pdData&&!pdData.value) pdData.value=h;
+  const sbData=document.getElementById('sb-data');
+  if(sbData&&!sbData.value) sbData.value=h;
+  if(!_pcpIniciado){
+    _pcpIniciado=true;
+    fichas=await api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&order=nome.asc`).catch(()=>[]);
+    const fichaOpts='<option value="">Selecione...</option>'+fichas.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('');
+    ['mp-ficha','ms-ficha'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=fichaOpts;});
   }
-  carregarPcpProducao();
-  carregarPcpConsumo();
+  renderProducaoDia();
 }
 
-async function carregarPcpProducao(){
-  const data=document.getElementById('pcp-prod-data').value;
-  const turno=document.getElementById('pcp-prod-turno').value;
-  const tbody=document.getElementById('pcp-prod-tbody');
-  if(!data){tbody.innerHTML='<tr><td colspan="7" class="empty">Selecione uma data</td></tr>';return;}
+/* ── PRODUÇÃO DO DIA ─────────────────────────────────────── */
+function iniciarProducaoDia(){
+  const el=document.getElementById('pd-data');
+  if(el&&!el.value) el.value=new Date().toISOString().slice(0,10);
+  renderProducaoDia();
+}
+
+async function renderProducaoDia(){
+  const data=document.getElementById('pd-data')?.value||new Date().toISOString().slice(0,10);
+  const turno=document.getElementById('pd-turno')?.value||'';
+  const tbody=document.getElementById('pd-tbody');
+  tbody.innerHTML='<tr><td colspan="11" class="empty-st">Carregando...</td></tr>';
   try{
-    let qs=`pcp_producao?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`;
-    if(turno) qs+=`&turno=eq.${encodeURIComponent(turno)}`;
-    const rows=await api(qs);
-    if(!rows.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma produção nesta data.</td></tr>';return;}
-    tbody.innerHTML=rows.map(r=>{
-      const ins=_pcpInsumos.find(i=>i.id===r.insumo_id);
-      const pct=r.qtd_planejada>0?Math.round((r.qtd_produzida||0)/r.qtd_planejada*100):null;
-      const status=pct==null?''
-        :pct>=100?'<span class="badge b-ativo">✓ OK</span>'
-        :pct>=80?`<span class="badge" style="background:#fef3c7;color:#b45309">${pct}%</span>`
-        :`<span class="badge" style="background:#fee2e2;color:#dc2626">${pct}%</span>`;
-      return `<tr><td style="font-weight:600">${esc(ins?.nome||'—')}</td><td>${esc(r.turno||'—')}</td><td class="r mono">${r.qtd_planejada??'—'}</td><td class="r mono">${r.qtd_produzida??'—'}</td><td>${esc(r.responsavel||'—')}</td><td>${status}</td><td><button class="btn btn-ghost btn-sm" onclick="editarPcpProd('${r.id}')">Editar</button></td></tr>`;
+    let q=`pcp_producao?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`;
+    if(turno) q+=`&turno=eq.${turno}`;
+    const lojaId=_pcpLojaId();if(lojaId) q+=`&loja_id=eq.${lojaId}`;
+    const lista=await api(q).catch(()=>[]);
+    pcpProd=lista;
+    const info=document.getElementById('pd-info');
+    if(info) info.textContent=lista.length?`${lista.length} registro(s) em ${new Date(data+'T12:00:00').toLocaleDateString('pt-BR')}`:'Nenhum registro para os filtros selecionados.';
+    if(!lista.length){tbody.innerHTML='<tr><td colspan="11" class="empty-st">Nenhum registro para os filtros selecionados.</td></tr>';return;}
+    const turnolbl={manha:'Manhã',tarde:'Tarde',noite:'Noite'};
+    tbody.innerHTML=lista.map(r=>{
+      const f=fichas.find(x=>x.id===r.ficha_id);
+      const ap=r.aproveitamento!=null?parseFloat(r.aproveitamento):null;
+      const badge=ap==null?'b-neu':ap>=85?'b-ok':ap>=70?'b-warn':'b-danger';
+      const disp=(parseFloat(r.sobra_anterior)||0)+(parseFloat(r.produzido)||0);
+      return `<tr onclick="abrirModalProd('${r.id}')">
+        <td style="font-weight:600">${esc(f?.nome||'—')}</td>
+        <td><span class="badge b-neu">${turnolbl[r.turno]||r.turno||'—'}</span></td>
+        <td style="color:var(--text2);font-size:12px">${esc(r.responsavel||'—')}</td>
+        <td class="r td-mono" style="color:var(--text3)">${fmtN(r.sobra_anterior)}</td>
+        <td class="r td-mono" style="font-weight:600">${fmtN(r.produzido)}</td>
+        <td class="r td-mono" style="color:#2563eb">${fmtN(disp)}</td>
+        <td class="r td-mono" style="color:#f59e0b;font-weight:600">${fmtN(r.sobra_final)}</td>
+        <td class="r td-mono" style="color:var(--text2)">${fmtN(r.venda_estimada)}</td>
+        <td class="r td-mono"><span class="badge ${badge}">${ap!=null?fmtN(ap,1)+'%':'—'}</span></td>
+        <td class="c"><span class="badge ${badge}">${ap==null?'—':ap>=85?'Ótimo':ap>=70?'Regular':'Atenção'}</span></td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deletarProd('${r.id}')" style="color:#dc2626;padding:4px 8px">✕</button>
+        </td>
+      </tr>`;
     }).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="11" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
 }
 
-function abrirModalPcpProd(){
-  _pcpEditProdId=null;
-  ['fp-insumo','fp-turno','fp-responsavel','fp-planejada','fp-produzida'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('fp-data').value=document.getElementById('pcp-prod-data').value||new Date().toISOString().slice(0,10);
-  document.getElementById('m-pcp-prod-titulo').textContent='Novo Lançamento de Produção';
-  document.getElementById('m-pcp-prod').classList.add('open');
+/* MODAL PRODUÇÃO */
+function abrirModalProd(id){
+  _editProdId=id||null;
+  const r=id?pcpProd.find(x=>x.id===id):null;
+  const set=(el,v)=>{const e=document.getElementById(el);if(e)e.value=v!=null?v:'';};
+  set('mp-data',r?.data||document.getElementById('pd-data')?.value||new Date().toISOString().slice(0,10));
+  set('mp-turno',r?.turno||'manha');
+  set('mp-ficha',r?.ficha_id||'');
+  set('mp-resp',r?.responsavel||'');
+  set('mp-produzido',r?.produzido||'');
+  set('mp-sobra-fin',r?.sobra_final??'');
+  set('mp-obs',r?.observacoes||'');
+  set('mp-sobra-ant',r?.sobra_anterior??'');
+  set('mp-unidade',r?.unidade||'');
+  set('mp-disponivel','');
+  set('mp-venda','');
+  set('mp-aprov-display','');
+  document.getElementById('modal-prod-titulo').textContent=r?'Editar Produção':'Registrar Produção';
+  if(r){
+    _preencherUnidadeFicha(r.ficha_id,r.unidade);
+    calcProdPreview();
+  }else{
+    _preencherUnidadeFicha(document.getElementById('mp-ficha').value);
+    buscarSobraAnterior();
+  }
+  document.getElementById('modal-prod').classList.add('open');
 }
-async function editarPcpProd(id){
+function fecharModalProd(){document.getElementById('modal-prod').classList.remove('open');_editProdId=null;}
+
+function onFichaChange(){
+  _preencherUnidadeFicha(document.getElementById('mp-ficha').value);
+  buscarSobraAnterior();
+}
+
+function _preencherUnidadeFicha(fichaId,override){
+  const unEl=document.getElementById('mp-unidade');
+  if(!unEl)return;
+  if(override){unEl.value=override;return;}
+  unEl.value=fichaId?'un':'';
+}
+
+async function buscarSobraAnterior(){
+  const fichaId=document.getElementById('mp-ficha')?.value;
+  const data=document.getElementById('mp-data')?.value;
+  const sobraEl=document.getElementById('mp-sobra-ant');
+  const loadEl=document.getElementById('mp-sobra-loading');
+  if(!fichaId||!data){if(sobraEl)sobraEl.value='0';calcProdPreview();return;}
+  if(loadEl) loadEl.style.display='inline';
+  if(sobraEl) sobraEl.value='…';
   try{
-    const r=(await api(`pcp_producao?id=eq.${id}`))[0];if(!r)return;
-    _pcpEditProdId=id;
-    document.getElementById('fp-insumo').value=r.insumo_id||'';
-    document.getElementById('fp-data').value=r.data||'';
-    document.getElementById('fp-turno').value=r.turno||'';
-    document.getElementById('fp-responsavel').value=r.responsavel||'';
-    document.getElementById('fp-planejada').value=r.qtd_planejada||'';
-    document.getElementById('fp-produzida').value=r.qtd_produzida||'';
-    document.getElementById('m-pcp-prod-titulo').textContent='Editar Lançamento';
-    document.getElementById('m-pcp-prod').classList.add('open');
-  }catch(e){toast('Erro: '+e.message,'err');}
+    let q=`pcp_producao?tenant_id=eq.${TENANT_ID}&ficha_id=eq.${fichaId}&data=lt.${data}&order=data.desc,created_at.desc&limit=1`;
+  const lojaId=_pcpLojaId();if(lojaId) q+=`&loja_id=eq.${lojaId}`;
+    const res=await api(q).catch(()=>[]);
+    const ultimo=res[0];
+    const sobraAnt=ultimo?.sobra_final??0;
+    if(sobraEl) sobraEl.value=sobraAnt;
+    if(ultimo?.unidade){const unEl=document.getElementById('mp-unidade');if(unEl&&!unEl.value)unEl.value=ultimo.unidade;}
+  }catch{
+    if(sobraEl) sobraEl.value='0';
+  }finally{
+    if(loadEl) loadEl.style.display='none';
+    calcProdPreview();
+  }
 }
-async function salvarPcpProd(){
-  const insumoId=document.getElementById('fp-insumo').value;
-  const data=document.getElementById('fp-data').value;
-  if(!insumoId||!data){toast('Produto e data são obrigatórios.','err');return;}
-  const payload={insumo_id:insumoId,data,turno:document.getElementById('fp-turno').value||null,responsavel:document.getElementById('fp-responsavel').value.trim()||null,qtd_planejada:parseFloat(document.getElementById('fp-planejada').value)||null,qtd_produzida:parseFloat(document.getElementById('fp-produzida').value)||null};
-  const btn=document.getElementById('btn-salvar-pcp-prod');
+
+function calcProdPreview(){
+  const sobraAnt=parseFloat(document.getElementById('mp-sobra-ant')?.value)||0;
+  const prod=parseFloat(document.getElementById('mp-produzido')?.value)||0;
+  const sobraFin=parseFloat(document.getElementById('mp-sobra-fin')?.value)||0;
+  const disp=sobraAnt+prod;
+  const venda=Math.max(0,disp-sobraFin);
+  const aprov=disp>0?(venda/disp*100):null;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  set('mp-disponivel',disp>0?fmtN(disp):'');
+  set('mp-venda',disp>0?fmtN(venda):'');
+  const aprovEl=document.getElementById('mp-aprov-display');
+  if(aprovEl){
+    if(aprov!=null){
+      aprovEl.value=fmtN(aprov,1)+'%';
+      aprovEl.style.color=aprov>=85?'#16a34a':aprov>=70?'#f59e0b':'#dc2626';
+    }else{aprovEl.value='';aprovEl.style.color='';}
+  }
+}
+
+async function salvarProd(){
+  const fichaId=document.getElementById('mp-ficha').value;
+  const produzido=parseFloat(document.getElementById('mp-produzido').value);
+  if(!fichaId||isNaN(produzido)){toast('Preencha o produto e a quantidade produzida.','err');return;}
+  const sobraAnt=parseFloat(document.getElementById('mp-sobra-ant').value)||0;
+  const sobraFin=parseFloat(document.getElementById('mp-sobra-fin').value)||0;
+  const disp=sobraAnt+produzido;
+  const venda=Math.max(0,disp-sobraFin);
+  const aprov=disp>0?parseFloat((venda/disp*100).toFixed(2)):null;
+  const payload={
+    tenant_id:TENANT_ID,
+    ficha_id:fichaId,
+    data:document.getElementById('mp-data').value,
+    turno:document.getElementById('mp-turno').value,
+    loja_id:_pcpLojaId()||null,
+    responsavel:document.getElementById('mp-resp').value.trim()||null,
+    sobra_anterior:sobraAnt,
+    produzido,
+    sobra_final:sobraFin||0,
+    venda_estimada:venda||null,
+    aproveitamento:aprov,
+    unidade:document.getElementById('mp-unidade').value||'un',
+    observacoes:document.getElementById('mp-obs').value.trim()||null,
+  };
+  const btn=document.getElementById('btn-salvar-prod');
   btn.disabled=true;btn.textContent='Salvando...';
   try{
-    if(_pcpEditProdId) await api(`pcp_producao?id=eq.${_pcpEditProdId}`,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
-    else{payload.tenant_id=TENANT_ID;await api('pcp_producao',{method:'POST',body:JSON.stringify(payload)});}
-    fecharModal('m-pcp-prod');toast('Salvo.','ok');carregarPcpProducao();
+    if(_editProdId) await api(`pcp_producao?id=eq.${_editProdId}`,{method:'PATCH',body:JSON.stringify(payload)});
+    else await api('pcp_producao',{method:'POST',body:JSON.stringify(payload)});
+    toast('Produção salva com sucesso.','ok');
+    fecharModalProd();
+    await renderProducaoDia();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar Produção';}
+}
+
+async function deletarProd(id){
+  if(!confirm('Excluir este registro de produção?'))return;
+  try{
+    await api(`pcp_producao?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+    toast('Registro excluído.','ok');
+    await renderProducaoDia();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+/* ── PRODUÇÃO SUGERIDA ───────────────────────────────────── */
+async function calcularSugestoes(){
+  const diasPeriodo=parseInt(document.getElementById('sg-periodo')?.value)||14;
+  const diaSemEl=document.getElementById('sg-dia');
+  const diaSem=diaSemEl?.value!==''?parseInt(diaSemEl.value):new Date().getDay();
+  const tbody=document.getElementById('sg-tbody');
+  tbody.innerHTML='<tr><td colspan="7" class="empty-st">Calculando sugestões...</td></tr>';
+  try{
+    const dataIni=new Date();dataIni.setDate(dataIni.getDate()-diasPeriodo);
+    const dataIniStr=dataIni.toISOString().slice(0,10);
+    let _qSug=`pcp_producao?tenant_id=eq.${TENANT_ID}&data=gte.${dataIniStr}&order=data.desc`;
+    const _lidSug=_pcpLojaId();if(_lidSug) _qSug+=`&loja_id=eq.${_lidSug}`;
+    const hist=await api(_qSug).catch(()=>[]);
+    const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    const byFicha={};
+    hist.forEach(r=>{
+      const d=new Date(r.data+'T12:00:00').getDay();
+      if(!byFicha[r.ficha_id]) byFicha[r.ficha_id]={dias:{}};
+      if(!byFicha[r.ficha_id].dias[d]) byFicha[r.ficha_id].dias[d]=[];
+      byFicha[r.ficha_id].dias[d].push({produzido:parseFloat(r.produzido)||0,sobra:parseFloat(r.sobra_final)||0,venda:parseFloat(r.venda_estimada)||0});
+    });
+    const sugestoes=Object.entries(byFicha).map(([fichaId,data])=>{
+      const diaData=data.dias[diaSem]||[];
+      const mediaVenda=diaData.length?diaData.reduce((s,r)=>s+(r.venda||r.produzido-r.sobra),0)/diaData.length:0;
+      const mediaSobra=diaData.length?diaData.reduce((s,r)=>s+r.sobra,0)/diaData.length:0;
+      const sugestao=Math.max(Math.ceil((mediaVenda*1.10-mediaSobra)*10)/10,0);
+      return {fichaId,mediaVenda,mediaSobra,sugestao,registros:diaData.length};
+    }).filter(s=>s.registros>0);
+    if(!sugestoes.length){tbody.innerHTML='<tr><td colspan="7" class="empty-st">Sem histórico suficiente. Registre produções por alguns dias.</td></tr>';return;}
+    tbody.innerHTML=sugestoes.map(s=>{
+      const f=fichas.find(x=>x.id===s.fichaId);
+      const status=s.sugestao<=0?'<span class="sug-ok">Estoque OK</span>':s.mediaSobra>s.mediaVenda*0.3?'<span class="sug-baixo">Produção alta</span>':'<span class="sug-ruptura">Produzir</span>';
+      return `<tr>
+        <td style="font-weight:600">${esc(f?.nome||'—')}</td>
+        <td class="r td-mono">${fmtN(s.mediaVenda,2)}</td>
+        <td class="r td-mono" style="color:#f59e0b">${fmtN(s.mediaSobra,2)}</td>
+        <td class="r td-mono" style="font-weight:700;color:#f97316;font-size:14px">${fmtN(s.sugestao,2)}</td>
+        <td class="r td-mono" style="color:var(--text3)">+10%</td>
+        <td class="c">${status}</td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="aplicarSugestao('${s.fichaId}',${s.sugestao})">Aplicar</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function aplicarSugestao(fichaId,qtd){
+  document.getElementById('pcptab-producao').click();
+  setTimeout(()=>{
+    abrirModalProd();
+    document.getElementById('mp-ficha').value=fichaId;
+    document.getElementById('mp-produzido').value=qtd;
+    calcProdPreview();
+  },200);
+}
+
+/* ── SOBRAS E PERDAS ─────────────────────────────────────── */
+function iniciarSobras(){
+  const el=document.getElementById('sb-data');
+  if(el&&!el.value) el.value=new Date().toISOString().slice(0,10);
+  renderSobras();
+}
+
+async function renderSobras(){
+  const data=document.getElementById('sb-data')?.value||new Date().toISOString().slice(0,10);
+  const tipo=document.getElementById('sb-tipo')?.value||'';
+  const tbody=document.getElementById('sb-tbody');
+  tbody.innerHTML='<tr><td colspan="9" class="empty-st">Carregando...</td></tr>';
+  try{
+    let q=`pcp_sobras?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`;
+    if(tipo) q+=`&tipo=eq.${tipo}`;
+    const _lidSob=_pcpLojaId();if(_lidSob) q+=`&loja_id=eq.${_lidSob}`;
+    const lista=await api(q).catch(()=>[]);
+    pcpSobras=lista;
+    const info=document.getElementById('sb-info');
+    if(info) info.textContent=lista.length?`${lista.length} registro(s)`:'Nenhum registro.';
+    if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty-st">Nenhum registro para os filtros selecionados.</td></tr>';return;}
+    const tipoLabel={sobra_aproveitavel:'Sobra aproveitável',perda_real:'Perda real',vencimento:'Vencimento',erro_producao:'Erro de produção',excesso:'Excesso',descarte:'Descarte'};
+    const tipoBadge={sobra_aproveitavel:'b-info',perda_real:'b-danger',vencimento:'b-danger',erro_producao:'b-warn',excesso:'b-warn',descarte:'b-danger'};
+    tbody.innerHTML=lista.map(r=>{
+      const f=fichas.find(x=>x.id===r.ficha_id);
+      return `<tr onclick="abrirModalSobra('${r.id}')">
+        <td class="td-mono" style="color:var(--text2);font-size:11px">${new Date(r.data+'T12:00:00').toLocaleDateString('pt-BR')}</td>
+        <td style="font-weight:600">${esc(f?.nome||'—')}</td>
+        <td><span class="badge ${tipoBadge[r.tipo]||'b-neu'}">${tipoLabel[r.tipo]||r.tipo||'—'}</span></td>
+        <td class="r td-mono" style="font-weight:600">${fmtN(r.quantidade)}</td>
+        <td style="color:var(--text2)">${esc(r.unidade||'—')}</td>
+        <td class="r td-mono" style="color:#dc2626">${brl(r.custo_estimado)}</td>
+        <td style="color:var(--text2);font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.motivo||'—')}</td>
+        <td style="color:var(--text2);font-size:12px">${esc(r.responsavel||'—')}</td>
+        <td>
+          <button class="btn-ghost btn-sm" onclick="event.stopPropagation();deletarSobra('${r.id}')" style="color:#dc2626;padding:4px 8px;background:none;border:none;cursor:pointer">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="9" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function abrirModalSobra(id){
+  _editSobraId=id||null;
+  const r=id?pcpSobras.find(x=>x.id===id):null;
+  const set=(el,v)=>{const e=document.getElementById(el);if(e)e.value=v!=null?v:'';};
+  set('ms-data',r?.data||document.getElementById('sb-data')?.value||new Date().toISOString().slice(0,10));
+  set('ms-ficha',r?.ficha_id||'');
+  set('ms-tipo',r?.tipo||'');
+  set('ms-qtd',r?.quantidade||'');
+  set('ms-unidade',r?.unidade||'un');
+  set('ms-custo',r?.custo_estimado||'');
+  set('ms-resp',r?.responsavel||'');
+  set('ms-motivo',r?.motivo||'');
+  set('ms-obs',r?.observacao||'');
+  document.getElementById('modal-sobra-titulo').textContent=r?'Editar Registro':'Registrar Sobra / Perda';
+  document.getElementById('modal-sobra').classList.add('open');
+}
+function fecharModalSobra(){document.getElementById('modal-sobra').classList.remove('open');_editSobraId=null;}
+
+async function salvarSobra(){
+  const fichaId=document.getElementById('ms-ficha').value;
+  const tipo=document.getElementById('ms-tipo').value;
+  const qtd=parseFloat(document.getElementById('ms-qtd').value);
+  if(!fichaId||!tipo||isNaN(qtd)){toast('Preencha produto, tipo e quantidade.','err');return;}
+  const payload={
+    tenant_id:TENANT_ID,
+    ficha_id:fichaId,
+    data:document.getElementById('ms-data').value,
+    loja_id:_pcpLojaId()||null,
+    tipo,
+    quantidade:qtd,
+    unidade:document.getElementById('ms-unidade').value,
+    custo_estimado:parseFloat(document.getElementById('ms-custo').value)||null,
+    responsavel:document.getElementById('ms-resp').value.trim()||null,
+    motivo:document.getElementById('ms-motivo').value.trim()||null,
+    observacao:document.getElementById('ms-obs').value.trim()||null,
+  };
+  const btn=document.getElementById('btn-salvar-sobra');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(_editSobraId) await api(`pcp_sobras?id=eq.${_editSobraId}`,{method:'PATCH',body:JSON.stringify(payload)});
+    else await api('pcp_sobras',{method:'POST',body:JSON.stringify(payload)});
+    toast('Registro salvo.','ok');
+    fecharModalSobra();
+    await renderSobras();
   }catch(e){toast('Erro: '+e.message,'err');}
   finally{btn.disabled=false;btn.textContent='Salvar';}
 }
 
-async function carregarPcpSobras(){
-  const data=document.getElementById('pcp-sob-data').value;
-  const tbody=document.getElementById('pcp-sob-tbody');
-  if(!data){tbody.innerHTML='<tr><td colspan="7" class="empty">Selecione uma data</td></tr>';return;}
+async function deletarSobra(id){
+  if(!confirm('Excluir este registro?'))return;
   try{
-    const rows=await api(`pcp_sobras?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`);
-    if(!rows.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma sobra nesta data.</td></tr>';return;}
-    tbody.innerHTML=rows.map(r=>{
-      const ins=_pcpInsumos.find(i=>i.id===r.insumo_id);
-      const pct=r.qtd_inicial>0?Math.round((r.qtd_perda||0)/r.qtd_inicial*100):null;
-      return `<tr><td style="font-weight:600">${esc(ins?.nome||'—')}</td><td>${esc(r.turno||'—')}</td><td class="r mono">${r.qtd_inicial??'—'}</td><td class="r mono">${r.qtd_sobra??'—'}</td><td class="r mono">${r.qtd_perda??'—'}</td><td class="r mono">${pct!=null?pct+'%':'—'}</td><td><button class="btn btn-ghost btn-sm" onclick="editarPcpSobra('${r.id}')">Editar</button></td></tr>`;
-    }).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
-}
-
-function calcSobraPcp(){
-  const ini=parseFloat(document.getElementById('fs-inicial').value)||0;
-  const sob=parseFloat(document.getElementById('fs-sobra').value)||0;
-  document.getElementById('fs-perda').value=Math.max(0,Math.round((ini-sob)*1000)/1000)||'';
-}
-function abrirModalPcpSobra(){
-  _pcpEditSobId=null;
-  ['fs-insumo','fs-turno','fs-inicial','fs-sobra','fs-perda'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('fs-data').value=document.getElementById('pcp-sob-data').value||new Date().toISOString().slice(0,10);
-  document.getElementById('m-pcp-sob').classList.add('open');
-}
-async function editarPcpSobra(id){
-  try{
-    const r=(await api(`pcp_sobras?id=eq.${id}`))[0];if(!r)return;
-    _pcpEditSobId=id;
-    document.getElementById('fs-insumo').value=r.insumo_id||'';
-    document.getElementById('fs-data').value=r.data||'';
-    document.getElementById('fs-turno').value=r.turno||'';
-    document.getElementById('fs-inicial').value=r.qtd_inicial||'';
-    document.getElementById('fs-sobra').value=r.qtd_sobra||'';
-    document.getElementById('fs-perda').value=r.qtd_perda||'';
-    document.getElementById('m-pcp-sob').classList.add('open');
+    await api(`pcp_sobras?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+    toast('Excluído.','ok');
+    await renderSobras();
   }catch(e){toast('Erro: '+e.message,'err');}
 }
-async function salvarPcpSobra(){
-  const insumoId=document.getElementById('fs-insumo').value;
-  const data=document.getElementById('fs-data').value;
-  if(!insumoId||!data){toast('Produto e data são obrigatórios.','err');return;}
-  const ini=parseFloat(document.getElementById('fs-inicial').value)||0;
-  const sob=parseFloat(document.getElementById('fs-sobra').value)||0;
-  const payload={insumo_id:insumoId,data,turno:document.getElementById('fs-turno').value||null,qtd_inicial:ini||null,qtd_sobra:sob||null,qtd_perda:Math.max(0,Math.round((ini-sob)*1000)/1000)||null};
-  const btn=document.getElementById('btn-salvar-pcp-sob');
-  btn.disabled=true;btn.textContent='Salvando...';
+
+/* ── CONSUMO MÉDIO ───────────────────────────────────────── */
+async function renderConsumo(){
+  const diasPeriodo=parseInt(document.getElementById('cm-periodo')?.value)||30;
+  const turno=document.getElementById('cm-turno')?.value||'';
+  const tbody=document.getElementById('cm-tbody');
+  tbody.innerHTML='<tr><td colspan="10" class="empty-st">Calculando...</td></tr>';
   try{
-    if(_pcpEditSobId) await api(`pcp_sobras?id=eq.${_pcpEditSobId}`,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
-    else{payload.tenant_id=TENANT_ID;await api('pcp_sobras',{method:'POST',body:JSON.stringify(payload)});}
-    fecharModal('m-pcp-sob');toast('Salvo.','ok');carregarPcpSobras();
-  }catch(e){toast('Erro: '+e.message,'err');}
-  finally{btn.disabled=false;btn.textContent='Salvar';}
+    const dataIni=new Date();dataIni.setDate(dataIni.getDate()-diasPeriodo);
+    const dataIniStr=dataIni.toISOString().slice(0,10);
+    let q=`pcp_producao?tenant_id=eq.${TENANT_ID}&data=gte.${dataIniStr}&order=data.asc`;
+    if(turno) q+=`&turno=eq.${turno}`;
+    const _lidCm=_pcpLojaId();if(_lidCm) q+=`&loja_id=eq.${_lidCm}`;
+    const hist=await api(q).catch(()=>[]);
+    if(!hist.length){tbody.innerHTML='<tr><td colspan="10" class="empty-st">Nenhum dado no período. Registre produções para ver o consumo médio.</td></tr>';return;}
+    const byFicha={};
+    hist.forEach(r=>{
+      const d=new Date(r.data+'T12:00:00').getDay();
+      if(!byFicha[r.ficha_id]) byFicha[r.ficha_id]={d0:[],d1:[],d2:[],d3:[],d4:[],d5:[],d6:[]};
+      const consumo=Math.max(0,(parseFloat(r.produzido)||0)+(parseFloat(r.sobra_anterior)||0)-(parseFloat(r.sobra_final)||0));
+      byFicha[r.ficha_id]['d'+d].push(consumo);
+    });
+    const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;
+    const fmtC=v=>v!=null?`<span style="font-family:'DM Mono',monospace;font-size:12px">${fmtN(v,1)}</span>`:'<span style="color:var(--text3)">—</span>';
+    tbody.innerHTML=Object.entries(byFicha).map(([fichaId,dias])=>{
+      const f=fichas.find(x=>x.id===fichaId);
+      const avgs=[0,1,2,3,4,5,6].map(i=>avg(dias['d'+i]));
+      const total=avgs.filter(v=>v!=null).reduce((a,b)=>a+(b||0),0);
+      const mediaGeral=avgs.filter(v=>v!=null);
+      const mgVal=mediaGeral.length?total/mediaGeral.length:null;
+      return `<tr>
+        <td style="font-weight:600">${esc(f?.nome||'—')}</td>
+        ${avgs.map(v=>`<td class="c">${fmtC(v)}</td>`).join('')}
+        <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${fmtN(mgVal,1)}</td>
+        <td class="r td-mono" style="color:#2563eb;font-weight:600">${fmtN(total,1)}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
 }
 
-async function carregarPcpConsumo(){
-  const dias=parseInt(document.getElementById('pcp-cons-dias').value)||30;
-  const tbody=document.getElementById('pcp-cons-tbody');
-  const de=new Date(Date.now()-dias*86400000).toISOString().slice(0,10);
-  try{
-    const rows=await api(`pcp_producao?tenant_id=eq.${TENANT_ID}&data=gte.${de}&order=insumo_id.asc`);
-    if(!rows.length){tbody.innerHTML='<tr><td colspan="4" class="empty">Sem dados no período.</td></tr>';return;}
-    const map={};
-    rows.forEach(r=>{if(!map[r.insumo_id])map[r.insumo_id]={total:0,dias:new Set()};map[r.insumo_id].total+=(r.qtd_produzida||0);map[r.insumo_id].dias.add(r.data);});
-    tbody.innerHTML=Object.entries(map).map(([id,v])=>{
-      const ins=_pcpInsumos.find(i=>i.id===id);
-      const media=v.dias.size>0?Math.round(v.total/v.dias.size*100)/100:0;
-      return `<tr><td style="font-weight:600">${esc(ins?.nome||'—')}</td><td class="r mono">${media}</td><td class="r mono">${Math.round(v.total*100)/100}</td><td class="r mono">${v.dias.size}</td></tr>`;
-    }).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="4" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
-}
+/* Modal click-outside */
+['modal-prod','modal-sobra'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('click',function(e){
+    if(e.target===this){if(id==='modal-prod')fecharModalProd();else fecharModalSobra();}
+  });
+});
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
