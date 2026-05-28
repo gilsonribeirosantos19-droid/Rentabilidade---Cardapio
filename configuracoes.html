@@ -118,6 +118,14 @@
   .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:380px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
   .toast.show{opacity:1;transform:translateY(0)}.toast.ok{border-color:var(--green);color:var(--green)}.toast.err{border-color:var(--red);color:var(--red)}
   ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+  /* PERMISSÕES */
+  .perm-tab{padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;background:transparent;color:#64748b;transition:all .15s}
+  .perm-tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .perm-matrix th,.perm-matrix td{text-align:left}
+  .perm-col{text-align:center !important;width:110px}
+  .perm-matrix tbody tr:hover td{background:#f8fafc}
+  .perm-matrix input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#f97316}
+  .perm-disabled{opacity:.3;pointer-events:none}
 </style>
 </head>
 <body>
@@ -452,6 +460,60 @@
       </div><!-- /section-content -->
     </div><!-- /sec-parametros -->
 
+    <!-- ===== SEÇÃO: PERMISSÕES ===== -->
+    <div id="sec-permissoes" class="cfg-section" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Permissões</div>
+          <div class="page-desc">Defina o que cada perfil pode visualizar e executar no sistema.</div>
+        </div>
+      </div>
+      <div class="section-content">
+
+        <!-- AVISO ADMIN -->
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 18px;font-size:13px;color:#166534;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><strong>Administrador</strong> tem acesso total ao sistema e não pode ser editado.</span>
+        </div>
+
+        <!-- SELETOR DE PERFIL -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Perfil</div>
+          <div style="display:flex;background:#f1f5f9;border-radius:10px;padding:4px;gap:4px;width:fit-content">
+            <button class="perm-tab active" id="ptab-gerente"   onclick="setPerfil('gerente',this)">Gerente</button>
+            <button class="perm-tab"        id="ptab-operador"  onclick="setPerfil('operador',this)">Operador</button>
+            <button class="perm-tab"        id="ptab-caixa"     onclick="setPerfil('caixa',this)">Caixa</button>
+          </div>
+        </div>
+
+        <!-- MATRIZ DE PERMISSÕES -->
+        <div class="acc-card" style="overflow:clip">
+          <table class="cfg-table perm-matrix">
+            <thead>
+              <tr>
+                <th style="min-width:200px">Módulo</th>
+                <th class="perm-col">Visualizar</th>
+                <th class="perm-col">Criar / Lançar</th>
+                <th class="perm-col">Editar</th>
+                <th class="perm-col">Excluir</th>
+              </tr>
+            </thead>
+            <tbody id="perm-tbody">
+              <tr><td colspan="5" style="text-align:center;padding:28px;color:#94a3b8">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-primary" id="btn-salvar-perm" onclick="salvarPermissoes()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Salvar Permissões
+          </button>
+        </div>
+
+      </div><!-- /section-content -->
+    </div><!-- /sec-permissoes -->
+
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /shell -->
@@ -527,6 +589,7 @@
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="params.js"></script>
+<script src="perms.js"></script>
 <script src="sidebar.js"></script>
 <script>
 /* ================================================================
@@ -567,8 +630,123 @@ function toast(msg, tipo = 'ok') {
 /* ================================================================
    SEÇÕES (via URL ?tab=)
 ================================================================ */
+/* ================================================================
+   PERMISSÕES
+================================================================ */
+const MODULOS_PERM=[
+  {id:'dashboard',       lbl:'Dashboard',            acoes:['visualizar']},
+  {id:'estoque',         lbl:'Estoque',              acoes:['visualizar','criar','editar','excluir']},
+  {id:'ajustes',         lbl:'Ajustes de Estoque',   acoes:['visualizar','criar','editar','excluir']},
+  {id:'insumos',         lbl:'Insumos',              acoes:['visualizar','criar','editar','excluir']},
+  {id:'fichas_tecnicas', lbl:'Fichas Técnicas',      acoes:['visualizar','criar','editar','excluir']},
+  {id:'fornecedores',    lbl:'Fornecedores',         acoes:['visualizar','criar','editar','excluir']},
+  {id:'compras',         lbl:'Compras',              acoes:['visualizar','criar','editar','excluir']},
+  {id:'relatorios',      lbl:'Relatórios',           acoes:['visualizar']},
+  {id:'cmv',             lbl:'CMV Teórico x Real',   acoes:['visualizar']},
+  {id:'rendimento',      lbl:'Rendimentos',          acoes:['visualizar']},
+  {id:'pdv',             lbl:'PDV / Vendas',         acoes:['visualizar','criar','editar','excluir']},
+  {id:'pcp',             lbl:'PCP / Produção',       acoes:['visualizar','criar','editar','excluir']},
+  {id:'porcionamento',   lbl:'Porcionamento',        acoes:['visualizar','criar','editar','excluir']},
+  {id:'configuracoes',   lbl:'Configurações',        acoes:['visualizar','editar']},
+];
+
+const DEFAULTS_PERM={
+  gerente:{
+    dashboard:{v:true},estoque:{v:true,c:true,e:true},ajustes:{v:true,c:true,e:true},
+    insumos:{v:true,c:true,e:true},fichas_tecnicas:{v:true,c:true,e:true},
+    fornecedores:{v:true,c:true,e:true},compras:{v:true,c:true,e:true},
+    relatorios:{v:true},cmv:{v:true},rendimento:{v:true},pdv:{v:true,c:true,e:true},
+    pcp:{v:true,c:true,e:true},porcionamento:{v:true,c:true,e:true},
+    configuracoes:{v:true,e:false},
+  },
+  operador:{
+    dashboard:{v:true},estoque:{v:true,c:true},ajustes:{v:true,c:true},
+    insumos:{v:true},fichas_tecnicas:{v:true},fornecedores:{v:true},compras:{v:true},
+    relatorios:{v:false},cmv:{v:false},rendimento:{v:false},pdv:{v:true,c:true},
+    pcp:{v:true,c:true},porcionamento:{v:true,c:true},configuracoes:{v:false},
+  },
+  caixa:{
+    dashboard:{v:true},estoque:{v:false},ajustes:{v:false},insumos:{v:false},
+    fichas_tecnicas:{v:false},fornecedores:{v:false},compras:{v:false},
+    relatorios:{v:false},cmv:{v:false},rendimento:{v:false},pdv:{v:true,c:true,e:true},
+    pcp:{v:false},porcionamento:{v:false},configuracoes:{v:false},
+  },
+};
+
+let _permPerfil='gerente';
+let _permCache={};
+
+async function carregarPermissoes(){
+  if(_permCache[_permPerfil]){renderPermTable();return;}
+  try{
+    const data=await api(`permissoes?tenant_id=eq.${TENANT_ID}&perfil=eq.${_permPerfil}`);
+    _permCache[_permPerfil]=data;
+    renderPermTable();
+  }catch(e){toast('Erro ao carregar permissões: '+e.message,'err');}
+}
+
+function setPerfil(perfil,btn){
+  _permPerfil=perfil;
+  document.querySelectorAll('.perm-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  carregarPermissoes();
+}
+
+function renderPermTable(){
+  const data=_permCache[_permPerfil]||[];
+  const ALL=['visualizar','criar','editar','excluir'];
+  const defs=DEFAULTS_PERM[_permPerfil]||{};
+  document.getElementById('perm-tbody').innerHTML=MODULOS_PERM.map(m=>{
+    const row=data.find(p=>p.modulo===m.id)||{};
+    const defRow=defs[m.id]||{};
+    return `<tr>
+      <td style="font-weight:500;color:#0f172a">${esc(m.lbl)}</td>
+      ${ALL.map(a=>{
+        const hasAcao=m.acoes.includes(a);
+        if(!hasAcao) return `<td class="perm-col"><span style="color:#e2e8f0">—</span></td>`;
+        // row from DB first, then fall back to defaults
+        const checked=Object.keys(row).length>0
+          ? (row[a]===true)
+          : (a==='visualizar'?defRow.v:a==='criar'?defRow.c:a==='editar'?defRow.e:defRow.x)||false;
+        return `<td class="perm-col">
+          <input type="checkbox" id="perm-${m.id}-${a}" ${checked?'checked':''}>
+        </td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+}
+
+async function salvarPermissoes(){
+  const btn=document.getElementById('btn-salvar-perm');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    const ALL=['visualizar','criar','editar','excluir'];
+    const payloads=MODULOS_PERM.map(m=>({
+      tenant_id:TENANT_ID,
+      perfil:_permPerfil,
+      modulo:m.id,
+      visualizar:!!(document.getElementById(`perm-${m.id}-visualizar`)?.checked),
+      criar:!!(document.getElementById(`perm-${m.id}-criar`)?.checked),
+      editar:!!(document.getElementById(`perm-${m.id}-editar`)?.checked),
+      excluir:!!(document.getElementById(`perm-${m.id}-excluir`)?.checked),
+    }));
+    await api('permissoes',{
+      method:'POST',
+      body:JSON.stringify(payloads),
+      prefer:'resolution=merge-duplicates,return=minimal',
+    });
+    delete _permCache[_permPerfil];
+    window.Perms?.invalidate();
+    toast('Permissões salvas com sucesso.','ok');
+  }catch(e){toast('Erro ao salvar: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar Permissões';}
+}
+
+/* ================================================================
+   SEÇÕES
+================================================================ */
 const _section = new URLSearchParams(location.search).get('tab') || 'geral';
-const _secTitles = { geral: 'Geral', usuarios: 'Usuários', parametros: 'Parâmetros' };
+const _secTitles = { geral: 'Geral', usuarios: 'Usuários', parametros: 'Parâmetros', permissoes: 'Permissões' };
 
 function initSection() {
   document.querySelectorAll('.cfg-section').forEach(s => s.style.display = 'none');
@@ -580,6 +758,7 @@ function initSection() {
   if (_section === 'geral') carregarGeral();
   if (_section === 'parametros') carregarParams();
   if (_section === 'usuarios') carregarUsuarios();
+  if (_section === 'permissoes') carregarPermissoes();
 }
 
 /* ================================================================

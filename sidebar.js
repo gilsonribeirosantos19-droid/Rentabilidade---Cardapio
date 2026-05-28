@@ -57,16 +57,53 @@
     {
       id: 'configuracoes', label: 'Configurações',
       items: [
-        { href: 'configuracoes.html', tab: 'geral',      label: 'Geral' },
-        { href: 'configuracoes.html', tab: 'usuarios',   label: 'Usuários' },
-        { href: 'configuracoes.html', tab: 'parametros', label: 'Parâmetros' },
+        { href: 'configuracoes.html', tab: 'geral',        label: 'Geral' },
+        { href: 'configuracoes.html', tab: 'usuarios',     label: 'Usuários' },
+        { href: 'configuracoes.html', tab: 'permissoes',   label: 'Permissões' },
+        { href: 'configuracoes.html', tab: 'parametros',   label: 'Parâmetros' },
       ]
     },
   ];
 
   const _urlTab = new URLSearchParams(location.search).get('tab') || '';
 
+  // Mapeamento href → módulo para filtragem por permissão
+  const _MODULO_MAP = {
+    'dashboard.html':       'dashboard',
+    'estoque.html':         'estoque',
+    'ajustes.html':         'ajustes',
+    'insumos.html':         'insumos',
+    'fichas_tecnicas.html': 'fichas_tecnicas',
+    'fornecedores.html':    'fornecedores',
+    'compras.html':         'compras',
+    'relatorios.html':      'relatorios',
+    'cmv.html':             'cmv',
+    'rendimento.html':      'rendimento',
+    'pdv.html':             'pdv',
+    'pcp.html':             'pcp',
+    'porcionamento.html':   'porcionamento',
+    'configuracoes.html':   'configuracoes',
+  };
+
+  // Lê permissões em cache para filtragem síncrona
+  function _canView(href) {
+    try {
+      const cached = localStorage.getItem('aiko_perms_v1');
+      if (!cached) return true;
+      const { perfil, data } = JSON.parse(cached);
+      const u = JSON.parse(localStorage.getItem('sb_user') || '{}');
+      const role = ((u.role || u.perfil || 'operador') + '').toLowerCase();
+      if (role === 'administrador') return true;
+      if (perfil !== role) return true;
+      const modulo = _MODULO_MAP[href];
+      if (!modulo) return true;
+      const p = data.find(x => x.modulo === modulo);
+      return p ? p.visualizar === true : true;
+    } catch { return true; }
+  }
+
   function navItem(item) {
+    if (!_canView(item.href)) return '';
     let active = false;
     if (item.tab) {
       active = item.href === page && item.tab === _urlTab;
@@ -83,7 +120,9 @@
   }
 
   function navGroup(g) {
-    const hasActive = g.items.some(i => {
+    const visibleItems = g.items.filter(i => _canView(i.href));
+    if (!visibleItems.length) return '';
+    const hasActive = visibleItems.some(i => {
       if (i.tab) return i.href === page && i.tab === _urlTab;
       if (i.href === page) return true;
       // Expandir configuracoes quando estiver na página
@@ -100,7 +139,7 @@
         </span>
         <svg class="nav-group-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div class="nav-group-items">${g.items.map(navItem).join('')}</div>
+      <div class="nav-group-items">${visibleItems.map(navItem).join('')}</div>
     </div>`;
   }
 
