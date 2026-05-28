@@ -117,11 +117,11 @@
   const html = `
     <div class="logo">
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:32px;height:32px;background:#f97316;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div style="width:34px;height:34px;background:#f97316;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(249,115,22,.4)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <ellipse cx="12" cy="5" rx="9" ry="3"/>
-            <path d="M3 5v4c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-            <path d="M3 13v4c0 1.66 4 3 9 3s9-1.34 9-3v-4"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
           </svg>
         </div>
         <div>
