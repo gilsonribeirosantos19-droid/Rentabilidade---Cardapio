@@ -269,7 +269,7 @@ async function init(){
   // Verifica acesso ao portal
   if(!Perms.can('portal_gerente','visualizar')){
     document.getElementById('portal-content').style.display='none';
-    document.getElementById('access-denied').style.display='';
+    document.getElementById('access-denied').style.display='block';
     return;
   }
 

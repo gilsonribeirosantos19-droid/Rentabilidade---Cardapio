@@ -40,7 +40,7 @@
 
     // Verifica se o perfil atual pode executar a ação no módulo
     can(modulo,acao='visualizar'){
-      if(!this._data) return true; // administrador ou sem dados = acesso total
+      if(!this._data||this._data.length===0) return true; // sem dados = acesso total (fail open)
       const p=this._data.find(x=>x.modulo===modulo);
       if(!p) return false;
       return p[acao]===true;
