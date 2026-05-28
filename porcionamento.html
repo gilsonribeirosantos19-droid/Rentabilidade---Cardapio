@@ -28,8 +28,8 @@
   .content{flex:1;padding:0 24px 24px;overflow-y:auto}
   .tab-pane{display:none}.tab-pane.active{display:block;padding-top:18px}
 
-  /* FILTER BAR */
-  .filter-bar-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:18px;position:sticky;top:92px;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  /* FILTER BAR — top:0 porque .content tem overflow-y:auto (scroll interno) */
+  .filter-bar-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:18px;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.04)}
   .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .search-wrap{position:relative}
   .search-wrap input{padding-left:34px;min-width:180px}
@@ -584,6 +584,7 @@ function switchTab(id){
   if(pane) pane.classList.add('active');
   _renderTabStrip();
   if(id==='lancamento'&&!_loadedTabs.lancamento){renderLanc();_loadedTabs.lancamento=true;}
+  if(id==='hub') _renderTabStrip(); // mantém strip visível ao voltar para hub
 }
 function closeTab(id,e){
   e.stopPropagation();
@@ -598,7 +599,10 @@ function _renderTabStrip(){
   if(!_openTabs.length){strip.style.display='none';return;}
   strip.style.display='flex';
   const activePaneId=document.querySelector('.tab-pane.active')?.id?.replace('tab-','');
-  strip.innerHTML=_openTabs.map(id=>`
+  const homeBtn=`<button class="ws-home-btn" onclick="switchTab('hub')" title="Hub">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </button>`;
+  strip.innerHTML=homeBtn+_openTabs.map(id=>`
     <div class="ws-tab${activePaneId===id?' active':''}" onclick="switchTab('${id}')">
       ${esc(_tabNames[id]||id)}
       <span class="ws-tab-close" onclick="closeTab('${id}',event)">×</span>
