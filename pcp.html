@@ -868,6 +868,14 @@ async function salvarProd(){
   const fichaId=document.getElementById('mp-ficha').value;
   const produzido=parseFloat(document.getElementById('mp-produzido').value);
   if(!fichaId||isNaN(produzido)){toast('Preencha o produto e a quantidade produzida.','err');return;}
+
+  // ── Validações por parâmetro ─────────────────────────────
+  await Params.load();
+  if(Params.bool('producao','obrigar_responsavel')&&!document.getElementById('mp-resp').value.trim()){
+    toast('Responsável é obrigatório (Parâmetros > Produção).','err');return;}
+  if(Params.bool('producao','obrigar_turno')&&!document.getElementById('mp-turno').value){
+    toast('Turno é obrigatório (Parâmetros > Produção).','err');return;}
+  // ─────────────────────────────────────────────────────────
   const sobraAnt=parseFloat(document.getElementById('mp-sobra-ant').value)||0;
   const sobraFin=parseFloat(document.getElementById('mp-sobra-fin').value)||0;
   const disp=sobraAnt+produzido;
@@ -1139,6 +1147,7 @@ carregar().then(()=>{
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>if(window.lucide)lucide.createIcons();</script>
+<script src="params.js"></script>
 <script src="sidebar.js"></script>
 </body>
 </html>

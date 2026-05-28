@@ -763,6 +763,16 @@ async function gerarPedidos() {
   const semQtd = itens.filter(([,d]) => !d.qComprar || d.qComprar <= 0);
   if (semQtd.length) { toast('Informe Q. Comprar para todos os itens.','err'); return; }
 
+  // ── Validações por parâmetro ─────────────────────────────
+  await Params.load();
+  if(!Params.bool('compras','permitir_sem_fornecedor',true)){
+    const semForn=itens.filter(([,d])=>!d.fornecedorId);
+    if(semForn.length){toast(`${semForn.length} item(ns) sem fornecedor. Obrigatório (Parâmetros > Compras).`,'err');return;}
+  }
+  // Status inicial: se exigir aprovação, criar como 'aguardando_aprovacao'
+  const _statusInicial=Params.bool('compras','exigir_aprovacao')?'aguardando_aprovacao':'aprovado';
+  // ─────────────────────────────────────────────────────────
+
   // Agrupa por fornecedor
   const porForn = {};
   itens.forEach(([insId, d]) => {
@@ -1559,6 +1569,7 @@ carregar();
 })();
 </script>
 
+<script src="params.js"></script>
 <script src="sidebar.js"></script>
 </body>
 </html>

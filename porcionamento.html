@@ -505,6 +505,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="params.js"></script>
 <script src="sidebar.js"></script>
 <script>
 /* ================================================================
@@ -843,6 +844,19 @@ async function salvarLanc(){
   const data=document.getElementById('f-data').value;
   if(!data){toast('Informe a data.','err');return;}
 
+  // ── Validações por parâmetro ─────────────────────────────
+  await Params.load();
+  const resp=document.getElementById('f-responsavel').value.trim();
+  if(Params.bool('porcionamento','obrigar_responsavel')&&!resp){
+    toast('Responsável é obrigatório (Parâmetros > Porcionamento).','err');return;}
+  const fornId=document.getElementById('f-fornecedor').value;
+  if(Params.bool('porcionamento','obrigar_fornecedor')&&!fornId){
+    toast('Fornecedor é obrigatório (Parâmetros > Porcionamento).','err');return;}
+  const lote=document.getElementById('f-lote').value.trim();
+  if(Params.bool('porcionamento','obrigar_lote')&&!lote){
+    toast('Lote é obrigatório (Parâmetros > Porcionamento).','err');return;}
+  // ─────────────────────────────────────────────────────────
+
   let payload={
     insumo_id:insumoId,
     modelo,
@@ -893,6 +907,16 @@ async function salvarLanc(){
       valor_total:custo?round2(cons*custo):null,
     });
   }
+
+  // ── Alerta de perda alta ─────────────────────────────────
+  if(Params.bool('porcionamento','alertar_perda_alta')&&payload.rendimento_pct!=null){
+    const maxPerda=Params.num('porcionamento','pct_max_perda',40);
+    const perdaPct=100-payload.rendimento_pct;
+    if(perdaPct>maxPerda){
+      if(!confirm(`⚠️ Perda de ${perdaPct.toFixed(1)}% está acima do limite de ${maxPerda}% (Parâmetros > Porcionamento).\n\nDeseja salvar mesmo assim?`))return;
+    }
+  }
+  // ─────────────────────────────────────────────────────────
 
   const btn=document.getElementById('btn-salvar-lanc');
   btn.disabled=true;btn.textContent='Salvando...';

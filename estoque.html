@@ -1901,6 +1901,12 @@ async function salvarEntrada() {
   if(qtd_<=0){toast('Informe a quantidade.','err');return;}
   if(custo<=0){toast('Informe o custo unitário.','err');return;}
 
+  // ── Validação: obrigar lote ──────────────────────────────
+  await Params.load();
+  if(Params.bool('estoque','obrigar_lote')&&!document.getElementById('ef-lote').value.trim()){
+    toast('Lote é obrigatório (Parâmetros > Estoque).','err');return;}
+  // ─────────────────────────────────────────────────────────
+
   const btn=document.getElementById('btn-ent');
   btn.disabled=true;btn.textContent='Salvando…';
   try {
@@ -2357,7 +2363,16 @@ async function salvarSaida() {
   if(!insId){toast('Selecione um insumo.','err');return;}
   if(qtd_<=0){toast('Informe a quantidade.','err');return;}
   const s=getSaldo(insId);
-  if(qtd_>(s.quantidade||0) && !confirm(`Quantidade (${qtd(qtd_)}) supera o saldo (${qtd(s.quantidade||0)}). Continuar?`)) return;
+
+  // ── Validação: permitir estoque negativo ─────────────────
+  await Params.load();
+  if(qtd_>(s.quantidade||0)){
+    if(!Params.bool('estoque','permitir_negativo',false)){
+      toast(`Saldo insuficiente (${qtd(s.quantidade||0)}). Estoque negativo não permitido (Parâmetros > Estoque).`,'err');return;
+    }
+    if(!confirm(`Quantidade (${qtd(qtd_)}) supera o saldo (${qtd(s.quantidade||0)}). Continuar?`)) return;
+  }
+  // ─────────────────────────────────────────────────────────
 
   const btn=document.getElementById('btn-sai');
   btn.disabled=true;btn.textContent='Salvando…';
@@ -3969,6 +3984,7 @@ carregar().then(() => {
   fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
 })();
 </script>
+<script src="params.js"></script>
 <script src="sidebar.js"></script>
 </body>
 </html>

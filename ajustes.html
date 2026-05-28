@@ -576,6 +576,12 @@ async function salvarAjusteEstoque() {
   const qtd = parseFloat(document.getElementById('ae-qtd').value);
   if (!qtd || qtd <= 0) { toast('Informe a quantidade.','err'); return; }
 
+  // ── Validação: obrigar observação em ajuste ──────────────
+  await Params.load();
+  if(Params.bool('producao','obrigar_obs_ajuste')&&!(document.getElementById('ae-obs')?.value||'').trim()){
+    toast('Observação é obrigatória em ajustes (Parâmetros > Produção).','err');return;}
+  // ─────────────────────────────────────────────────────────
+
   const btn = document.getElementById('btn-ae');
   btn.disabled = true; btn.textContent = 'Salvando…';
 
@@ -818,6 +824,7 @@ function toast(msg, tipo='ok') {
   setTimeout(() => el.classList.remove('show'), 3500);
 }
 </script>
+<script src="params.js"></script>
 <script src="sidebar.js"></script>
 </body>
 </html>

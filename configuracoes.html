@@ -526,6 +526,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="params.js"></script>
 <script src="sidebar.js"></script>
 <script>
 /* ================================================================
@@ -896,6 +897,7 @@ async function salvarParams(modulo) {
   });
   try {
     await Promise.all(promises);
+    window.Params?.invalidate(); // força recarga nos outros módulos
     toast('Parâmetros salvos com sucesso', 'ok');
   } catch (e) {
     toast('Erro ao salvar: ' + e.message, 'err');
