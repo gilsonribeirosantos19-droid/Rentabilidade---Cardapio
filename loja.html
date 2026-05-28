@@ -1889,6 +1889,8 @@ async function registrarMovimentacao() {
 // ── HELPERS ──────────────────────────────────────────────────────
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function hoje(p=0){const d=new Date();d.setDate(d.getDate()+p);return d.toISOString().split('T')[0];}
+function fmtN(v,dec=2){if(v==null||isNaN(v))return'—';const n=parseFloat(v);if(Number.isInteger(n))return n.toString();return n.toFixed(dec).replace(/\.?0+$/,'');}
+function brl(v){if(v==null)return'—';return'R$ '+Number(v).toFixed(2).replace('.',',');}
 function fmtData(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
 function fmtQtd(v){const n=Number(v)||0;return n%1===0?n.toLocaleString('pt-BR'):n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3});}
 let _tt;
