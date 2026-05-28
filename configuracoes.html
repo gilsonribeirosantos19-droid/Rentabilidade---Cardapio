@@ -119,13 +119,21 @@
   .toast.show{opacity:1;transform:translateY(0)}.toast.ok{border-color:var(--green);color:var(--green)}.toast.err{border-color:var(--red);color:var(--red)}
   ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
   /* PERMISSÕES */
-  .perm-tab{padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;background:transparent;color:#64748b;transition:all .15s}
-  .perm-tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 4px rgba(0,0,0,.12)}
-  .perm-matrix th,.perm-matrix td{text-align:left}
-  .perm-col{text-align:center !important;width:110px}
-  .perm-matrix tbody tr:hover td{background:#f8fafc}
+  .grp-list-item{padding:11px 16px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;transition:background .1s;font-size:13px}
+  .grp-list-item:last-child{border-bottom:none}
+  .grp-list-item:hover{background:#f8fafc}
+  .grp-list-item.active{background:#fff7ed;border-left:3px solid #f97316}
+  .grp-tab-btn{padding:10px 20px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+  .grp-tab-btn.active{color:#f97316;border-bottom-color:#f97316;font-weight:600}
+  .perm-matrix{width:100%;border-collapse:collapse;font-size:13px}
+  .perm-matrix th{padding:10px 14px;background:#0f2d5c;color:rgba(255,255,255,.85);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:left}
+  .perm-matrix th.pc{text-align:center;width:130px}
+  .perm-matrix td{padding:9px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  .perm-matrix td.pc{text-align:center}
+  .perm-matrix tr.grp-row td{background:#f8fafc;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;padding:7px 14px}
+  .perm-matrix tbody tr:not(.grp-row):hover td{background:#fffbf7}
   .perm-matrix input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#f97316}
-  .perm-disabled{opacity:.3;pointer-events:none}
+  .perm-disabled td{opacity:.4;pointer-events:none}
 </style>
 </head>
 <body>
@@ -465,50 +473,89 @@
       <div class="page-header">
         <div>
           <div class="page-title">Permissões</div>
-          <div class="page-desc">Defina o que cada perfil pode visualizar e executar no sistema.</div>
+          <div class="page-desc">Gerencie grupos de acesso e defina o que cada grupo pode fazer no sistema.</div>
         </div>
       </div>
       <div class="section-content">
 
-        <!-- AVISO ADMIN -->
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 18px;font-size:13px;color:#166534;margin-bottom:20px;display:flex;align-items:center;gap:10px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span><strong>Administrador</strong> tem acesso total ao sistema e não pode ser editado.</span>
-        </div>
+        <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start">
 
-        <!-- SELETOR DE PERFIL -->
-        <div style="margin-bottom:20px">
-          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Perfil</div>
-          <div style="display:flex;background:#f1f5f9;border-radius:10px;padding:4px;gap:4px;width:fit-content">
-            <button class="perm-tab active" id="ptab-gerente"   onclick="setPerfil('gerente',this)">Gerente</button>
-            <button class="perm-tab"        id="ptab-operador"  onclick="setPerfil('operador',this)">Operador</button>
-            <button class="perm-tab"        id="ptab-caixa"     onclick="setPerfil('caixa',this)">Caixa</button>
+          <!-- PAINEL ESQUERDO: GRUPOS -->
+          <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+            <div style="padding:12px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em">Grupos de Acesso</span>
+              <button class="btn btn-primary btn-sm" onclick="novoGrupo()">+ Novo</button>
+            </div>
+            <div id="grp-list-items">
+              <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">Carregando...</div>
+            </div>
           </div>
-        </div>
 
-        <!-- MATRIZ DE PERMISSÕES -->
-        <div class="acc-card" style="overflow:clip">
-          <table class="cfg-table perm-matrix">
-            <thead>
-              <tr>
-                <th style="min-width:200px">Módulo</th>
-                <th class="perm-col">Visualizar</th>
-                <th class="perm-col">Criar / Lançar</th>
-                <th class="perm-col">Editar</th>
-                <th class="perm-col">Excluir</th>
-              </tr>
-            </thead>
-            <tbody id="perm-tbody">
-              <tr><td colspan="5" style="text-align:center;padding:28px;color:#94a3b8">Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
+          <!-- PAINEL DIREITO: DETALHE DO GRUPO -->
+          <div id="grp-detail" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
 
-        <div style="display:flex;justify-content:flex-end;margin-top:16px">
-          <button class="btn btn-primary" id="btn-salvar-perm" onclick="salvarPermissoes()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Salvar Permissões
-          </button>
+            <!-- Cabeçalho do grupo -->
+            <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:12px">
+              <input id="grp-nome-input" class="form-input" style="font-size:15px;font-weight:700;flex:1;max-width:280px" placeholder="Nome do grupo">
+              <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+                <button onclick="salvarGrupo()" class="btn btn-primary btn-sm">Salvar grupo</button>
+                <button id="grp-btn-excluir" onclick="excluirGrupo()" class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fecaca">Excluir</button>
+              </div>
+            </div>
+
+            <!-- Abas -->
+            <div style="display:flex;border-bottom:1px solid #e2e8f0;padding:0 4px">
+              <button class="grp-tab-btn active" id="gtab-usuarios" onclick="setGrpTab('usuarios',this)">Vincular Usuários</button>
+              <button class="grp-tab-btn" id="gtab-perms" onclick="setGrpTab('perms',this)">Permissões/Acesso</button>
+            </div>
+
+            <!-- ABA: VINCULAR USUÁRIOS -->
+            <div id="grp-pane-usuarios" style="padding:16px">
+              <div style="font-size:12px;color:#64748b;margin-bottom:12px">Usuários marcados pertencem a este grupo.</div>
+              <div id="grp-usuarios-list">
+                <div style="color:#94a3b8;font-size:13px">Salve o grupo primeiro para vincular usuários.</div>
+              </div>
+              <div id="grp-vinculos-footer" style="display:none;margin-top:14px;display:flex;justify-content:flex-end">
+                <button onclick="salvarVinculos()" class="btn btn-primary btn-sm">Salvar vínculos</button>
+              </div>
+            </div>
+
+            <!-- ABA: PERMISSÕES/ACESSO -->
+            <div id="grp-pane-perms" style="display:none">
+              <div style="overflow-x:auto">
+                <table class="perm-matrix">
+                  <thead>
+                    <tr>
+                      <th style="min-width:220px">Módulo / Funcionalidade</th>
+                      <th class="pc">Habilitado</th>
+                      <th class="pc">Controle Total</th>
+                      <th class="pc">Somente Leitura</th>
+                    </tr>
+                  </thead>
+                  <tbody id="perm-tbody">
+                    <tr><td colspan="4" style="text-align:center;padding:24px;color:#94a3b8">Selecione um grupo</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style="padding:14px 16px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end">
+                <button id="btn-salvar-perm" onclick="salvarPermissoes()" class="btn btn-primary">Salvar Permissões</button>
+              </div>
+            </div>
+
+          </div><!-- /grp-detail -->
+
+          <!-- EMPTY STATE -->
+          <div id="grp-empty" style="padding:60px;text-align:center;color:#94a3b8;font-size:13px">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:.3"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <div>Selecione um grupo para gerenciar</div>
+          </div>
+
+        </div><!-- /grid -->
+
+        <!-- AVISO ADMIN -->
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 16px;font-size:12px;color:#166534;margin-top:16px;display:flex;align-items:center;gap:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <strong>Administrador</strong> — tem acesso total e não pode ser editado.
         </div>
 
       </div><!-- /section-content -->
@@ -628,118 +675,214 @@ function toast(msg, tipo = 'ok') {
 }
 
 /* ================================================================
-   SEÇÕES (via URL ?tab=)
+   PERMISSÕES — Grupos de Acesso
 ================================================================ */
-/* ================================================================
-   PERMISSÕES
-================================================================ */
-const MODULOS_PERM=[
-  {id:'dashboard',       lbl:'Dashboard',            acoes:['visualizar']},
-  {id:'estoque',         lbl:'Estoque',              acoes:['visualizar','criar','editar','excluir']},
-  {id:'ajustes',         lbl:'Ajustes de Estoque',   acoes:['visualizar','criar','editar','excluir']},
-  {id:'insumos',         lbl:'Insumos',              acoes:['visualizar','criar','editar','excluir']},
-  {id:'fichas_tecnicas', lbl:'Fichas Técnicas',      acoes:['visualizar','criar','editar','excluir']},
-  {id:'fornecedores',    lbl:'Fornecedores',         acoes:['visualizar','criar','editar','excluir']},
-  {id:'compras',         lbl:'Compras',              acoes:['visualizar','criar','editar','excluir']},
-  {id:'relatorios',      lbl:'Relatórios',           acoes:['visualizar']},
-  {id:'cmv',             lbl:'CMV Teórico x Real',   acoes:['visualizar']},
-  {id:'rendimento',      lbl:'Rendimentos',          acoes:['visualizar']},
-  {id:'pdv',             lbl:'PDV / Vendas',         acoes:['visualizar','criar','editar','excluir']},
-  {id:'pcp',             lbl:'PCP / Produção',       acoes:['visualizar','criar','editar','excluir']},
-  {id:'porcionamento',   lbl:'Porcionamento',        acoes:['visualizar','criar','editar','excluir']},
-  {id:'configuracoes',   lbl:'Configurações',        acoes:['visualizar','editar']},
+const MODULO_GROUPS=[
+  {lbl:'Operação',   mods:[{id:'estoque',lbl:'Estoque'},{id:'ajustes',lbl:'Ajustes de Estoque'}]},
+  {lbl:'Cadastros',  mods:[{id:'insumos',lbl:'Insumos'},{id:'fichas_tecnicas',lbl:'Fichas Técnicas'},{id:'fornecedores',lbl:'Fornecedores'}]},
+  {lbl:'Compras',    mods:[{id:'compras',lbl:'Compras'}]},
+  {lbl:'Análises',   mods:[{id:'relatorios',lbl:'Relatórios'},{id:'cmv',lbl:'CMV Teórico x Real'},{id:'rendimento',lbl:'Rendimentos'},{id:'pdv',lbl:'PDV / Vendas'}]},
+  {lbl:'PCP',        mods:[{id:'pcp',lbl:'PCP / Produção'},{id:'porcionamento',lbl:'Porcionamento'}]},
+  {lbl:'Outros',     mods:[{id:'dashboard',lbl:'Dashboard'},{id:'configuracoes',lbl:'Configurações'}]},
 ];
+const ALL_MODS=MODULO_GROUPS.flatMap(g=>g.mods);
 
-const DEFAULTS_PERM={
-  gerente:{
-    dashboard:{v:true},estoque:{v:true,c:true,e:true},ajustes:{v:true,c:true,e:true},
-    insumos:{v:true,c:true,e:true},fichas_tecnicas:{v:true,c:true,e:true},
-    fornecedores:{v:true,c:true,e:true},compras:{v:true,c:true,e:true},
-    relatorios:{v:true},cmv:{v:true},rendimento:{v:true},pdv:{v:true,c:true,e:true},
-    pcp:{v:true,c:true,e:true},porcionamento:{v:true,c:true,e:true},
-    configuracoes:{v:true,e:false},
-  },
-  operador:{
-    dashboard:{v:true},estoque:{v:true,c:true},ajustes:{v:true,c:true},
-    insumos:{v:true},fichas_tecnicas:{v:true},fornecedores:{v:true},compras:{v:true},
-    relatorios:{v:false},cmv:{v:false},rendimento:{v:false},pdv:{v:true,c:true},
-    pcp:{v:true,c:true},porcionamento:{v:true,c:true},configuracoes:{v:false},
-  },
-  caixa:{
-    dashboard:{v:true},estoque:{v:false},ajustes:{v:false},insumos:{v:false},
-    fichas_tecnicas:{v:false},fornecedores:{v:false},compras:{v:false},
-    relatorios:{v:false},cmv:{v:false},rendimento:{v:false},pdv:{v:true,c:true,e:true},
-    pcp:{v:false},porcionamento:{v:false},configuracoes:{v:false},
-  },
-};
-
-let _permPerfil='gerente';
-let _permCache={};
+let _grupos=[], _selGrupoId=null, _grpPermsCache={}, _grpTab='usuarios';
 
 async function carregarPermissoes(){
-  if(_permCache[_permPerfil]){renderPermTable();return;}
-  try{
-    const data=await api(`permissoes?tenant_id=eq.${TENANT_ID}&perfil=eq.${_permPerfil}`);
-    _permCache[_permPerfil]=data;
-    renderPermTable();
-  }catch(e){toast('Erro ao carregar permissões: '+e.message,'err');}
+  _grupos=await api(`grupos_acesso?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]);
+  renderGruposList();
+  // Se não há grupo selecionado, mostra empty state
+  if(!_selGrupoId){
+    document.getElementById('grp-detail').style.display='none';
+    document.getElementById('grp-empty').style.display='';
+  }
 }
 
-function setPerfil(perfil,btn){
-  _permPerfil=perfil;
-  document.querySelectorAll('.perm-tab').forEach(b=>b.classList.remove('active'));
+function renderGruposList(){
+  const el=document.getElementById('grp-list-items');
+  if(!_grupos.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">Nenhum grupo cadastrado</div>';
+    return;
+  }
+  el.innerHTML=_grupos.map(g=>`
+    <div class="grp-list-item${g.id===_selGrupoId?' active':''}" onclick="selecionarGrupo('${g.id}')">
+      <span style="font-weight:600">${esc(g.nome)}</span>
+      <span style="font-size:11px;color:${g.ativo?'#16a34a':'#94a3b8'}">${g.ativo?'Ativo':'Inativo'}</span>
+    </div>`).join('');
+}
+
+async function selecionarGrupo(id){
+  _selGrupoId=id;
+  renderGruposList();
+  const grp=_grupos.find(g=>g.id===id);
+  if(!grp) return;
+  const isAdmin=grp.nome.toLowerCase()==='administrador';
+  document.getElementById('grp-nome-input').value=grp.nome;
+  document.getElementById('grp-btn-excluir').style.display=isAdmin?'none':'';
+  document.getElementById('grp-detail').style.display='';
+  document.getElementById('grp-empty').style.display='none';
+  setGrpTab('usuarios',document.getElementById('gtab-usuarios'));
+}
+
+function setGrpTab(tab,btn){
+  _grpTab=tab;
+  document.querySelectorAll('.grp-tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  carregarPermissoes();
+  document.getElementById('grp-pane-usuarios').style.display=tab==='usuarios'?'':'none';
+  document.getElementById('grp-pane-perms').style.display=tab==='perms'?'':'none';
+  if(tab==='usuarios') loadVinculos();
+  if(tab==='perms') loadGrpPerms();
 }
 
-function renderPermTable(){
-  const data=_permCache[_permPerfil]||[];
-  const ALL=['visualizar','criar','editar','excluir'];
-  const defs=DEFAULTS_PERM[_permPerfil]||{};
-  document.getElementById('perm-tbody').innerHTML=MODULOS_PERM.map(m=>{
-    const row=data.find(p=>p.modulo===m.id)||{};
-    const defRow=defs[m.id]||{};
-    return `<tr>
-      <td style="font-weight:500;color:#0f172a">${esc(m.lbl)}</td>
-      ${ALL.map(a=>{
-        const hasAcao=m.acoes.includes(a);
-        if(!hasAcao) return `<td class="perm-col"><span style="color:#e2e8f0">—</span></td>`;
-        // row from DB first, then fall back to defaults
-        const checked=Object.keys(row).length>0
-          ? (row[a]===true)
-          : (a==='visualizar'?defRow.v:a==='criar'?defRow.c:a==='editar'?defRow.e:defRow.x)||false;
-        return `<td class="perm-col">
-          <input type="checkbox" id="perm-${m.id}-${a}" ${checked?'checked':''}>
-        </td>`;
-      }).join('')}
-    </tr>`;
-  }).join('');
+async function loadVinculos(){
+  if(!_selGrupoId) return;
+  const grp=_grupos.find(g=>g.id===_selGrupoId);
+  if(!grp) return;
+  const users=await api(`usuarios?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]);
+  const el=document.getElementById('grp-usuarios-list');
+  if(!users.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px">Nenhum usuário cadastrado.</div>';return;}
+  el.innerHTML=`<table class="cfg-table" style="width:100%">
+    <thead><tr>
+      <th style="width:40px">Sel.</th><th>Login / E-mail</th><th>Nome</th><th>Grupo Atual</th><th>Situação</th>
+    </tr></thead>
+    <tbody>${users.map(u=>`
+      <tr>
+        <td><input type="checkbox" id="vu-${u.id}" ${u.role===grp.nome?'checked':''} style="accent-color:#f97316;width:16px;height:16px"></td>
+        <td style="font-family:monospace;font-size:12px">${esc(u.email||u.login||'—')}</td>
+        <td style="font-weight:500">${esc(u.nome||'—')}</td>
+        <td><span style="font-size:11px;color:#64748b">${esc(u.role||'—')}</span></td>
+        <td><span style="font-size:11px;color:${u.ativo!==false?'#16a34a':'#94a3b8'}">${u.ativo!==false?'Ativo':'Inativo'}</span></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+  document.getElementById('grp-vinculos-footer').style.display='flex';
+}
+
+async function salvarVinculos(){
+  const grp=_grupos.find(g=>g.id===_selGrupoId);
+  if(!grp) return;
+  const checkboxes=document.querySelectorAll('[id^="vu-"]');
+  try{
+    await Promise.all(Array.from(checkboxes).map(chk=>{
+      const uid=chk.id.replace('vu-','');
+      return api(`usuarios?id=eq.${uid}`,{method:'PATCH',body:JSON.stringify({role:chk.checked?grp.nome:null}),prefer:'return=minimal'});
+    }));
+    window.Perms?.invalidate();
+    toast('Vínculos salvos.','ok');
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+async function loadGrpPerms(){
+  const grp=_grupos.find(g=>g.id===_selGrupoId);
+  if(!grp) return;
+  if(!_grpPermsCache[grp.nome]){
+    _grpPermsCache[grp.nome]=await api(`permissoes?tenant_id=eq.${TENANT_ID}&perfil=eq.${encodeURIComponent(grp.nome)}`).catch(()=>[]);
+  }
+  renderPermTable(grp);
+}
+
+function renderPermTable(grp){
+  const data=_grpPermsCache[grp.nome]||[];
+  const isAdmin=grp.nome.toLowerCase()==='administrador';
+  let html='';
+  MODULO_GROUPS.forEach(g=>{
+    html+=`<tr class="grp-row"><td colspan="4">${esc(g.lbl)}</td></tr>`;
+    g.mods.forEach(m=>{
+      const p=data.find(x=>x.modulo===m.id)||{};
+      const hab=isAdmin||(p.visualizar===true);
+      const ct=isAdmin||(p.visualizar&&(p.criar||p.editar||p.excluir));
+      const sl=!isAdmin&&p.visualizar&&!p.criar&&!p.editar&&!p.excluir;
+      const dis=isAdmin?'disabled':''
+      html+=`<tr${isAdmin?' class="perm-disabled"':''}>
+        <td style="padding-left:28px">${esc(m.lbl)}</td>
+        <td class="pc"><input type="checkbox" id="ph-${m.id}" ${hab?'checked':''} ${dis} onchange="onHab('${m.id}')"></td>
+        <td class="pc"><input type="checkbox" id="pct-${m.id}" ${ct?'checked':''} ${dis} onchange="onCT('${m.id}')"></td>
+        <td class="pc"><input type="checkbox" id="psl-${m.id}" ${sl?'checked':''} ${dis} onchange="onSL('${m.id}')"></td>
+      </tr>`;
+    });
+  });
+  document.getElementById('perm-tbody').innerHTML=html;
+}
+
+function onHab(id){
+  if(!document.getElementById(`ph-${id}`).checked){
+    document.getElementById(`pct-${id}`).checked=false;
+    document.getElementById(`psl-${id}`).checked=false;
+  }
+}
+function onCT(id){
+  if(document.getElementById(`pct-${id}`).checked){
+    document.getElementById(`ph-${id}`).checked=true;
+    document.getElementById(`psl-${id}`).checked=false;
+  }
+}
+function onSL(id){
+  if(document.getElementById(`psl-${id}`).checked){
+    document.getElementById(`ph-${id}`).checked=true;
+    document.getElementById(`pct-${id}`).checked=false;
+  }
 }
 
 async function salvarPermissoes(){
+  const grp=_grupos.find(g=>g.id===_selGrupoId);
+  if(!grp) return;
   const btn=document.getElementById('btn-salvar-perm');
   btn.disabled=true;btn.textContent='Salvando...';
   try{
-    const ALL=['visualizar','criar','editar','excluir'];
-    const payloads=MODULOS_PERM.map(m=>({
-      tenant_id:TENANT_ID,
-      perfil:_permPerfil,
-      modulo:m.id,
-      visualizar:!!(document.getElementById(`perm-${m.id}-visualizar`)?.checked),
-      criar:!!(document.getElementById(`perm-${m.id}-criar`)?.checked),
-      editar:!!(document.getElementById(`perm-${m.id}-editar`)?.checked),
-      excluir:!!(document.getElementById(`perm-${m.id}-excluir`)?.checked),
-    }));
-    await api('permissoes',{
-      method:'POST',
-      body:JSON.stringify(payloads),
-      prefer:'resolution=merge-duplicates,return=minimal',
+    const payloads=ALL_MODS.map(m=>{
+      const hab=!!(document.getElementById(`ph-${m.id}`)?.checked);
+      const ct=!!(document.getElementById(`pct-${m.id}`)?.checked);
+      return{tenant_id:TENANT_ID,perfil:grp.nome,modulo:m.id,
+        visualizar:hab,criar:hab&&ct,editar:hab&&ct,excluir:hab&&ct};
     });
-    delete _permCache[_permPerfil];
+    await api('permissoes',{method:'POST',body:JSON.stringify(payloads),prefer:'resolution=merge-duplicates,return=minimal'});
+    delete _grpPermsCache[grp.nome];
     window.Perms?.invalidate();
-    toast('Permissões salvas com sucesso.','ok');
-  }catch(e){toast('Erro ao salvar: '+e.message,'err');}
+    toast('Permissões salvas.','ok');
+  }catch(e){toast('Erro: '+e.message,'err');}
   finally{btn.disabled=false;btn.textContent='Salvar Permissões';}
+}
+
+// CRUD grupos
+function novoGrupo(){
+  _selGrupoId=null;
+  renderGruposList();
+  document.getElementById('grp-nome-input').value='';
+  document.getElementById('grp-btn-excluir').style.display='none';
+  document.getElementById('grp-detail').style.display='';
+  document.getElementById('grp-empty').style.display='none';
+  document.getElementById('grp-pane-usuarios').style.display='';
+  document.getElementById('grp-pane-perms').style.display='none';
+  document.getElementById('grp-usuarios-list').innerHTML='<div style="color:#94a3b8;font-size:13px">Salve o grupo primeiro para vincular usuários.</div>';
+  document.getElementById('grp-vinculos-footer').style.display='none';
+  document.getElementById('gtab-usuarios').classList.add('active');
+  document.getElementById('gtab-perms').classList.remove('active');
+}
+async function salvarGrupo(){
+  const nome=document.getElementById('grp-nome-input').value.trim();
+  if(!nome){toast('Informe o nome do grupo.','err');return;}
+  try{
+    if(_selGrupoId){
+      await api(`grupos_acesso?id=eq.${_selGrupoId}`,{method:'PATCH',body:JSON.stringify({nome}),prefer:'return=minimal'});
+      toast('Grupo atualizado.','ok');
+    } else {
+      await api('grupos_acesso',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,ativo:true}),prefer:'return=minimal'});
+      toast('Grupo criado.','ok');
+    }
+    await carregarPermissoes();
+    const novo=_grupos.find(g=>g.nome===nome);
+    if(novo) selecionarGrupo(novo.id);
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+async function excluirGrupo(){
+  if(!_selGrupoId||!confirm('Excluir este grupo?')) return;
+  try{
+    await api(`grupos_acesso?id=eq.${_selGrupoId}`,{method:'DELETE',prefer:'return=minimal'});
+    _selGrupoId=null;
+    toast('Grupo excluído.','ok');
+    carregarPermissoes();
+  }catch(e){toast('Erro: '+e.message,'err');}
 }
 
 /* ================================================================
