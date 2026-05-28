@@ -17,8 +17,9 @@
     {
       id: 'operacao', label: 'Operação',
       items: [
-        { href: 'estoque.html',  label: 'Estoque' },
-        { href: 'ajustes.html',  label: 'Ajustes' },
+        { href: 'portal_gerente.html', label: 'Portal do Gerente' },
+        { href: 'estoque.html',        label: 'Estoque' },
+        { href: 'ajustes.html',        label: 'Ajustes' },
       ]
     },
     {
@@ -69,6 +70,7 @@
 
   // Mapeamento href → módulo para filtragem por permissão
   const _MODULO_MAP = {
+    'portal_gerente.html':  'portal_gerente',
     'dashboard.html':       'dashboard',
     'estoque.html':         'estoque',
     'ajustes.html':         'ajustes',
