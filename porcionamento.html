@@ -247,6 +247,10 @@
             <label class="form-label">Data *</label>
             <input class="form-input" id="f-data" type="date">
           </div>
+          <div class="form-group">
+            <label class="form-label">Loja</label>
+            <select class="form-select" id="f-loja"><option value="">Selecione...</option></select>
+          </div>
           <div class="form-group" id="fg-fornecedor">
             <label class="form-label">Fornecedor</label>
             <select class="form-select" id="f-fornecedor"><option value="">Selecione...</option></select>
@@ -417,6 +421,11 @@
             <option value="saida">↑ Saída</option>
           </select>
         </div>
+        <!-- LOJA -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Loja</div>
+          <select class="fil-select" id="rel-loja" style="min-width:150px"><option value="">Todas as lojas</option></select>
+        </div>
         <!-- PRODUTO -->
         <div>
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Produto</div>
@@ -532,7 +541,7 @@ function sair(){localStorage.removeItem('sb_user');location.href='login.html';}
 /* ================================================================
    STATE
 ================================================================ */
-let _lancs=[], _insumos=[], _fornecedores=[];
+let _lancs=[], _insumos=[], _fornecedores=[], _lojas=[];
 let _editId=null, _tipo='entrada';
 let _relData=[];
 
@@ -577,9 +586,10 @@ function _renderStrip(){
 ================================================================ */
 async function carregar(){
   try{
-    [_insumos,_fornecedores,_lancs]=await Promise.all([
+    [_insumos,_fornecedores,_lojas,_lancs]=await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]),
+      api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]),
       api(`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`).catch(()=>[]),
     ]);
     _populateSelects();
@@ -599,6 +609,12 @@ function _populateSelects(){
   const fornOpts='<option value="">Nenhum</option>'+
     _fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</option>`).join('');
   document.getElementById('f-fornecedor').innerHTML=fornOpts;
+  const lojaOpts='<option value="">Selecione...</option>'+
+    _lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+  document.getElementById('f-loja').innerHTML=lojaOpts;
+  const relLojaOpts='<option value="">Todas as lojas</option>'+
+    _lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+  document.getElementById('rel-loja').innerHTML=relLojaOpts;
 }
 
 function _loadUser(){
@@ -678,7 +694,7 @@ function editarLanc(id){
   showForm();
 }
 function _resetForm(){
-  const ids=['f-data','f-loja','f-fornecedor','f-turno','f-responsavel','f-obs',
+  const ids=['f-data','f-loja','f-turno','f-fornecedor','f-responsavel','f-obs',
     'f-insumo-ent','f-qtd-ent','f-peso-bruto','f-valor-total','f-custo-kg-ent','f-cabeca','f-liq-arm',
     'f-insumo-sai','f-qtd-sai','f-peso-entrada','f-custo-kg-sai','f-file-limpo','f-pele','f-aparas','f-perdas'];
   ids.forEach(id=>sv(id,''));
@@ -690,6 +706,7 @@ function _resetForm(){
 function _populateForm(l){
   setTipo(l.tipo||'entrada');
   sv('f-data',l.data||'');
+  sv('f-loja',l.loja_id||'');
   sv('f-responsavel',l.responsavel||'');
   sv('f-obs',l.observacoes||'');
   if(l.tipo==='entrada'){
@@ -792,7 +809,9 @@ function calcSaida(){
 async function salvarLanc(){
   const data=document.getElementById('f-data').value;
   if(!data){toast('Informe a data.','err');return;}
-  let payload={tipo:_tipo,data,observacoes:document.getElementById('f-obs').value.trim()||null,
+  let payload={tipo:_tipo,data,
+    loja_id:document.getElementById('f-loja').value||null,
+    observacoes:document.getElementById('f-obs').value.trim()||null,
     responsavel:document.getElementById('f-responsavel').value.trim()||null};
 
   if(_tipo==='entrada'){
@@ -950,10 +969,12 @@ function toggleCol(id,on){
 ================================================================ */
 async function filtrarRel(){
   const insumoId=document.getElementById('rel-insumo').value;
+  const lojaId=document.getElementById('rel-loja').value;
   const de=document.getElementById('rel-de').value;
   const ate=document.getElementById('rel-ate').value;
   let qs=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`;
   if(insumoId) qs+=`&insumo_id=eq.${insumoId}`;
+  if(lojaId) qs+=`&loja_id=eq.${lojaId}`;
   if(_relTipo) qs+=`&tipo=eq.${_relTipo}`;
   if(de) qs+=`&data=gte.${de}`;
   if(ate) qs+=`&data=lte.${ate}`;
@@ -967,7 +988,7 @@ async function filtrarRel(){
 }
 
 function limparRel(){
-  ['rel-insumo','rel-tipo','rel-de','rel-ate'].forEach(id=>sv(id,''));
+  ['rel-tipo','rel-loja','rel-insumo','rel-de','rel-ate'].forEach(id=>sv(id,''));
   _relTipo='';
   _autoAdjustCols('');
   _relData=[];
