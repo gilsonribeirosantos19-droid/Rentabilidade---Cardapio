@@ -408,24 +408,19 @@
   <div id="tab-relatorio" class="tab-pane">
     <div class="filter-bar-wrap">
       <div class="toolbar" style="flex-wrap:wrap;gap:14px 10px">
-        <!-- TIPO pills -->
+        <!-- TIPO select -->
         <div>
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Tipo</div>
-          <div style="display:flex;background:var(--bg3);border-radius:8px;padding:3px;gap:3px">
-            <button class="rel-tp-pill active" data-v="" onclick="setRelTipo(this,'')">Ent. + Saída</button>
-            <button class="rel-tp-pill" data-v="entrada" onclick="setRelTipo(this,'entrada')">↓ Entrada</button>
-            <button class="rel-tp-pill" data-v="saida" onclick="setRelTipo(this,'saida')">↑ Saída</button>
-          </div>
+          <select class="fil-select" id="rel-tipo" onchange="setRelTipoSel(this.value)">
+            <option value="">Entrada + Saída</option>
+            <option value="entrada">↓ Entrada</option>
+            <option value="saida">↑ Saída</option>
+          </select>
         </div>
         <!-- PRODUTO -->
         <div>
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Produto</div>
           <select class="fil-select" id="rel-insumo" style="min-width:180px"><option value="">Todos os produtos</option></select>
-        </div>
-        <!-- LOJA -->
-        <div>
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Loja</div>
-          <select class="fil-select" id="rel-loja" style="min-width:140px"><option value="">Todas as lojas</option></select>
         </div>
         <!-- PERÍODO -->
         <div>
@@ -915,10 +910,8 @@ const COLS=[
 
 let _relTipo=''; // ''=ambos, 'entrada', 'saida'
 
-function setRelTipo(btn,v){
+function setRelTipoSel(v){
   _relTipo=v;
-  document.querySelectorAll('.rel-tp-pill').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
   _autoAdjustCols(v);
 }
 
@@ -974,9 +967,8 @@ async function filtrarRel(){
 }
 
 function limparRel(){
-  ['rel-insumo','rel-de','rel-ate'].forEach(id=>sv(id,''));
+  ['rel-insumo','rel-tipo','rel-de','rel-ate'].forEach(id=>sv(id,''));
   _relTipo='';
-  document.querySelectorAll('.rel-tp-pill').forEach((b,i)=>b.classList.toggle('active',i===0));
   _autoAdjustCols('');
   _relData=[];
   document.getElementById('rel-content').style.display='none';
