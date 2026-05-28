@@ -247,7 +247,7 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Item (insumo) *</label>
-            <select class="form-select" id="f-insumo"><option value="">Selecione...</option></select>
+            <select class="form-select" id="f-insumo" onchange="onInsumoChange()"><option value="">Selecione...</option></select>
           </div>
           <div class="form-group">
             <label class="form-label">Modelo de Processo *</label>
@@ -736,6 +736,16 @@ function _populateForm(l){
 /* ================================================================
    MODELO CHANGE
 ================================================================ */
+function onInsumoChange(){
+  const sel=document.getElementById('f-insumo');
+  const custo=parseFloat(sel.options[sel.selectedIndex]?.dataset?.custo)||0;
+  if(!custo) return;
+  const modelo=document.getElementById('f-modelo')?.value||'simples';
+  const camposCusto={simples:'f-custo-unit',degelo:'fd-custo',coccao:'fc-custo',lote:'fl-custo'};
+  const campo=camposCusto[modelo];
+  if(campo) sv(campo,custo);
+}
+
 function onModeloChange(){
   const modelo=document.getElementById('f-modelo')?.value||'simples';
   document.querySelectorAll('.fields-block').forEach(b=>b.classList.remove('active'));

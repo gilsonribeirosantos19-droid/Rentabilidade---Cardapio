@@ -849,7 +849,7 @@
           <div class="form-card-title">Identificação</div>
           <div class="form-grid">
             <div class="form-group"><label class="form-label">Item (insumo) *</label>
-              <select class="form-select" id="porc-f-insumo"><option value="">Selecione...</option></select>
+              <select class="form-select" id="porc-f-insumo" onchange="porcOnInsumoChange()"><option value="">Selecione...</option></select>
             </div>
             <div class="form-group"><label class="form-label">Modelo de Processo *</label>
               <select class="form-select" id="porc-f-modelo" onchange="porcOnModeloChange()">
@@ -2654,6 +2654,16 @@ function _porcResetForm(){
    'porc-dv-limpo','porc-dv-perdas','porc-dv-rend','porc-dv-valor',
    'porc-ccv-red','porc-ccv-rend','porc-ccv-valor','porc-lv-rend','porc-lv-valor']
   .forEach(id=>_pSe(id,'—'));
+}
+
+function porcOnInsumoChange(){
+  const sel=document.getElementById('porc-f-insumo');
+  const custo=parseFloat(sel.options[sel.selectedIndex]?.dataset?.custo)||0;
+  if(!custo) return;
+  const modelo=document.getElementById('porc-f-modelo')?.value||'simples';
+  const map={simples:'porc-fs-custo',degelo:'porc-fd-custo',coccao:'porc-fc-custo',lote:'porc-fl-custo'};
+  const campo=map[modelo];
+  if(campo) _pSv(campo,custo);
 }
 
 function porcOnModeloChange(){
