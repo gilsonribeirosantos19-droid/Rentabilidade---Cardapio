@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -8,474 +8,469 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configurações · Aiko</title>
 <style>
-  
   :root{
-    --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
-    --border1:#e2e8f0;--border2:#e2e8f0;
-    --teal:#0d9488;--teal2:#0f766e;--teal-dim:rgba(13,148,136,.12);
-    --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;
+    --bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--border:#e2e8f0;
+    --orange:#f97316;--blue:#3b82f6;--green:#16a34a;--red:#dc2626;
     --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
     --radius:10px;--radius-lg:16px;
+    --filter-top:0px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI', system-ui, -apple-system, sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text1);min-height:100vh;display:flex}
   .shell{display:flex;width:100%;min-height:100vh}
-
-  /* SIDEBAR */
-  .sidebar{width:220px;min-height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;
-    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
-  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
+  .sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}
   .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
-  .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
-  .nav-group{padding:8px 10px;margin:0 8px 12px;background:#f8fafc;border-radius:10px;box-shadow:0 4px 12px rgba(15,45,92,.15)}
-  .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
-  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
-  .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
-  .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
-  .nav-icon{width:15px;height:15px;flex-shrink:0;stroke-width:1.8}
+  .logo-sub{font-size:11px;color:var(--orange);font-family:'DM Mono',monospace;margin-top:1px}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
+  .content{flex:1;padding:0 0 32px;overflow-y:auto}
 
-  /* MAIN */
-  .main{flex:1;display:flex;flex-direction:column;min-width:0}
-  .topbar{height:40px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
-    padding:0 24px;gap:12px;background:#ffffff;color:var(--text1);position:sticky;top:0;z-index:50}
-  .topbar-title{font-size:15px;font-weight:600;flex:1}
-  .content{padding:24px;flex:1}
+  /* PAGE HEADER */
+  .page-header{padding:28px 32px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+  .page-title{font-size:22px;font-weight:700;color:var(--text1);margin-bottom:4px}
+  .page-sub{font-size:13px;color:var(--text2)}
+  .search-box{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;min-width:220px}
+  .search-box svg{color:var(--text3);flex-shrink:0}
+  .search-box input{border:none;outline:none;font-size:13px;color:var(--text1);background:transparent;min-width:0;width:100%}
 
-  /* SETTINGS LAYOUT */
-  .cfg-layout{display:flex;min-height:calc(100vh - 56px)}
-  .cfg-nav-outer{flex-shrink:0;width:200px;border-right:1px solid var(--border2);background:var(--bg2)}
-  .cfg-nav{width:100%;height:100%;overflow-y:auto}
-  .cfg-nav>*{min-width:0}
-  .cfg-nav-inner{padding:16px 0;overflow-y:auto;height:100%}
-  .cfg-nav-group{margin-bottom:20px}
-  .cfg-nav-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;
-    letter-spacing:.08em;padding:0 16px;margin-bottom:4px;display:block}
-  .cfg-nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;
-    color:var(--text2);cursor:pointer;border:none;background:none;width:100%;text-align:left;
-    font-family:inherit;transition:all .15s;white-space:nowrap}
-  .cfg-nav-item:hover{background:var(--bg3);color:var(--text1)}
-  .cfg-nav-item.active{background:var(--teal-dim);color:var(--teal);font-weight:600}
-  .cfg-body{flex:1;padding:24px;min-width:0;overflow-x:hidden}
-  .cfg-pane{display:none}.cfg-pane.active{display:block}
-  /* SEÇÕES */
-  .section{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);margin-bottom:24px}
-  .section-header{padding:18px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:12px}
-  .section-title{font-size:14px;font-weight:600;flex:1}
-  .section-sub{font-size:12px;color:var(--text3)}
-  .section-body{padding:0}
+  /* SECTION CONTENT */
+  .section-content{padding:0 32px}
 
-  /* TABELA */
-  table{width:100%;border-collapse:collapse}
-  thead th{font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.06em;
-    padding:10px 20px;text-align:left;border-bottom:none;background:#0f2d5c}
-  tbody tr{border-bottom:1px solid var(--border2);transition:background .12s}
-  tbody tr:last-child{border-bottom:none}
-  tbody tr:hover{background:var(--bg3)}
-  td{padding:12px 20px;font-size:13px;vertical-align:middle}
-  .td-mono{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3)}
-  .td-actions{display:flex;gap:6px;justify-content:flex-end}
+  /* ACCORDION CARDS */
+  .acc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:box-shadow .2s}
+  .acc-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .acc-header{display:flex;align-items:center;gap:16px;padding:18px 20px;cursor:pointer;user-select:none}
+  .acc-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .acc-body-text{flex:1}
+  .acc-title{font-size:14px;font-weight:600;color:var(--text1);margin-bottom:2px}
+  .acc-desc{font-size:12px;color:var(--text2)}
+  .acc-arrow{color:var(--text3);transition:transform .2s;flex-shrink:0}
+  .acc-card.open .acc-arrow{transform:rotate(180deg)}
+  .acc-content{display:none;border-top:1px solid var(--border);padding:20px}
+  .acc-card.open .acc-content{display:block}
+
+  /* INFO CARD */
+  .info-card{background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius);padding:14px 18px;display:flex;align-items:flex-start;gap:10px;margin-top:16px;font-size:13px;color:#1e40af;line-height:1.5}
+
+  /* TABLES inside accordion */
+  .cfg-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+  .cfg-table thead tr{background:#f1f5f9}
+  .cfg-table th{padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .cfg-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .cfg-table tr:last-child td{border-bottom:none}
+  .cfg-table tr:hover td{background:var(--bg3)}
+  .empty-row td{color:var(--text3);font-size:12px;text-align:center;padding:20px}
+
+  /* PARAMETER FIELDS */
+  .param-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:4px}
+  .param-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:4px}
+  .param-group-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .param-item{display:flex;flex-direction:column;gap:4px}
+  .param-label{font-size:12px;font-weight:600;color:var(--text1)}
+  .param-hint{font-size:11px;color:var(--text3);margin-top:2px}
+  .param-input,.param-select{padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);background:#f8fafc;outline:none;width:100%;transition:border-color .15s}
+  .param-input:focus,.param-select:focus{border-color:var(--orange);background:#fff}
+  .param-toggle{display:flex;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#f8fafc}
+  .param-toggle label{flex:1;text-align:center;padding:7px 6px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s}
+  .param-toggle input{display:none}
+  .param-toggle input:checked+label{background:var(--orange);color:#fff;font-weight:600}
+
+  /* SAVE FOOTER */
+  .save-footer{display:flex;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--border);margin-top:16px}
 
   /* BOTÕES */
-  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
-    border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s}
-  .btn-primary{background:#f97316;color:#fff}
-  .btn-primary:hover{background:#ea6c00}
-  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
-  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
-  .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(239,68,68,.4)}
-  .btn-danger:hover{background:rgba(239,68,68,.1)}
-  .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-
-  /* EMPTY / LOADING */
-  .empty-row td{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
-  .spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--teal);
-    border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
-  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .btn-primary{background:var(--orange);color:#fff}.btn-primary:hover{background:#ea6c00}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid #fca5a5}.btn-danger:hover{background:#fef2f2}
+  .btn-sm{padding:5px 10px;font-size:12px}
+  .td-actions{display:flex;gap:6px;justify-content:flex-end}
+  .td-mono{font-family:'DM Mono',monospace;font-size:12px}
+  .ml{margin-left:auto}
 
   /* MODAL */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
-    display:none;align-items:center;justify-content:center;padding:16px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
   .overlay.open{display:flex}
-  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
-    width:100%;max-width:460px;position:relative}
-  .modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border2);
-    display:flex;align-items:center;justify-content:space-between}
-  .modal-title{font-size:15px;font-weight:600}
-  .modal-close{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);
-    width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;
-    display:flex;align-items:center;justify-content:center;transition:all .15s}
-  .modal-close:hover{color:var(--text1);border-color:var(--text2)}
+  .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.14)}
+  .modal-header{padding:18px 24px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-title{font-size:15px;font-weight:700}
+  .modal-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--text3)}
   .modal-body{padding:20px 24px}
-  .modal-footer{padding:16px 24px;border-top:1px solid var(--border2);display:flex;gap:10px;justify-content:flex-end}
-  .form-group{margin-bottom:16px}
-  .form-group label{display:block;font-size:11px;font-weight:600;color:var(--text3);
-    text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-  .form-group input,.form-group select{width:100%;background:var(--bg3);border:1px solid var(--border2);
-    color:var(--text1);padding:9px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
-  .form-group input:focus,.form-group select:focus{border-color:var(--teal)}
-  .form-group select option{background:var(--bg3)}
-  .form-group .hint{font-size:11px;color:var(--text3);margin-top:4px}
+  .modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+  .form-group{margin-bottom:14px}
+  .form-label{display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+  .form-input,.form-select{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);outline:none;background:#f8fafc}
+  .form-input:focus,.form-select:focus{border-color:var(--orange)}
 
-  /* CONFIRM MODAL */
-  .confirm-msg{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:4px}
-  .confirm-item{font-size:14px;font-weight:600;color:var(--text1);margin-top:6px}
+  /* USUARIOS */
+  .user-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:8px;display:flex;align-items:center;gap:14px}
+  .user-avatar{width:36px;height:36px;border-radius:50%;background:#0f2d5c;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+  .user-info{flex:1;min-width:0}
+  .user-nome{font-size:13px;font-weight:600;color:var(--text1)}
+  .user-email{font-size:11px;color:var(--text3)}
+  .role-badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .role-admin{background:#fff7ed;color:#c2410c}
+  .role-gerente{background:#eff6ff;color:#1d4ed8}
+  .role-operador{background:#f0fdf4;color:#166534}
 
   /* TOAST */
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);
-    border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;
-    transform:translateY(8px);transition:all .25s;max-width:320px}
-  .toast.show{opacity:1;transform:translateY(0)}
-  .toast.ok{border-color:var(--teal);color:var(--teal)}
-  .toast.err{border-color:var(--red);color:var(--red)}
-
-  .metric,.panel,.card{box-shadow:0 1px 3px rgba(0,0,0,.08)}
-  ::-webkit-scrollbar{width:6px;height:6px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-  @media(max-width:700px){.sidebar{display:none}}
-  .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
-  .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
-  #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:hidden}
-  .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
-  .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
-  .cfg-flyout-item:last-child{border-bottom:none}
-  .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
+  .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:380px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+  .toast.show{opacity:1;transform:translateY(0)}.toast.ok{border-color:var(--green);color:var(--green)}.toast.err{border-color:var(--red);color:var(--red)}
+  ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 </style>
 </head>
 <body>
 <div class="shell">
 
-  <!-- SIDEBAR -->
-  <nav class="sidebar">
-    <div class="logo">
-      <div class="logo-mark">Aiko</div>
-      <div class="logo-sub">sistema</div>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Principal</div>
-      <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard" class="nav-icon"></i>Dashboard</a>
-      <a class="nav-item" href="insumos.html"><i data-lucide="package" class="nav-icon"></i>Insumos</a>
-      <a class="nav-item" href="fichas_tecnicas.html"><i data-lucide="clipboard-list" class="nav-icon"></i>Fichas técnicas</a>
-      <a class="nav-item" href="#"><i data-lucide="tag" class="nav-icon"></i>Precificação</a>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Análise</div>
-      <a class="nav-item" href="estoque.html"><i data-lucide="archive" class="nav-icon"></i>Estoque</a>
-      <a class="nav-item" href="producao.html"><i data-lucide="chef-hat" class="nav-icon"></i>Produção</a>
-      <a class="nav-item" href="rendimento.html"><i data-lucide="trending-up" class="nav-icon"></i>Rendimento</a>
-      <a class="nav-item" href="pdv.html"><i data-lucide="receipt" class="nav-icon"></i>PDV / Vendas</a>
-      <a class="nav-item" href="cmv.html"><i data-lucide="bar-chart-2" class="nav-icon"></i>CMV teórico x real</a>
-    <a class="nav-item" href="relatorios.html"><i data-lucide="file-bar-chart" class="nav-icon"></i>Relatórios</a>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Gestão</div>
-      <a class="nav-item" href="fornecedores.html"><i data-lucide="truck" class="nav-icon"></i>Fornecedores</a>
-      <a class="nav-item" href="compras.html"><i data-lucide="shopping-cart" class="nav-icon"></i>Pedidos de compra</a>
-      <a class="nav-item" href="ajustes.html"><i data-lucide="sliders-horizontal" class="nav-icon"></i>Ajustes</a>
-      <div class="nav-sub-wrap" id="cfg-nav-trigger">
-    <a class="nav-item active" href="configuracoes.html"><i data-lucide="settings" class="nav-icon"></i>Configurações<span class="nav-sub-arrow">›</span></a>
-    </div>
-    </div>
-  <div class="nav-bottom">Precisa de ajuda?<br><a href="https://wa.me/5592994948230?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20sistema%20Aiko" target="_blank" rel="noopener">Acesse o suporte</a></div>
-  </nav>
+<nav class="sidebar"></nav>
 
-  <!-- MAIN -->
-  <div class="main">
-    <div class="topbar">
-      <span class="topbar-title">Configurações</span>
-      <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
-      <div id="topbar-user" style="margin-left:auto;display:flex;align-items:center;gap:10px">
-        <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
-        <span onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:12px;color:#dc2626;cursor:pointer;border:1px solid #fca5a5;padding:4px 12px;border-radius:20px;font-weight:600;white-space:nowrap">← Sair</span>
-      </div>
-    </div>
-    <div class="content" style="padding:0">
-    <div class="cfg-layout">
-
-      <!-- NAV ESQUERDA -->
-      <div class="cfg-nav-outer" id="cfg-nav-outer">
-        <nav class="cfg-nav"><div class="cfg-nav-inner">
-          <div class="cfg-nav-group">
-            <span class="cfg-nav-label">Estrutura de Itens</span>
-            <button class="cfg-nav-item" id="cfg-btn-tipo-item" onclick="switchConfig('tipo-item')">Tipo do Item</button>
-            <button class="cfg-nav-item" id="cfg-btn-familia"   onclick="switchConfig('familia')">Família</button>
-            <button class="cfg-nav-item" id="cfg-btn-grupo"     onclick="switchConfig('grupo')">Grupo</button>
-            <button class="cfg-nav-item" id="cfg-btn-subgrupo"  onclick="switchConfig('subgrupo')">Subgrupo</button>
-            <button class="cfg-nav-item" id="cfg-btn-embalagem" onclick="switchConfig('embalagem')">Embalagens</button>
-          </div>
-          <div class="cfg-nav-group">
-            <span class="cfg-nav-label">Cadastros</span>
-            <button class="cfg-nav-item active" id="cfg-btn-cat-ficha" onclick="switchConfig('cat-ficha')">Categorias de Fichas</button>
-            <button class="cfg-nav-item"         id="cfg-btn-unidades"    onclick="switchConfig('unidades')">Unidades de Medida</button>
-          </div>
-          <div class="cfg-nav-group">
-            <span class="cfg-nav-label">Compras</span>
-            <button class="cfg-nav-item" id="cfg-btn-grupos-compra" onclick="switchConfig('grupos-compra')">Grupos de Compra</button>
-            <button class="cfg-nav-item" id="cfg-btn-inventarios"   onclick="switchConfig('inventarios')">Inventários</button>
-            <button class="cfg-nav-item" id="cfg-btn-motivos"       onclick="switchConfig('motivos')">Motivos de Perda</button>
-          </div>
-          <div class="cfg-nav-group">
-            <span class="cfg-nav-label">Empresa</span>
-            <button class="cfg-nav-item" id="cfg-btn-lojas"        onclick="switchConfig('lojas')">Lojas / Filiais</button>
-          </div>
-          <div class="cfg-nav-group">
-            <span class="cfg-nav-label">Acesso</span>
-            <button class="cfg-nav-item" id="cfg-btn-usuarios" onclick="switchConfig('usuarios')">Usuários</button>
-          </div>
-        </div></nav>
-      </div>
-
-      <!-- PAINEL DIREITO -->
-      <div class="cfg-body">
-
-        <!-- Tipo do Item -->
-        <div class="cfg-pane" id="cfg-tipo-item">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Tipo do Item</div><div class="section-sub">Ex: Matéria-prima, Produto acabado, Embalagem, Serviço</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModal('tipo_item')">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-tipo-item"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Família -->
-        <div class="cfg-pane" id="cfg-familia">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Família</div><div class="section-sub">Agrupamento amplo de itens. Ex: Proteínas, Hortifruti, Bebidas</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModal('familia')">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-familia"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Grupo -->
-        <div class="cfg-pane" id="cfg-grupo">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Grupo</div><div class="section-sub">Subdivisão dentro da família. Ex: Peixes, Frango, Folhosos</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModal('grupo')">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-grupo"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Subgrupo -->
-        <div class="cfg-pane" id="cfg-subgrupo">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Subgrupo</div><div class="section-sub">Nível mais específico de classificação. Ex: Salmão, Filé, Costela</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModal('subgrupo')">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-subgrupo"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Embalagens Fornecedor -->
-        <div class="cfg-pane" id="cfg-embalagem">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Embalagens Fornecedor</div><div class="section-sub">Tipos de embalagem usados no vínculo Item × Fornecedor. Ex: CX 27x0,375 · FARDO 20KG · UNI 0,375</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModal('embalagem')">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Embalagem</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-embalagem"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Categorias de Fichas -->
-        <div class="cfg-pane" id="cfg-cat-ficha">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Categorias de Fichas Técnicas</div><div class="section-sub">Agrupe as fichas por tipo de produto do cardápio</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModal('cat_ficha')">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-cat-ficha"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Unidades de Medida -->
-        <div class="cfg-pane" id="cfg-unidades">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Unidades de Medida</div><div class="section-sub">Unidades usadas nos insumos e fichas técnicas</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModal('unidade')">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Abreviação</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-unidade"><tr class="empty-row"><td colspan="4"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Grupos de Compra -->
-        <div class="cfg-pane" id="cfg-grupos-compra">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Grupos de Compra</div><div class="section-sub">Organize os insumos em grupos para solicitação de compra dos gerentes</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModalGrupoCompra()">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Insumos</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-grupos-compra"><tr class="empty-row"><td colspan="4"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Inventários -->
-        <div class="cfg-pane" id="cfg-inventarios">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Inventários</div><div class="section-sub">Crie inventários para as lojas preencherem a contagem de estoque</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModalInventario()">+ Criar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Descrição</th><th>Loja</th><th>Período</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-inventarios"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Motivos de Perda -->
-        <div class="cfg-pane" id="cfg-motivos">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Motivos de Perda</div><div class="section-sub">Motivos disponíveis para lançamento de perdas pelos gerentes</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModalMotivo()">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-motivos"><tr class="empty-row"><td colspan="3"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Lojas -->
-        <div class="cfg-pane" id="cfg-lojas">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Lojas / Filiais</div><div class="section-sub">Cadastre as unidades da empresa</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModalLoja()">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Endereço</th><th>WhatsApp</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-lojas"><tr class="empty-row"><td colspan="5"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <!-- Usuários -->
-        <div class="cfg-pane" id="cfg-usuarios">
-          <div class="section">
-            <div class="section-header">
-              <div><div class="section-title">Usuários</div><div class="section-sub">Gerencie os acessos e perfis de cada usuário</div></div>
-              <button class="btn btn-primary btn-sm" onclick="abrirModalUsuario()">+ Adicionar</button>
-            </div>
-            <div class="section-body">
-              <table><thead><tr><th>Nome</th><th>Email</th><th>Perfil</th><th>Loja</th><th>Status</th><th style="text-align:right">Ações</th></tr></thead>
-              <tbody id="tbody-usuarios"><tr class="empty-row"><td colspan="6"><span class="spinner"></span>Carregando...</td></tr></tbody></table>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /cfg-body -->
-    </div><!-- /cfg-layout -->
+<div class="main">
+  <div class="topbar">
+    <div id="topbar-titulo" style="font-size:16px;font-weight:700;color:var(--text1)">Configurações</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="conn-status" style="font-size:11px;font-weight:600"></span>
+      <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:var(--text1)">—</span>
     </div>
   </div>
-</div>
 
-<!-- MODAL: GRUPO DE COMPRA -->
-<div id="m-grupo-compra" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-grupo-compra')">
-  <div class="modal" style="max-width:560px" onclick="event.stopPropagation()">
-    <div class="modal-header"><span class="modal-title" id="gc-titulo">Novo Grupo de Compra</span><button class="modal-close" onclick="fecharModalExtra('m-grupo-compra')">✕</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label>Nome *</label><input type="text" id="gc-nome" placeholder="Ex: Frios e Proteína"></div>
-      <div class="form-group">
-        <label>Insumos do grupo</label>
-        <input type="text" id="gc-busca" placeholder="Buscar insumo..." oninput="filtrarInsumosGC()" style="margin-bottom:8px">
-        <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border2);border-radius:8px" id="gc-insumos-list"></div>
+  <div class="content">
+
+    <!-- ===== SEÇÃO: GERAL ===== -->
+    <div id="sec-geral" class="cfg-section" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Geral</div>
+          <div class="page-sub">Cadastros auxiliares e estrutura do sistema.</div>
+        </div>
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar configuração..." id="geral-busca" oninput="filtrarGeral()">
+        </div>
+      </div>
+      <div class="section-content">
+
+        <!-- ESTRUTURA DE ITENS -->
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Estrutura de Itens</div>
+        <div class="acc-card" data-search="tipo item"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#fff7ed"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Tipo do Item</div><div class="acc-desc">Ex: Matéria-prima, Produto acabado, Embalagem, Serviço</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('tipo_item')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-tipo-item"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+        <div class="acc-card" data-search="familia"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#f0fdf4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Família</div><div class="acc-desc">Agrupamento amplo. Ex: Proteínas, Hortifruti, Bebidas</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('familia')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-familia"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+        <div class="acc-card" data-search="grupo categoria"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#eff6ff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Grupo (Categoria)</div><div class="acc-desc">Subdivisão dentro da família. Ex: Peixes, Frango, Folhosos</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('grupo')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-grupo"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+        <div class="acc-card" data-search="subgrupo"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#f5f3ff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Subgrupo</div><div class="acc-desc">Nível mais específico. Ex: Salmão, Filé, Costela</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('subgrupo')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-subgrupo"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+        <div class="acc-card" data-search="embalagem"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#fef9c3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Embalagens Fornecedor</div><div class="acc-desc">Tipos de embalagem usados no vínculo Item × Fornecedor. Ex: CX 27x0,375</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('embalagem')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-embalagem"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+        <div class="acc-card" data-search="unidade medida"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#fce7f3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Unidades de Medida</div><div class="acc-desc">Unidades usadas nos insumos e fichas técnicas</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('unidade')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Abreviação</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-unidade"><tr class="empty-row"><td colspan="4">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+        <!-- CADASTROS OPERACIONAIS -->
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px">Cadastros Operacionais</div>
+        <div class="acc-card" data-search="categoria ficha"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#ecfdf5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Categorias de Fichas</div><div class="acc-desc">Agrupe fichas técnicas por tipo de produto do cardápio</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('cat_ficha')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-cat-ficha"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+        <!-- COMPRAS -->
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px">Compras</div>
+        <div class="acc-card" data-search="grupos compra"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#eff6ff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Grupos de Compra</div><div class="acc-desc">Organize insumos em grupos para solicitações dos gerentes</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('grupo_compra')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-grupo-compra"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+        <!-- EMPRESA -->
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px">Empresa</div>
+        <div class="acc-card" data-search="lojas filiais"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#fff7ed"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Lojas / Filiais</div><div class="acc-desc">Cadastro de unidades do negócio</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('loja')">+ Adicionar</button></div>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-lojas"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
+        </div></div>
+
+      </div><!-- /section-content -->
+    </div><!-- /sec-geral -->
+
+    <!-- ===== SEÇÃO: USUÁRIOS ===== -->
+    <div id="sec-usuarios" class="cfg-section" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Usuários</div>
+          <div class="page-sub">Gerencie o acesso e permissões de cada colaborador.</div>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModalUsuario()">+ Novo usuário</button>
+      </div>
+      <div class="section-content">
+        <div id="usuarios-lista">
+          <div style="color:var(--text3);font-size:13px;text-align:center;padding:40px">Carregando usuários...</div>
+        </div>
+        <div class="info-card" style="margin-top:24px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div><strong>Controle de permissões por módulo</strong> será implementado na próxima versão. Atualmente os papéis disponíveis são: Administrador, Gerente e Operador.</div>
+        </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModalExtra('m-grupo-compra')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarGrupoCompra()">Salvar</button>
-    </div>
-  </div>
-</div>
 
-<!-- MODAL: INVENTÁRIO -->
-<div id="m-inventario" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-inventario')">
-  <div class="modal" style="max-width:600px" onclick="event.stopPropagation()">
-    <div class="modal-header"><span class="modal-title" id="inv-titulo">Criar Inventário</span><button class="modal-close" onclick="fecharModalExtra('m-inventario')">✕</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label>Descrição *</label><input type="text" id="inv-desc" placeholder="Ex: Inventário Mensal — Ponta Negra"></div>
-      <div class="form-group"><label>Loja *</label><select id="inv-loja" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text1);padding:9px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit"></select></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label>Data início *</label><input type="date" id="inv-inicio"></div>
-        <div class="form-group"><label>Data fim *</label><input type="date" id="inv-fim"></div>
+    <!-- ===== SEÇÃO: PARÂMETROS ===== -->
+    <div id="sec-parametros" class="cfg-section" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Parâmetros</div>
+          <div class="page-sub">Defina as regras de funcionamento do sistema.</div>
+        </div>
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar parâmetro..." id="param-busca" oninput="filtrarParams()">
+        </div>
       </div>
-      <div class="form-group">
-        <label>Insumos do inventário</label>
-        <input type="text" id="inv-busca" placeholder="Buscar insumo..." oninput="filtrarInsumosInv()" style="margin-bottom:8px">
-        <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border2);border-radius:8px" id="inv-insumos-list"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModalExtra('m-inventario')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarInventario()">Criar Inventário</button>
-    </div>
-  </div>
-</div>
+      <div class="section-content">
 
-<!-- MODAL: MOTIVO DE PERDA -->
-<div id="m-motivo" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-motivo')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><span class="modal-title" id="mot-titulo">Novo Motivo</span><button class="modal-close" onclick="fecharModalExtra('m-motivo')">✕</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label>Nome *</label><input type="text" id="mot-nome" placeholder="Ex: Validade vencida"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModalExtra('m-motivo')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarMotivo()">Salvar</button>
-    </div>
-  </div>
-</div>
+        <!-- ESTOQUE -->
+        <div class="acc-card" data-search="estoque"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#eff6ff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Estoque</div><div class="acc-desc">Regras de controle e movimentação de estoque.</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Permitir estoque negativo</div>
+              <div class="param-toggle"><input type="radio" name="p-est-negativo" id="p-est-neg-sim" value="sim"><label for="p-est-neg-sim">Sim</label><input type="radio" name="p-est-negativo" id="p-est-neg-nao" value="nao" checked><label for="p-est-neg-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Método de custo</div>
+              <select class="param-select" id="p-est-metodo-custo"><option value="medio">Custo Médio</option><option value="ultima">Última Compra</option><option value="peps">PEPS (FIFO)</option></select></div>
+            <div class="param-item"><div class="param-label">Controla validade</div>
+              <div class="param-toggle"><input type="radio" name="p-est-validade" id="p-est-val-sim" value="sim"><label for="p-est-val-sim">Sim</label><input type="radio" name="p-est-validade" id="p-est-val-nao" value="nao" checked><label for="p-est-val-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Obrigar lote</div>
+              <div class="param-toggle"><input type="radio" name="p-est-lote" id="p-est-lot-sim" value="sim"><label for="p-est-lot-sim">Sim</label><input type="radio" name="p-est-lote" id="p-est-lot-nao" value="nao" checked><label for="p-est-lot-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Atualizar custo automaticamente</div>
+              <div class="param-toggle"><input type="radio" name="p-est-atualizar" id="p-est-atu-sim" value="sim" checked><label for="p-est-atu-sim">Sim</label><input type="radio" name="p-est-atualizar" id="p-est-atu-nao" value="nao"><label for="p-est-atu-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Dias para alerta de validade</div>
+              <input class="param-input" type="number" id="p-est-dias-validade" min="1" max="365" value="7" placeholder="ex: 7"></div>
+            <div class="param-item"><div class="param-label">Alerta de estoque mínimo (%)</div>
+              <input class="param-input" type="number" id="p-est-alerta-min" min="0" max="100" value="20" placeholder="ex: 20"><div class="param-hint">Alertar quando estoque atingir X% do mínimo definido</div></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('estoque')">Salvar alterações</button></div>
+        </div></div>
 
-<!-- MODAL FORM -->
-<div id="modal-form" class="overlay" onclick="if(event.target===this)fecharModal()">
-  <div class="modal" onclick="event.stopPropagation()">
+        <!-- PCP -->
+        <div class="acc-card" data-search="pcp producao"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#f0fdf4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">PCP</div><div class="acc-desc">Regras da produção e cálculo da produção sugerida.</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Média para produção sugerida</div>
+              <select class="param-select" id="p-pcp-media-dias"><option value="7">Últimos 7 dias</option><option value="15">Últimos 15 dias</option><option value="30">Últimos 30 dias</option></select></div>
+            <div class="param-item"><div class="param-label">Considerar mesmo dia da semana</div>
+              <div class="param-toggle"><input type="radio" name="p-pcp-dia-semana" id="p-pcp-ds-sim" value="sim"><label for="p-pcp-ds-sim">Sim</label><input type="radio" name="p-pcp-dia-semana" id="p-pcp-ds-nao" value="nao" checked><label for="p-pcp-ds-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Considerar sobra anterior</div>
+              <div class="param-toggle"><input type="radio" name="p-pcp-sobra" id="p-pcp-sob-sim" value="sim" checked><label for="p-pcp-sob-sim">Sim</label><input type="radio" name="p-pcp-sobra" id="p-pcp-sob-nao" value="nao"><label for="p-pcp-sob-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Margem de segurança padrão (%)</div>
+              <input class="param-input" type="number" id="p-pcp-margem" min="0" max="100" value="10" placeholder="ex: 10"></div>
+            <div class="param-item"><div class="param-label">Separar cálculo por loja</div>
+              <div class="param-toggle"><input type="radio" name="p-pcp-loja" id="p-pcp-lj-sim" value="sim" checked><label for="p-pcp-lj-sim">Sim</label><input type="radio" name="p-pcp-loja" id="p-pcp-lj-nao" value="nao"><label for="p-pcp-lj-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Separar cálculo por turno</div>
+              <div class="param-toggle"><input type="radio" name="p-pcp-turno" id="p-pcp-trn-sim" value="sim"><label for="p-pcp-trn-sim">Sim</label><input type="radio" name="p-pcp-turno" id="p-pcp-trn-nao" value="nao" checked><label for="p-pcp-trn-nao">Não</label></div></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('pcp')">Salvar alterações</button></div>
+        </div></div>
+
+        <!-- PRODUÇÃO -->
+        <div class="acc-card" data-search="producao lancamentos"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#fff7ed"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Produção</div><div class="acc-desc">Regras dos lançamentos de produção do dia.</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Obrigar responsável</div>
+              <div class="param-toggle"><input type="radio" name="p-prod-resp" id="p-prod-res-sim" value="sim"><label for="p-prod-res-sim">Sim</label><input type="radio" name="p-prod-resp" id="p-prod-res-nao" value="nao" checked><label for="p-prod-res-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Obrigar turno</div>
+              <div class="param-toggle"><input type="radio" name="p-prod-turno" id="p-prod-trn-sim" value="sim"><label for="p-prod-trn-sim">Sim</label><input type="radio" name="p-prod-turno" id="p-prod-trn-nao" value="nao" checked><label for="p-prod-trn-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Obrigar observação em ajuste</div>
+              <div class="param-toggle"><input type="radio" name="p-prod-obs" id="p-prod-obs-sim" value="sim"><label for="p-prod-obs-sim">Sim</label><input type="radio" name="p-prod-obs" id="p-prod-obs-nao" value="nao" checked><label for="p-prod-obs-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Permitir edição após fechamento</div>
+              <div class="param-toggle"><input type="radio" name="p-prod-edit" id="p-prod-edt-sim" value="sim"><label for="p-prod-edt-sim">Sim</label><input type="radio" name="p-prod-edit" id="p-prod-edt-nao" value="nao" checked><label for="p-prod-edt-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Permitir produção sem ficha técnica</div>
+              <div class="param-toggle"><input type="radio" name="p-prod-sem-ficha" id="p-prod-sf-sim" value="sim" checked><label for="p-prod-sf-sim">Sim</label><input type="radio" name="p-prod-sem-ficha" id="p-prod-sf-nao" value="nao"><label for="p-prod-sf-nao">Não</label></div></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('producao')">Salvar alterações</button></div>
+        </div></div>
+
+        <!-- PORCIONAMENTO -->
+        <div class="acc-card" data-search="porcionamento rendimento perdas"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#fce7f3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#be185d" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><circle cx="7" cy="7" r="2"/><circle cx="17" cy="17" r="2"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Porcionamento</div><div class="acc-desc">Regras do controle de rendimento e perdas.</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Obrigar lote</div>
+              <div class="param-toggle"><input type="radio" name="p-porc-lote" id="p-porc-lot-sim" value="sim"><label for="p-porc-lot-sim">Sim</label><input type="radio" name="p-porc-lote" id="p-porc-lot-nao" value="nao" checked><label for="p-porc-lot-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Obrigar fornecedor</div>
+              <div class="param-toggle"><input type="radio" name="p-porc-forn" id="p-porc-for-sim" value="sim"><label for="p-porc-for-sim">Sim</label><input type="radio" name="p-porc-forn" id="p-porc-for-nao" value="nao" checked><label for="p-porc-for-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Obrigar responsável</div>
+              <div class="param-toggle"><input type="radio" name="p-porc-resp" id="p-porc-res-sim" value="sim"><label for="p-porc-res-sim">Sim</label><input type="radio" name="p-porc-resp" id="p-porc-res-nao" value="nao" checked><label for="p-porc-res-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Rendimento mínimo padrão (%)</div>
+              <input class="param-input" type="number" id="p-porc-rend-min" min="0" max="100" value="70" placeholder="ex: 70"></div>
+            <div class="param-item"><div class="param-label">Alertar quando perda alta</div>
+              <div class="param-toggle"><input type="radio" name="p-porc-alerta" id="p-porc-alt-sim" value="sim" checked><label for="p-porc-alt-sim">Sim</label><input type="radio" name="p-porc-alerta" id="p-porc-alt-nao" value="nao"><label for="p-porc-alt-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Percentual máximo de perda permitido (%)</div>
+              <input class="param-input" type="number" id="p-porc-pct-max" min="0" max="100" value="40" placeholder="ex: 40"></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('porcionamento')">Salvar alterações</button></div>
+        </div></div>
+
+        <!-- COMPRAS -->
+        <div class="acc-card" data-search="compras pedidos aprovacao"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#eff6ff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Compras</div><div class="acc-desc">Regras do processo de compras e aprovações.</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Exigir aprovação de pedido</div>
+              <div class="param-toggle"><input type="radio" name="p-cmp-aprovacao" id="p-cmp-apv-sim" value="sim"><label for="p-cmp-apv-sim">Sim</label><input type="radio" name="p-cmp-aprovacao" id="p-cmp-apv-nao" value="nao" checked><label for="p-cmp-apv-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Permitir pedido sem fornecedor</div>
+              <div class="param-toggle"><input type="radio" name="p-cmp-sem-forn" id="p-cmp-sf-sim" value="sim" checked><label for="p-cmp-sf-sim">Sim</label><input type="radio" name="p-cmp-sem-forn" id="p-cmp-sf-nao" value="nao"><label for="p-cmp-sf-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Usar fornecedor principal automaticamente</div>
+              <div class="param-toggle"><input type="radio" name="p-cmp-forn-princ" id="p-cmp-fp-sim" value="sim" checked><label for="p-cmp-fp-sim">Sim</label><input type="radio" name="p-cmp-forn-princ" id="p-cmp-fp-nao" value="nao"><label for="p-cmp-fp-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Considerar menor preço na sugestão</div>
+              <div class="param-toggle"><input type="radio" name="p-cmp-menor-preco" id="p-cmp-mp-sim" value="sim" checked><label for="p-cmp-mp-sim">Sim</label><input type="radio" name="p-cmp-menor-preco" id="p-cmp-mp-nao" value="nao"><label for="p-cmp-mp-nao">Não</label></div></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('compras')">Salvar alterações</button></div>
+        </div></div>
+
+        <!-- FICHA TÉCNICA -->
+        <div class="acc-card" data-search="ficha tecnica custo calculo"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#f5f3ff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Ficha Técnica</div><div class="acc-desc">Regras de cálculo e composição das fichas técnicas.</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Atualizar custo automaticamente</div>
+              <div class="param-toggle"><input type="radio" name="p-ft-atualizar" id="p-ft-atu-sim" value="sim" checked><label for="p-ft-atu-sim">Sim</label><input type="radio" name="p-ft-atualizar" id="p-ft-atu-nao" value="nao"><label for="p-ft-atu-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Considerar rendimento do insumo</div>
+              <div class="param-toggle"><input type="radio" name="p-ft-rendimento" id="p-ft-rend-sim" value="sim" checked><label for="p-ft-rend-sim">Sim</label><input type="radio" name="p-ft-rendimento" id="p-ft-rend-nao" value="nao"><label for="p-ft-rend-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Base de custo usada</div>
+              <select class="param-select" id="p-ft-base-custo"><option value="medio">Custo Médio</option><option value="atual">Custo Atual</option></select></div>
+            <div class="param-item"><div class="param-label">Arredondamento (casas decimais)</div>
+              <select class="param-select" id="p-ft-arredondamento"><option value="2">2 casas</option><option value="3">3 casas</option><option value="4">4 casas</option></select></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('ficha')">Salvar alterações</button></div>
+        </div></div>
+
+        <!-- CMV -->
+        <div class="acc-card" data-search="cmv custo mercadoria"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#fef9c3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">CMV</div><div class="acc-desc">Regras de cálculo do CMV teórico e real.</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Meta padrão de CMV (%)</div>
+              <input class="param-input" type="number" id="p-cmv-meta" min="0" max="100" value="30" placeholder="ex: 30"></div>
+            <div class="param-item"><div class="param-label">Considerar perdas no CMV</div>
+              <div class="param-toggle"><input type="radio" name="p-cmv-perdas" id="p-cmv-prd-sim" value="sim" checked><label for="p-cmv-prd-sim">Sim</label><input type="radio" name="p-cmv-perdas" id="p-cmv-prd-nao" value="nao"><label for="p-cmv-prd-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Considerar ajustes de estoque</div>
+              <div class="param-toggle"><input type="radio" name="p-cmv-ajustes" id="p-cmv-ajt-sim" value="sim" checked><label for="p-cmv-ajt-sim">Sim</label><input type="radio" name="p-cmv-ajustes" id="p-cmv-ajt-nao" value="nao"><label for="p-cmv-ajt-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Considerar produção no CMV</div>
+              <div class="param-toggle"><input type="radio" name="p-cmv-producao" id="p-cmv-prd2-sim" value="sim"><label for="p-cmv-prd2-sim">Sim</label><input type="radio" name="p-cmv-producao" id="p-cmv-prd2-nao" value="nao" checked><label for="p-cmv-prd2-nao">Não</label></div></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('cmv')">Salvar alterações</button></div>
+        </div></div>
+
+        <!-- DASHBOARD -->
+        <div class="acc-card" data-search="dashboard indicadores"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#ecfdf5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Dashboard</div><div class="acc-desc">Regras de exibição e atualização do dashboard.</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Atualização automática</div>
+              <div class="param-toggle"><input type="radio" name="p-dash-auto" id="p-dash-aut-sim" value="sim" checked><label for="p-dash-aut-sim">Sim</label><input type="radio" name="p-dash-auto" id="p-dash-aut-nao" value="nao"><label for="p-dash-aut-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Intervalo de atualização (minutos)</div>
+              <select class="param-select" id="p-dash-intervalo"><option value="5">5 minutos</option><option value="10">10 minutos</option><option value="15">15 minutos</option><option value="30">30 minutos</option></select></div>
+            <div class="param-item"><div class="param-label">Período padrão</div>
+              <select class="param-select" id="p-dash-periodo"><option value="hoje">Hoje</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="mes">Mês atual</option></select></div>
+            <div class="param-item"><div class="param-label">Exibir valores financeiros</div>
+              <div class="param-toggle"><input type="radio" name="p-dash-valores" id="p-dash-val-sim" value="sim" checked><label for="p-dash-val-sim">Sim</label><input type="radio" name="p-dash-valores" id="p-dash-val-nao" value="nao"><label for="p-dash-val-nao">Não</label></div></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('dashboard')">Salvar alterações</button></div>
+        </div></div>
+
+        <div class="info-card">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div><strong>Importante:</strong> Os parâmetros definem o comportamento do sistema. Alterações podem impactar cálculos e processos em andamento.</div>
+        </div>
+
+      </div><!-- /section-content -->
+    </div><!-- /sec-parametros -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- MODAL CRUD -->
+<div class="overlay" id="modal-form">
+  <div class="modal">
     <div class="modal-header">
       <span class="modal-title" id="modal-title">Novo item</span>
-      <button class="modal-close" onclick="fecharModal()">✕</button>
+      <button class="modal-close" onclick="fecharModal()">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group" id="fg-nome">
-        <label>Nome *</label>
-        <input type="text" id="f-nome" placeholder="Ex: Peixe">
+      <div class="form-group">
+        <label class="form-label">Nome *</label>
+        <input class="form-input" id="f-nome" type="text" placeholder="Nome do item">
       </div>
       <div class="form-group" id="fg-abrev" style="display:none">
-        <label>Abreviação *</label>
-        <input type="text" id="f-abrev" placeholder="Ex: kg">
-        <div class="hint">Usada nos formulários de insumos e fichas</div>
+        <label class="form-label">Abreviação *</label>
+        <input class="form-input" id="f-abrev" type="text" placeholder="Ex: kg, g, L">
       </div>
     </div>
     <div class="modal-footer">
@@ -485,16 +480,15 @@
   </div>
 </div>
 
-<!-- MODAL CONFIRMAÇÃO EXCLUSÃO -->
-<div id="modal-confirm" class="overlay" onclick="if(event.target===this)fecharConfirm()">
-  <div class="modal" onclick="event.stopPropagation()">
+<!-- MODAL CONFIRMAR DELETE -->
+<div class="overlay" id="modal-confirm">
+  <div class="modal" style="max-width:400px">
     <div class="modal-header">
       <span class="modal-title">Confirmar exclusão</span>
-      <button class="modal-close" onclick="fecharConfirm()">✕</button>
+      <button class="modal-close" onclick="fecharConfirm()">×</button>
     </div>
     <div class="modal-body">
-      <p class="confirm-msg">Tem certeza que deseja excluir este item?</p>
-      <p class="confirm-item" id="confirm-item-name"></p>
+      <p style="font-size:14px;color:var(--text2)">Deseja excluir <strong id="confirm-item-name"></strong>? Esta ação não pode ser desfeita.</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharConfirm()">Cancelar</button>
@@ -503,41 +497,27 @@
   </div>
 </div>
 
-<!-- MODAL: LOJA -->
-<div id="m-loja" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-loja')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><span class="modal-title" id="loja-titulo">Nova Loja</span><button class="modal-close" onclick="fecharModalExtra('m-loja')">✕</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label>Nome *</label><input type="text" id="loja-nome" placeholder="Ex: Aiko - Ponta Negra"></div>
-      <div class="form-group"><label>Endereço</label><input type="text" id="loja-end" placeholder="Rua, número, bairro"></div>
-      <div class="form-group"><label>WhatsApp</label><input type="text" id="loja-wpp" placeholder="84 9 9999-9999"></div>
+<!-- MODAL USUÁRIO -->
+<div class="overlay" id="modal-usuario">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-usuario-titulo">Novo Usuário</span>
+      <button class="modal-close" onclick="fecharModalUsuario()">×</button>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModalExtra('m-loja')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarLoja()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: USUÁRIO -->
-<div id="m-usuario" class="overlay" onclick="if(event.target===this)fecharModalExtra('m-usuario')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><span class="modal-title" id="usuario-titulo">Novo Usuário</span><button class="modal-close" onclick="fecharModalExtra('m-usuario')">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Nome *</label><input type="text" id="usuario-nome" placeholder="Nome completo"></div>
-      <div class="form-group"><label>Email *</label><input type="email" id="usuario-email" placeholder="email@empresa.com"></div>
-      <div class="form-group" id="fg-senha"><label>Senha *</label><input type="password" id="usuario-senha" placeholder="Mínimo 6 caracteres"></div>
-      <div class="form-group"><label>Perfil *</label>
-        <select id="usuario-perfil" onchange="onPerfilChange()">
-          <option value="admin">Admin (acesso total)</option>
-          <option value="compras">Compras (pedidos + relatórios)</option>
-          <option value="gerente">Gerente de loja (apenas pedidos)</option>
+      <div class="form-group"><label class="form-label">Nome *</label><input class="form-input" id="u-nome" type="text" placeholder="Nome completo"></div>
+      <div class="form-group"><label class="form-label">E-mail *</label><input class="form-input" id="u-email" type="email" placeholder="email@exemplo.com"></div>
+      <div class="form-group"><label class="form-label">Papel / Perfil *</label>
+        <select class="form-select" id="u-role">
+          <option value="admin">Administrador</option>
+          <option value="gerente">Gerente</option>
+          <option value="operador" selected>Operador</option>
         </select>
       </div>
-      <div class="form-group" id="fg-loja" style="display:none"><label>Loja *</label><select id="usuario-loja"></select></div>
+      <div class="form-group"><label class="form-label">Senha inicial</label><input class="form-input" id="u-senha" type="password" placeholder="Deixe em branco para envio por e-mail"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModalExtra('m-usuario')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="fecharModalUsuario()">Cancelar</button>
       <button class="btn btn-primary" id="btn-usuario" onclick="salvarUsuario()">Criar usuário</button>
     </div>
   </div>
@@ -545,645 +525,488 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
-  (function(){if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u&&u.perfil==='gerente'){window.location.href='loja.html';}}catch{}})();
-(function(){
-    try{
-      const u=JSON.parse(localStorage.getItem('sb_user')||'null');
-      if(u){
-        const n=document.getElementById('sb-user-nome');
-        const p=document.getElementById('sb-user-perfil');
-        if(n)n.textContent=u.nome||'Usuário';
-        if(p)p.textContent=u.perfil||'—';
-      }
-    }catch{}
-  })();
-    const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
-  const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
-  const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
-
-  async function api(endpoint, opts = {}) {
-    const method = (opts.method || 'GET').toUpperCase();
-    const headers = {
-      'apikey': SUPA_KEY,
-      'Authorization': 'Bearer ' + SUPA_KEY,
-    };
-    if (opts.body) headers['Content-Type'] = 'application/json';
-    if (opts.prefer) headers['Prefer'] = opts.prefer;
-    else if (method === 'POST')  headers['Prefer'] = 'return=representation';
-    else if (method === 'PATCH') headers['Prefer'] = 'return=representation';
-
-    const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,
-      { method, headers, body: opts.body || undefined });
-
-    if (!res.ok) {
-      let msg = res.statusText;
-      try { const j = await res.json(); msg = j.message || j.error || msg; } catch {}
-      throw new Error(`[${res.status}] ${msg}`);
-    }
-    const ct = res.headers.get('content-type') || '';
-    if (ct.includes('application/json')) { const t = await res.text(); return t ? JSON.parse(t) : []; }
-    return [];
-  }
-
-  // ── ESTADO ────────────────────────────────────────────────
-  let modalTipo  = '';   // 'cat_insumo' | 'cat_ficha' | 'unidade'
-  let editId     = null;
-  const _itemsMap = {}; // lookup por id para evitar JSON inline em onclick
-  let deleteId   = null;
-  let deleteTipo = null;
-  let deleteNome = '';
-
-  const TIPO_TABLE = {
-    cat_insumo: 'categorias',
-    cat_ficha:  'categorias',
-    unidade:    'unidades_medida',
-    tipo_item:  'item_classificacoes',
-    familia:    'item_classificacoes',
-    grupo:      'item_classificacoes',
-    subgrupo:   'item_classificacoes',
-    embalagem:  'item_classificacoes',
-  };
-
-  const TIPO_TITULO = {
-    cat_insumo: 'Categoria de Insumo',
-    cat_ficha:  'Categoria de Ficha',
-    unidade:    'Unidade de Medida',
-    tipo_item:  'Tipo do Item',
-    familia:    'Família',
-    grupo:      'Grupo',
-    subgrupo:   'Subgrupo',
-    embalagem:  'Embalagem Fornecedor',
-  };
-
-  const CLSF_TIPOS = ['tipo_item','familia','grupo','subgrupo','embalagem'];
-
-  // ── CARREGAR DADOS ────────────────────────────────────────
-  async function carregar() {
-    try {
-      const [cats, unidades, classificacoes] = await Promise.all([
-        api(`categorias?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=*`),
-        api(`unidades_medida?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=*`),
-        api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=*`).catch(()=>[]),
-      ]);
-      document.getElementById('conn-status').textContent = '● conectado';
-      document.getElementById('conn-status').style.color = 'var(--teal)';
-
-      const catFichas = cats.filter(c => c.tipo === 'ficha');
-      renderCats('tbody-cat-ficha', catFichas, 'cat_ficha');
-      renderUnidades(unidades);
-
-      renderCats('tbody-tipo-item', classificacoes.filter(c=>c.tipo==='tipo_item'), 'tipo_item');
-      renderCats('tbody-familia',   classificacoes.filter(c=>c.tipo==='familia'),   'familia');
-      renderCats('tbody-grupo',     classificacoes.filter(c=>c.tipo==='grupo'),     'grupo');
-      renderCats('tbody-subgrupo',  classificacoes.filter(c=>c.tipo==='subgrupo'),  'subgrupo');
-      renderCats('tbody-embalagem', classificacoes.filter(c=>c.tipo==='embalagem'), 'embalagem');
-    } catch (e) {
-      document.getElementById('conn-status').textContent = '● desconectado';
-      document.getElementById('conn-status').style.color = 'var(--red)';
-      mostrarErroTabelas(e.message);
-    }
-  }
-
-  function renderCats(tbodyId, lista, tipo) {
-    const tbody = document.getElementById(tbodyId);
-    if (!lista.length) {
-      tbody.innerHTML = `<tr class="empty-row"><td colspan="3">Nenhum item cadastrado</td></tr>`;
-      return;
-    }
-    lista.forEach(item => { _itemsMap[item.id] = item; });
-    tbody.innerHTML = lista.map(item => `
-      <tr>
-        <td>${escHtml(item.nome)}</td>
-        <td class="td-mono">${formatDate(item.created_at)}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-sm" onclick="abrirEditar('${tipo}','${item.id}')">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="abrirConfirmDelete('${tipo}','${item.id}','${escHtml(item.nome)}')">Excluir</button>
-        </div></td>
-      </tr>`).join('');
-  }
-
-  function renderUnidades(lista) {
-    const tbody = document.getElementById('tbody-unidade');
-    if (!lista.length) {
-      tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Nenhuma unidade cadastrada</td></tr>`;
-      return;
-    }
-    lista.forEach(item => { _itemsMap[item.id] = item; });
-    tbody.innerHTML = lista.map(item => `
-      <tr>
-        <td>${escHtml(item.nome)}</td>
-        <td class="td-mono">${escHtml(item.abreviacao || '—')}</td>
-        <td class="td-mono">${formatDate(item.created_at)}</td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-sm" onclick="abrirEditar('unidade','${item.id}')">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="abrirConfirmDelete('unidade','${item.id}','${escHtml(item.nome)}')">Excluir</button>
-        </div></td>
-      </tr>`).join('');
-  }
-
-  function mostrarErroTabelas(msg) {
-    ['tbody-cat-ficha','tbody-unidade'].forEach(id => {
-      const el = document.getElementById(id);
-      const cols = id === 'tbody-unidade' ? 4 : 3;
-      el.innerHTML = `<tr class="empty-row"><td colspan="${cols}">Erro ao carregar: ${escHtml(msg)}</td></tr>`;
-    });
-  }
-
-  // ── MODAL FORM ────────────────────────────────────────────
-  function abrirModal(tipo) {
-    modalTipo = tipo;
-    editId    = null;
-    document.getElementById('modal-title').textContent = 'Novo(a) ' + TIPO_TITULO[tipo];
-    document.getElementById('f-nome').value  = '';
-    document.getElementById('f-abrev').value = '';
-    document.getElementById('fg-abrev').style.display = tipo === 'unidade' ? 'block' : 'none';
-    document.getElementById('btn-salvar').textContent = 'Salvar';
-    document.getElementById('modal-form').classList.add('open');
-    document.getElementById('f-nome').focus();
-  }
-
-  function abrirEditar(tipo, id) {
-    const item = _itemsMap[id] || {};
-    modalTipo = tipo;
-    editId    = id;
-    document.getElementById('modal-title').textContent = 'Editar ' + TIPO_TITULO[tipo];
-    document.getElementById('f-nome').value  = item.nome || '';
-    document.getElementById('f-abrev').value = item.abreviacao || '';
-    document.getElementById('fg-abrev').style.display = tipo === 'unidade' ? 'block' : 'none';
-    document.getElementById('btn-salvar').textContent = 'Salvar alterações';
-    document.getElementById('modal-form').classList.add('open');
-    document.getElementById('f-nome').focus();
-  }
-
-  function fecharModal() {
-    document.getElementById('modal-form').classList.remove('open');
-  }
-
-  async function salvar() {
-    const nome  = document.getElementById('f-nome').value.trim();
-    const abrev = document.getElementById('f-abrev').value.trim();
-
-    if (!nome) { toast('Informe o nome', 'err'); document.getElementById('f-nome').focus(); return; }
-    if (modalTipo === 'unidade' && !abrev) {
-      toast('Informe a abreviação', 'err'); document.getElementById('f-abrev').focus(); return;
-    }
-
-    const btn = document.getElementById('btn-salvar');
-    btn.disabled = true;
-    btn.textContent = 'Salvando...';
-
-    try {
-      const table = TIPO_TABLE[modalTipo];
-      const body  = modalTipo === 'unidade'
-        ? { nome, abreviacao: abrev, tenant_id: TENANT_ID }
-        : CLSF_TIPOS.includes(modalTipo)
-          ? { nome, tipo: modalTipo, ativo: true, tenant_id: TENANT_ID }
-          : { nome, tipo: modalTipo === 'cat_insumo' ? 'insumo' : 'ficha', tenant_id: TENANT_ID };
-
-      if (editId) {
-        await api(`${table}?id=eq.${editId}`, {
-          method: 'PATCH',
-          body: JSON.stringify(body),
-          prefer: 'return=minimal',
-        });
-        toast('Item atualizado', 'ok');
-      } else {
-        await api(table, { method: 'POST', body: JSON.stringify(body) });
-        toast('Item adicionado', 'ok');
-      }
-      fecharModal();
-      await carregar();
-    } catch (e) {
-      toast('Erro: ' + e.message, 'err');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = editId ? 'Salvar alterações' : 'Salvar';
-    }
-  }
-
-  // ── MODAL CONFIRMAR DELETE ────────────────────────────────
-  function abrirConfirmDelete(tipo, id, nome) {
-    deleteTipo = tipo;
-    deleteId   = id;
-    deleteNome = nome;
-    document.getElementById('confirm-item-name').textContent = nome;
-    document.getElementById('modal-confirm').classList.add('open');
-  }
-
-  function fecharConfirm() {
-    document.getElementById('modal-confirm').classList.remove('open');
-  }
-
-  async function confirmarDelete() {
-    const btn = document.getElementById('btn-confirmar-del');
-    btn.disabled = true;
-    btn.textContent = 'Excluindo...';
-    try {
-      const table = TIPO_TABLE[deleteTipo];
-      await api(`${table}?id=eq.${deleteId}&tenant_id=eq.${TENANT_ID}`, {
-        method: 'DELETE',
-        prefer: 'return=minimal',
-      });
-      toast('Item excluído', 'ok');
-      fecharConfirm();
-      await carregar();
-    } catch (e) {
-      toast('Erro ao excluir: ' + e.message, 'err');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Excluir';
-    }
-  }
-
-  // ── UTILS ─────────────────────────────────────────────────
-  function escHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function formatDate(iso) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
-  }
-
-  let toastTimer;
-  function toast(msg, type = 'ok') {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = `toast show ${type}`;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
-  }
-
-  // ── TECLADO ───────────────────────────────────────────────
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { fecharModal(); fecharConfirm(); }
-    if (e.key === 'Enter' && document.getElementById('modal-form').classList.contains('open')) salvar();
-  });
-
-  // ── LOJAS ─────────────────────────────────────────────────
-  let lojas = [], usuarios = [];
-  let editLojaId = null, editUserId = null;
-
-  function fecharModalExtra(id) { document.getElementById(id).classList.remove('open'); }
-
-
-  function switchConfig(nome) {
-    document.querySelectorAll('.cfg-pane').forEach(p => p.classList.remove('active'));
-    document.getElementById('cfg-'+nome).classList.add('active');
-    document.querySelectorAll('.cfg-nav-item').forEach(b => {
-      b.classList.toggle('active', b.id === 'cfg-btn-'+nome);
-    });
-    // Fecha o nav após selecionar
-  }
-
-  async function carregarExtras() {
-    [lojas, usuarios] = await Promise.all([
-      api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
-      api(`usuarios?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
-    ]);
-    renderLojas(); renderUsuarios();
-  }
-
-  function renderLojas() {
-    const tbody = document.getElementById('tbody-lojas');
-    tbody.innerHTML = lojas.length ? lojas.map(l => `<tr>
-      <td style="font-weight:500">${escHtml(l.nome)}</td>
-      <td class="td-mono">${escHtml(l.endereco||'—')}</td>
-      <td class="td-mono">${escHtml(l.whatsapp||'—')}</td>
-      <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${l.ativo?'#dcfce7':'#fee2e2'};color:${l.ativo?'#16a34a':'#dc2626'}">${l.ativo?'Ativa':'Inativa'}</span></td>
-      <td><div class="td-actions">
-        <button class="btn btn-ghost btn-sm" onclick="abrirModalLoja('${l.id}')">Editar</button>
-        <button class="btn btn-danger btn-sm" onclick="excluirItem('lojas','${l.id}','${escHtml(l.nome)}')">Excluir</button>
-      </div></td>
-    </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhuma loja cadastrada</td></tr>';
-  }
-
-  function abrirModalLoja(id) {
-    editLojaId = id||null;
-    const l = id ? lojas.find(x=>x.id===id) : null;
-    document.getElementById('loja-titulo').textContent = id ? 'Editar Loja' : 'Nova Loja';
-    document.getElementById('loja-nome').value = l?.nome||'';
-    document.getElementById('loja-end').value = l?.endereco||'';
-    document.getElementById('loja-wpp').value = l?.whatsapp||'';
-    document.getElementById('m-loja').classList.add('open');
-  }
-
-  async function salvarLoja() {
-    const nome = document.getElementById('loja-nome').value.trim();
-    if (!nome) { toast('Informe o nome.','err'); return; }
-    const payload = { nome, endereco: document.getElementById('loja-end').value.trim()||null,
-      whatsapp: document.getElementById('loja-wpp').value.trim()||null, tenant_id: TENANT_ID, ativo: true };
-    try {
-      if (editLojaId) await api(`lojas?id=eq.${editLojaId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(payload)});
-      else await api('lojas',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
-      toast('Loja salva!','ok'); fecharModalExtra('m-loja'); await carregarExtras();
-    } catch(e) { toast('Erro: '+e.message,'err'); }
-  }
-
-  // ── USUÁRIOS ───────────────────────────────────────────────
-  const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.8Yx9qY2kZ1mN3pL6wR4vT7cF0dE5nQ2jH8xK9bA1sU4';
-
-  const PERFIL_LABEL = { admin:'Admin', compras:'Compras', gerente:'Gerente' };
-
-  function renderUsuarios() {
-    const tbody = document.getElementById('tbody-usuarios');
-    tbody.innerHTML = usuarios.length ? usuarios.map(u => {
-      const loja = lojas.find(l=>l.id===u.loja_id);
-      return `<tr>
-        <td style="font-weight:500">${escHtml(u.nome)}</td>
-        <td class="td-mono">${escHtml(u.email||'—')}</td>
-        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg3);color:var(--text2)">${PERFIL_LABEL[u.perfil]||u.perfil}</span></td>
-        <td>${escHtml(loja?.nome||'—')}</td>
-        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${u.ativo?'#dcfce7':'#fee2e2'};color:${u.ativo?'#16a34a':'#dc2626'}">${u.ativo?'Ativo':'Inativo'}</span></td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-sm" onclick="abrirModalUsuario('${u.id}')">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="excluirItem('usuarios','${u.id}','${escHtml(u.nome)}')">Excluir</button>
-        </div></td>
-      </tr>`;
-    }).join('') : '<tr class="empty-row"><td colspan="6">Nenhum usuário cadastrado</td></tr>';
-  }
-
-  function abrirModalUsuario(id) {
-    editUserId = id||null;
-    const u = id ? usuarios.find(x=>x.id===id) : null;
-    document.getElementById('usuario-titulo').textContent = id ? 'Editar Usuário' : 'Novo Usuário';
-    document.getElementById('usuario-nome').value = u?.nome||'';
-    document.getElementById('usuario-email').value = u?.email||'';
-    document.getElementById('usuario-senha').value = '';
-    document.getElementById('usuario-perfil').value = u?.perfil||'gerente';
-    document.getElementById('fg-senha').style.display = id ? 'none' : '';
-    document.getElementById('btn-usuario').textContent = id ? 'Salvar alterações' : 'Criar usuário';
-    document.getElementById('usuario-loja').innerHTML = lojas.map(l=>`<option value="${l.id}" ${u?.loja_id===l.id?'selected':''}>${escHtml(l.nome)}</option>`).join('');
-    onPerfilChange();
-    document.getElementById('m-usuario').classList.add('open');
-  }
-
-  function onPerfilChange() {
-    const perfil = document.getElementById('usuario-perfil').value;
-    document.getElementById('fg-loja').style.display = perfil==='gerente' ? '' : 'none';
-  }
-
-  async function salvarUsuario() {
-    const nome = document.getElementById('usuario-nome').value.trim();
-    const email = document.getElementById('usuario-email').value.trim();
-    const senha = document.getElementById('usuario-senha').value;
-    const perfil = document.getElementById('usuario-perfil').value;
-    const lojaId = document.getElementById('usuario-loja').value||null;
-    if (!nome||!email) { toast('Preencha nome e email.','err'); return; }
-    if (!editUserId && senha.length < 6) { toast('Senha deve ter ao menos 6 caracteres.','err'); return; }
-    const btn = document.getElementById('btn-usuario');
-    btn.disabled = true; btn.textContent = 'Salvando...';
-    try {
-      if (!editUserId) {
-        const rpcRes = await api('rpc/criar_usuario_auth', {
-          method: 'POST',
-          body: JSON.stringify({
-            p_email: email,
-            p_senha: senha,
-            p_nome: nome,
-            p_perfil: perfil,
-            p_loja_id: perfil === 'gerente' ? lojaId : null
-          })
-        });
-        toast(`Usuário "${nome}" criado!`, 'ok');
-      } else {
-        await api(`usuarios?id=eq.${editUserId}`,{method:'PATCH',prefer:'return=minimal',
-          body:JSON.stringify({nome,perfil,loja_id:perfil==='gerente'?lojaId:null})});
-        toast('Usuário atualizado!','ok');
-      }
-      fecharModalExtra('m-usuario'); await carregarExtras();
-    } catch(e) { toast('Erro: '+e.message,'err'); }
-    finally { btn.disabled=false; btn.textContent=editUserId?'Salvar alterações':'Criar usuário'; }
-  }
-
-  async function excluirItem(tabela, id, nome) {
-    if (!confirm(`Excluir "${nome}"?`)) return;
-    try {
-      await api(`${tabela}?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
-      toast('Excluído com sucesso.','ok'); await carregarExtras();
-    } catch(e) { toast('Erro: '+e.message,'err'); }
-  }
-
-  // ══════════════════════════════════════════════════════════
-  // GRUPOS DE COMPRA
-  // ══════════════════════════════════════════════════════════
-  let todosInsumos = [], gcSelecionados = new Set(), gcEditId = null;
-  let invSelecionados = new Set(), invEditId = null;
-  let motivoEditId = null;
-
-  async function carregarGruposCompra() {
-    const tbody = document.getElementById('tbody-grupos-compra');
-    try {
-      const grupos = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
-      if (!grupos.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="4">Nenhum grupo cadastrado</td></tr>'; return; }
-      const counts = await Promise.all(grupos.map(g=>api(`grupos_compra_itens?grupo_id=eq.${g.id}`)));
-      tbody.innerHTML = grupos.map((g,i)=>`<tr>
-        <td style="font-weight:500">${escHtml(g.nome)}</td>
-        <td class="td-mono">${counts[i].length} insumo(s)</td>
-        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${g.ativo?'#dcfce7':'#fee2e2'};color:${g.ativo?'#16a34a':'#dc2626'}">${g.ativo?'Ativo':'Inativo'}</span></td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-sm" onclick="abrirModalGrupoCompra('${g.id}')">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="excluirItem('grupos_compra','${g.id}','${escHtml(g.nome)}')">Excluir</button>
-        </div></td>
-      </tr>`).join('');
-    } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="4">Erro: ${escHtml(e.message)}</td></tr>`; }
-  }
-
-  async function abrirModalGrupoCompra(id) {
-    gcEditId = id||null;
-    gcSelecionados.clear();
-    if (!todosInsumos.length) todosInsumos = await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
-    document.getElementById('gc-titulo').textContent = id ? 'Editar Grupo' : 'Novo Grupo de Compra';
-    document.getElementById('gc-nome').value = '';
-    document.getElementById('gc-busca').value = '';
-    if (id) {
-      const g = await api(`grupos_compra?id=eq.${id}&limit=1`).then(r=>r[0]);
-      document.getElementById('gc-nome').value = g?.nome||'';
-      const its = await api(`grupos_compra_itens?grupo_id=eq.${id}`);
-      its.forEach(it => gcSelecionados.add(it.insumo_id));
-    }
-    renderInsumosGC('');
-    document.getElementById('m-grupo-compra').classList.add('open');
-  }
-
-  function renderInsumosGC(busca) {
-    const lista = todosInsumos.filter(i=>!busca||i.nome.toLowerCase().includes(busca.toLowerCase()));
-    document.getElementById('gc-insumos-list').innerHTML = lista.map(ins=>`
-      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border2);font-size:13px">
-        <input type="checkbox" ${gcSelecionados.has(ins.id)?'checked':''} onchange="gcToggle('${ins.id}',this.checked)" style="width:auto">
-        ${escHtml(ins.nome)} <span style="font-size:11px;color:var(--text3);margin-left:auto">${escHtml(ins.unidade_medida||'')}</span>
-      </label>`).join('');
-  }
-  function filtrarInsumosGC() { renderInsumosGC(document.getElementById('gc-busca').value); }
-  function gcToggle(id, checked) { checked ? gcSelecionados.add(id) : gcSelecionados.delete(id); }
-
-  async function salvarGrupoCompra() {
-    const nome = document.getElementById('gc-nome').value.trim();
-    if (!nome) { toast('Informe o nome.','err'); return; }
-    try {
-      let grupoId = gcEditId;
-      if (gcEditId) {
-        await api(`grupos_compra?id=eq.${gcEditId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,ativo:true})});
-        await api(`grupos_compra_itens?grupo_id=eq.${gcEditId}`,{method:'DELETE',prefer:'return=minimal'});
-      } else {
-        const res = await api('grupos_compra',{method:'POST',body:JSON.stringify({nome,tenant_id:TENANT_ID,ativo:true})});
-        grupoId = res[0]?.id;
-      }
-      if (gcSelecionados.size && grupoId) {
-        const payload = [...gcSelecionados].map(insId=>({grupo_id:grupoId,insumo_id:insId}));
-        await api('grupos_compra_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
-      }
-      toast('Grupo salvo!','ok');
-      fecharModalExtra('m-grupo-compra');
-      carregarGruposCompra();
-    } catch(e) { toast('Erro: '+e.message,'err'); }
-  }
-
-  // ══════════════════════════════════════════════════════════
-  // INVENTÁRIOS
-  // ══════════════════════════════════════════════════════════
-  async function carregarInventariosAdmin() {
-    const tbody = document.getElementById('tbody-inventarios');
-    try {
-      const invs = await api(`inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`);
-      if (!invs.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="5">Nenhum inventário criado</td></tr>'; return; }
-      tbody.innerHTML = invs.map(inv=>{
-        const loja = lojas.find(l=>l.id===inv.loja_id);
-        const periodo = inv.data_inicial?`${formatDate(inv.data_inicial)} a ${formatDate(inv.data_final)}`:'—';
-        const statusColor = {ativo:'#16a34a',encerrado:'#1d4ed8',cancelado:'#dc2626'}[inv.status]||'#64748b';
-        const statusBg = {ativo:'#dcfce7',encerrado:'#dbeafe',cancelado:'#fee2e2'}[inv.status]||'#f1f5f9';
-        return `<tr>
-          <td style="font-weight:500">${escHtml(inv.descricao||'—')}</td>
-          <td>${escHtml(loja?.nome||'—')}</td>
-          <td class="td-mono">${periodo}</td>
-          <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${statusBg};color:${statusColor}">${inv.status}</span></td>
-          <td><div class="td-actions">
-            <button class="btn btn-danger btn-sm" onclick="excluirItem('inventarios','${inv.id}','inventário')">Excluir</button>
-          </div></td>
-        </tr>`;
-      }).join('');
-    } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="5">Erro: ${escHtml(e.message)}</td></tr>`; }
-  }
-
-  async function abrirModalInventario() {
-    invSelecionados.clear();
-    if (!todosInsumos.length) todosInsumos = await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
-    document.getElementById('inv-desc').value='';
-    document.getElementById('inv-busca').value='';
-    document.getElementById('inv-inicio').value='';
-    document.getElementById('inv-fim').value='';
-    document.getElementById('inv-loja').innerHTML = lojas.map(l=>`<option value="${l.id}">${escHtml(l.nome)}</option>`).join('');
-    renderInsumosInv('');
-    document.getElementById('m-inventario').classList.add('open');
-  }
-
-  function renderInsumosInv(busca) {
-    const lista = todosInsumos.filter(i=>!busca||i.nome.toLowerCase().includes(busca.toLowerCase()));
-    document.getElementById('inv-insumos-list').innerHTML = lista.map(ins=>`
-      <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border2);font-size:13px">
-        <input type="checkbox" ${invSelecionados.has(ins.id)?'checked':''} onchange="invToggle('${ins.id}',this.checked)" style="width:auto">
-        ${escHtml(ins.nome)} <span style="font-size:11px;color:var(--text3);margin-left:auto">${escHtml(ins.unidade_medida||'')}</span>
-      </label>`).join('');
-  }
-  function filtrarInsumosInv() { renderInsumosInv(document.getElementById('inv-busca').value); }
-  function invToggle(id, checked) { checked ? invSelecionados.add(id) : invSelecionados.delete(id); }
-
-  async function salvarInventario() {
-    const desc = document.getElementById('inv-desc').value.trim();
-    const lojaId = document.getElementById('inv-loja').value;
-    const inicio = document.getElementById('inv-inicio').value;
-    const fim = document.getElementById('inv-fim').value;
-    if (!desc) { toast('Informe a descrição.','err'); return; }
-    if (!lojaId) { toast('Selecione a loja.','err'); return; }
-    if (!inicio||!fim) { toast('Informe as datas.','err'); return; }
-    if (!invSelecionados.size) { toast('Selecione ao menos um insumo.','err'); return; }
-    try {
-      const res = await api('inventarios',{method:'POST',body:JSON.stringify({
-        tenant_id:TENANT_ID, loja_id:lojaId, descricao:desc,
-        data_inicial:inicio, data_final:fim, status:'ativo'
-      })});
-      const invId = res[0]?.id;
-      if (!invId) throw new Error('Falha ao criar inventário.');
-      const payload = [...invSelecionados].map(insId=>({inventario_id:invId,insumo_id:insId,qtd_contada:0,qtd_estoque:0}));
-      await api('inventario_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
-      toast('Inventário criado!','ok');
-      fecharModalExtra('m-inventario');
-      carregarInventariosAdmin();
-    } catch(e) { toast('Erro: '+e.message,'err'); }
-  }
-
-  // ══════════════════════════════════════════════════════════
-  // MOTIVOS DE PERDA
-  // ══════════════════════════════════════════════════════════
-  async function carregarMotivos() {
-    const tbody = document.getElementById('tbody-motivos');
-    try {
-      const motivos = await api(`motivos_perda?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
-      if (!motivos.length) { tbody.innerHTML='<tr class="empty-row"><td colspan="3">Nenhum motivo cadastrado</td></tr>'; return; }
-      tbody.innerHTML = motivos.map(m=>`<tr>
-        <td style="font-weight:500">${escHtml(m.nome)}</td>
-        <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${m.ativo?'#dcfce7':'#fee2e2'};color:${m.ativo?'#16a34a':'#dc2626'}">${m.ativo?'Ativo':'Inativo'}</span></td>
-        <td><div class="td-actions">
-          <button class="btn btn-ghost btn-sm" onclick="abrirModalMotivo('${m.id}','${escHtml(m.nome)}')">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="excluirItem('motivos_perda','${m.id}','${escHtml(m.nome)}')">Excluir</button>
-        </div></td>
-      </tr>`).join('');
-    } catch(e) { tbody.innerHTML=`<tr class="empty-row"><td colspan="3">Erro: ${escHtml(e.message)}</td></tr>`; }
-  }
-
-  function abrirModalMotivo(id, nome) {
-    motivoEditId = id||null;
-    document.getElementById('mot-titulo').textContent = id ? 'Editar Motivo' : 'Novo Motivo';
-    document.getElementById('mot-nome').value = nome||'';
-    document.getElementById('m-motivo').classList.add('open');
-  }
-
-  async function salvarMotivo() {
-    const nome = document.getElementById('mot-nome').value.trim();
-    if (!nome) { toast('Informe o nome.','err'); return; }
-    try {
-      if (motivoEditId) {
-        await api(`motivos_perda?id=eq.${motivoEditId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome})});
-      } else {
-        await api('motivos_perda',{method:'POST',prefer:'return=minimal',body:JSON.stringify({nome,tenant_id:TENANT_ID,ativo:true})});
-      }
-      toast('Motivo salvo!','ok');
-      fecharModalExtra('m-motivo');
-      carregarMotivos();
-    } catch(e) { toast('Erro: '+e.message,'err'); }
-  }
-
-  // ── INIT ──────────────────────────────────────────────────
-  carregar(); carregarExtras(); carregarGruposCompra(); carregarInventariosAdmin(); carregarMotivos();
-  // Abre seção pela URL: configuracoes.html?sec=lojas
-  const _sec = new URLSearchParams(location.search).get('sec');
-  if (_sec) switchConfig(_sec);
-</script>
-
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script>lucide.createIcons();</script>
-<div id="cfg-flyout">
-  <span class="cfg-flyout-title">Configurações</span>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=lojas">Lojas / Filiais</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=usuarios">Usuários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=cat-ficha">Categorias de Fichas</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=unidades">Unidades de Medida</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=grupos-compra">Grupos de Compra</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=inventarios">Inventários</a>
-  <a class="cfg-flyout-item" href="configuracoes.html?sec=motivos">Motivos de Perda</a>
-</div>
-<script>
-(function(){
-  var tr=document.querySelector('.nav-sub-wrap'),fl=document.getElementById('cfg-flyout');
-  if(!tr||!fl)return;
-  var t;
-  function show(){clearTimeout(t);fl.style.top='0';fl.style.display='block';}
-  function hide(){t=setTimeout(function(){fl.style.display='none';},200);}
-  tr.addEventListener('mouseenter',show);tr.addEventListener('mouseleave',hide);
-  fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
-})();
-</script>
 <script src="sidebar.js"></script>
+<script>
+/* ================================================================
+   CONFIG
+================================================================ */
+const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+
+/* ================================================================
+   API
+================================================================ */
+async function api(endpoint, opts = {}) {
+  const method = (opts.method || 'GET').toUpperCase();
+  const headers = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
+  if (opts.body) headers['Content-Type'] = 'application/json';
+  if (opts.prefer) headers['Prefer'] = opts.prefer;
+  else if (method === 'POST')  headers['Prefer'] = 'return=representation';
+  else if (method === 'PATCH') headers['Prefer'] = 'return=representation';
+  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`, { method, headers, body: opts.body || undefined });
+  if (!res.ok) { let msg = res.statusText; try { const j = await res.json(); msg = j.message || j.error || msg; } catch {} throw new Error(`[${res.status}] ${msg}`); }
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) { const t = await res.text(); return t ? JSON.parse(t) : []; }
+  return [];
+}
+
+/* ================================================================
+   UTILS
+================================================================ */
+function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function formatDate(d) { if (!d) return '—'; const dt = new Date(d); return dt.toLocaleDateString('pt-BR'); }
+function toast(msg, tipo = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast ' + tipo; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ================================================================
+   SEÇÕES (via URL ?tab=)
+================================================================ */
+const _section = new URLSearchParams(location.search).get('tab') || 'geral';
+const _secTitles = { geral: 'Geral', usuarios: 'Usuários', parametros: 'Parâmetros' };
+
+function initSection() {
+  document.querySelectorAll('.cfg-section').forEach(s => s.style.display = 'none');
+  const secEl = document.getElementById('sec-' + _section);
+  if (secEl) secEl.style.display = 'block';
+  const title = document.getElementById('topbar-titulo');
+  if (title) title.textContent = _secTitles[_section] || 'Configurações';
+  document.title = (_secTitles[_section] || 'Configurações') + ' · Aiko';
+  if (_section === 'geral') carregarGeral();
+  if (_section === 'parametros') carregarParams();
+  if (_section === 'usuarios') carregarUsuarios();
+}
+
+/* ================================================================
+   ACCORDION
+================================================================ */
+function toggleAcc(header) {
+  const card = header.closest('.acc-card');
+  card.classList.toggle('open');
+}
+
+function filtrarGeral() {
+  const q = document.getElementById('geral-busca')?.value?.toLowerCase() || '';
+  document.querySelectorAll('#sec-geral .acc-card').forEach(card => {
+    const text = (card.dataset.search || '') + ' ' + (card.querySelector('.acc-title')?.textContent || '');
+    card.style.display = text.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function filtrarParams() {
+  const q = document.getElementById('param-busca')?.value?.toLowerCase() || '';
+  document.querySelectorAll('#sec-parametros .acc-card').forEach(card => {
+    const text = (card.dataset.search || '') + ' ' + (card.querySelector('.acc-title')?.textContent || '');
+    card.style.display = text.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+/* ================================================================
+   CRUD GERAL — ESTADO
+================================================================ */
+let modalTipo = '', editId = null, deleteId = null, deleteTipo = null;
+const _itemsMap = {};
+
+const TIPO_TABLE = {
+  cat_ficha:    'categorias',
+  unidade:      'unidades_medida',
+  tipo_item:    'item_classificacoes',
+  familia:      'item_classificacoes',
+  grupo:        'item_classificacoes',
+  subgrupo:     'item_classificacoes',
+  embalagem:    'item_classificacoes',
+  grupo_compra: 'grupos_compra',
+  loja:         'lojas',
+};
+
+const TIPO_TITULO = {
+  cat_ficha:    'Categoria de Ficha',
+  unidade:      'Unidade de Medida',
+  tipo_item:    'Tipo do Item',
+  familia:      'Família',
+  grupo:        'Grupo',
+  subgrupo:     'Subgrupo',
+  embalagem:    'Embalagem Fornecedor',
+  grupo_compra: 'Grupo de Compra',
+  loja:         'Loja / Filial',
+};
+
+const CLSF_TIPOS = ['tipo_item','familia','grupo','subgrupo','embalagem'];
+
+/* ================================================================
+   CARREGAR GERAL
+================================================================ */
+async function carregarGeral() {
+  try {
+    const [cats, unidades, classificacoes] = await Promise.all([
+      api(`categorias?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
+      api(`unidades_medida?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
+      api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(() => []),
+    ]);
+    document.getElementById('conn-status').textContent = '● conectado';
+    document.getElementById('conn-status').style.color = '#16a34a';
+    renderCats('tbody-cat-ficha', cats.filter(c => c.tipo === 'ficha'), 'cat_ficha');
+    renderCats('tbody-tipo-item', classificacoes.filter(c => c.tipo === 'tipo_item'), 'tipo_item');
+    renderCats('tbody-familia',   classificacoes.filter(c => c.tipo === 'familia'),   'familia');
+    renderCats('tbody-grupo',     classificacoes.filter(c => c.tipo === 'grupo'),     'grupo');
+    renderCats('tbody-subgrupo',  classificacoes.filter(c => c.tipo === 'subgrupo'),  'subgrupo');
+    renderCats('tbody-embalagem', classificacoes.filter(c => c.tipo === 'embalagem'), 'embalagem');
+    renderUnidades(unidades);
+    // Grupos de compra
+    try { const gc = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&order=nome.asc`); renderCats('tbody-grupo-compra', gc, 'grupo_compra'); } catch { renderCats('tbody-grupo-compra', [], 'grupo_compra'); }
+    // Lojas
+    try { const lj = await api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`); renderCats('tbody-lojas', lj, 'loja'); } catch { renderCats('tbody-lojas', [], 'loja'); }
+  } catch (e) {
+    document.getElementById('conn-status').textContent = '● desconectado';
+    document.getElementById('conn-status').style.color = '#dc2626';
+  }
+}
+
+function renderCats(tbodyId, lista, tipo) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  if (!lista.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Nenhum item cadastrado</td></tr>'; return; }
+  lista.forEach(item => { _itemsMap[item.id] = item; });
+  tbody.innerHTML = lista.map(item => `<tr>
+    <td>${escHtml(item.nome)}</td>
+    <td class="td-mono">${formatDate(item.created_at)}</td>
+    <td><div class="td-actions">
+      <button class="btn btn-ghost btn-sm" onclick="abrirEditar('${tipo}','${item.id}')">Editar</button>
+      <button class="btn btn-danger btn-sm" onclick="abrirConfirmDelete('${tipo}','${item.id}','${escHtml(item.nome)}')">Excluir</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function renderUnidades(lista) {
+  const tbody = document.getElementById('tbody-unidade');
+  if (!tbody) return;
+  if (!lista.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma unidade cadastrada</td></tr>'; return; }
+  lista.forEach(item => { _itemsMap[item.id] = item; });
+  tbody.innerHTML = lista.map(item => `<tr>
+    <td>${escHtml(item.nome)}</td>
+    <td class="td-mono">${escHtml(item.abreviacao || '—')}</td>
+    <td class="td-mono">${formatDate(item.created_at)}</td>
+    <td><div class="td-actions">
+      <button class="btn btn-ghost btn-sm" onclick="abrirEditar('unidade','${item.id}')">Editar</button>
+      <button class="btn btn-danger btn-sm" onclick="abrirConfirmDelete('unidade','${item.id}','${escHtml(item.nome)}')">Excluir</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+/* ================================================================
+   MODAL CRUD
+================================================================ */
+function abrirModal(tipo) {
+  modalTipo = tipo; editId = null;
+  document.getElementById('modal-title').textContent = 'Novo(a) ' + (TIPO_TITULO[tipo] || tipo);
+  document.getElementById('f-nome').value = '';
+  document.getElementById('f-abrev').value = '';
+  document.getElementById('fg-abrev').style.display = tipo === 'unidade' ? 'block' : 'none';
+  document.getElementById('btn-salvar').textContent = 'Salvar';
+  document.getElementById('modal-form').classList.add('open');
+  setTimeout(() => document.getElementById('f-nome').focus(), 100);
+}
+
+function abrirEditar(tipo, id) {
+  const item = _itemsMap[id] || {};
+  modalTipo = tipo; editId = id;
+  document.getElementById('modal-title').textContent = 'Editar ' + (TIPO_TITULO[tipo] || tipo);
+  document.getElementById('f-nome').value = item.nome || '';
+  document.getElementById('f-abrev').value = item.abreviacao || '';
+  document.getElementById('fg-abrev').style.display = tipo === 'unidade' ? 'block' : 'none';
+  document.getElementById('btn-salvar').textContent = 'Salvar alterações';
+  document.getElementById('modal-form').classList.add('open');
+}
+
+function fecharModal() { document.getElementById('modal-form').classList.remove('open'); }
+
+async function salvar() {
+  const nome  = document.getElementById('f-nome').value.trim();
+  const abrev = document.getElementById('f-abrev').value.trim();
+  if (!nome) { toast('Informe o nome', 'err'); return; }
+  if (modalTipo === 'unidade' && !abrev) { toast('Informe a abreviação', 'err'); return; }
+  const btn = document.getElementById('btn-salvar');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    const table = TIPO_TABLE[modalTipo];
+    if (!table) { toast('Tipo não configurado', 'err'); return; }
+    let body;
+    if (modalTipo === 'unidade') body = { nome, abreviacao: abrev, tenant_id: TENANT_ID };
+    else if (CLSF_TIPOS.includes(modalTipo)) body = { nome, tipo: modalTipo, ativo: true, tenant_id: TENANT_ID };
+    else body = { nome, tenant_id: TENANT_ID };
+    if (editId) {
+      await api(`${table}?id=eq.${editId}`, { method: 'PATCH', body: JSON.stringify(body), prefer: 'return=minimal' });
+      toast('Atualizado com sucesso', 'ok');
+    } else {
+      await api(table, { method: 'POST', body: JSON.stringify(body) });
+      toast('Adicionado com sucesso', 'ok');
+    }
+    fecharModal();
+    await carregarGeral();
+  } catch (e) { toast('Erro: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = editId ? 'Salvar alterações' : 'Salvar'; }
+}
+
+function abrirConfirmDelete(tipo, id, nome) {
+  deleteTipo = tipo; deleteId = id;
+  document.getElementById('confirm-item-name').textContent = nome;
+  document.getElementById('modal-confirm').classList.add('open');
+}
+function fecharConfirm() { document.getElementById('modal-confirm').classList.remove('open'); }
+
+async function confirmarDelete() {
+  const btn = document.getElementById('btn-confirmar-del');
+  btn.disabled = true; btn.textContent = 'Excluindo...';
+  try {
+    const table = TIPO_TABLE[deleteTipo];
+    await api(`${table}?id=eq.${deleteId}`, { method: 'DELETE', prefer: 'return=minimal' });
+    toast('Excluído com sucesso', 'ok');
+    fecharConfirm();
+    await carregarGeral();
+  } catch (e) { toast('Erro: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = 'Excluir'; }
+}
+
+/* ================================================================
+   PARÂMETROS — CARREGAR / SALVAR
+================================================================ */
+// Mapa: modulo → {chave: {inputId, type}}
+const PARAM_MAP = {
+  estoque: {
+    permitir_negativo:     { id: 'p-est-negativo',     type: 'radio' },
+    metodo_custo:          { id: 'p-est-metodo-custo', type: 'select' },
+    controla_validade:     { id: 'p-est-validade',     type: 'radio' },
+    obrigar_lote:          { id: 'p-est-lote',         type: 'radio' },
+    atualizar_custo_auto:  { id: 'p-est-atualizar',    type: 'radio' },
+    dias_alerta_validade:  { id: 'p-est-dias-validade', type: 'input' },
+    alerta_min_pct:        { id: 'p-est-alerta-min',   type: 'input' },
+  },
+  pcp: {
+    media_dias:          { id: 'p-pcp-media-dias',  type: 'select' },
+    considerar_dia_sem:  { id: 'p-pcp-dia-semana',  type: 'radio' },
+    considerar_sobra:    { id: 'p-pcp-sobra',       type: 'radio' },
+    margem_seguranca:    { id: 'p-pcp-margem',      type: 'input' },
+    separar_loja:        { id: 'p-pcp-loja',        type: 'radio' },
+    separar_turno:       { id: 'p-pcp-turno',       type: 'radio' },
+  },
+  producao: {
+    obrigar_responsavel: { id: 'p-prod-resp',       type: 'radio' },
+    obrigar_turno:       { id: 'p-prod-turno',      type: 'radio' },
+    obrigar_obs_ajuste:  { id: 'p-prod-obs',        type: 'radio' },
+    permitir_edicao:     { id: 'p-prod-edit',       type: 'radio' },
+    permitir_sem_ficha:  { id: 'p-prod-sem-ficha',  type: 'radio' },
+  },
+  porcionamento: {
+    obrigar_lote:        { id: 'p-porc-lote',       type: 'radio' },
+    obrigar_fornecedor:  { id: 'p-porc-forn',       type: 'radio' },
+    obrigar_responsavel: { id: 'p-porc-resp',       type: 'radio' },
+    rendimento_minimo:   { id: 'p-porc-rend-min',   type: 'input' },
+    alertar_perda_alta:  { id: 'p-porc-alerta',     type: 'radio' },
+    pct_max_perda:       { id: 'p-porc-pct-max',    type: 'input' },
+  },
+  compras: {
+    exigir_aprovacao:         { id: 'p-cmp-aprovacao',   type: 'radio' },
+    permitir_sem_fornecedor:  { id: 'p-cmp-sem-forn',    type: 'radio' },
+    usar_forn_principal:      { id: 'p-cmp-forn-princ',  type: 'radio' },
+    considerar_menor_preco:   { id: 'p-cmp-menor-preco', type: 'radio' },
+  },
+  ficha: {
+    atualizar_custo_auto: { id: 'p-ft-atualizar',     type: 'radio' },
+    considerar_rendimento:{ id: 'p-ft-rendimento',    type: 'radio' },
+    base_custo:           { id: 'p-ft-base-custo',    type: 'select' },
+    arredondamento:       { id: 'p-ft-arredondamento',type: 'select' },
+  },
+  cmv: {
+    meta_pct:              { id: 'p-cmv-meta',     type: 'input' },
+    considerar_perdas:     { id: 'p-cmv-perdas',   type: 'radio' },
+    considerar_ajustes:    { id: 'p-cmv-ajustes',  type: 'radio' },
+    considerar_producao:   { id: 'p-cmv-producao', type: 'radio' },
+  },
+  dashboard: {
+    atualizacao_auto: { id: 'p-dash-auto',      type: 'radio' },
+    intervalo:        { id: 'p-dash-intervalo', type: 'select' },
+    periodo_padrao:   { id: 'p-dash-periodo',   type: 'select' },
+    exibir_valores:   { id: 'p-dash-valores',   type: 'radio' },
+  },
+};
+
+function getParamVal(type, nameOrId) {
+  if (type === 'radio') {
+    const checked = document.querySelector(`input[name="${nameOrId}"]:checked`);
+    return checked ? checked.value : null;
+  }
+  if (type === 'select') {
+    const el = document.getElementById(nameOrId);
+    return el ? el.value : null;
+  }
+  if (type === 'input') {
+    const el = document.getElementById(nameOrId);
+    return el ? el.value : null;
+  }
+  return null;
+}
+
+function setParamVal(type, nameOrId, value) {
+  if (type === 'radio') {
+    const radio = document.querySelector(`input[name="${nameOrId}"][value="${value}"]`);
+    if (radio) radio.checked = true;
+  } else if (type === 'select') {
+    const el = document.getElementById(nameOrId);
+    if (el) el.value = value;
+  } else if (type === 'input') {
+    const el = document.getElementById(nameOrId);
+    if (el) el.value = value;
+  }
+}
+
+async function carregarParams() {
+  try {
+    const params = await api(`parametros?tenant_id=eq.${TENANT_ID}`).catch(() => []);
+    params.forEach(p => {
+      const modMap = PARAM_MAP[p.modulo];
+      if (!modMap) return;
+      const cfg = modMap[p.chave];
+      if (!cfg) return;
+      setParamVal(cfg.type, cfg.id, p.valor);
+    });
+  } catch {}
+}
+
+async function salvarParams(modulo) {
+  const modMap = PARAM_MAP[modulo];
+  if (!modMap) return;
+  const promises = Object.entries(modMap).map(([chave, cfg]) => {
+    const valor = getParamVal(cfg.type, cfg.id);
+    if (valor == null) return Promise.resolve();
+    return api('parametros', {
+      method: 'POST',
+      body: JSON.stringify({ tenant_id: TENANT_ID, modulo, chave, valor }),
+      prefer: 'resolution=merge-duplicates,return=minimal',
+    }).catch(() =>
+      api(`parametros?tenant_id=eq.${TENANT_ID}&modulo=eq.${modulo}&chave=eq.${chave}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ valor }),
+        prefer: 'return=minimal',
+      })
+    );
+  });
+  try {
+    await Promise.all(promises);
+    toast('Parâmetros salvos com sucesso', 'ok');
+  } catch (e) {
+    toast('Erro ao salvar: ' + e.message, 'err');
+  }
+}
+
+/* ================================================================
+   USUÁRIOS
+================================================================ */
+let _usuarios = [], _editUserId = null;
+
+async function carregarUsuarios() {
+  try {
+    _usuarios = await api(`usuarios?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(() => []);
+    renderUsuarios();
+  } catch { renderUsuarios(); }
+}
+
+function renderUsuarios() {
+  const el = document.getElementById('usuarios-lista');
+  if (!_usuarios.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:40px">Nenhum usuário cadastrado. Clique em "+ Novo usuário" para adicionar.</div>';
+    return;
+  }
+  const roleMap = { admin: { label: 'Administrador', cls: 'role-admin' }, gerente: { label: 'Gerente', cls: 'role-gerente' }, operador: { label: 'Operador', cls: 'role-operador' } };
+  el.innerHTML = _usuarios.map(u => {
+    const r = roleMap[u.role] || { label: u.role || '—', cls: 'role-operador' };
+    return `<div class="user-card">
+      <div class="user-avatar">${(u.nome||'?')[0].toUpperCase()}</div>
+      <div class="user-info">
+        <div class="user-nome">${escHtml(u.nome || '—')}</div>
+        <div class="user-email">${escHtml(u.email || '—')}</div>
+      </div>
+      <span class="role-badge ${r.cls}">${r.label}</span>
+      <div style="display:flex;gap:6px;margin-left:16px">
+        <button class="btn btn-ghost btn-sm" onclick="editarUsuario('${u.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirUsuario('${u.id}','${escHtml(u.nome||'')}')">Remover</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirModalUsuario() {
+  _editUserId = null;
+  document.getElementById('modal-usuario-titulo').textContent = 'Novo Usuário';
+  ['u-nome','u-email','u-senha'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('u-role').value = 'operador';
+  document.getElementById('btn-usuario').textContent = 'Criar usuário';
+  document.getElementById('modal-usuario').classList.add('open');
+}
+
+function editarUsuario(id) {
+  const u = _usuarios.find(x => x.id === id);
+  if (!u) return;
+  _editUserId = id;
+  document.getElementById('modal-usuario-titulo').textContent = 'Editar Usuário';
+  document.getElementById('u-nome').value = u.nome || '';
+  document.getElementById('u-email').value = u.email || '';
+  document.getElementById('u-senha').value = '';
+  document.getElementById('u-role').value = u.role || 'operador';
+  document.getElementById('btn-usuario').textContent = 'Salvar alterações';
+  document.getElementById('modal-usuario').classList.add('open');
+}
+
+function fecharModalUsuario() { document.getElementById('modal-usuario').classList.remove('open'); }
+
+async function salvarUsuario() {
+  const nome = document.getElementById('u-nome').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const role = document.getElementById('u-role').value;
+  const senha = document.getElementById('u-senha').value;
+  if (!nome) { toast('Informe o nome', 'err'); return; }
+  if (!email) { toast('Informe o e-mail', 'err'); return; }
+  const btn = document.getElementById('btn-usuario');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    const body = { nome, email, role, tenant_id: TENANT_ID };
+    if (senha) body.senha_hash = senha;
+    if (_editUserId) {
+      await api(`usuarios?id=eq.${_editUserId}`, { method: 'PATCH', body: JSON.stringify(body), prefer: 'return=minimal' });
+      toast('Usuário atualizado', 'ok');
+    } else {
+      await api('usuarios', { method: 'POST', body: JSON.stringify(body) });
+      toast('Usuário criado', 'ok');
+    }
+    fecharModalUsuario();
+    await carregarUsuarios();
+  } catch (e) { toast('Erro: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = _editUserId ? 'Salvar alterações' : 'Criar usuário'; }
+}
+
+async function excluirUsuario(id, nome) {
+  if (!confirm(`Remover usuário "${nome}"?`)) return;
+  try {
+    await api(`usuarios?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    toast('Usuário removido', 'ok');
+    await carregarUsuarios();
+  } catch (e) { toast('Erro: ' + e.message, 'err'); }
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) lucide.createIcons();
+  try {
+    const u = JSON.parse(localStorage.getItem('sb_user') || 'null');
+    if (u) document.getElementById('sb-user-nome').textContent = u.nome || u.email || '—';
+  } catch {}
+  initSection();
+});
+</script>
 </body>
 </html>

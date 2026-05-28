@@ -2,65 +2,67 @@
 (function () {
   const page = (location.pathname.split('/').pop() || 'dashboard.html').split('?')[0].split('#')[0];
 
-  // Não sobrescreve páginas com sidebar próprio
   if (page === 'loja.html' || page === 'login.html') return;
 
-  // Ícones SVG inline para os grupos (sem depender do Lucide)
   const GROUP_ICONS = {
-    operacao:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
-    cadastros: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
-    compras:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
-    analises:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
-    producao:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+    operacao:       `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`,
+    cadastros:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
+    compras:        `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
+    analises:       `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+    pcp:            `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+    configuracoes:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
   };
 
   const GROUPS = [
     {
       id: 'operacao', label: 'Operação',
       items: [
-        { href: 'estoque.html',  icon: 'archive',            label: 'Estoque' },
-        { href: 'ajustes.html',  icon: 'sliders-horizontal', label: 'Ajustes' },
+        { href: 'estoque.html',  label: 'Estoque' },
+        { href: 'ajustes.html',  label: 'Ajustes' },
       ]
     },
     {
       id: 'cadastros', label: 'Cadastros',
       items: [
-        { href: 'insumos.html',         icon: 'package',        label: 'Insumos' },
-        { href: 'fichas_tecnicas.html', icon: 'clipboard-list', label: 'Fichas técnicas' },
-        { href: 'fornecedores.html',    icon: 'truck',          label: 'Fornecedores' },
+        { href: 'insumos.html',         label: 'Insumos' },
+        { href: 'fichas_tecnicas.html', label: 'Fichas Técnicas' },
+        { href: 'fornecedores.html',    label: 'Fornecedores' },
       ]
     },
     {
       id: 'compras', label: 'Compras',
       items: [
-        { href: 'compras.html', icon: 'shopping-cart', label: 'Pedidos de compra' },
+        { href: 'compras.html', label: 'Pedidos de Compra' },
       ]
     },
     {
       id: 'analises', label: 'Análises',
       items: [
-        { href: 'relatorios.html', icon: 'file-bar-chart', label: 'Relatórios' },
-        { href: 'cmv.html',        icon: 'bar-chart-2',    label: 'CMV teórico x real' },
-        { href: 'rendimento.html', icon: 'trending-up',    label: 'Rendimento' },
-        { href: 'pdv.html',        icon: 'receipt',        label: 'PDV / Vendas' },
+        { href: 'relatorios.html', label: 'Relatórios' },
+        { href: 'cmv.html',        label: 'CMV Teórico x Real' },
+        { href: 'rendimento.html', label: 'Rendimentos' },
+        { href: 'pdv.html',        label: 'PDV / Vendas' },
       ]
     },
     {
-      id: 'producao', label: 'Produção / PCP',
+      id: 'pcp', label: 'PCP',
       items: [
-        { href: 'pcp.html', tab: 'dashboard',    icon: 'layout-dashboard', label: 'Dashboard PCP' },
-        { href: 'pcp.html', tab: 'producao-dia', icon: 'chef-hat',         label: 'Produção do Dia' },
-        { href: 'pcp.html', tab: 'sugerida',     icon: 'lightbulb',        label: 'Prod. Sugerida' },
-        { href: 'pcp.html', tab: 'sobras',       icon: 'activity',         label: 'Sobras e Perdas' },
-        { href: 'pcp.html', tab: 'consumo',      icon: 'bar-chart-2',      label: 'Consumo Médio' },
-        { href: 'porcionamento.html',             icon: 'scissors',         label: 'Porcionamento' },
+        { href: 'pcp.html', tab: 'producao-dia', label: 'Produção do Dia' },
+        { href: 'porcionamento.html',             label: 'Porcionamento' },
+        { href: 'pcp.html', tab: 'sugerida',     label: 'Produção Sugerida' },
+        { href: 'pcp.html', tab: 'sobras',        label: 'Sobras e Perdas' },
+        { href: 'pcp.html', tab: 'consumo',       label: 'Consumo Médio' },
+      ]
+    },
+    {
+      id: 'configuracoes', label: 'Configurações',
+      items: [
+        { href: 'configuracoes.html', tab: 'geral',      label: 'Geral' },
+        { href: 'configuracoes.html', tab: 'usuarios',   label: 'Usuários' },
+        { href: 'configuracoes.html', tab: 'parametros', label: 'Parâmetros' },
       ]
     },
   ];
-
-  function ico(name) {
-    return `<i data-lucide="${name}" class="nav-icon"></i>`;
-  }
 
   const _urlTab = new URLSearchParams(location.search).get('tab') || '';
 
@@ -71,13 +73,23 @@
     } else {
       active = item.href === page;
     }
+    // Se estiver em configuracoes.html sem tab, marca Geral como ativo
+    if (item.href === 'configuracoes.html' && item.tab === 'geral' && page === 'configuracoes.html' && !_urlTab) {
+      active = true;
+    }
     const href = item.tab ? `${item.href}?tab=${item.tab}` : item.href;
     const dot = `<span style="width:15px;height:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5;display:inline-block"></span></span>`;
     return `<a class="nav-item${active ? ' active' : ''}" href="${href}">${dot}${item.label}</a>`;
   }
 
   function navGroup(g) {
-    const hasActive = g.items.some(i => i.tab ? (i.href === page && i.tab === _urlTab) : i.href === page);
+    const hasActive = g.items.some(i => {
+      if (i.tab) return i.href === page && i.tab === _urlTab;
+      if (i.href === page) return true;
+      // Expandir configuracoes quando estiver na página
+      if (g.id === 'configuracoes' && page === 'configuracoes.html') return true;
+      return false;
+    });
     const key = 'nav-grp-' + g.id;
     const saved = localStorage.getItem(key);
     const collapsed = saved === '1' ? true : saved === '0' ? false : !hasActive;
@@ -92,24 +104,46 @@
     </div>`;
   }
 
-  const isDash   = page === 'dashboard.html';
-  const isConfig = page === 'configuracoes.html';
+  const isDash = page === 'dashboard.html';
+
+  // Usuário do localStorage
+  let userNome = '—', userRole = '';
+  try {
+    const u = JSON.parse(localStorage.getItem('sb_user') || '{}');
+    userNome = u.nome || u.email || '—';
+    userRole = u.role || 'Operador';
+  } catch {}
 
   const html = `
     <div class="logo">
-      <div class="logo-mark">Aiko</div>
-      <div class="logo-sub">sistema</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;background:#f97316;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div>
+          <div class="logo-mark">Aiko</div>
+          <div class="logo-sub">sistema</div>
+        </div>
+      </div>
     </div>
     <div class="nav-group" style="border-bottom:1px solid #e2e8f0;padding-bottom:10px;margin-bottom:4px">
-      <a class="nav-item${isDash ? ' active' : ''}" href="dashboard.html">${ico('layout-dashboard')}Dashboard</a>
+      <a class="nav-item${isDash ? ' active' : ''}" href="dashboard.html">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
     </div>
     ${GROUPS.map(navGroup).join('')}
-    <div class="nav-group" style="border-top:1px solid #e2e8f0;padding-top:8px;margin-top:8px">
-      <a class="nav-item${isConfig ? ' active' : ''}" href="configuracoes.html">${ico('settings')}Configurações</a>
-    </div>
     <div style="flex:1"></div>
-    <div class="nav-bottom">Precisa de ajuda?<br>
+    <div class="nav-bottom">
+      Precisa de ajuda?<br>
       <a href="https://wa.me/5592994948230?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20sistema%20Aiko" target="_blank" rel="noopener">Acesse o suporte</a>
+    </div>
+    <div style="padding:10px 14px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px">
+      <div style="width:30px;height:30px;background:#0f2d5c;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#fff">${(userNome[0]||'U').toUpperCase()}</div>
+      <div style="min-width:0">
+        <div style="font-size:12px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${userNome}</div>
+        <div style="font-size:10px;color:#94a3b8">${userRole}</div>
+      </div>
     </div>`;
 
   const nav = document.querySelector('nav.sidebar');
