@@ -275,6 +275,24 @@
   .form-input[readonly]{background:#f1f5f9;color:var(--text2);cursor:default}
   .form-section{margin-bottom:20px}
   .form-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px}
+  /* ── PORCIONAMENTO ── */
+  .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  .form-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:20px;margin-bottom:14px}
+  .form-card-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:7px}
+  .col-full{grid-column:1/-1}
+  .tipo-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:20px}
+  .tipo-pills{display:flex;background:var(--bg3);border-radius:8px;padding:3px;gap:3px}
+  .tipo-pill{padding:8px 28px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;background:transparent;color:var(--text2);transition:all .15s}
+  .tipo-pill.active{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  #porc-pill-entrada.active{color:var(--blue)}.porc-tipo-ent{color:var(--blue)}
+  #porc-pill-saida.active{color:var(--teal)}.porc-tipo-sai{color:var(--teal)}
+  .calc-box{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 0;display:flex;margin-top:14px}
+  .calc-item{flex:1;text-align:center;padding:0 12px;border-right:1px solid var(--border2)}
+  .calc-item:last-child{border-right:none}
+  .calc-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+  .calc-val{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1)}
+  .b-ent{background:#eff6ff;color:#1d4ed8}.b-sai{background:#f0fdfa;color:#0f766e}
 </style>
 </head>
 <body>
@@ -310,6 +328,10 @@
     <button class="nav-item" id="nav-pcp" onclick="switchTab('pcp')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
       Produção
+    </button>
+    <button class="nav-item" id="nav-porcionamento" onclick="switchTab('porcionamento')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+      Porcionamento
     </button>
   </div>
   <div class="nav-bottom">Precisa de ajuda?<br><a href="https://wa.me/5592994948230?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20sistema%20Aiko" target="_blank" rel="noopener">Acesse o suporte</a></div>
@@ -780,6 +802,175 @@
       </div>
     </div><!-- /tab-pcp -->
 
+    <!-- ══ PORCIONAMENTO ══ -->
+    <div id="tab-porcionamento" class="tab-pane">
+      <div class="page-title">Porcionamento</div>
+      <div class="page-sub">Controle de entrada de matéria-prima e filetagem</div>
+
+      <!-- LISTA -->
+      <div id="porc-list">
+        <div class="filter-bar-wrap">
+          <div class="toolbar">
+            <select class="fil-select" id="porc-f-tipo" onchange="porcRenderLanc()">
+              <option value="">Entrada + Saída</option>
+              <option value="entrada">↓ Entrada</option>
+              <option value="saida">↑ Saída</option>
+            </select>
+            <input type="date" class="fil-select" id="porc-f-de" onchange="porcRenderLanc()" title="De">
+            <span style="color:var(--text3);font-size:12px">–</span>
+            <input type="date" class="fil-select" id="porc-f-ate" onchange="porcRenderLanc()" title="Até">
+            <button class="btn btn-primary ml" onclick="porcNovoLanc()">+ Novo Lançamento</button>
+          </div>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-scroll"><table class="tbl">
+            <thead><tr>
+              <th>Data</th><th>Tipo</th><th>Produto</th><th>Fornecedor</th>
+              <th class="r">Qtd. Peixes</th><th class="r">Peso Bruto</th><th class="r">Rendimento %</th>
+              <th>Responsável</th><th></th>
+            </tr></thead>
+            <tbody id="porc-lanc-body"><tr><td colspan="9" class="empty-st">Carregando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO -->
+      <div id="porc-form" style="display:none">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <button class="btn btn-ghost btn-sm" onclick="porcShowLista()">← Voltar</button>
+          <span id="porc-form-titulo" style="font-size:15px;font-weight:700">Novo Lançamento</span>
+        </div>
+
+        <!-- TIPO -->
+        <div class="tipo-wrap">
+          <span style="font-size:13px;font-weight:700">Tipo de lançamento</span>
+          <div class="tipo-pills">
+            <button class="tipo-pill active" id="porc-pill-entrada" onclick="porcSetTipo('entrada')">↓ Entrada</button>
+            <button class="tipo-pill" id="porc-pill-saida" onclick="porcSetTipo('saida')">↑ Saída</button>
+          </div>
+        </div>
+
+        <!-- IDENTIFICAÇÃO -->
+        <div class="form-card">
+          <div class="form-card-title">Identificação</div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Data *</label>
+              <input class="form-input" id="porc-f-data" type="date">
+            </div>
+            <div class="form-group" id="porc-fg-fornecedor"><label class="form-label">Fornecedor</label>
+              <select class="form-select" id="porc-f-fornecedor"><option value="">Nenhum</option></select>
+            </div>
+            <div class="form-group" id="porc-fg-turno" style="display:none"><label class="form-label">Turno</label>
+              <select class="form-select" id="porc-f-turno">
+                <option value="">Selecione...</option>
+                <option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option>
+              </select>
+            </div>
+            <div class="form-group col-full"><label class="form-label">Responsável</label>
+              <input class="form-input" id="porc-f-responsavel" type="text" placeholder="Nome do colaborador">
+            </div>
+            <div class="form-group col-full"><label class="form-label">Observação</label>
+              <textarea class="form-input" id="porc-f-obs" rows="2" style="resize:vertical"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ENTRADA: RECEBIMENTO -->
+        <div class="form-card" id="porc-sec-recebimento">
+          <div class="form-card-title porc-tipo-ent">↓ Recebimento</div>
+          <div class="form-grid" style="margin-bottom:14px">
+            <div class="form-group"><label class="form-label">Produto recebido *</label>
+              <select class="form-select" id="porc-f-insumo-ent"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Quantidade de peixes</label>
+              <input class="form-input mono" id="porc-f-qtd-ent" type="number" min="1" step="1" placeholder="0">
+            </div>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Peso bruto total c/ cabeça (kg) *</label>
+              <input class="form-input mono" id="porc-f-peso-bruto" type="number" step="0.001" min="0" placeholder="0,000" oninput="porcCalcEntrada()">
+            </div>
+            <div class="form-group"><label class="form-label">Valor total da compra (R$)</label>
+              <input class="form-input mono" id="porc-f-valor-total" type="number" step="0.01" min="0" placeholder="0,00" oninput="porcOnValorChange()">
+            </div>
+            <div class="form-group"><label class="form-label">Custo/kg entrada (R$/kg)</label>
+              <input class="form-input mono" id="porc-f-custo-kg-ent" type="number" step="0.01" min="0" placeholder="0,00" oninput="porcOnCustoKgEntChange()">
+            </div>
+          </div>
+        </div>
+
+        <!-- ENTRADA: QUEBRA INICIAL -->
+        <div class="form-card" id="porc-sec-quebra">
+          <div class="form-card-title" style="color:#dc2626">✕ Quebra Inicial — Cabeça</div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Peso da cabeça descartada (kg)</label>
+              <input class="form-input mono" id="porc-f-cabeca" type="number" step="0.001" min="0" placeholder="0,000" oninput="porcCalcEntrada()">
+            </div>
+            <div class="form-group"><label class="form-label">Peso líquido armazenado (kg)</label>
+              <input class="form-input mono" id="porc-f-liq-arm" type="number" step="0.001" min="0" placeholder="automático" readonly>
+            </div>
+          </div>
+          <div class="calc-box">
+            <div class="calc-item"><div class="calc-lbl">% Cabeça</div><div class="calc-val c-amber" id="porc-cv-pct-cab">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Peso Líq. Armazenado</div><div class="calc-val" id="porc-cv-liq-arm">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Novo Custo/kg</div><div class="calc-val c-blue" id="porc-cv-novo-custo">—</div></div>
+          </div>
+        </div>
+
+        <!-- SAÍDA: PROCESSAMENTO -->
+        <div class="form-card" id="porc-sec-processamento" style="display:none">
+          <div class="form-card-title porc-tipo-sai">↑ Processamento</div>
+          <div class="form-grid" style="margin-bottom:14px">
+            <div class="form-group"><label class="form-label">Produto processado *</label>
+              <select class="form-select" id="porc-f-insumo-sai" onchange="porcOnInsumoSaiChange()"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Quantidade de peixes</label>
+              <input class="form-input mono" id="porc-f-qtd-sai" type="number" min="1" step="1" placeholder="0">
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Peso de entrada (kg) *</label>
+              <input class="form-input mono" id="porc-f-peso-entrada" type="number" step="0.001" min="0" placeholder="0,000" oninput="porcCalcSaida()">
+            </div>
+            <div class="form-group"><label class="form-label">Custo/kg de entrada (R$/kg)</label>
+              <input class="form-input mono" id="porc-f-custo-kg-sai" type="number" step="0.01" min="0" placeholder="0,00" oninput="porcCalcSaida()">
+            </div>
+          </div>
+        </div>
+
+        <!-- SAÍDA: RESULTADOS -->
+        <div class="form-card" id="porc-sec-resultados" style="display:none">
+          <div class="form-card-title" style="color:#16a34a">✓ Resultados</div>
+          <div class="form-grid-4">
+            <div class="form-group"><label class="form-label">Filé limpo (kg)</label>
+              <input class="form-input mono" id="porc-f-file-limpo" type="number" step="0.001" min="0" placeholder="0,000" oninput="porcCalcSaida()">
+            </div>
+            <div class="form-group"><label class="form-label">Pele (kg)</label>
+              <input class="form-input mono" id="porc-f-pele" type="number" step="0.001" min="0" placeholder="0,000" oninput="porcCalcSaida()">
+            </div>
+            <div class="form-group"><label class="form-label">Aparas (kg)</label>
+              <input class="form-input mono" id="porc-f-aparas" type="number" step="0.001" min="0" placeholder="0,000" oninput="porcCalcSaida()">
+            </div>
+            <div class="form-group"><label class="form-label">Perdas (kg)</label>
+              <input class="form-input mono" id="porc-f-perdas" type="number" step="0.001" min="0" placeholder="automático" readonly>
+            </div>
+          </div>
+          <div class="calc-box">
+            <div class="calc-item"><div class="calc-lbl">Total Aprov.</div><div class="calc-val c-green" id="porc-sv-aprov">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Perdas</div><div class="calc-val c-red" id="porc-sv-perdas">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Rendimento Op.</div><div class="calc-val c-amber" id="porc-sv-rend">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Custo/kg Filé</div><div class="calc-val" id="porc-sv-custo-file">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Custo/kg Aprov.</div><div class="calc-val" id="porc-sv-custo-aprov">—</div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+          <button class="btn btn-ghost" onclick="porcShowLista()">Cancelar</button>
+          <button class="btn btn-primary" id="porc-btn-salvar" onclick="porcSalvarLanc()">Salvar Lançamento</button>
+        </div>
+      </div>
+    </div><!-- /tab-porcionamento -->
+
   </div>
 </div>
 </div>
@@ -1049,7 +1240,7 @@ async function carregar() {
 function switchTab(tab) {
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  ['inventario','solicitacao','perdas','estoque','pcp'].forEach(t => {
+  ['inventario','solicitacao','perdas','estoque','pcp','porcionamento'].forEach(t => {
     document.getElementById('nav-'+t)?.classList.toggle('active', t===tab);
     const mn = document.getElementById('mnav-'+t);
     if (mn) mn.classList.toggle('active', t===tab);
@@ -1058,6 +1249,7 @@ function switchTab(tab) {
   if (tab==='perdas') carregarHistoricoPerdas();
   if (tab==='estoque') iniciarEstoque();
   if (tab==='pcp') iniciarPcp();
+  if (tab==='porcionamento') iniciarPorcionamento();
   window.scrollTo(0,0);
 }
 
@@ -2316,6 +2508,277 @@ async function renderConsumo(){
     if(e.target===this){if(id==='modal-prod')fecharModalProd();else fecharModalSobra();}
   });
 });
+
+/* ================================================================
+   PORCIONAMENTO
+================================================================ */
+let porcLancs=[], _porcEditId=null, _porcTipo='entrada', _porcIniciado=false;
+
+function _porcN(id){return parseFloat(document.getElementById(id)?.value)||0;}
+function _porcSv(id,v){const e=document.getElementById(id);if(e)e.value=v!=null?v:'';}
+function _porcSe(id,t){const e=document.getElementById(id);if(e)e.textContent=t;}
+function _porcR3(v){return Math.round(v*1000)/1000;}
+function _porcR2(v){return Math.round(v*100)/100;}
+function _porcKg(v){if(v==null||v===''||isNaN(v)||Number(v)===0)return'—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';}
+function _porcPct(v){if(v==null||isNaN(v))return'—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';}
+function _porcBrl(v){if(v==null||isNaN(v))return'—';return'R$ '+Number(v).toFixed(2).replace('.',',');}
+function _porcFmtDate(d){if(!d)return'—';const[y,m,dd]=(d+'').split('-');return`${dd}/${m}/${y}`;}
+
+async function iniciarPorcionamento(){
+  if(!_porcIniciado){
+    _porcIniciado=true;
+    await _porcCarregar();
+  }
+  porcShowLista();
+  porcRenderLanc();
+}
+
+async function _porcCarregar(){
+  try{
+    porcLancs=await api(`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`).catch(()=>[]);
+    // Popula selects com insumos e fornecedores já carregados pelo carregar() principal
+    const insOpts='<option value="">Selecione o insumo...</option>'+insumos.map(i=>`<option value="${i.id}" data-custo="${i.preco_compra||0}">${esc(i.nome)}</option>`).join('');
+    document.getElementById('porc-f-insumo-ent').innerHTML=insOpts;
+    document.getElementById('porc-f-insumo-sai').innerHTML=insOpts;
+    const fornOpts='<option value="">Nenhum</option>'+fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</option>`).join('');
+    document.getElementById('porc-f-fornecedor').innerHTML=fornOpts;
+    // Datas padrão do relatório
+    const h=hoje();const m=primeiroDiaMes?primeiroDiaMes():'';
+    _porcSv('porc-f-de',m);_porcSv('porc-f-ate',h);
+  }catch(e){toast('Erro ao carregar porcionamento: '+e.message,'err');}
+}
+
+function porcShowLista(){
+  document.getElementById('porc-list').style.display='';
+  document.getElementById('porc-form').style.display='none';
+  porcRenderLanc();
+}
+function porcShowForm(){
+  document.getElementById('porc-list').style.display='none';
+  document.getElementById('porc-form').style.display='block';
+}
+
+function porcRenderLanc(){
+  const tipo=document.getElementById('porc-f-tipo')?.value||'';
+  const de=document.getElementById('porc-f-de')?.value||'';
+  const ate=document.getElementById('porc-f-ate')?.value||'';
+  const lojaId=userProfile?.loja_id||null;
+  const rows=porcLancs.filter(l=>{
+    if(tipo&&l.tipo!==tipo)return false;
+    if(de&&l.data<de)return false;
+    if(ate&&l.data>ate)return false;
+    if(lojaId&&l.loja_id&&l.loja_id!==lojaId)return false;
+    return true;
+  });
+  const tbody=document.getElementById('porc-lanc-body');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty-st">Nenhum lançamento encontrado.</td></tr>';return;}
+  tbody.innerHTML=rows.map(l=>{
+    const ins=insumos.find(i=>i.id===l.insumo_id);
+    const forn=fornecedores.find(f=>f.id===l.fornecedor_id);
+    const isEnt=l.tipo==='entrada';
+    const badge=isEnt?'<span class="badge b-ent">↓ Entrada</span>':'<span class="badge b-sai">↑ Saída</span>';
+    return `<tr>
+      <td>${_porcFmtDate(l.data)}</td>
+      <td>${badge}</td>
+      <td style="font-weight:600">${esc(ins?.nome||'—')}</td>
+      <td>${esc(forn?(forn.nome_fantasia||forn.nome||forn.razao_social||'—'):'—')}</td>
+      <td class="r mono">${l.qtd_peixes||'—'}</td>
+      <td class="r mono">${_porcKg(l.peso_bruto)}</td>
+      <td class="r">${l.rendimento_pct!=null?_porcPct(l.rendimento_pct):'—'}</td>
+      <td>${esc(l.responsavel||'—')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="porcEditar('${l.id}')">Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="porcExcluir('${l.id}')" style="color:#dc2626;margin-left:4px">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function porcNovoLanc(){
+  _porcEditId=null;
+  _porcResetForm();
+  document.getElementById('porc-form-titulo').textContent='Novo Lançamento';
+  porcShowForm();
+}
+function porcEditar(id){
+  const l=porcLancs.find(x=>x.id===id);if(!l)return;
+  _porcEditId=id;
+  _porcResetForm();
+  porcSetTipo(l.tipo||'entrada');
+  _porcSv('porc-f-data',l.data||'');
+  _porcSv('porc-f-responsavel',l.responsavel||'');
+  _porcSv('porc-f-obs',l.observacoes||'');
+  if(l.tipo==='entrada'){
+    _porcSv('porc-f-insumo-ent',l.insumo_id||'');
+    _porcSv('porc-f-qtd-ent',l.qtd_peixes||'');
+    _porcSv('porc-f-peso-bruto',l.peso_bruto||'');
+    _porcSv('porc-f-valor-total',l.valor_total||'');
+    _porcSv('porc-f-custo-kg-ent',l.custo_unitario||'');
+    _porcSv('porc-f-cabeca',l.perda_cabeca||'');
+    _porcSv('porc-f-fornecedor',l.fornecedor_id||'');
+    porcCalcEntrada();
+  }else{
+    _porcSv('porc-f-insumo-sai',l.insumo_id||'');
+    _porcSv('porc-f-qtd-sai',l.qtd_peixes||'');
+    _porcSv('porc-f-peso-entrada',l.peso_bruto||'');
+    _porcSv('porc-f-custo-kg-sai',l.custo_unitario||'');
+    _porcSv('porc-f-file-limpo',l.peso_limpo||'');
+    _porcSv('porc-f-pele',l.pele||'');
+    _porcSv('porc-f-aparas',l.aparas||'');
+    _porcSv('porc-f-turno',l.turno||'');
+    porcCalcSaida();
+  }
+  document.getElementById('porc-form-titulo').textContent='Editar Lançamento';
+  porcShowForm();
+}
+function _porcResetForm(){
+  ['porc-f-data','porc-f-fornecedor','porc-f-turno','porc-f-responsavel','porc-f-obs',
+   'porc-f-insumo-ent','porc-f-qtd-ent','porc-f-peso-bruto','porc-f-valor-total','porc-f-custo-kg-ent','porc-f-cabeca','porc-f-liq-arm',
+   'porc-f-insumo-sai','porc-f-qtd-sai','porc-f-peso-entrada','porc-f-custo-kg-sai','porc-f-file-limpo','porc-f-pele','porc-f-aparas','porc-f-perdas']
+  .forEach(id=>_porcSv(id,''));
+  _porcSv('porc-f-data',hoje());
+  porcSetTipo('entrada');
+  ['porc-cv-pct-cab','porc-cv-liq-arm','porc-cv-novo-custo','porc-sv-aprov','porc-sv-perdas','porc-sv-rend','porc-sv-custo-file','porc-sv-custo-aprov']
+  .forEach(id=>_porcSe(id,'—'));
+}
+
+function porcSetTipo(tipo){
+  _porcTipo=tipo;
+  document.getElementById('porc-pill-entrada').classList.toggle('active',tipo==='entrada');
+  document.getElementById('porc-pill-saida').classList.toggle('active',tipo==='saida');
+  ['porc-sec-recebimento','porc-sec-quebra'].forEach(id=>{
+    document.getElementById(id).style.display=tipo==='entrada'?'':'none';
+  });
+  ['porc-sec-processamento','porc-sec-resultados'].forEach(id=>{
+    document.getElementById(id).style.display=tipo==='saida'?'':'none';
+  });
+  document.getElementById('porc-fg-fornecedor').style.display=tipo==='entrada'?'':'none';
+  document.getElementById('porc-fg-turno').style.display=tipo==='saida'?'':'none';
+}
+
+function porcCalcEntrada(){
+  const bruto=_porcN('porc-f-peso-bruto');
+  const cabeca=_porcN('porc-f-cabeca');
+  const liq=_porcR3(bruto-cabeca);
+  const valor=_porcN('porc-f-valor-total');
+  _porcSv('porc-f-liq-arm',liq>0?liq:'');
+  _porcSe('porc-cv-pct-cab',bruto>0?_porcPct(_porcR2(cabeca/bruto*100)):'—');
+  _porcSe('porc-cv-liq-arm',liq>0?_porcKg(liq):'—');
+  const novoCusto=liq>0&&valor>0?_porcR2(valor/liq):null;
+  _porcSe('porc-cv-novo-custo',novoCusto?_porcBrl(novoCusto):'—');
+}
+function porcOnValorChange(){
+  const bruto=_porcN('porc-f-peso-bruto'),val=_porcN('porc-f-valor-total');
+  if(bruto>0&&val>0) _porcSv('porc-f-custo-kg-ent',_porcR2(val/bruto));
+  porcCalcEntrada();
+}
+function porcOnCustoKgEntChange(){
+  const bruto=_porcN('porc-f-peso-bruto'),custo=_porcN('porc-f-custo-kg-ent');
+  if(bruto>0&&custo>0) _porcSv('porc-f-valor-total',_porcR2(bruto*custo));
+  porcCalcEntrada();
+}
+function porcOnInsumoSaiChange(){
+  const sel=document.getElementById('porc-f-insumo-sai');
+  const opt=sel.options[sel.selectedIndex];
+  const custo=parseFloat(opt?.dataset?.custo)||0;
+  if(custo>0) _porcSv('porc-f-custo-kg-sai',custo);
+  porcCalcSaida();
+}
+function porcCalcSaida(){
+  const entrada=_porcN('porc-f-peso-entrada');
+  const file=_porcN('porc-f-file-limpo');
+  const pele=_porcN('porc-f-pele');
+  const aparas=_porcN('porc-f-aparas');
+  const aprov=_porcR3(file+pele+aparas);
+  const perdas=_porcR3(Math.max(0,entrada-aprov));
+  const rend=entrada>0?_porcR2(aprov/entrada*100):null;
+  const custoKg=_porcN('porc-f-custo-kg-sai');
+  const valorEnt=custoKg*entrada;
+  _porcSv('porc-f-perdas',perdas>0?perdas:'');
+  _porcSe('porc-sv-aprov',aprov>0?_porcKg(aprov):'—');
+  _porcSe('porc-sv-perdas',perdas>0?_porcKg(perdas):'—');
+  _porcSe('porc-sv-rend',rend!=null?_porcPct(rend):'—');
+  _porcSe('porc-sv-custo-file',file>0&&custoKg>0?_porcBrl(_porcR2(valorEnt/file)):'—');
+  _porcSe('porc-sv-custo-aprov',aprov>0&&custoKg>0?_porcBrl(_porcR2(valorEnt/aprov)):'—');
+}
+
+async function porcSalvarLanc(){
+  const data=document.getElementById('porc-f-data').value;
+  if(!data){toast('Informe a data.','err');return;}
+  const lojaId=userProfile?.loja_id||null;
+  let payload={tipo:_porcTipo,data,tenant_id:TENANT_ID,
+    loja_id:lojaId,
+    observacoes:document.getElementById('porc-f-obs').value.trim()||null,
+    responsavel:document.getElementById('porc-f-responsavel').value.trim()||null};
+
+  if(_porcTipo==='entrada'){
+    const insumoId=document.getElementById('porc-f-insumo-ent').value;
+    if(!insumoId){toast('Selecione o produto recebido.','err');return;}
+    const bruto=_porcN('porc-f-peso-bruto');
+    if(!bruto){toast('Informe o peso bruto total.','err');return;}
+    const cabeca=_porcN('porc-f-cabeca');
+    const liq=_porcR3(bruto-cabeca);
+    const valor=_porcN('porc-f-valor-total');
+    const custoKg=_porcN('porc-f-custo-kg-ent');
+    Object.assign(payload,{
+      insumo_id:insumoId,
+      fornecedor_id:document.getElementById('porc-f-fornecedor').value||null,
+      qtd_peixes:parseInt(document.getElementById('porc-f-qtd-ent').value)||null,
+      peso_bruto:bruto||null,valor_total:valor||null,custo_unitario:custoKg||null,
+      perda_cabeca:cabeca||null,peso_limpo:liq>0?liq:null,
+      pct_cabeca:bruto>0?_porcR2(cabeca/bruto*100):null,
+      novo_custo_kg:(liq>0&&valor>0)?_porcR2(valor/liq):null,
+    });
+  }else{
+    const insumoId=document.getElementById('porc-f-insumo-sai').value;
+    if(!insumoId){toast('Selecione o produto processado.','err');return;}
+    const entrada=_porcN('porc-f-peso-entrada');
+    if(!entrada){toast('Informe o peso de entrada.','err');return;}
+    const file=_porcN('porc-f-file-limpo');
+    const peleV=_porcN('porc-f-pele');
+    const aparasV=_porcN('porc-f-aparas');
+    const aprov=_porcR3(file+peleV+aparasV);
+    const perdas=_porcR3(Math.max(0,entrada-aprov));
+    const rend=entrada>0?_porcR2(aprov/entrada*100):null;
+    const custoKg=_porcN('porc-f-custo-kg-sai');
+    const valorEnt=custoKg*entrada;
+    Object.assign(payload,{
+      insumo_id:insumoId,
+      turno:document.getElementById('porc-f-turno').value||null,
+      qtd_peixes:parseInt(document.getElementById('porc-f-qtd-sai').value)||null,
+      peso_bruto:entrada||null,custo_unitario:custoKg||null,
+      peso_limpo:file||null,pele:peleV||null,aparas:aparasV||null,
+      perda_outros:perdas>0?perdas:null,rendimento_pct:rend,
+      custo_kg_file:(file>0&&custoKg>0)?_porcR2(valorEnt/file):null,
+      custo_kg_aprov:(aprov>0&&custoKg>0)?_porcR2(valorEnt/aprov):null,
+    });
+  }
+
+  const btn=document.getElementById('porc-btn-salvar');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(_porcEditId){
+      await api(`porcao_lancamentos?id=eq.${_porcEditId}`,{method:'PATCH',body:JSON.stringify(payload)});
+      toast('Lançamento atualizado.','ok');
+    }else{
+      await api('porcao_lancamentos',{method:'POST',body:JSON.stringify(payload)});
+      toast('Lançamento registrado.','ok');
+    }
+    porcLancs=await api(`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`).catch(()=>[]);
+    porcShowLista();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar Lançamento';}
+}
+
+async function porcExcluir(id){
+  if(!confirm('Excluir este lançamento?'))return;
+  try{
+    await api(`porcao_lancamentos?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+    toast('Excluído.','ok');
+    porcLancs=porcLancs.filter(l=>l.id!==id);
+    porcRenderLanc();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
