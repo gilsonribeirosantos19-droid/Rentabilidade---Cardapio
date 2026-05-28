@@ -3,67 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="design-system.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal do Gerente · Aiko</title>
 <style>
   :root{
-    --bg:#f8fafc;--bg2:#fff;--bg3:#f1f5f9;--border:#e2e8f0;
     --orange:#f97316;--blue:#3b82f6;--green:#16a34a;--red:#dc2626;--amber:#f59e0b;
+    --bg:#f8fafc;--bg3:#f1f5f9;--border:#e2e8f0;
     --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
-    --radius:10px;--radius-lg:16px;--filter-top:0px;
+    --sidebar-w:220px;--radius:10px;--radius-lg:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text1);min-height:100vh;display:flex}
-  .shell{display:flex;width:100%;min-height:100vh}
-  .sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
-  .logo{padding:0 18px 20px;border-bottom:1px solid var(--border);margin-bottom:16px}
-  .logo-mark{font-size:16px;font-weight:800;color:#0f172a}
-  .logo-sub{font-size:11px;color:var(--orange);font-family:'DM Mono',monospace;margin-top:1px}
-  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
-  .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
-  .content{flex:1;padding:24px;overflow-y:auto}
 
-  /* HEADER PORTAL */
-  .portal-header{background:linear-gradient(135deg,#0f2d5c 0%,#1e3a6e 100%);border-radius:var(--radius-lg);padding:28px 32px;margin-bottom:24px;color:#fff;display:flex;align-items:center;justify-content:space-between}
-  .portal-title{font-size:22px;font-weight:800;margin-bottom:4px}
-  .portal-sub{font-size:13px;opacity:.7}
-  .portal-date{font-size:13px;opacity:.8;text-align:right}
-  .portal-day{font-size:28px;font-weight:700;line-height:1}
+  /* ── SIDEBAR PRÓPRIA ── */
+  .p-sidebar{width:var(--sidebar-w);background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .p-logo{padding:16px 18px 14px;border-bottom:1px solid var(--border)}
+  .p-logo-mark{font-size:18px;font-weight:800;color:var(--text1);line-height:1}
+  .p-logo-sub{font-size:11px;color:var(--orange);font-family:monospace;margin-top:1px}
+  .p-logo-loja{font-size:11px;color:var(--text3);margin-top:2px}
+  .p-nav{flex:1;padding:10px 0}
+  .p-nav-section{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:12px 18px 6px}
+  .p-nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .1s;border:none;background:none;width:100%;text-align:left;text-decoration:none;font-family:inherit}
+  .p-nav-item:hover{background:var(--bg3);color:var(--text1)}
+  .p-nav-item.active{background:#fff7ed;color:var(--orange);font-weight:600}
+  .p-nav-item svg{flex-shrink:0;opacity:.7}
+  .p-nav-item.active svg{opacity:1}
+  .p-bottom{padding:12px 18px;border-top:1px solid var(--border);font-size:12px;color:var(--text3)}
+  .p-bottom a{color:var(--orange);text-decoration:none;font-size:12px}
+  .p-user{padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+  .p-avatar{width:30px;height:30px;background:#0f2d5c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+  .p-user-nome{font-size:12px;font-weight:600;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .p-user-role{font-size:10px;color:var(--text3)}
 
-  /* MODULE TILES */
-  .modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:28px}
-  .mod-tile{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;cursor:pointer;transition:all .15s;text-decoration:none;display:flex;flex-direction:column;gap:10px}
-  .mod-tile:hover{border-color:var(--orange);box-shadow:0 4px 12px rgba(249,115,22,.12);transform:translateY(-1px)}
-  .mod-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .mod-name{font-size:14px;font-weight:700;color:var(--text1)}
-  .mod-desc{font-size:12px;color:var(--text2);line-height:1.4}
+  /* ── MAIN ── */
+  .p-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .p-topbar{height:52px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
+  .p-topbar-left{display:flex;align-items:center;gap:10px}
+  .p-topbar-title{font-size:15px;font-weight:700;color:var(--text1)}
+  .p-topbar-sub{font-size:12px;color:var(--text3)}
+  .p-content{flex:1;overflow-y:auto}
 
-  /* SECTION CARD */
-  .section-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:20px;overflow:hidden}
-  .section-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-  .section-title{font-size:14px;font-weight:700;color:var(--text1);display:flex;align-items:center;gap:8px}
-  .section-body{padding:20px}
+  /* ── SEÇÕES ── */
+  .p-section{display:none;padding:20px 24px 32px}
+  .p-section.active{display:block}
 
-  /* BUTTONS */
+  /* ── CARDS KPI ── */
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+  .kpi{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+  .kpi-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+  .kpi-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;color:var(--text1)}
+  .kpi-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+  /* ── TABS ── */
+  .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px}
+  .tab-btn{padding:10px 18px;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;transition:all .15s}
+  .tab-btn.active{color:var(--orange);border-bottom-color:var(--orange);font-weight:600}
+  .tab-pane{display:none}.tab-pane.active{display:block}
+
+  /* ── BUTTONS ── */
   .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap;text-decoration:none}
   .btn-primary{background:var(--orange);color:#fff}.btn-primary:hover{background:#ea6c00}
-  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text1);border-color:var(--text2)}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text1)}
   .btn-sm{padding:5px 10px;font-size:12px}
+  .btn-danger{background:#fff0f0;border:1px solid #fecaca;color:var(--red);border-radius:7px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px}
 
-  /* PCP INLINE */
-  .pcp-tabs{display:flex;gap:0;border-bottom:1px solid var(--border)}
-  .pcp-tab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;transition:all .15s}
-  .pcp-tab.active{color:var(--orange);border-bottom-color:var(--orange);font-weight:600}
-  .pcp-pane{display:none;padding:20px}.pcp-pane.active{display:block}
+  /* ── FILTROS ── */
+  .filter-bar{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:18px}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .fil-select{height:36px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);background:var(--bg);outline:none;cursor:pointer}
+  .fil-date{height:36px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);background:var(--bg);outline:none}
+  .fil-date:focus,.fil-select:focus{border-color:var(--orange)}
+  .ml{margin-left:auto}
 
-  /* TABLE */
+  /* ── TABLE ── */
   .tbl-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:clip}
-  .tbl-scroll{overflow-x:auto}
+  .tbl-scroll{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 340px)}
   table{width:100%;border-collapse:collapse;font-size:13px}
   thead tr{background:#0f2d5c}
-  th{padding:9px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  th{padding:9px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;position:sticky;top:0;z-index:5;background:#0f2d5c}
   td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
   tr:last-child td{border-bottom:none}
   tbody tr:hover td{background:var(--bg3)}
@@ -71,159 +88,301 @@
   .mono{font-family:'DM Mono',monospace}
   .badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
   .b-ok{background:#f0fdf4;color:#16a34a}.b-warn{background:#fef3c7;color:#b45309}.b-err{background:#fef2f2;color:#dc2626}
+  .b-manha{background:#eff6ff;color:#1d4ed8}.b-tarde{background:#fef3c7;color:#b45309}.b-noite{background:#f5f3ff;color:#6d28d9}
 
-  /* TOAST / EMPTY */
+  /* ── MODAL ── */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+  .overlay.open{display:flex}
+  .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.16)}
+  .modal-header{padding:16px 22px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+  .modal-title{font-size:14px;font-weight:700}
+  .modal-close{background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1}
+  .modal-body{padding:20px 22px}
+  .modal-footer{padding:12px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:#fff}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .form-group{display:flex;flex-direction:column;gap:4px}
+  .form-label{font-size:11px;font-weight:700;color:var(--text2)}
+  .form-input,.form-select,.form-textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);outline:none;background:#fff;transition:border-color .15s;width:100%}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
+  .form-input[readonly]{background:var(--bg3);color:var(--text2)}
+  .form-textarea{resize:vertical;min-height:60px}
+  .col-full{grid-column:1/-1}
+  .section-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .section-title{font-size:15px;font-weight:700;color:var(--text1)}
+
+  /* ── ACCESS DENIED ── */
+  .access-denied{display:none;padding:100px 24px;text-align:center}
+
+  /* ── EMPTY / TOAST ── */
   .empty-st{padding:40px;text-align:center;color:var(--text3);font-size:13px}
   .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:380px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
   .toast.show{opacity:1;transform:translateY(0)}.toast.ok{border-color:var(--green);color:var(--green)}.toast.err{border-color:var(--red);color:var(--red)}
   ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-
-  /* ACCESS DENIED */
-  .access-denied{display:none;padding:80px 24px;text-align:center}
-  .access-denied svg{opacity:.25;margin-bottom:16px}
 </style>
 </head>
 <body>
-<div class="shell">
+<div style="display:flex;width:100%;min-height:100vh">
 
-<nav class="sidebar"></nav>
-
-<div class="main">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div>
-      <div style="font-size:16px;font-weight:700;color:var(--text1)">Portal do Gerente</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:1px">Visão operacional e gestão do dia</div>
+<!-- ════════════════ SIDEBAR PRÓPRIA ════════════════ -->
+<div class="p-sidebar">
+  <div class="p-logo">
+    <div class="p-logo-mark">Aiko</div>
+    <div class="p-logo-sub">sistema</div>
+    <div class="p-logo-loja" id="p-loja-nome">—</div>
+  </div>
+  <div class="p-nav" id="p-nav">
+    <!-- preenchido pelo JS com base nas permissões -->
+  </div>
+  <div class="p-bottom">
+    Precisa de ajuda?<br>
+    <a href="https://wa.me/5592994948230" target="_blank" rel="noopener">Acesse o suporte</a>
+  </div>
+  <div class="p-user">
+    <div class="p-avatar" id="p-avatar">?</div>
+    <div style="min-width:0">
+      <div class="p-user-nome" id="p-user-nome">—</div>
+      <div class="p-user-role" id="p-user-role">—</div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:var(--text1)">—</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <button onclick="sair()" style="background:#fff0f0;border:1px solid #fecaca;color:#dc2626;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Sair
-      </button>
+    <button onclick="sair()" title="Sair" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);padding:4px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════ MAIN ════════════════ -->
+<div class="p-main">
+  <div class="p-topbar">
+    <div class="p-topbar-left">
+      <span class="p-topbar-title" id="p-topbar-title">Portal do Gerente</span>
+      <span style="color:var(--text3);font-size:13px">·</span>
+      <span class="p-topbar-sub" id="p-topbar-sub">—</span>
     </div>
+    <span style="font-size:12px;color:var(--text3)" id="p-data-hoje">—</span>
   </div>
 
-  <div class="content">
+  <div class="p-content">
 
     <!-- ACESSO NEGADO -->
     <div class="access-denied" id="access-denied">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-      <div style="font-size:18px;font-weight:700;color:var(--text1);margin-bottom:8px">Acesso não autorizado</div>
-      <div style="font-size:13px;color:var(--text2)">Você não tem permissão para acessar o Portal do Gerente.</div>
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.2;margin-bottom:16px"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">Acesso não autorizado</div>
+      <div style="font-size:13px;color:var(--text2)">Você não tem permissão para acessar este portal.</div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <div id="portal-content">
-
-      <!-- HEADER -->
-      <div class="portal-header">
-        <div>
-          <div class="portal-title">Bom trabalho, <span id="portal-nome">—</span>!</div>
-          <div class="portal-sub" id="portal-sub">Sushi Ponta Negra</div>
-        </div>
-        <div class="portal-date">
-          <div class="portal-day" id="portal-dia">—</div>
-          <div id="portal-data-ext" style="font-size:12px;opacity:.7;margin-top:2px">—</div>
-        </div>
+    <!-- ── PCP ── -->
+    <div id="sec-pcp" class="p-section">
+      <div class="section-title-row">
+        <div class="section-title">PCP — Controle de Produção</div>
       </div>
 
-      <!-- ATALHOS DE MÓDULOS (baseados nas permissões) -->
-      <div id="modulos-wrap">
-        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Acesso Rápido</div>
-        <div class="modules-grid" id="modulos-grid"></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="setPcpTab('producao',this)">Produção do Dia</button>
+        <button class="tab-btn" onclick="setPcpTab('sobras',this)">Sobras e Perdas</button>
+        <button class="tab-btn" onclick="setPcpTab('sugerida',this)">Produção Sugerida</button>
+        <button class="tab-btn" onclick="setPcpTab('consumo',this)">Consumo Médio</button>
       </div>
 
-      <!-- PCP — SEÇÃO PRINCIPAL -->
-      <div class="section-card" id="sec-pcp">
-        <div class="section-head">
-          <div class="section-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-            PCP — Controle de Produção
-          </div>
-          <a href="pcp.html" class="btn btn-ghost btn-sm">Abrir completo →</a>
-        </div>
-
-        <!-- Abas PCP inline -->
-        <div class="pcp-tabs">
-          <button class="pcp-tab active" onclick="setPcpTab('producao',this)">Produção do Dia</button>
-          <button class="pcp-tab" onclick="setPcpTab('sobras',this)">Sobras e Perdas</button>
-          <button class="pcp-tab" onclick="setPcpTab('consumo',this)">Consumo Médio</button>
-        </div>
-
-        <!-- ABA: PRODUÇÃO DO DIA -->
-        <div class="pcp-pane active" id="pcp-pane-producao">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="date" id="pcp-data-filtro" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#fff" onchange="carregarProducao()">
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="window.location.href='pcp.html?tab=producao-dia'">
+      <!-- PRODUÇÃO DO DIA -->
+      <div class="tab-pane active" id="pcp-producao">
+        <div class="filter-bar">
+          <div class="toolbar">
+            <input type="date" class="fil-date" id="prod-data" onchange="carregarProducao()">
+            <select class="fil-select" id="prod-turno" onchange="carregarProducao()">
+              <option value="">Todos os turnos</option>
+              <option value="Manhã">Manhã</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Noite">Noite</option>
+            </select>
+            <button class="btn btn-primary ml" onclick="abrirModalProd()">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Novo Lançamento
             </button>
           </div>
-          <div class="tbl-card"><div class="tbl-scroll">
-            <table>
-              <thead><tr>
-                <th>Produto</th><th class="r">Qtd. Planejada</th><th class="r">Qtd. Produzida</th>
-                <th>Turno</th><th>Responsável</th><th>Status</th>
-              </tr></thead>
-              <tbody id="pcp-prod-tbody"><tr><td colspan="6" class="empty-st">Selecione uma data</td></tr></tbody>
-            </table>
-          </div></div>
         </div>
+        <div class="tbl-card"><div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th>Produto</th><th>Turno</th><th class="r">Qtd. Planejada</th>
+              <th class="r">Qtd. Produzida</th><th>Responsável</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="prod-tbody"><tr><td colspan="7" class="empty-st">Selecione uma data</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
 
-        <!-- ABA: SOBRAS E PERDAS -->
-        <div class="pcp-pane" id="pcp-pane-sobras">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-            <input type="date" id="pcp-sobras-data" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#fff" onchange="carregarSobras()">
+      <!-- SOBRAS E PERDAS -->
+      <div class="tab-pane" id="pcp-sobras">
+        <div class="filter-bar">
+          <div class="toolbar">
+            <input type="date" class="fil-date" id="sob-data" onchange="carregarSobras()">
+            <button class="btn btn-primary ml" onclick="abrirModalSobra()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Registrar Sobra
+            </button>
           </div>
-          <div class="tbl-card"><div class="tbl-scroll">
-            <table>
-              <thead><tr>
-                <th>Produto</th><th class="r">Qtd. Inicial</th><th class="r">Sobra</th>
-                <th class="r">Perda</th><th class="r">% Perda</th><th>Turno</th>
-              </tr></thead>
-              <tbody id="pcp-sobras-tbody"><tr><td colspan="6" class="empty-st">Selecione uma data</td></tr></tbody>
-            </table>
-          </div></div>
         </div>
+        <div class="tbl-card"><div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th>Produto</th><th>Turno</th><th class="r">Qtd. Inicial</th>
+              <th class="r">Sobra</th><th class="r">Perda</th><th class="r">% Perda</th><th></th>
+            </tr></thead>
+            <tbody id="sob-tbody"><tr><td colspan="7" class="empty-st">Selecione uma data</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
 
-        <!-- ABA: CONSUMO MÉDIO -->
-        <div class="pcp-pane" id="pcp-pane-consumo">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-            <div style="font-size:12px;color:var(--text2)">Últimos</div>
-            <select id="pcp-consumo-dias" onchange="carregarConsumo()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#fff">
+      <!-- PRODUÇÃO SUGERIDA -->
+      <div class="tab-pane" id="pcp-sugerida">
+        <div class="filter-bar">
+          <div class="toolbar">
+            <input type="date" class="fil-date" id="sug-data" onchange="carregarSugerida()">
+          </div>
+        </div>
+        <div class="tbl-card"><div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th>Produto</th><th class="r">Consumo Médio</th>
+              <th class="r">Estoque Atual</th><th class="r">Sugestão</th>
+            </tr></thead>
+            <tbody id="sug-tbody"><tr><td colspan="4" class="empty-st">Selecione uma data</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- CONSUMO MÉDIO -->
+      <div class="tab-pane" id="pcp-consumo">
+        <div class="filter-bar">
+          <div class="toolbar">
+            <span style="font-size:13px;color:var(--text2)">Últimos</span>
+            <select class="fil-select" id="cons-dias" onchange="carregarConsumo()">
               <option value="7">7 dias</option>
               <option value="15">15 dias</option>
               <option value="30" selected>30 dias</option>
             </select>
           </div>
-          <div class="tbl-card"><div class="tbl-scroll">
-            <table>
-              <thead><tr>
-                <th>Produto</th><th class="r">Consumo Médio/dia</th><th class="r">Total Período</th>
-                <th class="r">Dias com Prod.</th>
-              </tr></thead>
-              <tbody id="pcp-consumo-tbody"><tr><td colspan="4" class="empty-st">Carregando...</td></tr></tbody>
-            </table>
-          </div></div>
         </div>
+        <div class="tbl-card"><div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th>Produto</th><th class="r">Consumo Médio/dia</th>
+              <th class="r">Total Período</th><th class="r">Dias com Produção</th>
+            </tr></thead>
+            <tbody id="cons-tbody"><tr><td colspan="4" class="empty-st">Carregando...</td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+    </div><!-- /sec-pcp -->
 
-      </div><!-- /sec-pcp -->
-
-    </div><!-- /portal-content -->
-  </div><!-- /content -->
-</div><!-- /main -->
+  </div><!-- /p-content -->
+</div><!-- /p-main -->
 </div><!-- /shell -->
 
+<!-- MODAL PRODUÇÃO -->
+<div class="overlay" id="modal-prod">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-prod-titulo">Novo Lançamento de Produção</span>
+      <button class="modal-close" onclick="fecharModalProd()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Produto *</label>
+          <select class="form-select" id="fp-insumo"><option value="">Selecione...</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data *</label>
+          <input class="form-input" id="fp-data" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Turno</label>
+          <select class="form-select" id="fp-turno">
+            <option value="">Selecione...</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsável</label>
+          <input class="form-input" id="fp-responsavel" type="text" placeholder="Nome do colaborador">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Qtd. Planejada</label>
+          <input class="form-input mono" id="fp-planejada" type="number" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Qtd. Produzida</label>
+          <input class="form-input mono" id="fp-produzida" type="number" min="0" placeholder="0">
+        </div>
+        <div class="form-group col-full">
+          <label class="form-label">Observações</label>
+          <textarea class="form-textarea" id="fp-obs" placeholder="Observações..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalProd()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-prod" onclick="salvarProd()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SOBRA -->
+<div class="overlay" id="modal-sob">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar Sobra / Perda</span>
+      <button class="modal-close" onclick="fecharModalSobra()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Produto *</label>
+          <select class="form-select" id="fs-insumo"><option value="">Selecione...</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data *</label>
+          <input class="form-input" id="fs-data" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Turno</label>
+          <select class="form-select" id="fs-turno">
+            <option value="">Selecione...</option>
+            <option value="Manhã">Manhã</option>
+            <option value="Tarde">Tarde</option>
+            <option value="Noite">Noite</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Qtd. Inicial</label>
+          <input class="form-input mono" id="fs-inicial" type="number" step="0.001" min="0" placeholder="0,000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sobra (kg/un)</label>
+          <input class="form-input mono" id="fs-sobra" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSobra()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Perda (kg/un)</label>
+          <input class="form-input mono" id="fs-perda" type="number" step="0.001" min="0" placeholder="automático" readonly>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalSobra()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-sob" onclick="salvarSobra()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="perms.js"></script>
-<script src="sidebar.js"></script>
 <script>
+/* ================================================================
+   CONFIG
+================================================================ */
 const SUPA_URL='https://trczpnjidqfippbfxtpe.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
 const TENANT_ID='00000000-0000-0000-0000-000000000001';
@@ -233,6 +392,8 @@ async function api(endpoint,opts={}){
   const headers={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
   if(opts.body) headers['Content-Type']='application/json';
   if(opts.prefer) headers['Prefer']=opts.prefer;
+  else if(method==='POST') headers['Prefer']='return=representation';
+  else if(method==='PATCH') headers['Prefer']='return=representation';
   const res=await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers,body:opts.body||undefined});
   if(!res.ok){let msg=res.statusText;try{const j=await res.json();msg=j.message||j.error||msg;}catch{}throw new Error(`[${res.status}] ${msg}`);}
   const ct=res.headers.get('content-type')||'';
@@ -241,8 +402,10 @@ async function api(endpoint,opts={}){
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function fmtDate(d){if(!d)return'—';const[y,m,dd]=(d+'').split('-');return`${dd}/${m}/${y}`;}
 function r2(v){return Math.round(v*100)/100;}
+function n(id){return parseFloat(document.getElementById(id)?.value)||0;}
+function sv(id,v){const e=document.getElementById(id);if(e)e.value=v!=null?v:'';}
+function se(id,t){const e=document.getElementById(id);if(e)e.textContent=t;}
 function toast(msg,tipo='ok'){
   const el=document.getElementById('toast');
   el.textContent=msg;el.className='toast show '+(tipo==='err'?'err':'ok');
@@ -250,158 +413,316 @@ function toast(msg,tipo='ok'){
 }
 function sair(){localStorage.removeItem('sb_user');location.href='login.html';}
 
-// Módulos com acesso rápido
-const QUICK_MODULES=[
-  {id:'estoque',       href:'estoque.html',       lbl:'Estoque',         desc:'Entradas e inventário',     color:'#eff6ff',icon:'#3b82f6', svg:'<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>'},
-  {id:'porcionamento', href:'porcionamento.html',  lbl:'Porcionamento',   desc:'Filetagem e rendimento',    color:'#fff7ed',icon:'#f97316', svg:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
-  {id:'compras',       href:'compras.html',        lbl:'Compras',         desc:'Pedidos de compra',         color:'#f0fdf4',icon:'#16a34a', svg:'<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>'},
-  {id:'relatorios',    href:'relatorios.html',     lbl:'Relatórios',      desc:'Análises e relatórios',     color:'#f5f3ff',icon:'#7c3aed', svg:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'},
-  {id:'fichas_tecnicas',href:'fichas_tecnicas.html',lbl:'Fichas Técnicas', desc:'Receitas e custos',         color:'#fef2f2',icon:'#dc2626', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'},
-  {id:'cmv',           href:'cmv.html',            lbl:'CMV',             desc:'Custo x real',              color:'#fef3c7',icon:'#b45309', svg:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>'},
+/* ================================================================
+   STATE
+================================================================ */
+let _insumos=[], _editProdId=null, _editSobId=null;
+let _activeSection='pcp';
+
+/* ================================================================
+   MÓDULOS DA SIDEBAR
+================================================================ */
+const PORTAL_MODULES=[
+  {id:'pcp',       secId:'sec-pcp',   label:'PCP / Produção',  section:'PCP',
+   svg:'<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>'},
+  {id:'porcionamento', href:'porcionamento.html', label:'Porcionamento', section:'PCP',
+   svg:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {id:'estoque',   href:'estoque.html',   label:'Estoque',      section:'OPERAÇÃO',
+   svg:'<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>'},
+  {id:'ajustes',   href:'ajustes.html',   label:'Ajustes',      section:'OPERAÇÃO',
+   svg:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>'},
+  {id:'compras',   href:'compras.html',   label:'Compras',      section:'COMPRAS',
+   svg:'<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>'},
+  {id:'relatorios',href:'relatorios.html',label:'Relatórios',   section:'ANÁLISES',
+   svg:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'},
+  {id:'cmv',       href:'cmv.html',       label:'CMV',          section:'ANÁLISES',
+   svg:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>'},
+  {id:'pdv',       href:'pdv.html',       label:'PDV / Vendas', section:'VENDAS',
+   svg:'<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'},
 ];
 
-let _insumos=[];
+function renderSidebar(){
+  const nav=document.getElementById('p-nav');
+  let html='', lastSection='';
+  PORTAL_MODULES.forEach(m=>{
+    if(!Perms.can(m.id,'visualizar')) return;
+    if(m.section!==lastSection){
+      html+=`<div class="p-nav-section">${esc(m.section)}</div>`;
+      lastSection=m.section;
+    }
+    if(m.secId){
+      html+=`<button class="p-nav-item${_activeSection===m.id?' active':''}" onclick="showSection('${m.id}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${m.svg}</svg>
+        ${esc(m.label)}
+      </button>`;
+    } else {
+      html+=`<a class="p-nav-item" href="${m.href}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${m.svg}</svg>
+        ${esc(m.label)}
+      </a>`;
+    }
+  });
+  nav.innerHTML=html||'<div style="padding:20px 18px;font-size:13px;color:var(--text3)">Nenhum módulo disponível.</div>';
+}
 
+function showSection(id){
+  _activeSection=id;
+  document.querySelectorAll('.p-section').forEach(s=>s.classList.remove('active'));
+  const m=PORTAL_MODULES.find(x=>x.id===id);
+  if(m?.secId) document.getElementById(m.secId)?.classList.add('active');
+  se('p-topbar-title', m?.label||'Portal do Gerente');
+  renderSidebar();
+}
+
+/* ================================================================
+   INIT
+================================================================ */
 async function init(){
-  // Carrega permissões
   await Perms.load();
 
-  // Verifica acesso ao portal
   if(!Perms.can('portal_gerente','visualizar')){
-    document.getElementById('portal-content').style.display='none';
+    document.getElementById('p-nav').innerHTML='';
     document.getElementById('access-denied').style.display='block';
     return;
   }
 
-  // User info
+  // Dados do usuário
   try{
     const u=JSON.parse(localStorage.getItem('sb_user')||'{}');
     const nome=u.nome||u.email||'—';
-    document.getElementById('sb-user-nome').textContent=nome;
-    document.getElementById('portal-nome').textContent=nome.split(' ')[0];
+    const role=u.role||'—';
+    se('p-user-nome',nome);
+    se('p-user-role',role);
+    se('p-topbar-sub',nome);
+    document.getElementById('p-avatar').textContent=(nome[0]||'?').toUpperCase();
   }catch{}
 
   // Data
-  const now=new Date();
-  const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const hoje=new Date();
+  const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  document.getElementById('portal-dia').textContent=now.getDate()+'';
-  document.getElementById('portal-data-ext').textContent=
-    `${dias[now.getDay()]}, ${meses[now.getMonth()]} ${now.getFullYear()}`;
+  se('p-data-hoje',`${dias[hoje.getDay()]}, ${hoje.getDate()} ${meses[hoje.getMonth()]} ${hoje.getFullYear()}`);
+  se('p-loja-nome','Sushi Ponta Negra');
 
-  // Data padrão filtros PCP = hoje
-  const hoje=now.toISOString().slice(0,10);
-  document.getElementById('pcp-data-filtro').value=hoje;
-  document.getElementById('pcp-sobras-data').value=hoje;
+  // Datas padrão
+  const d=hoje.toISOString().slice(0,10);
+  sv('prod-data',d);sv('sob-data',d);sv('sug-data',d);
 
-  // Carrega insumos para exibir nomes
+  // Carrega insumos
   _insumos=await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
 
-  // Renderiza atalhos (somente módulos com permissão)
-  renderModulosTiles();
+  // Popula selects dos modais
+  const insOpts='<option value="">Selecione...</option>'+_insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
+  document.getElementById('fp-insumo').innerHTML=insOpts;
+  document.getElementById('fs-insumo').innerHTML=insOpts;
+  sv('fp-data',d);sv('fs-data',d);
 
-  // PCP visível?
-  if(!Perms.can('pcp','visualizar')){
-    document.getElementById('sec-pcp').style.display='none';
-  } else {
+  // Sidebar e primeira seção
+  renderSidebar();
+  // Abre a primeira seção permitida
+  const first=PORTAL_MODULES.find(m=>m.secId&&Perms.can(m.id,'visualizar'));
+  if(first) showSection(first.id);
+  else if(PORTAL_MODULES.find(m=>Perms.can(m.id,'visualizar'))){
+    document.querySelectorAll('.p-section').forEach(s=>s.classList.remove('active'));
+  }
+
+  // Carrega dados iniciais do PCP se permitido
+  if(Perms.can('pcp','visualizar')){
     carregarProducao();
     carregarConsumo();
   }
 }
 
-function renderModulosTiles(){
-  const visibles=QUICK_MODULES.filter(m=>Perms.can(m.id,'visualizar'));
-  const grid=document.getElementById('modulos-grid');
-  if(!visibles.length){
-    document.getElementById('modulos-wrap').style.display='none';
-    return;
-  }
-  grid.innerHTML=visibles.map(m=>`
-    <a href="${m.href}" class="mod-tile">
-      <div class="mod-icon" style="background:${m.color}">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${m.icon}" stroke-width="2">${m.svg}</svg>
-      </div>
-      <div>
-        <div class="mod-name">${esc(m.lbl)}</div>
-        <div class="mod-desc">${esc(m.desc)}</div>
-      </div>
-    </a>`).join('');
-}
-
 /* ================================================================
-   PCP INLINE
+   PCP — TABS
 ================================================================ */
 function setPcpTab(tab,btn){
-  document.querySelectorAll('.pcp-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.pcp-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#sec-pcp .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#sec-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('pcp-pane-'+tab).classList.add('active');
+  document.getElementById('pcp-'+tab).classList.add('active');
   if(tab==='sobras') carregarSobras();
+  if(tab==='sugerida') carregarSugerida();
   if(tab==='consumo') carregarConsumo();
 }
 
+/* ================================================================
+   PRODUÇÃO DO DIA
+================================================================ */
 async function carregarProducao(){
-  const data=document.getElementById('pcp-data-filtro').value;
-  const tbody=document.getElementById('pcp-prod-tbody');
-  if(!data){tbody.innerHTML='<tr><td colspan="6" class="empty-st">Selecione uma data</td></tr>';return;}
+  const data=document.getElementById('prod-data').value;
+  const turno=document.getElementById('prod-turno').value;
+  const tbody=document.getElementById('prod-tbody');
+  if(!data){tbody.innerHTML='<tr><td colspan="7" class="empty-st">Selecione uma data</td></tr>';return;}
   try{
-    const rows=await api(`pcp_producao?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`);
-    if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="empty-st">Nenhuma produção registrada nesta data.</td></tr>';return;}
+    let qs=`pcp_producao?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`;
+    if(turno) qs+=`&turno=eq.${turno}`;
+    const rows=await api(qs);
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="7" class="empty-st">Nenhuma produção nesta data.</td></tr>';return;}
     tbody.innerHTML=rows.map(r=>{
       const ins=_insumos.find(i=>i.id===r.insumo_id);
-      const pct=r.qtd_planejada>0?Math.round(r.qtd_produzida/r.qtd_planejada*100):null;
+      const pct=r.qtd_planejada>0?Math.round((r.qtd_produzida||0)/r.qtd_planejada*100):null;
       const badge=pct==null?''
         :pct>=100?'<span class="badge b-ok">✓ OK</span>'
-        :pct>=80?'<span class="badge b-warn">'+pct+'%</span>'
-        :'<span class="badge b-err">'+pct+'%</span>';
+        :pct>=80?`<span class="badge b-warn">${pct}%</span>`
+        :`<span class="badge b-err">${pct}%</span>`;
+      const turnoMap={'Manhã':'b-manha','Tarde':'b-tarde','Noite':'b-noite'};
       return `<tr>
-        <td style="font-weight:500">${esc(ins?.nome||r.insumo_id||'—')}</td>
+        <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+        <td>${r.turno?`<span class="badge ${turnoMap[r.turno]||''}">${esc(r.turno)}</span>`:'—'}</td>
         <td class="r mono">${r.qtd_planejada??'—'}</td>
         <td class="r mono">${r.qtd_produzida??'—'}</td>
-        <td>${esc(r.turno||'—')}</td>
         <td>${esc(r.responsavel||'—')}</td>
         <td>${badge}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="editarProd('${r.id}')">Editar</button>
+        </td>
       </tr>`;
     }).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="6" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
 }
 
+function abrirModalProd(){
+  _editProdId=null;
+  sv('fp-insumo','');sv('fp-data',document.getElementById('prod-data').value||new Date().toISOString().slice(0,10));
+  sv('fp-turno','');sv('fp-responsavel','');sv('fp-planejada','');sv('fp-produzida','');sv('fp-obs','');
+  se('modal-prod-titulo','Novo Lançamento de Produção');
+  document.getElementById('modal-prod').classList.add('open');
+}
+async function editarProd(id){
+  try{
+    const rows=await api(`pcp_producao?id=eq.${id}`);
+    const r=rows[0];if(!r)return;
+    _editProdId=id;
+    sv('fp-insumo',r.insumo_id||'');sv('fp-data',r.data||'');sv('fp-turno',r.turno||'');
+    sv('fp-responsavel',r.responsavel||'');sv('fp-planejada',r.qtd_planejada||'');
+    sv('fp-produzida',r.qtd_produzida||'');sv('fp-obs',r.observacoes||'');
+    se('modal-prod-titulo','Editar Lançamento');
+    document.getElementById('modal-prod').classList.add('open');
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+function fecharModalProd(){document.getElementById('modal-prod').classList.remove('open');}
+async function salvarProd(){
+  const insumoId=document.getElementById('fp-insumo').value;
+  const data=document.getElementById('fp-data').value;
+  if(!insumoId||!data){toast('Produto e data são obrigatórios.','err');return;}
+  const payload={insumo_id:insumoId,data,turno:document.getElementById('fp-turno').value||null,
+    responsavel:document.getElementById('fp-responsavel').value.trim()||null,
+    qtd_planejada:n('fp-planejada')||null,qtd_produzida:n('fp-produzida')||null,
+    observacoes:document.getElementById('fp-obs').value.trim()||null};
+  const btn=document.getElementById('btn-salvar-prod');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(_editProdId) await api(`pcp_producao?id=eq.${_editProdId}`,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
+    else{payload.tenant_id=TENANT_ID;await api('pcp_producao',{method:'POST',body:JSON.stringify(payload)});}
+    fecharModalProd();toast('Salvo.','ok');carregarProducao();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+
+/* ================================================================
+   SOBRAS E PERDAS
+================================================================ */
 async function carregarSobras(){
-  const data=document.getElementById('pcp-sobras-data').value;
-  const tbody=document.getElementById('pcp-sobras-tbody');
-  if(!data){tbody.innerHTML='<tr><td colspan="6" class="empty-st">Selecione uma data</td></tr>';return;}
+  const data=document.getElementById('sob-data').value;
+  const tbody=document.getElementById('sob-tbody');
+  if(!data){tbody.innerHTML='<tr><td colspan="7" class="empty-st">Selecione uma data</td></tr>';return;}
   try{
     const rows=await api(`pcp_sobras?tenant_id=eq.${TENANT_ID}&data=eq.${data}&order=created_at.desc`);
-    if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="empty-st">Nenhuma sobra registrada nesta data.</td></tr>';return;}
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="7" class="empty-st">Nenhuma sobra nesta data.</td></tr>';return;}
     tbody.innerHTML=rows.map(r=>{
       const ins=_insumos.find(i=>i.id===r.insumo_id);
       const perda=r.qtd_inicial>0?r2((r.qtd_perda||0)/r.qtd_inicial*100):null;
+      const turnoMap={'Manhã':'b-manha','Tarde':'b-tarde','Noite':'b-noite'};
       return `<tr>
         <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+        <td>${r.turno?`<span class="badge ${turnoMap[r.turno]||''}">${esc(r.turno)}</span>`:'—'}</td>
         <td class="r mono">${r.qtd_inicial??'—'}</td>
         <td class="r mono">${r.qtd_sobra??'—'}</td>
         <td class="r mono">${r.qtd_perda??'—'}</td>
         <td class="r mono">${perda!=null?perda.toFixed(1)+'%':'—'}</td>
-        <td>${esc(r.turno||'—')}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="editarSobra('${r.id}')">Editar</button></td>
       </tr>`;
     }).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="6" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
+  }catch(e){tbody.innerHTML=`<tr><td colspan="7" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
 }
 
-async function carregarConsumo(){
-  const dias=parseInt(document.getElementById('pcp-consumo-dias').value)||30;
-  const tbody=document.getElementById('pcp-consumo-tbody');
+function calcSobra(){
+  const ini=n('fs-inicial'),sob=n('fs-sobra');
+  const perda=Math.max(0,r2(ini-sob));
+  sv('fs-perda',perda>0?perda:'');
+}
+function abrirModalSobra(){
+  _editSobId=null;
+  sv('fs-insumo','');sv('fs-data',document.getElementById('sob-data').value||new Date().toISOString().slice(0,10));
+  sv('fs-turno','');sv('fs-inicial','');sv('fs-sobra','');sv('fs-perda','');
+  document.getElementById('modal-sob').classList.add('open');
+}
+async function editarSobra(id){
+  try{
+    const rows=await api(`pcp_sobras?id=eq.${id}`);
+    const r=rows[0];if(!r)return;
+    _editSobId=id;
+    sv('fs-insumo',r.insumo_id||'');sv('fs-data',r.data||'');sv('fs-turno',r.turno||'');
+    sv('fs-inicial',r.qtd_inicial||'');sv('fs-sobra',r.qtd_sobra||'');sv('fs-perda',r.qtd_perda||'');
+    document.getElementById('modal-sob').classList.add('open');
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+function fecharModalSobra(){document.getElementById('modal-sob').classList.remove('open');}
+async function salvarSobra(){
+  const insumoId=document.getElementById('fs-insumo').value;
+  const data=document.getElementById('fs-data').value;
+  if(!insumoId||!data){toast('Produto e data são obrigatórios.','err');return;}
+  const ini=n('fs-inicial'),sob=n('fs-sobra');
+  const payload={insumo_id:insumoId,data,turno:document.getElementById('fs-turno').value||null,
+    qtd_inicial:ini||null,qtd_sobra:sob||null,qtd_perda:Math.max(0,r2(ini-sob))||null};
+  const btn=document.getElementById('btn-salvar-sob');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(_editSobId) await api(`pcp_sobras?id=eq.${_editSobId}`,{method:'PATCH',body:JSON.stringify(payload),prefer:'return=minimal'});
+    else{payload.tenant_id=TENANT_ID;await api('pcp_sobras',{method:'POST',body:JSON.stringify(payload)});}
+    fecharModalSobra();toast('Salvo.','ok');carregarSobras();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+
+/* ================================================================
+   PRODUÇÃO SUGERIDA
+================================================================ */
+async function carregarSugerida(){
+  const tbody=document.getElementById('sug-tbody');
+  const dias=30;
   const de=new Date(Date.now()-dias*86400000).toISOString().slice(0,10);
   try{
     const rows=await api(`pcp_producao?tenant_id=eq.${TENANT_ID}&data=gte.${de}&order=insumo_id.asc`);
-    if(!rows.length){tbody.innerHTML='<tr><td colspan="4" class="empty-st">Nenhum dado no período.</td></tr>';return;}
-    // Agrupa por insumo
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="4" class="empty-st">Sem dados dos últimos 30 dias.</td></tr>';return;}
     const map={};
-    rows.forEach(r=>{
-      if(!map[r.insumo_id]) map[r.insumo_id]={total:0,dias:new Set()};
-      map[r.insumo_id].total+=(r.qtd_produzida||0);
-      map[r.insumo_id].dias.add(r.data);
-    });
+    rows.forEach(r=>{if(!map[r.insumo_id])map[r.insumo_id]={total:0,dias:new Set()};map[r.insumo_id].total+=(r.qtd_produzida||0);map[r.insumo_id].dias.add(r.data);});
+    tbody.innerHTML=Object.entries(map).map(([id,v])=>{
+      const ins=_insumos.find(i=>i.id===id);
+      const media=v.dias.size>0?r2(v.total/v.dias.size):0;
+      return `<tr>
+        <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+        <td class="r mono">${media}</td>
+        <td class="r mono">—</td>
+        <td class="r mono" style="font-weight:600;color:var(--orange)">${media}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="4" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+/* ================================================================
+   CONSUMO MÉDIO
+================================================================ */
+async function carregarConsumo(){
+  const dias=parseInt(document.getElementById('cons-dias').value)||30;
+  const tbody=document.getElementById('cons-tbody');
+  const de=new Date(Date.now()-dias*86400000).toISOString().slice(0,10);
+  try{
+    const rows=await api(`pcp_producao?tenant_id=eq.${TENANT_ID}&data=gte.${de}&order=insumo_id.asc`);
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="4" class="empty-st">Sem dados no período.</td></tr>';return;}
+    const map={};
+    rows.forEach(r=>{if(!map[r.insumo_id])map[r.insumo_id]={total:0,dias:new Set()};map[r.insumo_id].total+=(r.qtd_produzida||0);map[r.insumo_id].dias.add(r.data);});
     tbody.innerHTML=Object.entries(map).map(([id,v])=>{
       const ins=_insumos.find(i=>i.id===id);
       const media=v.dias.size>0?r2(v.total/v.dias.size):0;
@@ -415,6 +736,9 @@ async function carregarConsumo(){
   }catch(e){tbody.innerHTML=`<tr><td colspan="4" class="empty-st">Erro: ${esc(e.message)}</td></tr>`;}
 }
 
+/* ================================================================
+   START
+================================================================ */
 init();
 </script>
 </body>
