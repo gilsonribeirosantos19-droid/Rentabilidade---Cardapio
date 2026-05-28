@@ -12,8 +12,7 @@
     --bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--border:#e2e8f0;
     --orange:#f97316;--blue:#3b82f6;--green:#16a34a;--red:#dc2626;--amber:#f59e0b;
     --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
-    --radius:10px;--radius-lg:16px;
-    --filter-top:92px;
+    --radius:10px;--radius-lg:16px;--filter-top:0px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text1);min-height:100vh;display:flex}
@@ -24,11 +23,10 @@
   .logo-sub{font-size:11px;color:var(--orange);font-family:'DM Mono',monospace;margin-top:1px}
   .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
   .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
-  .topbar-title{font-size:16px;font-weight:700;color:var(--text1)}
   .content{flex:1;padding:0 24px 24px;overflow-y:auto}
   .tab-pane{display:none}.tab-pane.active{display:block;padding-top:18px}
 
-  /* FILTER BAR — top:0 porque .content tem overflow-y:auto (scroll interno) */
+  /* FILTER BAR */
   .filter-bar-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:18px;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.04)}
   .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .search-wrap{position:relative}
@@ -50,13 +48,12 @@
 
   /* BADGES */
   .badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
-  .b-manha{background:#eff6ff;color:#1d4ed8}.b-tarde{background:#fef3c7;color:#b45309}.b-noite{background:#1e1b4b;color:#c7d2fe}
-  .b-simples{background:#f0fdf4;color:#166534}.b-degelo{background:#eff6ff;color:#1d4ed8}
-  .b-coccao{background:#fff7ed;color:#c2410c}.b-lote{background:#f5f3ff;color:#6d28d9}
+  .b-ent{background:#eff6ff;color:#1d4ed8}
+  .b-sai{background:#fff7ed;color:#c2410c}
 
   /* TABLE */
   .tbl-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:clip}
-  .tbl-scroll{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 320px)}
+  .tbl-scroll{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 300px)}
   table{width:100%;border-collapse:collapse;font-size:13px}
   thead tr{background:#0f2d5c}
   th{padding:9px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;position:sticky;top:0;z-index:10;background:#0f2d5c}
@@ -66,71 +63,63 @@
   .r{text-align:right}.c{text-align:center}
   .mono{font-family:'DM Mono',monospace}
 
-  /* KPI CARDS */
-  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px}
+  /* KPI */
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
   .kpi{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
-  .kpi-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .kpi-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
   .kpi-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
   .kpi-sub{font-size:11px;color:var(--text3);margin-top:3px}
-  .kpi-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-
-  /* MODAL */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
-  .overlay.open{display:flex}
-  .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:700px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.16)}
-  .modal-header{padding:18px 24px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
-  .modal-title{font-size:15px;font-weight:700}
-  .modal-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--text3);line-height:1;padding:2px}
-  .modal-body{padding:20px 24px}
-  .modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:#fff}
-  .form-section{margin-bottom:20px}
-  .form-section-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-  .form-group{display:flex;flex-direction:column;gap:4px}
-  .form-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
-  .form-input,.form-select,.form-textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);outline:none;background:#f8fafc;transition:border-color .15s;width:100%}
-  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange);background:#fff}
-  .form-input[readonly]{background:var(--bg3);color:var(--text2)}
-  .form-textarea{resize:vertical;min-height:56px}
-
-  /* CAMPOS DINÂMICOS */
-  .fields-block{display:none}
-  .fields-block.active{display:contents}
-
-  /* CALC BOX */
-  .calc-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;display:flex;gap:20px;align-items:center;margin-top:14px;flex-wrap:wrap}
-  .calc-item{text-align:center;min-width:80px}
-  .calc-label{font-size:9px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
-  .calc-val{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:#166534}
 
   /* HUB */
-  .hub-section{margin-bottom:28px}
-  .hub-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
   .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:560px}
-  .hub-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:all .15s;user-select:none}
+  .hub-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:all .15s}
   .hub-card:hover{border-color:var(--orange);box-shadow:0 2px 10px rgba(249,115,22,.1)}
   .hub-icon{width:44px;height:44px;border-radius:10px;background:#fff7ed;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--orange)}
   .hub-title{font-size:14px;font-weight:700;color:var(--text1);margin-bottom:3px}
   .hub-desc{font-size:12px;color:var(--text2);line-height:1.4}
   .hub-arrow{color:var(--text3);font-size:20px;margin-left:auto;flex-shrink:0}
 
-  /* ABAS INTERNAS RELATÓRIO */
-  .rel-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px;gap:0}
-  .rel-tab{padding:9px 18px;font-size:13px;font-weight:500;color:var(--text2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;transition:all .15s}
-  .rel-tab.active{color:var(--orange);border-bottom-color:var(--orange);font-weight:600}
-  .rel-pane{display:none}.rel-pane.active{display:block}
+  /* FORM */
+  .form-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:14px}
+  .form-card-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-label{font-size:11px;font-weight:700;color:var(--text2)}
+  .form-input,.form-select,.form-textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);outline:none;background:#fff;transition:border-color .15s;width:100%}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
+  .form-input[readonly]{background:var(--bg3);color:var(--text2);cursor:default}
+  .form-textarea{resize:vertical;min-height:60px}
+  .form-hint{font-size:11px;color:var(--text3)}
+  .col-full{grid-column:1/-1}
 
-  /* CHARTS */
-  .charts-row{display:grid;grid-template-columns:300px 1fr;gap:18px;margin-top:4px}
-  .chart-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px}
-  .chart-title{font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text1)}
-  .donut-wrap{display:flex;align-items:center;gap:18px}
-  .legend-item{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;color:var(--text2)}
-  .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-  .legend-pct{margin-left:auto;font-family:'DM Mono',monospace;font-weight:600;color:var(--text1);font-size:12px}
+  /* TIPO PILLS */
+  .tipo-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:14px;display:flex;align-items:center;gap:20px}
+  .tipo-lbl{font-size:13px;font-weight:700;color:var(--text1);white-space:nowrap}
+  .tipo-pills{display:flex;background:var(--bg3);border-radius:10px;padding:4px;gap:4px}
+  .tipo-pill{padding:10px 32px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;background:transparent;color:var(--text2);transition:all .15s}
+  .tipo-pill.active{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  #pill-entrada.active{color:var(--blue)}
+  #pill-saida.active{color:var(--orange)}
 
-  /* EMPTY / TOAST */
+  /* CALC BOX */
+  .calc-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 0;display:flex;margin-top:16px}
+  .calc-item{flex:1;text-align:center;padding:0 16px;border-right:1px solid var(--border)}
+  .calc-item:last-child{border-right:none}
+  .calc-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+  .calc-val{font-size:17px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text1)}
+  .c-blue{color:var(--blue)}.c-green{color:var(--green)}.c-red{color:var(--red)}.c-amber{color:var(--amber)}
+
+  /* COLUMN TOGGLE */
+  .col-toggle-wrap{position:relative}
+  .col-panel{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:8px 0;min-width:220px;box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:50;display:none}
+  .col-panel.open{display:block}
+  .col-chk-item{display:flex;align-items:center;gap:10px;padding:7px 16px;cursor:pointer;font-size:13px;color:var(--text1);transition:background .1s;user-select:none}
+  .col-chk-item:hover{background:var(--bg3)}
+  .col-chk-item input{accent-color:var(--orange)}
+
+  /* TOAST / EMPTY */
   .empty-st{padding:40px;text-align:center;color:var(--text3);font-size:13px}
   .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:380px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
   .toast.show{opacity:1;transform:translateY(0)}.toast.ok{border-color:var(--green);color:var(--green)}.toast.err{border-color:var(--red);color:var(--red)}
@@ -143,64 +132,69 @@
 <nav class="sidebar"></nav>
 
 <div class="main">
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-title">Porcionamento</div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <select id="sel-loja" style="font-size:13px;padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text1);outline:none;font-family:inherit;cursor:pointer">
-        <option value="">Todas as lojas</option>
-      </select>
-      <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:var(--text1)">—</span>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div>
+    <div style="font-size:16px;font-weight:700;color:var(--text1)">Porcionamento / Rendimento Operacional</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:1px">Controle de entrada de matéria-prima e filetagem</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span id="por-atualizado" style="font-size:12px;color:var(--text3);white-space:nowrap"></span>
+    <button onclick="carregar()" title="Atualizar" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text3);display:inline-flex;align-items:center">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg>
+    </button>
+    <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:var(--text1)">—</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <button onclick="sair()" style="background:#fff0f0;border:1px solid #fecaca;color:#dc2626;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </button>
+  </div>
+</div>
+
+<!-- WS TAB STRIP -->
+<div class="ws-tab-strip" id="por-tab-strip"></div>
+
+<div class="content">
+
+  <!-- HUB -->
+  <div id="tab-hub" class="tab-pane active">
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Módulo</div>
+    <div class="hub-grid">
+      <div class="hub-card" onclick="openTab('lancamento')">
+        <div class="hub-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+        <div><div class="hub-title">Lançamentos</div><div class="hub-desc">Registre entradas e saídas de porcionamento.</div></div>
+        <div class="hub-arrow">›</div>
+      </div>
+      <div class="hub-card" onclick="openTab('relatorio')">
+        <div class="hub-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div><div class="hub-title">Relatório Consolidado</div><div class="hub-desc">Analise rendimento, perdas e custos por produto.</div></div>
+        <div class="hub-arrow">›</div>
+      </div>
     </div>
   </div>
 
-  <!-- WS TAB STRIP -->
-  <div class="ws-tab-strip" id="por-tab-strip"></div>
+  <!-- LANÇAMENTO -->
+  <div id="tab-lancamento" class="tab-pane">
 
-  <div class="content">
-
-    <!-- HUB -->
-    <div id="tab-hub" class="tab-pane active">
-      <div class="hub-section">
-        <div class="hub-label">Lançamentos</div>
-        <div class="hub-grid">
-          <div class="hub-card" onclick="openTab('lancamento')">
-            <div class="hub-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
-            <div><div class="hub-title">Lançar Porcionamento</div><div class="hub-desc">Registre processos de limpeza, degelo, cocção e rendimento.</div></div>
-            <div class="hub-arrow">›</div>
-          </div>
-          <div class="hub-card" onclick="openTab('relatorio')">
-            <div class="hub-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-            <div><div class="hub-title">Relatório de Porcionamento</div><div class="hub-desc">Analise rendimento, perdas e evolução por item e período.</div></div>
-            <div class="hub-arrow">›</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LANÇAMENTO -->
-    <div id="tab-lancamento" class="tab-pane">
+    <!-- LISTA -->
+    <div id="lanc-list">
       <div class="filter-bar-wrap">
         <div class="toolbar">
           <div class="search-wrap">
             <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input class="form-input" id="lanc-busca" placeholder="Buscar item..." oninput="filtrarLanc()" style="height:38px">
+            <input class="form-input" id="lanc-busca" placeholder="Buscar produto..." oninput="renderLanc()" style="height:38px">
           </div>
-          <select class="fil-select" id="lanc-f-turno" onchange="filtrarLanc()">
-            <option value="">Turno ▾</option>
-            <option value="Manhã">Manhã</option>
-            <option value="Tarde">Tarde</option>
-            <option value="Noite">Noite</option>
+          <select class="fil-select" id="lanc-f-tipo" onchange="renderLanc()">
+            <option value="">Tipo ▾</option>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
           </select>
-          <select class="fil-select" id="lanc-f-modelo" onchange="filtrarLanc()">
-            <option value="">Modelo ▾</option>
-            <option value="simples">Simples</option>
-            <option value="degelo">Degelo + Limpeza</option>
-            <option value="coccao">Cocção / Redução</option>
-            <option value="lote">Produção em Lote</option>
-          </select>
-          <input type="date" class="fil-date" id="lanc-f-data" onchange="filtrarLanc()">
-          <button class="btn btn-primary ml" onclick="abrirModal()">
+          <input type="date" class="fil-date" id="lanc-f-de" onchange="renderLanc()" title="De">
+          <span style="color:var(--text3);font-size:12px">–</span>
+          <input type="date" class="fil-date" id="lanc-f-ate" onchange="renderLanc()" title="Até">
+          <button class="btn btn-primary ml" onclick="novoLancamento()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Novo Lançamento
           </button>
@@ -209,298 +203,284 @@
       <div class="tbl-card"><div class="tbl-scroll">
         <table>
           <thead><tr>
-            <th>Data</th><th>Lote</th><th>Item</th><th>Modelo</th><th>Turno</th>
-            <th class="r">Peso Bruto</th><th class="r">Peso Limpo</th>
-            <th class="r">Rendimento %</th><th class="r">Valor Total</th>
+            <th>Data</th><th>Tipo</th><th>Produto</th><th>Fornecedor</th>
+            <th class="r">Qtd. Peixes</th><th class="r">Peso Bruto</th><th class="r">Rendimento %</th>
             <th>Responsável</th><th></th>
           </tr></thead>
-          <tbody id="lanc-body"><tr><td colspan="11" class="empty-st">Carregando...</td></tr></tbody>
+          <tbody id="lanc-body"><tr><td colspan="9" class="empty-st">Carregando...</td></tr></tbody>
         </table>
       </div></div>
     </div>
 
-    <!-- RELATÓRIO -->
-    <div id="tab-relatorio" class="tab-pane">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-        <button class="btn btn-ghost btn-sm" onclick="openTab('hub')" style="font-size:12px">
+    <!-- FORMULÁRIO INLINE -->
+    <div id="lanc-form" style="display:none">
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+        <button class="btn btn-ghost btn-sm" onclick="showLista()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Voltar para relatórios
+          Voltar
         </button>
-      </div>
-      <div class="filter-bar-wrap" style="position:relative;top:auto">
-        <div class="toolbar" style="gap:10px">
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Item</div>
-            <select class="fil-select" id="rel-insumo" style="min-width:200px"><option value="">Selecione um item...</option></select>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Período</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <input type="date" class="fil-date" id="rel-de">
-              <span style="color:var(--text3);font-size:12px">até</span>
-              <input type="date" class="fil-date" id="rel-ate">
-            </div>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Turno</div>
-            <select class="fil-select" id="rel-turno">
-              <option value="">Todos</option>
-              <option value="Manhã">Manhã</option>
-              <option value="Tarde">Tarde</option>
-              <option value="Noite">Noite</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Fornecedor</div>
-            <select class="fil-select" id="rel-forn"><option value="">Todos</option></select>
-          </div>
-          <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:0;margin-top:auto">
-            <button class="btn btn-primary" onclick="filtrarRelatorio()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-              Filtrar
-            </button>
-            <button class="btn btn-ghost" onclick="limparFiltrosRel()">Limpar filtros</button>
-          </div>
-        </div>
+        <span id="form-breadcrumb" style="font-size:15px;font-weight:700;color:var(--text1)">Novo Lançamento</span>
       </div>
 
-      <!-- KPI CARDS -->
-      <div class="kpi-row" id="rel-kpis" style="display:none">
-        <div class="kpi">
-          <div class="kpi-label"><div class="kpi-icon" style="background:#eff6ff"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>Peso Bruto Total</div>
-          <div class="kpi-val mono" id="k-bruto">—</div><div class="kpi-sub">entrada</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label"><div class="kpi-icon" style="background:#f0fdf4"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>Peso Limpo Total</div>
-          <div class="kpi-val mono c-green" id="k-limpo">—</div><div class="kpi-sub">aproveitável</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label"><div class="kpi-icon" style="background:#fef2f2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>Perdas Totais</div>
-          <div class="kpi-val mono" style="color:var(--red)" id="k-perdas">—</div>
-          <div class="kpi-sub"><span id="k-perdas-pct" style="color:var(--amber);font-weight:700"></span></div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label"><div class="kpi-icon" style="background:#fff7ed"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>Rendimento Médio</div>
-          <div class="kpi-val mono" style="color:var(--orange)" id="k-rend">—</div><div class="kpi-sub">% aproveitamento</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label"><div class="kpi-icon" style="background:#f5f3ff"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>Valor Total</div>
-          <div class="kpi-val mono" style="color:#7c3aed" id="k-valor">—</div><div class="kpi-sub">custo do período</div>
+      <!-- TIPO SELECTOR -->
+      <div class="tipo-wrap">
+        <span class="tipo-lbl">Tipo de lançamento</span>
+        <div class="tipo-pills">
+          <button class="tipo-pill active" id="pill-entrada" onclick="setTipo('entrada')">↓ Entrada</button>
+          <button class="tipo-pill" id="pill-saida" onclick="setTipo('saida')">↑ Saída</button>
         </div>
       </div>
-
-      <!-- ABAS RELATÓRIO -->
-      <div id="rel-content" style="display:none">
-        <div class="rel-tabs">
-          <button class="rel-tab active" onclick="switchRelTab('detalhado',this)">Detalhado por data</button>
-          <button class="rel-tab" onclick="switchRelTab('evolucao',this)">Evolução do rendimento</button>
-          <button class="rel-tab" onclick="switchRelTab('composicao',this)">Composição das perdas</button>
-        </div>
-
-        <!-- DETALHADO -->
-        <div class="rel-pane active" id="rel-detalhado">
-          <div class="tbl-card"><div class="tbl-scroll" style="max-height:340px">
-            <table id="rel-table">
-              <thead><tr id="rel-thead-tr"></tr></thead>
-              <tbody id="rel-tbody"></tbody>
-            </table>
-          </div></div>
-          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
-            <button class="btn btn-ghost btn-sm" onclick="exportarExcel()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Exportar Excel
-            </button>
-          </div>
-        </div>
-
-        <!-- EVOLUÇÃO -->
-        <div class="rel-pane" id="rel-evolucao">
-          <div class="chart-card">
-            <div class="chart-title">Evolução do Rendimento (%)</div>
-            <div id="chart-evolucao" style="overflow-x:auto"></div>
-          </div>
-        </div>
-
-        <!-- COMPOSIÇÃO -->
-        <div class="rel-pane" id="rel-composicao">
-          <div class="charts-row">
-            <div class="chart-card">
-              <div class="chart-title">Composição das Perdas</div>
-              <div class="donut-wrap">
-                <div id="chart-donut"></div>
-                <div id="donut-legend" class="donut-legend" style="flex:1"></div>
-              </div>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">Total de Perdas por Categoria</div>
-              <div id="chart-barras"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="rel-empty" style="padding:60px;text-align:center;color:var(--text3);font-size:13px">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:.3"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <div>Selecione um item e o período para gerar o relatório.</div>
-      </div>
-    </div>
-
-  </div><!-- /content -->
-</div><!-- /main -->
-</div><!-- /shell -->
-
-<!-- ===== MODAL LANÇAMENTO ===== -->
-<div class="overlay" id="modal-lanc">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modal-lanc-titulo">Novo Lançamento</span>
-      <button class="modal-close" onclick="fecharModal()">×</button>
-    </div>
-    <div class="modal-body">
 
       <!-- IDENTIFICAÇÃO -->
-      <div class="form-section">
-        <div class="form-section-title">Identificação</div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Item (insumo) *</label>
-            <select class="form-select" id="f-insumo" onchange="onInsumoChange()"><option value="">Selecione...</option></select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Modelo de Processo *</label>
-            <select class="form-select" id="f-modelo" onchange="onModeloChange()">
-              <option value="simples">Simples (peixe, carne)</option>
-              <option value="degelo">Degelo + Limpeza (camarão, polvo)</option>
-              <option value="coccao">Cocção / Redução (shimeji, caldos)</option>
-              <option value="lote">Produção em Lote (shari, molhos)</option>
-            </select>
-          </div>
+      <div class="form-card">
+        <div class="form-card-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Identificação
         </div>
-        <div class="form-grid-3" style="margin-top:12px">
+        <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Data *</label>
             <input class="form-input" id="f-data" type="date">
           </div>
           <div class="form-group">
+            <label class="form-label">Loja</label>
+            <select class="form-select" id="f-loja"><option value="">Selecione...</option></select>
+          </div>
+          <div class="form-group" id="fg-fornecedor">
+            <label class="form-label">Fornecedor</label>
+            <select class="form-select" id="f-fornecedor"><option value="">Selecione...</option></select>
+          </div>
+          <div class="form-group" id="fg-turno" style="display:none">
             <label class="form-label">Turno</label>
             <select class="form-select" id="f-turno">
+              <option value="">Selecione...</option>
               <option value="Manhã">Manhã</option>
               <option value="Tarde">Tarde</option>
               <option value="Noite">Noite</option>
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label">Lote</label>
-            <input class="form-input" id="f-lote" type="text" placeholder="Auto">
-          </div>
-        </div>
-        <div class="form-grid" style="margin-top:12px">
-          <div class="form-group">
+          <div class="form-group col-full">
             <label class="form-label">Responsável</label>
             <input class="form-input" id="f-responsavel" type="text" placeholder="Nome do colaborador">
           </div>
-          <div class="form-group">
-            <label class="form-label">Fornecedor</label>
-            <select class="form-select" id="f-fornecedor"><option value="">Selecione...</option></select>
+          <div class="form-group col-full">
+            <label class="form-label">Observação</label>
+            <textarea class="form-textarea" id="f-obs" placeholder="Observações gerais..."></textarea>
           </div>
         </div>
       </div>
 
-      <!-- MODELO: SIMPLES -->
-      <div class="form-section fields-block" id="fields-simples">
-        <div class="form-section-title">Pesos e Perdas</div>
-        <div class="form-grid" style="margin-bottom:12px">
+      <!-- ENTRADA: RECEBIMENTO -->
+      <div class="form-card" id="sec-recebimento">
+        <div class="form-card-title" style="color:#1d4ed8">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Recebimento
+        </div>
+        <div class="form-grid" style="margin-bottom:14px">
           <div class="form-group">
-            <label class="form-label">Peso Bruto (kg) *</label>
-            <input class="form-input mono" id="f-peso-bruto" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()">
+            <label class="form-label">Produto recebido *</label>
+            <select class="form-select" id="f-insumo-ent"><option value="">Selecione o insumo...</option></select>
           </div>
           <div class="form-group">
-            <label class="form-label">Custo Unitário (R$/kg)</label>
-            <input class="form-input mono" id="f-custo-unit" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSimples()">
+            <label class="form-label">Quantidade de peixes</label>
+            <input class="form-input mono" id="f-qtd-ent" type="number" min="1" step="1" placeholder="0">
           </div>
-        </div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Perdas (kg)</div>
-        <div class="form-grid-3">
-          <div class="form-group"><label class="form-label">Cabeça</label><input class="form-input mono" id="f-p-cabeca" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
-          <div class="form-group"><label class="form-label">Pele</label><input class="form-input mono" id="f-p-pele" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
-          <div class="form-group"><label class="form-label">Espinha</label><input class="form-input mono" id="f-p-espinha" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
-          <div class="form-group"><label class="form-label">Outros</label><input class="form-input mono" id="f-p-outros" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
-          <div class="form-group"><label class="form-label">Peso Limpo (kg)</label><input class="form-input mono" id="f-peso-limpo" type="number" step="0.001" min="0" placeholder="auto" readonly></div>
-        </div>
-        <div class="calc-box" id="calc-simples">
-          <div class="calc-item"><div class="calc-label">Peso Limpo</div><div class="calc-val" id="cv-limpo">—</div></div>
-          <div class="calc-item"><div class="calc-label">Total Perdas</div><div class="calc-val" id="cv-perdas">—</div></div>
-          <div class="calc-item"><div class="calc-label">Rendimento</div><div class="calc-val" id="cv-rend">—</div></div>
-          <div class="calc-item"><div class="calc-label">Valor Total</div><div class="calc-val" id="cv-valor">—</div></div>
-        </div>
-      </div>
-
-      <!-- MODELO: DEGELO -->
-      <div class="form-section fields-block" id="fields-degelo">
-        <div class="form-section-title">Degelo + Limpeza</div>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg)</label><input class="form-input mono" id="fd-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcDegelo()"></div>
         </div>
         <div class="form-grid-3">
-          <div class="form-group"><label class="form-label">Peso Congelado (kg) *</label><input class="form-input mono" id="fd-congelado" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
-          <div class="form-group"><label class="form-label">Peso Descongelado (kg)</label><input class="form-input mono" id="fd-descongelado" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
-          <div class="form-group"><label class="form-label">Perda Degelo (kg)</label><input class="form-input mono" id="fd-p-degelo" type="number" step="0.001" min="0" placeholder="auto" readonly></div>
-          <div class="form-group"><label class="form-label">Peso Limpo (kg)</label><input class="form-input mono" id="fd-limpo" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
-          <div class="form-group"><label class="form-label">Perda Limpeza (kg)</label><input class="form-input mono" id="fd-p-limpeza" type="number" step="0.001" min="0" placeholder="auto" readonly></div>
-        </div>
-        <div class="calc-box">
-          <div class="calc-item"><div class="calc-label">Peso Final</div><div class="calc-val" id="dv-limpo">—</div></div>
-          <div class="calc-item"><div class="calc-label">Perda Total</div><div class="calc-val" id="dv-perdas">—</div></div>
-          <div class="calc-item"><div class="calc-label">Rendimento</div><div class="calc-val" id="dv-rend">—</div></div>
-          <div class="calc-item"><div class="calc-label">Valor Total</div><div class="calc-val" id="dv-valor">—</div></div>
+          <div class="form-group">
+            <label class="form-label">Peso bruto total com cabeça (kg) *</label>
+            <input class="form-input mono" id="f-peso-bruto" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcEntrada()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Valor total da compra (R$)</label>
+            <input class="form-input mono" id="f-valor-total" type="number" step="0.01" min="0" placeholder="0,00" oninput="onValorChange()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Custo/kg entrada (R$/kg)</label>
+            <input class="form-input mono" id="f-custo-kg-ent" type="number" step="0.01" min="0" placeholder="0,00" oninput="onCustoKgEntChange()">
+          </div>
         </div>
       </div>
 
-      <!-- MODELO: COCÇÃO -->
-      <div class="form-section fields-block" id="fields-coccao">
-        <div class="form-section-title">Cocção / Redução</div>
+      <!-- ENTRADA: QUEBRA INICIAL -->
+      <div class="form-card" id="sec-quebra">
+        <div class="form-card-title" style="color:#dc2626">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Quebra Inicial — Cabeça
+        </div>
         <div class="form-grid">
-          <div class="form-group"><label class="form-label">Peso Inicial (kg) *</label><input class="form-input mono" id="fc-inicial" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcCoccao()"></div>
-          <div class="form-group"><label class="form-label">Peso Final (kg) *</label><input class="form-input mono" id="fc-final" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcCoccao()"></div>
-          <div class="form-group"><label class="form-label">Redução (kg)</label><input class="form-input mono" id="fc-reducao" type="number" step="0.001" min="0" placeholder="auto" readonly></div>
-          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg)</label><input class="form-input mono" id="fc-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcCoccao()"></div>
+          <div class="form-group">
+            <label class="form-label">Peso da cabeça descartada (kg)</label>
+            <input class="form-input mono" id="f-cabeca" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcEntrada()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Peso líquido armazenado (kg)</label>
+            <input class="form-input mono" id="f-liq-arm" type="number" step="0.001" min="0" placeholder="automático" readonly>
+            <span class="form-hint">= Peso bruto − Cabeça</span>
+          </div>
         </div>
         <div class="calc-box">
-          <div class="calc-item"><div class="calc-label">Redução</div><div class="calc-val" id="ccv-red">—</div></div>
-          <div class="calc-item"><div class="calc-label">Rendimento</div><div class="calc-val" id="ccv-rend">—</div></div>
-          <div class="calc-item"><div class="calc-label">Valor Total</div><div class="calc-val" id="ccv-valor">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">% Cabeça</div><div class="calc-val c-amber" id="cv-pct-cab">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Peso Líq. Armazenado</div><div class="calc-val" id="cv-liq-arm">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Novo Custo/kg</div><div class="calc-val c-blue" id="cv-novo-custo">—</div></div>
         </div>
       </div>
 
-      <!-- MODELO: LOTE -->
-      <div class="form-section fields-block" id="fields-lote">
-        <div class="form-section-title">Produção em Lote</div>
+      <!-- SAÍDA: PROCESSAMENTO -->
+      <div class="form-card" id="sec-processamento" style="display:none">
+        <div class="form-card-title" style="color:#c2410c">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Processamento
+        </div>
+        <div class="form-grid" style="margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Produto processado *</label>
+            <select class="form-select" id="f-insumo-sai" onchange="onInsumoSaiChange()"><option value="">Selecione o insumo...</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quantidade de peixes</label>
+            <input class="form-input mono" id="f-qtd-sai" type="number" min="1" step="1" placeholder="0">
+          </div>
+        </div>
         <div class="form-grid">
-          <div class="form-group"><label class="form-label">Qtd. Produzida (kg/un) *</label><input class="form-input mono" id="fl-produzida" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcLote()"></div>
-          <div class="form-group"><label class="form-label">Qtd. Consumida (MP) (kg)</label><input class="form-input mono" id="fl-consumida" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcLote()"></div>
-          <div class="form-group"><label class="form-label">Sobra</label><input class="form-input mono" id="fl-sobra" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcLote()"></div>
-          <div class="form-group"><label class="form-label">Validade</label><input class="form-input" id="fl-validade" type="date"></div>
-          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg MP)</label><input class="form-input mono" id="fl-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcLote()"></div>
+          <div class="form-group">
+            <label class="form-label">Peso de entrada (kg) *</label>
+            <input class="form-input mono" id="f-peso-entrada" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSaida()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Custo/kg de entrada (R$/kg)</label>
+            <input class="form-input mono" id="f-custo-kg-sai" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSaida()">
+            <span class="form-hint">Preenchido automaticamente pelo insumo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAÍDA: RESULTADOS -->
+      <div class="form-card" id="sec-resultados" style="display:none">
+        <div class="form-card-title" style="color:#16a34a">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Resultados
+        </div>
+        <div class="form-grid-4">
+          <div class="form-group">
+            <label class="form-label">Filé limpo (kg)</label>
+            <input class="form-input mono" id="f-file-limpo" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSaida()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pele (kg)</label>
+            <input class="form-input mono" id="f-pele" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSaida()">
+            <span class="form-hint">aproveitamento</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Aparas (kg)</label>
+            <input class="form-input mono" id="f-aparas" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSaida()">
+            <span class="form-hint">aproveitamento</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Perdas (kg)</label>
+            <input class="form-input mono" id="f-perdas" type="number" step="0.001" min="0" placeholder="automático" readonly>
+            <span class="form-hint">= Entrada − Aproveitável</span>
+          </div>
         </div>
         <div class="calc-box">
-          <div class="calc-item"><div class="calc-label">Rendimento</div><div class="calc-val" id="lv-rend">—</div></div>
-          <div class="calc-item"><div class="calc-label">Valor Total MP</div><div class="calc-val" id="lv-valor">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Total Aprov.</div><div class="calc-val c-green" id="sv-aprov">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Perdas</div><div class="calc-val c-red" id="sv-perdas">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Rendimento Op.</div><div class="calc-val c-amber" id="sv-rend">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Custo/kg Filé</div><div class="calc-val" id="sv-custo-file">—</div></div>
+          <div class="calc-item"><div class="calc-lbl">Custo/kg Aprov.</div><div class="calc-val" id="sv-custo-aprov">—</div></div>
         </div>
       </div>
 
-      <!-- OBSERVAÇÕES -->
-      <div class="form-section" style="margin-bottom:0">
-        <div class="form-section-title">Observações</div>
-        <textarea class="form-textarea" id="f-obs" placeholder="Observações gerais sobre o lançamento..."></textarea>
+      <!-- BOTÕES -->
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+        <button class="btn btn-ghost" onclick="showLista()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-salvar" onclick="salvarLanc()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Salvar Lançamento
+        </button>
       </div>
 
+    </div><!-- /lanc-form -->
+  </div><!-- /tab-lancamento -->
+
+  <!-- RELATÓRIO -->
+  <div id="tab-relatorio" class="tab-pane">
+    <div class="filter-bar-wrap">
+      <div class="toolbar">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Produto</div>
+          <select class="fil-select" id="rel-insumo" style="min-width:200px"><option value="">Todos os produtos</option></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Tipo</div>
+          <select class="fil-select" id="rel-tipo">
+            <option value="">Entrada + Saída</option>
+            <option value="entrada">Só Entradas</option>
+            <option value="saida">Só Saídas</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Período</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="date" class="fil-date" id="rel-de">
+            <span style="color:var(--text3);font-size:12px">até</span>
+            <input type="date" class="fil-date" id="rel-ate">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-top:auto">
+          <button class="btn btn-primary" onclick="filtrarRel()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtrar
+          </button>
+          <button class="btn btn-ghost" onclick="limparRel()">Limpar</button>
+        </div>
+        <div class="col-toggle-wrap ml">
+          <button class="btn btn-ghost" onclick="toggleColPanel(event)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Colunas
+          </button>
+          <div class="col-panel" id="col-panel">
+            <div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Exibir colunas</div>
+            <div id="col-checks"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-salvar-lanc" onclick="salvarLanc()">Salvar Lançamento</button>
+
+    <!-- KPIs -->
+    <div class="kpi-row" id="rel-kpis" style="display:none">
+      <div class="kpi"><div class="kpi-label">Peso Bruto Recebido</div><div class="kpi-val mono" id="k-bruto">—</div><div class="kpi-sub">entradas</div></div>
+      <div class="kpi"><div class="kpi-label">Filé Limpo Total</div><div class="kpi-val mono c-green" id="k-file">—</div><div class="kpi-sub">saídas</div></div>
+      <div class="kpi"><div class="kpi-label">Perdas Totais</div><div class="kpi-val mono c-red" id="k-perdas">—</div><div class="kpi-sub" id="k-perdas-sub"></div></div>
+      <div class="kpi"><div class="kpi-label">Rendimento Médio</div><div class="kpi-val mono c-amber" id="k-rend">—</div><div class="kpi-sub">operacional</div></div>
+      <div class="kpi"><div class="kpi-label">Lançamentos</div><div class="kpi-val mono" id="k-count">—</div><div class="kpi-sub">no período</div></div>
     </div>
-  </div>
-</div>
+
+    <!-- TABELA -->
+    <div id="rel-content" style="display:none">
+      <div class="tbl-card"><div class="tbl-scroll">
+        <table id="rel-table">
+          <thead><tr id="rel-thead"></tr></thead>
+          <tbody id="rel-tbody"></tbody>
+        </table>
+      </div></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="exportar()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Exportar
+        </button>
+      </div>
+    </div>
+    <div id="rel-empty" style="padding:60px;text-align:center;color:var(--text3);font-size:13px">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:.3"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <div>Selecione o período e clique em Filtrar para gerar o relatório.</div>
+    </div>
+  </div><!-- /tab-relatorio -->
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
 
 <div class="toast" id="toast"></div>
 
@@ -536,75 +516,61 @@ async function api(endpoint,opts={}){
    UTILS
 ================================================================ */
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function brl(v){if(v==null||v===''||isNaN(v))return'—';return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fmtKg(v){if(v==null||v===''||isNaN(v))return'—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';}
-function fmtPct(v){if(v==null||isNaN(v))return'—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';}
+function brl(v){if(v==null||v===''||isNaN(v))return'—';return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function kg(v){if(v==null||v===''||isNaN(v)||Number(v)===0)return'—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';}
+function pct(v){if(v==null||isNaN(v))return'—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';}
 function fmtDate(d){if(!d)return'—';const[y,m,dd]=(d+'').split('-');return`${dd}/${m}/${y}`;}
 function n(id){return parseFloat(document.getElementById(id)?.value)||0;}
-function setV(id,v){const e=document.getElementById(id);if(e)e.value=v!=null?v:'';}
-function round3(v){return Math.round(v*1000)/1000;}
-function round2(v){return Math.round(v*100)/100;}
+function sv(id,v){const e=document.getElementById(id);if(e)e.value=v!=null?v:'';}
+function se(id,t){const e=document.getElementById(id);if(e)e.textContent=t;}
+function r3(v){return Math.round(v*1000)/1000;}
+function r2(v){return Math.round(v*100)/100;}
 
 function toast(msg,tipo='ok'){
   const el=document.getElementById('toast');
-  el.textContent=msg;el.className='toast '+tipo;el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),3200);
+  el.textContent=msg;el.className='toast show '+(tipo==='err'?'err':'ok');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3200);
 }
-
-function turnoLabel(t){
-  const map={Manhã:'b-manha',Tarde:'b-tarde',Noite:'b-noite'};
-  return `<span class="badge ${map[t]||''}">${esc(t||'—')}</span>`;
-}
-function modeloLabel(m){
-  const map={simples:'b-simples',degelo:'b-degelo',coccao:'b-coccao',lote:'b-lote'};
-  const txt={simples:'Simples',degelo:'Degelo',coccao:'Cocção',lote:'Lote'};
-  return `<span class="badge ${map[m]||''}">${txt[m]||m}</span>`;
-}
+function sair(){localStorage.removeItem('sb_user');location.href='login.html';}
 
 /* ================================================================
    STATE
 ================================================================ */
-let _lancamentos=[],_insumos=[],_fornecedores=[];
-let _editId=null;
+let _lancs=[], _insumos=[], _fornecedores=[];
+let _editId=null, _tipo='entrada';
 let _relData=[];
 
 /* ================================================================
    WORKSPACE TABS
 ================================================================ */
-const _openTabs=[],_loadedTabs={},_activeTab=null;
-const _tabNames={lancamento:'Lançamento',relatorio:'Relatório'};
+const _tabs=[], _loaded={};
+const _tabNames={lancamento:'Lançamentos',relatorio:'Relatório'};
 
 function openTab(id){
-  if(!_openTabs.includes(id)) _openTabs.push(id);
-  _renderTabStrip();
+  if(!_tabs.includes(id)) _tabs.push(id);
   switchTab(id);
 }
 function switchTab(id){
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-  const pane=document.getElementById('tab-'+id)||document.getElementById('tab-hub');
-  if(pane) pane.classList.add('active');
-  _renderTabStrip();
-  if(id==='lancamento'&&!_loadedTabs.lancamento){renderLanc();_loadedTabs.lancamento=true;}
-  if(id==='hub') _renderTabStrip(); // mantém strip visível ao voltar para hub
+  (document.getElementById('tab-'+id)||document.getElementById('tab-hub')).classList.add('active');
+  _renderStrip();
+  if(id==='lancamento'&&!_loaded.lancamento){renderLanc();_loaded.lancamento=true;}
 }
 function closeTab(id,e){
   e.stopPropagation();
-  const idx=_openTabs.indexOf(id);
-  if(idx>-1) _openTabs.splice(idx,1);
-  _renderTabStrip();
-  if(_openTabs.length) switchTab(_openTabs[_openTabs.length-1]);
-  else switchTab('hub');
+  _tabs.splice(_tabs.indexOf(id),1);
+  _renderStrip();
+  switchTab(_tabs.length?_tabs[_tabs.length-1]:'hub');
 }
-function _renderTabStrip(){
+function _renderStrip(){
   const strip=document.getElementById('por-tab-strip');
-  if(!_openTabs.length){strip.style.display='none';return;}
+  if(!_tabs.length){strip.style.display='none';return;}
   strip.style.display='flex';
-  const activePaneId=document.querySelector('.tab-pane.active')?.id?.replace('tab-','');
-  const homeBtn=`<button class="ws-home-btn" onclick="switchTab('hub')" title="Hub">
+  const active=document.querySelector('.tab-pane.active')?.id?.replace('tab-','');
+  strip.innerHTML=`<button class="ws-home-btn" onclick="switchTab('hub')" title="Hub">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-  </button>`;
-  strip.innerHTML=homeBtn+_openTabs.map(id=>`
-    <div class="ws-tab${activePaneId===id?' active':''}" onclick="switchTab('${id}')">
+  </button>`+_tabs.map(id=>`
+    <div class="ws-tab${active===id?' active':''}" onclick="switchTab('${id}')">
       ${esc(_tabNames[id]||id)}
       <span class="ws-tab-close" onclick="closeTab('${id}',event)">×</span>
     </div>`).join('');
@@ -615,81 +581,73 @@ function _renderTabStrip(){
 ================================================================ */
 async function carregar(){
   try{
-    [_insumos,_fornecedores,_lancamentos]=await Promise.all([
+    [_insumos,_fornecedores,_lancs]=await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=200`).catch(()=>[]),
+      api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]),
+      api(`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`).catch(()=>[]),
     ]);
-
-    // Popular selects
-    const selIns=document.getElementById('f-insumo');
-    selIns.innerHTML='<option value="">Selecione o item...</option>'+
-      _insumos.map(i=>`<option value="${i.id}" data-modelo="${i.modelo_porcionamento||'simples'}">${esc(i.nome)}</option>`).join('');
-
-    const selForn=document.getElementById('f-fornecedor');
-    selForn.innerHTML='<option value="">Nenhum</option>'+
-      _fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</option>`).join('');
-
-    const relIns=document.getElementById('rel-insumo');
-    relIns.innerHTML='<option value="">Selecione um item...</option>'+
-      _insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
-
-    const relForn=document.getElementById('rel-forn');
-    relForn.innerHTML='<option value="">Todos</option>'+
-      _fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome||'—')}</option>`).join('');
-
-    // Preencher lojas
-    try{
-      const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
-      const sel=document.getElementById('sel-loja');
-      if(lojas.length) sel.innerHTML='<option value="">Todas as lojas</option>'+lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
-    }catch{}
-
-    // Usuário
-    try{const u=JSON.parse(localStorage.getItem('sb_user')||'{}');if(u.nome)document.getElementById('sb-user-nome').textContent=u.nome;}catch{}
-
-    renderLanc();
+    _populateSelects();
+    _loadUser();
+    se('por-atualizado','Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+    if(_loaded.lancamento) renderLanc();
   }catch(e){toast('Erro ao carregar: '+e.message,'err');}
 }
 
-/* ================================================================
-   LANÇAMENTO — LISTA
-================================================================ */
-function filtrarLanc(){
-  const q=(document.getElementById('lanc-busca')?.value||'').toLowerCase();
-  const turno=document.getElementById('lanc-f-turno')?.value||'';
-  const modelo=document.getElementById('lanc-f-modelo')?.value||'';
-  const data=document.getElementById('lanc-f-data')?.value||'';
-  let lista=_lancamentos;
-  if(q){lista=lista.filter(l=>{const ins=_insumos.find(i=>i.id===l.insumo_id);return (ins?.nome||'').toLowerCase().includes(q)||(l.lote||'').toLowerCase().includes(q)||(l.responsavel||'').toLowerCase().includes(q);});}
-  if(turno) lista=lista.filter(l=>l.turno===turno);
-  if(modelo) lista=lista.filter(l=>l.modelo===modelo);
-  if(data) lista=lista.filter(l=>l.data===data);
-  renderLanc(lista);
+function _populateSelects(){
+  const insumoOpts='<option value="">Selecione o insumo...</option>'+
+    _insumos.map(i=>`<option value="${i.id}" data-custo="${i.preco_compra||0}">${esc(i.nome)}</option>`).join('');
+  document.getElementById('f-insumo-ent').innerHTML=insumoOpts;
+  document.getElementById('f-insumo-sai').innerHTML=insumoOpts;
+  document.getElementById('rel-insumo').innerHTML='<option value="">Todos os produtos</option>'+
+    _insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
+  const fornOpts='<option value="">Nenhum</option>'+
+    _fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</option>`).join('');
+  document.getElementById('f-fornecedor').innerHTML=fornOpts;
 }
 
-function renderLanc(lista){
-  lista=lista||_lancamentos;
+function _loadUser(){
+  try{
+    const u=JSON.parse(localStorage.getItem('sb_user')||'{}');
+    se('sb-user-nome',u.nome||u.email||'—');
+  }catch{}
+}
+
+/* ================================================================
+   LIST — render
+================================================================ */
+function renderLanc(){
+  const busca=(document.getElementById('lanc-busca')?.value||'').toLowerCase();
+  const tipo=document.getElementById('lanc-f-tipo')?.value||'';
+  const de=document.getElementById('lanc-f-de')?.value||'';
+  const ate=document.getElementById('lanc-f-ate')?.value||'';
+  const rows=_lancs.filter(l=>{
+    if(tipo&&l.tipo!==tipo)return false;
+    if(busca){const ins=_insumos.find(i=>i.id===l.insumo_id);if(!(ins?.nome||'').toLowerCase().includes(busca))return false;}
+    if(de&&l.data<de)return false;
+    if(ate&&l.data>ate)return false;
+    return true;
+  });
   const tbody=document.getElementById('lanc-body');
-  if(!lista.length){tbody.innerHTML='<tr><td colspan="11" class="empty-st">Nenhum lançamento encontrado.</td></tr>';return;}
-  tbody.innerHTML=lista.map(l=>{
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty-st">Nenhum lançamento encontrado.</td></tr>';return;}
+  tbody.innerHTML=rows.map(l=>{
     const ins=_insumos.find(i=>i.id===l.insumo_id);
-    const pesoBruto=l.peso_bruto||l.peso_congelado||l.peso_inicial||l.qtd_produzida||0;
-    const pesoLimpo=l.peso_limpo||l.peso_final||l.qtd_produzida||0;
-    return `<tr style="cursor:pointer" onclick="abrirModal('${l.id}')">
-      <td class="mono" style="font-size:12px">${fmtDate(l.data)}</td>
-      <td class="mono" style="font-size:11px;color:var(--text3)">${esc(l.lote||'—')}</td>
+    const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
+    const isEnt=l.tipo==='entrada';
+    const badge=isEnt?'<span class="badge b-ent">↓ Entrada</span>':'<span class="badge b-sai">↑ Saída</span>';
+    const rendVal=l.rendimento_pct!=null?`<span class="mono">${pct(l.rendimento_pct)}</span>`:'—';
+    return `<tr>
+      <td>${fmtDate(l.data)}</td>
+      <td>${badge}</td>
       <td style="font-weight:600">${esc(ins?.nome||'—')}</td>
-      <td>${modeloLabel(l.modelo)}</td>
-      <td>${turnoLabel(l.turno)}</td>
-      <td class="r mono">${fmtKg(pesoBruto)}</td>
-      <td class="r mono">${fmtKg(pesoLimpo)}</td>
-      <td class="r mono" style="color:var(--orange);font-weight:600">${fmtPct(l.rendimento_pct)}</td>
-      <td class="r mono">${brl(l.valor_total)}</td>
-      <td style="color:var(--text2)">${esc(l.responsavel||'—')}</td>
-      <td>
-        <button class="btn-icon" onclick="excluirLanc('${l.id}',event)" title="Excluir">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      <td>${esc(forn?(forn.nome_fantasia||forn.nome||forn.razao_social||'—'):'—')}</td>
+      <td class="r mono">${l.qtd_peixes||'—'}</td>
+      <td class="r mono">${kg(l.peso_bruto)}</td>
+      <td class="r">${rendVal}</td>
+      <td>${esc(l.responsavel||'—')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="editarLanc('${l.id}')">Editar</button>
+        <button class="btn-icon" onclick="excluirLanc('${l.id}',event)" title="Excluir" style="margin-left:4px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>
       </td>
     </tr>`;
@@ -697,228 +655,212 @@ function renderLanc(lista){
 }
 
 /* ================================================================
-   MODAL — ABRIR / FECHAR
+   FORM — show / hide
 ================================================================ */
-function abrirModal(id){
-  _editId=id||null;
-  const l=_editId?_lancamentos.find(x=>x.id===_editId):null;
-  document.getElementById('modal-lanc-titulo').textContent=l?'Editar Lançamento':'Novo Lançamento';
-  document.getElementById('modal-lanc').classList.add('open');
-
-  if(l){
-    setV('f-insumo',l.insumo_id||'');
-    setV('f-modelo',l.modelo||'simples');
-    setV('f-data',l.data||'');
-    setV('f-turno',l.turno||'Manhã');
-    setV('f-lote',l.lote||'');
-    setV('f-responsavel',l.responsavel||'');
-    setV('f-fornecedor',l.fornecedor_id||'');
-    setV('f-obs',l.observacoes||'');
-    onModeloChange();
-    // Preencher campos por modelo
-    const m=l.modelo||'simples';
-    if(m==='simples'){setV('f-peso-bruto',l.peso_bruto);setV('f-custo-unit',l.custo_unitario);setV('f-p-cabeca',l.perda_cabeca);setV('f-p-pele',l.perda_pele);setV('f-p-espinha',l.perda_espinha);setV('f-p-outros',l.perda_outros);calcSimples();}
-    if(m==='degelo'){setV('fd-congelado',l.peso_congelado);setV('fd-descongelado',l.peso_descongelado);setV('fd-limpo',l.peso_limpo);setV('fd-custo',l.custo_unitario);calcDegelo();}
-    if(m==='coccao'){setV('fc-inicial',l.peso_inicial);setV('fc-final',l.peso_final);setV('fc-custo',l.custo_unitario);calcCoccao();}
-    if(m==='lote'){setV('fl-produzida',l.qtd_produzida);setV('fl-consumida',l.qtd_consumida);setV('fl-sobra',l.sobra_lote);setV('fl-validade',l.validade||'');setV('fl-custo',l.custo_unitario);calcLote();}
-  } else {
-    // Defaults
-    const today=new Date().toISOString().slice(0,10);
-    setV('f-data',today);
-    setV('f-turno','Manhã');
-    setV('f-modelo','simples');
-    ['f-insumo','f-lote','f-responsavel','f-fornecedor','f-obs',
-     'f-peso-bruto','f-custo-unit','f-p-cabeca','f-p-pele','f-p-espinha','f-p-outros','f-peso-limpo',
-     'fd-congelado','fd-descongelado','fd-limpo','fd-custo',
-     'fc-inicial','fc-final','fc-custo',
-     'fl-produzida','fl-consumida','fl-sobra','fl-validade','fl-custo'].forEach(id=>setV(id,''));
-    onModeloChange();
-    _resetCalc();
-  }
+function showLista(){
+  document.getElementById('lanc-list').style.display='';
+  document.getElementById('lanc-form').style.display='none';
+  renderLanc();
 }
-
-function fecharModal(){
-  document.getElementById('modal-lanc').classList.remove('open');
+function showForm(){
+  document.getElementById('lanc-list').style.display='none';
+  document.getElementById('lanc-form').style.display='block';
+}
+function novoLancamento(){
   _editId=null;
+  _resetForm();
+  se('form-breadcrumb','Novo Lançamento');
+  showForm();
 }
-
-function _resetCalc(){
-  ['cv-limpo','cv-perdas','cv-rend','cv-valor','dv-limpo','dv-perdas','dv-rend','dv-valor','ccv-red','ccv-rend','ccv-valor','lv-rend','lv-valor'].forEach(id=>{
-    const e=document.getElementById(id);if(e)e.textContent='—';
-  });
+function editarLanc(id){
+  const l=_lancs.find(x=>x.id===id);
+  if(!l)return;
+  _editId=id;
+  _resetForm();
+  _populateForm(l);
+  se('form-breadcrumb','Editar Lançamento');
+  showForm();
 }
-
-/* ================================================================
-   LÓGICA DE MODELO
-================================================================ */
-function onInsumoChange(){
-  const sel=document.getElementById('f-insumo');
-  const opt=sel.options[sel.selectedIndex];
-  const modelo=opt?.dataset?.modelo||'simples';
-  setV('f-modelo',modelo);
-  onModeloChange();
-  // Sugerir lote
-  const ins=_insumos.find(i=>i.id===sel.value);
-  if(ins){
-    const prefix=ins.nome.substring(0,2).toUpperCase();
-    const d=new Date();
-    const dt=`${String(d.getDate()).padStart(2,'0')}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getFullYear()).slice(-2)}`;
-    const seq=String((_lancamentos.filter(l=>l.insumo_id===ins.id).length+1)).padStart(2,'0');
-    setV('f-lote',`${prefix}${dt}-${seq}`);
+function _resetForm(){
+  const ids=['f-data','f-loja','f-fornecedor','f-turno','f-responsavel','f-obs',
+    'f-insumo-ent','f-qtd-ent','f-peso-bruto','f-valor-total','f-custo-kg-ent','f-cabeca','f-liq-arm',
+    'f-insumo-sai','f-qtd-sai','f-peso-entrada','f-custo-kg-sai','f-file-limpo','f-pele','f-aparas','f-perdas'];
+  ids.forEach(id=>sv(id,''));
+  sv('f-data',new Date().toISOString().slice(0,10));
+  setTipo('entrada');
+  ['cv-pct-cab','cv-liq-arm','cv-novo-custo','sv-aprov','sv-perdas','sv-rend','sv-custo-file','sv-custo-aprov']
+    .forEach(id=>se(id,'—'));
+}
+function _populateForm(l){
+  setTipo(l.tipo||'entrada');
+  sv('f-data',l.data||'');
+  sv('f-responsavel',l.responsavel||'');
+  sv('f-obs',l.observacoes||'');
+  if(l.tipo==='entrada'){
+    sv('f-insumo-ent',l.insumo_id||'');
+    sv('f-qtd-ent',l.qtd_peixes||'');
+    sv('f-peso-bruto',l.peso_bruto||'');
+    sv('f-valor-total',l.valor_total||'');
+    sv('f-custo-kg-ent',l.custo_unitario||'');
+    sv('f-cabeca',l.perda_cabeca||'');
+    sv('f-fornecedor',l.fornecedor_id||'');
+    calcEntrada();
+  } else {
+    sv('f-insumo-sai',l.insumo_id||'');
+    sv('f-qtd-sai',l.qtd_peixes||'');
+    sv('f-peso-entrada',l.peso_bruto||'');
+    sv('f-custo-kg-sai',l.custo_unitario||'');
+    sv('f-file-limpo',l.peso_limpo||'');
+    sv('f-pele',l.pele||'');
+    sv('f-aparas',l.aparas||'');
+    sv('f-turno',l.turno||'');
+    calcSaida();
   }
 }
 
-function onModeloChange(){
-  const modelo=document.getElementById('f-modelo')?.value||'simples';
-  document.querySelectorAll('.fields-block').forEach(b=>b.classList.remove('active'));
-  const block=document.getElementById('fields-'+modelo);
-  if(block) block.classList.add('active');
-  _resetCalc();
-}
-
 /* ================================================================
-   CÁLCULOS AUTOMÁTICOS
+   TIPO TOGGLE
 ================================================================ */
-function calcSimples(){
-  const bruto=n('f-peso-bruto');
-  const perdas=[n('f-p-cabeca'),n('f-p-pele'),n('f-p-espinha'),n('f-p-outros')];
-  const totalPerdas=round3(perdas.reduce((s,v)=>s+v,0));
-  const limpo=round3(bruto-totalPerdas);
-  const rend=bruto>0?round2(limpo/bruto*100):0;
-  const custo=n('f-custo-unit');
-  const valor=round2(bruto*custo);
-  setV('f-peso-limpo',limpo>=0?limpo:'');
-  document.getElementById('cv-limpo').textContent=limpo>=0?fmtKg(limpo):'—';
-  document.getElementById('cv-perdas').textContent=fmtKg(totalPerdas);
-  document.getElementById('cv-rend').textContent=fmtPct(rend);
-  document.getElementById('cv-valor').textContent=custo?brl(valor):'—';
-}
-
-function calcDegelo(){
-  const cong=n('fd-congelado');
-  const desc=n('fd-descongelado');
-  const limpo=n('fd-limpo');
-  const pDegelo=round3(cong-desc);
-  const pLimpo=desc>0?round3(desc-limpo):0;
-  const rend=cong>0?round2(limpo/cong*100):0;
-  const custo=n('fd-custo');
-  const valor=round2(cong*custo);
-  setV('fd-p-degelo',pDegelo>=0?pDegelo:'');
-  setV('fd-p-limpeza',pLimpo>=0?pLimpo:'');
-  document.getElementById('dv-limpo').textContent=fmtKg(limpo);
-  document.getElementById('dv-perdas').textContent=fmtKg(round3(cong-limpo));
-  document.getElementById('dv-rend').textContent=fmtPct(rend);
-  document.getElementById('dv-valor').textContent=custo?brl(valor):'—';
-}
-
-function calcCoccao(){
-  const ini=n('fc-inicial');
-  const fin=n('fc-final');
-  const red=round3(ini-fin);
-  const rend=ini>0?round2(fin/ini*100):0;
-  const custo=n('fc-custo');
-  const valor=round2(ini*custo);
-  setV('fc-reducao',red>=0?red:'');
-  document.getElementById('ccv-red').textContent=fmtKg(red);
-  document.getElementById('ccv-rend').textContent=fmtPct(rend);
-  document.getElementById('ccv-valor').textContent=custo?brl(valor):'—';
-}
-
-function calcLote(){
-  const prod=n('fl-produzida');
-  const cons=n('fl-consumida');
-  const rend=cons>0?round2(prod/cons*100):0;
-  const custo=n('fl-custo');
-  const valor=round2(cons*custo);
-  document.getElementById('lv-rend').textContent=fmtPct(rend);
-  document.getElementById('lv-valor').textContent=custo?brl(valor):'—';
+function setTipo(tipo){
+  _tipo=tipo;
+  document.getElementById('pill-entrada').classList.toggle('active',tipo==='entrada');
+  document.getElementById('pill-saida').classList.toggle('active',tipo==='saida');
+  ['sec-recebimento','sec-quebra'].forEach(id=>{
+    document.getElementById(id).style.display=tipo==='entrada'?'':'none';
+  });
+  ['sec-processamento','sec-resultados'].forEach(id=>{
+    document.getElementById(id).style.display=tipo==='saida'?'':'none';
+  });
+  document.getElementById('fg-fornecedor').style.display=tipo==='entrada'?'':'none';
+  document.getElementById('fg-turno').style.display=tipo==='saida'?'':'none';
 }
 
 /* ================================================================
-   SALVAR LANÇAMENTO
+   CÁLCULOS — ENTRADA
+================================================================ */
+function calcEntrada(){
+  const bruto=n('f-peso-bruto');
+  const cabeca=n('f-cabeca');
+  const liq=r3(bruto-cabeca);
+  const valor=n('f-valor-total');
+  sv('f-liq-arm',liq>0?liq:'');
+  se('cv-pct-cab',bruto>0?pct(r2(cabeca/bruto*100)):'—');
+  se('cv-liq-arm',liq>0?kg(liq):'—');
+  const novoCusto=liq>0&&valor>0?r2(valor/liq):null;
+  se('cv-novo-custo',novoCusto?brl(novoCusto):'—');
+}
+function onValorChange(){
+  const bruto=n('f-peso-bruto'),val=n('f-valor-total');
+  if(bruto>0&&val>0) sv('f-custo-kg-ent',r2(val/bruto));
+  calcEntrada();
+}
+function onCustoKgEntChange(){
+  const bruto=n('f-peso-bruto'),custo=n('f-custo-kg-ent');
+  if(bruto>0&&custo>0) sv('f-valor-total',r2(bruto*custo));
+  calcEntrada();
+}
+
+/* ================================================================
+   CÁLCULOS — SAÍDA
+================================================================ */
+function onInsumoSaiChange(){
+  const sel=document.getElementById('f-insumo-sai');
+  const opt=sel.options[sel.selectedIndex];
+  const custo=parseFloat(opt?.dataset?.custo)||0;
+  if(custo>0) sv('f-custo-kg-sai',custo);
+  calcSaida();
+}
+function calcSaida(){
+  const entrada=n('f-peso-entrada');
+  const file=n('f-file-limpo');
+  const pele=n('f-pele');
+  const aparas=n('f-aparas');
+  const aprov=r3(file+pele+aparas);
+  const perdas=r3(Math.max(0,entrada-aprov));
+  const rend=entrada>0?r2(aprov/entrada*100):null;
+  const custoKg=n('f-custo-kg-sai');
+  const valorEnt=custoKg*entrada;
+  const custoFile=file>0&&custoKg>0?r2(valorEnt/file):null;
+  const custoAprov=aprov>0&&custoKg>0?r2(valorEnt/aprov):null;
+  sv('f-perdas',perdas>0?perdas:'');
+  se('sv-aprov',aprov>0?kg(aprov):'—');
+  se('sv-perdas',perdas>0?kg(perdas):'—');
+  se('sv-rend',rend!=null?pct(rend):'—');
+  se('sv-custo-file',custoFile?brl(custoFile):'—');
+  se('sv-custo-aprov',custoAprov?brl(custoAprov):'—');
+}
+
+/* ================================================================
+   SALVAR
 ================================================================ */
 async function salvarLanc(){
-  const modelo=document.getElementById('f-modelo').value;
-  const insumoId=document.getElementById('f-insumo').value;
-  if(!insumoId){toast('Selecione o item.','err');return;}
   const data=document.getElementById('f-data').value;
   if(!data){toast('Informe a data.','err');return;}
+  let payload={tipo:_tipo,data,observacoes:document.getElementById('f-obs').value.trim()||null,
+    responsavel:document.getElementById('f-responsavel').value.trim()||null};
 
-  // ── Validações por parâmetro ─────────────────────────────
-  await Params.load();
-  const resp=document.getElementById('f-responsavel').value.trim();
-  if(Params.bool('porcionamento','obrigar_responsavel')&&!resp){
-    toast('Responsável é obrigatório (Parâmetros > Porcionamento).','err');return;}
-  const fornId=document.getElementById('f-fornecedor').value;
-  if(Params.bool('porcionamento','obrigar_fornecedor')&&!fornId){
-    toast('Fornecedor é obrigatório (Parâmetros > Porcionamento).','err');return;}
-  const lote=document.getElementById('f-lote').value.trim();
-  if(Params.bool('porcionamento','obrigar_lote')&&!lote){
-    toast('Lote é obrigatório (Parâmetros > Porcionamento).','err');return;}
-  // ─────────────────────────────────────────────────────────
-
-  let payload={
-    insumo_id:insumoId,
-    modelo,
-    data,
-    turno:document.getElementById('f-turno').value||null,
-    lote:document.getElementById('f-lote').value.trim()||null,
-    responsavel:document.getElementById('f-responsavel').value.trim()||null,
-    fornecedor_id:document.getElementById('f-fornecedor').value||null,
-    observacoes:document.getElementById('f-obs').value.trim()||null,
-  };
-
-  if(modelo==='simples'){
+  if(_tipo==='entrada'){
+    const insumoId=document.getElementById('f-insumo-ent').value;
+    if(!insumoId){toast('Selecione o produto recebido.','err');return;}
     const bruto=n('f-peso-bruto');
-    const limpo=n('f-peso-limpo');
-    const rend=bruto>0?round2(limpo/bruto*100):null;
-    const custo=n('f-custo-unit');
+    if(!bruto){toast('Informe o peso bruto total.','err');return;}
+    const cabeca=n('f-cabeca');
+    const liq=r3(bruto-cabeca);
+    const valor=n('f-valor-total');
+    const custoKg=n('f-custo-kg-ent');
     Object.assign(payload,{
-      peso_bruto:bruto||null,peso_limpo:limpo||null,
-      perda_cabeca:n('f-p-cabeca')||null,perda_pele:n('f-p-pele')||null,
-      perda_espinha:n('f-p-espinha')||null,perda_outros:n('f-p-outros')||null,
-      rendimento_pct:rend,custo_unitario:custo||null,
-      valor_total:custo?round2(bruto*custo):null,
+      insumo_id:insumoId,
+      fornecedor_id:document.getElementById('f-fornecedor').value||null,
+      qtd_peixes:parseInt(document.getElementById('f-qtd-ent').value)||null,
+      peso_bruto:bruto||null,
+      valor_total:valor||null,
+      custo_unitario:custoKg||null,
+      perda_cabeca:cabeca||null,
+      peso_limpo:liq>0?liq:null,
+      pct_cabeca:bruto>0?r2(cabeca/bruto*100):null,
+      novo_custo_kg:(liq>0&&valor>0)?r2(valor/liq):null,
     });
-  } else if(modelo==='degelo'){
-    const cong=n('fd-congelado');const limpo=n('fd-limpo');
-    const rend=cong>0?round2(limpo/cong*100):null;const custo=n('fd-custo');
+  } else {
+    const insumoId=document.getElementById('f-insumo-sai').value;
+    if(!insumoId){toast('Selecione o produto processado.','err');return;}
+    const entrada=n('f-peso-entrada');
+    if(!entrada){toast('Informe o peso de entrada.','err');return;}
+    const file=n('f-file-limpo');
+    const peleV=n('f-pele');
+    const aparasV=n('f-aparas');
+    const aprov=r3(file+peleV+aparasV);
+    const perdas=r3(Math.max(0,entrada-aprov));
+    const rend=entrada>0?r2(aprov/entrada*100):null;
+    const custoKg=n('f-custo-kg-sai');
+    const valorEnt=custoKg*entrada;
     Object.assign(payload,{
-      peso_congelado:cong||null,peso_descongelado:n('fd-descongelado')||null,
-      peso_limpo:limpo||null,rendimento_pct:rend,
-      custo_unitario:custo||null,valor_total:custo?round2(cong*custo):null,
-    });
-  } else if(modelo==='coccao'){
-    const ini=n('fc-inicial');const fin=n('fc-final');
-    const rend=ini>0?round2(fin/ini*100):null;const custo=n('fc-custo');
-    Object.assign(payload,{
-      peso_inicial:ini||null,peso_final:fin||null,
-      rendimento_pct:rend,custo_unitario:custo||null,
-      valor_total:custo?round2(ini*custo):null,
-    });
-  } else if(modelo==='lote'){
-    const prod=n('fl-produzida');const cons=n('fl-consumida');
-    const rend=cons>0?round2(prod/cons*100):null;const custo=n('fl-custo');
-    Object.assign(payload,{
-      qtd_produzida:prod||null,qtd_consumida:cons||null,
-      sobra_lote:n('fl-sobra')||null,
-      validade:document.getElementById('fl-validade').value||null,
-      rendimento_pct:rend,custo_unitario:custo||null,
-      valor_total:custo?round2(cons*custo):null,
+      insumo_id:insumoId,
+      turno:document.getElementById('f-turno').value||null,
+      qtd_peixes:parseInt(document.getElementById('f-qtd-sai').value)||null,
+      peso_bruto:entrada||null,
+      custo_unitario:custoKg||null,
+      peso_limpo:file||null,
+      pele:peleV||null,
+      aparas:aparasV||null,
+      perda_outros:perdas>0?perdas:null,
+      rendimento_pct:rend,
+      custo_kg_file:(file>0&&custoKg>0)?r2(valorEnt/file):null,
+      custo_kg_aprov:(aprov>0&&custoKg>0)?r2(valorEnt/aprov):null,
     });
   }
 
-  // ── Alerta de perda alta ─────────────────────────────────
-  if(Params.bool('porcionamento','alertar_perda_alta')&&payload.rendimento_pct!=null){
-    const maxPerda=Params.num('porcionamento','pct_max_perda',40);
-    const perdaPct=100-payload.rendimento_pct;
-    if(perdaPct>maxPerda){
-      if(!confirm(`⚠️ Perda de ${perdaPct.toFixed(1)}% está acima do limite de ${maxPerda}% (Parâmetros > Porcionamento).\n\nDeseja salvar mesmo assim?`))return;
-    }
+  await Params.load();
+  if(Params.bool('porcionamento','obrigar_responsavel')&&!payload.responsavel){
+    toast('Responsável é obrigatório (Parâmetros).','err');return;}
+  if(_tipo==='entrada'&&Params.bool('porcionamento','obrigar_fornecedor')&&!payload.fornecedor_id){
+    toast('Fornecedor é obrigatório (Parâmetros).','err');return;}
+  if(_tipo==='saida'&&Params.bool('porcionamento','alertar_perda_alta')&&payload.rendimento_pct!=null){
+    const maxP=Params.num('porcionamento','pct_max_perda',40);
+    const perdPct=100-payload.rendimento_pct;
+    if(perdPct>maxP&&!confirm(`⚠️ Perda de ${perdPct.toFixed(1)}% acima do limite de ${maxP}%.\nSalvar mesmo assim?`))return;
   }
-  // ─────────────────────────────────────────────────────────
 
-  const btn=document.getElementById('btn-salvar-lanc');
+  const btn=document.getElementById('btn-salvar');
   btn.disabled=true;btn.textContent='Salvando...';
   try{
     if(_editId){
@@ -929,9 +871,8 @@ async function salvarLanc(){
       await api('porcao_lancamentos',{method:'POST',body:JSON.stringify(payload)});
       toast('Lançamento registrado.','ok');
     }
-    fecharModal();
-    _lancamentos=await api(`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=200`).catch(()=>[]);
-    renderLanc();
+    _lancs=await api(`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`).catch(()=>[]);
+    showLista();
   }catch(e){toast('Erro: '+e.message,'err');}
   finally{btn.disabled=false;btn.textContent='Salvar Lançamento';}
 }
@@ -942,248 +883,164 @@ async function excluirLanc(id,e){
   try{
     await api(`porcao_lancamentos?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
     toast('Excluído.','ok');
-    _lancamentos=_lancamentos.filter(l=>l.id!==id);
+    _lancs=_lancs.filter(l=>l.id!==id);
     renderLanc();
   }catch(err){toast('Erro: '+err.message,'err');}
 }
 
 /* ================================================================
+   COLUNAS DO RELATÓRIO
+================================================================ */
+const COLS=[
+  {id:'data',       lbl:'Data',                   on:true},
+  {id:'tipo',       lbl:'Tipo',                   on:true},
+  {id:'produto',    lbl:'Produto',                on:true},
+  {id:'fornecedor', lbl:'Fornecedor',             on:true},
+  {id:'qtd',        lbl:'Qtd. Peixes',            on:true},
+  {id:'peso_bruto', lbl:'Peso Bruto Recebido',    on:true},
+  {id:'cabeca',     lbl:'Cabeça (kg)',             on:true},
+  {id:'liq_arm',    lbl:'Peso Líq. Armazenado',   on:true},
+  {id:'peso_ent',   lbl:'Peso Entrada Filetagem',  on:true},
+  {id:'file_limpo', lbl:'Filé Limpo',             on:true},
+  {id:'pele',       lbl:'Pele',                   on:true},
+  {id:'aparas',     lbl:'Aparas',                 on:true},
+  {id:'perdas',     lbl:'Perdas',                 on:true},
+  {id:'rend_op',    lbl:'Rendimento Op.',         on:true},
+  {id:'custo_kg',   lbl:'Custo/kg',               on:true},
+  {id:'responsavel',lbl:'Responsável',            on:true},
+];
+
+function toggleColPanel(e){
+  e.stopPropagation();
+  const p=document.getElementById('col-panel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')) _renderColChecks();
+}
+document.addEventListener('click',()=>document.getElementById('col-panel')?.classList.remove('open'));
+
+function _renderColChecks(){
+  document.getElementById('col-checks').innerHTML=COLS.map(c=>`
+    <label class="col-chk-item">
+      <input type="checkbox" ${c.on?'checked':''} onchange="toggleCol('${c.id}',this.checked)">
+      ${esc(c.lbl)}
+    </label>`).join('');
+}
+function toggleCol(id,on){
+  const c=COLS.find(x=>x.id===id);
+  if(c){c.on=on;if(_relData.length) _renderRelTable();}
+}
+
+/* ================================================================
    RELATÓRIO
 ================================================================ */
-function filtrarRelatorio(){
-  const insId=document.getElementById('rel-insumo').value;
-  if(!insId){toast('Selecione um item para gerar o relatório.','err');return;}
+async function filtrarRel(){
+  const insumoId=document.getElementById('rel-insumo').value;
+  const tipo=document.getElementById('rel-tipo').value;
   const de=document.getElementById('rel-de').value;
   const ate=document.getElementById('rel-ate').value;
-  const turno=document.getElementById('rel-turno').value;
-  const fornId=document.getElementById('rel-forn').value;
-
-  let data=_lancamentos.filter(l=>l.insumo_id===insId);
-  if(de) data=data.filter(l=>l.data>=de);
-  if(ate) data=data.filter(l=>l.data<=ate);
-  if(turno) data=data.filter(l=>l.turno===turno);
-  if(fornId) data=data.filter(l=>l.fornecedor_id===fornId);
-  data=data.sort((a,b)=>a.data.localeCompare(b.data));
-
-  _relData=data;
-  document.getElementById('rel-empty').style.display='none';
-  document.getElementById('rel-kpis').style.display='grid';
-  document.getElementById('rel-content').style.display='block';
-
-  renderKPIs(data);
-  renderTabelaRel(data);
-  renderGraficoEvolucao(data);
-  renderGraficoComposicao(data);
+  let qs=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`;
+  if(insumoId) qs+=`&insumo_id=eq.${insumoId}`;
+  if(tipo) qs+=`&tipo=eq.${tipo}`;
+  if(de) qs+=`&data=gte.${de}`;
+  if(ate) qs+=`&data=lte.${ate}`;
+  try{
+    _relData=await api(qs);
+    _renderRelKpis();
+    _renderRelTable();
+    const hasData=_relData.length>0;
+    document.getElementById('rel-kpis').style.display=hasData?'':'none';
+    document.getElementById('rel-content').style.display=hasData?'':'none';
+    document.getElementById('rel-empty').style.display=hasData?'none':'';
+  }catch(e){toast('Erro: '+e.message,'err');}
 }
 
-function limparFiltrosRel(){
-  ['rel-insumo','rel-turno','rel-forn','rel-de','rel-ate'].forEach(id=>setV(id,''));
-  document.getElementById('rel-empty').style.display='block';
+function limparRel(){
+  ['rel-insumo','rel-tipo','rel-de','rel-ate'].forEach(id=>sv(id,''));
+  _relData=[];
   document.getElementById('rel-kpis').style.display='none';
   document.getElementById('rel-content').style.display='none';
+  document.getElementById('rel-empty').style.display='';
 }
 
-function renderKPIs(data){
-  const totalBruto=round3(data.reduce((s,l)=>s+(l.peso_bruto||l.peso_congelado||l.peso_inicial||l.qtd_consumida||0),0));
-  const totalLimpo=round3(data.reduce((s,l)=>s+(l.peso_limpo||l.peso_final||l.qtd_produzida||0),0));
-  const totalPerdas=round3(totalBruto-totalLimpo);
-  const perdaPct=totalBruto>0?round2(totalPerdas/totalBruto*100):0;
-  const rendMedio=data.length?round2(data.reduce((s,l)=>s+(l.rendimento_pct||0),0)/data.length):0;
-  const totalValor=round2(data.reduce((s,l)=>s+(l.valor_total||0),0));
-
-  document.getElementById('k-bruto').textContent=fmtKg(totalBruto);
-  document.getElementById('k-limpo').textContent=fmtKg(totalLimpo);
-  document.getElementById('k-perdas').textContent=fmtKg(totalPerdas);
-  document.getElementById('k-perdas-pct').textContent=perdaPct+'%';
-  document.getElementById('k-rend').textContent=fmtPct(rendMedio);
-  document.getElementById('k-valor').textContent=brl(totalValor);
+function _renderRelKpis(){
+  const ent=_relData.filter(r=>r.tipo==='entrada');
+  const sai=_relData.filter(r=>r.tipo==='saida');
+  const bruto=ent.reduce((s,r)=>s+(r.peso_bruto||0),0);
+  const file=sai.reduce((s,r)=>s+(r.peso_limpo||0),0);
+  const perdas=sai.reduce((s,r)=>s+(r.perda_outros||0),0);
+  const totalEnt=sai.reduce((s,r)=>s+(r.peso_bruto||0),0);
+  const rend=totalEnt>0?r2((totalEnt-perdas)/totalEnt*100):null;
+  se('k-bruto',bruto>0?kg(bruto):'—');
+  se('k-file',file>0?kg(file):'—');
+  se('k-perdas',perdas>0?kg(perdas):'—');
+  se('k-perdas-sub',rend!=null?pct(r2(100-rend))+' perda':'');
+  se('k-rend',rend!=null?pct(rend):'—');
+  se('k-count',_relData.length+'');
 }
 
-function renderTabelaRel(data){
-  const modelo=data[0]?.modelo||'simples';
-  const thead=document.getElementById('rel-thead-tr');
+function _renderRelTable(){
+  const visCols=COLS.filter(c=>c.on);
+  document.getElementById('rel-thead').innerHTML=visCols.map(c=>`<th>${esc(c.lbl)}</th>`).join('');
   const tbody=document.getElementById('rel-tbody');
-
-  if(modelo==='simples'){
-    thead.innerHTML='<th>Data</th><th>Lote</th><th>Fornecedor</th><th>Turno</th><th class="r">Peso Bruto</th><th class="r">Peso Limpo</th><th class="r">Cabeça</th><th class="r">Pele</th><th class="r">Espinha</th><th class="r">Outros</th><th class="r">Total Perdas</th><th class="r">Rendimento %</th><th class="r">Valor</th><th>Responsável</th>';
-    let sumBruto=0,sumLimpo=0,sumCab=0,sumPele=0,sumEsp=0,sumOut=0;
-    tbody.innerHTML=data.map(l=>{
-      const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
-      const totalP=round3((l.perda_cabeca||0)+(l.perda_pele||0)+(l.perda_espinha||0)+(l.perda_outros||0));
-      sumBruto+=l.peso_bruto||0;sumLimpo+=l.peso_limpo||0;
-      sumCab+=l.perda_cabeca||0;sumPele+=l.perda_pele||0;sumEsp+=l.perda_espinha||0;sumOut+=l.perda_outros||0;
-      return `<tr>
-        <td class="mono" style="font-size:12px">${fmtDate(l.data)}</td>
-        <td class="mono" style="font-size:11px;color:var(--text3)">${esc(l.lote||'—')}</td>
-        <td style="font-size:12px">${esc(forn?.nome_fantasia||forn?.nome||'—')}</td>
-        <td>${turnoLabel(l.turno)}</td>
-        <td class="r mono">${fmtKg(l.peso_bruto)}</td>
-        <td class="r mono">${fmtKg(l.peso_limpo)}</td>
-        <td class="r mono" style="color:var(--text2)">${fmtKg(l.perda_cabeca)}</td>
-        <td class="r mono" style="color:var(--text2)">${fmtKg(l.perda_pele)}</td>
-        <td class="r mono" style="color:var(--text2)">${fmtKg(l.perda_espinha)}</td>
-        <td class="r mono" style="color:var(--text2)">${fmtKg(l.perda_outros)}</td>
-        <td class="r mono" style="color:var(--red)">${fmtKg(totalP)}</td>
-        <td class="r mono" style="color:var(--orange);font-weight:600">${fmtPct(l.rendimento_pct)}</td>
-        <td class="r mono">${brl(l.valor_total)}</td>
-        <td style="font-size:12px;color:var(--text2)">${esc(l.responsavel||'—')}</td>
-      </tr>`;
-    }).join('')+`<tr style="background:#f8fafc;font-weight:700">
-      <td colspan="4" style="font-size:12px;color:var(--text3)">TOTAL GERAL</td>
-      <td class="r mono">${fmtKg(sumBruto)}</td><td class="r mono">${fmtKg(sumLimpo)}</td>
-      <td class="r mono">${fmtKg(sumCab)}</td><td class="r mono">${fmtKg(sumPele)}</td>
-      <td class="r mono">${fmtKg(sumEsp)}</td><td class="r mono">${fmtKg(sumOut)}</td>
-      <td class="r mono" style="color:var(--red)">${fmtKg(round3(sumBruto-sumLimpo))}</td>
-      <td class="r mono" style="color:var(--orange)">${sumBruto?fmtPct(round2(sumLimpo/sumBruto*100)):'—'}</td>
-      <td class="r mono">${brl(round2(data.reduce((s,l)=>s+(l.valor_total||0),0)))}</td>
-      <td></td>
-    </tr>`;
-  } else {
-    // Tabela genérica para outros modelos
-    thead.innerHTML='<th>Data</th><th>Lote</th><th>Turno</th><th class="r">Entrada (kg)</th><th class="r">Saída (kg)</th><th class="r">Rendimento %</th><th class="r">Valor</th><th>Responsável</th>';
-    tbody.innerHTML=data.map(l=>{
-      const entrada=l.peso_bruto||l.peso_congelado||l.peso_inicial||l.qtd_consumida||0;
-      const saida=l.peso_limpo||l.peso_final||l.qtd_produzida||0;
-      return `<tr>
-        <td class="mono" style="font-size:12px">${fmtDate(l.data)}</td>
-        <td class="mono" style="font-size:11px;color:var(--text3)">${esc(l.lote||'—')}</td>
-        <td>${turnoLabel(l.turno)}</td>
-        <td class="r mono">${fmtKg(entrada)}</td>
-        <td class="r mono">${fmtKg(saida)}</td>
-        <td class="r mono" style="color:var(--orange);font-weight:600">${fmtPct(l.rendimento_pct)}</td>
-        <td class="r mono">${brl(l.valor_total)}</td>
-        <td style="font-size:12px;color:var(--text2)">${esc(l.responsavel||'—')}</td>
-      </tr>`;
-    }).join('');
+  if(!_relData.length){
+    tbody.innerHTML=`<tr><td colspan="${visCols.length}" class="empty-st">Nenhum dado.</td></tr>`;return;
   }
-}
-
-function switchRelTab(tab,btn){
-  document.querySelectorAll('.rel-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  const pane=document.getElementById('rel-'+tab);
-  if(pane) pane.classList.add('active');
-}
-
-/* ================================================================
-   GRÁFICOS
-================================================================ */
-function renderGraficoEvolucao(data){
-  const container=document.getElementById('chart-evolucao');
-  if(!data.length){container.innerHTML='<div class="empty-st">Sem dados</div>';return;}
-  const pts=data.filter(l=>l.rendimento_pct!=null);
-  if(!pts.length){container.innerHTML='<div class="empty-st">Sem dados de rendimento</div>';return;}
-  const W=560,H=160,pad={top:20,right:20,bottom:30,left:48};
-  const W2=W-pad.left-pad.right,H2=H-pad.top-pad.bottom;
-  const vals=pts.map(p=>p.rendimento_pct);
-  const minV=Math.max(0,Math.min(...vals)-5),maxV=Math.min(100,Math.max(...vals)+5);
-  const xS=i=>pad.left+(pts.length>1?i/(pts.length-1):0.5)*W2;
-  const yS=v=>pad.top+H2-((v-minV)/(maxV-minV||1))*H2;
-  const polyPts=pts.map((p,i)=>`${xS(i)},${yS(p.rendimento_pct)}`).join(' ');
-  const areaPath=`M${xS(0)},${pad.top+H2} ${pts.map((p,i)=>`L${xS(i)},${yS(p.rendimento_pct)}`).join(' ')} L${xS(pts.length-1)},${pad.top+H2} Z`;
-  const circles=pts.map((p,i)=>`
-    <circle cx="${xS(i)}" cy="${yS(p.rendimento_pct)}" r="4" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
-    <text x="${xS(i)}" y="${yS(p.rendimento_pct)-10}" text-anchor="middle" font-size="10" fill="#374151">${round2(p.rendimento_pct)}%</text>
-  `).join('');
-  const xlabels=pts.map((p,i)=>`<text x="${xS(i)}" y="${pad.top+H2+18}" text-anchor="middle" font-size="10" fill="#94a3b8">${fmtDate(p.data).slice(0,5)}</text>`).join('');
-  container.innerHTML=`<svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible">
-    <path d="${areaPath}" fill="rgba(59,130,246,.08)"/>
-    <polyline points="${polyPts}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linejoin="round"/>
-    ${circles}${xlabels}
-  </svg>`;
-}
-
-function renderGraficoComposicao(data){
-  const cDot=document.getElementById('chart-donut');
-  const cLeg=document.getElementById('donut-legend');
-  const cBar=document.getElementById('chart-barras');
-  const cats=[
-    {key:'perda_cabeca',label:'Cabeça',color:'#3b82f6'},
-    {key:'perda_pele',label:'Pele',color:'#f97316'},
-    {key:'perda_espinha',label:'Espinha',color:'#8b5cf6'},
-    {key:'perda_outros',label:'Outros',color:'#94a3b8'},
-  ];
-  const totals=cats.map(c=>({...c,total:round3(data.reduce((s,l)=>s+(l[c.key]||0),0))}));
-  const grand=round3(totals.reduce((s,c)=>s+c.total,0));
-  if(!grand){cDot.innerHTML='<div class="empty-st">Sem perdas registradas</div>';cLeg.innerHTML='';cBar.innerHTML='';return;}
-
-  // SVG Donut
-  const cx=70,cy=70,r=55,inner=30;
-  let angle=-Math.PI/2;
-  let paths='';
-  totals.forEach(c=>{
-    if(!c.total) return;
-    const sweep=(c.total/grand)*2*Math.PI;
-    const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
-    const x2=cx+r*Math.cos(angle+sweep),y2=cy+r*Math.sin(angle+sweep);
-    const ix1=cx+inner*Math.cos(angle+sweep),iy1=cy+inner*Math.sin(angle+sweep);
-    const ix2=cx+inner*Math.cos(angle),iy2=cy+inner*Math.sin(angle);
-    const large=sweep>Math.PI?1:0;
-    paths+=`<path d="M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} L${ix1},${iy1} A${inner},${inner} 0 ${large},0 ${ix2},${iy2} Z" fill="${c.color}" opacity=".9"/>`;
-    angle+=sweep;
-  });
-  cDot.innerHTML=`<svg width="140" height="140" viewBox="0 0 140 140">${paths}<text x="70" y="65" text-anchor="middle" font-size="11" fill="#64748b">Total</text><text x="70" y="82" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">${grand.toFixed(2)}kg</text></svg>`;
-
-  // Legenda
-  cLeg.innerHTML=totals.filter(c=>c.total>0).map(c=>{
-    const pct=round2(c.total/grand*100);
-    return `<div class="legend-item"><span class="legend-dot" style="background:${c.color}"></span>${esc(c.label)}<span class="legend-pct">${pct}%</span></div>`;
+  tbody.innerHTML=_relData.map(l=>{
+    const ins=_insumos.find(i=>i.id===l.insumo_id);
+    const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
+    const isEnt=l.tipo==='entrada';
+    const cells={
+      data:fmtDate(l.data),
+      tipo:isEnt?'<span class="badge b-ent">↓ Entrada</span>':'<span class="badge b-sai">↑ Saída</span>',
+      produto:`<span style="font-weight:600">${esc(ins?.nome||'—')}</span>`,
+      fornecedor:esc(forn?(forn.nome_fantasia||forn.nome||forn.razao_social||'—'):'—'),
+      qtd:l.qtd_peixes!=null?`<span class="mono">${l.qtd_peixes}</span>`:'—',
+      peso_bruto:isEnt?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
+      cabeca:isEnt?`<span class="mono">${kg(l.perda_cabeca)}</span>`:'—',
+      liq_arm:isEnt?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
+      peso_ent:!isEnt?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
+      file_limpo:!isEnt?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
+      pele:!isEnt?`<span class="mono">${kg(l.pele)}</span>`:'—',
+      aparas:!isEnt?`<span class="mono">${kg(l.aparas)}</span>`:'—',
+      perdas:!isEnt?`<span class="mono" style="color:var(--red)">${kg(l.perda_outros)}</span>`:'—',
+      rend_op:!isEnt&&l.rendimento_pct!=null?`<span class="mono">${pct(l.rendimento_pct)}</span>`:'—',
+      custo_kg:isEnt?(l.novo_custo_kg?brl(l.novo_custo_kg):brl(l.custo_unitario)):(l.custo_kg_file?brl(l.custo_kg_file):'—'),
+      responsavel:esc(l.responsavel||'—'),
+    };
+    return `<tr>${visCols.map(c=>`<td>${cells[c.id]||'—'}</td>`).join('')}</tr>`;
   }).join('');
-
-  // Barras horizontais
-  const maxBar=Math.max(...totals.map(c=>c.total),0.001);
-  cBar.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">`+
-    totals.filter(c=>c.total>0).map(c=>`
-      <div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-          <span style="color:var(--text1);font-weight:500">${esc(c.label)}</span>
-          <span class="mono" style="color:var(--text2)">${fmtKg(c.total)}</span>
-        </div>
-        <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
-          <div style="height:100%;background:${c.color};width:${round2(c.total/maxBar*100)}%;border-radius:4px;transition:width .4s"></div>
-        </div>
-      </div>`).join('')+`</div>`;
 }
 
-/* ================================================================
-   EXPORT
-================================================================ */
-function exportarExcel(){
-  if(!_relData.length){toast('Sem dados para exportar.','err');return;}
-  const ins=_insumos.find(i=>i.id===document.getElementById('rel-insumo').value);
-  const nome=ins?.nome||'porcionamento';
-  const modelo=_relData[0]?.modelo||'simples';
-  let header,rows;
-  if(modelo==='simples'){
-    header=['Data','Lote','Fornecedor','Turno','Peso Bruto','Peso Limpo','Cabeça','Pele','Espinha','Outros','Total Perdas','Rendimento%','Valor','Responsável'];
-    rows=_relData.map(l=>{
-      const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
-      const totalP=round3((l.perda_cabeca||0)+(l.perda_pele||0)+(l.perda_espinha||0)+(l.perda_outros||0));
-      return [fmtDate(l.data),l.lote||'',forn?.nome||'',l.turno||'',l.peso_bruto||0,l.peso_limpo||0,l.perda_cabeca||0,l.perda_pele||0,l.perda_espinha||0,l.perda_outros||0,totalP,l.rendimento_pct||0,l.valor_total||0,l.responsavel||''];
-    });
-  } else {
-    header=['Data','Lote','Turno','Entrada','Saída','Rendimento%','Valor','Responsável'];
-    rows=_relData.map(l=>[fmtDate(l.data),l.lote||'',l.turno||'',l.peso_bruto||l.peso_congelado||l.peso_inicial||l.qtd_consumida||0,l.peso_limpo||l.peso_final||l.qtd_produzida||0,l.rendimento_pct||0,l.valor_total||0,l.responsavel||'']);
-  }
-  const csv=[header,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
-  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:`porcionamento_${nome}_${new Date().toISOString().slice(0,10)}.csv`});
-  a.click();
+function exportar(){
+  if(!_relData.length){toast('Nenhum dado.','err');return;}
+  const visCols=COLS.filter(c=>c.on);
+  const linhas=[visCols.map(c=>c.lbl).join('\t')];
+  _relData.forEach(l=>{
+    const ins=_insumos.find(i=>i.id===l.insumo_id);
+    const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
+    const isEnt=l.tipo==='entrada';
+    const cells={
+      data:l.data,tipo:l.tipo,produto:ins?.nome||'',
+      fornecedor:forn?(forn.nome_fantasia||forn.nome||forn.razao_social):'',
+      qtd:l.qtd_peixes||'',
+      peso_bruto:isEnt?(l.peso_bruto||''):'',cabeca:isEnt?(l.perda_cabeca||''):'',
+      liq_arm:isEnt?(l.peso_limpo||''):'',peso_ent:!isEnt?(l.peso_bruto||''):'',
+      file_limpo:!isEnt?(l.peso_limpo||''):'',pele:!isEnt?(l.pele||''):'',
+      aparas:!isEnt?(l.aparas||''):'',perdas:!isEnt?(l.perda_outros||''):'',
+      rend_op:!isEnt?(l.rendimento_pct||''):'',
+      custo_kg:isEnt?(l.novo_custo_kg||l.custo_unitario||''):(l.custo_kg_file||''),
+      responsavel:l.responsavel||'',
+    };
+    linhas.push(visCols.map(c=>cells[c.id]??'').join('\t'));
+  });
+  const blob=new Blob([linhas.join('\n')],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='porcionamento.tsv';a.click();
 }
 
 /* ================================================================
    START
 ================================================================ */
-document.addEventListener('DOMContentLoaded',()=>{
-  if(window.lucide) lucide.createIcons();
-  carregar();
-  // Datas padrão relatório: últimos 7 dias
-  const hoje=new Date();
-  const h7=new Date(hoje);h7.setDate(h7.getDate()-7);
-  document.getElementById('rel-ate').value=hoje.toISOString().slice(0,10);
-  document.getElementById('rel-de').value=h7.toISOString().slice(0,10);
-});
+carregar();
 </script>
 </body>
 </html>
