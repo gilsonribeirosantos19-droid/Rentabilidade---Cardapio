@@ -857,6 +857,14 @@
             <div class="form-group"><label class="form-label">Data *</label>
               <input class="form-input" id="porc-f-data" type="date">
             </div>
+            <div class="form-group"><label class="form-label">Modelo de Processo *</label>
+              <select class="form-select" id="porc-f-modelo">
+                <option value="simples">Simples (peixe, carne)</option>
+                <option value="degelo">Degelo + Limpeza (camarão, polvo)</option>
+                <option value="coccao">Cocção / Redução (shimeji, caldos)</option>
+                <option value="lote">Produção em Lote (shari, molhos)</option>
+              </select>
+            </div>
             <div class="form-group" id="porc-fg-fornecedor"><label class="form-label">Fornecedor</label>
               <select class="form-select" id="porc-f-fornecedor"><option value="">Nenhum</option></select>
             </div>
@@ -2606,6 +2614,7 @@ function porcEditar(id){
   _porcResetForm();
   porcSetTipo(l.tipo||'entrada');
   _porcSv('porc-f-data',l.data||'');
+  _porcSv('porc-f-modelo',l.modelo_processo||'simples');
   _porcSv('porc-f-responsavel',l.responsavel||'');
   _porcSv('porc-f-obs',l.observacoes||'');
   if(l.tipo==='entrada'){
@@ -2637,6 +2646,7 @@ function _porcResetForm(){
    'porc-f-insumo-sai','porc-f-qtd-sai','porc-f-peso-entrada','porc-f-custo-kg-sai','porc-f-file-limpo','porc-f-pele','porc-f-aparas','porc-f-perdas']
   .forEach(id=>_porcSv(id,''));
   _porcSv('porc-f-data',hoje());
+  _porcSv('porc-f-modelo','simples');
   porcSetTipo('entrada');
   ['porc-cv-pct-cab','porc-cv-liq-arm','porc-cv-novo-custo','porc-sv-aprov','porc-sv-perdas','porc-sv-rend','porc-sv-custo-file','porc-sv-custo-aprov']
   .forEach(id=>_porcSe(id,'—'));
@@ -2708,6 +2718,7 @@ async function porcSalvarLanc(){
   const lojaId=userProfile?.loja_id||null;
   let payload={tipo:_porcTipo,data,tenant_id:TENANT_ID,
     loja_id:lojaId,
+    modelo_processo:document.getElementById('porc-f-modelo').value||'simples',
     observacoes:document.getElementById('porc-f-obs').value.trim()||null,
     responsavel:document.getElementById('porc-f-responsavel').value.trim()||null};
 
