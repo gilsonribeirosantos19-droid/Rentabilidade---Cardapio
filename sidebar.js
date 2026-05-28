@@ -119,9 +119,8 @@
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:36px;height:36px;background:#f97316;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(249,115,22,.35)">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <ellipse cx="12" cy="5" rx="9" ry="3"/>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            <polyline points="1,21 8,6 13,13 17,8 23,21"/>
+            <line x1="1" y1="21" x2="23" y2="21"/>
           </svg>
         </div>
         <div>
