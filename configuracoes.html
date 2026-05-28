@@ -838,7 +838,7 @@ async function salvarPermissoes(){
       return{tenant_id:TENANT_ID,perfil:grp.nome,modulo:m.id,
         visualizar:hab,criar:hab&&ct,editar:hab&&ct,excluir:hab&&ct};
     });
-    await api('permissoes',{method:'POST',body:JSON.stringify(payloads),prefer:'resolution=merge-duplicates,return=minimal'});
+    await api('permissoes?on_conflict=tenant_id,perfil,modulo',{method:'POST',body:JSON.stringify(payloads),prefer:'resolution=merge-duplicates,return=minimal'});
     delete _grpPermsCache[grp.nome];
     window.Perms?.invalidate();
     toast('Permissões salvas.','ok');
