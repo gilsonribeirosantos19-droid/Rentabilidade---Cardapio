@@ -119,6 +119,10 @@
   .col-chk-item:hover{background:var(--bg3)}
   .col-chk-item input{accent-color:var(--orange)}
 
+  /* REL TIPO PILLS */
+  .rel-tp-pill{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;background:transparent;color:var(--text2);transition:all .15s;white-space:nowrap}
+  .rel-tp-pill.active{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);color:var(--text1)}
+
   /* TOAST / EMPTY */
   .empty-st{padding:40px;text-align:center;color:var(--text3);font-size:13px}
   .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:380px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
@@ -403,54 +407,55 @@
   <!-- RELATÓRIO -->
   <div id="tab-relatorio" class="tab-pane">
     <div class="filter-bar-wrap">
-      <div class="toolbar">
+      <div class="toolbar" style="flex-wrap:wrap;gap:14px 10px">
+        <!-- TIPO pills -->
         <div>
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Produto</div>
-          <select class="fil-select" id="rel-insumo" style="min-width:200px"><option value="">Todos os produtos</option></select>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Tipo</div>
+          <div style="display:flex;background:var(--bg3);border-radius:8px;padding:3px;gap:3px">
+            <button class="rel-tp-pill active" data-v="" onclick="setRelTipo(this,'')">Ent. + Saída</button>
+            <button class="rel-tp-pill" data-v="entrada" onclick="setRelTipo(this,'entrada')">↓ Entrada</button>
+            <button class="rel-tp-pill" data-v="saida" onclick="setRelTipo(this,'saida')">↑ Saída</button>
+          </div>
         </div>
+        <!-- PRODUTO -->
         <div>
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Tipo</div>
-          <select class="fil-select" id="rel-tipo">
-            <option value="">Entrada + Saída</option>
-            <option value="entrada">Só Entradas</option>
-            <option value="saida">Só Saídas</option>
-          </select>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Produto</div>
+          <select class="fil-select" id="rel-insumo" style="min-width:180px"><option value="">Todos os produtos</option></select>
         </div>
+        <!-- LOJA -->
         <div>
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Período</div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Loja</div>
+          <select class="fil-select" id="rel-loja" style="min-width:140px"><option value="">Todas as lojas</option></select>
+        </div>
+        <!-- PERÍODO -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Período</div>
           <div style="display:flex;align-items:center;gap:6px">
             <input type="date" class="fil-date" id="rel-de">
             <span style="color:var(--text3);font-size:12px">até</span>
             <input type="date" class="fil-date" id="rel-ate">
           </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:flex-end;margin-top:auto">
+        <!-- AÇÕES -->
+        <div style="display:flex;gap:8px;align-items:flex-end">
           <button class="btn btn-primary" onclick="filtrarRel()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             Filtrar
           </button>
           <button class="btn btn-ghost" onclick="limparRel()">Limpar</button>
         </div>
+        <!-- COLUNAS -->
         <div class="col-toggle-wrap ml">
           <button class="btn btn-ghost" onclick="toggleColPanel(event)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Colunas
           </button>
-          <div class="col-panel" id="col-panel">
+          <div class="col-panel" id="col-panel" onclick="event.stopPropagation()">
             <div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Exibir colunas</div>
             <div id="col-checks"></div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- KPIs -->
-    <div class="kpi-row" id="rel-kpis" style="display:none">
-      <div class="kpi"><div class="kpi-label">Peso Bruto Recebido</div><div class="kpi-val mono" id="k-bruto">—</div><div class="kpi-sub">entradas</div></div>
-      <div class="kpi"><div class="kpi-label">Filé Limpo Total</div><div class="kpi-val mono c-green" id="k-file">—</div><div class="kpi-sub">saídas</div></div>
-      <div class="kpi"><div class="kpi-label">Perdas Totais</div><div class="kpi-val mono c-red" id="k-perdas">—</div><div class="kpi-sub" id="k-perdas-sub"></div></div>
-      <div class="kpi"><div class="kpi-label">Rendimento Médio</div><div class="kpi-val mono c-amber" id="k-rend">—</div><div class="kpi-sub">operacional</div></div>
-      <div class="kpi"><div class="kpi-label">Lançamentos</div><div class="kpi-val mono" id="k-count">—</div><div class="kpi-sub">no período</div></div>
     </div>
 
     <!-- TABELA -->
@@ -886,25 +891,46 @@ async function excluirLanc(id,e){
 
 /* ================================================================
    COLUNAS DO RELATÓRIO
+   tipos: 'e'=entrada, 's'=saida, 'b'=ambos
 ================================================================ */
 const COLS=[
-  {id:'data',       lbl:'Data',                   on:true},
-  {id:'tipo',       lbl:'Tipo',                   on:true},
-  {id:'produto',    lbl:'Produto',                on:true},
-  {id:'fornecedor', lbl:'Fornecedor',             on:true},
-  {id:'qtd',        lbl:'Qtd. Peixes',            on:true},
-  {id:'peso_bruto', lbl:'Peso Bruto Recebido',    on:true},
-  {id:'cabeca',     lbl:'Cabeça (kg)',             on:true},
-  {id:'liq_arm',    lbl:'Peso Líq. Armazenado',   on:true},
-  {id:'peso_ent',   lbl:'Peso Entrada Filetagem',  on:true},
-  {id:'file_limpo', lbl:'Filé Limpo',             on:true},
-  {id:'pele',       lbl:'Pele',                   on:true},
-  {id:'aparas',     lbl:'Aparas',                 on:true},
-  {id:'perdas',     lbl:'Perdas',                 on:true},
-  {id:'rend_op',    lbl:'Rendimento Op.',         on:true},
-  {id:'custo_kg',   lbl:'Custo/kg',               on:true},
-  {id:'responsavel',lbl:'Responsável',            on:true},
+  {id:'data',       lbl:'Data',                    on:true,  t:'b'},
+  {id:'tipo',       lbl:'Tipo',                    on:true,  t:'b'},
+  {id:'produto',    lbl:'Produto',                 on:true,  t:'b'},
+  {id:'fornecedor', lbl:'Fornecedor',              on:true,  t:'e'},
+  {id:'qtd_ent',    lbl:'Qtd. Recebida',           on:true,  t:'e'},
+  {id:'peso_bruto', lbl:'Peso Bruto Recebido',     on:true,  t:'e'},
+  {id:'cabeca',     lbl:'Cabeça (kg)',              on:true,  t:'e'},
+  {id:'liq_arm',    lbl:'Peso Líq. Armazenado',    on:true,  t:'e'},
+  {id:'qtd_sai',    lbl:'Qtd. Filetado',           on:true,  t:'s'},
+  {id:'peso_ent',   lbl:'Peso Entrada Filetagem',  on:true,  t:'s'},
+  {id:'file_limpo', lbl:'Filé Limpo',              on:true,  t:'s'},
+  {id:'pele',       lbl:'Pele',                    on:true,  t:'s'},
+  {id:'aparas',     lbl:'Aparas',                  on:true,  t:'s'},
+  {id:'perdas',     lbl:'Perdas',                  on:true,  t:'s'},
+  {id:'rend_op',    lbl:'Rendimento Op.',          on:true,  t:'s'},
+  {id:'custo_kg',   lbl:'Custo/kg',                on:true,  t:'b'},
+  {id:'responsavel',lbl:'Responsável',             on:true,  t:'b'},
 ];
+
+let _relTipo=''; // ''=ambos, 'entrada', 'saida'
+
+function setRelTipo(btn,v){
+  _relTipo=v;
+  document.querySelectorAll('.rel-tp-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  _autoAdjustCols(v);
+}
+
+function _autoAdjustCols(tipo){
+  COLS.forEach(c=>{
+    if(tipo==='entrada')      c.on=c.t==='e'||c.t==='b';
+    else if(tipo==='saida')   c.on=c.t==='s'||c.t==='b';
+    else                      c.on=true;
+  });
+  if(_relData.length) _renderRelTable();
+  _renderColChecks();
+}
 
 function toggleColPanel(e){
   e.stopPropagation();
@@ -931,47 +957,30 @@ function toggleCol(id,on){
 ================================================================ */
 async function filtrarRel(){
   const insumoId=document.getElementById('rel-insumo').value;
-  const tipo=document.getElementById('rel-tipo').value;
   const de=document.getElementById('rel-de').value;
   const ate=document.getElementById('rel-ate').value;
   let qs=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`;
   if(insumoId) qs+=`&insumo_id=eq.${insumoId}`;
-  if(tipo) qs+=`&tipo=eq.${tipo}`;
+  if(_relTipo) qs+=`&tipo=eq.${_relTipo}`;
   if(de) qs+=`&data=gte.${de}`;
   if(ate) qs+=`&data=lte.${ate}`;
   try{
     _relData=await api(qs);
-    _renderRelKpis();
     _renderRelTable();
     const hasData=_relData.length>0;
-    document.getElementById('rel-kpis').style.display=hasData?'':'none';
     document.getElementById('rel-content').style.display=hasData?'':'none';
     document.getElementById('rel-empty').style.display=hasData?'none':'';
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
 function limparRel(){
-  ['rel-insumo','rel-tipo','rel-de','rel-ate'].forEach(id=>sv(id,''));
+  ['rel-insumo','rel-de','rel-ate'].forEach(id=>sv(id,''));
+  _relTipo='';
+  document.querySelectorAll('.rel-tp-pill').forEach((b,i)=>b.classList.toggle('active',i===0));
+  _autoAdjustCols('');
   _relData=[];
-  document.getElementById('rel-kpis').style.display='none';
   document.getElementById('rel-content').style.display='none';
   document.getElementById('rel-empty').style.display='';
-}
-
-function _renderRelKpis(){
-  const ent=_relData.filter(r=>r.tipo==='entrada');
-  const sai=_relData.filter(r=>r.tipo==='saida');
-  const bruto=ent.reduce((s,r)=>s+(r.peso_bruto||0),0);
-  const file=sai.reduce((s,r)=>s+(r.peso_limpo||0),0);
-  const perdas=sai.reduce((s,r)=>s+(r.perda_outros||0),0);
-  const totalEnt=sai.reduce((s,r)=>s+(r.peso_bruto||0),0);
-  const rend=totalEnt>0?r2((totalEnt-perdas)/totalEnt*100):null;
-  se('k-bruto',bruto>0?kg(bruto):'—');
-  se('k-file',file>0?kg(file):'—');
-  se('k-perdas',perdas>0?kg(perdas):'—');
-  se('k-perdas-sub',rend!=null?pct(r2(100-rend))+' perda':'');
-  se('k-rend',rend!=null?pct(rend):'—');
-  se('k-count',_relData.length+'');
 }
 
 function _renderRelTable(){
@@ -986,22 +995,23 @@ function _renderRelTable(){
     const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
     const isEnt=l.tipo==='entrada';
     const cells={
-      data:fmtDate(l.data),
-      tipo:isEnt?'<span class="badge b-ent">↓ Entrada</span>':'<span class="badge b-sai">↑ Saída</span>',
-      produto:`<span style="font-weight:600">${esc(ins?.nome||'—')}</span>`,
-      fornecedor:esc(forn?(forn.nome_fantasia||forn.nome||forn.razao_social||'—'):'—'),
-      qtd:l.qtd_peixes!=null?`<span class="mono">${l.qtd_peixes}</span>`:'—',
-      peso_bruto:isEnt?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
-      cabeca:isEnt?`<span class="mono">${kg(l.perda_cabeca)}</span>`:'—',
-      liq_arm:isEnt?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
-      peso_ent:!isEnt?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
-      file_limpo:!isEnt?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
-      pele:!isEnt?`<span class="mono">${kg(l.pele)}</span>`:'—',
-      aparas:!isEnt?`<span class="mono">${kg(l.aparas)}</span>`:'—',
-      perdas:!isEnt?`<span class="mono" style="color:var(--red)">${kg(l.perda_outros)}</span>`:'—',
-      rend_op:!isEnt&&l.rendimento_pct!=null?`<span class="mono">${pct(l.rendimento_pct)}</span>`:'—',
-      custo_kg:isEnt?(l.novo_custo_kg?brl(l.novo_custo_kg):brl(l.custo_unitario)):(l.custo_kg_file?brl(l.custo_kg_file):'—'),
-      responsavel:esc(l.responsavel||'—'),
+      data:        fmtDate(l.data),
+      tipo:        isEnt?'<span class="badge b-ent">↓ Entrada</span>':'<span class="badge b-sai">↑ Saída</span>',
+      produto:     `<span style="font-weight:600">${esc(ins?.nome||'—')}</span>`,
+      fornecedor:  esc(forn?(forn.nome_fantasia||forn.nome||forn.razao_social||'—'):'—'),
+      qtd_ent:     isEnt&&l.qtd_peixes!=null?`<span class="mono">${l.qtd_peixes}</span>`:'—',
+      peso_bruto:  isEnt?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
+      cabeca:      isEnt?`<span class="mono">${kg(l.perda_cabeca)}</span>`:'—',
+      liq_arm:     isEnt?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
+      qtd_sai:     !isEnt&&l.qtd_peixes!=null?`<span class="mono">${l.qtd_peixes}</span>`:'—',
+      peso_ent:    !isEnt?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
+      file_limpo:  !isEnt?`<span class="mono">${kg(l.peso_limpo)}</span>`:'—',
+      pele:        !isEnt?`<span class="mono">${kg(l.pele)}</span>`:'—',
+      aparas:      !isEnt?`<span class="mono">${kg(l.aparas)}</span>`:'—',
+      perdas:      !isEnt?`<span class="mono" style="color:var(--red)">${kg(l.perda_outros)}</span>`:'—',
+      rend_op:     !isEnt&&l.rendimento_pct!=null?`<span class="mono">${pct(l.rendimento_pct)}</span>`:'—',
+      custo_kg:    isEnt?(l.novo_custo_kg?brl(l.novo_custo_kg):brl(l.custo_unitario)):(l.custo_kg_file?brl(l.custo_kg_file):'—'),
+      responsavel: esc(l.responsavel||'—'),
     };
     return `<tr>${visCols.map(c=>`<td>${cells[c.id]||'—'}</td>`).join('')}</tr>`;
   }).join('');
