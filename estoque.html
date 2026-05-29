@@ -398,6 +398,16 @@
             <div class="est-hub-body"><div class="est-hub-title">Sugestão de Compras</div><div class="est-hub-desc">Recomendações de compra baseadas no consumo.</div></div>
             <div class="est-hub-arrow">›</div>
           </div>
+          <div class="est-hub-card" onclick="switchTab('saldo-est')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Saldo de Estoque</div><div class="est-hub-desc">Saldo atual, custo médio e valor financeiro por loja.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('historico-custo')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Histórico de Custos</div><div class="est-hub-desc">Auditoria de variações de custo médio por insumo.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1137,6 +1147,65 @@
       </div>
     </div>
 
+    <!-- TAB: SALDO DE ESTOQUE -->
+    <div id="tab-saldo-est" class="tab-pane">
+      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
+        Saldo de Estoque <span style="font-weight:400;color:#94a3b8;font-size:13px">— posição financeira por loja</span>
+      </div>
+      <div class="toolbar" style="margin-bottom:16px">
+        <select class="field field-sm" id="se-loja" onchange="renderSaldoEst()">
+          <option value="">Todas as lojas</option>
+        </select>
+        <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
+          <option value="">Todas as categorias</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
+        <span id="se-valor-total" style="margin-left:auto;font-size:13px;font-weight:700;color:#0f172a"></span>
+      </div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr>
+          <th>Insumo</th><th>Categoria</th><th>Un.</th><th>Loja</th>
+          <th class="r">Saldo Atual</th><th class="r">Custo Médio</th><th class="r">Valor em Estoque</th><th class="c">Status</th>
+        </tr></thead>
+        <tfoot id="se-tfoot"></tfoot>
+        <tbody id="se-body"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- TAB: HISTÓRICO DE CUSTOS -->
+    <div id="tab-historico-custo" class="tab-pane">
+      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
+        Histórico de Custos <span style="font-weight:400;color:#94a3b8;font-size:13px">— auditoria de variações de custo médio</span>
+      </div>
+      <div class="toolbar" style="margin-bottom:16px">
+        <select class="field field-sm" id="hc-loja" onchange="renderHistoricoCusto()">
+          <option value="">Todas as lojas</option>
+        </select>
+        <select class="field field-sm" id="hc-insumo" onchange="renderHistoricoCusto()" style="min-width:180px">
+          <option value="">Todos os insumos</option>
+        </select>
+        <select class="field field-sm" id="hc-origem" onchange="renderHistoricoCusto()">
+          <option value="">Todas as origens</option>
+          <option value="entrada_manual">Entrada Manual</option>
+          <option value="nfe">XML / NF-e</option>
+          <option value="ajuste">Ajuste</option>
+        </select>
+        <input type="date" class="field field-sm" id="hc-de" onchange="renderHistoricoCusto()" title="De">
+        <input type="date" class="field field-sm" id="hc-ate" onchange="renderHistoricoCusto()" title="Até">
+        <button class="btn btn-ghost btn-sm" onclick="renderHistoricoCusto()">↻ Atualizar</button>
+      </div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr>
+          <th>Data</th><th>Insumo</th><th>Loja</th><th>Origem</th>
+          <th class="r">Saldo Ant.</th><th class="r">Custo Ant.</th>
+          <th class="r">Qtd. Entrada</th><th class="r">Custo Entrada</th>
+          <th class="r">Novo Custo Médio</th><th class="r">Impacto %</th>
+        </tr></thead>
+        <tbody id="hc-body"><tr><td colspan="10" class="empty">Carregando...</td></tr></tbody>
+      </table></div>
+      <div class="pag-row"><span id="hc-info">—</span></div>
+    </div>
+
     <!-- TAB: RELATÓRIOS -->
   </div><!-- /content -->
 </div><!-- /main -->
@@ -1720,8 +1789,116 @@ function popularSelects() {
     cats.map(c=>`<option value="${c}">${esc(c)}</option>`).join('');
 }
 
+// ── SALDO DE ESTOQUE ─────────────────────────────────────────────
+async function renderSaldoEst(){
+  const lojaFil=document.getElementById('se-loja')?.value||'';
+  const catFil=document.getElementById('se-cat')?.value||'';
+  const tbody=document.getElementById('se-body');
+  const tfoot=document.getElementById('se-tfoot');
+  tbody.innerHTML='<tr><td colspan="8" class="empty">Carregando...</td></tr>';
+  try{
+    let q=`saldo_estoque?tenant_id=eq.${TENANT_ID}`;
+    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
+    const saldos=await api(q).catch(()=>[]);
+    if(!saldos.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum saldo encontrado.</td></tr>';tfoot.innerHTML='';return;}
+    let rows=saldos.map(s=>{
+      const ins=insumos.find(i=>i.id===s.insumo_id);
+      const loja=lojas.find(l=>l.id===s.loja_id);
+      if(!ins)return null;
+      if(catFil&&(ins.categoria||'')!==catFil)return null;
+      const valor=(s.quantidade||0)*(s.custo_medio||0);
+      const status=(ins.minimo>0&&s.quantidade<ins.minimo)?'<span class="badge" style="background:#fee2e2;color:#dc2626">Abaixo mín.</span>':
+                   (s.quantidade===0?'<span class="badge" style="background:#f1f5f9;color:#64748b">Zerado</span>':
+                   '<span class="badge" style="background:#dcfce7;color:#16a34a">OK</span>');
+      return {ins,loja,s,valor,row:`<tr>
+        <td style="font-weight:600">${esc(ins.nome)}</td>
+        <td>${esc(ins.categoria||'—')}</td>
+        <td>${esc(ins.unidade_medida||ins.unidade_compra||'—')}</td>
+        <td>${esc(loja?.nome||'—')}</td>
+        <td class="r mono">${(s.quantidade||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+        <td class="r mono">${s.custo_medio?brl(s.custo_medio):'—'}</td>
+        <td class="r mono" style="font-weight:600">${valor>0?brl(valor):'—'}</td>
+        <td class="c">${status}</td>
+      </tr>`};
+    }).filter(Boolean);
+    rows.sort((a,b)=>b.valor-a.valor);
+    tbody.innerHTML=rows.map(r=>r.row).join('');
+    const totalValor=rows.reduce((s,r)=>s+r.valor,0);
+    const se=document.getElementById('se-valor-total');
+    if(se) se.innerHTML=`Valor total em estoque: <span style="color:#16a34a">${brl(totalValor)}</span>`;
+    tfoot.innerHTML=`<tr style="background:#f8fafc;font-weight:700">
+      <td colspan="4" style="font-size:11px;color:#0f172a;text-transform:uppercase;letter-spacing:.05em">TOTAL</td>
+      <td class="r mono">—</td><td class="r mono">—</td>
+      <td class="r mono" style="color:#16a34a">${brl(totalValor)}</td>
+      <td></td></tr>`;
+  }catch(e){tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function _initSaldoEst(){
+  // Popula filtros
+  const selLoja=document.getElementById('se-loja');
+  if(selLoja&&selLoja.options.length<=1) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
+  const selCat=document.getElementById('se-cat');
+  if(selCat&&selCat.options.length<=1){
+    const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o);});
+  }
+  renderSaldoEst();
+}
+
+// ── HISTÓRICO DE CUSTOS ───────────────────────────────────────────
+async function renderHistoricoCusto(){
+  const lojaFil=document.getElementById('hc-loja')?.value||'';
+  const insumoFil=document.getElementById('hc-insumo')?.value||'';
+  const origemFil=document.getElementById('hc-origem')?.value||'';
+  const de=document.getElementById('hc-de')?.value||'';
+  const ate=document.getElementById('hc-ate')?.value||'';
+  const tbody=document.getElementById('hc-body');
+  tbody.innerHTML='<tr><td colspan="10" class="empty">Carregando...</td></tr>';
+  try{
+    let q=`historico_custo?tenant_id=eq.${TENANT_ID}&order=data.desc&limit=200`;
+    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
+    if(insumoFil) q+=`&insumo_id=eq.${insumoFil}`;
+    if(origemFil) q+=`&origem=eq.${origemFil}`;
+    if(de) q+=`&data=gte.${de}T00:00:00`;
+    if(ate) q+=`&data=lte.${ate}T23:59:59`;
+    const hist=await api(q).catch(()=>[]);
+    const info=document.getElementById('hc-info');
+    if(info) info.textContent=hist.length?`${hist.length} registro(s)`:'Nenhum registro.';
+    if(!hist.length){tbody.innerHTML='<tr><td colspan="10" class="empty">Nenhum registro encontrado.</td></tr>';return;}
+    const origemLabel={entrada_manual:'Entrada Manual',nfe:'XML / NF-e',nfe_importada:'XML / NF-e',ajuste:'Ajuste',manual:'Entrada Manual'};
+    tbody.innerHTML=hist.map(h=>{
+      const ins=insumos.find(i=>i.id===h.insumo_id);
+      const loja=lojas.find(l=>l.id===h.loja_id);
+      const imp=h.impacto_pct;
+      const impColor=imp>0?'#dc2626':imp<0?'#16a34a':'#64748b';
+      const impTxt=imp!=null?`<span style="color:${impColor};font-weight:600">${imp>0?'+':''}${Number(imp).toFixed(2)}%</span>`:'—';
+      return `<tr>
+        <td class="mono" style="font-size:11px;color:#64748b">${new Date(h.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+        <td style="font-weight:600">${esc(ins?.nome||'—')}</td>
+        <td>${esc(loja?.nome||'—')}</td>
+        <td><span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:11px">${esc(origemLabel[h.origem]||h.origem||'—')}</span></td>
+        <td class="r mono">${h.saldo_anterior!=null?h.saldo_anterior.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}):'—'}</td>
+        <td class="r mono">${h.custo_medio_anterior?brl(h.custo_medio_anterior):'—'}</td>
+        <td class="r mono">${h.qtd_entrada!=null?h.qtd_entrada.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}):'—'}</td>
+        <td class="r mono">${h.custo_entrada?brl(h.custo_entrada):'—'}</td>
+        <td class="r mono" style="font-weight:700;color:#0f172a">${h.novo_custo_medio?brl(h.novo_custo_medio):'—'}</td>
+        <td class="r">${impTxt}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function _initHistoricoCusto(){
+  const selLoja=document.getElementById('hc-loja');
+  if(selLoja&&selLoja.options.length<=1) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
+  const selIns=document.getElementById('hc-insumo');
+  if(selIns&&selIns.options.length<=1) insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;selIns.appendChild(o);});
+  renderHistoricoCusto();
+}
+
 // ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
-const _tabNames = {dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras'};
+const _tabNames = {dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras','saldo-est':'Saldo de Estoque','historico-custo':'Histórico de Custos'};
 let _openTabs = [], _activeTab = null, _loadedTabs = {};
 
 function _renderTabStrip() {
@@ -1773,6 +1950,8 @@ function activateTab(nome) {
     if (nome==='inventario') iniciarAbaInventario();
     if (nome==='movimentacao') renderMovimentacao();
     if (nome==='compras') renderCompras();
+    if (nome==='saldo-est') _initSaldoEst();
+    if (nome==='historico-custo') _initHistoricoCusto();
   }
 }
 
@@ -1946,6 +2125,21 @@ async function registrarEntrada(insId, dados, custoUnitEstoque) {
   const qN = qA + dados.quantidade;
   const cmN = qN>0 ? (qA*cmA + dados.quantidade*custoUnitEstoque)/qN : custoUnitEstoque;
   await upsertSaldo(insId, qN, parseFloat(cmN.toFixed(6)));
+  // historico_custo
+  try{
+    const impacto=cmA>0?parseFloat(((cmN-cmA)/cmA*100).toFixed(4)):null;
+    await api('historico_custo',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
+      tenant_id:TENANT_ID, insumo_id:insId, loja_id:getLojaId(),
+      saldo_anterior:parseFloat(qA.toFixed(4)),
+      custo_medio_anterior:parseFloat(cmA.toFixed(4)),
+      qtd_entrada:parseFloat(dados.quantidade.toFixed(4)),
+      custo_entrada:parseFloat(custoUnitEstoque.toFixed(4)),
+      novo_custo_medio:parseFloat(cmN.toFixed(4)),
+      impacto_pct:impacto,
+      origem:dados.tipo||'entrada_manual',
+      documento_ref:dados.documento_ref||null,
+    })});
+  }catch{}
   // atualiza preco_unitario no vínculo insumo → fornecedor se houver
   if (dados.fornecedor_id) {
     await api(`insumo_fornecedores?insumo_id=eq.${insId}&fornecedor_id=eq.${dados.fornecedor_id}`,
