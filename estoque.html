@@ -1153,9 +1153,6 @@
         Saldo de Estoque <span style="font-weight:400;color:#94a3b8;font-size:13px">— posição financeira por loja</span>
       </div>
       <div class="toolbar" style="margin-bottom:16px">
-        <select class="field field-sm" id="se-loja" onchange="renderSaldoEst()">
-          <option value="">Todas as lojas</option>
-        </select>
         <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
           <option value="">Todas as categorias</option>
         </select>
@@ -1178,9 +1175,6 @@
         Histórico de Custos <span style="font-weight:400;color:#94a3b8;font-size:13px">— auditoria de variações de custo médio</span>
       </div>
       <div class="toolbar" style="margin-bottom:16px">
-        <select class="field field-sm" id="hc-loja" onchange="renderHistoricoCusto()">
-          <option value="">Todas as lojas</option>
-        </select>
         <select class="field field-sm" id="hc-insumo" onchange="renderHistoricoCusto()" style="min-width:180px">
           <option value="">Todos os insumos</option>
         </select>
@@ -1791,7 +1785,7 @@ function popularSelects() {
 
 // ── SALDO DE ESTOQUE ─────────────────────────────────────────────
 async function renderSaldoEst(){
-  const lojaFil=document.getElementById('se-loja')?.value||'';
+  const lojaFil=getLojaId()||'';
   const catFil=document.getElementById('se-cat')?.value||'';
   const tbody=document.getElementById('se-body');
   const tfoot=document.getElementById('se-tfoot');
@@ -1835,9 +1829,6 @@ async function renderSaldoEst(){
 }
 
 function _initSaldoEst(){
-  // Popula filtros
-  const selLoja=document.getElementById('se-loja');
-  if(selLoja&&selLoja.options.length<=1) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
   const selCat=document.getElementById('se-cat');
   if(selCat&&selCat.options.length<=1){
     const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
@@ -1848,7 +1839,7 @@ function _initSaldoEst(){
 
 // ── HISTÓRICO DE CUSTOS ───────────────────────────────────────────
 async function renderHistoricoCusto(){
-  const lojaFil=document.getElementById('hc-loja')?.value||'';
+  const lojaFil=getLojaId()||'';
   const insumoFil=document.getElementById('hc-insumo')?.value||'';
   const origemFil=document.getElementById('hc-origem')?.value||'';
   const de=document.getElementById('hc-de')?.value||'';
@@ -1890,8 +1881,6 @@ async function renderHistoricoCusto(){
 }
 
 function _initHistoricoCusto(){
-  const selLoja=document.getElementById('hc-loja');
-  if(selLoja&&selLoja.options.length<=1) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
   const selIns=document.getElementById('hc-insumo');
   if(selIns&&selIns.options.length<=1) insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;selIns.appendChild(o);});
   renderHistoricoCusto();
