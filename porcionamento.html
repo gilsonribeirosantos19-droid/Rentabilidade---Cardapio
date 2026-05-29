@@ -615,7 +615,7 @@
     </div>
     <div class="tbl-wrap"><table class="tbl" id="so-table">
       <thead id="so-thead"><tr>
-        <th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th>Lote / Ref.</th>
+        <th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th>
         <th class="r">Entrada (kg)</th><th class="r">Saída (kg)</th><th class="r">Saldo (kg)</th>
         <th>Responsável</th><th>Observação</th>
       </tr></thead>
@@ -727,8 +727,8 @@ async function renderSaldoOp(){
     // atualiza cabeçalho dinamicamente
     const thead=document.getElementById('so-thead');
     if(thead) thead.innerHTML=hasUnits
-      ?`<tr><th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th>Lote / Ref.</th><th class="r">Ent. (un)</th><th class="r">Entrada (kg)</th><th class="r">Saída (un)</th><th class="r">Saída (kg)</th><th class="r">Saldo (un)</th><th class="r">Saldo (kg)</th><th>Responsável</th><th>Observação</th></tr>`
-      :`<tr><th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th>Lote / Ref.</th><th class="r">Entrada (kg)</th><th class="r">Saída (kg)</th><th class="r">Saldo (kg)</th><th>Responsável</th><th>Observação</th></tr>`;
+      ?`<tr><th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th class="r">Ent. (un)</th><th class="r">Entrada (kg)</th><th class="r">Saída (un)</th><th class="r">Saída (kg)</th><th class="r">Saldo (un)</th><th class="r">Saldo (kg)</th><th>Responsável</th><th>Observação</th></tr>`
+      :`<tr><th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th class="r">Entrada (kg)</th><th class="r">Saída (kg)</th><th class="r">Saldo (kg)</th><th>Responsável</th><th>Observação</th></tr>`;
     if(!_soData.length){tbody.innerHTML=`<tr><td colspan="${colspan}" class="empty">Nenhum registro encontrado.</td></tr>`;tfoot.innerHTML='';return;}
     let saldoKg=0,saldoUn=0,totEntKg=0,totSaiKg=0,totEntUn=0,totSaiUn=0;
     tbody.innerHTML=_soData.map(l=>{
@@ -748,7 +748,7 @@ async function renderSaldoOp(){
       if(hasUnits) return `<tr>
         <td class="mono" style="font-size:11px;color:var(--text2)">${dataStr}</td>
         <td>${tipoLabel}</td><td style="font-weight:600">${esc(ins?.nome||'—')}</td>
-        <td>${esc(loja?.nome||'—')}</td><td style="font-size:11px">${esc(l.lote||'—')}</td>
+        <td>${esc(loja?.nome||'—')}</td>
         <td class="r mono">${entUn>0?entUn:'—'}</td>
         <td class="r mono">${entKg>0?kg(entKg):'—'}</td>
         <td class="r mono">${saiUn>0?saiUn:'—'}</td>
@@ -760,7 +760,7 @@ async function renderSaldoOp(){
       return `<tr>
         <td class="mono" style="font-size:11px;color:var(--text2)">${dataStr}</td>
         <td>${tipoLabel}</td><td style="font-weight:600">${esc(ins?.nome||'—')}</td>
-        <td>${esc(loja?.nome||'—')}</td><td style="font-size:11px">${esc(l.lote||'—')}</td>
+        <td>${esc(loja?.nome||'—')}</td>
         <td class="r mono">${entKg>0?kg(entKg):'—'}</td>
         <td class="r mono">${saiKg>0?kg(saiKg):'—'}</td>
         <td class="r mono" style="font-weight:700;color:${saldoKg>=0?'var(--green)':'var(--red)'}">${kg(saldoKg)}</td>
@@ -778,8 +778,8 @@ function exportSaldoOp(){
   const hasUnits=_soData.some(l=>(l.modelo||l.modelo_processo||'')==='simples');
   let saldoKg=0,saldoUn=0;
   const header=hasUnits
-    ?['Data/Hora','Tipo','Produto','Loja','Lote/Ref','Ent. (un)','Entrada (kg)','Saída (un)','Saída (kg)','Saldo (un)','Saldo (kg)','Responsável','Observação']
-    :['Data/Hora','Tipo','Produto','Loja','Lote/Ref','Entrada (kg)','Saída (kg)','Saldo (kg)','Responsável','Observação'];
+    ?['Data/Hora','Tipo','Produto','Loja','Ent. (un)','Entrada (kg)','Saída (un)','Saída (kg)','Saldo (un)','Saldo (kg)','Responsável','Observação']
+    :['Data/Hora','Tipo','Produto','Loja','Entrada (kg)','Saída (kg)','Saldo (kg)','Responsável','Observação'];
   const rows=[header];
   _soData.forEach(l=>{
     const ins=_insumos.find(i=>i.id===l.insumo_id);
@@ -793,8 +793,8 @@ function exportSaldoOp(){
     saldoKg=r3(saldoKg+entKg-saiKg);saldoUn=r3(saldoUn+entUn-saiUn);
     const dataStr=l.data?new Date(l.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
     const tipo=isEnt?'Entrada':'Saída';
-    if(hasUnits) rows.push([dataStr,tipo,ins?.nome||'',loja?.nome||'',l.lote||'',entUn||'',entKg||'',saiUn||'',saiKg||'',saldoUn,saldoKg,l.responsavel||'',l.observacoes||'']);
-    else rows.push([dataStr,tipo,ins?.nome||'',loja?.nome||'',l.lote||'',entKg||'',saiKg||'',saldoKg,l.responsavel||'',l.observacoes||'']);
+    if(hasUnits) rows.push([dataStr,tipo,ins?.nome||'',loja?.nome||'',entUn||'',entKg||'',saiUn||'',saiKg||'',saldoUn,saldoKg,l.responsavel||'',l.observacoes||'']);
+    else rows.push([dataStr,tipo,ins?.nome||'',loja?.nome||'',entKg||'',saiKg||'',saldoKg,l.responsavel||'',l.observacoes||'']);
   });
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
