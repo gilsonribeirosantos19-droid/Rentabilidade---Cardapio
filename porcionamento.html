@@ -102,6 +102,8 @@
   .tipo-pill.active{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}
   #pill-entrada.active{color:var(--blue)}
   #pill-saida.active{color:var(--orange)}
+  #pill-sim-ent.active{color:var(--blue)}
+  #pill-sim-sai.active{color:var(--orange)}
 
   /* CALC BOX */
   .calc-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 0;display:flex;margin-top:16px}
@@ -299,28 +301,105 @@
 
       <!-- MODELO: SIMPLES -->
       <div class="form-card fields-block active" id="fields-simples">
-        <div class="form-card-title">Pesos e Perdas</div>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-group"><label class="form-label">Peso Bruto (kg) *</label>
-            <input class="form-input mono" id="f-peso-bruto" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()">
-          </div>
-          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg)</label>
-            <input class="form-input mono" id="f-custo-unit" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSimples()">
+        <!-- Pills Entrada/Saída -->
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:700;color:var(--text1)">Tipo de lançamento</span>
+          <div class="tipo-pills">
+            <button class="tipo-pill" id="pill-sim-ent" onclick="onSimplesTipo('entrada')">↓ Entrada</button>
+            <button class="tipo-pill active" id="pill-sim-sai" onclick="onSimplesTipo('saida')">↑ Saída</button>
           </div>
         </div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Perdas (kg)</div>
-        <div class="form-grid-3">
-          <div class="form-group"><label class="form-label">Cabeça</label><input class="form-input mono" id="f-p-cabeca" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
-          <div class="form-group"><label class="form-label">Pele</label><input class="form-input mono" id="f-p-pele" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
-          <div class="form-group"><label class="form-label">Espinha</label><input class="form-input mono" id="f-p-espinha" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
-          <div class="form-group"><label class="form-label">Outros</label><input class="form-input mono" id="f-p-outros" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimples()"></div>
-          <div class="form-group"><label class="form-label">Peso Limpo (kg)</label><input class="form-input mono" id="f-peso-limpo" type="number" step="0.001" min="0" placeholder="auto" readonly></div>
+
+        <!-- ENTRADA: RECEBIMENTO + QUEBRA INICIAL -->
+        <div id="sim-ent-block" style="display:none">
+          <div class="form-card-title" style="color:#1d4ed8">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12l10 10 10-10"/></svg>
+            Recebimento
+          </div>
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Quantidade de peixes</label>
+              <input class="form-input mono" id="fse-qtd-peixes" type="number" step="1" min="0" placeholder="0">
+            </div>
+            <div class="form-group"><label class="form-label">Custo/kg entrada (R$/kg)</label>
+              <input class="form-input mono" id="fse-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSimplesEnt()">
+            </div>
+          </div>
+          <div class="form-grid-3" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Peso bruto total com cabeça (kg) *</label>
+              <input class="form-input mono" id="fse-peso-bruto" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimplesEnt()">
+            </div>
+            <div class="form-group"><label class="form-label">Valor total da compra (R$)</label>
+              <input class="form-input mono" id="fse-valor-compra" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSimplesEnt()">
+            </div>
+          </div>
+          <div class="form-card-title" style="color:#dc2626;margin-top:4px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Quebra Inicial — Cabeça
+          </div>
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Peso da cabeça descartada (kg)</label>
+              <input class="form-input mono" id="fse-cabeca" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimplesEnt()">
+            </div>
+            <div class="form-group"><label class="form-label">Peso líquido armazenado (kg)</label>
+              <input class="form-input mono" id="fse-peso-liq" type="number" step="0.001" placeholder="automático" readonly>
+              <div style="font-size:11px;color:var(--text3);margin-top:3px">= Peso bruto – Cabeça</div>
+            </div>
+          </div>
+          <div class="calc-box">
+            <div class="calc-item"><div class="calc-lbl">% Cabeça</div><div class="calc-val c-amber" id="sev-cabeca-pct">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Peso Líq. Armazenado</div><div class="calc-val" id="sev-peso-liq">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Novo Custo/kg</div><div class="calc-val c-blue" id="sev-novo-custo">—</div></div>
+          </div>
         </div>
-        <div class="calc-box">
-          <div class="calc-item"><div class="calc-lbl">Peso Limpo</div><div class="calc-val" id="cv-limpo">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Total Perdas</div><div class="calc-val c-red" id="cv-perdas">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Rendimento</div><div class="calc-val c-amber" id="cv-rend">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Valor Total</div><div class="calc-val c-blue" id="cv-valor">—</div></div>
+
+        <!-- SAÍDA: PROCESSAMENTO + RESULTADOS -->
+        <div id="sim-sai-block">
+          <div class="form-card-title" style="color:#c2410c">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Processamento
+          </div>
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Quantidade de peixes</label>
+              <input class="form-input mono" id="fss-qtd-peixes" type="number" step="1" min="0" placeholder="0">
+            </div>
+            <div class="form-group"><label class="form-label">Custo/kg de entrada (R$/kg)</label>
+              <input class="form-input mono" id="fss-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSimplesSai()">
+              <div style="font-size:11px;color:var(--text3);margin-top:3px">Preenchido automaticamente pelo insumo</div>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Peso de entrada (kg) *</label>
+              <input class="form-input mono" id="fss-peso-entrada" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimplesSai()">
+            </div>
+          </div>
+          <div class="form-card-title" style="color:#16a34a;margin-top:4px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Resultados
+          </div>
+          <div class="form-grid-3" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Filé limpo (kg)</label>
+              <input class="form-input mono" id="fss-file" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimplesSai()">
+            </div>
+            <div class="form-group"><label class="form-label">Pele (kg)</label>
+              <input class="form-input mono" id="fss-pele" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimplesSai()">
+              <div style="font-size:11px;color:var(--text3);margin-top:3px">aproveitamento</div>
+            </div>
+            <div class="form-group"><label class="form-label">Aparas (kg)</label>
+              <input class="form-input mono" id="fss-aparas" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcSimplesSai()">
+              <div style="font-size:11px;color:var(--text3);margin-top:3px">aproveitamento</div>
+            </div>
+            <div class="form-group"><label class="form-label">Perdas (kg)</label>
+              <input class="form-input mono" id="fss-perdas" type="number" step="0.001" placeholder="automático" readonly>
+              <div style="font-size:11px;color:var(--text3);margin-top:3px">= Entrada – Aproveitável</div>
+            </div>
+          </div>
+          <div class="calc-box">
+            <div class="calc-item"><div class="calc-lbl">Total Aprov.</div><div class="calc-val c-green" id="ssv-aprov">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Perdas</div><div class="calc-val c-red" id="ssv-perdas">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Rendimento Op.</div><div class="calc-val c-amber" id="ssv-rend">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Custo/kg Filé</div><div class="calc-val" id="ssv-custo-file">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Custo/kg Aprov.</div><div class="calc-val c-blue" id="ssv-custo-aprov">—</div></div>
+          </div>
         </div>
       </div>
 
@@ -690,7 +769,8 @@ function editarLanc(id){
 }
 function _resetForm(){
   ['f-insumo','f-modelo','f-data','f-loja','f-turno','f-lote','f-fornecedor','f-responsavel','f-obs',
-   'f-peso-bruto','f-custo-unit','f-p-cabeca','f-p-pele','f-p-espinha','f-p-outros','f-peso-limpo',
+   'fse-qtd-peixes','fse-custo','fse-peso-bruto','fse-valor-compra','fse-cabeca','fse-peso-liq',
+   'fss-qtd-peixes','fss-custo','fss-peso-entrada','fss-file','fss-pele','fss-aparas','fss-perdas',
    'fd-custo','fd-congelado','fd-descongelado','fd-p-degelo','fd-limpo','fd-p-limpeza',
    'fc-inicial','fc-final','fc-reducao','fc-custo',
    'fl-produzida','fl-consumida','fl-sobra','fl-validade','fl-custo']
@@ -699,7 +779,9 @@ function _resetForm(){
   sv('f-turno','Manhã');
   sv('f-modelo','simples');
   onModeloChange();
-  ['cv-limpo','cv-perdas','cv-rend','cv-valor',
+  onSimplesTipo('saida');
+  ['sev-cabeca-pct','sev-peso-liq','sev-novo-custo',
+   'ssv-aprov','ssv-perdas','ssv-rend','ssv-custo-file','ssv-custo-aprov',
    'dv-limpo','dv-perdas','dv-rend','dv-valor',
    'ccv-red','ccv-rend','ccv-valor','lv-rend','lv-valor'].forEach(id=>se(id,'—'));
 }
@@ -715,10 +797,19 @@ function _populateForm(l){
   sv('f-fornecedor',l.fornecedor_id||'');
   sv('f-obs',l.observacoes||'');
   if(mod==='simples'){
-    sv('f-peso-bruto',l.peso_bruto||'');sv('f-custo-unit',l.custo_unitario||'');
-    sv('f-p-cabeca',l.perda_cabeca||'');sv('f-p-pele',l.perda_pele||'');
-    sv('f-p-espinha',l.perda_espinha||'');sv('f-p-outros',l.perda_outros||'');
-    sv('f-peso-limpo',l.peso_limpo||'');calcSimples();
+    const tipo=l.tipo||'saida';
+    onSimplesTipo(tipo);
+    if(tipo==='entrada'){
+      sv('fse-qtd-peixes',l.qtd_consumida||'');sv('fse-custo',l.custo_unitario||'');
+      sv('fse-peso-bruto',l.peso_bruto||'');sv('fse-valor-compra',l.valor_total||'');
+      sv('fse-cabeca',l.perda_cabeca||'');sv('fse-peso-liq',l.peso_limpo||'');
+      calcSimplesEnt();
+    }else{
+      sv('fss-qtd-peixes',l.qtd_consumida||'');sv('fss-custo',l.custo_unitario||'');
+      sv('fss-peso-entrada',l.peso_bruto||'');sv('fss-file',l.peso_limpo||'');
+      sv('fss-pele',l.perda_pele||'');sv('fss-aparas',l.perda_outros||'');
+      calcSimplesSai();
+    }
   }else if(mod==='degelo'){
     sv('fd-custo',l.custo_unitario||'');sv('fd-congelado',l.peso_congelado||'');
     sv('fd-descongelado',l.peso_descongelado||'');sv('fd-limpo',l.peso_limpo||'');calcDegelo();
@@ -741,9 +832,32 @@ function onInsumoChange(){
   const custo=parseFloat(sel.options[sel.selectedIndex]?.dataset?.custo)||0;
   if(!custo) return;
   const modelo=document.getElementById('f-modelo')?.value||'simples';
-  const camposCusto={simples:'f-custo-unit',degelo:'fd-custo',coccao:'fc-custo',lote:'fl-custo'};
-  const campo=camposCusto[modelo];
-  if(campo) sv(campo,custo);
+  if(modelo==='simples'){
+    sv('fse-custo',custo); calcSimplesEnt();
+    sv('fss-custo',custo); calcSimplesSai();
+  }else{
+    const camposCusto={degelo:'fd-custo',coccao:'fc-custo',lote:'fl-custo'};
+    const campo=camposCusto[modelo];
+    if(campo) sv(campo,custo);
+  }
+}
+
+function onSimplesTipo(tipo){
+  const entBlock=document.getElementById('sim-ent-block');
+  const saiBlock=document.getElementById('sim-sai-block');
+  const pillEnt=document.getElementById('pill-sim-ent');
+  const pillSai=document.getElementById('pill-sim-sai');
+  if(tipo==='entrada'){
+    if(entBlock) entBlock.style.display='';
+    if(saiBlock) saiBlock.style.display='none';
+    if(pillEnt) pillEnt.classList.add('active');
+    if(pillSai) pillSai.classList.remove('active');
+  }else{
+    if(entBlock) entBlock.style.display='none';
+    if(saiBlock) saiBlock.style.display='';
+    if(pillEnt) pillEnt.classList.remove('active');
+    if(pillSai) pillSai.classList.add('active');
+  }
 }
 
 function onModeloChange(){
@@ -756,18 +870,31 @@ function onModeloChange(){
 /* ================================================================
    CÁLCULOS
 ================================================================ */
-function calcSimples(){
-  const bruto=n('f-peso-bruto');
-  const perdas=[n('f-p-cabeca'),n('f-p-pele'),n('f-p-espinha'),n('f-p-outros')];
-  const totalP=r3(perdas.reduce((s,v)=>s+v,0));
-  const limpo=r3(bruto-totalP);
-  const rend=bruto>0?r2(limpo/bruto*100):0;
-  const custo=n('f-custo-unit');
-  sv('f-peso-limpo',limpo>=0?limpo:'');
-  se('cv-limpo',limpo>=0?kg(limpo):'—');
-  se('cv-perdas',kg(totalP));
-  se('cv-rend',pct(rend));
-  se('cv-valor',custo?brl(r2(bruto*custo)):'—');
+function calcSimplesEnt(){
+  const bruto=n('fse-peso-bruto');
+  const cabeca=n('fse-cabeca');
+  const liq=r3(bruto-cabeca);
+  const custo=n('fse-custo');
+  const valorCompra=n('fse-valor-compra');
+  sv('fse-peso-liq',liq>=0?liq:'');
+  se('sev-cabeca-pct',bruto>0?pct(r2(cabeca/bruto*100)):'—');
+  se('sev-peso-liq',liq>=0?kg(liq):'—');
+  if(valorCompra>0&&liq>0) se('sev-novo-custo',brl(r2(valorCompra/liq)));
+  else if(custo>0&&bruto>0&&liq>0) se('sev-novo-custo',brl(r2(custo*bruto/liq)));
+  else se('sev-novo-custo','—');
+}
+function calcSimplesSai(){
+  const entrada=n('fss-peso-entrada');
+  const file=n('fss-file'),pele=n('fss-pele'),aparas=n('fss-aparas');
+  const aprov=r3(file+pele+aparas);
+  const perdas=r3(entrada-aprov);
+  const custo=n('fss-custo');
+  sv('fss-perdas',perdas>=0?perdas:'');
+  se('ssv-aprov',kg(aprov));
+  se('ssv-perdas',kg(perdas>=0?perdas:0));
+  se('ssv-rend',entrada>0?pct(r2(aprov/entrada*100)):'—');
+  se('ssv-custo-file',custo&&file>0?brl(r2(custo*entrada/file)):'—');
+  se('ssv-custo-aprov',custo&&aprov>0?brl(r2(custo*entrada/aprov)):'—');
 }
 function calcDegelo(){
   const cong=n('fd-congelado'),desc=n('fd-descongelado'),limpo=n('fd-limpo');
@@ -810,13 +937,25 @@ async function salvarLanc(){
   };
 
   if(modelo==='simples'){
-    const bruto=n('f-peso-bruto');if(!bruto){toast('Informe o peso bruto.','err');return;}
-    const limpo=n('f-peso-limpo'),custo=n('f-custo-unit');
-    Object.assign(payload,{peso_bruto:bruto,peso_limpo:limpo||null,
-      perda_cabeca:n('f-p-cabeca')||null,perda_pele:n('f-p-pele')||null,
-      perda_espinha:n('f-p-espinha')||null,perda_outros:n('f-p-outros')||null,
-      rendimento_pct:bruto>0?r2(limpo/bruto*100):null,
-      custo_unitario:custo||null,valor_total:custo?r2(bruto*custo):null});
+    const tipo=document.getElementById('pill-sim-ent')?.classList.contains('active')?'entrada':'saida';
+    if(tipo==='entrada'){
+      const bruto=n('fse-peso-bruto');if(!bruto){toast('Informe o peso bruto.','err');return;}
+      const liq=n('fse-peso-liq'),custo=n('fse-custo'),valorCompra=n('fse-valor-compra');
+      Object.assign(payload,{tipo:'entrada',peso_bruto:bruto,perda_cabeca:n('fse-cabeca')||null,
+        peso_limpo:liq||null,custo_unitario:custo||null,valor_total:valorCompra||null,
+        qtd_consumida:n('fse-qtd-peixes')||null,
+        rendimento_pct:bruto>0?r2(liq/bruto*100):null,
+        perda_pele:null,perda_espinha:null,perda_outros:null});
+    }else{
+      const entrada=n('fss-peso-entrada');if(!entrada){toast('Informe o peso de entrada.','err');return;}
+      const file=n('fss-file'),pele=n('fss-pele'),aparas=n('fss-aparas'),perdas=n('fss-perdas');
+      const aprov=r3(file+pele+aparas);const custo=n('fss-custo');
+      Object.assign(payload,{tipo:'saida',peso_bruto:entrada,peso_limpo:file||null,
+        perda_pele:pele||null,perda_outros:aparas||null,perda_espinha:perdas||null,
+        custo_unitario:custo||null,qtd_consumida:n('fss-qtd-peixes')||null,
+        rendimento_pct:entrada>0?r2(aprov/entrada*100):null,
+        valor_total:null,perda_cabeca:null});
+    }
   }else if(modelo==='degelo'){
     const cong=n('fd-congelado');if(!cong){toast('Informe o peso congelado.','err');return;}
     const limpo=n('fd-limpo'),custo=n('fd-custo');
