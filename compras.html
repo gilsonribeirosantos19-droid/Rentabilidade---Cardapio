@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="design-system.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pedidos de Compra · Aiko</title>
 <style>
@@ -222,20 +224,25 @@
 
       <!-- TAB: SOLICITAÇÕES -->
       <div id="tab-solicitacoes" class="tab-pane">
-        <div class="sc-grid" id="sol-cards"></div>
+        <div class="sc-grid" id="sol-cards" style="display:none"></div>
         <div class="toolbar">
-          <select id="sol-fil-loja" onchange="renderSolicitacoes()" style="font-size:13px;padding:7px 14px;min-width:180px;border:1.5px solid var(--teal);border-radius:8px;background:var(--bg2);color:var(--text1);cursor:pointer;outline:none;font-family:inherit">
+          <select id="sol-fil-loja" style="font-size:13px;padding:7px 14px;min-width:180px;border:1.5px solid var(--teal);border-radius:8px;background:var(--bg2);color:var(--text1);cursor:pointer;outline:none;font-family:inherit">
             <option value="">Todas as lojas</option>
           </select>
-          <input type="date" class="field field-sm" id="sol-fil-data" onchange="renderSolicitacoes()" title="Filtrar por data">
-          <select class="field field-sm" id="sol-fil-status" onchange="renderSolicitacoes()">
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="date" class="field field-sm" id="sol-fil-de" title="Data inicial">
+            <span style="color:#94a3b8;font-size:12px">–</span>
+            <input type="date" class="field field-sm" id="sol-fil-ate" title="Data final">
+          </div>
+          <select class="field field-sm" id="sol-fil-status">
             <option value="">Todas</option>
             <option value="solicitado">Aguardando</option>
             <option value="processado">Processadas</option>
             <option value="cancelado">Canceladas</option>
           </select>
           <button class="btn btn-ghost btn-sm" onclick="limparFiltrosSol()">✕ Limpar</button>
-          <button class="btn btn-ghost btn-sm ml" onclick="renderSolicitacoes()">↻ Atualizar</button>
+          <button class="btn btn-primary btn-sm ml" onclick="renderSolicitacoes()">Consultar</button>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
@@ -526,28 +533,48 @@ function switchTab(tab) {
 // ══════════════════════════════════════════════════════════════════════
 function limparFiltrosSol() {
   document.getElementById('sol-fil-loja').value = '';
-  document.getElementById('sol-fil-data').value = '';
+  document.getElementById('sol-fil-de').value = '';
+  document.getElementById('sol-fil-ate').value = '';
   document.getElementById('sol-fil-status').value = '';
   renderSolicitacoes();
 }
 
 async function renderSolicitacoes() {
   const lojaFil   = document.getElementById('sol-fil-loja')?.value||'';
-  const dataFil   = document.getElementById('sol-fil-data')?.value||'';
+  const deFil     = document.getElementById('sol-fil-de')?.value||'';
+  const ateFil    = document.getElementById('sol-fil-ate')?.value||'';
   const statusFil = document.getElementById('sol-fil-status')?.value||'';
+  const temFiltro = lojaFil || deFil || ateFil || statusFil;
+
+  // Sem filtro: mostra estado vazio, não faz requisição
+  if (!temFiltro) {
+    const tbody = document.getElementById('sol-body');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding:36px;text-align:center;color:#94a3b8;font-size:13px">Selecione um filtro (loja, data ou status) e clique em <b>Atualizar</b> para consultar.</td></tr>`;
+    const cardsEl = document.getElementById('sol-cards');
+    if (cardsEl) cardsEl.style.display = 'none';
+    return;
+  }
+
   try {
-    // Cards sempre mostram total de aguardando (sem filtros)
-    const totais = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id,loja_id`);
-    const lojaSet = new Set(totais.map(s=>s.loja_id).filter(Boolean));
-    document.getElementById('sol-cards').innerHTML = `
-      <div class="sc"><div class="sc-label">Aguardando</div><div class="sc-value c-amber">${totais.length}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">solicitações</div></div>
-      <div class="sc"><div class="sc-label">Lojas</div><div class="sc-value c-blue">${lojaSet.size}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">com pedidos</div></div>`;
+    const cardsEl = document.getElementById('sol-cards');
+    if (temFiltro) {
+      // Mostra cards só quando há filtro ativo
+      const totais = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id,loja_id`);
+      const lojaSet = new Set(totais.map(s=>s.loja_id).filter(Boolean));
+      cardsEl.innerHTML = `
+        <div class="sc"><div class="sc-label">Aguardando</div><div class="sc-value c-amber">${totais.length}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">solicitações</div></div>
+        <div class="sc"><div class="sc-label">Lojas</div><div class="sc-value c-blue">${lojaSet.size}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">com pedidos</div></div>`;
+      cardsEl.style.display = '';
+    } else {
+      cardsEl.style.display = 'none';
+    }
 
     // Lista com filtros aplicados
     let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&order=data_pedido.desc,created_at.desc`;
     if (statusFil) q += `&status=eq.${statusFil}`;
     if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
-    if (dataFil)   q += `&data_pedido=eq.${dataFil}`;
+    if (deFil)     q += `&data_pedido=gte.${deFil}`;
+    if (ateFil)    q += `&data_pedido=lte.${ateFil}`;
     solicitacoes = await api(q);
 
     const tbody = document.getElementById('sol-body');
@@ -735,6 +762,16 @@ async function gerarPedidos() {
 
   const semQtd = itens.filter(([,d]) => !d.qComprar || d.qComprar <= 0);
   if (semQtd.length) { toast('Informe Q. Comprar para todos os itens.','err'); return; }
+
+  // ── Validações por parâmetro ─────────────────────────────
+  await Params.load();
+  if(!Params.bool('compras','permitir_sem_fornecedor',true)){
+    const semForn=itens.filter(([,d])=>!d.fornecedorId);
+    if(semForn.length){toast(`${semForn.length} item(ns) sem fornecedor. Obrigatório (Parâmetros > Compras).`,'err');return;}
+  }
+  // Status inicial: se exigir aprovação, criar como 'aguardando_aprovacao'
+  const _statusInicial=Params.bool('compras','exigir_aprovacao')?'aguardando_aprovacao':'aprovado';
+  // ─────────────────────────────────────────────────────────
 
   // Agrupa por fornecedor
   const porForn = {};
@@ -1247,7 +1284,8 @@ function gerarImpressaoPorLoja(porLoja, dataRef) {
       @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    </body></html>`;
+    
+</body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
@@ -1361,7 +1399,8 @@ async function imprimirFornecedor(fornId, pedIdsStr) {
       @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    </body></html>`;
+    
+</body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
@@ -1480,7 +1519,8 @@ async function imprimirPedido(id) {
       }
 </style></head><body>${paginas}
     <script>window.onload=function(){window.print()}<\/script>
-    </body></html>`;
+    
+</body></html>`;
 
   const win = window.open('','_blank');
   win.document.write(html);
@@ -1528,5 +1568,8 @@ carregar();
   fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
 })();
 </script>
+
+<script src="params.js"></script>
+<script src="sidebar.js"></script>
 </body>
 </html>

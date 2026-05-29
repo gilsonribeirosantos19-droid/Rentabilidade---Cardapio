@@ -218,7 +218,13 @@
       <div style="font-size:12px;color:#94a3b8;margin-top:3px">Cadastre e gerencie as fichas técnicas de produção.</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <select id="sel-loja" onchange="filtrar()" style="font-size:13px;padding:6px 12px;min-width:160px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;cursor:pointer;outline:none;font-family:inherit"><option value="">Todas as lojas</option></select>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">Custo por loja:</span>
+        <select id="sel-loja" onchange="onChangeLojaFT()" style="height:34px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;background:#f8fafc;outline:none;cursor:pointer;min-width:160px">
+          <option value="">Preço de compra</option>
+        </select>
+        <span id="ft-loja-badge" style="display:none;font-size:11px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:20px;padding:2px 10px;font-weight:600;white-space:nowrap">custo médio</span>
+      </div>
       <span id="ft-atualizado" style="font-size:12px;color:#94a3b8;white-space:nowrap"></span>
       <button onclick="carregar()" title="Atualizar" style="background:none;border:none;cursor:pointer;padding:4px;color:#94a3b8;display:inline-flex;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg></button>
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
@@ -707,11 +713,19 @@ function switchDpTab(nome,btn){
   }
 }
 
-// BUSINESS LOGIC (unchanged)
+// BUSINESS LOGIC
+let _saldosLoja=[];
+
+function _custoBase(ins){
+  const saldo=_saldosLoja.find(s=>s.insumo_id===ins.id);
+  return (saldo?.custo_medio>0)?saldo.custo_medio:(ins.preco_compra||0);
+}
+
 function custoIngrediente(ins,qtdG){
+  const cb=_custoBase(ins);
   const um=ins.unidade_medida||ins.unidade_compra||'g';
-  if(um==='un'||um==='pct'||um==='cx')return ins.preco_compra*qtdG;
-  return ins.preco_compra/(ins.rendimento_pct/100)/1000*qtdG;
+  if(um==='un'||um==='pct'||um==='cx')return cb*qtdG;
+  return cb/(ins.rendimento_pct/100)/1000*qtdG;
 }
 function custoFicha(f){
   if(!f.itens||!f.itens.length)return 0;
@@ -904,6 +918,25 @@ async function carregarLojas(){
   }catch{}
 }
 
+async function onChangeLojaFT(){
+  const lojaId=document.getElementById('sel-loja').value;
+  const badge=document.getElementById('ft-loja-badge');
+  if(lojaId){
+    _saldosLoja=await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`).catch(()=>[]);
+    if(badge) badge.style.display='inline';
+  }else{
+    _saldosLoja=[];
+    if(badge) badge.style.display='none';
+  }
+  filtrar();
+  // Re-renderiza painel de detalhe se estiver aberto
+  if(fichaDetalhe){
+    const tabAtiva=document.querySelector('.dp-tab.active');
+    if(tabAtiva) switchDpTab(tabAtiva.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]||'resumo',tabAtiva);
+  }
+  atualizarMetricas();
+}
+
 function abrirModalNova(){ abrirModalNovo(); }
 
 carregarLojas();
@@ -936,5 +969,6 @@ carregar();
   fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
 })();
 </script>
+<script src="sidebar.js"></script>
 </body>
 </html>

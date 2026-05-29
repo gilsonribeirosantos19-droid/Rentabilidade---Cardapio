@@ -50,7 +50,20 @@
   .tab-btn:hover{background:#1a3f7a}
   .tab-btn.active{color:#fff;background:#f97316;font-weight:600}
   .tab-pane{display:none}
-  .tab-pane.active{display:block}
+  .tab-pane.active{display:block;padding-top:18px}
+
+  /* HUB */
+  .est-hub-section{margin-bottom:28px}
+  .est-hub-label{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+  .est-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .est-hub-card{display:flex;align-items:center;gap:16px;padding:18px 20px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s;user-select:none}
+  .est-hub-card:hover{border-color:#f97316}
+  .est-hub-icon{width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .est-hub-icon svg{width:20px;height:20px;stroke:#64748b;stroke-width:1.8;fill:none}
+  .est-hub-body{flex:1}
+  .est-hub-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px}
+  .est-hub-desc{font-size:12px;color:#64748b;line-height:1.4}
+  .est-hub-arrow{font-size:18px;color:#94a3b8;margin-left:auto;flex-shrink:0}
 
   /* CARDS */
   .sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:24px}
@@ -153,6 +166,19 @@
   .inv-zero{color:var(--text3);font-family:'DM Mono',monospace}
   .b-aberto{background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
   .b-fechado{background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  /* Inventário — filtro estilo ERP */
+  .inv-fc{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .inv-fc-r1{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:14px}
+  .inv-fc-r2{display:flex;align-items:stretch;gap:12px}
+  .inv-flbl{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px}
+  .inv-freq{color:#f97316}
+  .inv-bbox{border:1px solid #e2e8f0;border-radius:10px;padding:10px 16px;position:relative}
+  .inv-bbox-ttl{position:absolute;top:-8px;left:10px;background:#fff;padding:0 6px;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em}
+  .inv-toolbar{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-bottom:10px}
+  .inv-tbtn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:11px;font-weight:600;color:#64748b;background:#fff;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase}
+  .inv-tbtn:hover{border-color:#cbd5e1;color:#0f172a}
+  .inv-slab{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;color:#334155;white-space:nowrap}
+  .inv-slab input[type=checkbox]{width:15px;height:15px;accent-color:#f97316;cursor:pointer}
 
   /* RELATÓRIOS */
   .rep-title{font-size:14px;font-weight:600;margin-bottom:12px;
@@ -205,9 +231,9 @@
   .nfe-sec-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #e2e8f0}
   .nfe-tbl{width:100%;border-collapse:collapse;font-size:12px}
   .nfe-tbl thead tr{background:#0f2d5c}
-  .nfe-tbl th{padding:9px 10px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .nfe-tbl th{padding:7px 8px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
   .nfe-tbl th.r{text-align:right}
-  .nfe-tbl td{padding:10px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  .nfe-tbl td{padding:6px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
   .nfe-tbl tr.linked-row{background:#f0fdf4}
   .nfe-tbl tr.summary-row td{background:#f8fafc;font-size:11px;color:#64748b;padding:8px 10px;border-bottom:1px solid #e2e8f0}
   .nfe-tbl tr:last-child td{border-bottom:none}
@@ -234,6 +260,21 @@
   .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
   .cfg-flyout-item:last-child{border-bottom:none}
   .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
+  /* Sticky offset: topbar(~58px) + ws-tab-strip(36px) */
+  :root { --filter-top: 94px; }
+  .filter-bar-wrap {
+    position: sticky !important;
+    top: 94px !important;
+    z-index: 20 !important;
+    background: #f8fafc !important;
+  }
+  /* Inventário: card de filtro ERP também fica preso */
+  .inv-fc {
+    position: sticky !important;
+    top: 94px !important;
+    z-index: 20 !important;
+    background: #fff !important;
+  }
 </style>
 </head>
 <body>
@@ -277,8 +318,7 @@
 <div class="main">
   <div class="topbar">
     <div>
-      <div class="topbar-title">Estoque</div>
-      <div class="topbar-breadcrumb">Estoque &rsaquo; <span id="bc-tab">Dashboard</span></div>
+      <div id="topbar-heading" class="topbar-title">Estoque</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       <select id="sel-loja" style="font-size:13px;padding:7px 14px;min-width:160px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;cursor:pointer;outline:none;font-family:inherit"
@@ -295,20 +335,85 @@
   </div>
   <div class="content">
 
-    <!-- TABS -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</button>
-      <button class="tab-btn" data-tab="entradas" onclick="switchTab('entradas')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>Entradas</button>
-      <button class="tab-btn" data-tab="saidas" onclick="switchTab('saidas')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 17 12 21 8 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>Saídas</button>
-      <button class="tab-btn" data-tab="kardex" onclick="switchTab('kardex')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Kardex</button>
-      <button class="tab-btn" data-tab="inventario" onclick="switchTab('inventario')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Inventário</button>
-      <button class="tab-btn" data-tab="fechamento" onclick="switchTab('fechamento')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Fechamento</button>
-      <button class="tab-btn" data-tab="movimentacao" onclick="switchTab('movimentacao')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Movimentação</button>
-      <button class="tab-btn" data-tab="compras" onclick="switchTab('compras')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Sugestão de Compras</button>
+    <!-- WORKSPACE TAB STRIP -->
+    <div class="ws-tab-strip" id="est-tab-strip"></div>
+
+    <!-- HUB LANDING PAGE -->
+    <div id="tab-hub" class="tab-pane active">
+      <div class="est-hub-section">
+        <div class="est-hub-label">Geral</div>
+        <div class="est-hub-grid">
+          <div class="est-hub-card" onclick="switchTab('dashboard')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Dashboard</div><div class="est-hub-desc">Visão geral do estoque, alertas e indicadores.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('movimentacao')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Movimentação</div><div class="est-hub-desc">Histórico de todas as movimentações do período.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="est-hub-section">
+        <div class="est-hub-label">Lançamentos</div>
+        <div class="est-hub-grid">
+          <div class="est-hub-card" onclick="switchTab('entradas')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Entradas</div><div class="est-hub-desc">Registre entradas de insumos no estoque.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('saidas')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><polyline points="16 17 12 21 8 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Saídas</div><div class="est-hub-desc">Registre saídas e consumo de insumos.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="est-hub-section">
+        <div class="est-hub-label">Controle</div>
+        <div class="est-hub-grid">
+          <div class="est-hub-card" onclick="switchTab('inventario')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Inventário</div><div class="est-hub-desc">Contagem e conferência física do estoque.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('fechamento')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Fechamento</div><div class="est-hub-desc">Fechamento periódico e consolidação do estoque.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('kardex')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Kardex</div><div class="est-hub-desc">Rastreabilidade e saldo por insumo ao longo do tempo.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="est-hub-section">
+        <div class="est-hub-label">Análises</div>
+        <div class="est-hub-grid">
+          <div class="est-hub-card" onclick="switchTab('compras')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Sugestão de Compras</div><div class="est-hub-desc">Recomendações de compra baseadas no consumo.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('saldo-est')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Saldo de Estoque</div><div class="est-hub-desc">Saldo atual, custo médio e valor financeiro por loja.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+          <div class="est-hub-card" onclick="switchTab('historico-custo')">
+            <div class="est-hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
+            <div class="est-hub-body"><div class="est-hub-title">Histórico de Custos</div><div class="est-hub-desc">Auditoria de variações de custo médio por insumo.</div></div>
+            <div class="est-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- TAB: DASHBOARD -->
-    <div id="tab-dashboard" class="tab-pane active">
+    <div id="tab-dashboard" class="tab-pane">
       <div class="sc-grid">
         <div class="sc"><div class="sc-label">Total de insumos</div>
           <div class="sc-value c-blue" id="m-total">—</div><div class="sc-sub">cadastrados e ativos</div></div>
@@ -354,7 +459,7 @@
       </div>
 
       <!-- FILTROS — acima dos KPIs -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <div style="position:relative">
           <input class="field field-sm" id="ent-busca" placeholder="Buscar insumo..." oninput="renderEntradas()" style="padding-left:30px;min-width:180px">
           <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -620,76 +725,90 @@
       <!-- LISTA -->
       <div id="inv-lista">
 
-        <!-- AÇÕES TOP -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <button class="btn btn-primary" onclick="abrirModalNovoInv()" style="display:inline-flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Novo inventário
-          </button>
-          <button onclick="abrirModalGrupos()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:#0f172a;cursor:pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <!-- TOPO: botões -->
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:14px">
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalGrupos()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             Grupos
           </button>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalNovoInv()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo inventário
+          </button>
         </div>
 
-        <!-- FILTROS -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)">
-          <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:16px">
+        <!-- FILTROS — estilo ERP -->
+        <div class="inv-fc">
+          <div class="inv-fc-r1">
             <div>
-              <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">Loja</label>
-              <select id="inv-fil-loja" class="field" style="width:100%"><option value="">Todas as lojas</option></select>
+              <span class="inv-flbl">Loja <span class="inv-freq">*</span></span>
+              <select id="inv-fil-loja" class="field field-sm" style="width:100%"><option value="">Todas as lojas</option></select>
             </div>
             <div>
-              <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Inicial</label>
-              <input type="date" id="inv-fil-ini" class="field" style="width:100%">
+              <span class="inv-flbl">Grupo Inventário</span>
+              <select id="inv-fil-grupo" class="field field-sm" style="width:100%"><option value="">Todos os grupos</option></select>
             </div>
             <div>
-              <label style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px">D. Final</label>
-              <input type="date" id="inv-fil-fim" class="field" style="width:100%">
+              <span class="inv-flbl">N. Inventário</span>
+              <input type="text" id="inv-fil-num" class="field field-sm" placeholder="[digite...]" style="width:100%">
             </div>
-            <button class="btn btn-primary" onclick="renderInvLista()" style="height:40px;white-space:nowrap;padding:0 20px">Consultar</button>
           </div>
-          <div style="display:flex;gap:20px;align-items:center">
-            <span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Situação</span>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#16a34a;font-weight:500">
-              <input type="checkbox" id="inv-sit-ativo" checked> Ativo
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#2563eb;font-weight:500">
-              <input type="checkbox" id="inv-sit-encerrado" checked> Encerrado
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#64748b;font-weight:500">
-              <input type="checkbox" id="inv-sit-cancelado"> Cancelado
-            </label>
+          <div class="inv-fc-r2">
+            <div class="inv-bbox" style="flex:0 0 auto">
+              <span class="inv-bbox-ttl">Período</span>
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div>
+                  <span class="inv-flbl">D. Inicial <span class="inv-freq">*</span></span>
+                  <input type="date" id="inv-fil-ini" class="field field-sm">
+                </div>
+                <div>
+                  <span class="inv-flbl">D. Final <span class="inv-freq">*</span></span>
+                  <input type="date" id="inv-fil-fim" class="field field-sm">
+                </div>
+              </div>
+            </div>
+            <div class="inv-bbox" style="flex:1">
+              <span class="inv-bbox-ttl">Situação</span>
+              <div style="display:flex;align-items:center;gap:20px;height:100%;min-height:46px">
+                <label class="inv-slab"><input type="checkbox" id="inv-sit-ativo" checked> Ativo</label>
+                <label class="inv-slab"><input type="checkbox" id="inv-sit-encerrado" checked> Encerrado</label>
+                <label class="inv-slab"><input type="checkbox" id="inv-sit-cancelado"> Cancelado</label>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-end">
+              <button class="btn btn-primary" onclick="renderInvLista()" style="height:42px;padding:0 28px;border-radius:21px;white-space:nowrap">Consultar</button>
+            </div>
           </div>
-        </div>
-
-        <!-- SUB-ABAS -->
-        <div style="border-bottom:2px solid #e2e8f0;margin-bottom:16px;display:flex;gap:0">
-          <button id="inv-subtab-lista" onclick="switchInvSubtab('lista')"
-            style="padding:10px 18px;font-size:13px;font-weight:600;background:none;border:none;border-bottom:3px solid #f97316;color:#f97316;cursor:pointer;margin-bottom:-2px">
-            Inventários
-          </button>
-          <button id="inv-subtab-modelos" onclick="switchInvSubtab('modelos')"
-            style="padding:10px 18px;font-size:13px;font-weight:600;background:none;border:none;border-bottom:3px solid transparent;color:#94a3b8;cursor:pointer;margin-bottom:-2px">
-            Modelos de inventário
-          </button>
         </div>
 
         <!-- PAINEL INVENTÁRIOS -->
         <div id="inv-pane-lista">
+          <div class="inv-toolbar">
+            <button class="inv-tbtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Colunas
+            </button>
+            <button class="inv-tbtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Filtros
+            </button>
+            <button class="inv-tbtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar
+            </button>
+          </div>
           <div class="tbl-wrap"><div class="tbl-scroll">
             <table class="tbl">
               <thead><tr>
-                <th>Loja</th><th>Grupo</th><th>Tipo</th>
-                <th class="c">Status</th>
-                <th class="r">Itens Contados</th>
-                <th>Progresso</th>
+                <th>Loja</th><th>Tipo</th>
+                <th>D. Inicial</th><th>D. Final</th>
+                <th class="c">Situação</th>
                 <th class="c">Ações</th>
               </tr></thead>
-              <tbody id="inv-lista-body"><tr><td colspan="7" class="empty"><b>Selecione os filtros e clique em Consultar.</b></td></tr></tbody>
+              <tbody id="inv-lista-body"><tr><td colspan="6" class="empty">Selecione os filtros e clique em <b>Consultar</b>.</td></tr></tbody>
             </table>
           </div></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;font-size:12px;color:#94a3b8;margin-top:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;font-size:12px;color:#94a3b8;margin-top:6px">
             <span id="inv-pag-info">—</span>
             <div style="display:flex;gap:4px" id="inv-pag-btns"></div>
             <select class="field field-sm" id="inv-por-pag" onchange="_invPagAtual=1;_renderInvPage()" style="padding:3px 8px;font-size:11px;width:auto">
@@ -697,15 +816,6 @@
               <option value="20">20 por página</option>
               <option value="50">50 por página</option>
             </select>
-          </div>
-        </div>
-
-        <!-- PAINEL MODELOS -->
-        <div id="inv-pane-modelos" style="display:none">
-          <div style="padding:48px 0;text-align:center;color:#94a3b8">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 12px;display:block"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-            <div style="font-size:14px;font-weight:600;color:#64748b;margin-bottom:6px">Modelos de inventário</div>
-            <div style="font-size:13px">Em desenvolvimento</div>
           </div>
         </div>
 
@@ -1037,6 +1147,65 @@
       </div>
     </div>
 
+    <!-- TAB: SALDO DE ESTOQUE -->
+    <div id="tab-saldo-est" class="tab-pane">
+      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
+        Saldo de Estoque <span style="font-weight:400;color:#94a3b8;font-size:13px">— posição financeira por loja</span>
+      </div>
+      <div class="toolbar" style="margin-bottom:16px">
+        <select class="field field-sm" id="se-loja" onchange="renderSaldoEst()">
+          <option value="">Todas as lojas</option>
+        </select>
+        <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
+          <option value="">Todas as categorias</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
+        <span id="se-valor-total" style="margin-left:auto;font-size:13px;font-weight:700;color:#0f172a"></span>
+      </div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr>
+          <th>Insumo</th><th>Categoria</th><th>Un.</th><th>Loja</th>
+          <th class="r">Saldo Atual</th><th class="r">Custo Médio</th><th class="r">Valor em Estoque</th><th class="c">Status</th>
+        </tr></thead>
+        <tfoot id="se-tfoot"></tfoot>
+        <tbody id="se-body"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- TAB: HISTÓRICO DE CUSTOS -->
+    <div id="tab-historico-custo" class="tab-pane">
+      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
+        Histórico de Custos <span style="font-weight:400;color:#94a3b8;font-size:13px">— auditoria de variações de custo médio</span>
+      </div>
+      <div class="toolbar" style="margin-bottom:16px">
+        <select class="field field-sm" id="hc-loja" onchange="renderHistoricoCusto()">
+          <option value="">Todas as lojas</option>
+        </select>
+        <select class="field field-sm" id="hc-insumo" onchange="renderHistoricoCusto()" style="min-width:180px">
+          <option value="">Todos os insumos</option>
+        </select>
+        <select class="field field-sm" id="hc-origem" onchange="renderHistoricoCusto()">
+          <option value="">Todas as origens</option>
+          <option value="entrada_manual">Entrada Manual</option>
+          <option value="nfe">XML / NF-e</option>
+          <option value="ajuste">Ajuste</option>
+        </select>
+        <input type="date" class="field field-sm" id="hc-de" onchange="renderHistoricoCusto()" title="De">
+        <input type="date" class="field field-sm" id="hc-ate" onchange="renderHistoricoCusto()" title="Até">
+        <button class="btn btn-ghost btn-sm" onclick="renderHistoricoCusto()">↻ Atualizar</button>
+      </div>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr>
+          <th>Data</th><th>Insumo</th><th>Loja</th><th>Origem</th>
+          <th class="r">Saldo Ant.</th><th class="r">Custo Ant.</th>
+          <th class="r">Qtd. Entrada</th><th class="r">Custo Entrada</th>
+          <th class="r">Novo Custo Médio</th><th class="r">Impacto %</th>
+        </tr></thead>
+        <tbody id="hc-body"><tr><td colspan="10" class="empty">Carregando...</td></tr></tbody>
+      </table></div>
+      <div class="pag-row"><span id="hc-info">—</span></div>
+    </div>
+
     <!-- TAB: RELATÓRIOS -->
   </div><!-- /content -->
 </div><!-- /main -->
@@ -1227,13 +1396,15 @@
           <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
             <table class="nfe-tbl">
               <thead><tr>
-                <th style="width:200px">Produto na NF-e<br><span style="font-weight:400;opacity:.7">(Fornecedor)</span></th>
-                <th style="width:80px">Cód. Forn.<br>/ EAN</th>
-                <th>Produto do sistema<br><span style="font-weight:400;opacity:.7">(Seu cadastro)</span></th>
-                <th style="width:130px">Embalagem de compra<br><span style="font-weight:400;opacity:.7">(Unidade da NF-e)</span></th>
-                <th style="width:150px">Conversão<br><span style="font-weight:400;opacity:.7">(Compra → Estoque)</span></th>
-                <th style="width:110px">Entrada no estoque<br><span style="font-weight:400;opacity:.7">(Unidade de estoque)</span></th>
-                <th style="width:36px"></th>
+                <th style="width:170px">Produto NF-e</th>
+                <th style="width:62px">Cód.</th>
+                <th>Produto do sistema</th>
+                <th class="r" style="width:58px">Qtd.</th>
+                <th style="width:65px">Emb.</th>
+                <th style="width:130px">Conversão</th>
+                <th class="r" style="width:72px">Convertido</th>
+                <th style="width:55px">Un.</th>
+                <th style="width:30px"></th>
               </tr></thead>
               <tbody id="nfe-body"></tbody>
             </table>
@@ -1538,7 +1709,7 @@ async function api(endpoint, opts={}) {
 // ── STATE ─────────────────────────────────────────────────────────
 let insumos=[], saldos=[], entradas=[], saidas=[], vinculos=[], fornecedores=[], insumoFornVinculos=[];
 let lojas=[], lojaAtual=null;
-let nfeItens=[], tabAtual='dashboard';
+let nfeItens=[], tabAtual='hub';
 
 function getLojaId() { return lojaAtual?.id||null; }
 
@@ -1618,26 +1789,182 @@ function popularSelects() {
     cats.map(c=>`<option value="${c}">${esc(c)}</option>`).join('');
 }
 
-// ── TABS ──────────────────────────────────────────────────────────
-const _tabLabels={dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras'};
-
-function switchTab(tab) {
-  tabAtual = tab;
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === tab);
-  });
-  const el = document.getElementById('tab-'+tab);
-  if (el) el.classList.add('active');
-  // Atualiza breadcrumb
-  const bc = document.getElementById('bc-tab');
-  if (bc) bc.textContent = _tabLabels[tab] || tab;
-  if (tab==='kardex') renderKardex();
-  if (tab==='inventario') iniciarAbaInventario();
-  if (tab==='movimentacao') renderMovimentacao();
-  if (tab==='relatorios') { switchRelTab('resumo'); }
-  if (tab==='compras') { renderCompras(); }
+// ── SALDO DE ESTOQUE ─────────────────────────────────────────────
+async function renderSaldoEst(){
+  const lojaFil=document.getElementById('se-loja')?.value||'';
+  const catFil=document.getElementById('se-cat')?.value||'';
+  const tbody=document.getElementById('se-body');
+  const tfoot=document.getElementById('se-tfoot');
+  tbody.innerHTML='<tr><td colspan="8" class="empty">Carregando...</td></tr>';
+  try{
+    let q=`saldo_estoque?tenant_id=eq.${TENANT_ID}`;
+    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
+    const saldos=await api(q).catch(()=>[]);
+    if(!saldos.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum saldo encontrado.</td></tr>';tfoot.innerHTML='';return;}
+    let rows=saldos.map(s=>{
+      const ins=insumos.find(i=>i.id===s.insumo_id);
+      const loja=lojas.find(l=>l.id===s.loja_id);
+      if(!ins)return null;
+      if(catFil&&(ins.categoria||'')!==catFil)return null;
+      const valor=(s.quantidade||0)*(s.custo_medio||0);
+      const status=(ins.minimo>0&&s.quantidade<ins.minimo)?'<span class="badge" style="background:#fee2e2;color:#dc2626">Abaixo mín.</span>':
+                   (s.quantidade===0?'<span class="badge" style="background:#f1f5f9;color:#64748b">Zerado</span>':
+                   '<span class="badge" style="background:#dcfce7;color:#16a34a">OK</span>');
+      return {ins,loja,s,valor,row:`<tr>
+        <td style="font-weight:600">${esc(ins.nome)}</td>
+        <td>${esc(ins.categoria||'—')}</td>
+        <td>${esc(ins.unidade_medida||ins.unidade_compra||'—')}</td>
+        <td>${esc(loja?.nome||'—')}</td>
+        <td class="r mono">${(s.quantidade||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+        <td class="r mono">${s.custo_medio?brl(s.custo_medio):'—'}</td>
+        <td class="r mono" style="font-weight:600">${valor>0?brl(valor):'—'}</td>
+        <td class="c">${status}</td>
+      </tr>`};
+    }).filter(Boolean);
+    rows.sort((a,b)=>b.valor-a.valor);
+    tbody.innerHTML=rows.map(r=>r.row).join('');
+    const totalValor=rows.reduce((s,r)=>s+r.valor,0);
+    const se=document.getElementById('se-valor-total');
+    if(se) se.innerHTML=`Valor total em estoque: <span style="color:#16a34a">${brl(totalValor)}</span>`;
+    tfoot.innerHTML=`<tr style="background:#f8fafc;font-weight:700">
+      <td colspan="4" style="font-size:11px;color:#0f172a;text-transform:uppercase;letter-spacing:.05em">TOTAL</td>
+      <td class="r mono">—</td><td class="r mono">—</td>
+      <td class="r mono" style="color:#16a34a">${brl(totalValor)}</td>
+      <td></td></tr>`;
+  }catch(e){tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
 }
+
+function _initSaldoEst(){
+  // Popula filtros
+  const selLoja=document.getElementById('se-loja');
+  if(selLoja&&selLoja.options.length<=1) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
+  const selCat=document.getElementById('se-cat');
+  if(selCat&&selCat.options.length<=1){
+    const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o);});
+  }
+  renderSaldoEst();
+}
+
+// ── HISTÓRICO DE CUSTOS ───────────────────────────────────────────
+async function renderHistoricoCusto(){
+  const lojaFil=document.getElementById('hc-loja')?.value||'';
+  const insumoFil=document.getElementById('hc-insumo')?.value||'';
+  const origemFil=document.getElementById('hc-origem')?.value||'';
+  const de=document.getElementById('hc-de')?.value||'';
+  const ate=document.getElementById('hc-ate')?.value||'';
+  const tbody=document.getElementById('hc-body');
+  tbody.innerHTML='<tr><td colspan="10" class="empty">Carregando...</td></tr>';
+  try{
+    let q=`historico_custo?tenant_id=eq.${TENANT_ID}&order=data.desc&limit=200`;
+    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
+    if(insumoFil) q+=`&insumo_id=eq.${insumoFil}`;
+    if(origemFil) q+=`&origem=eq.${origemFil}`;
+    if(de) q+=`&data=gte.${de}T00:00:00`;
+    if(ate) q+=`&data=lte.${ate}T23:59:59`;
+    const hist=await api(q).catch(()=>[]);
+    const info=document.getElementById('hc-info');
+    if(info) info.textContent=hist.length?`${hist.length} registro(s)`:'Nenhum registro.';
+    if(!hist.length){tbody.innerHTML='<tr><td colspan="10" class="empty">Nenhum registro encontrado.</td></tr>';return;}
+    const origemLabel={entrada_manual:'Entrada Manual',nfe:'XML / NF-e',nfe_importada:'XML / NF-e',ajuste:'Ajuste',manual:'Entrada Manual'};
+    tbody.innerHTML=hist.map(h=>{
+      const ins=insumos.find(i=>i.id===h.insumo_id);
+      const loja=lojas.find(l=>l.id===h.loja_id);
+      const imp=h.impacto_pct;
+      const impColor=imp>0?'#dc2626':imp<0?'#16a34a':'#64748b';
+      const impTxt=imp!=null?`<span style="color:${impColor};font-weight:600">${imp>0?'+':''}${Number(imp).toFixed(2)}%</span>`:'—';
+      return `<tr>
+        <td class="mono" style="font-size:11px;color:#64748b">${new Date(h.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+        <td style="font-weight:600">${esc(ins?.nome||'—')}</td>
+        <td>${esc(loja?.nome||'—')}</td>
+        <td><span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:11px">${esc(origemLabel[h.origem]||h.origem||'—')}</span></td>
+        <td class="r mono">${h.saldo_anterior!=null?h.saldo_anterior.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}):'—'}</td>
+        <td class="r mono">${h.custo_medio_anterior?brl(h.custo_medio_anterior):'—'}</td>
+        <td class="r mono">${h.qtd_entrada!=null?h.qtd_entrada.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}):'—'}</td>
+        <td class="r mono">${h.custo_entrada?brl(h.custo_entrada):'—'}</td>
+        <td class="r mono" style="font-weight:700;color:#0f172a">${h.novo_custo_medio?brl(h.novo_custo_medio):'—'}</td>
+        <td class="r">${impTxt}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function _initHistoricoCusto(){
+  const selLoja=document.getElementById('hc-loja');
+  if(selLoja&&selLoja.options.length<=1) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
+  const selIns=document.getElementById('hc-insumo');
+  if(selIns&&selIns.options.length<=1) insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;selIns.appendChild(o);});
+  renderHistoricoCusto();
+}
+
+// ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
+const _tabNames = {dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras','saldo-est':'Saldo de Estoque','historico-custo':'Histórico de Custos'};
+let _openTabs = [], _activeTab = null, _loadedTabs = {};
+
+function _renderTabStrip() {
+  const strip = document.getElementById('est-tab-strip');
+  if (!strip) return;
+  if (_openTabs.length === 0) { strip.style.display = 'none'; return; }
+  strip.style.display = 'flex';
+  strip.innerHTML = `<button class="ws-home-btn" onclick="goHub()" title="Hub do Estoque">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </button>
+  ${_openTabs.map(t=>`<button class="ws-tab ${t===_activeTab?'active':''}" onclick="activateTab('${t}')">
+    ${_tabNames[t]||t}
+    <span class="ws-tab-close" onclick="closeTab('${t}',event);event.stopPropagation()">×</span>
+  </button>`).join('')}`;
+}
+
+function _setBreadcrumb(nome) {
+  const h = document.getElementById('topbar-heading');
+  if (!h) return;
+  if (!nome) { h.innerHTML='Estoque'; return; }
+  h.innerHTML = '<span style="color:#94a3b8;cursor:pointer;font-weight:700" onclick="goHub()">Estoque</span>'
+    + '<span style="color:#94a3b8;margin:0 6px">›</span>'
+    + '<span style="font-size:15px;font-weight:600;color:#0f172a">' + (_tabNames[nome]||nome) + '</span>';
+}
+
+function goHub() {
+  tabAtual = 'hub'; _activeTab = null;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-hub').classList.add('active');
+  _setBreadcrumb(null);
+  _renderTabStrip();
+}
+
+function openTab(nome) {
+  if (!_openTabs.includes(nome)) _openTabs.push(nome);
+  activateTab(nome);
+}
+
+function activateTab(nome) {
+  tabAtual = nome; _activeTab = nome;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('tab-'+nome);
+  if (el) el.classList.add('active');
+  _setBreadcrumb(nome);
+  _renderTabStrip();
+  if (!_loadedTabs[nome]) {
+    _loadedTabs[nome] = true;
+    if (nome==='kardex') renderKardex();
+    if (nome==='inventario') iniciarAbaInventario();
+    if (nome==='movimentacao') renderMovimentacao();
+    if (nome==='compras') renderCompras();
+    if (nome==='saldo-est') _initSaldoEst();
+    if (nome==='historico-custo') _initHistoricoCusto();
+  }
+}
+
+function closeTab(nome, e) {
+  e.stopPropagation();
+  _openTabs = _openTabs.filter(t=>t!==nome);
+  delete _loadedTabs[nome];
+  if (_openTabs.length === 0) { location.href = 'dashboard.html'; return; }
+  if (_activeTab === nome) activateTab(_openTabs[_openTabs.length-1]);
+  else _renderTabStrip();
+}
+
+function switchTab(tab) { openTab(tab); }
 // fix: Relatórios button dataset
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.tab-btn').forEach(b => {
@@ -1753,6 +2080,12 @@ async function salvarEntrada() {
   if(qtd_<=0){toast('Informe a quantidade.','err');return;}
   if(custo<=0){toast('Informe o custo unitário.','err');return;}
 
+  // ── Validação: obrigar lote ──────────────────────────────
+  await Params.load();
+  if(Params.bool('estoque','obrigar_lote')&&!document.getElementById('ef-lote').value.trim()){
+    toast('Lote é obrigatório (Parâmetros > Estoque).','err');return;}
+  // ─────────────────────────────────────────────────────────
+
   const btn=document.getElementById('btn-ent');
   btn.disabled=true;btn.textContent='Salvando…';
   try {
@@ -1792,6 +2125,21 @@ async function registrarEntrada(insId, dados, custoUnitEstoque) {
   const qN = qA + dados.quantidade;
   const cmN = qN>0 ? (qA*cmA + dados.quantidade*custoUnitEstoque)/qN : custoUnitEstoque;
   await upsertSaldo(insId, qN, parseFloat(cmN.toFixed(6)));
+  // historico_custo
+  try{
+    const impacto=cmA>0?parseFloat(((cmN-cmA)/cmA*100).toFixed(4)):null;
+    await api('historico_custo',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
+      tenant_id:TENANT_ID, insumo_id:insId, loja_id:getLojaId(),
+      saldo_anterior:parseFloat(qA.toFixed(4)),
+      custo_medio_anterior:parseFloat(cmA.toFixed(4)),
+      qtd_entrada:parseFloat(dados.quantidade.toFixed(4)),
+      custo_entrada:parseFloat(custoUnitEstoque.toFixed(4)),
+      novo_custo_medio:parseFloat(cmN.toFixed(4)),
+      impacto_pct:impacto,
+      origem:dados.tipo||'entrada_manual',
+      documento_ref:dados.documento_ref||null,
+    })});
+  }catch{}
   // atualiza preco_unitario no vínculo insumo → fornecedor se houver
   if (dados.fornecedor_id) {
     await api(`insumo_fornecedores?insumo_id=eq.${insId}&fornecedor_id=eq.${dados.fornecedor_id}`,
@@ -2003,6 +2351,12 @@ function parseNfeXml(xml) {
   return itens;
 }
 
+function fmtQtd(n) {
+  const v=parseFloat(n)||0;
+  if(Number.isInteger(v)) return v.toString();
+  return v.toFixed(3).replace(/\.?0+$/,'');
+}
+
 function calcNfePreview(idx) {
   const it=nfeItens[idx]; if(!it) return;
   const insId=document.getElementById(`ns-${idx}`)?.value;
@@ -2010,6 +2364,16 @@ function calcNfePreview(idx) {
   const ins=insId?insumos.find(x=>x.id===insId):null;
   const qtdEst=it.quantidade*fator;
   const custoUnit=it.valorUnit/fator;
+  const unEst=ins?.unidade_medida||ins?.unidade_compra||'un';
+
+  // Atualiza colunas da tabela inline
+  const nqEl=document.getElementById(`nq-${idx}`);
+  const nuEl=document.getElementById(`nu-${idx}`);
+  const neEl=document.getElementById(`ne-${idx}`);
+  if(nqEl) nqEl.textContent=fmtQtd(qtdEst);
+  if(nuEl) nuEl.textContent=ins?unEst:'—';
+  if(neEl) neEl.textContent=ins?unEst:'—';
+
   const panel=document.getElementById('nfe-preview-panel');
   const confEl=document.getElementById('nfe-conf-status');
   if(!ins||!insId){
@@ -2019,13 +2383,13 @@ function calcNfePreview(idx) {
   if(panel) panel.innerHTML=`
     <div style="margin-bottom:12px">
       <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Quantidade que entrará</div>
-      <div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">${qtdEst.toFixed(3)}</div>
-      <div style="font-size:11px;color:#64748b">Unidade(s)</div>
+      <div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">${fmtQtd(qtdEst)} <span style="font-size:13px;font-weight:600;color:#64748b">${unEst}</span></div>
+      <div style="font-size:11px;color:#64748b">${fmtQtd(it.quantidade)} ${esc(it.unidade)} × ${fmtQtd(fator)} = ${fmtQtd(qtdEst)} ${unEst}</div>
     </div>
     <div style="margin-bottom:14px">
       <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Custo unitário no estoque</div>
       <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${brl(custoUnit)}</div>
-      <div style="font-size:11px;color:#64748b">/ Unidade</div>
+      <div style="font-size:11px;color:#64748b">/ ${unEst}</div>
     </div>
     <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px">Este item impactará:</div>
     ${['Estoque','Custo médio','Fichas técnicas','CMV'].map(l=>`
@@ -2049,7 +2413,7 @@ function renderNfeVinculos(insId) {
   const vins=vinculos.filter(v=>v.insumo_id===insId);
   const fornId=document.getElementById('nfe-forn')?.value;
   const ifvs=insumoFornVinculos.filter(v=>v.insumo_id===insId);
-  const todos=[...vins.map(v=>({cod:v.codigo_nfe||'—',desc:v.descricao_nfe||'—',ins:ins?.nome||'—',insCode:insId.slice(-5).toUpperCase(),emb:v.unidade_compra||'—',conv:`1 ${v.unidade_compra||'?'} = ${(v.fator_conversao||1).toFixed(3)}`,un:ins?.unidade_medida||ins?.unidade_compra||'un',id:v.id}))];
+  const todos=[...vins.map(v=>({cod:v.codigo_nfe||'—',desc:v.descricao_nfe||'—',ins:ins?.nome||'—',insCode:insId.slice(-5).toUpperCase(),emb:v.unidade_compra||'—',conv:`1 ${v.unidade_compra||'?'} = ${fmtQtd(v.fator_conversao||1)} ${ins?.unidade_medida||'un'}`,un:ins?.unidade_medida||ins?.unidade_compra||'un',id:v.id}))];
   if(!todos.length){tbody.innerHTML='<tr><td colspan="7" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Nenhuma conversão salva para este insumo</td></tr>';return;}
   tbody.innerHTML=todos.map((v,idx)=>`<tr>
     <td><span class="cod-badge">${esc(v.cod)}</span></td>
@@ -2084,46 +2448,31 @@ function renderNfeMap(itens) {
     const opts=insOpts.replace(`value="${selVal}"`,`value="${selVal}" selected`);
     const ins=selVal?insumos.find(x=>x.id===selVal):null;
     const qtdEst=it.quantidade*fator;
-    const linkedHtml=autoFill&&ins?`
-      <span class="linked-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Produto vinculado</span>
-      <div style="font-size:11px;color:#64748b;margin-top:3px">Código interno: INS-${ins.id.slice(-5).toUpperCase()}</div>`:'';
+    const unEst=ins?.unidade_medida||ins?.unidade_compra||'—';
 
     return `<tr class="${autoFill?'linked-row':''}">
-      <td>
-        <div style="font-weight:700;font-size:12px">${esc(it.descricao.substring(0,40))}${it.descricao.length>40?'…':''}</div>
-        ${it.codigo?`<span class="cod-badge" style="margin-top:4px;display:inline-block">Cód. fornecedor: ${esc(it.codigo)}</span>`:''}
+      <td style="padding:6px 8px"><div style="font-weight:600;font-size:11px;line-height:1.3">${esc(it.descricao.substring(0,38))}${it.descricao.length>38?'…':''}</div></td>
+      <td style="padding:6px 8px"><span style="font-family:'DM Mono',monospace;font-size:10px;color:#64748b">${esc(it.codigo||'—')}</span></td>
+      <td style="padding:6px 8px">
+        <select class="field field-sm" id="ns-${i}" style="width:100%;font-size:11px;padding:4px 6px" onchange="checkNfeInc(${i});calcNfePreview(${i})">${opts}</select>
+        ${autoFill?`<span class="linked-badge" style="margin-top:2px;display:inline-flex;font-size:9px;padding:1px 6px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Vinculado</span>`:''}
       </td>
-      <td><span class="mono" style="color:#64748b;font-size:11px">${esc(it.codigo||'—')}</span></td>
-      <td>
-        <select class="field field-sm" id="ns-${i}" style="width:100%;margin-bottom:4px" onchange="checkNfeInc(${i});calcNfePreview(${i})">${opts}</select>
-        ${linkedHtml}
-      </td>
-      <td>
-        <div style="display:flex;align-items:center;gap:6px">
-          <div style="width:28px;height:28px;background:#eff6ff;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-          </div>
-          <div>
-            <div style="font-size:12px;font-weight:600">${esc(it.unidade)}</div>
-            <div style="font-size:10px;color:#94a3b8">Unidade de compra</div>
-          </div>
+      <td style="text-align:right;padding:6px 8px"><span style="font-family:'DM Mono',monospace;font-weight:600;font-size:12px">${fmtQtd(it.quantidade)}</span></td>
+      <td style="padding:6px 8px"><span style="font-size:11px;font-weight:600;color:#334155">${esc(it.unidade)}</span></td>
+      <td style="padding:6px 8px">
+        <div style="font-size:10px;color:#94a3b8;margin-bottom:2px">1 ${esc(it.unidade)} =</div>
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:60px;font-size:11px;padding:3px 5px" oninput="calcNfePreview(${i})">
+          <span id="nu-${i}" style="font-size:11px;color:#64748b">${esc(unEst)}</span>
         </div>
       </td>
-      <td>
-        <div style="font-size:11px;color:#64748b;margin-bottom:4px">1 ${esc(it.unidade)} =</div>
-        <input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:90px" oninput="calcNfePreview(${i})">
-        <div style="font-size:10px;color:#94a3b8;margin-top:2px">UN Unidade de estoque</div>
+      <td style="text-align:right;padding:6px 8px">
+        <span id="nq-${i}" style="font-family:'DM Mono',monospace;font-weight:700;font-size:12px;color:#0f172a">${fmtQtd(qtdEst)}</span>
+        <div style="margin-top:3px"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''} style="accent-color:#f97316"></div>
       </td>
-      <td>
-        <div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${qtdEst.toFixed(3)}</div>
-        <div style="font-size:10px;color:#94a3b8">UN Unidade de estoque</div>
-        <div style="margin-top:4px"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''} style="accent-color:#f97316"></div>
-      </td>
-      <td>
-        <button style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;border-radius:4px" title="Mais opções">⋮</button>
-      </td>
-    </tr>
-    `;
+      <td style="padding:6px 8px"><span id="ne-${i}" style="font-size:11px;font-weight:600;color:#334155">${esc(unEst)}</span></td>
+      <td style="padding:4px"><button style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:2px;border-radius:4px">⋮</button></td>
+    </tr>`;
   }).join('');
 }
 
@@ -2150,7 +2499,7 @@ async function confirmarNfe() {
   btn.disabled=true;btn.textContent='Importando…';
   try {
     for(const it of itensOk) {
-      const qtdEst=parseFloat((it.quantidade*it.fator).toFixed(4));
+      const qtdEst=parseFloat((it.quantidade*it.fator).toFixed(6));
       const custoUnitEst=parseFloat((it.valorUnit/it.fator).toFixed(6));
       await registrarEntrada(it.insId, {
         fornecedor_id:fornId, fornecedor_nome:fornNome,
@@ -2208,7 +2557,16 @@ async function salvarSaida() {
   if(!insId){toast('Selecione um insumo.','err');return;}
   if(qtd_<=0){toast('Informe a quantidade.','err');return;}
   const s=getSaldo(insId);
-  if(qtd_>(s.quantidade||0) && !confirm(`Quantidade (${qtd(qtd_)}) supera o saldo (${qtd(s.quantidade||0)}). Continuar?`)) return;
+
+  // ── Validação: permitir estoque negativo ─────────────────
+  await Params.load();
+  if(qtd_>(s.quantidade||0)){
+    if(!Params.bool('estoque','permitir_negativo',false)){
+      toast(`Saldo insuficiente (${qtd(s.quantidade||0)}). Estoque negativo não permitido (Parâmetros > Estoque).`,'err');return;
+    }
+    if(!confirm(`Quantidade (${qtd(qtd_)}) supera o saldo (${qtd(s.quantidade||0)}). Continuar?`)) return;
+  }
+  // ─────────────────────────────────────────────────────────
 
   const btn=document.getElementById('btn-sai');
   btn.disabled=true;btn.textContent='Salvando…';
@@ -2828,7 +3186,12 @@ async function iniciarAbaInventario() {
   }
   const invBody = document.getElementById('inv-lista-body');
   if (invBody) invBody.innerHTML =
-    '<tr><td colspan="7" class="empty">Selecione os filtros e clique em Consultar.</td></tr>';
+    '<tr><td colspan="8" class="empty">Selecione os filtros e clique em <b>Consultar</b>.</td></tr>';
+  const selGrupo = document.getElementById('inv-fil-grupo');
+  if (selGrupo && grupos.length) {
+    selGrupo.innerHTML = '<option value="">Todos os grupos</option>' +
+      grupos.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
+  }
 }
 
 let _invLista = [], _invPagAtual = 1;
@@ -2903,7 +3266,7 @@ function _renderInvPage() {
     btnsEl.innerHTML = html;
   }
 
-  if (!page.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
+  if (!page.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
 
   const tipoLabel = {mensal:'Mensal',quinzenal:'Quinzenal',semanal:'Semanal',avulso:'Avulso',geral:'Geral',parcial:'Parcial'};
   const statusCfg = {
@@ -2915,21 +3278,13 @@ function _renderInvPage() {
 
   tbody.innerHTML = page.map(inv => {
     const sc = statusCfg[inv.status] || {label:inv.status, bg:'#f1f5f9', color:'#64748b', barColor:'#94a3b8'};
-    const pct = inv._pct;
-    const progressBar = `
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;min-width:80px">
-          <div style="height:100%;width:${pct}%;background:${sc.barColor};border-radius:3px;transition:width .3s"></div>
-        </div>
-        <span style="font-size:12px;font-weight:600;color:#64748b;white-space:nowrap">${pct}%</span>
-      </div>`;
+    const fmtD = d => d ? new Date(d+'T12:00:00').toLocaleDateString('pt-BR') : '—';
     return `<tr>
-      <td style="font-weight:600">${esc(inv._loja?.nome||'—')}</td>
-      <td>${esc(inv._grupo?.nome||'—')}</td>
-      <td style="color:#64748b">${tipoLabel[inv.tipo]||inv.tipo||'—'}</td>
-      <td class="c"><span style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.label}</span></td>
-      <td class="r mono" style="font-weight:600">${inv._cnt||'—'}</td>
-      <td style="min-width:140px">${progressBar}</td>
+      <td style="font-weight:600;font-size:12px">${esc(inv._loja?.nome||'—')}</td>
+      <td style="color:#64748b;font-size:12px">${tipoLabel[inv.tipo]||inv.tipo||'—'}</td>
+      <td style="color:#64748b;font-size:12px;white-space:nowrap">${fmtD(inv.data_inicial)}</td>
+      <td style="color:#64748b;font-size:12px;white-space:nowrap">${fmtD(inv.data_final)}</td>
+      <td class="c"><span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.label}</span></td>
       <td class="c">
         <div style="display:flex;align-items:center;justify-content:center;gap:4px">
           <button class="btn-icon" title="Ver detalhes" onclick="abrirInvDetalhe('${inv.id}')">
@@ -3823,5 +4178,7 @@ carregar().then(() => {
   fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
 })();
 </script>
+<script src="params.js"></script>
+<script src="sidebar.js"></script>
 </body>
 </html>

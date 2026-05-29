@@ -50,6 +50,19 @@
   .tab-pane{display:none}
   .tab-pane.active{display:block}
 
+  /* HUB */
+  .pdv-hub-section{margin-bottom:28px}
+  .pdv-hub-label{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+  .pdv-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pdv-hub-card{display:flex;align-items:center;gap:16px;padding:18px 20px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s;user-select:none}
+  .pdv-hub-card:hover{border-color:#f97316}
+  .pdv-hub-icon{width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .pdv-hub-icon svg{width:20px;height:20px;stroke:#64748b;stroke-width:1.8;fill:none}
+  .pdv-hub-body{flex:1}
+  .pdv-hub-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px}
+  .pdv-hub-desc{font-size:12px;color:#64748b;line-height:1.4}
+  .pdv-hub-arrow{font-size:18px;color:#94a3b8;margin-left:auto;flex-shrink:0}
+
   /* CARDS */
   .sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:24px}
   .sc{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
@@ -265,6 +278,8 @@
   .cfg-flyout-item:last-child{border-bottom:none}
   .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
 </style>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="design-system.css">
 </head>
 <body>
 <div class="shell">
@@ -306,7 +321,7 @@
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <span class="topbar-title">PDV / Vendas</span>
+    <span id="topbar-heading" class="topbar-title">PDV / Vendas</span>
     <span id="conn-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace"></span>
     <div id="topbar-user" style="display:flex;align-items:center;gap:10px">
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
@@ -315,31 +330,55 @@
   </div>
   <div class="content">
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Dashboard
-      </button>
-      <button class="tab-btn" data-tab="faturamento" onclick="switchTab('faturamento')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        Faturamento
-      </button>
-      <button class="tab-btn" data-tab="vendas" onclick="switchTab('vendas')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        Vendas por Produto
-      </button>
-      <button class="tab-btn" data-tab="relatorios" onclick="switchTab('relatorios')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Relatórios
-      </button>
-      <button class="tab-btn" data-tab="importar" onclick="switchTab('importar')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-        Importar / API
-      </button>
+    <!-- WORKSPACE TAB STRIP -->
+    <div class="ws-tab-strip" id="pdv-tab-strip"></div>
+
+    <!-- HUB LANDING PAGE -->
+    <div id="tab-hub" class="tab-pane active">
+      <div class="pdv-hub-section">
+        <div class="pdv-hub-label">Visão Geral</div>
+        <div class="pdv-hub-grid">
+          <div class="pdv-hub-card" onclick="switchTab('dashboard')">
+            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+            <div class="pdv-hub-body"><div class="pdv-hub-title">Dashboard</div><div class="pdv-hub-desc">KPIs do período: faturamento, CMV, ticket médio e pedidos.</div></div>
+            <div class="pdv-hub-arrow">›</div>
+          </div>
+          <div class="pdv-hub-card" onclick="switchTab('faturamento')">
+            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="pdv-hub-body"><div class="pdv-hub-title">Faturamento</div><div class="pdv-hub-desc">Evolução diária e detalhamento de receitas no período.</div></div>
+            <div class="pdv-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="pdv-hub-section">
+        <div class="pdv-hub-label">Análises</div>
+        <div class="pdv-hub-grid">
+          <div class="pdv-hub-card" onclick="switchTab('vendas')">
+            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
+            <div class="pdv-hub-body"><div class="pdv-hub-title">Vendas por Produto</div><div class="pdv-hub-desc">Desempenho por item: quantidade, faturamento e margem.</div></div>
+            <div class="pdv-hub-arrow">›</div>
+          </div>
+          <div class="pdv-hub-card" onclick="switchTab('relatorios')">
+            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="pdv-hub-body"><div class="pdv-hub-title">Relatórios</div><div class="pdv-hub-desc">Curva ABC, CMV e engenharia de cardápio.</div></div>
+            <div class="pdv-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="pdv-hub-section">
+        <div class="pdv-hub-label">Operações</div>
+        <div class="pdv-hub-grid">
+          <div class="pdv-hub-card" onclick="switchTab('importar')">
+            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+            <div class="pdv-hub-body"><div class="pdv-hub-title">Importar / API</div><div class="pdv-hub-desc">Importe vendas manualmente ou via integração de API.</div></div>
+            <div class="pdv-hub-arrow">›</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- TAB: DASHBOARD -->
-    <div id="tab-dashboard" class="tab-pane active">
+    <div id="tab-dashboard" class="tab-pane">
 
       <!-- FILTRO DE PERÍODO -->
       <div class="db-filter">
@@ -1299,7 +1338,7 @@ async function api(endpoint, opts={}) {
 
 // ── STATE ──────────────────────────────────────────────────────────
 let fichas = [], mapeamentos = [];
-let tabAtual = 'dashboard';
+let tabAtual = 'hub';
 
 // ── INIT ───────────────────────────────────────────────────────────
 async function carregar() {
@@ -1333,16 +1372,71 @@ function popularFichasSelect() {
 }
 
 // ── TABS ───────────────────────────────────────────────────────────
-function switchTab(tab) {
-  tabAtual = tab;
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
-  const el = document.getElementById('tab-'+tab);
-  if (el) el.classList.add('active');
-  if (tab==='faturamento') renderFaturamento();
-  if (tab==='vendas') renderVendas();
-  if (tab==='relatorios') renderRelatorios();
+// ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
+const _tabNames = {dashboard:'Dashboard',faturamento:'Faturamento',vendas:'Vendas por Produto',relatorios:'Relatórios',importar:'Importar / API'};
+let _openTabs = [], _activeTab = null, _loadedTabs = {};
+
+function _renderTabStrip() {
+  const strip = document.getElementById('pdv-tab-strip');
+  if (!strip) return;
+  if (_openTabs.length === 0) { strip.style.display = 'none'; return; }
+  strip.style.display = 'flex';
+  strip.innerHTML = `<button class="ws-home-btn" onclick="goHub()" title="Hub do PDV">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </button>
+  ${_openTabs.map(t=>`<button class="ws-tab ${t===_activeTab?'active':''}" onclick="activateTab('${t}')">
+    ${_tabNames[t]||t}
+    <span class="ws-tab-close" onclick="closeTab('${t}',event);event.stopPropagation()">×</span>
+  </button>`).join('')}`;
 }
+
+function _setBreadcrumb(nome) {
+  const h = document.getElementById('topbar-heading');
+  if (!h) return;
+  if (!nome) { h.innerHTML='PDV / Vendas'; return; }
+  h.innerHTML = '<span style="color:#94a3b8;cursor:pointer;font-weight:700" onclick="goHub()">PDV / Vendas</span>'
+    + '<span style="color:#94a3b8;margin:0 6px">›</span>'
+    + '<span style="font-size:15px;font-weight:600;color:#0f172a">' + (_tabNames[nome]||nome) + '</span>';
+}
+
+function goHub() {
+  tabAtual = 'hub'; _activeTab = null;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-hub').classList.add('active');
+  _setBreadcrumb(null);
+  _renderTabStrip();
+}
+
+function openTab(nome) {
+  if (!_openTabs.includes(nome)) _openTabs.push(nome);
+  activateTab(nome);
+}
+
+function activateTab(nome) {
+  tabAtual = nome; _activeTab = nome;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('tab-'+nome);
+  if (el) el.classList.add('active');
+  _setBreadcrumb(nome);
+  _renderTabStrip();
+  if (!_loadedTabs[nome]) {
+    _loadedTabs[nome] = true;
+    if (nome==='faturamento') renderFaturamento();
+    if (nome==='vendas') renderVendas();
+    if (nome==='relatorios') renderRelatorios();
+  }
+}
+
+function closeTab(nome, e) {
+  e.stopPropagation();
+  _openTabs = _openTabs.filter(t=>t!==nome);
+  delete _loadedTabs[nome];
+  if (_openTabs.length === 0) { location.href = 'dashboard.html'; return; }
+  if (_activeTab === nome) activateTab(_openTabs[_openTabs.length-1]);
+  else _renderTabStrip();
+}
+
+function switchTab(tab) { openTab(tab); }
 
 function switchRelTab(nome) {
   ['abc','cmv','engenharia'].forEach(t => {
@@ -2588,5 +2682,6 @@ carregar();
   fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
 })();
 </script>
+<script src="sidebar.js"></script>
 </body>
 </html>

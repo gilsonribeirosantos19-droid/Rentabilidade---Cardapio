@@ -130,6 +130,41 @@
   .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;white-space:nowrap;border-bottom:1px solid #f1f5f9}
   .cfg-flyout-item:last-child{border-bottom:none}
   .cfg-flyout-item:hover{background:#f1f5f9;color:#0d9488;padding-left:20px}
+
+  /* WORKSPACE MULTI-ABA */
+  .ws-tab-strip{display:none;align-items:center;border-bottom:1px solid #e2e8f0;background:#fff;
+    position:sticky;top:58px;z-index:50;padding:0 8px;overflow-x:auto;gap:0}
+  .ws-home-btn{display:flex;align-items:center;justify-content:center;width:34px;height:44px;
+    border:none;background:transparent;cursor:pointer;color:#94a3b8;flex-shrink:0;transition:color .12s;border-right:1px solid #e2e8f0;margin-right:4px;padding:0 10px}
+  .ws-home-btn:hover{color:#f97316}
+  .ws-tab{display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;font-size:13px;
+    color:#64748b;border:none;background:transparent;border-bottom:2px solid transparent;
+    cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s;margin-bottom:-1px}
+  .ws-tab:hover{color:#0f172a;background:#f8fafc}
+  .ws-tab.active{color:#f97316;border-bottom-color:#f97316;font-weight:600}
+  .ws-tab-close{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;
+    justify-content:center;font-size:14px;line-height:1;color:#94a3b8;transition:all .12s;
+    border:none;background:transparent;cursor:pointer;padding:0;font-family:inherit}
+  .ws-tab-close:hover{background:#e2e8f0;color:#0f172a}
+
+  /* LANDING HOME */
+  .rep-home-section{margin-bottom:28px}
+  .rep-home-label{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+  .rep-home-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rep-home-card{display:flex;align-items:center;gap:16px;padding:18px 20px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s;user-select:none}
+  .rep-home-card:hover{border-color:#f97316}
+  .rep-home-icon{width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rep-home-icon svg{width:20px;height:20px;stroke:#64748b;stroke-width:1.8;fill:none}
+  .rep-home-body{flex:1}
+  .rep-home-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px}
+  .rep-home-desc{font-size:12px;color:#64748b;line-height:1.4}
+  .rep-home-arrow{font-size:18px;color:#94a3b8;margin-left:auto;flex-shrink:0}
+  /* SIDEBAR SUB-ITEMS */
+  .nav-sub-items{padding-left:23px;margin-top:2px;margin-bottom:4px}
+  .nav-sub-item{display:flex;align-items:center;gap:7px;padding:5px 8px;font-size:12px;color:#64748b;cursor:pointer;border-radius:5px;text-decoration:none;transition:all .12s}
+  .nav-sub-item:hover{color:#f97316;background:rgba(249,115,22,.07)}
+  .nav-sub-item.active{color:#f97316;font-weight:600}
+  .nav-sub-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -170,7 +205,7 @@
 <div class="main">
   <div class="topbar">
     <div>
-      <div class="topbar-title">Relatórios</div>
+      <div id="topbar-breadcrumb" class="topbar-title">Relatórios</div>
       <div id="topbar-sub" style="font-size:12px;color:#94a3b8;margin-top:2px">Visão geral de estoque e rentabilidade.</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
@@ -185,36 +220,84 @@
       </button>
     </div>
   </div>
+  <!-- WORKSPACE TAB STRIP -->
+  <div id="ws-tab-strip" class="ws-tab-strip">
+    <button class="ws-home-btn" onclick="goHome()" title="Hub de Relatórios">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+  </div>
+
   <div class="content">
 
-    <div class="sub-tabs">
-      <button class="sub-tab active" id="tab-resumo"   onclick="switchTab('resumo')">Resumo</button>
-      <button class="sub-tab"        id="tab-abc"      onclick="switchTab('abc')">Curva ABC</button>
-      <button class="sub-tab"        id="tab-inflacao" onclick="switchTab('inflacao')">Inflação</button>
-      <button class="sub-tab"        id="tab-evolucao" onclick="switchTab('evolucao')">Evolução Mensal</button>
-      <button class="sub-tab"        id="tab-entradas"  onclick="switchTab('entradas')">Entradas</button>
-      <button class="sub-tab"        id="tab-auditoria" onclick="switchTab('auditoria')">Auditoria de Conversão</button>
-      <div class="tab-actions">
-        <button class="tab-btn" id="btn-filtros" style="display:none">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          Filtros
-        </button>
-        <button class="tab-btn" id="btn-exportar" style="display:none" onclick="exportarABC()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Exportar
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
+    <!-- HOME LANDING PAGE -->
+    <div id="pane-home" class="rel-pane active">
+      <div id="sec-geral" class="rep-home-section">
+        <div class="rep-home-label">Geral</div>
+        <div class="rep-home-grid">
+          <div class="rep-home-card" onclick="openTab('resumo')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Resumo</div>
+              <div class="rep-home-desc">Visão geral dos indicadores de estoque, compras e vendas.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+          <div class="rep-home-card" onclick="openTab('evolucao')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Evolução Mensal</div>
+              <div class="rep-home-desc">Acompanhe a evolução dos principais indicadores mês a mês.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div id="sec-analises" class="rep-home-section">
+        <div class="rep-home-label">Análises</div>
+        <div class="rep-home-grid">
+          <div class="rep-home-card" onclick="openTab('abc')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Curva ABC</div>
+              <div class="rep-home-desc">Classificação dos insumos por importância de consumo e valor.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+          <div class="rep-home-card" onclick="openTab('inflacao')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Inflação</div>
+              <div class="rep-home-desc">Acompanhe a variação de preços dos insumos ao longo do tempo.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div id="sec-auditoria" class="rep-home-section">
+        <div class="rep-home-label">Auditoria</div>
+        <div class="rep-home-grid">
+          <div class="rep-home-card" onclick="openTab('entradas')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Entradas</div>
+              <div class="rep-home-desc">Detalhamento de todas as entradas de insumos.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+          <div class="rep-home-card" onclick="openTab('auditoria')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Auditoria de Conversão</div>
+              <div class="rep-home-desc">Audite as conversões e fatores aplicados nas entradas de insumos.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- RESUMO -->
-    <div id="pane-resumo" class="rel-pane active">
-      <div class="kpi-grid" id="kpis">
-        <div class="kpi skeleton"><div class="kpi-label">Valor em estoque</div><div class="kpi-val">—</div></div>
-        <div class="kpi skeleton"><div class="kpi-label">Entradas (30d)</div><div class="kpi-val">—</div></div>
-        <div class="kpi skeleton"><div class="kpi-label">Giro de estoque</div><div class="kpi-val">—</div></div>
-        <div class="kpi skeleton"><div class="kpi-label">Cobertura estimada</div><div class="kpi-val">—</div></div>
-      </div>
+    <div id="pane-resumo" class="rel-pane">
       <div class="row2">
         <div class="rep-sec">
           <div class="rep-title">Valor por categoria</div>
@@ -323,7 +406,7 @@
     <!-- INFLAÇÃO -->
     <div id="pane-inflacao" class="rel-pane">
       <!-- FILTROS -->
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+      <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px">
         <div>
           <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Período</div>
           <select id="inf-meses" onchange="renderInflacao()" class="field" style="min-width:150px">
@@ -568,17 +651,7 @@
               <th class="r">ESPERADO</th>
               <th class="r">DIFERENÇA</th>
               <th>RESPONSÁVEL</th>
-              <th style="min-width:100px">
-                <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
-                  <span>STATUS</span>
-                  <select id="aud-status-fil" onchange="_audStatusFiltro=this.value;_audPag=1;_renderAudPage()" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:10px;border-radius:4px;padding:2px 6px;font-family:inherit;cursor:pointer;outline:none;width:100%">
-                    <option value="">Todos</option>
-                    <option value="OK">OK</option>
-                    <option value="Suspeito">Suspeito</option>
-                    <option value="Erro">Erro</option>
-                  </select>
-                </div>
-              </th>
+              <th>STATUS</th>
               <th>AÇÕES</th>
             </tr></thead>
             <tbody id="aud-body">
@@ -659,9 +732,10 @@ function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textC
 
 // ── STATE ─────────────────────────────────────────────────────────
 let insumos=[], saldos=[], entradas=[], saidas=[], lojas=[];
-let tabAtual = 'resumo';
+let tabAtual = 'home';
 
 const _tabSubs={
+  home:'Visão geral de estoque e rentabilidade.',
   resumo:'Visão geral de estoque e rentabilidade.',
   abc:'Análise da curva ABC dos insumos por valor em estoque.',
   inflacao:'Variação de preço de compra por insumo ao longo do tempo.',
@@ -670,19 +744,74 @@ const _tabSubs={
   auditoria:'Auditoria de fator de conversão nas entradas de NF-e.',
 };
 
-// ── TABS ──────────────────────────────────────────────────────────
-function switchTab(nome) {
+// ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
+const _tabNames = {
+  resumo:'Resumo', abc:'Curva ABC', inflacao:'Inflação',
+  evolucao:'Evolução Mensal', entradas:'Entradas', auditoria:'Auditoria de Conversão',
+};
+
+let _openTabs = [];   // abas abertas em ordem
+let _activeTab = null; // aba visível
+
+function _renderTabStrip() {
+  const strip = document.getElementById('ws-tab-strip');
+  if (!strip) return;
+  strip.style.display = _openTabs.length > 0 ? 'flex' : 'none';
+  // mantém o botão home + reconstrói abas
+  strip.innerHTML = `
+    <button class="ws-home-btn" onclick="goHome()" title="Hub de Relatórios">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+    ${_openTabs.map(t=>`
+      <button class="ws-tab ${t===_activeTab?'active':''}" onclick="activateTab('${t}')">
+        ${_tabNames[t]||t}
+        <span class="ws-tab-close" onclick="closeTab('${t}',event);event.stopPropagation()" title="Fechar">×</span>
+      </button>
+    `).join('')}`;
+}
+
+function _setBreadcrumb(nome) {
+  const bc = document.getElementById('topbar-breadcrumb');
+  const sub = document.getElementById('topbar-sub');
+  if (nome === 'home') {
+    if (bc) bc.innerHTML = 'Relatórios';
+    if (sub) sub.textContent = _tabSubs.home;
+  } else {
+    if (bc) bc.innerHTML = '<span style="color:#94a3b8;font-weight:500;cursor:pointer" onclick="goHome()">Relatórios</span>'
+      + ' <span style="color:#94a3b8;margin:0 4px">›</span> ' + (_tabNames[nome]||nome);
+    if (sub) sub.textContent = _tabSubs[nome]||'';
+  }
+}
+
+function goHome() {
+  tabAtual = 'home';
+  _activeTab = null;
+  document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-home').classList.add('active');
+  _setBreadcrumb('home');
+  _renderTabStrip();
+}
+
+function goSection(sec) {
+  goHome();
+  setTimeout(()=>{
+    const el = document.getElementById('sec-'+sec);
+    if (el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 50);
+}
+
+function openTab(nome) {
+  if (!_openTabs.includes(nome)) _openTabs.push(nome);
+  activateTab(nome);
+}
+
+function activateTab(nome) {
   tabAtual = nome;
+  _activeTab = nome;
   document.querySelectorAll('.rel-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pane-'+nome).classList.add('active');
-  ['resumo','abc','inflacao','evolucao','entradas','auditoria'].forEach(t=>
-    document.getElementById('tab-'+t).classList.toggle('active',t===nome));
-  const sub=document.getElementById('topbar-sub');
-  if(sub)sub.textContent=_tabSubs[nome]||'';
-  const bFilt=document.getElementById('btn-filtros');
-  const bExp=document.getElementById('btn-exportar');
-  if(bFilt)bFilt.style.display='none';
-  if(bExp)bExp.style.display='none';
+  _setBreadcrumb(nome);
+  _renderTabStrip();
   if (nome==='resumo')    renderResumo();
   if (nome==='abc')       renderABC();
   if (nome==='inflacao')  renderInflacao();
@@ -690,6 +819,16 @@ function switchTab(nome) {
   if (nome==='entradas')  iniciarEntradas();
   if (nome==='auditoria') iniciarAuditoria();
 }
+
+function closeTab(nome, e) {
+  e.stopPropagation();
+  _openTabs = _openTabs.filter(t=>t!==nome);
+  if (_openTabs.length === 0) { location.href = 'dashboard.html'; return; }
+  if (_activeTab === nome) activateTab(_openTabs[_openTabs.length-1]);
+  else _renderTabStrip();
+}
+
+function switchTab(nome) { openTab(nome); }
 
 // ── LOAD ──────────────────────────────────────────────────────────
 async function carregar() {
@@ -722,7 +861,7 @@ async function carregar() {
     document.getElementById('last-updated').textContent =
       'Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
-    switchTab(tabAtual);
+    if (tabAtual === 'home') goHome(); else switchTab(tabAtual);
   } catch(e) { toast('Erro: '+e.message,'err'); }
 }
 
@@ -741,23 +880,7 @@ function renderResumo() {
   const cobSub = cobDias!=null?(cobDias>=999?'Cobertura alta':cobDias>=30?'Cobertura ok':'Cobertura baixa'):'';
   const giroSub = giro<0.1?'Giro baixo':giro<0.5?'Giro médio':'Giro alto';
 
-  document.getElementById('kpis').innerHTML=`
-    <div class="kpi">
-      <div class="kpi-icon" style="background:#eff6ff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h-1a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1"/><path d="M9 12h6M9 16h6"/></svg></div>
-      <div class="kpi-body"><div class="kpi-label">Valor em Estoque</div><div class="kpi-val">${brl(valTotal)}</div></div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-icon" style="background:#f0fdf4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
-      <div class="kpi-body"><div class="kpi-label">Entradas (30 Dias)</div><div class="kpi-val c-green">${brl(valEnt30)}</div></div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-icon" style="background:#eff6ff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg></div>
-      <div class="kpi-body"><div class="kpi-label">Giro de Estoque</div><div class="kpi-val c-blue">${giro.toFixed(2)}x</div><div class="kpi-sub">${giroSub}</div></div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-icon" style="background:#fff7ed"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-      <div class="kpi-body"><div class="kpi-label">Cobertura</div><div class="kpi-val c-amber">${cobLabel}</div><div class="kpi-sub">${cobSub}</div></div>
-    </div>`;
+  // KPI cards removidos do Resumo (preview ERP denso)
 
   // Por categoria
   const porCat={};
@@ -1590,5 +1713,6 @@ init();
   fl.addEventListener('mouseenter',function(){clearTimeout(t);});fl.addEventListener('mouseleave',hide);
 })();
 </script>
+<script src="sidebar.js"></script>
 </body>
 </html>

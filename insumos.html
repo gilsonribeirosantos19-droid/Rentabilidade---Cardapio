@@ -38,17 +38,36 @@
   .metric-val{font-size:28px;font-weight:700;line-height:1;font-family:'DM Mono',monospace}
   .metric-sub{font-size:11px;color:#94a3b8;margin-top:5px}
   .c-green{color:#16a34a}.c-amber{color:#f59e0b}.c-red{color:#e11d48}
-  /* TOOLBAR */
-  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-  .search-wrap{position:relative;min-width:200px}
-  .search-wrap input{width:200px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px 8px 34px;color:#0f172a;font-family:inherit;font-size:13px;outline:none;transition:border-color .15s}
-  .search-wrap input:focus{border-color:#0d9488}
-  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none}
-  .chips{display:flex;gap:5px;flex-wrap:wrap}
-  .chip{padding:6px 14px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
-  .chip:hover{border-color:#64748b;color:#0f172a}
+  /* FILTER BAR — global */
+  .filter-bar-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:18px}
+  .toolbar,.prod-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  /* Search */
+  .search-wrap,.prod-search{position:relative;flex:0 0 280px}
+  .search-wrap input,.prod-search input{
+    width:100%;height:44px!important;padding:0 14px 0 40px!important;
+    border:1.5px solid #e2e8f0!important;border-radius:10px!important;
+    font-size:13px!important;font-family:inherit!important;color:#0f172a!important;
+    background:#f8fafc!important;outline:none!important;transition:all .18s!important}
+  .search-wrap input:hover,.prod-search input:hover{border-color:#cbd5e1!important}
+  .search-wrap input:focus,.prod-search input:focus{border-color:#f97316!important;background:#fff!important}
+  .search-wrap input::placeholder,.prod-search input::placeholder{color:#94a3b8}
+  .search-icon,.prod-search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8}
+  /* Filter selects — todas as abas */
+  .fil-select,.prod-filter{
+    height:44px!important;padding:0 14px!important;
+    border:1.5px solid #e2e8f0!important;border-radius:10px!important;
+    font-size:13px!important;font-family:inherit!important;
+    color:#334155!important;font-weight:500!important;
+    background:#f8fafc!important;outline:none!important;
+    cursor:pointer!important;transition:all .18s!important;min-width:140px}
+  .fil-select:hover,.prod-filter:hover{border-color:#cbd5e1!important;background:#fff!important}
+  .fil-select:focus,.prod-filter:focus{border-color:#f97316!important;background:#fff!important}
+  /* Chips / tag filters */
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:0 16px;height:44px;border-radius:10px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#334155;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .18s;white-space:nowrap;display:inline-flex;align-items:center}
+  .chip:hover{border-color:#f97316;color:#f97316;background:#fff}
   .chip.active{background:#f97316;border-color:#f97316;color:#fff;font-weight:600}
-  .chip-more{background:#fff;border:1px solid #e2e8f0;color:#64748b;display:inline-flex;align-items:center;gap:4px}
+  .chip-more{display:inline-flex;align-items:center;gap:5px}
   /* BUTTONS */
   .btn{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
   .btn:hover{background:#f8fafc}
@@ -64,9 +83,9 @@
   .tbl-scroll{overflow-x:auto}
   table{width:100%;border-collapse:collapse;font-size:13px}
   thead tr{background:#0f2d5c}
-  th{padding:10px 14px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  th{padding:7px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
   th.r,td.r{text-align:right}
-  td{padding:11px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  td{padding:6px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
   tbody tr:last-child td{border-bottom:none}
   tbody tr{cursor:pointer;transition:background .1s}
   tbody tr:hover{background:#fafbfc}
@@ -125,6 +144,19 @@
   /* UTILS */
   .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
   .nav-sub-arrow{margin-left:auto;font-size:11px;color:#94a3b8}
+  /* MODULE TABS */
+  .mod-tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid #e2e8f0;padding-bottom:0}
+  .mod-tab{padding:8px 18px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;font-family:inherit;margin-bottom:-1px;transition:all .15s}
+  .mod-tab.active{color:#f97316;border-bottom-color:#f97316}
+  .mod-tab:hover{color:#0f172a}
+  .mod-pane{display:none}
+  /* CADASTRO FORM */
+  .form-section{margin-bottom:24px}
+  .form-section-title{font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #e2e8f0}
+  .form-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .form-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;margin-bottom:16px}
+  .form-footer{display:flex;justify-content:flex-end;gap:10px;padding-top:16px;border-top:1px solid #e2e8f0}
+  .prod-toolbar{margin-bottom:0}
   #cfg-flyout{display:none;position:fixed;left:220px;top:0;width:230px;height:100vh;background:#fff;border-right:1px solid #e2e8f0;z-index:2000;box-shadow:4px 0 20px rgba(0,0,0,.12);padding:20px 0;overflow-y:auto}
   .cfg-flyout-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;padding:10px 16px 6px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;display:block}
   .cfg-flyout-item{display:block;padding:10px 16px;font-size:13px;color:#0f172a;text-decoration:none;transition:all .15s;border-bottom:1px solid #f1f5f9}
@@ -176,7 +208,7 @@
       <div style="font-size:12px;color:#94a3b8;margin-top:3px">Gerencie os insumos e matérias-primas do sistema.</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <select id="sel-loja" onchange="filtrar()" style="font-size:13px;padding:6px 12px;min-width:160px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;cursor:pointer;outline:none;font-family:inherit"><option value="">Todas as lojas</option></select>
+      <select id="sel-loja" onchange="filtrar()" style="display:none"><option value="">Todas as lojas</option></select>
       <span id="ins-atualizado" style="font-size:12px;color:#94a3b8;white-space:nowrap"></span>
       <button onclick="carregarInsumos()" title="Atualizar" style="background:none;border:none;cursor:pointer;padding:4px;color:#94a3b8;display:inline-flex;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg></button>
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
@@ -190,43 +222,162 @@
 
   <div class="content">
 
+    <!-- MODULE TABS -->
+    <div class="mod-tabs">
+      <button class="mod-tab" data-tab="cadastro" onclick="switchModulo('cadastro')">Cadastro de Item</button>
+      <button class="mod-tab active" data-tab="produtos" onclick="switchModulo('produtos')">Produtos / Itens</button>
+      <button class="mod-tab" data-tab="custos" onclick="switchModulo('custos')">Base de Custos da Ficha Técnica</button>
+    </div>
+
+    <!-- PANE 1: CADASTRO DE ITEM -->
+    <div class="mod-pane" id="pane-cadastro">
+      <div class="form-card">
+        <div class="form-section">
+          <div class="form-section-title">1. Identificação</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Código interno</label><input class="form-input" id="cad-codigo" type="text" readonly placeholder="Gerado automaticamente" style="background:#f1f5f9;color:#94a3b8"></div>
+            <div class="form-group" style="grid-column:span 2"><label class="form-label">Descrição do item *</label><input class="form-input" id="cad-nome" type="text" placeholder="Ex: Salmão fresco"></div>
+            <div class="form-group"><label class="form-label">NCM</label><input class="form-input" id="cad-ncm" type="text" placeholder="00000000"></div>
+            <div class="form-group"><label class="form-label">Status *</label>
+              <select class="form-select" id="cad-ativo">
+                <option value="true">Ativo</option>
+                <option value="false">Inativo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">2. Classificação</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Tipo do item *</label>
+              <select class="form-select" id="cad-tipo"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Família</label>
+              <select class="form-select" id="cad-familia"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Grupo (Categoria)</label>
+              <select class="form-select" id="cad-grupo"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Subgrupo</label>
+              <select class="form-select" id="cad-subgrupo"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label class="form-label">Participa do CMV</label>
+              <select class="form-select" id="cad-cmv">
+                <option value="sim">Sim</option>
+                <option value="nao">Não</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Tipo de baixa</label>
+              <select class="form-select" id="cad-tipo-baixa">
+                <option value="consumo">Consumo</option>
+                <option value="producao">Produção</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">3. Unidade e Embalagem</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Unidade de estoque *</label>
+              <select class="form-select" id="cad-und-med">
+                <option value="">Selecione...</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="litro">litro</option>
+                <option value="ml">ml</option>
+                <option value="un">un</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column:span 1"><label class="form-label">Local / Depósito padrão</label><input class="form-input" id="cad-deposito" type="text" placeholder="Ex: Câmara fria"></div>
+          </div>
+        </div>
+        <div class="form-footer">
+          <button class="btn" onclick="limparCadastro()">Cancelar</button>
+          <button class="btn btn-primary" onclick="salvarCadastro()" style="background:#f97316;border-color:#f97316">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 2: PRODUTOS / ITENS -->
+    <div class="mod-pane" id="pane-produtos" style="display:block">
+      <div class="filter-bar-wrap">
+        <div class="prod-toolbar">
+          <div class="prod-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="prod-busca" placeholder="Buscar item..." oninput="filtrarProdutos()">
+          </div>
+          <select class="prod-filter" id="prod-tipo" onchange="filtrarProdutos()">
+            <option value="">Tipo do item ▾</option>
+          </select>
+          <select class="prod-filter" id="prod-familia" onchange="filtrarProdutos()"><option value="">Família ▾</option></select>
+          <select class="prod-filter" id="prod-grupo" onchange="filtrarProdutos()"><option value="">Grupo ▾</option></select>
+          <select class="prod-filter" id="prod-subgrupo" onchange="filtrarProdutos()"><option value="">Subgrupo ▾</option></select>
+          <select class="prod-filter" id="prod-status" onchange="filtrarProdutos()">
+            <option value="">Status ▾</option>
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+          <select class="prod-filter" id="prod-estq" onchange="filtrarProdutos()">
+            <option value="">Situação de estoque ▾</option>
+            <option value="ativo">Em estoque</option>
+            <option value="atencao">Estoque baixo</option>
+            <option value="critico">Crítico</option>
+          </select>
+        </div>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th>Código Interno</th>
+              <th>Descrição</th>
+              <th>Tipo do Item</th>
+              <th>Família</th>
+              <th>Grupo</th>
+              <th>Subgrupo</th>
+              <th>Unidade</th>
+              <th>Embalagem Padrão</th>
+              <th class="r">Qtd. Emb.</th>
+              <th>Código de Barras</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr></thead>
+            <tbody id="prod-tbody">
+              <tr><td colspan="12" class="empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 3: BASE DE CUSTOS -->
+    <div class="mod-pane" id="pane-custos">
+
     <!-- TOOLBAR -->
-    <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div style="position:relative">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="busca" placeholder="Buscar insumo..." oninput="filtrar()" style="padding:8px 12px 8px 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;width:220px">
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Categoria</div>
-        <select id="fil-cat" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:150px;cursor:pointer"><option value="">Selecione</option></select>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Status</div>
-        <select id="fil-status" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer">
-          <option value="">Todos</option>
+    <div class="filter-bar-wrap">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="busca" placeholder="Buscar insumo..." oninput="filtrar()">
+        </div>
+        <select id="fil-cat" class="fil-select" onchange="filtrar()"><option value="">Categoria ▾</option></select>
+        <select id="fil-status" class="fil-select" onchange="filtrar()">
+          <option value="">Status ▾</option>
           <option value="ativo">Ativo</option>
           <option value="atencao">Estoque baixo</option>
           <option value="critico">Crítico</option>
         </select>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Estoque</div>
-        <select id="fil-estoque" onchange="filtrar()" style="padding:7px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer">
-          <option value="">Todos</option>
+        <select id="fil-estoque" class="fil-select" onchange="filtrar()">
+          <option value="">Estoque ▾</option>
           <option value="em">Em estoque</option>
           <option value="baixo">Estoque baixo</option>
           <option value="sem">Sem estoque</option>
         </select>
+        <button class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Mais filtros
+        </button>
       </div>
-      <button style="padding:7px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;align-self:flex-end">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        Mais filtros
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <button class="btn btn-primary" onclick="abrirModalNovo()" style="margin-left:auto;align-self:flex-end;padding:7px 18px;background:#1d4ed8;border-color:#1d4ed8;border-radius:8px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Novo insumo
-      </button>
     </div>
 
     <!-- BODY: TABELA + PAINEL LATERAL -->
@@ -243,17 +394,7 @@
                 <th>Unidade</th>
                 <th class="r">Preço Compra</th>
                 <th class="r">Custo Real/kg</th>
-                <th style="min-width:100px">
-                  <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
-                    <span>Status</span>
-                    <select id="ins-status-fil" onchange="filtrarStatus(this.value)" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:10px;border-radius:4px;padding:2px 6px;font-family:inherit;cursor:pointer;outline:none;width:100%">
-                      <option value="">Todos</option>
-                      <option value="ativo">Ativo</option>
-                      <option value="atencao">Atenção</option>
-                      <option value="critico">Crítico</option>
-                    </select>
-                  </div>
-                </th>
+                <th>Status</th>
                 <th>Ações</th>
               </tr></thead>
               <tbody id="tbody">
@@ -297,6 +438,8 @@
       </div>
 
     </div>
+
+    </div><!-- /pane-custos -->
   </div>
   <div style="padding:16px 0 4px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;margin-top:16px">© 2026 Aiko Sistema</div>
 </div>
@@ -381,7 +524,7 @@ function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${tipo} show`;setTimeout(()=>el.classList.remove('show'),3000);}
 
 let todos=[], filtroStatus='todos', insDetalhe=null, categoriasInsumo=[], unidadesMedida=[];
-let _pagAtual=1, _filtrado=[];
+let _pagAtual=1, _filtrado=[], _prodFiltrado=[], _cadEditId=null;
 
 // STATUS dos insumos
 function getStatus(ins){
@@ -464,43 +607,26 @@ function renderPagina(){
 }
 
 function _catBadge(cat){
-  const c=(cat||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-  const map={
-    'hortifruti':{bg:'#fef9c3',color:'#a16207'},
-    'mercearia':{bg:'#dbeafe',color:'#1d4ed8'},
-    'proteinas':{bg:'#dcfce7',color:'#15803d'},
-    'laticinios':{bg:'#f3e8ff',color:'#7e22ce'},
-    'estivas':{bg:'#d1fae5',color:'#065f46'},
-    'bebidas':{bg:'#e0f2fe',color:'#0369a1'},
-    'descartaveis':{bg:'#fce7f3',color:'#9d174d'},
-    'frios':{bg:'#e0f2fe',color:'#0284c7'},
-    'condimentos':{bg:'#fef3c7',color:'#b45309'},
-  };
-  const s=map[c]||{bg:'#f1f5f9',color:'#475569'};
-  return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color}">${esc(cat||'—')}</span>`;
+  return `<span class="badge b-cat">${esc(cat||'—')}</span>`;
 }
+
+const _stTxt={ativo:'Ativo',atencao:'Estoque baixo',critico:'Crítico'};
 
 function renderTabela(lista){
   const tbody=document.getElementById('tbody');
   if(!lista.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhum insumo encontrado</td></tr>';return;}
-  const statusCfg={
-    ativo:{bg:'#dcfce7',color:'#16a34a',txt:'Ativo'},
-    atencao:{bg:'#ffedd5',color:'#ea580c',txt:'Estoque baixo'},
-    critico:{bg:'#fee2e2',color:'#dc2626',txt:'Crítico'},
-  };
   tbody.innerHTML=lista.map(i=>{
     const rend=parseFloat(i.rendimento_pct||100);
     const custo=i.preco_compra/(rend/100);
     const st=getStatus(i);
-    const sc=statusCfg[st];
     const sel=insDetalhe?.id===i.id?' selected':'';
-    return `<tr onclick="abrirDetalhe('${i.id}')" class="${sel}">
+    return `<tr onclick="abrirDetalhe('${i.id}')" class="${sel}" style="cursor:pointer">
       <td style="font-weight:600;color:#0f172a">${esc(i.nome)}</td>
       <td>${_catBadge(i.categoria)}</td>
       <td style="color:#64748b">${esc(i.unidade_compra||i.unidade_medida||'—')}</td>
       <td class="r td-mono" style="color:#334155">${brl(i.preco_compra)}</td>
       <td class="r td-mono" style="color:#334155">${brl(custo)}</td>
-      <td><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${sc.bg};color:${sc.color}">${sc.txt}</span></td>
+      <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
       <td>
         <button class="btn-ghost" onclick="event.stopPropagation();menuAcoes('${i.id}')" style="border-radius:6px;padding:4px 8px;font-size:18px;line-height:1;color:#94a3b8">⋮</button>
       </td>
@@ -664,6 +790,9 @@ async function carregarInsumos(){
     if(cs){cs.textContent='• conectado';cs.style.color='#16a34a';}
     atualizarMetricas();
     filtrar();
+    _popularGruposProd();
+    _prodFiltrado=todos.slice();
+    renderProdutos();
   }catch(e){
     if(tbody) tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
     const cs=document.getElementById('conn-status');
@@ -671,9 +800,170 @@ async function carregarInsumos(){
   }
 }
 
+// MODULE TABS
+function switchModulo(tab) {
+  document.querySelectorAll('.mod-pane').forEach(p => p.style.display='none');
+  document.getElementById('pane-'+tab).style.display='block';
+  document.querySelectorAll('.mod-tab').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+}
+
+// PANE 1 — CADASTRO
+function limparCadastro(){
+  _cadEditId = null;
+  ['cad-nome','cad-ncm','cad-subgrupo','cad-deposito'].forEach(id=>{
+    const e=document.getElementById(id); if(e) e.value='';
+  });
+  const code=document.getElementById('cad-codigo');
+  if(code) code.value='Gerado automaticamente';
+  const setVal=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  setVal('cad-ativo','true'); setVal('cad-tipo',''); setVal('cad-familia','');
+  setVal('cad-grupo',''); setVal('cad-cmv','sim'); setVal('cad-und-med',''); setVal('cad-tipo-baixa','consumo');
+}
+
+function novoItemCadastro(){
+  limparCadastro();
+  switchModulo('cadastro');
+}
+
+function editarItemCadastro(id){
+  const ins=todos.find(x=>x.id===id);
+  if(!ins) return;
+  _cadEditId = id;
+  const idx = todos.indexOf(ins);
+  const setVal=(elId,v)=>{const e=document.getElementById(elId);if(e)e.value=v!=null?v:'';};
+  setVal('cad-codigo', 'MP-'+String(idx+1).padStart(6,'0'));
+  setVal('cad-nome', ins.nome||'');
+  setVal('cad-ativo', ins.ativo===false?'false':'true');
+  setVal('cad-tipo', '');
+  setVal('cad-familia', '');
+  setVal('cad-grupo', ins.categoria||'');
+  setVal('cad-subgrupo', '');
+  setVal('cad-cmv', 'sim');
+  setVal('cad-und-med', ins.unidade_medida||'');
+  setVal('cad-tipo-baixa', ins.tipo_baixa||'consumo');
+  setVal('cad-deposito', '');
+  setVal('cad-ncm', '');
+  switchModulo('cadastro');
+}
+
+async function salvarCadastro(){
+  const nome=document.getElementById('cad-nome').value.trim();
+  if(!nome){toast('Informe a descrição do item.','err');return;}
+  const payload={
+    nome,
+    categoria: document.getElementById('cad-grupo').value||null,
+    unidade_medida: document.getElementById('cad-und-med').value||null,
+    tipo_baixa: document.getElementById('cad-tipo-baixa').value||'consumo',
+    ativo: document.getElementById('cad-ativo').value!=='false',
+  };
+  if(!_cadEditId){
+    payload.tenant_id=TENANT_ID;
+    payload.preco_compra=0;
+    payload.rendimento_pct=100;
+  }
+  try{
+    if(_cadEditId){
+      await api(`insumos?id=eq.${_cadEditId}`,{method:'PATCH',body:JSON.stringify(payload)});
+      toast('Item atualizado.','ok');
+    } else {
+      await api('insumos',{method:'POST',body:JSON.stringify(payload)});
+      toast(`${nome} cadastrado.`,'ok');
+    }
+    await carregarInsumos();
+    switchModulo('produtos');
+    limparCadastro();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+// PANE 2 — PRODUTOS
+function _gerarCodigo(idx){ return 'MP-'+String(idx+1).padStart(6,'0'); }
+
+function filtrarProdutos(){
+  const q=(document.getElementById('prod-busca')?.value||'').toLowerCase();
+  const filGrupo=document.getElementById('prod-grupo')?.value||'';
+  const filStatus=document.getElementById('prod-status')?.value;
+  const filEstq=document.getElementById('prod-estq')?.value||'';
+  let lista=todos;
+  if(q) lista=lista.filter(i=>i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q));
+  if(filGrupo) lista=lista.filter(i=>(i.categoria||'')==filGrupo);
+  if(filStatus!==''&&filStatus!=null) lista=lista.filter(i=>String(i.ativo!==false)===filStatus);
+  if(filEstq) lista=lista.filter(i=>getStatus(i)===filEstq);
+  _prodFiltrado=lista;
+  renderProdutos();
+}
+
+function renderProdutos(){
+  const tbody=document.getElementById('prod-tbody');
+  if(!tbody) return;
+  if(!_prodFiltrado.length){
+    tbody.innerHTML='<tr><td colspan="12" class="empty">Nenhum item encontrado</td></tr>';return;
+  }
+  tbody.innerHTML=_prodFiltrado.map((ins)=>{
+    const realIdx=todos.indexOf(ins);
+    const codigo=_gerarCodigo(realIdx);
+    const st=getStatus(ins);
+    return `<tr onclick="editarItemCadastro('${ins.id}')" style="cursor:pointer">
+      <td class="td-mono" style="color:#64748b;font-size:11px">${esc(codigo)}</td>
+      <td style="font-weight:600;color:#0f172a">${esc(ins.nome)}</td>
+      <td style="color:#64748b">—</td>
+      <td style="color:#64748b">—</td>
+      <td>${_catBadge(ins.categoria)}</td>
+      <td style="color:#64748b">—</td>
+      <td style="color:#64748b">${esc(ins.unidade_medida||'—')}</td>
+      <td style="color:#64748b">${esc(ins.unidade_compra||'—')}</td>
+      <td class="r td-mono" style="color:#64748b">${ins.rendimento_pct!=null?ins.rendimento_pct:'—'}</td>
+      <td style="color:#64748b">—</td>
+      <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
+      <td>
+        <button class="btn-ghost" onclick="event.stopPropagation();menuProduto('${ins.id}')" style="border-radius:6px;padding:4px 8px;font-size:18px;line-height:1;color:#94a3b8">⋮</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function menuProduto(id){
+  const ins=todos.find(x=>x.id===id);
+  if(!ins) return;
+  const acao=prompt(`Ação para "${ins.nome}":\n1 - Editar cadastro\n2 - Ver custos\n3 - Excluir\n\nDigite o número:`);
+  if(acao==='1') editarItemCadastro(id);
+  else if(acao==='2') { switchModulo('custos'); abrirDetalhe(id); }
+  else if(acao==='3'){ if(confirm(`Desativar "${ins.nome}"?`)) deletar(id,ins.nome); }
+}
+
+function _popularGruposProd(){
+  const sel=document.getElementById('prod-grupo');
+  if(!sel) return;
+  const cats=[...new Set(todos.map(i=>i.categoria).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">Grupo ▾</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+
+async function carregarClassificacoes(){
+  try{
+    const list=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    const byTipo=(t)=>list.filter(c=>c.tipo===t);
+
+    const fill=(id, items, placeholder)=>{
+      const el=document.getElementById(id);
+      if(!el) return;
+      const cur=el.value;
+      el.innerHTML=`<option value="">${placeholder}</option>`+
+        items.map(i=>`<option value="${esc(i.nome)}">${esc(i.nome)}</option>`).join('');
+      if(cur) el.value=cur;
+    };
+
+    fill('cad-tipo',     byTipo('tipo_item'), 'Selecione...');
+    fill('cad-familia',  byTipo('familia'),   'Selecione...');
+    fill('cad-grupo',    byTipo('grupo'),     'Selecione...');
+    fill('cad-subgrupo', byTipo('subgrupo'),  'Selecione...');
+    fill('prod-tipo',    byTipo('tipo_item'), 'Tipo do item ▾');
+    fill('prod-familia', byTipo('familia'),   'Família ▾');
+    fill('prod-subgrupo',byTipo('subgrupo'),  'Subgrupo ▾');
+  }catch{}
+}
+
 document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
 
-(async()=>{await carregarLojas();await carregarOpcoes();await carregarInsumos();})();
+(async()=>{await carregarLojas();await Promise.all([carregarOpcoes(),carregarClassificacoes()]);await carregarInsumos();})();
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
@@ -697,5 +987,6 @@ document.getElementById('modal-novo').addEventListener('click',function(e){if(e.
   document.addEventListener('click',e=>{if(!tr.contains(e.target)&&!fl.contains(e.target))fl.style.display='none';});
 })();
 </script>
+<script src="sidebar.js"></script>
 </body>
 </html>

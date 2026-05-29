@@ -7,11 +7,29 @@ body {
   background: #f0f4f8 !important;
 }
 
+/* NAV BOTTOM — suporte, padrao global */
+.nav-bottom {
+  margin-top: auto !important;
+  padding: 14px 18px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+  line-height: 1.6 !important;
+}
+.nav-bottom a {
+  color: #f97316 !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+}
+.nav-bottom a:hover { text-decoration: underline !important; }
+
 /* SIDEBAR */
 .sidebar {
   width: 220px !important;
   background: #fff !important;
   border-right: 1px solid #e2e8f0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 /* Remove os boxes azulados dos grupos */
@@ -61,6 +79,92 @@ body {
   font-weight: 600 !important;
   border-left: none !important;
 }
+
+/* WORKSPACE MULTI-ABA (compartilhado) */
+.ws-tab-strip{display:none;align-items:center;border-bottom:1px solid #e2e8f0;background:#f1f5f9;
+  position:sticky;top:58px;z-index:50;padding:0 4px;overflow-x:auto;gap:0;flex-shrink:0}
+.ws-home-btn{display:flex;align-items:center;justify-content:center;width:32px;height:36px;
+  border:none;background:transparent;cursor:pointer;color:#94a3b8;flex-shrink:0;
+  transition:color .12s;border-right:1px solid #e2e8f0;margin-right:2px;padding:0 8px}
+.ws-home-btn:hover{color:#f97316}
+.ws-tab{display:flex;align-items:center;gap:6px;padding:0 12px;height:36px;font-size:12px;
+  color:#64748b;border:none;background:transparent;
+  border-top:2px solid transparent;border-bottom:2px solid transparent;
+  cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .12s;
+  margin-bottom:-1px;position:relative}
+.ws-tab:hover{color:#0f172a;background:#fff}
+.ws-tab.active{
+  background:#fff !important;
+  color:#0f172a !important;
+  font-weight:600 !important;
+  border-top-color:#f97316 !important;
+  border-bottom-color:#fff !important;
+}
+.ws-tab-close{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;font-size:12px;line-height:1;color:#94a3b8;transition:all .12s;
+  cursor:pointer;user-select:none}
+.ws-tab-close:hover{background:#e2e8f0;color:#0f172a}
+
+/* Espaço entre tab strip e conteúdo do workspace */
+.ws-tab-strip + * { margin-top: 18px; }
+
+/* ── FILTROS STICKY ─────────────────────────────────────── */
+/* Cada página define --filter-top para o offset correto (topbar + tab strip) */
+:root { --filter-top: 0px; }
+.filter-bar-wrap {
+  position: sticky !important;
+  top: var(--filter-top) !important;
+  z-index: 30 !important;
+  background: #f8fafc !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05) !important;
+}
+
+/* ── THEAD STICKY ───────────────────────────────────────── */
+/* overflow:clip recorta visualmente mas não cria scroll context, mantendo sticky ativo */
+.tbl-card,
+.tbl-wrap {
+  overflow: clip !important;
+}
+.tbl-scroll {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: calc(100vh - 280px) !important;
+}
+/* Sticky em th (não em tr) — funciona com border-collapse:collapse em todos os browsers */
+.tbl-scroll thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: inherit !important;
+}
+
+/* SIDEBAR HIERÁRQUICO — COLLAPSE */
+.nav-group-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 4px 4px !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+.nav-group-header:hover .nav-label { color: #334155 !important; }
+.nav-group-header .nav-label {
+  padding: 0 !important;
+  margin-bottom: 0 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #334155 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+.nav-group-arrow {
+  transition: transform .18s !important;
+  flex-shrink: 0 !important;
+  color: #cbd5e1 !important;
+}
+.nav-group.collapsed .nav-group-arrow { transform: rotate(-90deg) !important; }
+.nav-group-items { overflow: hidden !important; }
+.nav-group.collapsed .nav-group-items { display: none !important; }
 
 /* SCROLLBAR */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
