@@ -715,7 +715,7 @@ async function renderSaldoOp(){
   const tfoot=document.getElementById('so-tfoot');
   tbody.innerHTML='<tr><td colspan="10" class="empty">Carregando...</td></tr>';
   try{
-    let q=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&or=(modelo.eq.degelo,modelo_processo.eq.degelo)&order=data.asc,created_at.asc&limit=1000`;
+    let q=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&modelo_processo=eq.degelo&order=data.asc,created_at.asc&limit=1000`;
     if(insumoFil) q+=`&insumo_id=eq.${insumoFil}`;
     if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
     if(de) q+=`&data=gte.${de}`;
