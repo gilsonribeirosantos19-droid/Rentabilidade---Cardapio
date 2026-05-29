@@ -104,6 +104,8 @@
   #pill-saida.active{color:var(--orange)}
   #pill-sim-ent.active{color:var(--blue)}
   #pill-sim-sai.active{color:var(--orange)}
+  #pill-deg-ent.active{color:var(--blue)}
+  #pill-deg-sai.active{color:var(--orange)}
 
   /* CALC BOX */
   .calc-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 0;display:flex;margin-top:16px}
@@ -180,6 +182,11 @@
       <div class="hub-card" onclick="openTab('relatorio')">
         <div class="hub-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
         <div><div class="hub-title">Relatório Consolidado</div><div class="hub-desc">Analise rendimento, perdas e custos por produto.</div></div>
+        <div class="hub-arrow">›</div>
+      </div>
+      <div class="hub-card" onclick="openTab('saldo-op')">
+        <div class="hub-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <div><div class="hub-title">Saldo Operacional</div><div class="hub-desc">Kardex de entradas e saídas do estoque secundário.</div></div>
         <div class="hub-arrow">›</div>
       </div>
     </div>
@@ -405,22 +412,50 @@
 
       <!-- MODELO: DEGELO -->
       <div class="form-card fields-block" id="fields-degelo">
-        <div class="form-card-title" style="color:#1d4ed8">Degelo + Limpeza</div>
-        <div class="form-grid" style="margin-bottom:12px">
-          <div class="form-group"><label class="form-label">Custo Unitário (R$/kg)</label><input class="form-input mono" id="fd-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcDegelo()"></div>
+        <!-- Pills Entrada/Saída -->
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:700;color:var(--text1)">Tipo de lançamento</span>
+          <div class="tipo-pills">
+            <button class="tipo-pill" id="pill-deg-ent" onclick="onDegeloTipo('entrada')">↓ Entrada</button>
+            <button class="tipo-pill active" id="pill-deg-sai" onclick="onDegeloTipo('saida')">↑ Saída</button>
+          </div>
         </div>
-        <div class="form-grid-3">
-          <div class="form-group"><label class="form-label">Peso Congelado (kg) *</label><input class="form-input mono" id="fd-congelado" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
-          <div class="form-group"><label class="form-label">Peso Descongelado (kg)</label><input class="form-input mono" id="fd-descongelado" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
-          <div class="form-group"><label class="form-label">Perda Degelo (kg)</label><input class="form-input mono" id="fd-p-degelo" type="number" step="0.001" placeholder="auto" readonly></div>
-          <div class="form-group"><label class="form-label">Peso Limpo (kg)</label><input class="form-input mono" id="fd-limpo" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
-          <div class="form-group"><label class="form-label">Perda Limpeza (kg)</label><input class="form-input mono" id="fd-p-limpeza" type="number" step="0.001" placeholder="auto" readonly></div>
+
+        <!-- ENTRADA: simples -->
+        <div id="deg-ent-block" style="display:none">
+          <div class="form-card-title" style="color:#1d4ed8">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12l10 10 10-10"/></svg>
+            Recebimento
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Quantidade (kg) *</label>
+              <input class="form-input mono" id="fde-qtd-kg" type="number" step="0.001" min="0" placeholder="0,000">
+            </div>
+            <div class="form-group"><label class="form-label">Valor (R$)</label>
+              <input class="form-input mono" id="fde-valor" type="number" step="0.01" min="0" placeholder="0,00">
+            </div>
+          </div>
         </div>
-        <div class="calc-box">
-          <div class="calc-item"><div class="calc-lbl">Peso Final</div><div class="calc-val" id="dv-limpo">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Perda Total</div><div class="calc-val c-red" id="dv-perdas">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Rendimento</div><div class="calc-val c-amber" id="dv-rend">—</div></div>
-          <div class="calc-item"><div class="calc-lbl">Valor Total</div><div class="calc-val c-blue" id="dv-valor">—</div></div>
+
+        <!-- SAÍDA: processamento (inalterado) -->
+        <div id="deg-sai-block">
+          <div class="form-card-title" style="color:#1d4ed8">Degelo + Limpeza</div>
+          <div class="form-grid" style="margin-bottom:12px">
+            <div class="form-group"><label class="form-label">Custo Unitário (R$/kg)</label><input class="form-input mono" id="fd-custo" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcDegelo()"></div>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group"><label class="form-label">Peso Congelado (kg) *</label><input class="form-input mono" id="fd-congelado" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
+            <div class="form-group"><label class="form-label">Peso Descongelado (kg)</label><input class="form-input mono" id="fd-descongelado" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
+            <div class="form-group"><label class="form-label">Perda Degelo (kg)</label><input class="form-input mono" id="fd-p-degelo" type="number" step="0.001" placeholder="auto" readonly></div>
+            <div class="form-group"><label class="form-label">Peso Limpo (kg)</label><input class="form-input mono" id="fd-limpo" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
+            <div class="form-group"><label class="form-label">Perda Limpeza (kg)</label><input class="form-input mono" id="fd-p-limpeza" type="number" step="0.001" placeholder="auto" readonly></div>
+          </div>
+          <div class="calc-box">
+            <div class="calc-item"><div class="calc-lbl">Peso Final</div><div class="calc-val" id="dv-limpo">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Perda Total</div><div class="calc-val c-red" id="dv-perdas">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Rendimento</div><div class="calc-val c-amber" id="dv-rend">—</div></div>
+            <div class="calc-item"><div class="calc-lbl">Valor Total</div><div class="calc-val c-blue" id="dv-valor">—</div></div>
+          </div>
         </div>
       </div>
 
@@ -555,6 +590,41 @@
     </div>
   </div><!-- /tab-relatorio -->
 
+  <!-- SALDO OPERACIONAL -->
+  <div id="tab-saldo-op" class="tab-pane">
+    <div style="font-size:15px;font-weight:700;color:var(--text1);margin-bottom:14px">
+      Saldo Operacional <span style="font-weight:400;color:var(--text3);font-size:13px">— estoque secundário de processamento (Degelo)</span>
+    </div>
+    <div class="filter-bar-wrap">
+      <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+        <select class="fil-select" id="so-insumo" onchange="renderSaldoOp()" style="min-width:160px">
+          <option value="">Todos os produtos</option>
+        </select>
+        <select class="fil-select" id="so-loja" onchange="renderSaldoOp()">
+          <option value="">Todas as lojas</option>
+        </select>
+        <input type="date" class="fil-date" id="so-de" onchange="renderSaldoOp()" title="De">
+        <span style="color:var(--text3);font-size:12px">–</span>
+        <input type="date" class="fil-date" id="so-ate" onchange="renderSaldoOp()" title="Até">
+        <button class="btn btn-ghost btn-sm" onclick="renderSaldoOp()">↻ Atualizar</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportSaldoOp()" style="margin-left:auto">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV
+        </button>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="so-table">
+      <thead><tr>
+        <th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th>Lote / Ref.</th>
+        <th class="r">Entrada (kg)</th><th class="r">Saída (kg)</th><th class="r">Saldo (kg)</th>
+        <th>Responsável</th><th>Observação</th>
+      </tr></thead>
+      <tfoot id="so-tfoot"></tfoot>
+      <tbody id="so-body"><tr><td colspan="10" class="empty">Selecione os filtros e clique em Atualizar.</td></tr></tbody>
+    </table></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px">* Saldo calculado: Entradas – Saídas (peso congelado processado)</div>
+  </div><!-- /tab-saldo-op -->
+
 </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /shell -->
@@ -619,10 +689,97 @@ let _relData=[];
 const _modeloLabel={simples:'Simples',degelo:'Degelo + Limpeza',coccao:'Cocção / Redução',lote:'Prod. em Lote'};
 
 /* ================================================================
+   SALDO OPERACIONAL
+================================================================ */
+let _soData=[];
+function _initSaldoOp(){
+  const selIns=document.getElementById('so-insumo');
+  if(selIns&&selIns.options.length<=1)
+    _insumos.filter(i=>i.ativo!==false).forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;selIns.appendChild(o);});
+  const selLoja=document.getElementById('so-loja');
+  if(selLoja&&selLoja.options.length<=1)
+    _lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
+  const hoje=new Date(),de=new Date(hoje);de.setDate(de.getDate()-30);
+  const fmt=d=>d.toISOString().slice(0,10);
+  const elDe=document.getElementById('so-de'),elAte=document.getElementById('so-ate');
+  if(elDe&&!elDe.value) elDe.value=fmt(de);
+  if(elAte&&!elAte.value) elAte.value=fmt(hoje);
+  renderSaldoOp();
+}
+async function renderSaldoOp(){
+  const insumoFil=document.getElementById('so-insumo')?.value||'';
+  const lojaFil=document.getElementById('so-loja')?.value||'';
+  const de=document.getElementById('so-de')?.value||'';
+  const ate=document.getElementById('so-ate')?.value||'';
+  const tbody=document.getElementById('so-body');
+  const tfoot=document.getElementById('so-tfoot');
+  tbody.innerHTML='<tr><td colspan="10" class="empty">Carregando...</td></tr>';
+  try{
+    let q=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&modelo=eq.degelo&order=data.asc,created_at.asc&limit=1000`;
+    if(insumoFil) q+=`&insumo_id=eq.${insumoFil}`;
+    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
+    if(de) q+=`&data=gte.${de}T00:00:00`;
+    if(ate) q+=`&data=lte.${ate}T23:59:59`;
+    _soData=await api(q).catch(()=>[]);
+    if(!_soData.length){tbody.innerHTML='<tr><td colspan="10" class="empty">Nenhum registro encontrado.</td></tr>';tfoot.innerHTML='';return;}
+    let saldo=0,totEnt=0,totSai=0;
+    tbody.innerHTML=_soData.map(l=>{
+      const ins=_insumos.find(i=>i.id===l.insumo_id);
+      const loja=_lojas.find(lj=>lj.id===l.loja_id);
+      const isEnt=l.tipo==='entrada';
+      const entKg=isEnt?(l.peso_bruto||0):0;
+      const saiKg=!isEnt?(l.peso_congelado||0):0;
+      saldo=r3(saldo+entKg-saiKg);
+      totEnt=r3(totEnt+entKg);totSai=r3(totSai+saiKg);
+      const tipoLabel=isEnt?`<span style="color:var(--blue);font-weight:600">Entrada</span>`:`<span style="color:var(--orange);font-weight:600">Degelo + Limpeza</span>`;
+      const dataStr=l.data?new Date(l.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      return `<tr>
+        <td class="mono" style="font-size:11px;color:var(--text2)">${dataStr}</td>
+        <td>${tipoLabel}</td>
+        <td style="font-weight:600">${esc(ins?.nome||'—')}</td>
+        <td>${esc(loja?.nome||'—')}</td>
+        <td style="font-size:11px">${esc(l.lote||'—')}</td>
+        <td class="r mono">${entKg>0?kg(entKg):'—'}</td>
+        <td class="r mono">${saiKg>0?kg(saiKg):'—'}</td>
+        <td class="r mono" style="font-weight:700;color:${saldo>=0?'var(--green)':'var(--red)'}">${kg(saldo)}</td>
+        <td>${esc(l.responsavel||'—')}</td>
+        <td style="font-size:11px;color:var(--text2)">${esc(l.observacoes||'—')}</td>
+      </tr>`;
+    }).join('');
+    const saldoFinal=r3(totEnt-totSai);
+    tfoot.innerHTML=`<tr style="background:#f8fafc;font-weight:700;font-size:12px">
+      <td colspan="5" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text1)">TOTAL GERAL</td>
+      <td class="r mono">${kg(totEnt)}</td>
+      <td class="r mono">${kg(totSai)}</td>
+      <td class="r mono" style="color:${saldoFinal>=0?'var(--green)':'var(--red)'}">${kg(saldoFinal)}</td>
+      <td colspan="2"></td>
+    </tr>`;
+  }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+function exportSaldoOp(){
+  if(!_soData.length){toast('Nenhum dado para exportar.','err');return;}
+  let saldo=0;
+  const rows=[['Data/Hora','Tipo','Produto','Loja','Lote/Ref','Entrada (kg)','Saída (kg)','Saldo (kg)','Responsável','Observação']];
+  _soData.forEach(l=>{
+    const ins=_insumos.find(i=>i.id===l.insumo_id);
+    const loja=_lojas.find(lj=>lj.id===l.loja_id);
+    const isEnt=l.tipo==='entrada';
+    const entKg=isEnt?(l.peso_bruto||0):0;
+    const saiKg=!isEnt?(l.peso_congelado||0):0;
+    saldo=r3(saldo+entKg-saiKg);
+    const dataStr=l.data?new Date(l.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    rows.push([dataStr,isEnt?'Entrada':'Degelo + Limpeza',ins?.nome||'',loja?.nome||'',l.lote||'',entKg||'',saiKg||'',saldo,l.responsavel||'',l.observacoes||'']);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+  a.download=`saldo_operacional_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+/* ================================================================
    WORKSPACE TABS
 ================================================================ */
 const _tabs=[], _loaded={};
-const _tabNames={lancamento:'Lançamentos',relatorio:'Relatório'};
+const _tabNames={lancamento:'Lançamentos',relatorio:'Relatório','saldo-op':'Saldo Operacional'};
 
 function openTab(id){
   if(!_tabs.includes(id)) _tabs.push(id);
@@ -633,6 +790,7 @@ function switchTab(id){
   (document.getElementById('tab-'+id)||document.getElementById('tab-hub')).classList.add('active');
   _renderStrip();
   if(id==='lancamento'&&!_loaded.lancamento){renderLanc();_loaded.lancamento=true;}
+  if(id==='saldo-op'&&!_loaded['saldo-op']){_initSaldoOp();_loaded['saldo-op']=true;}
 }
 function closeTab(id,e){
   e.stopPropagation();
@@ -771,6 +929,7 @@ function _resetForm(){
   ['f-insumo','f-modelo','f-data','f-loja','f-turno','f-lote','f-fornecedor','f-responsavel','f-obs',
    'fse-qtd-peixes','fse-custo','fse-peso-bruto','fse-valor-compra','fse-cabeca','fse-peso-liq',
    'fss-qtd-peixes','fss-custo','fss-peso-entrada','fss-file','fss-pele','fss-aparas','fss-perdas',
+   'fde-qtd-kg','fde-valor',
    'fd-custo','fd-congelado','fd-descongelado','fd-p-degelo','fd-limpo','fd-p-limpeza',
    'fc-inicial','fc-final','fc-reducao','fc-custo',
    'fl-produzida','fl-consumida','fl-sobra','fl-validade','fl-custo']
@@ -780,6 +939,7 @@ function _resetForm(){
   sv('f-modelo','simples');
   onModeloChange();
   onSimplesTipo('saida');
+  onDegeloTipo('saida');
   ['sev-cabeca-pct','sev-peso-liq','sev-novo-custo',
    'ssv-aprov','ssv-perdas','ssv-rend','ssv-custo-file','ssv-custo-aprov',
    'dv-limpo','dv-perdas','dv-rend','dv-valor',
@@ -811,8 +971,14 @@ function _populateForm(l){
       calcSimplesSai();
     }
   }else if(mod==='degelo'){
-    sv('fd-custo',l.custo_unitario||'');sv('fd-congelado',l.peso_congelado||'');
-    sv('fd-descongelado',l.peso_descongelado||'');sv('fd-limpo',l.peso_limpo||'');calcDegelo();
+    const tipoD=l.tipo||'saida';
+    onDegeloTipo(tipoD);
+    if(tipoD==='entrada'){
+      sv('fde-qtd-kg',l.peso_bruto||'');sv('fde-valor',l.valor_total||'');
+    }else{
+      sv('fd-custo',l.custo_unitario||'');sv('fd-congelado',l.peso_congelado||'');
+      sv('fd-descongelado',l.peso_descongelado||'');sv('fd-limpo',l.peso_limpo||'');calcDegelo();
+    }
   }else if(mod==='coccao'){
     sv('fc-inicial',l.peso_inicial||'');sv('fc-final',l.peso_final||'');
     sv('fc-custo',l.custo_unitario||'');calcCoccao();
@@ -839,6 +1005,20 @@ function onInsumoChange(){
     const camposCusto={degelo:'fd-custo',coccao:'fc-custo',lote:'fl-custo'};
     const campo=camposCusto[modelo];
     if(campo) sv(campo,custo);
+  }
+}
+
+function onDegeloTipo(tipo){
+  const entB=document.getElementById('deg-ent-block');
+  const saiB=document.getElementById('deg-sai-block');
+  const pE=document.getElementById('pill-deg-ent');
+  const pS=document.getElementById('pill-deg-sai');
+  if(tipo==='entrada'){
+    if(entB) entB.style.display='';if(saiB) saiB.style.display='none';
+    if(pE) pE.classList.add('active');if(pS) pS.classList.remove('active');
+  }else{
+    if(entB) entB.style.display='none';if(saiB) saiB.style.display='';
+    if(pE) pE.classList.remove('active');if(pS) pS.classList.add('active');
   }
 }
 
@@ -957,11 +1137,17 @@ async function salvarLanc(){
         valor_total:null,perda_cabeca:null});
     }
   }else if(modelo==='degelo'){
-    const cong=n('fd-congelado');if(!cong){toast('Informe o peso congelado.','err');return;}
-    const limpo=n('fd-limpo'),custo=n('fd-custo');
-    Object.assign(payload,{peso_congelado:cong,peso_descongelado:n('fd-descongelado')||null,
-      peso_limpo:limpo||null,rendimento_pct:cong>0?r2(limpo/cong*100):null,
-      custo_unitario:custo||null,valor_total:custo?r2(cong*custo):null});
+    const tipoD=document.getElementById('pill-deg-ent')?.classList.contains('active')?'entrada':'saida';
+    if(tipoD==='entrada'){
+      const qtdKg=n('fde-qtd-kg');if(!qtdKg){toast('Informe a quantidade (kg).','err');return;}
+      Object.assign(payload,{tipo:'entrada',peso_bruto:qtdKg,valor_total:n('fde-valor')||null});
+    }else{
+      const cong=n('fd-congelado');if(!cong){toast('Informe o peso congelado.','err');return;}
+      const limpo=n('fd-limpo'),custo=n('fd-custo');
+      Object.assign(payload,{tipo:'saida',peso_congelado:cong,peso_descongelado:n('fd-descongelado')||null,
+        peso_limpo:limpo||null,rendimento_pct:cong>0?r2(limpo/cong*100):null,
+        custo_unitario:custo||null,valor_total:custo?r2(cong*custo):null});
+    }
   }else if(modelo==='coccao'){
     const ini=n('fc-inicial');if(!ini){toast('Informe o peso inicial.','err');return;}
     const fin=n('fc-final'),custo=n('fc-custo');
