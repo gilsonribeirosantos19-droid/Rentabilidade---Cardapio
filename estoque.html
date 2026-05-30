@@ -469,11 +469,18 @@
           <option value="">Tipo: Todos</option><option value="manual">Manual</option><option value="nfe">NF-e</option><option value="ajuste">Ajuste</option>
         </select>
         <select class="field field-sm" id="ent-f-forn" onchange="renderEntradas()"><option value="">Fornecedor: Todos</option></select>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <input type="date" id="ent-f-de" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
-          <span style="color:#94a3b8">–</span>
-          <input type="date" id="ent-f-ate" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <select class="field field-sm" onchange="setPeriodoRange(this.value,'ent-f-de','ent-f-ate',renderEntradas)" style="min-width:130px">
+            <option value="periodo">Período</option>
+            <option value="mes_atual" selected>Mês Atual</option>
+            <option value="mes_anterior">Mês Anterior</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="date" id="ent-f-de" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+            <span style="color:#94a3b8">–</span>
+            <input type="date" id="ent-f-ate" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+          </div>
         </div>
       </div>
 
@@ -601,11 +608,18 @@
         <select class="field field-sm" id="sai-f-resp" onchange="renderSaidas()" style="width:auto">
           <option value="">Responsável: Todos</option>
         </select>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <input type="date" id="sai-f-de" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
-          <span style="color:#94a3b8">–</span>
-          <input type="date" id="sai-f-ate" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <select class="field field-sm" onchange="setPeriodoRange(this.value,'sai-f-de','sai-f-ate',renderSaidas)" style="min-width:130px">
+            <option value="periodo">Período</option>
+            <option value="mes_atual" selected>Mês Atual</option>
+            <option value="mes_anterior">Mês Anterior</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="date" id="sai-f-de" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
+            <span style="color:#94a3b8">–</span>
+            <input type="date" id="sai-f-ate" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
+          </div>
         </div>
       </div>
 
@@ -645,6 +659,11 @@
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <select class="field field-sm" id="kx-ins" onchange="renderKardex()" style="min-width:220px">
           <option value="">Selecione um insumo...</option>
+        </select>
+        <select class="field field-sm" onchange="setPeriodoRange(this.value,'kx-de','kx-ate',renderKardex)" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
         </select>
         <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -853,6 +872,11 @@
       <div style="position:sticky;top:114px;z-index:40;background:#fff;padding-bottom:12px;margin-top:-18px;padding-top:18px;border-bottom:1px solid #e2e8f0;margin-bottom:16px">
       <!-- FILTROS -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="field field-sm" onchange="setPeriodoRange(this.value,'fm-de','fm-ate')" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
         <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
           <input class="field field-sm" type="date" id="fm-de" style="border:none;padding:0;background:transparent;width:110px">
           <span style="color:#94a3b8">–</span>
@@ -959,6 +983,11 @@
       <!-- TÍTULO + FILTROS -->
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">Movimentação de Estoque no Período</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <select class="field field-sm" onchange="setPeriodoRange(this.value,'mov-de','mov-ate')" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual">Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
         <input class="field field-sm" type="date" id="mov-de" style="width:140px">
         <input class="field field-sm" type="date" id="mov-ate" style="width:140px">
         <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
@@ -1185,6 +1214,11 @@
           <option value="entrada_manual">Entrada Manual</option>
           <option value="nfe">XML / NF-e</option>
           <option value="ajuste">Ajuste</option>
+        </select>
+        <select class="field field-sm" onchange="setPeriodoRange(this.value,'hc-de','hc-ate',renderHistoricoCusto)" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
         </select>
         <input type="date" class="field field-sm" id="hc-de" onchange="renderHistoricoCusto()" title="De">
         <input type="date" class="field field-sm" id="hc-ate" onchange="renderHistoricoCusto()" title="Até">
@@ -3910,6 +3944,22 @@ async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maxi
 function abrirModal(id) {document.getElementById(id).classList.add('open')}
 function fecharModal(id){document.getElementById(id).classList.remove('open')}
 function hoje(){return new Date().toISOString().split('T')[0]}
+function setPeriodoRange(tipo, deId, ateId, fn) {
+  const d = new Date();
+  let de, ate;
+  if (tipo === 'mes_atual') {
+    de = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    ate = d.toISOString().split('T')[0];
+  } else if (tipo === 'mes_anterior') {
+    const prev = new Date(d.getFullYear(), d.getMonth()-1, 1);
+    const last = new Date(d.getFullYear(), d.getMonth(), 0);
+    de = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}-01`;
+    ate = `${last.getFullYear()}-${String(last.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;
+  } else { return; }
+  const elDe = document.getElementById(deId); if (elDe) elDe.value = de;
+  const elAte = document.getElementById(ateId); if (elAte) elAte.value = ate;
+  if (fn) fn();
+}
 function primeiroDiaMes(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;}
 function ultimoDiaMes(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0];}
 function ajustarDatasInv(){
