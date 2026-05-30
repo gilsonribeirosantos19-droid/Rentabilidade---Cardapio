@@ -623,59 +623,165 @@
 
     <!-- ══ PERDAS ══ -->
     <div id="tab-perdas" class="tab-pane">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
 
-        <!-- Formulário nova perda -->
+        <!-- FORMULÁRIO -->
         <div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:16px">Registrar Perda</div>
-          <div class="fg">
-            <label>Tipo de item</label>
-            <select id="p-tipo" onchange="onTipoChange()" class="field" style="width:100%">
-              <option value="insumo">Insumo (matéria-prima)</option>
-              <option value="produto">Produto acabado (ficha técnica)</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label id="p-item-label">Insumo *</label>
-            <select id="p-item" class="field" style="width:100%">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Quantidade *</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="number" id="p-qtd" class="field" min="0" step="0.001" placeholder="0.000" style="flex:1">
-              <span id="p-unidade" style="font-size:13px;color:var(--text3);min-width:40px"></span>
+          <div class="page-title" style="margin-bottom:4px">Registrar Perda</div>
+          <div class="page-sub" style="margin-bottom:18px">Registre aqui qualquer perda real de insumo ou produto.</div>
+
+          <div class="form-card">
+            <!-- Tipo + Data -->
+            <div class="form-grid" style="margin-bottom:14px">
+              <div class="form-group">
+                <label class="form-label">Tipo de Item</label>
+                <select id="p-tipo" class="form-select" onchange="onTipoChange()">
+                  <option value="insumo">Insumo (matéria-prima)</option>
+                  <option value="produto">Produto acabado (ficha técnica)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data *</label>
+                <input type="date" id="p-data" class="form-input">
+              </div>
+            </div>
+
+            <!-- Insumo com badge -->
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label" id="p-item-label">Insumo *</label>
+              <div style="position:relative">
+                <select id="p-item" class="form-select" onchange="onItemChange()">
+                  <option value="">Selecione...</option>
+                </select>
+                <span id="p-stock-badge" style="display:none;position:absolute;right:36px;top:50%;transform:translateY(-50%);background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px">Em estoque</span>
+              </div>
+            </div>
+
+            <!-- Unidade + Quantidade -->
+            <div class="form-grid" style="margin-bottom:14px">
+              <div class="form-group">
+                <label class="form-label">Unidade</label>
+                <input type="text" id="p-unidade" class="form-input" readonly style="background:#f8fafc;color:#64748b">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quantidade *</label>
+                <input type="number" id="p-qtd" class="form-input mono" min="0" step="0.001" placeholder="0,000" oninput="calcValorPerda()">
+              </div>
+            </div>
+
+            <!-- Custo Médio + Valor da Perda -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px">
+              <div>
+                <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Custo Médio (kg)</div>
+                <div id="p-custo-medio" style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">—</div>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Valor da Perda</div>
+                <div id="p-valor-perda" style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace;color:#f97316">—</div>
+              </div>
+            </div>
+
+            <!-- Setor + Responsável -->
+            <div class="form-grid" style="margin-bottom:14px">
+              <div class="form-group">
+                <label class="form-label">Setor</label>
+                <select id="p-setor" class="form-select">
+                  <option value="">Selecione...</option>
+                  <option value="Sushibar">Sushibar</option>
+                  <option value="Cozinha">Cozinha</option>
+                  <option value="Confeitaria">Confeitaria</option>
+                  <option value="Expedição">Expedição</option>
+                  <option value="Almoxarifado">Almoxarifado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Responsável</label>
+                <input type="text" id="p-responsavel" class="form-input" placeholder="Nome do colaborador">
+              </div>
+            </div>
+
+            <!-- Motivo -->
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Motivo da Perda *</label>
+              <select id="p-motivo" class="form-select">
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+
+            <!-- Observação com contador -->
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Observação</label>
+              <textarea id="p-obs" class="form-input" rows="3" maxlength="300" placeholder="Detalhes da perda (opcional)" oninput="document.getElementById('p-obs-count').textContent=(this.value.length)+'/300'" style="resize:vertical"></textarea>
+              <div style="text-align:right;font-size:11px;color:#94a3b8;margin-top:3px"><span id="p-obs-count">0/300</span></div>
+            </div>
+
+            <!-- Aviso -->
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;font-size:12px;color:#1e40af">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>Apenas perdas reais devem ser registradas aqui. Aparas, cabeças, peles e perdas operacionais são controladas no porcionamento e produção.</span>
+            </div>
+
+            <!-- Preview produto -->
+            <div id="p-preview" style="display:none;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e">
+              <div style="font-weight:700;margin-bottom:6px">Insumos que serão debitados:</div>
+              <div id="p-preview-body"></div>
+            </div>
+
+            <!-- Botões -->
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-ghost" onclick="limparFormPerda()" style="flex:1;justify-content:center">Cancelar</button>
+              <button class="btn btn-primary" onclick="registrarPerda()" style="flex:2;justify-content:center;background:#dc2626;border-color:#dc2626">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                Registrar Perda
+              </button>
             </div>
           </div>
-          <div class="fg">
-            <label>Motivo *</label>
-            <select id="p-motivo" class="field" style="width:100%">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Data</label>
-            <input type="date" id="p-data" class="field" style="width:100%">
-          </div>
-          <div class="fg">
-            <label>Observação</label>
-            <textarea id="p-obs" class="field" rows="2" placeholder="Opcional" style="width:100%"></textarea>
-          </div>
-
-          <!-- Preview conversão produto → insumos -->
-          <div id="p-preview" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:12px;margin-bottom:14px;font-size:12px">
-            <div style="font-weight:600;margin-bottom:8px;color:var(--text2)">Insumos que serão debitados:</div>
-            <div id="p-preview-body"></div>
-          </div>
-
-          <button class="btn btn-red" onclick="registrarPerda()" style="width:100%">Registrar Perda</button>
         </div>
 
-        <!-- Histórico de perdas -->
-        <div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:16px">Histórico</div>
-          <div id="perdas-historico"><div class="empty">Carregando...</div></div>
+        <!-- DASHBOARD DIREITO -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <!-- Histórico recente -->
+          <div class="form-card" style="padding:16px 20px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="font-size:13px;font-weight:700;color:#0f172a">Histórico recente</div>
+              <button onclick="pVerTodas()" style="background:none;border:none;cursor:pointer;font-size:12px;color:#f97316;font-weight:600;font-family:inherit">Ver todas</button>
+            </div>
+            <div id="perdas-historico"><div class="empty">Carregando...</div></div>
+          </div>
+
+          <!-- Resumo do período -->
+          <div class="form-card" style="padding:16px 20px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+              <div style="font-size:13px;font-weight:700;color:#0f172a">Resumo do período</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b">
+                <input type="date" id="p-resumo-de" class="fil-select" style="height:32px;font-size:11px" onchange="carregarResumoPerdas()">
+                <span>–</span>
+                <input type="date" id="p-resumo-ate" class="fil-select" style="height:32px;font-size:11px" onchange="carregarResumoPerdas()">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="p-kpi-grid">
+              <div style="background:#f8fafc;border-radius:8px;padding:12px"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Total de perdas (kg)</div><div id="p-kpi-kg" style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">—</div></div>
+              <div style="background:#f8fafc;border-radius:8px;padding:12px"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Total de perdas (R$)</div><div id="p-kpi-rs" style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#dc2626">—</div></div>
+              <div style="background:#f8fafc;border-radius:8px;padding:12px"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Média diária (R$)</div><div id="p-kpi-media" style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">—</div></div>
+              <div style="background:#f8fafc;border-radius:8px;padding:12px"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Total de registros</div><div id="p-kpi-n" style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">—</div></div>
+            </div>
+          </div>
+
+          <!-- Perdas por motivo -->
+          <div class="form-card" style="padding:16px 20px">
+            <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px">Perdas por motivo (R$)</div>
+            <div id="p-chart-wrap" style="display:flex;align-items:center;gap:20px">
+              <div id="p-donut"></div>
+              <div id="p-motivo-list" style="flex:1;font-size:12px"></div>
+            </div>
+          </div>
+
+          <!-- Rodapé -->
+          <div style="text-align:center;font-size:11px;color:#94a3b8;padding:8px 0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Todas as perdas são registradas e auditadas para controle e melhoria contínua.
+          </div>
         </div>
       </div>
     </div>
@@ -1743,14 +1849,43 @@ async function enviarSolicitacao() {
 // ══════════════════════════════════════════════════════════════════
 function iniciarPerdas() {
   document.getElementById('p-data').value = hoje();
-  // Motivos
   const sel=document.getElementById('p-motivo');
   sel.innerHTML='<option value="">Selecione...</option>'+
     motivos.map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
-  // Insumos no select
   popularItemPerda('insumo');
+  const respEl=document.getElementById('p-responsavel');
+  if(respEl&&!respEl.value) respEl.value=userProfile?.nome||'';
+  const elDe=document.getElementById('p-resumo-de'),elAte=document.getElementById('p-resumo-ate');
+  if(elDe&&!elDe.value) elDe.value=primeiroDiaMes();
+  if(elAte&&!elAte.value) elAte.value=hoje();
   carregarHistoricoPerdas();
+  carregarResumoPerdas();
 }
+
+let _pCustoMedio=0;
+
+function limparFormPerda(){
+  ['p-item','p-motivo','p-setor'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['p-qtd','p-obs','p-unidade'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('p-custo-medio').textContent='—';
+  document.getElementById('p-valor-perda').textContent='—';
+  document.getElementById('p-obs-count').textContent='0/300';
+  const badge=document.getElementById('p-stock-badge');if(badge)badge.style.display='none';
+  document.getElementById('p-preview').style.display='none';
+  _pCustoMedio=0;
+}
+
+function calcValorPerda(){
+  const qtd=parseFloat(document.getElementById('p-qtd').value)||0;
+  const valEl=document.getElementById('p-valor-perda');
+  if(_pCustoMedio>0&&qtd>0){
+    const val=_pCustoMedio*qtd;
+    valEl.textContent=`R$ ${val.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    valEl.style.color='#f97316';
+  }else{valEl.textContent='—';valEl.style.color='#94a3b8';}
+}
+
+function pVerTodas(){toast('Histórico completo em breve.','ok');}
 
 function setTipoPerda(tipo) {
   document.getElementById('p-tipo').value = tipo;
@@ -1772,31 +1907,51 @@ function popularItemPerda(tipo) {
   const sel=document.getElementById('p-item');
   if (tipo==='insumo') {
     sel.innerHTML='<option value="">Selecione...</option>'+
-      insumos.map(i=>`<option value="${i.id}" data-un="${esc(i.unidade_medida||i.unidade_compra||'un')}">${esc(i.nome)}</option>`).join('');
+      insumos.filter(i=>i.ativo!==false).map(i=>`<option value="${i.id}" data-un="${esc(i.unidade_medida||i.unidade_compra||'un')}">${esc(i.nome)}</option>`).join('');
   } else {
     sel.innerHTML='<option value="">Selecione...</option>'+
       fichas.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('');
   }
-  sel.onchange = () => onItemChange();
+  sel.onchange=()=>onItemChange();
+  document.getElementById('p-unidade').value='';
+  _pCustoMedio=0;
 }
 
 async function onItemChange() {
   const tipo=document.getElementById('p-tipo').value;
   const itemId=document.getElementById('p-item').value;
-  if (!itemId) { document.getElementById('p-preview').style.display='none'; return; }
+  _pCustoMedio=0;
+  document.getElementById('p-custo-medio').textContent='—';
+  document.getElementById('p-valor-perda').textContent='—';
+  const badge=document.getElementById('p-stock-badge');
+  if (!itemId) { document.getElementById('p-preview').style.display='none';if(badge)badge.style.display='none'; return; }
   if (tipo==='insumo') {
     const opt=document.querySelector(`#p-item option[value="${itemId}"]`);
-    document.getElementById('p-unidade').textContent=opt?.dataset.un||'';
+    const un=opt?.dataset.un||'';
+    document.getElementById('p-unidade').value=un;
     document.getElementById('p-preview').style.display='none';
+    // Busca custo médio e saldo
+    try{
+      const lojaId=userProfile?.loja_id;
+      const saldos=lojaId?await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${itemId}&loja_id=eq.${lojaId}`).catch(()=>[]):[];
+      const s=saldos[0];
+      const saldo=Number(s?.quantidade||0);
+      const cm=Number(s?.custo_medio||0)||(insumos.find(i=>i.id===itemId)?.preco_compra||0);
+      _pCustoMedio=cm;
+      const cmEl=document.getElementById('p-custo-medio');
+      cmEl.textContent=cm>0?`R$ ${cm.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'—';
+      if(badge){badge.style.display=saldo>0?'':'none';}
+      calcValorPerda();
+    }catch{}
   } else {
-    // Produto: busca itens da ficha para preview
+    document.getElementById('p-unidade').value='un';
+    if(badge) badge.style.display='none';
     try {
       const itens=await api(`itens_ficha?ficha_id=eq.${itemId}`);
-      document.getElementById('p-unidade').textContent='un';
       if (itens.length) {
         document.getElementById('p-preview-body').innerHTML=itens.map(it=>{
           const ins=insumos.find(i=>i.id===it.insumo_id);
-          return `<div style="color:var(--text2)">• ${esc(ins?.nome||it.insumo_id)}: ${Number(it.quantidade_g).toFixed(1)}g por unidade</div>`;
+          return `<div>• ${esc(ins?.nome||it.insumo_id)}: ${Number(it.quantidade_g).toFixed(1)}g por unidade</div>`;
         }).join('');
         document.getElementById('p-preview').style.display='';
       }
@@ -1817,6 +1972,8 @@ async function registrarPerda() {
   if (qtd<=0) { toast('Informe a quantidade.','err'); return; }
   if (!motivoId) { toast('Selecione o motivo.','err'); return; }
 
+  const btn=document.querySelector('[onclick="registrarPerda()"]');
+  if(btn){btn.disabled=true;btn.textContent='Registrando...';}
   try {
     const perdaRes=await api('perdas',{method:'POST',body:JSON.stringify({
       tenant_id:TENANT_ID,loja_id:lojaId,motivo_id:motivoId,
@@ -1830,29 +1987,17 @@ async function registrarPerda() {
         body:JSON.stringify([{perda_id:perdaId,insumo_id:itemId,quantidade:qtd,origem:'insumo'}])
       });
     } else {
-      // Produto → converte para insumos via ficha
       const itens=await api(`itens_ficha?ficha_id=eq.${itemId}`);
-      const payload=itens.map(it=>({
-        perda_id:perdaId,
-        insumo_id:it.insumo_id,
-        quantidade: Number(it.quantidade_g)/1000*qtd,
-        origem:'produto'
-      }));
-      if (payload.length) {
-        await api('perdas_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
-      }
+      const payload=itens.map(it=>({perda_id:perdaId,insumo_id:it.insumo_id,quantidade:Number(it.quantidade_g)/1000*qtd,origem:'produto'}));
+      if (payload.length) await api('perdas_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
     }
 
-    // Limpa formulário
-    document.getElementById('p-item').value='';
-    document.getElementById('p-qtd').value='';
-    document.getElementById('p-motivo').value='';
-    document.getElementById('p-obs').value='';
-    document.getElementById('p-preview').style.display='none';
-    document.getElementById('p-unidade').textContent='';
-    toast('Perda registrada!','ok');
+    limparFormPerda();
+    toast('Perda registrada com sucesso!','ok');
     carregarHistoricoPerdas();
+    carregarResumoPerdas();
   } catch(e) { toast('Erro: '+e.message,'err'); }
+  finally{if(btn){btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Registrar Perda';}}
 }
 
 async function carregarHistoricoPerdas() {
@@ -1860,29 +2005,105 @@ async function carregarHistoricoPerdas() {
   if (!container) return;
   try {
     const lojaId=userProfile?.loja_id;
-    let q=`perdas?tenant_id=eq.${TENANT_ID}&order=created_at.desc&limit=20`;
+    let q=`perdas?tenant_id=eq.${TENANT_ID}&order=created_at.desc&limit=5`;
     if (lojaId) q+=`&loja_id=eq.${lojaId}`;
     const perdas=await api(q);
-    if (!perdas.length){container.innerHTML='<div class="empty">Nenhuma perda registrada.</div>';return;}
+    if (!perdas.length){container.innerHTML='<div class="empty" style="padding:20px;text-align:center;color:#94a3b8">Nenhuma perda registrada.</div>';return;}
     const itensMap={};
-    await Promise.all(perdas.map(async p=>{
-      itensMap[p.id]=await api(`perdas_itens?perda_id=eq.${p.id}`);
-    }));
-    container.innerHTML='<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Data</th><th>Motivo</th><th>Itens</th></tr></thead><tbody>'+
-      perdas.map(p=>{
+    await Promise.all(perdas.map(async p=>{ itensMap[p.id]=await api(`perdas_itens?perda_id=eq.${p.id}`).catch(()=>[]); }));
+    const lojasSaldos=lojaId?await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`).catch(()=>[]):[];
+    const fBrl=v=>v>0?`R$ ${Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'—';
+    container.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="border-bottom:2px solid #f1f5f9">
+        <th style="padding:6px 4px;text-align:left;font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase">Data</th>
+        <th style="padding:6px 4px;text-align:left;font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase">Insumo</th>
+        <th style="padding:6px 4px;text-align:right;font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase">Qtd.</th>
+        <th style="padding:6px 4px;text-align:right;font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase">Valor</th>
+        <th style="padding:6px 4px;text-align:left;font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase">Motivo</th>
+      </tr></thead><tbody>
+      ${perdas.map(p=>{
         const m=motivos.find(x=>x.id===p.motivo_id);
         const itens=itensMap[p.id]||[];
-        const resumo=itens.map(it=>{
-          const ins=insumos.find(i=>i.id===it.insumo_id);
-          return `${esc(ins?.nome||'?')}: ${fmtQtd(it.quantidade)}`;
-        }).join(', ');
-        return `<tr>
-          <td class="mono">${fmtData(p.data_perda)}</td>
-          <td>${esc(m?.nome||'—')}</td>
-          <td style="font-size:12px;color:var(--text2)">${resumo||'—'}</td>
+        const it=itens[0];const ins=it?insumos.find(i=>i.id===it.insumo_id):null;
+        const s=ins?lojasSaldos.find(x=>x.insumo_id===ins.id):null;
+        const cm=Number(s?.custo_medio||ins?.preco_compra||0);
+        const val=cm>0&&it?(cm*Number(it.quantidade||0)):0;
+        const nomeIns=ins?.nome||(itens.length>1?`${itens.length} insumos`:'—');
+        return `<tr style="border-bottom:1px solid #f8fafc">
+          <td style="padding:8px 4px;color:#64748b">${fmtData(p.data_perda)}</td>
+          <td style="padding:8px 4px;font-weight:600">${esc(nomeIns)}</td>
+          <td style="padding:8px 4px;text-align:right;font-family:'DM Mono',monospace">${it?fmtQtd(it.quantidade):'—'}</td>
+          <td style="padding:8px 4px;text-align:right;font-family:'DM Mono',monospace;color:#dc2626">${fBrl(val)}</td>
+          <td style="padding:8px 4px">${esc(m?.nome||'—')}</td>
         </tr>`;
-      }).join('')+'</tbody></table></div>';
+      }).join('')}</tbody></table>`;
   } catch(e){container.innerHTML=`<div class="empty">Erro: ${esc(e.message)}</div>`;}
+}
+
+async function carregarResumoPerdas() {
+  const lojaId=userProfile?.loja_id;
+  const de=document.getElementById('p-resumo-de')?.value||primeiroDiaMes();
+  const ate=document.getElementById('p-resumo-ate')?.value||hoje();
+  try {
+    let q=`perdas?tenant_id=eq.${TENANT_ID}&data_perda=gte.${de}&data_perda=lte.${ate}&order=created_at.desc&limit=500`;
+    if(lojaId) q+=`&loja_id=eq.${lojaId}`;
+    const perdas=await api(q).catch(()=>[]);
+    // busca itens de todas as perdas
+    let allItens=[];
+    if(perdas.length){
+      const ids=perdas.map(p=>p.id);
+      allItens=await api(`perdas_itens?perda_id=in.(${ids.join(',')})`).catch(()=>[]);
+    }
+    const lojasSaldos=lojaId?await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`).catch(()=>[]):[];
+    const calcValor=it=>{const ins=insumos.find(i=>i.id===it.insumo_id);const s=lojasSaldos.find(x=>x.insumo_id===it.insumo_id);const cm=Number(s?.custo_medio||ins?.preco_compra||0);return cm*Number(it.quantidade||0);};
+    const totalKg=allItens.reduce((s,it)=>s+Number(it.quantidade||0),0);
+    const totalRs=allItens.reduce((s,it)=>s+calcValor(it),0);
+    const dias=Math.max(1,Math.round((new Date(ate)-new Date(de))/(1000*60*60*24))+1);
+    const media=totalRs/dias;
+    const fBrl=v=>`R$ ${Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    const fQ=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+    document.getElementById('p-kpi-kg').textContent=fQ(totalKg);
+    document.getElementById('p-kpi-rs').textContent=fBrl(totalRs);
+    document.getElementById('p-kpi-media').textContent=fBrl(media);
+    document.getElementById('p-kpi-n').textContent=perdas.length;
+    // Donut por motivo
+    const porMotivo={};
+    perdas.forEach(p=>{
+      const m=motivos.find(x=>x.id===p.motivo_id);
+      const key=m?.nome||'Outros';
+      const itensP=allItens.filter(it=>it.perda_id===p.id);
+      const val=itensP.reduce((s,it)=>s+calcValor(it),0);
+      porMotivo[key]=(porMotivo[key]||0)+val;
+    });
+    const cores=['#e11d48','#f97316','#f59e0b','#10b981','#6366f1','#94a3b8'];
+    const entradas=Object.entries(porMotivo).sort((a,b)=>b[1]-a[1]);
+    // SVG Donut
+    const R=55,r=32,cx=60,cy=60;let ang=-Math.PI/2;
+    const totalVal=entradas.reduce((s,[,v])=>s+v,0)||1;
+    let paths='';
+    entradas.forEach(([,val],i)=>{
+      const theta=(val/totalVal)*2*Math.PI;
+      const x1=cx+R*Math.cos(ang),y1=cy+R*Math.sin(ang);
+      const x2=cx+R*Math.cos(ang+theta),y2=cy+R*Math.sin(ang+theta);
+      const x3=cx+r*Math.cos(ang+theta),y3=cy+r*Math.sin(ang+theta);
+      const x4=cx+r*Math.cos(ang),y4=cy+r*Math.sin(ang);
+      const la=theta>Math.PI?1:0;
+      if(theta>0.01) paths+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 ${la} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L${x3.toFixed(1)} ${y3.toFixed(1)} A${r} ${r} 0 ${la} 0 ${x4.toFixed(1)} ${y4.toFixed(1)} Z" fill="${cores[i%cores.length]}"/>`;
+      ang+=theta;
+    });
+    document.getElementById('p-donut').innerHTML=`<svg width="120" height="120" viewBox="0 0 120 120">${paths}<circle cx="${cx}" cy="${cy}" r="20" fill="#fff"/></svg>`;
+    document.getElementById('p-motivo-list').innerHTML=entradas.map(([nome,val],i)=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f8fafc">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${cores[i%cores.length]};flex-shrink:0;display:inline-block"></span>
+          <span>${esc(nome)}</span>
+        </div>
+        <div style="display:flex;gap:12px">
+          <span style="font-family:'DM Mono',monospace;font-weight:700">${fBrl(val)}</span>
+          <span style="color:#94a3b8">${totalVal>0?(val/totalVal*100).toFixed(1):'0'}%</span>
+        </div>
+      </div>`).join('');
+  } catch(e){console.error('Resumo perdas:',e);}
 }
 
 // ══════════════════════════════════════════════════════════════════
