@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>sistema · Aiko</title>
+<title>Portal do Gerente · Aiko</title>
 <style>
   
   :root{
@@ -355,11 +355,11 @@
 <nav class="sidebar">
   <div class="logo">
     <div class="logo-mark">Aiko</div>
-    <div class="logo-sub">sistema</div>
+    <div class="logo-sub">Portal do Gerente</div>
     <div class="logo-loja" id="sb-loja-nome"></div>
   </div>
   <div class="nav-group">
-    <div class="nav-label">Compras</div>
+    <div class="nav-label">Operações</div>
     <button class="nav-item active" id="nav-inventario" onclick="switchTab('inventario')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
       Inventário
@@ -1494,7 +1494,7 @@ async function carregar() {
     const loja = await api(`lojas?id=eq.${userProfile?.loja_id}&limit=1`).then(r=>r[0]);
     const lojaNome = loja?.nome || 'Minha Loja';
     document.getElementById('sb-loja-nome').textContent = lojaNome;
-    document.getElementById('topbar-title').textContent = `sistema — ${lojaNome}`;
+    document.getElementById('topbar-title').textContent = `Portal do Gerente — ${lojaNome}`;
 
     [insumos, fichas, motivos, fornecedores] = await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
