@@ -166,7 +166,7 @@
   .tab-header-left .tab-title{font-size:15px;font-weight:700;color:var(--text1)}
   .tab-header-left .tab-sub{font-size:12px;color:var(--text3);margin-top:3px}
   .tab-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
-  .forn-sugerida{font-size:12px;color:var(--teal);font-weight:600}
+  .forn-sugerida{font-size:12px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.02em}
   .forn-sugerida-vazia{font-size:12px;color:var(--text3)}
 
   @media(max-width:700px){.sidebar{display:none}}
@@ -274,14 +274,14 @@
         <div class="tab-header">
           <div class="tab-header-left">
             <div class="tab-title">2. PROCESSAR</div>
-            <div id="cons-desc" class="tab-sub"></div>
+            <div class="tab-sub">Consolidação de solicitações de todas as lojas</div>
           </div>
           <div class="tab-header-right">
-            <span style="font-size:11px;color:var(--text3);max-width:220px;line-height:1.4;text-align:right">O sistema sugere o fornecedor com base no último preço e histórico de compras.</span>
             <button class="btn btn-ghost btn-sm" onclick="carregarConsolidado()">↻ Recalcular sugestões</button>
             <button class="btn btn-primary btn-sm" onclick="gerarPedidos()" id="btn-gerar" disabled>Gerar pedidos por fornecedor</button>
           </div>
         </div>
+        <span id="cons-desc" style="display:none"></span>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl" id="cons-table">
             <thead><tr>
@@ -292,7 +292,7 @@
               <th>Última compra</th>
               <th>Fornecedor sugerido</th>
               <th>Fornecedor selecionado</th>
-              <th></th>
+              <th>Ações</th>
             </tr></thead>
             <tbody id="cons-body"><tr><td colspan="8" class="empty">Nenhuma solicitação pendente</td></tr></tbody>
           </table>
@@ -308,6 +308,10 @@
               <tbody id="cons-lojas-body"></tbody>
             </table>
           </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:12px;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          O sistema sugere o fornecedor com base no último preço e histórico de compras. Altere se necessário.
         </div>
       </div>
 
@@ -560,6 +564,12 @@ function switchTab(tab) {
   if (tab==='g-nova')       renderGrupos();
 }
 
+// ── HELPERS ────────────────────────────────────────────────────────────
+function fmtQty(qty) {
+  // Remove trailing zeros mas mantém até 3 casas decimais
+  return Number(qty).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:3});
+}
+
 // ══════════════════════════════════════════════════════════════════════
 // ADMIN — SOLICITAÇÕES
 // ══════════════════════════════════════════════════════════════════════
@@ -752,21 +762,22 @@ function renderConsolidado() {
     const fornOpts = buildFornOptions(insId, d.fornecedorId);
     const vinc = vinculosForn.find(v=>v.insumo_id===insId && v.fornecedor_id===d.fornecedorId)
                || vinculosForn.find(v=>v.insumo_id===insId);
+    const _dtVinc = vinc?.updated_at||vinc?.created_at
+      ? new Date(vinc.updated_at||vinc.created_at).toLocaleDateString('pt-BR') : '';
     const ultCompra = vinc?.preco_unitario
-      ? new Date(vinc.updated_at||vinc.created_at||'').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
-        + ' · R$ '+Number(vinc.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
+      ? `${_dtVinc} - R$${Number(vinc.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} / ${d.unidade}`
       : '—';
     const fornSugerido = d.fornecedorId ? fornecedores.find(f=>f.id===d.fornecedorId)?.nome : null;
     return `<tr class="cons-row" id="crow-${insId}">
       <td style="font-weight:600">${esc(d.nome)}</td>
-      <td class="r mono">${d.total.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+      <td class="r mono" style="font-weight:600">${fmtQty(d.total)}</td>
       <td class="r">
         <input type="number" class="qtd-comprar" id="qc-${insId}"
-          value="${d.total.toFixed(3)}" min="0" step="0.001"
+          value="${d.total}" min="0" step="0.001"
           onchange="consolidado['${insId}'].qComprar=parseFloat(this.value)||0">
       </td>
       <td>${esc(d.unidade)}</td>
-      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap">${esc(ultCompra)}</td>
+      <td style="font-size:12px;color:var(--text2);white-space:nowrap">${esc(ultCompra)}</td>
       <td>${fornSugerido
         ? `<span class="forn-sugerida">${esc(fornSugerido)}</span>`
         : `<span class="forn-sugerida-vazia">—</span>`}
