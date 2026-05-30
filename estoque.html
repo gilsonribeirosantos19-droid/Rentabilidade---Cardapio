@@ -1690,7 +1690,7 @@ async function carregar() {
     if (!gruposCompra.length) {
       gruposCompra = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
       if (gruposCompra.length) {
-        const its = await Promise.all(gruposCompra.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}`).catch(()=>[])));
+        const its = await Promise.all(gruposCompra.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}&tenant_id=eq.${TENANT_ID}`).catch(()=>[])));
         gruposCompra.forEach((g,i) => { gruposCompraItens[g.id] = its[i].map(r=>r.insumo_id); });
       }
     }
@@ -3096,7 +3096,7 @@ async function carregarGrupos() {
   try {
     grupos = await api(`grupos_inventario?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
     for (const g of grupos) {
-      const itens = await api(`grupos_inventario_itens?grupo_id=eq.${g.id}`);
+      const itens = await api(`grupos_inventario_itens?grupo_id=eq.${g.id}&tenant_id=eq.${TENANT_ID}`);
       g.itens = itens;
     }
   } catch(e) { grupos = []; }
@@ -3493,7 +3493,7 @@ async function salvarGrupo() {
     let grupoId = id;
     if (id) {
       await api(`grupos_inventario?id=eq.${id}`, {method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,tipo})});
-      await api(`grupos_inventario_itens?grupo_id=eq.${id}`, {method:'DELETE',prefer:'return=minimal'});
+      await api(`grupos_inventario_itens?grupo_id=eq.${id}&tenant_id=eq.${TENANT_ID}`, {method:'DELETE',prefer:'return=minimal'});
     } else {
       const res = await api('grupos_inventario', {method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,tipo,ativo:true})});
       grupoId = res[0]?.id;

@@ -1539,7 +1539,7 @@ async function carregar() {
     // Grupos de compra
     grupos = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
     if (grupos.length) {
-      const its = await Promise.all(grupos.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}`)));
+      const its = await Promise.all(grupos.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}&tenant_id=eq.${TENANT_ID}`)));
       grupos.forEach((g,i) => { gruposItens[g.id] = its[i].map(r=>r.insumo_id); });
     }
 
@@ -2096,7 +2096,7 @@ async function onItemChange() {
     document.getElementById('p-unidade').value='un';
     if(badge) badge.style.display='none';
     try {
-      const itens=await api(`itens_ficha?ficha_id=eq.${itemId}`);
+      const itens=await api(`itens_ficha?ficha_id=eq.${itemId}&tenant_id=eq.${TENANT_ID}`);
       if (itens.length) {
         document.getElementById('p-preview-body').innerHTML=itens.map(it=>{
           const ins=insumos.find(i=>i.id===it.insumo_id);
@@ -2136,7 +2136,7 @@ async function registrarPerda() {
         body:JSON.stringify([{perda_id:perdaId,insumo_id:itemId,quantidade:qtd,origem:'insumo'}])
       });
     } else {
-      const itens=await api(`itens_ficha?ficha_id=eq.${itemId}`);
+      const itens=await api(`itens_ficha?ficha_id=eq.${itemId}&tenant_id=eq.${TENANT_ID}`);
       const payload=itens.map(it=>({perda_id:perdaId,insumo_id:it.insumo_id,quantidade:Number(it.quantidade_g)/1000*qtd,origem:'produto'}));
       if (payload.length) await api('perdas_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(payload)});
     }
