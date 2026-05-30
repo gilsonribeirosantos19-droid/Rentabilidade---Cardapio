@@ -277,6 +277,22 @@
   .sol-sheet-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
   .sol-sheet-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
   .sol-sheet-foot{padding:12px 22px;border-top:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  /* ── PCP HUB ── */
+  .pcp-hub-section{margin-bottom:28px}
+  .pcp-hub-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+  .pcp-hub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .pcp-hub-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all .15s;user-select:none}
+  .pcp-hub-card:hover{border-color:#0f2d5c;box-shadow:0 2px 12px rgba(15,45,92,.08);transform:translateY(-1px)}
+  .pcp-hub-icon{width:44px;height:44px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text2)}
+  .pcp-hub-body{flex:1;min-width:0}
+  .pcp-hub-name{font-size:14px;font-weight:700;color:var(--text1);margin-bottom:3px}
+  .pcp-hub-desc{font-size:12px;color:var(--text3);line-height:1.4}
+  .pcp-hub-arrow{color:var(--text3);flex-shrink:0}
+  .pcp-subhd{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+  .pcp-back{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+  .pcp-back:hover{border-color:#0f2d5c;color:#0f2d5c}
+  .pcp-breadcrumb{font-size:14px;color:var(--text3)}
+  .pcp-breadcrumb strong{color:var(--text1);font-weight:700}
   /* ── PCP ── */
   .filter-bar-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;margin-bottom:18px}
   .fil-select{height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--text1);font-weight:500;background:var(--bg3);outline:none;cursor:pointer;min-width:130px}
@@ -798,14 +814,64 @@
 
     <!-- PCP -->
     <div id="tab-pcp" class="tab-pane">
-      <div class="page-title">PCP — Controle de Produção</div>
-      <div class="page-sub">Produção do dia, sobras, perdas e consumo médio</div>
 
-      <div class="tabs">
-        <button class="tab-btn active" id="pcptab-producao" onclick="setPcpTab('producao',this)">Produção do Dia</button>
-        <button class="tab-btn" id="pcptab-sugerida" onclick="setPcpTab('sugerida',this)">Prod. Sugerida</button>
-        <button class="tab-btn" id="pcptab-sobras" onclick="setPcpTab('sobras',this)">Sobras e Perdas</button>
-        <button class="tab-btn" id="pcptab-consumo" onclick="setPcpTab('consumo',this)">Consumo Médio</button>
+      <!-- HUB -->
+      <div id="pcp-hub">
+        <div class="page-title">PCP — Controle de Produção</div>
+        <div class="page-sub" style="margin-bottom:28px">Produção do dia, sobras, perdas e consumo médio</div>
+
+        <div class="pcp-hub-section">
+          <div class="pcp-hub-label">Operação</div>
+          <div class="pcp-hub-grid">
+            <div class="pcp-hub-card" onclick="setPcpTab('producao')">
+              <div class="pcp-hub-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+              <div class="pcp-hub-body">
+                <div class="pcp-hub-name">Produção do Dia</div>
+                <div class="pcp-hub-desc">Registre e acompanhe o que foi produzido por turno.</div>
+              </div>
+              <svg class="pcp-hub-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="pcp-hub-card" onclick="setPcpTab('sugerida')">
+              <div class="pcp-hub-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+              <div class="pcp-hub-body">
+                <div class="pcp-hub-name">Produção Sugerida</div>
+                <div class="pcp-hub-desc">Sugestões baseadas no histórico de consumo por dia da semana.</div>
+              </div>
+              <svg class="pcp-hub-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="pcp-hub-section">
+          <div class="pcp-hub-label">Análise</div>
+          <div class="pcp-hub-grid">
+            <div class="pcp-hub-card" onclick="setPcpTab('sobras')">
+              <div class="pcp-hub-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+              <div class="pcp-hub-body">
+                <div class="pcp-hub-name">Sobras e Perdas</div>
+                <div class="pcp-hub-desc">Registre e analise sobras, perdas e descartes da operação.</div>
+              </div>
+              <svg class="pcp-hub-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="pcp-hub-card" onclick="setPcpTab('consumo')">
+              <div class="pcp-hub-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div class="pcp-hub-body">
+                <div class="pcp-hub-name">Consumo Médio</div>
+                <div class="pcp-hub-desc">Análise do consumo médio por produto e dia da semana.</div>
+              </div>
+              <svg class="pcp-hub-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BREADCRUMB (aparece ao entrar numa seção) -->
+      <div id="pcp-subhd" style="display:none" class="pcp-subhd">
+        <button class="pcp-back" onclick="pcpVoltar()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          PCP
+        </button>
+        <span class="pcp-breadcrumb">› <strong id="pcp-section-title"></strong></span>
       </div>
 
       <!-- PRODUÇÃO DO DIA -->
@@ -2522,17 +2588,32 @@ let _pcpIniciado=false;
 
 function _pcpLojaId(){return userProfile?.loja_id||null;}
 
-function setPcpTab(tab,btn){
-  document.querySelectorAll('#tab-pcp .tab-btn').forEach(b=>b.classList.remove('active'));
+const _pcpTitles = {producao:'Produção do Dia',sugerida:'Produção Sugerida',sobras:'Sobras e Perdas',consumo:'Consumo Médio'};
+
+function setPcpTab(tab){
+  document.getElementById('pcp-hub').style.display='none';
+  document.getElementById('pcp-subhd').style.display='flex';
+  document.getElementById('pcp-section-title').textContent=_pcpTitles[tab]||tab;
   document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('pcppane-'+tab).classList.add('active');
+  document.getElementById('pcppane-'+tab)?.classList.add('active');
   if(tab==='sugerida') calcularSugestoes();
   if(tab==='sobras') iniciarSobras();
   if(tab==='consumo') renderConsumo();
+  if(tab==='producao') renderProducaoDia();
+}
+
+function pcpVoltar(){
+  document.getElementById('pcp-hub').style.display='';
+  document.getElementById('pcp-subhd').style.display='none';
+  document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
 }
 
 async function iniciarPcp(){
+  // Sempre volta ao hub ao entrar no módulo
+  document.getElementById('pcp-hub').style.display='';
+  document.getElementById('pcp-subhd').style.display='none';
+  document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
+
   const h=new Date().toISOString().slice(0,10);
   const pdData=document.getElementById('pd-data');
   if(pdData&&!pdData.value) pdData.value=h;
