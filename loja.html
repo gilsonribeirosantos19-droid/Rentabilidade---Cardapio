@@ -593,19 +593,18 @@
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Grupo</div>
-            <select id="mov-cat-fil" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:140px;cursor:pointer">
+            <select id="mov-cat-fil" onchange="carregarMovimentacoes()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:140px;cursor:pointer">
               <option value="">Todos</option>
             </select>
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Tipo</div>
-            <select id="mov-tipo-fil" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:120px;cursor:pointer">
+            <select id="mov-tipo-fil" onchange="carregarMovimentacoes()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:120px;cursor:pointer">
               <option value="">Todos</option>
               <option value="entrada">Entrada</option>
               <option value="saida">Saída</option>
             </select>
           </div>
-          <button onclick="consultarMovimentacoes()" style="padding:8px 20px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;align-self:flex-end">Consultar</button>
           <button onclick="limparFiltrosMov()" style="padding:8px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;align-self:flex-end">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             Limpar filtros
@@ -2323,15 +2322,7 @@ function switchEstoqueTab(tab) {
   document.getElementById('est-'+tab).classList.add('active');
   document.querySelectorAll('.est-tab').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   if (tab==='relatorio') carregarRelatorio();
-  if (tab==='movimentacao') {
-    const md = document.getElementById('mov-data');
-    if (md && !md.value) md.value = hoje();
-    popularInsumosMov();
-    const hist = document.getElementById('mov-historico');
-    if (hist && !hist.dataset.loaded) {
-      hist.innerHTML = '<div class="empty">Selecione a data e clique em <strong>Atualizar</strong> para consultar.</div>';
-    }
-  }
+  if (tab==='movimentacao') { popularInsumosMov(); carregarMovimentacoes(); }
 }
 
 function getInsumosFiltrados(catId) {
@@ -2471,19 +2462,12 @@ function exportarEstoqueRel(){
   a.download=`estoque_${new Date().toISOString().slice(0,10)}.csv`;a.click();
 }
 
-function consultarMovimentacoes() {
-  const hist = document.getElementById('mov-historico');
-  if (hist) hist.dataset.loaded = '1';
-  carregarMovimentacoes();
-}
-
 function limparFiltrosMov() {
   const cf=document.getElementById('mov-cat-fil');
   const tf=document.getElementById('mov-tipo-fil');
   if(cf) cf.value='';
   if(tf) tf.value='';
-  const hist = document.getElementById('mov-historico');
-  if (hist) { hist.dataset.loaded=''; hist.innerHTML='<div class="empty">Selecione a data e clique em <strong>Consultar</strong>.</div>'; }
+  carregarMovimentacoes();
 }
 
 async function carregarMovimentacoes() {
