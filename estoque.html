@@ -464,7 +464,7 @@
           <input class="field field-sm" id="ent-busca" placeholder="Buscar insumo..." oninput="renderEntradas()" style="padding-left:30px;min-width:180px">
           <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
-        <select class="field field-sm" id="ent-f-cat" onchange="renderEntradas()"><option value="">Categoria: Todas</option></select>
+        <select class="field field-sm" id="ent-f-cat" onchange="renderEntradas()"><option value="">Grupo: Todos</option></select>
         <select class="field field-sm" id="ent-f-tipo" onchange="renderEntradas()">
           <option value="">Tipo: Todos</option><option value="manual">Manual</option><option value="nfe">NF-e</option><option value="ajuste">Ajuste</option>
         </select>
@@ -1786,9 +1786,11 @@ function popularSelects() {
   const saiIns = document.getElementById('sai-f-ins'); if (saiIns) saiIns.innerHTML = todos;
   document.getElementById('kx-ins').innerHTML = '<option value="">Selecione um insumo…</option>'+insOpts;
   document.getElementById('mov-ins').innerHTML = todos;
-  // grupos de compra
-  document.getElementById('mov-cat').innerHTML = '<option value="">Todos os grupos</option>'+
+  // grupos de compra — Movimentação e Entradas
+  const grpOpts = '<option value="">Grupo: Todos</option>'+
     gruposCompra.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
+  document.getElementById('mov-cat').innerHTML = grpOpts.replace('Grupo: Todos','Todos os grupos');
+  document.getElementById('ent-f-cat').innerHTML = grpOpts;
 }
 
 // ── SALDO DE ESTOQUE ─────────────────────────────────────────────
@@ -2154,6 +2156,7 @@ function renderEntradas() {
   const fForn  = document.getElementById('ent-f-forn')?.value||'';
   const fDe    = document.getElementById('ent-f-de')?.value||'';
   const fAte   = document.getElementById('ent-f-ate')?.value||'';
+  const fCat   = document.getElementById('ent-f-cat')?.value||'';
   const porPag = parseInt(document.getElementById('ent-por-pag')?.value||20);
 
   // KPIs
@@ -2183,6 +2186,7 @@ function renderEntradas() {
 
   // Filtrar
   let rows = entradas;
+  if (fCat)  { const ids=gruposCompraItens[fCat]||[]; rows=rows.filter(e=>ids.includes(e.insumo_id)); }
   if (busca)  rows=rows.filter(e=>{const ins=insumos.find(i=>i.id===e.insumo_id);return (ins?.nome||'').toLowerCase().includes(busca);});
   if (fTipo)  rows=rows.filter(e=>e.tipo===fTipo||(fTipo==='nfe'&&e.tipo==='nfe_importada'));
   if (fForn)  rows=rows.filter(e=>e.fornecedor_nome===fForn);
