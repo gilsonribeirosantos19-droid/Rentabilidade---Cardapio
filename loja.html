@@ -475,10 +475,9 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input class="sol-search-inp" id="sol-busca" placeholder="Buscar item, categoria ou código..." oninput="renderSolicitacao()">
         </div>
-        <button class="btn btn-ghost" style="gap:6px;white-space:nowrap">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          Filtros
-        </button>
+        <select id="sol-fil-grupo" class="field field-sm" style="min-width:160px" onchange="renderSolicitacao()">
+          <option value="">Todos os grupos</option>
+        </select>
       </div>
 
       <!-- Grupos (tabelas) -->
@@ -1649,6 +1648,13 @@ async function carregarSaldosSol() {
       saldos.forEach(s => { _solSaldos[s.insumo_id] = { saldo_atual: s.saldo_atual, estoque_minimo: s.estoque_minimo }; });
     } catch(e) { console.warn('Saldo não carregado:', e.message); }
   }
+  // Popula select de grupos
+  const sel = document.getElementById('sol-fil-grupo');
+  if (sel) {
+    const gruposValidos = grupos.filter(g => (gruposItens[g.id]||[]).some(id => insumos.find(i=>i.id===id)));
+    sel.innerHTML = '<option value="">Todos os grupos</option>' +
+      gruposValidos.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
+  }
   renderSolicitacao();
 }
 
@@ -1664,7 +1670,8 @@ function renderSolicitacao() {
   const lista = document.getElementById('sol-lista');
   if (!lista) return;
 
-  const gruposVisiveis = grupos.filter(g => (gruposItens[g.id]||[]).length);
+  const filGrupo = document.getElementById('sol-fil-grupo')?.value||'';
+  const gruposVisiveis = grupos.filter(g => (gruposItens[g.id]||[]).length && (!filGrupo || g.id===filGrupo));
   if (!gruposVisiveis.length) {
     lista.innerHTML = '<div class="empty-state"><div class="empty-title">Nenhum grupo cadastrado.</div><div class="empty-sub">Contate o administrador.</div></div>';
     return;
