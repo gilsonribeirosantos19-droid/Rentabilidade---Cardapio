@@ -505,7 +505,7 @@ async function calcular(){
       api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&criado_em=gte.${de}&criado_em=lte.${ate}T23:59:59${lojaQ}`).catch(()=>[]),
     ]);
     const ids=fichas.map(f=>f.id);
-    let itFichas=ids.length?await api(`itens_ficha?ficha_id=in.(${ids.join(',')})&select=*`):[];
+    let itFichas=ids.length?await api(`itens_ficha?ficha_id=in.(${ids.join(',')})&tenant_id=eq.${TENANT_ID}&select=*`):[];
 
     const totalFat=fats.reduce((s,f)=>s+(f.total||f.valor_total||0),0)+vendas.reduce((s,v)=>s+(v.valor_total||0),0);
     let totalTeo=0;
