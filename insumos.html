@@ -857,6 +857,10 @@ async function salvarCadastro(){
     unidade_medida: und,
     unidade_compra: und,
     tipo_baixa: document.getElementById('cad-tipo-baixa').value||'consumo',
+    tipo_item: document.getElementById('cad-tipo')?.value||null,
+    familia: document.getElementById('cad-familia')?.value||null,
+    subgrupo: document.getElementById('cad-subgrupo')?.value||null,
+    participa_cmv: document.getElementById('cad-cmv')?.value||'sim',
     ativo: document.getElementById('cad-ativo').value!=='false',
   };
   if(!_cadEditId){
