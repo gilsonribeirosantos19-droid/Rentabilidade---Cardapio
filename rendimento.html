@@ -216,6 +216,11 @@
       <select class="field" id="filtro-insumo" style="min-width:160px" onchange="filtrar()">
         <option value="">Todos os insumos</option>
       </select>
+      <select style="padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',filtrar)">
+        <option value="periodo">Período</option>
+        <option value="mes_atual" selected>Mês Atual</option>
+        <option value="mes_anterior">Mês Anterior</option>
+      </select>
       <div class="date-range">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <input type="date" id="fil-de" onchange="filtrar()">
@@ -339,6 +344,7 @@ function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_
 function fmtKg(v){if(v==null||v==='')return'—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';}
 function fmtBRL(v){if(v==null)return'—';return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function setPeriodoRange(tipo,deId,ateId,fn){const d=new Date();let de,ate;if(tipo==='mes_atual'){de=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;ate=d.toISOString().split('T')[0];}else if(tipo==='mes_anterior'){const p=new Date(d.getFullYear(),d.getMonth()-1,1);const l=new Date(d.getFullYear(),d.getMonth(),0);de=`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;ate=`${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;}else{return;}const elD=document.getElementById(deId);if(elD)elD.value=de;const elA=document.getElementById(ateId);if(elA)elA.value=ate;if(fn)fn();}
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
 

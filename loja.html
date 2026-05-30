@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>sistema · Aiko</title>
+<title>Portal do Gerente · Aiko</title>
 <style>
   
   :root{
@@ -245,6 +245,57 @@
     .sol-bottom div:last-child{order:3}
     .inv-filtros-grid .btn{grid-column:1/-1}
   }
+  /* ── TABELA DE GRUPO ─────────────────────────────────── */
+  .sol-grupo{background:#fff;border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
+  .sol-grupo-hdr{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--bg3);border-bottom:1px solid var(--border2);cursor:pointer;user-select:none}
+  .sol-grupo-nome{font-size:13px;font-weight:700;color:var(--text1)}
+  .sol-grupo-count{font-size:12px;color:var(--text3);background:var(--border2);padding:2px 8px;border-radius:20px}
+  .sol-grupo-arrow{margin-left:auto;width:16px;height:16px;transition:transform .2s;color:var(--text3)}
+  .sol-grupo.collapsed .sol-grupo-arrow{transform:rotate(-90deg)}
+  .sol-grupo.collapsed .sol-grupo-body{display:none}
+  .sol-grupo-body .tbl thead tr{background:#0f2d5c}
+  .sol-grupo-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
+  .sol-grupo-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
+  .sol-grupo-body .tbl tbody tr:last-child td{border-bottom:none}
+  .sol-grupo-body .tbl tbody tr:hover{background:var(--bg3)}
+  .sol-tr-sel td{background:#eff6ff!important}
+  .sol-qty-inp{width:80px;text-align:right;background:#fff;border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit;outline:none}
+  .sol-qty-inp:focus{border-color:var(--teal)}
+  .sol-un-sel{background:#fff;border:1px solid var(--border2);border-radius:6px;padding:5px 6px;font-size:12px;font-family:inherit;outline:none;cursor:pointer}
+  /* ── BOTTOM SHEET ──────────────────────────────────────── */
+  .sol-sheet-bd{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none}
+  .sol-sheet-bd.open{display:block}
+  .sol-sheet{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border2);border-radius:16px 16px 0 0;z-index:201;max-height:75vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s ease,max-height .3s ease,border-radius .3s ease}
+  .sol-sheet.open{transform:translateY(0)}
+  .sol-sheet.expanded{max-height:100vh;border-radius:0}
+  .sol-sheet-hd{padding:16px 22px;border-bottom:1px solid var(--border2);display:flex;align-items:center;flex-shrink:0}
+  .sol-sheet-title{font-size:15px;font-weight:700;flex:1;color:var(--text1)}
+  .sol-sheet-x{width:28px;height:28px;border:1px solid var(--border2);background:transparent;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-family:inherit}
+  .sol-sheet-top{display:flex;gap:16px;padding:14px 22px;border-bottom:1px solid var(--border2);flex-shrink:0;flex-wrap:wrap}
+  .sol-sheet-body{flex:1;overflow-y:auto}
+  .sol-sheet-body .tbl thead tr{background:#0f2d5c}
+  .sol-sheet-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
+  .sol-sheet-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
+  .sol-sheet-foot{padding:12px 22px;border-top:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  /* ── PCP HUB ── */
+  .pcp-hub-section{margin-bottom:28px}
+  .pcp-hub-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+  .pcp-hub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .pcp-hub-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all .15s;user-select:none}
+  .pcp-hub-card:hover{border-color:#0f2d5c;box-shadow:0 2px 12px rgba(15,45,92,.08);transform:translateY(-1px)}
+  .pcp-hub-icon{width:44px;height:44px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text2)}
+  .pcp-hub-body{flex:1;min-width:0}
+  .pcp-hub-name{font-size:14px;font-weight:700;color:var(--text1);margin-bottom:3px}
+  .pcp-hub-desc{font-size:12px;color:var(--text3);line-height:1.4}
+  .pcp-hub-arrow{color:var(--text3);flex-shrink:0}
+  .pcp-tabs-bar{display:flex;align-items:stretch;border-bottom:2px solid var(--border2);margin-bottom:20px;overflow-x:auto;flex-shrink:0}
+  .pcp-tab-home{padding:0 14px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;display:flex;align-items:center;border-right:1px solid var(--border2);flex-shrink:0;transition:all .15s}
+  .pcp-tab-home:hover{background:var(--bg3);color:var(--text1)}
+  .pcp-tab-item{display:flex;align-items:center;gap:8px;padding:10px 16px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;border-right:1px solid var(--border2);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;margin-bottom:-2px;transition:all .15s}
+  .pcp-tab-item:hover{background:var(--bg3);color:var(--text1)}
+  .pcp-tab-item.active{color:var(--text1);font-weight:700;border-bottom:2px solid #f97316}
+  .pcp-tab-close{width:18px;height:18px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;border-radius:3px;padding:0;line-height:1;font-family:inherit;flex-shrink:0}
+  .pcp-tab-close:hover{background:rgba(0,0,0,.1);color:var(--text1)}
   /* ── PCP ── */
   .filter-bar-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;margin-bottom:18px}
   .fil-select{height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--text1);font-weight:500;background:var(--bg3);outline:none;cursor:pointer;min-width:130px}
@@ -259,6 +310,13 @@
   .td-mono{font-family:'DM Mono',monospace;font-size:12px}
   .sug-ok{color:#16a34a;font-weight:600}.sug-baixo{color:#f59e0b;font-weight:600}.sug-ruptura{color:#dc2626;font-weight:600}
   /* PCP modal styles */
+  /* ── MOV FORM ── */
+  .mov-lbl{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+  .mov-field{width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;box-sizing:border-box}
+  .mov-field:focus{border-color:var(--teal)}
+  .mov-sel{width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;cursor:pointer;box-sizing:border-box}
+  .mov-sel:focus{border-color:var(--teal)}
+  .mov-total-box{padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:700;color:#0f172a;font-family:'DM Mono',monospace;white-space:nowrap}
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:20px}
   .modal-overlay.open{display:flex}
   .modal-overlay .modal-box{background:#fff;border-radius:16px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto}
@@ -304,11 +362,11 @@
 <nav class="sidebar">
   <div class="logo">
     <div class="logo-mark">Aiko</div>
-    <div class="logo-sub">sistema</div>
+    <div class="logo-sub">Portal do Gerente</div>
     <div class="logo-loja" id="sb-loja-nome"></div>
   </div>
   <div class="nav-group">
-    <div class="nav-label">Compras</div>
+    <div class="nav-label">Operações</div>
     <button class="nav-item active" id="nav-inventario" onclick="switchTab('inventario')">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
       Inventário
@@ -366,7 +424,7 @@
       </span>
       <div class="bell-wrap">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="bell-badge">1</span>
+        <span class="bell-badge" id="bell-badge" style="display:none">0</span>
       </div>
     </div>
   </div>
@@ -441,36 +499,14 @@
       <div class="sol-search-bar">
         <div style="position:relative;flex:1">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="sol-search-inp" id="sol-busca" placeholder="Buscar item, categoria ou fornecedor..." oninput="renderSolicitacao()">
+          <input class="sol-search-inp" id="sol-busca" placeholder="Buscar item, categoria ou código..." oninput="renderSolicitacao()">
         </div>
-        <button class="btn btn-ghost" style="gap:6px;white-space:nowrap">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          Filtros
-        </button>
+        <select id="sol-fil-grupo" class="field field-sm" style="min-width:160px" onchange="renderSolicitacao()">
+          <option value="">Todos os grupos</option>
+        </select>
       </div>
 
-      <!-- Pills de categoria -->
-      <div class="sol-cat-pills" id="sol-cat-pills">
-        <button class="sol-pill active" onclick="solSetCat('',this)">Todos</button>
-      </div>
-
-      <!-- Resumo -->
-      <div class="sol-summary" id="sol-summary" style="display:none">
-        <div class="sol-sum-item">
-          <div class="sol-sum-icon" style="background:#eff6ff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
-          <div><div class="sol-sum-lbl">Itens selecionados</div><div class="sol-sum-val" id="sol-sum-count">0 itens</div></div>
-        </div>
-        <div class="sol-sum-item">
-          <div class="sol-sum-icon" style="background:#f0fdf4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
-          <div><div class="sol-sum-lbl">Total estimado</div><div class="sol-sum-val" id="sol-sum-total">R$ 0,00</div></div>
-        </div>
-        <div class="sol-sum-item">
-          <div class="sol-sum-icon" style="background:#fff7ed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <div><div class="sol-sum-lbl">Último pedido</div><div class="sol-sum-val" id="sol-sum-ultimo">—</div></div>
-        </div>
-      </div>
-
-      <!-- Lista de itens -->
+      <!-- Grupos (tabelas) -->
       <div id="sol-lista"></div>
     </div>
 
@@ -556,7 +592,7 @@
             </div>
           </div>
           <div>
-            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Categoria</div>
+            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Grupo</div>
             <select id="mov-cat-fil" onchange="carregarMovimentacoes()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:140px;cursor:pointer">
               <option value="">Todos</option>
             </select>
@@ -577,41 +613,67 @@
 
         <!-- Nova movimentação card -->
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px">
-          <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:16px">Nova movimentação</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px" class="mov-form-grid">
+          <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:18px">Nova movimentação</div>
+
+          <!-- Linha 1: Tipo -->
+          <div style="margin-bottom:14px">
+            <div class="mov-lbl">Tipo</div>
+            <select id="mov-tipo" class="mov-sel" onchange="onMovTipoChange()">
+              <option value="">Selecione o tipo</option>
+              <option value="saida">Saída</option>
+              <option value="entrada">Entrada</option>
+            </select>
+          </div>
+
+          <!-- Linha 2: Insumo + Quantidade -->
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
             <div>
-              <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Tipo</div>
-              <select id="mov-tipo" onchange="onMovTipoChange()" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;cursor:pointer">
-                <option value="">Selecione o tipo</option>
-                <option value="saida">Saída</option>
-                <option value="entrada">Entrada</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Insumo</div>
-              <select id="mov-insumo" onchange="atualizarUnidadeMov()" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;cursor:pointer">
+              <div class="mov-lbl">Insumo</div>
+              <select id="mov-insumo" class="mov-sel" onchange="atualizarUnidadeMov()">
                 <option value="">Selecione um insumo</option>
               </select>
             </div>
             <div>
-              <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Quantidade</div>
+              <div class="mov-lbl">Quantidade</div>
               <div style="display:flex;align-items:center;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff">
-                <input type="number" id="mov-qtd" min="0" step="0.001" placeholder="0,000" style="flex:1;border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;padding:9px 12px;background:transparent">
-                <span id="mov-un" style="font-size:13px;color:#94a3b8;padding:0 12px;font-weight:600;border-left:1px solid #e2e8f0;min-width:44px;text-align:center">kg</span>
+                <input type="number" id="mov-qtd" min="0" step="0.001" placeholder="0,000" oninput="calcValorTotalMov()" style="flex:1;border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;padding:9px 12px;background:transparent">
+                <span id="mov-un" style="font-size:13px;color:#94a3b8;padding:0 12px;font-weight:600;border-left:1px solid #e2e8f0;min-width:44px;text-align:center">—</span>
               </div>
             </div>
           </div>
-          <div style="margin-bottom:16px">
-            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Observação (opcional)</div>
-            <textarea id="mov-obs" placeholder="Informe uma observação" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;resize:vertical;min-height:80px;background:#fff"></textarea>
-          </div>
-          <div style="text-align:right">
-            <button id="btn-registrar-mov" onclick="registrarMovimentacao()" style="padding:10px 24px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s" onmouseover="this.style.background='#ea6c00'" onmouseout="this.style.background='#f97316'">Registrar movimentação</button>
-          </div>
-          <!-- Campos ocultos para compatibilidade -->
+
+          <!-- Campos específicos de ENTRADA -->
           <div id="mov-campos-entrada" style="display:none">
-            <select id="mov-forn"><option value="">Sem fornecedor</option></select>
-            <input id="mov-unid"><input id="mov-fator" value="1"><input id="mov-custo"><input id="mov-lote"><input id="mov-val" type="date">
+            <!-- Linha 3: Fornecedor + Custo unit + Valor Total -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+              <div>
+                <div class="mov-lbl">Fornecedor</div>
+                <select id="mov-forn" class="mov-sel"><option value="">Sem fornecedor</option></select>
+              </div>
+              <div>
+                <div class="mov-lbl" id="mov-custo-label">Custo unitário</div>
+                <input type="number" id="mov-custo" class="mov-field" min="0" step="0.01" placeholder="0,00" oninput="calcValorTotalMov()">
+              </div>
+              <div>
+                <div class="mov-lbl">Valor Total</div>
+                <div class="mov-total-box" id="mov-valor-total">R$ 0,00</div>
+              </div>
+            </div>
+            <!-- campos ocultos: mantidos para compatibilidade com registrarMovimentacao() -->
+            <input type="hidden" id="mov-unid" value="">
+            <input type="hidden" id="mov-fator" value="1">
+            <input type="hidden" id="mov-lote" value="">
+            <input type="hidden" id="mov-val" value="">
+          </div>
+
+          <!-- Observação -->
+          <div style="margin-bottom:16px">
+            <div class="mov-lbl">Observação (opcional)</div>
+            <textarea id="mov-obs" placeholder="Informe uma observação" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;resize:vertical;min-height:70px;background:#fff;box-sizing:border-box"></textarea>
+          </div>
+
+          <div style="text-align:right">
+            <button id="btn-registrar-mov" onclick="registrarMovimentacao()" style="padding:10px 28px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer">Registrar movimentação</button>
           </div>
         </div>
 
@@ -788,15 +850,59 @@
 
     <!-- PCP -->
     <div id="tab-pcp" class="tab-pane">
-      <div class="page-title">PCP — Controle de Produção</div>
-      <div class="page-sub">Produção do dia, sobras, perdas e consumo médio</div>
 
-      <div class="tabs">
-        <button class="tab-btn active" id="pcptab-producao" onclick="setPcpTab('producao',this)">Produção do Dia</button>
-        <button class="tab-btn" id="pcptab-sugerida" onclick="setPcpTab('sugerida',this)">Prod. Sugerida</button>
-        <button class="tab-btn" id="pcptab-sobras" onclick="setPcpTab('sobras',this)">Sobras e Perdas</button>
-        <button class="tab-btn" id="pcptab-consumo" onclick="setPcpTab('consumo',this)">Consumo Médio</button>
+      <!-- HUB -->
+      <div id="pcp-hub">
+        <div class="page-title">PCP — Controle de Produção</div>
+        <div class="page-sub" style="margin-bottom:28px">Produção do dia, sobras, perdas e consumo médio</div>
+
+        <div class="pcp-hub-section">
+          <div class="pcp-hub-label">Operação</div>
+          <div class="pcp-hub-grid">
+            <div class="pcp-hub-card" onclick="setPcpTab('producao')">
+              <div class="pcp-hub-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg></div>
+              <div class="pcp-hub-body">
+                <div class="pcp-hub-name">Produção do Dia</div>
+                <div class="pcp-hub-desc">Registre e acompanhe o que foi produzido por turno.</div>
+              </div>
+              <svg class="pcp-hub-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="pcp-hub-card" onclick="setPcpTab('sugerida')">
+              <div class="pcp-hub-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+              <div class="pcp-hub-body">
+                <div class="pcp-hub-name">Produção Sugerida</div>
+                <div class="pcp-hub-desc">Sugestões baseadas no histórico de consumo por dia da semana.</div>
+              </div>
+              <svg class="pcp-hub-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="pcp-hub-section">
+          <div class="pcp-hub-label">Análise</div>
+          <div class="pcp-hub-grid">
+            <div class="pcp-hub-card" onclick="setPcpTab('sobras')">
+              <div class="pcp-hub-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+              <div class="pcp-hub-body">
+                <div class="pcp-hub-name">Sobras e Perdas</div>
+                <div class="pcp-hub-desc">Registre e analise sobras, perdas e descartes da operação.</div>
+              </div>
+              <svg class="pcp-hub-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="pcp-hub-card" onclick="setPcpTab('consumo')">
+              <div class="pcp-hub-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div class="pcp-hub-body">
+                <div class="pcp-hub-name">Consumo Médio</div>
+                <div class="pcp-hub-desc">Análise do consumo médio por produto e dia da semana.</div>
+              </div>
+              <svg class="pcp-hub-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- BARRA DE ABAS (aparece ao abrir seções) -->
+      <div id="pcp-tabs-bar" style="display:none"></div>
 
       <!-- PRODUÇÃO DO DIA -->
       <div class="tab-pane active" id="pcppane-producao">
@@ -1307,35 +1413,39 @@
   </div>
 </div>
 
-<!-- MODAL: QUANTIDADES SOLICITAÇÃO -->
-<div id="m-qtd" class="overlay" onclick="if(event.target===this)fecharModal('m-qtd')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h2>Informar Quantidades</h2>
-    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <div style="flex:1;min-width:150px">
-        <div class="fg" style="margin:0">
-          <label>Entrega prevista</label>
-          <input type="date" id="sol-entrega" class="field" style="width:100%;margin-top:5px">
-        </div>
-      </div>
-      <div style="flex:2;min-width:200px">
-        <div class="fg" style="margin:0">
-          <label>Observação</label>
-          <input type="text" id="sol-obs" class="field" placeholder="Opcional" style="width:100%;margin-top:5px">
-        </div>
-      </div>
+<!-- BOTTOM SHEET: Informar Quantidades -->
+<div id="sol-sheet-bd" class="sol-sheet-bd" onclick="fecharSheet()"></div>
+<div id="sol-sheet" class="sol-sheet">
+  <div class="sol-sheet-hd">
+    <span class="sol-sheet-title">Informar Quantidades</span>
+    <button class="sol-sheet-x" id="btn-sheet-expand" title="Expandir" onclick="toggleSheetExpand()" style="margin-right:6px">
+      <svg id="sheet-expand-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+    </button>
+    <button class="sol-sheet-x" onclick="fecharSheet()">✕</button>
+  </div>
+  <div class="sol-sheet-top">
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Entrega prevista</div>
+      <input type="date" class="field" id="sol-sheet-entrega" style="min-width:160px">
     </div>
-    <div class="tbl-wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Observação</div>
+      <input type="text" class="field" id="sol-sheet-obs" placeholder="Opcional" style="width:100%">
+    </div>
+  </div>
+  <div class="sol-sheet-body">
+    <div class="tbl-scroll">
       <table class="tbl">
-        <thead><tr><th>Item</th><th class="r">Sugestão</th><th class="r">Quantidade *</th><th>Embalagem</th></tr></thead>
-        <tbody id="qtd-body"></tbody>
+        <thead><tr>
+          <th>Item</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Sugestão</th><th>Quantidade *</th><th>Embalagem</th>
+        </tr></thead>
+        <tbody id="sol-sheet-tbody"></tbody>
       </table>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModal('m-qtd')">← Voltar</button>
-      <div class="ml"></div>
-      <button class="btn btn-primary" onclick="enviarSolicitacao()">Enviar Solicitação</button>
-    </div>
+  </div>
+  <div class="sol-sheet-foot">
+    <button class="btn btn-ghost" onclick="fecharSheet()">Voltar</button>
+    <button class="btn btn-primary" id="btn-enviar-sol" onclick="enviarSolicitacao()">Enviar Solicitação</button>
   </div>
 </div>
 
@@ -1411,13 +1521,13 @@ function sair() {
 async function carregar() {
   userProfile = getUser();
   document.getElementById('sb-user-nome').textContent = userProfile?.nome || '—';
-  document.getElementById('conn-status').textContent = 'carregando...';
+  document.getElementById('conn-status').innerHTML = '<span style="font-size:12px;color:#94a3b8">carregando...</span>';
 
   try {
     const loja = await api(`lojas?id=eq.${userProfile?.loja_id}&limit=1`).then(r=>r[0]);
     const lojaNome = loja?.nome || 'Minha Loja';
     document.getElementById('sb-loja-nome').textContent = lojaNome;
-    document.getElementById('topbar-title').textContent = `sistema — ${lojaNome}`;
+    document.getElementById('topbar-title').textContent = `Portal do Gerente — ${lojaNome}`;
 
     [insumos, fichas, motivos, fornecedores] = await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
@@ -1433,14 +1543,12 @@ async function carregar() {
       grupos.forEach((g,i) => { gruposItens[g.id] = its[i].map(r=>r.insumo_id); });
     }
 
-    if(document.getElementById('conn-status')){/* conectado já exibido via CSS */}
+    document.getElementById('conn-status').innerHTML = '<span class="conn-dot"></span><span class="conn-label">conectado</span>';
 
-    carregarInventarios();
     renderGruposSol();
     iniciarPerdas();
   } catch(e) {
-    document.getElementById('conn-status').textContent = '✕ erro';
-    document.getElementById('conn-status').style.color = 'var(--red)';
+    document.getElementById('conn-status').innerHTML = '<span style="font-size:12px;color:#dc2626;font-weight:600">✕ erro de conexão</span>';
     toast('Erro: '+e.message, 'err');
   }
 }
@@ -1459,6 +1567,7 @@ function switchTab(tab) {
   if (tab==='estoque') iniciarEstoque();
   if (tab==='pcp') iniciarPcp();
   if (tab==='porcionamento') iniciarPorcionamento();
+  if (tab==='solicitacao') carregarSaldosSol();
   window.scrollTo(0,0);
 }
 
@@ -1473,10 +1582,15 @@ function iniciarInventario() {
   const lojaNome = document.getElementById('sb-loja-nome')?.textContent || '—';
   const labelEl = document.getElementById('inv-empresa-label');
   if (labelEl) labelEl.textContent = lojaNome;
+  const container = document.getElementById('inv-lista');
+  if (container && !container.dataset.loaded) {
+    container.innerHTML = '<div class="empty">Preencha os filtros e clique em <strong>Consultar</strong>.</div>';
+  }
 }
 
 async function carregarInventarios() {
   const container = document.getElementById('inv-lista');
+  container.dataset.loaded = '1';
   container.innerHTML = '<div class="empty">Carregando...</div>';
   try {
     const lojaId = userProfile?.loja_id;
@@ -1617,16 +1731,28 @@ async function confirmarInventario() {
 // ══════════════════════════════════════════════════════════════════
 // ── SOLICITAÇÃO NOVA UI ──────────────────────────────────────────
 let _solSel = {}; // {insumoId: qty}
+let _solUnSel = {}; // {insId: unidade}
+let _solSaldos = {}; // {insId: {saldo_atual, estoque_minimo}}
 let _solCat = '';
 const _solVerMais = {}; // {grupoId: bool}
 
-function renderGruposSol() {
-  // Popular pills de categoria
-  const pills = document.getElementById('sol-cat-pills');
-  if (pills) {
+function renderGruposSol() { renderSolicitacao(); }
+
+async function carregarSaldosSol() {
+  const lojaId = userProfile?.loja_id;
+  if (lojaId) {
+    try {
+      const saldos = await api(`saldo_estoque?loja_id=eq.${lojaId}&tenant_id=eq.${TENANT_ID}&select=insumo_id,saldo_atual,estoque_minimo`);
+      _solSaldos = {};
+      saldos.forEach(s => { _solSaldos[s.insumo_id] = { saldo_atual: s.saldo_atual, estoque_minimo: s.estoque_minimo }; });
+    } catch(e) { console.warn('Saldo não carregado:', e.message); }
+  }
+  // Popula select de grupos
+  const sel = document.getElementById('sol-fil-grupo');
+  if (sel) {
     const gruposValidos = grupos.filter(g => (gruposItens[g.id]||[]).some(id => insumos.find(i=>i.id===id)));
-    pills.innerHTML = `<button class="sol-pill${_solCat===''?' active':''}" onclick="solSetCat('',this)">Todos</button>` +
-      gruposValidos.map(g=>`<button class="sol-pill${_solCat===g.id?' active':''}" onclick="solSetCat('${g.id}',this)">${esc(g.nome)}</button>`).join('');
+    sel.innerHTML = '<option value="">Todos os grupos</option>' +
+      gruposValidos.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
   }
   renderSolicitacao();
 }
@@ -1643,10 +1769,8 @@ function renderSolicitacao() {
   const lista = document.getElementById('sol-lista');
   if (!lista) return;
 
-  const gruposVisiveis = _solCat
-    ? grupos.filter(g=>g.id===_solCat)
-    : grupos.filter(g=>(gruposItens[g.id]||[]).length);
-
+  const filGrupo = document.getElementById('sol-fil-grupo')?.value||'';
+  const gruposVisiveis = grupos.filter(g => (gruposItens[g.id]||[]).length && (!filGrupo || g.id===filGrupo));
   if (!gruposVisiveis.length) {
     lista.innerHTML = '<div class="empty-state"><div class="empty-title">Nenhum grupo cadastrado.</div><div class="empty-sub">Contate o administrador.</div></div>';
     return;
@@ -1656,56 +1780,88 @@ function renderSolicitacao() {
     let itens = (gruposItens[g.id]||[]).map(id=>insumos.find(i=>i.id===id)).filter(Boolean);
     if (busca) itens = itens.filter(i=>i.nome.toLowerCase().includes(busca)||(i.categoria||'').toLowerCase().includes(busca));
     if (!itens.length) return '';
-    const mostrar = _solVerMais[g.id] ? itens : itens.slice(0,5);
-    const cards = mostrar.map(ins => {
+
+    const rows = itens.map(ins => {
+      const saldo = _solSaldos[ins.id]||{};
+      const atual = saldo.saldo_atual != null ? Number(saldo.saldo_atual) : null;
+      const minimo = saldo.estoque_minimo != null ? Number(saldo.estoque_minimo) : null;
+      const sug = (atual != null && minimo != null) ? Math.max(0, Math.ceil(minimo - atual)) : null;
+      const un = ins.unidade_medida||ins.unidade_compra||'un';
       const sel = ins.id in _solSel;
-      const qty = _solSel[ins.id]||0;
-      const un = ins.unidade_compra||ins.unidade_medida||'un';
-      const sug = Math.max(0, Math.ceil((ins.preco_compra||0)*0 + 5)); // placeholder
-      return `<div class="sol-item${sel?' checked':''}" id="sol-card-${ins.id}">
-        <input type="checkbox" class="sol-item-chk" ${sel?'checked':''} onchange="solToggleCard('${ins.id}',this.checked)">
-        <div class="sol-item-body">
-          <div class="sol-item-nome">${esc(ins.nome)}</div>
-        </div>
-        <div class="sol-item-right">
-          <div class="sol-item-estoque" style="color:#64748b">Estoque atual: — ${un}</div>
-          <span style="display:none" class="sol-item-sug" data-sug="${sug}" data-un="${esc(un)}"></span>
-        </div>
-      </div>`;
+      const qty = _solSel[ins.id] || (sug != null ? sug : 0);
+      const selUn = _solUnSel[ins.id] || un;
+      const unOpts = UNIDADES_PEDIDO.map(u=>`<option value="${u}"${u===selUn?' selected':''}>${u}</option>`).join('');
+      const fmtV = (v,u) => v != null ? v+' '+u : '—';
+      return `<tr class="${sel?'sol-tr-sel':''}">
+        <td style="width:36px;text-align:center"><input type="checkbox" ${sel?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#6366f1" onchange="solToggleRow('${ins.id}',this.checked)"></td>
+        <td style="font-weight:600">${esc(ins.nome)}</td>
+        <td style="color:var(--text2)">${fmtV(atual,un)}</td>
+        <td style="color:var(--text2)">${fmtV(minimo,un)}</td>
+        <td style="color:var(--text2)">${fmtV(sug,un)}</td>
+        <td><div style="display:flex;gap:4px;align-items:center">
+          <input type="number" class="sol-qty-inp" id="sol-qty-${ins.id}"
+            value="${qty}" min="0" step="0.001" onchange="setSolQtyInline('${ins.id}',this)">
+          <select class="sol-un-sel" id="sol-un-${ins.id}" onchange="_solUnSel['${ins.id}']=this.value">${unOpts}</select>
+        </div></td>
+      </tr>`;
     }).join('');
-    const temMais = itens.length > 5 && !_solVerMais[g.id];
-    return `<div class="sol-section">
-      <div class="sol-sec-hdr">
-        <span class="sol-sec-nome">${esc(g.nome)}</span>
-        <span class="sol-sec-count">${itens.length} itens</span>
-        <label class="sol-sec-selall">
-          <input type="checkbox" style="accent-color:#6366f1" onchange="solSelAll('${g.id}',this.checked)">
-          Selecionar todos
-        </label>
+
+    return `<div class="sol-grupo" id="sol-g-${g.id}">
+      <div class="sol-grupo-hdr" onclick="toggleSolGrupo('${g.id}')">
+        <span class="sol-grupo-nome">${esc(g.nome)}</span>
+        <span class="sol-grupo-count">${itens.length} itens</span>
+        <svg class="sol-grupo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
       </div>
-      ${cards}
-      ${temMais?`<button class="sol-ver-mais" onclick="_solVerMais['${g.id}']=true;renderSolicitacao()">Ver mais itens ∨</button>`:''}
+      <div class="sol-grupo-body">
+        <div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr><th></th><th>Item</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Sugestão</th><th>Solicitar</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
     </div>`;
   }).join('');
 
   updateSolSummary();
 }
 
-function solToggleCard(id, checked) {
-  const ins = insumos.find(i=>i.id===id);
-  const un = ins?.unidade_compra||ins?.unidade_medida||'un';
+function solToggleCard(id, checked) { solToggleRow(id, checked); }
+
+function solToggleRow(insId, checked) {
+  const ins = insumos.find(i=>i.id===insId);
+  const un = ins?.unidade_medida||ins?.unidade_compra||'un';
+  const qtyInp = document.getElementById(`sol-qty-${insId}`);
+  const qty = parseFloat(qtyInp?.value)||1;
   if (checked) {
-    if (!(id in _solSel)) _solSel[id] = 1;
+    _solSel[insId] = qty;
+    _solUnSel[insId] = document.getElementById(`sol-un-${insId}`)?.value||un;
   } else {
-    delete _solSel[id];
-    const inp = document.getElementById(`sol-qty-${id}`);
-    if (inp) inp.value = 0;
+    delete _solSel[insId];
   }
-  const card = document.getElementById(`sol-card-${id}`);
-  if (card) card.classList.toggle('checked', checked);
-  const sug = card?.querySelector('.sol-item-sug');
-  if (sug) sug.classList.toggle('active', checked);
+  qtyInp?.closest('tr')?.classList.toggle('sol-tr-sel', checked);
   updateSolSummary();
+}
+
+function setSolQtyInline(insId, inp) {
+  const qty = parseFloat(inp.value)||0;
+  const un = document.getElementById(`sol-un-${insId}`)?.value||'un';
+  const chk = inp.closest('tr')?.querySelector('input[type=checkbox]');
+  if (qty > 0) {
+    _solSel[insId] = qty;
+    _solUnSel[insId] = un;
+    if (chk && !chk.checked) chk.checked = true;
+    inp.closest('tr')?.classList.add('sol-tr-sel');
+  } else {
+    delete _solSel[insId];
+    if (chk) chk.checked = false;
+    inp.closest('tr')?.classList.remove('sol-tr-sel');
+  }
+  updateSolSummary();
+}
+
+function toggleSolGrupo(grupoId) {
+  document.getElementById(`sol-g-${grupoId}`)?.classList.toggle('collapsed');
 }
 
 function changeSolQty(id, un, delta) {
@@ -1713,133 +1869,126 @@ function changeSolQty(id, un, delta) {
   const cur = parseFloat(inp?.value)||0;
   const novo = Math.max(0, cur + delta);
   if (inp) inp.value = novo;
-  if (novo > 0) {
-    _solSel[id] = novo;
-    const chk = document.querySelector(`#sol-card-${id} .sol-item-chk`);
-    if (chk && !chk.checked) { chk.checked = true; solToggleCard(id, true); return; }
-  } else if (novo === 0 && id in _solSel) {
-    delete _solSel[id];
-    const chk = document.querySelector(`#sol-card-${id} .sol-item-chk`);
-    if (chk) { chk.checked = false; solToggleCard(id, false); return; }
-  } else {
-    _solSel[id] = novo;
-  }
-  updateSolSummary();
+  setSolQtyInline(id, inp);
 }
 
 function setSolQtyDirect(id, un, val) {
-  const novo = Math.max(0, parseFloat(val)||0);
-  if (novo > 0) { _solSel[id] = novo; }
-  else { delete _solSel[id]; }
-  updateSolSummary();
+  const inp = document.getElementById(`sol-qty-${id}`);
+  if (inp) { inp.value = val; setSolQtyInline(id, inp); }
 }
 
 function solSelAll(grupoId, checked) {
   const ids = gruposItens[grupoId]||[];
   ids.forEach(id=>{
-    const ins=insumos.find(i=>i.id===id);
-    if(!ins)return;
-    const chk=document.querySelector(`#sol-card-${id} .sol-item-chk`);
-    if(chk){chk.checked=checked;solToggleCard(id,checked);}
+    const chk=document.querySelector(`#sol-g-${grupoId} #sol-qty-${id}`)?.closest('tr')?.querySelector('input[type=checkbox]');
+    if(chk){chk.checked=checked;solToggleRow(id,checked);}
   });
 }
 
 function updateSolSummary() {
   const ids = Object.keys(_solSel);
   const n = ids.length;
-  const total = ids.reduce((s,id)=>{
-    const ins=insumos.find(i=>i.id===id);
-    const qty=_solSel[id]||0;
-    return s+(ins?.preco_compra||0)*qty;
-  },0);
+  const total = ids.reduce((s,id)=>{const ins=insumos.find(i=>i.id===id);return s+(ins?.preco_compra||0)*(_solSel[id]||0);},0);
   const kgTotal = ids.reduce((s,id)=>s+(_solSel[id]||0),0);
   const fmtBRL = v=>'R$ '+Number(v).toFixed(2).replace('.',',');
-
-  const sumEl=document.getElementById('sol-summary');
-  if(sumEl) sumEl.style.display=n>0?'flex':'none';
-  const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const el = (id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   el('sol-sum-count',n+' ite'+(n===1?'m':'ns'));
   el('sol-sum-total',fmtBRL(total));
-
   const bot=document.getElementById('sol-bottom');
   if(bot) bot.classList.toggle('show',n>0);
   el('sol-bot-count',n+' ite'+(n===1?'m':'ns')+' selecionado'+(n===1?'':'s'));
   el('sol-bot-kg',kgTotal.toFixed(1)+' kg no total');
-  document.getElementById('sol-bot-total').innerHTML='Total estimado: <strong>'+fmtBRL(total)+'</strong>';
+  const bt=document.getElementById('sol-bot-total');if(bt)bt.innerHTML='Total estimado: <strong>'+fmtBRL(total)+'</strong>';
 }
 
 function continuarPedido() {
   const ids = Object.keys(_solSel);
   if (!ids.length) { toast('Selecione pelo menos um item.','err'); return; }
-  // reutiliza o modal de quantidades existente
-  solChecked = new Set(ids);
-  ids.forEach(id=>{ _solSel[id]=_solSel[id]||1; });
-  abrirModalQtd();
+  document.getElementById('sol-sheet-entrega').value = hoje(7);
+  document.getElementById('sol-sheet-obs').value = '';
+  document.getElementById('sol-sheet-tbody').innerHTML = ids.map(insId => {
+    const ins = insumos.find(i=>i.id===insId);
+    const saldo = _solSaldos[insId]||{};
+    const atual = saldo.saldo_atual != null ? Number(saldo.saldo_atual) : null;
+    const minimo = saldo.estoque_minimo != null ? Number(saldo.estoque_minimo) : null;
+    const sug = (atual!=null&&minimo!=null) ? Math.max(0,Math.ceil(minimo-atual)) : null;
+    const un = ins?.unidade_medida||ins?.unidade_compra||'un';
+    const qty = _solSel[insId]||0;
+    const selUn = _solUnSel[insId]||un;
+    const fmtV = (v,u)=>v!=null?v+' '+u:'—';
+    const unOpts = UNIDADES_PEDIDO.map(u=>`<option value="${u}"${u===selUn?' selected':''}>${u}</option>`).join('');
+    return `<tr>
+      <td style="font-weight:600">${esc(ins?.nome||insId)}</td>
+      <td style="color:var(--text2)">${fmtV(atual,un)}</td>
+      <td style="color:var(--text2)">${fmtV(minimo,un)}</td>
+      <td style="color:var(--text2)">${fmtV(sug,un)}</td>
+      <td><input type="number" class="field field-sm" id="sheet-qty-${insId}" value="${qty}" min="0" step="0.001" style="width:80px;text-align:right"></td>
+      <td><select class="field field-sm" id="sheet-un-${insId}" style="width:70px">${unOpts}</select></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('sol-sheet-bd').classList.add('open');
+  document.getElementById('sol-sheet').classList.add('open');
+}
+
+function fecharSheet() {
+  const sheet = document.getElementById('sol-sheet');
+  sheet.classList.remove('open','expanded');
+  document.getElementById('sol-sheet-bd').classList.remove('open');
+  _sheetExpanded = false;
+}
+
+let _sheetExpanded = false;
+function toggleSheetExpand() {
+  _sheetExpanded = !_sheetExpanded;
+  document.getElementById('sol-sheet').classList.toggle('expanded', _sheetExpanded);
+  const icon = document.getElementById('sheet-expand-icon');
+  if (icon) icon.innerHTML = _sheetExpanded
+    ? '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/>'
+    : '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>';
 }
 
 // compat aliases
 function selecionarGrupoSol(){}
 function solSelecionarTodos(){}
-function limparSelecaoSol(){ _solSel={}; _solVerMais[Object.keys(_solVerMais)[0]]=false; renderSolicitacao(); }
+function limparSelecaoSol(){ _solSel={}; _solUnSel={}; renderSolicitacao(); }
 
 const UNIDADES_PEDIDO = ['kg','g','un','pct','litro','ml','cx','fardo','bd','sc'];
 
-function abrirModalQtd() {
-  if (!solChecked.size) return;
-  document.getElementById('sol-entrega').value = hoje(7);
-  document.getElementById('qtd-body').innerHTML = [...solChecked].map(insId=>{
-    const ins=insumos.find(i=>i.id===insId);
-    const unPadrao=ins?.unidade_medida||ins?.unidade_compra||'un';
-    // pega sugestão do card se existir
-    const sugEl=document.querySelector(`#sol-card-${insId} .sol-item-sug`);
-    const sug=sugEl?.dataset?.sug||'0';
-    const sugUn=sugEl?.dataset?.un||unPadrao;
-    const opts=UNIDADES_PEDIDO.map(u=>`<option value="${u}"${u===unPadrao?' selected':''}>${u}</option>`).join('');
-    return `<tr>
-      <td style="font-weight:600;color:#0f172a">${esc(ins?.nome||insId)}</td>
-      <td class="r"><span style="font-size:13px;font-weight:700;color:#f97316;font-family:'DM Mono',monospace">${sug} ${sugUn}</span></td>
-      <td class="r"><input type="number" class="field field-sm" id="mq-${insId}"
-        min="0" step="0.001" value="${sug}"
-        style="width:90px;text-align:right"></td>
-      <td><select class="field field-sm" id="mu-${insId}" style="width:72px">${opts}</select></td>
-    </tr>`;
-  }).join('');
-  abrirModal('m-qtd');
-  setTimeout(()=>{document.querySelector('#qtd-body input')?.focus();},100);
-}
+function abrirModalQtd() { continuarPedido(); }
 
 async function enviarSolicitacao() {
   const lojaId = userProfile?.loja_id;
   if (!lojaId) { toast('Loja não associada ao seu perfil.','err'); return; }
-  const itensFinal=[];
-  for (const insId of solChecked) {
-    const inp=document.getElementById(`mq-${insId}`);
-    const qty=parseFloat(inp?.value)||0;
+  const itensFinal = [];
+  for (const insId of Object.keys(_solSel)) {
+    const inp = document.getElementById(`sheet-qty-${insId}`);
+    const qty = parseFloat(inp?.value)||0;
     if (qty<=0){toast('Informe a quantidade de todos os itens.','err');inp?.focus();return;}
-    const unidade=document.getElementById(`mu-${insId}`)?.value||'un';
-    itensFinal.push({insId,qty,unidade});
+    itensFinal.push({insId, qty, unidade: document.getElementById(`sheet-un-${insId}`)?.value||'un'});
   }
-  const entrega=document.getElementById('sol-entrega').value;
-  const obs=document.getElementById('sol-obs').value.trim();
-  const btn=document.querySelector('#m-qtd .btn-primary');
-  btn.disabled=true; btn.textContent='Enviando...';
+  if (!itensFinal.length){toast('Selecione ao menos um item.','err');return;}
+  const entrega = document.getElementById('sol-sheet-entrega').value;
+  const obs = document.getElementById('sol-sheet-obs').value.trim();
+  const btn = document.getElementById('btn-enviar-sol');
+  btn.disabled=true;btn.textContent='Enviando...';
   try {
-    const pedRes=await api('pedidos_compra',{method:'POST',body:JSON.stringify({
-      tenant_id:TENANT_ID,loja_id:lojaId,fornecedor_id:null,status:'solicitado',
-      data_pedido:hoje(),data_entrega_prevista:entrega||null,
-      observacao:obs||null,solicitante_id:userProfile?.id||null
+    const pedRes = await api('pedidos_compra',{method:'POST',body:JSON.stringify({
+      tenant_id:TENANT_ID,loja_id:lojaId,fornecedor_id:null,
+      status:'solicitado',data_pedido:hoje(),
+      data_entrega_prevista:entrega||null,observacao:obs||null,
+      solicitante_id:userProfile?.id||null
     })});
-    const pedId=pedRes[0]?.id;
+    const pedId = pedRes[0]?.id;
     if (!pedId) throw new Error('Falha ao criar solicitação.');
     await api('itens_pedido',{method:'POST',prefer:'return=minimal',
       body:JSON.stringify(itensFinal.map(it=>({
-        pedido_id:pedId,insumo_id:it.insId,quantidade:it.qty,unidade:it.unidade,preco_unitario:null
-      })))
-    });
-    solChecked.clear();
-    fecharModal('m-qtd');
+        pedido_id:pedId,insumo_id:it.insId,
+        quantidade:it.qty,unidade:it.unidade,preco_unitario:null
+      })))});
+    _solSel={}; _solUnSel={};
+    fecharSheet();
+    renderSolicitacao();
     toast('Solicitação enviada com sucesso!','ok');
-    switchTab('inventario');
   } catch(e){toast('Erro: '+e.message,'err');}
   finally{btn.disabled=false;btn.textContent='Enviar Solicitação';}
 }
@@ -2191,8 +2340,28 @@ function popularInsumosMov() {
 }
 
 function atualizarUnidadeMov() {
-  const opt = document.querySelector('#mov-insumo option:checked');
-  document.getElementById('mov-un').textContent = opt?.dataset.un || '';
+  const sel = document.getElementById('mov-insumo');
+  const insId = sel.value;
+  const ins = insumos.find(i=>i.id===insId);
+  const un = ins?.unidade_compra || ins?.unidade_medida || '—';
+  document.getElementById('mov-un').textContent = un;
+
+  // Auto-preenche custo unitário do insumo
+  if (ins?.preco_compra) {
+    document.getElementById('mov-custo').value = ins.preco_compra;
+    document.getElementById('mov-custo-label').textContent = `Custo unitário (R$/${un})`;
+  } else {
+    document.getElementById('mov-custo-label').textContent = `Custo unitário (R$/${un})`;
+  }
+  calcValorTotalMov();
+}
+
+function calcValorTotalMov() {
+  const qtd   = parseFloat(document.getElementById('mov-qtd')?.value)||0;
+  const custo = parseFloat(document.getElementById('mov-custo')?.value)||0;
+  const total = qtd * custo;
+  const el = document.getElementById('mov-valor-total');
+  if (el) el.textContent = 'R$ ' + total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
 let _relRows=[], _relPag=1, _relPorPag=10;
@@ -2308,15 +2477,14 @@ async function carregarMovimentacoes() {
   if (!lojaId || !data) return;
   container.innerHTML = '<div class="empty">Carregando...</div>';
 
-  // Popular categorias no filtro
+  // Popular grupos no filtro
   const selCat = document.getElementById('mov-cat-fil');
   if (selCat && selCat.options.length <= 1) {
-    const cats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
-    cats.forEach(c=>{ const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o); });
+    grupos.forEach(g=>{ const o=document.createElement('option');o.value=g.id;o.textContent=g.nome;selCat.appendChild(o); });
   }
 
   const tipoFil = document.getElementById('mov-tipo-fil')?.value||'';
-  const catFil  = document.getElementById('mov-cat-fil')?.value||'';
+  const grpFil  = document.getElementById('mov-cat-fil')?.value||'';
 
   try {
     const queries = [];
@@ -2331,7 +2499,7 @@ async function carregarMovimentacoes() {
       ...saidas.map(s=>({...s,_tipo:'saida'})),
     ].sort((a,b)=>(b.criado_em||b.created_at||'').localeCompare(a.criado_em||a.created_at||''));
 
-    if (catFil) movs = movs.filter(m=>{ const ins=insumos.find(i=>i.id===m.insumo_id); return (ins?.categoria||'')=== catFil; });
+    if (grpFil) { const ids=gruposItens[grpFil]||[]; movs=movs.filter(m=>ids.includes(m.insumo_id)); }
 
     if (!movs.length) { container.innerHTML = '<div class="empty">Nenhuma movimentação neste dia.</div>'; return; }
 
@@ -2454,7 +2622,7 @@ let _tt;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3500);}
 function abrirModal(id){document.getElementById(id).classList.add('open');}
 function fecharModal(id){document.getElementById(id).classList.remove('open');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModal('m-qtd');fecharModal('m-inv');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharSheet();fecharModal('m-inv');}});
 
 function toggleSidebar(){
   const sb=document.querySelector('.sidebar');
@@ -2472,17 +2640,62 @@ let _pcpIniciado=false;
 
 function _pcpLojaId(){return userProfile?.loja_id||null;}
 
-function setPcpTab(tab,btn){
-  document.querySelectorAll('#tab-pcp .tab-btn').forEach(b=>b.classList.remove('active'));
+const _pcpTitles = {producao:'Produção do Dia',sugerida:'Produção Sugerida',sobras:'Sobras e Perdas',consumo:'Consumo Médio'};
+let _pcpOpenTabs = [], _pcpActiveTab = null;
+
+function _pcpRenderTabsBar() {
+  const bar = document.getElementById('pcp-tabs-bar');
+  if (!bar) return;
+  if (!_pcpOpenTabs.length) { bar.style.display='none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML =
+    `<button class="pcp-tab-home" onclick="pcpVoltar()" title="Voltar ao hub">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>` +
+    _pcpOpenTabs.map(t =>
+      `<div class="pcp-tab-item${t===_pcpActiveTab?' active':''}" onclick="setPcpTab('${t}')">
+        ${_pcpTitles[t]||t}
+        <button class="pcp-tab-close" onclick="event.stopPropagation();pcpCloseTab('${t}')">×</button>
+      </div>`
+    ).join('');
+}
+
+function setPcpTab(tab) {
+  if (!_pcpOpenTabs.includes(tab)) _pcpOpenTabs.push(tab);
+  _pcpActiveTab = tab;
+  document.getElementById('pcp-hub').style.display = 'none';
+  _pcpRenderTabsBar();
   document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('pcppane-'+tab).classList.add('active');
+  document.getElementById('pcppane-'+tab)?.classList.add('active');
   if(tab==='sugerida') calcularSugestoes();
   if(tab==='sobras') iniciarSobras();
   if(tab==='consumo') renderConsumo();
+  if(tab==='producao') renderProducaoDia();
+}
+
+function pcpCloseTab(tab) {
+  _pcpOpenTabs = _pcpOpenTabs.filter(t=>t!==tab);
+  if (_pcpActiveTab === tab) {
+    if (_pcpOpenTabs.length) { setPcpTab(_pcpOpenTabs[_pcpOpenTabs.length-1]); return; }
+    else { pcpVoltar(); return; }
+  }
+  _pcpRenderTabsBar();
+}
+
+function pcpVoltar() {
+  document.getElementById('pcp-hub').style.display = '';
+  document.getElementById('pcp-tabs-bar').style.display = 'none';
+  document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
+  _pcpActiveTab = null;
 }
 
 async function iniciarPcp(){
+  // Sempre volta ao hub ao entrar no módulo
+  _pcpOpenTabs = []; _pcpActiveTab = null;
+  document.getElementById('pcp-hub').style.display='';
+  document.getElementById('pcp-tabs-bar').style.display='none';
+  document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
+
   const h=new Date().toISOString().slice(0,10);
   const pdData=document.getElementById('pd-data');
   if(pdData&&!pdData.value) pdData.value=h;

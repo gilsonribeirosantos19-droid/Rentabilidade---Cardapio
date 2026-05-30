@@ -325,7 +325,6 @@
         onchange="onLojaChange()">
         <option value="">Todas as lojas</option>
       </select>
-      <span id="conn-status" style="font-size:11px;color:#16a34a;font-weight:600;white-space:nowrap"></span>
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
       <button onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:12px;color:#dc2626;background:#fff;border:1px solid #fca5a5;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -464,16 +463,23 @@
           <input class="field field-sm" id="ent-busca" placeholder="Buscar insumo..." oninput="renderEntradas()" style="padding-left:30px;min-width:180px">
           <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
-        <select class="field field-sm" id="ent-f-cat" onchange="renderEntradas()"><option value="">Categoria: Todas</option></select>
+        <select class="field field-sm" id="ent-f-cat" onchange="renderEntradas()"><option value="">Grupo: Todos</option></select>
         <select class="field field-sm" id="ent-f-tipo" onchange="renderEntradas()">
           <option value="">Tipo: Todos</option><option value="manual">Manual</option><option value="nfe">NF-e</option><option value="ajuste">Ajuste</option>
         </select>
         <select class="field field-sm" id="ent-f-forn" onchange="renderEntradas()"><option value="">Fornecedor: Todos</option></select>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <input type="date" id="ent-f-de" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
-          <span style="color:#94a3b8">–</span>
-          <input type="date" id="ent-f-ate" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <select class="field field-sm" onchange="setPeriodoRange(this.value,'ent-f-de','ent-f-ate',renderEntradas)" style="min-width:130px">
+            <option value="periodo">Período</option>
+            <option value="mes_atual" selected>Mês Atual</option>
+            <option value="mes_anterior">Mês Anterior</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="date" id="ent-f-de" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+            <span style="color:#94a3b8">–</span>
+            <input type="date" id="ent-f-ate" class="field field-sm" onchange="renderEntradas()" style="border:none;padding:0;background:transparent;width:110px">
+          </div>
         </div>
       </div>
 
@@ -543,42 +549,6 @@
     <!-- TAB: SAÍDAS -->
     <div id="tab-saidas" class="tab-pane">
 
-      <!-- KPI CARDS -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><polyline points="16 17 12 21 8 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg></div>
-          <div>
-            <div style="font-size:11px;font-weight:500;color:#64748b;margin-bottom:4px">Saídas Hoje</div>
-            <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="sai-kpi-hoje">—</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:2px">movimentações</div>
-          </div>
-        </div>
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;border-radius:50%;background:#fff7ed;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
-          <div>
-            <div style="font-size:11px;font-weight:500;color:#64748b;margin-bottom:4px">Ajustes Manuais</div>
-            <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="sai-kpi-manual">—</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:2px">lançamentos</div>
-          </div>
-        </div>
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <div>
-            <div style="font-size:11px;font-weight:500;color:#64748b;margin-bottom:4px">Última Saída</div>
-            <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a;line-height:1.2" id="sai-kpi-ultima-hora">—</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:2px" id="sai-kpi-ultima-ins">—</div>
-          </div>
-        </div>
-        <div style="background:#fff;border:1px solid #fee2e2;border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px">
-          <div style="width:44px;height:44px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-          <div>
-            <div style="font-size:11px;font-weight:500;color:#64748b;margin-bottom:4px">Divergências</div>
-            <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:#ef4444;line-height:1" id="sai-kpi-div">—</div>
-            <div style="font-size:11px;color:#ef4444;margin-top:2px">saídas sem motivo</div>
-          </div>
-        </div>
-      </div>
-
       <!-- AÇÕES + FILTROS -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="openSaida()" style="gap:6px">
@@ -598,17 +568,21 @@
           <option value="descarte">Descarte</option>
           <option value="ajuste">Ajuste</option>
         </select>
-        <select class="field field-sm" id="sai-f-motivo" onchange="renderSaidas()" style="width:auto">
-          <option value="">Motivo: Todos</option>
-        </select>
         <select class="field field-sm" id="sai-f-resp" onchange="renderSaidas()" style="width:auto">
           <option value="">Responsável: Todos</option>
         </select>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <input type="date" id="sai-f-de" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
-          <span style="color:#94a3b8">–</span>
-          <input type="date" id="sai-f-ate" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <select class="field field-sm" onchange="setPeriodoRange(this.value,'sai-f-de','sai-f-ate',renderSaidas)" style="min-width:130px">
+            <option value="periodo">Período</option>
+            <option value="mes_atual" selected>Mês Atual</option>
+            <option value="mes_anterior">Mês Anterior</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="date" id="sai-f-de" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
+            <span style="color:#94a3b8">–</span>
+            <input type="date" id="sai-f-ate" class="field field-sm" onchange="renderSaidas()" style="border:none;padding:0;background:transparent;width:110px">
+          </div>
         </div>
       </div>
 
@@ -649,6 +623,11 @@
         <select class="field field-sm" id="kx-ins" onchange="renderKardex()" style="min-width:220px">
           <option value="">Selecione um insumo...</option>
         </select>
+        <select class="field field-sm" onchange="setPeriodoRange(this.value,'kx-de','kx-ate',renderKardex)" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
         <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <input type="date" id="kx-de" class="field field-sm" onchange="renderKardex()" style="border:none;padding:0;background:transparent;width:110px">
@@ -660,42 +639,6 @@
           CSV
         </button>
         <span id="kx-info" style="font-size:12px;color:#94a3b8;margin-left:4px"></span>
-      </div>
-
-      <!-- KPI CARDS — ficam ABAIXO dos filtros -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e2e8f0;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:18px">
-        <div style="background:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
-          <div>
-            <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Entradas (período)</div>
-            <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="kx-kpi-ent">—</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:3px" id="kx-kpi-ent-q">— mov.</div>
-          </div>
-        </div>
-        <div style="background:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><polyline points="16 7 12 3 8 7"/><line x1="12" y1="21" x2="12" y2="3"/></svg>
-          <div>
-            <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Saídas (período)</div>
-            <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="kx-kpi-sai">—</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:3px" id="kx-kpi-sai-q">— mov.</div>
-          </div>
-        </div>
-        <div style="background:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8"/></svg>
-          <div>
-            <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Saldo atual</div>
-            <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="kx-kpi-saldo">—</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:3px" id="kx-kpi-saldo-un">selecione um insumo</div>
-          </div>
-        </div>
-        <div style="background:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          <div>
-            <div style="font-size:11px;color:#94a3b8;margin-bottom:3px">Custo médio atual</div>
-            <div style="font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a;line-height:1" id="kx-kpi-cmedio">—</div>
-            <div style="font-size:11px;color:#94a3b8;margin-top:3px">por kg / litro / un</div>
-          </div>
-        </div>
       </div>
 
       <!-- TABELA -->
@@ -767,14 +710,6 @@
                 </div>
               </div>
             </div>
-            <div class="inv-bbox" style="flex:1">
-              <span class="inv-bbox-ttl">Situação</span>
-              <div style="display:flex;align-items:center;gap:20px;height:100%;min-height:46px">
-                <label class="inv-slab"><input type="checkbox" id="inv-sit-ativo" checked> Ativo</label>
-                <label class="inv-slab"><input type="checkbox" id="inv-sit-encerrado" checked> Encerrado</label>
-                <label class="inv-slab"><input type="checkbox" id="inv-sit-cancelado"> Cancelado</label>
-              </div>
-            </div>
             <div style="display:flex;align-items:flex-end">
               <button class="btn btn-primary" onclick="renderInvLista()" style="height:42px;padding:0 28px;border-radius:21px;white-space:nowrap">Consultar</button>
             </div>
@@ -783,20 +718,6 @@
 
         <!-- PAINEL INVENTÁRIOS -->
         <div id="inv-pane-lista">
-          <div class="inv-toolbar">
-            <button class="inv-tbtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-              Colunas
-            </button>
-            <button class="inv-tbtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-              Filtros
-            </button>
-            <button class="inv-tbtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Exportar
-            </button>
-          </div>
           <div class="tbl-wrap"><div class="tbl-scroll">
             <table class="tbl">
               <thead><tr>
@@ -852,8 +773,15 @@
 
     <!-- TAB: FECHAMENTO MENSAL -->
     <div id="tab-fechamento" class="tab-pane">
+      <!-- FILTROS + KPI BAR (sticky) -->
+      <div style="position:sticky;top:114px;z-index:40;background:#fff;padding-bottom:12px;margin-top:-18px;padding-top:18px;border-bottom:1px solid #e2e8f0;margin-bottom:16px">
       <!-- FILTROS -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <select class="field field-sm" onchange="setPeriodoRange(this.value,'fm-de','fm-ate')" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
         <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
           <input class="field field-sm" type="date" id="fm-de" style="border:none;padding:0;background:transparent;width:110px">
           <span style="color:#94a3b8">–</span>
@@ -922,12 +850,13 @@
           </div>
         </div>
       </div>
+      </div><!-- /sticky header -->
       <!-- TABELA -->
       <div id="fm-tabela" style="display:none">
         <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:12px">Detalhamento por insumo</div>
-        <div class="tbl-wrap"><div class="tbl-scroll">
+        <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 380px);overflow-y:auto">
           <table class="tbl">
-            <thead><tr>
+            <thead style="position:sticky;top:0;z-index:5"><tr>
               <th>Insumo</th><th>Categoria</th>
               <th class="r">Est. Inicial</th><th class="r">+ Compras</th>
               <th class="r">- Perdas</th><th class="r">Consumo</th>
@@ -959,9 +888,14 @@
       <!-- TÍTULO + FILTROS -->
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">Movimentação de Estoque no Período</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <select class="field field-sm" onchange="setPeriodoRange(this.value,'mov-de','mov-ate')" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual">Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
         <input class="field field-sm" type="date" id="mov-de" style="width:140px">
         <input class="field field-sm" type="date" id="mov-ate" style="width:140px">
-        <select class="field field-sm" id="mov-cat" style="min-width:160px"><option value="">Todas as categorias</option></select>
+        <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
         <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
         <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
         <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
@@ -1023,11 +957,12 @@
     <!-- TAB: SUGESTÃO DE COMPRAS -->
     <div id="tab-compras" class="tab-pane">
 
-      <!-- TÍTULO + FILTROS -->
+      <!-- TÍTULO + FILTROS (sticky) -->
+      <div style="position:sticky;top:114px;z-index:40;background:#fff;padding-bottom:12px;margin-bottom:0;border-bottom:1px solid #e2e8f0;margin-top:-18px;padding-top:18px">
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
         Sugestão de Compras <span style="font-weight:400;color:#94a3b8;font-size:13px">— baseada no consumo médio diário</span>
       </div>
-      <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:0;flex-wrap:wrap">
         <div>
           <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cobertura desejada</div>
           <select class="field field-sm" id="comp-dias" onchange="renderCompras()" style="min-width:110px">
@@ -1065,6 +1000,7 @@
           </button>
         </div>
       </div>
+      </div><!-- /sticky header -->
 
       <!-- KPI CARDS -->
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px">
@@ -1110,9 +1046,9 @@
 
         <!-- TABELA + PAGINAÇÃO -->
         <div>
-          <div class="tbl-wrap"><div class="tbl-scroll">
+          <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 420px);overflow-y:auto">
             <table class="tbl">
-              <thead><tr>
+              <thead style="position:sticky;top:0;z-index:5"><tr>
                 <th>Insumo</th><th>Un.</th>
                 <th class="r">Estoque Atual</th>
                 <th class="r">Consumo (Período)</th>
@@ -1153,6 +1089,12 @@
         Saldo de Estoque <span style="font-weight:400;color:#94a3b8;font-size:13px">— posição financeira por loja</span>
       </div>
       <div class="toolbar" style="margin-bottom:16px">
+        <select class="field field-sm" id="se-tipo-data" onchange="onSeTipoDataChange()" style="min-width:150px">
+          <option value="atual">Posição Atual</option>
+          <option value="mes_anterior">Fim Mês Anterior</option>
+          <option value="especifica">Data Específica</option>
+        </select>
+        <input type="date" id="se-data" class="field field-sm" onchange="renderSaldoEst()" style="display:none">
         <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
           <option value="">Todas as categorias</option>
         </select>
@@ -1162,7 +1104,7 @@
       <div class="tbl-wrap"><table class="tbl">
         <thead><tr>
           <th>Insumo</th><th>Categoria</th><th>Un.</th><th>Loja</th>
-          <th class="r">Saldo Atual</th><th class="r">Custo Médio</th><th class="r">Valor em Estoque</th><th class="c">Status</th>
+          <th class="r" id="se-th-saldo">Saldo Atual</th><th class="r">Custo Médio</th><th class="r">Valor em Estoque</th><th class="c">Status</th>
         </tr></thead>
         <tfoot id="se-tfoot"></tfoot>
         <tbody id="se-body"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
@@ -1183,6 +1125,11 @@
           <option value="entrada_manual">Entrada Manual</option>
           <option value="nfe">XML / NF-e</option>
           <option value="ajuste">Ajuste</option>
+        </select>
+        <select class="field field-sm" onchange="setPeriodoRange(this.value,'hc-de','hc-ate',renderHistoricoCusto)" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
         </select>
         <input type="date" class="field field-sm" id="hc-de" onchange="renderHistoricoCusto()" title="De">
         <input type="date" class="field field-sm" id="hc-ate" onchange="renderHistoricoCusto()" title="Até">
@@ -1702,6 +1649,7 @@ async function api(endpoint, opts={}) {
 
 // ── STATE ─────────────────────────────────────────────────────────
 let insumos=[], saldos=[], entradas=[], saidas=[], vinculos=[], fornecedores=[], insumoFornVinculos=[];
+let gruposCompra=[], gruposCompraItens={};
 let lojas=[], lojaAtual=null;
 let nfeItens=[], tabAtual='hub';
 
@@ -1738,6 +1686,14 @@ async function carregar() {
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
     ]);
     insumoFornVinculos = await api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
+    // Carrega grupos de compra para o filtro de movimentação
+    if (!gruposCompra.length) {
+      gruposCompra = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
+      if (gruposCompra.length) {
+        const its = await Promise.all(gruposCompra.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}`).catch(()=>[])));
+        gruposCompra.forEach((g,i) => { gruposCompraItens[g.id] = its[i].map(r=>r.insumo_id); });
+      }
+    }
     popularSelects();
     // Inicializar datas dos filtros de entradas
     const _hoje=hoje(); const _ini=_hoje.slice(0,7)+'-01';
@@ -1777,33 +1733,89 @@ function popularSelects() {
   const saiIns = document.getElementById('sai-f-ins'); if (saiIns) saiIns.innerHTML = todos;
   document.getElementById('kx-ins').innerHTML = '<option value="">Selecione um insumo…</option>'+insOpts;
   document.getElementById('mov-ins').innerHTML = todos;
-  // categorias únicas
-  const cats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
-  document.getElementById('mov-cat').innerHTML = '<option value="">Todas categorias</option>'+
-    cats.map(c=>`<option value="${c}">${esc(c)}</option>`).join('');
+  // grupos de compra — Movimentação e Entradas
+  const grpOpts = '<option value="">Grupo: Todos</option>'+
+    gruposCompra.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
+  document.getElementById('mov-cat').innerHTML = grpOpts.replace('Grupo: Todos','Todos os grupos');
+  document.getElementById('ent-f-cat').innerHTML = grpOpts;
 }
 
 // ── SALDO DE ESTOQUE ─────────────────────────────────────────────
+function onSeTipoDataChange() {
+  const tipo = document.getElementById('se-tipo-data').value;
+  const dataEl = document.getElementById('se-data');
+  if (tipo === 'mes_anterior') {
+    const d = new Date();
+    const last = new Date(d.getFullYear(), d.getMonth(), 0);
+    dataEl.value = `${last.getFullYear()}-${String(last.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;
+    dataEl.style.display = 'none';
+  } else if (tipo === 'especifica') {
+    dataEl.style.display = '';
+    dataEl.focus();
+    return;
+  } else {
+    dataEl.value = '';
+    dataEl.style.display = 'none';
+  }
+  renderSaldoEst();
+}
+
 async function renderSaldoEst(){
-  const lojaFil=getLojaId()||'';
-  const catFil=document.getElementById('se-cat')?.value||'';
-  const tbody=document.getElementById('se-body');
-  const tfoot=document.getElementById('se-tfoot');
-  tbody.innerHTML='<tr><td colspan="8" class="empty">Carregando...</td></tr>';
-  try{
-    let q=`saldo_estoque?tenant_id=eq.${TENANT_ID}`;
-    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
-    const saldos=await api(q).catch(()=>[]);
-    if(!saldos.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum saldo encontrado.</td></tr>';tfoot.innerHTML='';return;}
-    let rows=saldos.map(s=>{
-      const ins=insumos.find(i=>i.id===s.insumo_id);
-      const loja=lojas.find(l=>l.id===s.loja_id);
-      if(!ins)return null;
-      if(catFil&&(ins.categoria||'')!==catFil)return null;
-      const valor=(s.quantidade||0)*(s.custo_medio||0);
-      const status=(ins.minimo>0&&s.quantidade<ins.minimo)?'<span class="badge" style="background:#fee2e2;color:#dc2626">Abaixo mín.</span>':
-                   (s.quantidade===0?'<span class="badge" style="background:#f1f5f9;color:#64748b">Zerado</span>':
-                   '<span class="badge" style="background:#dcfce7;color:#16a34a">OK</span>');
+  const lojaFil = getLojaId()||'';
+  const catFil  = document.getElementById('se-cat')?.value||'';
+  const tipoData= document.getElementById('se-tipo-data')?.value||'atual';
+  const dataBase= document.getElementById('se-data')?.value||'';
+  const tbody   = document.getElementById('se-body');
+  const tfoot   = document.getElementById('se-tfoot');
+  tbody.innerHTML = '<tr><td colspan="8" class="empty">Carregando...</td></tr>';
+
+  const thSaldo = document.getElementById('se-th-saldo');
+  if (thSaldo) thSaldo.textContent = tipoData === 'atual' ? 'Saldo Atual' :
+    `Saldo em ${dataBase ? new Date(dataBase+'T12:00:00').toLocaleDateString('pt-BR') : '—'}`;
+
+  try {
+    let saldosCalc = [];
+
+    if (tipoData === 'atual') {
+      let q = `saldo_estoque?tenant_id=eq.${TENANT_ID}`;
+      if (lojaFil) q += `&loja_id=eq.${lojaFil}`;
+      const saldos = await api(q).catch(()=>[]);
+      saldosCalc = saldos.map(s => ({ insumo_id:s.insumo_id, loja_id:s.loja_id, quantidade:s.quantidade||0, custo_medio:s.custo_medio||0 }));
+    } else {
+      if (!dataBase) { tbody.innerHTML='<tr><td colspan="8" class="empty">Selecione uma data base.</td></tr>'; tfoot.innerHTML=''; return; }
+      const dtLim = dataBase + 'T23:59:59';
+      const entsAteDt = entradas.filter(e => { const dt=e.criado_em||e.created_at||''; return dt<=dtLim&&(!lojaFil||e.loja_id===lojaFil); });
+      const saisAteDt = saidas.filter(s  => { const dt=s.criado_em||s.created_at||''; return dt<=dtLim&&(!lojaFil||s.loja_id===lojaFil); });
+
+      const map = {};
+      const sorted = [...entsAteDt].sort((a,b)=>(a.criado_em||a.created_at||'').localeCompare(b.criado_em||b.created_at||''));
+      for (const e of sorted) {
+        const key = e.insumo_id+'|'+(e.loja_id||'');
+        if (!map[key]) map[key] = { insumo_id:e.insumo_id, loja_id:e.loja_id||null, quantidade:0, custo_medio:0 };
+        const cur = map[key]; const qtdE=e.quantidade||0; const custoE=e.custo_unitario||0;
+        const nq = cur.quantidade + qtdE;
+        if (nq > 0) cur.custo_medio = (cur.quantidade*cur.custo_medio + qtdE*custoE) / nq;
+        cur.quantidade = nq;
+      }
+      for (const s of saisAteDt) {
+        const key = s.insumo_id+'|'+(s.loja_id||'');
+        if (!map[key]) map[key] = { insumo_id:s.insumo_id, loja_id:s.loja_id||null, quantidade:0, custo_medio:0 };
+        map[key].quantidade = Math.max(0, map[key].quantidade - (s.quantidade||0));
+      }
+      saldosCalc = Object.values(map);
+    }
+
+    if (!saldosCalc.length) { tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum saldo encontrado.</td></tr>'; tfoot.innerHTML=''; return; }
+
+    let rows = saldosCalc.map(s => {
+      const ins  = insumos.find(i=>i.id===s.insumo_id);
+      const loja = lojas.find(l=>l.id===s.loja_id);
+      if (!ins) return null;
+      if (catFil && (ins.categoria||'')!==catFil) return null;
+      const valor = (s.quantidade||0)*(s.custo_medio||0);
+      const status = (ins.minimo>0&&s.quantidade<ins.minimo)?'<span class="badge" style="background:#fee2e2;color:#dc2626">Abaixo mín.</span>':
+                     (s.quantidade===0?'<span class="badge" style="background:#f1f5f9;color:#64748b">Zerado</span>':
+                     '<span class="badge" style="background:#dcfce7;color:#16a34a">OK</span>');
       return {ins,loja,s,valor,row:`<tr>
         <td style="font-weight:600">${esc(ins.nome)}</td>
         <td>${esc(ins.categoria||'—')}</td>
@@ -1815,17 +1827,18 @@ async function renderSaldoEst(){
         <td class="c">${status}</td>
       </tr>`};
     }).filter(Boolean);
+
     rows.sort((a,b)=>b.valor-a.valor);
-    tbody.innerHTML=rows.map(r=>r.row).join('');
-    const totalValor=rows.reduce((s,r)=>s+r.valor,0);
-    const se=document.getElementById('se-valor-total');
-    if(se) se.innerHTML=`Valor total em estoque: <span style="color:#16a34a">${brl(totalValor)}</span>`;
-    tfoot.innerHTML=`<tr style="background:#f8fafc;font-weight:700">
+    tbody.innerHTML = rows.map(r=>r.row).join('');
+    const totalValor = rows.reduce((s,r)=>s+r.valor,0);
+    const se = document.getElementById('se-valor-total');
+    if (se) se.innerHTML = `Valor total em estoque: <span style="color:#16a34a">${brl(totalValor)}</span>`;
+    tfoot.innerHTML = `<tr style="background:#f8fafc;font-weight:700">
       <td colspan="4" style="font-size:11px;color:#0f172a;text-transform:uppercase;letter-spacing:.05em">TOTAL</td>
       <td class="r mono">—</td><td class="r mono">—</td>
       <td class="r mono" style="color:#16a34a">${brl(totalValor)}</td>
       <td></td></tr>`;
-  }catch(e){tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+  } catch(e) { tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
 }
 
 function _initSaldoEst(){
@@ -1979,7 +1992,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
 function getSaldo(insId) {
-  return saldos.find(s=>s.insumo_id===insId)||{quantidade:0,custo_medio:0,minimo:null,maximo:null};
+  const lojaId = getLojaId();
+  return saldos.find(s=>s.insumo_id===insId&&(!lojaId||s.loja_id===lojaId))||{quantidade:0,custo_medio:0,minimo:null,maximo:null};
 }
 function statusOf(s) {
   const q=s.quantidade||0;
@@ -2146,6 +2160,7 @@ function renderEntradas() {
   const fForn  = document.getElementById('ent-f-forn')?.value||'';
   const fDe    = document.getElementById('ent-f-de')?.value||'';
   const fAte   = document.getElementById('ent-f-ate')?.value||'';
+  const fCat   = document.getElementById('ent-f-cat')?.value||'';
   const porPag = parseInt(document.getElementById('ent-por-pag')?.value||20);
 
   // KPIs
@@ -2175,6 +2190,7 @@ function renderEntradas() {
 
   // Filtrar
   let rows = entradas;
+  if (fCat)  { const ids=gruposCompraItens[fCat]||[]; rows=rows.filter(e=>ids.includes(e.insumo_id)); }
   if (busca)  rows=rows.filter(e=>{const ins=insumos.find(i=>i.id===e.insumo_id);return (ins?.nome||'').toLowerCase().includes(busca);});
   if (fTipo)  rows=rows.filter(e=>e.tipo===fTipo||(fTipo==='nfe'&&e.tipo==='nfe_importada'));
   if (fForn)  rows=rows.filter(e=>e.fornecedor_nome===fForn);
@@ -3186,24 +3202,20 @@ async function iniciarAbaInventario() {
 let _invLista = [], _invPagAtual = 1;
 
 async function renderInvLista() {
-  const lojaFil      = document.getElementById('inv-fil-loja')?.value||'';
-  const dataIni      = document.getElementById('inv-fil-ini')?.value||'';
-  const dataFim      = document.getElementById('inv-fil-fim')?.value||'';
-  const sitAtivo     = document.getElementById('inv-sit-ativo')?.checked;
-  const sitEncerrado = document.getElementById('inv-sit-encerrado')?.checked;
-  const sitCancelado = document.getElementById('inv-sit-cancelado')?.checked;
-  const situacoes = [];
-  if (sitAtivo)     situacoes.push('ativo');
-  if (sitEncerrado) situacoes.push('encerrado','fechado');
-  if (sitCancelado) situacoes.push('cancelado');
+  const lojaFil = document.getElementById('inv-fil-loja')?.value||'';
+  const dataIni = document.getElementById('inv-fil-ini')?.value||'';
+  const dataFim = document.getElementById('inv-fil-fim')?.value||'';
   const tbody = document.getElementById('inv-lista-body');
+  if (!dataIni || !dataFim) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Preencha o <b>período</b> (D. Inicial e D. Final) para consultar.</td></tr>';
+    return;
+  }
   tbody.innerHTML = '<tr><td colspan="7" class="empty">Carregando...</td></tr>';
   try {
     let q = `inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`;
-    if (situacoes.length) q += `&status=in.(${situacoes.join(',')})`;
-    if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
-    if (dataIni)   q += `&criado_em=gte.${dataIni}`;
-    if (dataFim)   q += `&criado_em=lte.${dataFim}T23:59:59`;
+    if (lojaFil) q += `&loja_id=eq.${lojaFil}`;
+    if (dataIni) q += `&criado_em=gte.${dataIni}`;
+    if (dataFim) q += `&criado_em=lte.${dataFim}T23:59:59`;
     const lista = await api(q);
     if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
 
@@ -3626,10 +3638,21 @@ function exportFechamentoCSV() {
 // ── MOVIMENTAÇÃO NO PERÍODO ───────────────────────────────────────
 let _movRows = null, _movPagAtual = 1, _movTotais = null;
 
+function filtrarMovIns() {
+  const grpId = document.getElementById('mov-cat').value;
+  const sel = document.getElementById('mov-ins');
+  if (!sel) return;
+  const ids = grpId ? (gruposCompraItens[grpId]||[]) : null;
+  const filtrados = ids ? insumos.filter(i=>ids.includes(i.id)) : insumos;
+  sel.innerHTML = '<option value="">Todos os insumos</option>'+
+    filtrados.map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
+}
+
 function limparMovFiltros() {
   ['mov-de','mov-ate','mov-cat','mov-ins'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  filtrarMovIns();
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
   if (tbody) tbody.innerHTML = '<tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr>';
@@ -3746,7 +3769,7 @@ async function renderMovimentacao() {
   const saisPer = saidas.filter(s => s.criado_em >= de && s.criado_em <= ate + 'T23:59:59');
 
   let insFilt = insumos;
-  if (catF) insFilt = insFilt.filter(i => (i.categoria||'') === catF);
+  if (catF) { const ids = gruposCompraItens[catF]||[]; insFilt = insFilt.filter(i => ids.includes(i.id)); }
   if (insF) insFilt = insFilt.filter(i => i.id === insF);
 
   let tQAnt=0,tVAnt=0,tQEnt=0,tVEnt=0,tQCon=0,tVCon=0,tQPerd=0,tVPerd=0,tQFin=0,tVFin=0,tVFin2=0;
@@ -3885,6 +3908,22 @@ async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maxi
 function abrirModal(id) {document.getElementById(id).classList.add('open')}
 function fecharModal(id){document.getElementById(id).classList.remove('open')}
 function hoje(){return new Date().toISOString().split('T')[0]}
+function setPeriodoRange(tipo, deId, ateId, fn) {
+  const d = new Date();
+  let de, ate;
+  if (tipo === 'mes_atual') {
+    de = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    ate = d.toISOString().split('T')[0];
+  } else if (tipo === 'mes_anterior') {
+    const prev = new Date(d.getFullYear(), d.getMonth()-1, 1);
+    const last = new Date(d.getFullYear(), d.getMonth(), 0);
+    de = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}-01`;
+    ate = `${last.getFullYear()}-${String(last.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;
+  } else { return; }
+  const elDe = document.getElementById(deId); if (elDe) elDe.value = de;
+  const elAte = document.getElementById(ateId); if (elAte) elAte.value = ate;
+  if (fn) fn();
+}
 function primeiroDiaMes(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;}
 function ultimoDiaMes(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0];}
 function ajustarDatasInv(){
