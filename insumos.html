@@ -231,7 +231,7 @@
     </div>
 
     <!-- PANE 1: CADASTRO DE ITEM -->
-    <div class="mod-pane" id="pane-cadastro" style="padding-top:4px">
+    <div class="mod-pane" id="pane-cadastro" style="padding-top:16px">
       <div class="form-card">
         <div class="form-section">
           <div class="form-section-title">1. Identificação</div>
@@ -300,7 +300,7 @@
     </div>
 
     <!-- PANE 2: PRODUTOS / ITENS -->
-    <div class="mod-pane" id="pane-produtos" style="display:block;padding-top:4px">
+    <div class="mod-pane" id="pane-produtos" style="display:block;padding-top:16px">
       <div class="filter-bar-wrap">
         <div class="prod-toolbar">
           <div class="prod-search">
@@ -352,7 +352,7 @@
     </div>
 
     <!-- PANE 3: BASE DE CUSTOS -->
-    <div class="mod-pane" id="pane-custos" style="padding-top:4px">
+    <div class="mod-pane" id="pane-custos" style="padding-top:16px">
 
     <!-- TOOLBAR -->
     <div class="filter-bar-wrap">
@@ -979,7 +979,7 @@ async function carregarClassificacoes(){
 
 document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
 
-(async()=>{await carregarLojas();await Promise.all([carregarOpcoes(),carregarClassificacoes()]);await carregarInsumos();})();
+(async()=>{await carregarLojas();await Promise.all([carregarOpcoes(),carregarClassificacoes()]);await carregarInsumos();switchModulo('produtos');})();
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
