@@ -81,6 +81,7 @@
   .b-enviado{background:#ede9fe;color:#7c3aed}
   .b-recebido{background:#dcfce7;color:#16a34a}
   .b-cancelado{background:#fee2e2;color:#dc2626}
+  .b-pendente{background:#fef9c3;color:#854d0e}
 
   .field{background:var(--bg2);border:1px solid var(--border2);color:var(--text1);
     padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit}
@@ -154,6 +155,17 @@
   .toast.err{background:var(--red)}
   .toast.ok{background:var(--green)}
   .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
+
+  /* ── DRAWER (painel lateral direito) ───────────────── */
+  .drw-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+  .drw-backdrop.open{opacity:1;pointer-events:all}
+  .drawer{position:fixed;top:0;right:0;width:440px;max-width:100vw;height:100vh;background:var(--bg2);border-left:1px solid var(--border2);z-index:301;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease;box-shadow:-6px 0 32px rgba(0,0,0,.1)}
+  .drawer.open{transform:translateX(0)}
+  .drw-hd{padding:18px 22px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .drw-title{font-size:14px;font-weight:700;flex:1;color:var(--text1)}
+  .drw-close{width:28px;height:28px;border:1px solid var(--border2);background:transparent;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-family:inherit}
+  .drw-body{flex:1;overflow-y:auto;padding:20px 22px}
+  .drw-info{font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6}
 
   /* ── PAGINAÇÃO ─────────────────────────────────────── */
   .pag-btn{padding:4px 10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s}
@@ -267,6 +279,7 @@
               <option value="">Todos os status</option>
               <option value="solicitado">Aguardando</option>
               <option value="processado">Processado</option>
+              <option value="pendente">Pendente</option>
               <option value="cancelado">Cancelado</option>
             </select>
           </div>
@@ -310,18 +323,7 @@
             <tbody id="cons-body"><tr><td colspan="8" class="empty">Nenhuma solicitação pendente</td></tr></tbody>
           </table>
         </div></div>
-        <div id="cons-lojas-panel" style="display:none" class="lojas-panel">
-          <div class="lojas-panel-hd">
-            Solicitações por Loja —
-            <span id="cons-lojas-titulo" style="color:var(--teal)"></span>
-          </div>
-          <div class="tbl-scroll">
-            <table class="tbl">
-              <thead><tr><th>Loja</th><th class="r">Q. Solicitada</th><th>Un.</th></tr></thead>
-              <tbody id="cons-lojas-body"></tbody>
-            </table>
-          </div>
-        </div>
+        <!-- painel inline removido; usa modal m-lojas -->
         <div style="font-size:11px;color:var(--text3);margin-top:12px;display:flex;align-items:center;gap:6px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           O sistema sugere o fornecedor com base no último preço e histórico de compras. Altere se necessário.
@@ -468,6 +470,41 @@
     <div class="modal-foot">
       <div class="ml"></div>
       <button class="btn btn-ghost" onclick="fecharModal('m-ped')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER: DETALHE SOLICITAÇÃO (painel lateral direito) -->
+<div id="drw-backdrop" class="drw-backdrop" onclick="fecharDrawer()"></div>
+<div id="sol-drawer" class="drawer">
+  <div class="drw-hd">
+    <div class="drw-title" id="sol-drw-titulo">Solicitação</div>
+    <button class="drw-close" onclick="fecharDrawer()">✕</button>
+  </div>
+  <div class="drw-body">
+    <div id="sol-drw-info" class="drw-info"></div>
+    <div class="tbl-wrap"><div class="tbl-scroll">
+      <table class="tbl">
+        <thead><tr><th>Insumo</th><th class="r">Qtd</th><th>Un.</th></tr></thead>
+        <tbody id="sol-drw-body"><tr><td colspan="3" class="empty">Carregando...</td></tr></tbody>
+      </table>
+    </div></div>
+  </div>
+</div>
+
+<!-- MODAL: VER LOJAS (quantidade solicitada por loja) -->
+<div id="m-lojas" class="overlay" onclick="if(event.target===this)fecharModal('m-lojas')">
+  <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+    <h2>Solicitações por Loja — <span id="ml-titulo" style="color:var(--teal)"></span></h2>
+    <div class="tbl-wrap"><div class="tbl-scroll">
+      <table class="tbl">
+        <thead><tr><th>Loja</th><th class="r">Qtd. Solicitada</th><th>Un.</th></tr></thead>
+        <tbody id="ml-body"></tbody>
+      </table>
+    </div></div>
+    <div class="modal-foot">
+      <div class="ml"></div>
+      <button class="btn btn-ghost" onclick="fecharModal('m-lojas')">Fechar</button>
     </div>
   </div>
 </div>
@@ -621,7 +658,7 @@ async function renderSolicitacoes() {
   try {
     let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&order=created_at.desc`;
     if (statusFil) q += `&status=eq.${statusFil}`;
-    else           q += `&status=in.(solicitado,processado,cancelado)`;
+    else           q += `&status=in.(solicitado,processado,cancelado,pendente)`;
     if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
     if (deFil)     q += `&data_pedido=gte.${deFil}`;
     if (ateFil)    q += `&data_pedido=lte.${ateFil}`;
@@ -648,8 +685,8 @@ async function renderSolicitacoes() {
 function renderSolTabela() {
   const tbody = document.getElementById('sol-body');
   const pag   = document.getElementById('sol-pag');
-  const badgeMap = { solicitado:'b-solicitado', processado:'b-processado', cancelado:'b-cancelado' };
-  const labelMap = { solicitado:'Aguardando', processado:'Processado', cancelado:'Cancelado' };
+  const badgeMap = { solicitado:'b-solicitado', processado:'b-processado', cancelado:'b-cancelado', pendente:'b-pendente' };
+  const labelMap = { solicitado:'Aguardando', processado:'Processado', cancelado:'Cancelado', pendente:'Pendente' };
 
   if (!_solRows.length) {
     if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma solicitação encontrada</td></tr>';
@@ -689,19 +726,32 @@ async function verSolicitacao(id) {
   const s = solicitacoes.find(x=>x.id===id);
   if (!s) return;
   const loja = lojas.find(l=>l.id===s.loja_id);
-  document.getElementById('ms-titulo').textContent = `Solicitação — ${esc(loja?.nome||'—')}`;
-  document.getElementById('ms-info').innerHTML = `<span style="color:var(--text3)">Data:</span> ${fmtData(s.data_pedido)}
-    ${s.observacao?` · <span style="color:var(--text3)">Obs:</span> ${esc(s.observacao)}`:''}`;
+  document.getElementById('sol-drw-titulo').textContent = `Solicitação — ${loja?.nome||'—'}`;
+  document.getElementById('sol-drw-info').innerHTML =
+    `<strong>Data:</strong> ${fmtDateTime(s.created_at)}&emsp;<strong>Status:</strong> ${s.status}` +
+    (s.observacao ? `<br><strong>Obs:</strong> ${esc(s.observacao)}` : '');
+  document.getElementById('sol-drw-body').innerHTML = '<tr><td colspan="3" class="empty">Carregando...</td></tr>';
+  abrirDrawer();
   try {
     const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
-    document.getElementById('ms-body').innerHTML = itens.map(it => {
-      const ins = insumos.find(i=>i.id===it.insumo_id);
-      return `<tr><td>${esc(ins?.nome||it.insumo_id)}</td>
-        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
-        <td>${esc(it.unidade||'un')}</td></tr>`;
-    }).join('');
+    document.getElementById('sol-drw-body').innerHTML = itens.length
+      ? itens.map(it => {
+          const ins = insumos.find(i=>i.id===it.insumo_id);
+          return `<tr><td>${esc(ins?.nome||it.insumo_id)}</td>
+            <td class="r mono">${fmtQty(it.quantidade)}</td>
+            <td>${esc(it.unidade||'un')}</td></tr>`;
+        }).join('')
+      : '<tr><td colspan="3" class="empty">Nenhum item</td></tr>';
   } catch(e) { toast('Erro: '+e.message,'err'); }
-  abrirModal('m-sol');
+}
+
+function abrirDrawer() {
+  document.getElementById('drw-backdrop').classList.add('open');
+  document.getElementById('sol-drawer').classList.add('open');
+}
+function fecharDrawer() {
+  document.getElementById('drw-backdrop').classList.remove('open');
+  document.getElementById('sol-drawer').classList.remove('open');
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -804,22 +854,20 @@ function renderConsolidado() {
     </tr>`;
   }).join('');
 
-  // Mostra breakdown da primeira linha por padrão
-  mostrarLojaBreakdown(itens[0][0]);
 }
 
 function mostrarLojaBreakdown(insId) {
   const d = consolidado[insId];
   if (!d) return;
-  document.getElementById('cons-lojas-titulo').textContent = d.nome;
-  document.getElementById('cons-lojas-body').innerHTML = d.lojas.map(l =>
+  document.getElementById('ml-titulo').textContent = d.nome;
+  document.getElementById('ml-body').innerHTML = d.lojas.map(l =>
     `<tr>
       <td style="font-weight:600">${esc(l.nome)}</td>
-      <td class="r mono">${l.qty.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+      <td class="r mono">${fmtQty(l.qty)}</td>
       <td>${esc(d.unidade)}</td>
     </tr>`
   ).join('');
-  document.getElementById('cons-lojas-panel').style.display = '';
+  abrirModal('m-lojas');
 }
 
 function buildFornOptions(insId, selectedId) {
