@@ -850,10 +850,12 @@ function editarItemCadastro(id){
 async function salvarCadastro(){
   const nome=document.getElementById('cad-nome').value.trim();
   if(!nome){toast('Informe a descrição do item.','err');return;}
+  const und = document.getElementById('cad-und-med').value||null;
   const payload={
     nome,
     categoria: document.getElementById('cad-grupo').value||null,
-    unidade_medida: document.getElementById('cad-und-med').value||null,
+    unidade_medida: und,
+    unidade_compra: und,
     tipo_baixa: document.getElementById('cad-tipo-baixa').value||'consumo',
     ativo: document.getElementById('cad-ativo').value!=='false',
   };
