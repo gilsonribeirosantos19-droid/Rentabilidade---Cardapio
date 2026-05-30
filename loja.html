@@ -615,20 +615,14 @@
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px">
           <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:18px">Nova movimentação</div>
 
-          <!-- Linha 1: Tipo + Data -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-            <div>
-              <div class="mov-lbl">Tipo</div>
-              <select id="mov-tipo" class="mov-sel" onchange="onMovTipoChange()">
-                <option value="">Selecione o tipo</option>
-                <option value="saida">Saída</option>
-                <option value="entrada">Entrada</option>
-              </select>
-            </div>
-            <div>
-              <div class="mov-lbl">Data</div>
-              <input type="date" id="mov-data" class="mov-field">
-            </div>
+          <!-- Linha 1: Tipo -->
+          <div style="margin-bottom:14px">
+            <div class="mov-lbl">Tipo</div>
+            <select id="mov-tipo" class="mov-sel" onchange="onMovTipoChange()">
+              <option value="">Selecione o tipo</option>
+              <option value="saida">Saída</option>
+              <option value="entrada">Entrada</option>
+            </select>
           </div>
 
           <!-- Linha 2: Insumo + Quantidade -->
