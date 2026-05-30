@@ -592,7 +592,7 @@
             </div>
           </div>
           <div>
-            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Categoria</div>
+            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Grupo</div>
             <select id="mov-cat-fil" onchange="carregarMovimentacoes()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:140px;cursor:pointer">
               <option value="">Todos</option>
             </select>
@@ -2487,15 +2487,14 @@ async function carregarMovimentacoes() {
   if (!lojaId || !data) return;
   container.innerHTML = '<div class="empty">Carregando...</div>';
 
-  // Popular categorias no filtro
+  // Popular grupos no filtro
   const selCat = document.getElementById('mov-cat-fil');
   if (selCat && selCat.options.length <= 1) {
-    const cats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
-    cats.forEach(c=>{ const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o); });
+    grupos.forEach(g=>{ const o=document.createElement('option');o.value=g.id;o.textContent=g.nome;selCat.appendChild(o); });
   }
 
   const tipoFil = document.getElementById('mov-tipo-fil')?.value||'';
-  const catFil  = document.getElementById('mov-cat-fil')?.value||'';
+  const grpFil  = document.getElementById('mov-cat-fil')?.value||'';
 
   try {
     const queries = [];
@@ -2510,7 +2509,7 @@ async function carregarMovimentacoes() {
       ...saidas.map(s=>({...s,_tipo:'saida'})),
     ].sort((a,b)=>(b.criado_em||b.created_at||'').localeCompare(a.criado_em||a.created_at||''));
 
-    if (catFil) movs = movs.filter(m=>{ const ins=insumos.find(i=>i.id===m.insumo_id); return (ins?.categoria||'')=== catFil; });
+    if (grpFil) { const ids=gruposItens[grpFil]||[]; movs=movs.filter(m=>ids.includes(m.insumo_id)); }
 
     if (!movs.length) { container.innerHTML = '<div class="empty">Nenhuma movimentação neste dia.</div>'; return; }
 
