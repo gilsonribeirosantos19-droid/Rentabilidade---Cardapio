@@ -912,13 +912,13 @@ function renderProdutos(){
     return `<tr onclick="editarItemCadastro('${ins.id}')" style="cursor:pointer">
       <td class="td-mono" style="color:#64748b;font-size:11px">${esc(codigo)}</td>
       <td style="font-weight:600;color:#0f172a">${esc(ins.nome)}</td>
-      <td style="color:#64748b">—</td>
-      <td style="color:#64748b">—</td>
+      <td style="color:#64748b">${esc(ins.tipo_item||'—')}</td>
+      <td style="color:#64748b">${esc(ins.familia||'—')}</td>
       <td>${_catBadge(ins.categoria)}</td>
-      <td style="color:#64748b">—</td>
+      <td style="color:#64748b">${esc(ins.subgrupo||'—')}</td>
       <td style="color:#64748b">${esc(ins.unidade_medida||'—')}</td>
       <td style="color:#64748b">${esc(ins.unidade_compra||'—')}</td>
-      <td class="r td-mono" style="color:#64748b">${ins.rendimento_pct!=null?ins.rendimento_pct:'—'}</td>
+      <td class="r td-mono" style="color:#64748b">—</td>
       <td style="color:#64748b">—</td>
       <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
       <td>
