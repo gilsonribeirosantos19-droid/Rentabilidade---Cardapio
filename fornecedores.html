@@ -1014,7 +1014,7 @@ async function carregarTudo(){
     // Opções de embalagem: carrega tudo e filtra no cliente (igual configuracoes.html)
     try{
       const todasClsf=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
-      _embOpcoes = todasClsf.filter(c=>c.tipo==='embalagem').map(e=>e.nome);
+      _embOpcoes = todasClsf.filter(c=>c.tipo==='embalagem'||c.tipo==='tipo_item').map(e=>e.nome);
     }catch{ _embOpcoes=[]; }
     const selEmb=document.getElementById('v-embalagem');
     if(selEmb) selEmb.innerHTML='<option value="">Selecione a embalagem...</option>'+
