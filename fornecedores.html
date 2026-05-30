@@ -251,40 +251,100 @@
     <!-- ===== PANE 2: ITEM × FORNECEDOR ===== -->
     <div class="mod-pane" id="pane-vinculos">
 
-      <div class="filter-bar-wrap">
-        <div class="toolbar">
-          <select id="vin-sel-forn" class="fil-select fil-select-lg" onchange="onSelecionarFornVinculo()">
-            <option value="">Selecione um fornecedor...</option>
-          </select>
-          <div class="search-wrap">
-            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="vin-busca" placeholder="Buscar item..." oninput="filtrarVinculos()">
+      <!-- NÍVEL 1: Lista de Fornecedores -->
+      <div id="vin-pane-lista">
+        <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
+          <div class="search-wrap" style="flex:1;max-width:320px">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="vin-busca-forn" placeholder="Buscar fornecedor..." oninput="filtrarListaForn()">
           </div>
-          <button class="btn ml-auto btn-primary" id="btn-novo-vinculo" onclick="abrirModalVinculo()" style="display:none">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Vincular Item
-          </button>
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-scroll">
+            <table>
+              <thead><tr>
+                <th>Fornecedor</th>
+                <th>CNPJ</th>
+                <th>Contato / WhatsApp</th>
+                <th>Cidade</th>
+                <th class="c">Itens vinculados</th>
+              </tr></thead>
+              <tbody id="vin-lista-tbody"><tr><td colspan="5" class="empty-state">Carregando...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Info do fornecedor selecionado -->
-      <div class="vin-header" id="vin-header" style="display:none">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-        <div class="vin-header-info">
-          <div class="vin-header-nome" id="vin-forn-nome">—</div>
-          <div class="vin-header-sub" id="vin-forn-sub">—</div>
-        </div>
-        <span class="badge b-cat" id="vin-forn-qtd" style="font-size:12px">0 itens</span>
-      </div>
+      <!-- NÍVEL 2: Detalhe do Fornecedor -->
+      <div id="vin-pane-detalhe" style="display:none">
 
-      <div id="vin-empty-state" class="tbl-card" style="display:block">
-        <div class="empty-state">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-          <div>Selecione um fornecedor para ver os itens vinculados</div>
+        <!-- Cabeçalho -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:14px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:12px">
+          <button class="btn" onclick="voltarListaForn()" style="padding:6px 16px;font-size:13px">← Voltar</button>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:15px;color:#0f172a" id="vin-det-nome">—</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:2px" id="vin-det-sub">—</div>
+          </div>
+          <span class="badge b-cat" id="vin-det-qtd" style="font-size:12px">0 itens</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="search-wrap" style="width:180px">
+              <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="vin-busca" placeholder="Filtrar itens..." oninput="filtrarVinculos()" style="font-size:12px">
+            </div>
+            <button class="btn btn-primary" onclick="abrirFormVinculo()" style="white-space:nowrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Vincular Item
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div id="vin-tbl-wrap" style="display:none">
+        <!-- Formulário inline (add / edit) -->
+        <div id="vin-form-inline" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:20px">
+          <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:16px" id="vin-form-titulo">Vincular Item</div>
+          <div class="form-section">
+            <div class="form-section-title">Item interno</div>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Insumo / Matéria-prima *</label>
+                <select class="form-select" id="v-insumo" onchange="atualizarConversaoPreview()"><option value="">Selecione o item interno...</option></select>
+              </div>
+              <div class="form-group"><label class="form-label">Descrição no fornecedor</label><input class="form-input" id="v-descricao" type="text" placeholder="Como o fornecedor chama o produto"></div>
+              <div class="form-group"><label class="form-label">Código no fornecedor</label><input class="form-input" id="v-codigo" type="text" placeholder="Cód. do produto no catálogo"></div>
+              <div class="form-group"><label class="form-label">EAN/GTIN</label><input class="form-input" id="v-ean" type="text" placeholder="Código de barras" style="font-family:'DM Mono',monospace"></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="form-section-title">Embalagem e Conversão</div>
+            <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
+              <div class="form-group">
+                <label class="form-label">Embalagem fornecedor</label>
+                <input class="form-input" id="v-embalagem" type="text" placeholder="Ex: CX 27x0,375 · FARDO 20KG" oninput="atualizarConversaoPreview(true)" list="emb-datalist" style="font-family:'DM Mono',monospace">
+                <datalist id="emb-datalist"></datalist>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Qt. na Embalagem (un. estoque)</label>
+                <input class="form-input" id="v-qtd-emb" type="number" step="0.001" min="0" placeholder="Auto" oninput="atualizarConversaoPreview(false)" style="font-family:'DM Mono',monospace">
+              </div>
+            </div>
+            <div class="conv-preview" id="conv-preview" style="display:none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              <span id="conv-preview-txt"></span>
+            </div>
+          </div>
+          <div class="form-section" style="margin-bottom:0">
+            <div class="form-section-title">Preço</div>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Último preço de compra (R$)</label><input class="form-input" id="v-preco" type="number" step="0.01" min="0" placeholder="0,00"></div>
+              <div class="form-group"><label class="form-label">Data da última entrada</label><input class="form-input" id="v-ultima-entrada" type="date"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #e2e8f0">
+            <button class="btn" onclick="fecharFormVinculo()">Cancelar</button>
+            <button class="btn btn-primary" id="btn-salvar-vin" onclick="salvarVinculo()">Salvar Vínculo</button>
+          </div>
+        </div>
+
+        <!-- Tabela de itens -->
         <div class="tbl-card">
           <div class="tbl-scroll">
             <table>
@@ -299,12 +359,11 @@
                 <th class="r">Última entrada</th>
                 <th>Ações</th>
               </tr></thead>
-              <tbody id="vin-tbody">
-                <tr><td colspan="10" class="empty-state">Nenhum item vinculado</td></tr>
-              </tbody>
+              <tbody id="vin-tbody"><tr><td colspan="9" class="empty-state">Nenhum item vinculado</td></tr></tbody>
             </table>
           </div>
         </div>
+
       </div>
 
     </div>
@@ -437,67 +496,6 @@
 </div>
 
 <!-- ===== MODAL VÍNCULO ===== -->
-<div class="modal-overlay" id="modal-vinculo">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <span class="modal-title" id="modal-vin-titulo">Vincular Item</span>
-      <button class="modal-close" onclick="fecharModalVinculo()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-section">
-        <div class="form-section-title">Item interno</div>
-        <div class="form-grid">
-          <div class="form-group"><label class="form-label">Insumo / Matéria-prima *</label>
-            <select class="form-select" id="v-insumo" onchange="atualizarConversaoPreview()">
-              <option value="">Selecione o item interno...</option>
-            </select>
-          </div>
-          <div class="form-group"><label class="form-label">Descrição no fornecedor</label><input class="form-input" id="v-descricao" type="text" placeholder="Como o fornecedor chama o produto"></div>
-          <div class="form-group"><label class="form-label">Código no fornecedor</label><input class="form-input" id="v-codigo" type="text" placeholder="Cód. do produto no catálogo"></div>
-          <div class="form-group"><label class="form-label">Código de barras (EAN/GTIN)</label><input class="form-input" id="v-ean" type="text" placeholder="EAN/GTIN" style="font-family:'DM Mono',monospace"></div>
-        </div>
-      </div>
-      <div class="form-section">
-        <div class="form-section-title">Embalagem e Conversão</div>
-        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
-          <div class="form-group">
-            <label class="form-label">Embalagem fornecedor</label>
-            <input class="form-input" id="v-embalagem" type="text"
-              placeholder="Ex: CX 27x0,375 · UNI 0,375 · FARDO 20KG"
-              oninput="atualizarConversaoPreview(true)"
-              list="emb-datalist"
-              style="font-family:'DM Mono',monospace;letter-spacing:.02em">
-            <datalist id="emb-datalist"></datalist>
-            <div style="font-size:11px;color:#94a3b8;margin-top:4px">
-              Descreva como vem na nota. Use NxN para auto-calcular (ex: 27x0,375).
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Qt. na Embalagem (un. estoque)</label>
-            <input class="form-input" id="v-qtd-emb" type="number" step="0.001" min="0"
-              placeholder="Auto" oninput="atualizarConversaoPreview(false)"
-              style="font-family:'DM Mono',monospace">
-          </div>
-        </div>
-        <div class="conv-preview" id="conv-preview" style="display:none">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <span id="conv-preview-txt"></span>
-        </div>
-      </div>
-      <div class="form-section" style="margin-bottom:0">
-        <div class="form-section-title">Preço</div>
-        <div class="form-grid">
-          <div class="form-group"><label class="form-label">Último preço de compra (R$)</label><input class="form-input" id="v-preco" type="number" step="0.01" min="0" placeholder="0,00"></div>
-          <div class="form-group"><label class="form-label">Data da última entrada</label><input class="form-input" id="v-ultima-entrada" type="date"></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="fecharModalVinculo()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-salvar-vin" onclick="salvarVinculo()">Salvar Vínculo</button>
-    </div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -546,6 +544,7 @@ function switchModulo(tab){
   document.getElementById('pane-'+tab).style.display='block';
   document.querySelectorAll('.mod-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   if(tab==='custos' && insumos.length) filtrarCustos();
+  if(tab==='vinculos') renderListaForn();
 }
 
 /* ================================================================
@@ -685,56 +684,72 @@ function confirmarExcluirForn(id){
 /* ================================================================
    ABA 2 — ITEM × FORNECEDOR
 ================================================================ */
-function onSelecionarFornVinculo(){
-  const id=document.getElementById('vin-sel-forn').value;
-  _vinFornSel=id?fornecedores.find(f=>f.id===id):null;
-  const header=document.getElementById('vin-header');
-  const btnNovo=document.getElementById('btn-novo-vinculo');
-  const tblWrap=document.getElementById('vin-tbl-wrap');
-  const emptyState=document.getElementById('vin-empty-state');
+/* NÍVEL 1 — Lista de fornecedores */
+function renderListaForn() {
+  const tbody = document.getElementById('vin-lista-tbody');
+  if (!tbody) return;
+  const q = (document.getElementById('vin-busca-forn')?.value||'').toLowerCase();
+  let lista = fornecedores;
+  if (q) lista = lista.filter(f => (f.nome||f.razao_social||f.nome_fantasia||'').toLowerCase().includes(q) || (f.cnpj||'').includes(q));
+  if (!lista.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum fornecedor encontrado</td></tr>'; return; }
+  tbody.innerHTML = lista.map(f => {
+    const qtd = vinculos.filter(v => v.fornecedor_id === f.id).length;
+    const contato = [f.contato, f.whatsapp].filter(Boolean).join(' / ') || '—';
+    return `<tr style="cursor:pointer" onclick="abrirDetalheForn('${f.id}')">
+      <td style="font-weight:600;color:#0f172a">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</td>
+      <td class="td-mono" style="font-size:12px;color:#64748b">${esc(f.cnpj||'—')}</td>
+      <td style="color:#64748b;font-size:12px">${esc(contato)}</td>
+      <td style="color:#64748b;font-size:12px">${esc(f.cidade||'—')}</td>
+      <td class="c"><span class="badge b-cat">${qtd} item${qtd!==1?'s':''}</span></td>
+    </tr>`;
+  }).join('');
+}
 
-  if(!_vinFornSel){
-    header.style.display='none';
-    btnNovo.style.display='none';
-    tblWrap.style.display='none';
-    emptyState.style.display='block';
-    return;
-  }
+function filtrarListaForn() { renderListaForn(); }
 
-  const f=_vinFornSel;
-  document.getElementById('vin-forn-nome').textContent=f.nome_fantasia||f.nome||f.razao_social||'—';
-  document.getElementById('vin-forn-sub').textContent=[f.contato,f.whatsapp,f.cidade].filter(Boolean).join(' · ')||'Sem informações adicionais';
-  header.style.display='flex';
-  btnNovo.style.display='';
-  emptyState.style.display='none';
-  tblWrap.style.display='block';
+function abrirDetalheForn(fornId) {
+  _vinFornSel = fornecedores.find(f => f.id === fornId) || null;
+  if (!_vinFornSel) return;
+  const f = _vinFornSel;
+  document.getElementById('vin-det-nome').textContent = f.nome_fantasia||f.nome||f.razao_social||'—';
+  document.getElementById('vin-det-sub').textContent = [f.contato,f.whatsapp,f.cidade].filter(Boolean).join(' · ')||'Sem informações adicionais';
+  document.getElementById('vin-pane-lista').style.display = 'none';
+  document.getElementById('vin-pane-detalhe').style.display = 'block';
+  fecharFormVinculo();
   filtrarVinculos();
 }
 
-function filtrarVinculos(){
-  const q=(document.getElementById('vin-busca')?.value||'').toLowerCase();
-  if(!_vinFornSel){renderVinculos([]);return;}
-  let lista=vinculos.filter(v=>v.fornecedor_id===_vinFornSel.id);
-  if(q) lista=lista.filter(v=>{
-    const ins=insumos.find(i=>i.id===v.insumo_id);
+function voltarListaForn() {
+  _vinFornSel = null;
+  document.getElementById('vin-pane-detalhe').style.display = 'none';
+  document.getElementById('vin-pane-lista').style.display = 'block';
+  renderListaForn();
+}
+
+/* NÍVEL 2 — Itens do fornecedor */
+function filtrarVinculos() {
+  const q = (document.getElementById('vin-busca')?.value||'').toLowerCase();
+  if (!_vinFornSel) { renderVinculos([]); return; }
+  let lista = vinculos.filter(v => v.fornecedor_id === _vinFornSel.id);
+  if (q) lista = lista.filter(v => {
+    const ins = insumos.find(i => i.id === v.insumo_id);
     return (ins?.nome||'').toLowerCase().includes(q)||(v.descricao_fornecedor||'').toLowerCase().includes(q)||(v.codigo_fornecedor||'').toLowerCase().includes(q);
   });
-  _vinFiltrado=lista;
-  const qtdEl=document.getElementById('vin-forn-qtd');
-  if(qtdEl) qtdEl.textContent=vinculos.filter(v=>v.fornecedor_id===_vinFornSel.id).length+' itens';
+  _vinFiltrado = lista;
+  const qtdEl = document.getElementById('vin-det-qtd');
+  if (qtdEl) qtdEl.textContent = vinculos.filter(v => v.fornecedor_id === _vinFornSel.id).length + ' itens';
   renderVinculos(lista);
 }
 
-function renderVinculos(lista){
-  const tbody=document.getElementById('vin-tbody');
-  if(!tbody)return;
-  if(!lista.length){tbody.innerHTML='<tr><td colspan="10" class="empty-state">Nenhum item vinculado a este fornecedor</td></tr>';return;}
-  tbody.innerHTML=lista.map(v=>{
-    const ins=insumos.find(i=>i.id===v.insumo_id);
-    const und=ins?.unidade_medida||'';
-    const conv=v.qtd_por_embalagem?
-      `1 ${v.embalagem_descricao||'EMB'} = ${Number(v.qtd_por_embalagem).toLocaleString('pt-BR',{maximumFractionDigits:3})} ${und}`:'—';
-    return `<tr onclick="abrirModalVinculo('${v.id}')">
+function renderVinculos(lista) {
+  const tbody = document.getElementById('vin-tbody');
+  if (!tbody) return;
+  if (!lista.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhum item vinculado a este fornecedor</td></tr>'; return; }
+  tbody.innerHTML = lista.map(v => {
+    const ins = insumos.find(i => i.id === v.insumo_id);
+    const und = ins?.unidade_medida||'';
+    const conv = v.qtd_por_embalagem ? `1 ${v.embalagem_descricao||'EMB'} = ${Number(v.qtd_por_embalagem).toLocaleString('pt-BR',{maximumFractionDigits:3})} ${und}` : '—';
+    return `<tr onclick="abrirFormVinculo('${v.id}')" style="cursor:pointer">
       <td style="font-weight:600;color:#0f172a">${esc(ins?.nome||'—')}</td>
       <td style="color:#64748b">${esc(v.descricao_fornecedor||'—')}</td>
       <td class="td-mono" style="color:#64748b;font-size:11px">${esc(v.codigo_fornecedor||'—')}</td>
@@ -743,18 +758,16 @@ function renderVinculos(lista){
       <td style="color:#64748b;font-size:12px">${esc(conv)}</td>
       <td class="r td-mono" style="font-weight:600;color:#0f172a">${brl(v.preco_unitario)}</td>
       <td class="r td-mono" style="color:#64748b;font-size:12px">${fmtDate(v.ultima_entrada)}</td>
-      <td>
-        <button class="btn-ghost" onclick="event.stopPropagation();confirmarExcluirVin('${v.id}')" style="padding:4px 8px;font-size:16px;color:#94a3b8">⋮</button>
-      </td>
+      <td><button class="btn-ghost" onclick="event.stopPropagation();confirmarExcluirVin('${v.id}')" style="padding:4px 8px;font-size:16px;color:#94a3b8">⋮</button></td>
     </tr>`;
   }).join('');
 }
 
-/* MODAL VÍNCULO */
-function abrirModalVinculo(id){
-  _vinEditing=id?vinculos.find(v=>v.id===id):null;
-  const v=_vinEditing;
-  const setVal=(el,val)=>{const e=document.getElementById(el);if(e)e.value=val!=null?val:'';};
+/* FORMULÁRIO INLINE */
+function abrirFormVinculo(id) {
+  _vinEditing = id ? vinculos.find(v => v.id === id) : null;
+  const v = _vinEditing;
+  const setVal = (el, val) => { const e = document.getElementById(el); if (e) e.value = val!=null?val:''; };
   setVal('v-insumo', v?.insumo_id||'');
   setVal('v-descricao', v?.descricao_fornecedor||'');
   setVal('v-codigo', v?.codigo_fornecedor||'');
@@ -763,16 +776,22 @@ function abrirModalVinculo(id){
   setVal('v-qtd-emb', v?.qtd_por_embalagem||'');
   setVal('v-preco', v?.preco_unitario||'');
   setVal('v-ultima-entrada', v?.ultima_entrada||'');
-  document.getElementById('modal-vin-titulo').textContent=v?'Editar Vínculo':'Vincular Item ao Fornecedor';
-  document.getElementById('btn-salvar-vin').textContent='Salvar Vínculo';
+  const titulo = document.getElementById('vin-form-titulo');
+  if (titulo) titulo.textContent = v ? 'Editar Vínculo' : 'Vincular Item ao Fornecedor';
+  const btn = document.getElementById('btn-salvar-vin');
+  if (btn) btn.textContent = 'Salvar Vínculo';
   atualizarConversaoPreview();
-  document.getElementById('modal-vinculo').classList.add('open');
+  document.getElementById('vin-form-inline').style.display = 'block';
+  document.getElementById('vin-form-inline').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-function fecharModalVinculo(){
-  document.getElementById('modal-vinculo').classList.remove('open');
-  _vinEditing=null;
+function fecharFormVinculo() {
+  document.getElementById('vin-form-inline').style.display = 'none';
+  _vinEditing = null;
 }
+
+function abrirModalVinculo(id) { abrirFormVinculo(id); }
+function fecharModalVinculo() { fecharFormVinculo(); }
 
 function _calcQtdEmb(desc){
   const d=desc.trim();
@@ -840,7 +859,7 @@ async function salvarVinculo(){
       await api('insumo_fornecedores',{method:'POST',body:JSON.stringify(payload)});
       toast('Item vinculado com sucesso.','ok');
     }
-    fecharModalVinculo();
+    fecharFormVinculo();
     await carregarVinculos();
     filtrarVinculos();
   }catch(e){toast('Erro: '+e.message,'err');}
@@ -1000,12 +1019,7 @@ async function carregarTudo(){
     const selCid=document.getElementById('forn-fil-cidade');
     if(selCid) selCid.innerHTML='<option value="">Cidade ▾</option>'+cidades.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
 
-    // Popular select de fornecedores na aba 2
-    const selForn=document.getElementById('vin-sel-forn');
-    if(selForn) selForn.innerHTML='<option value="">Selecione um fornecedor...</option>'+
-      fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</option>`).join('');
-
-    // Popular select de insumos no modal de vínculo
+    // Popular select de insumos no formulário de vínculo
     const selIns=document.getElementById('v-insumo');
     if(selIns) selIns.innerHTML='<option value="">Selecione o item interno...</option>'+
       insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}${i.unidade_medida?' ('+i.unidade_medida+')':''}</option>`).join('');
