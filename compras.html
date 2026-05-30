@@ -155,13 +155,17 @@
   .toast.ok{background:var(--green)}
   .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
 
-  /* ── 3-SECTION LAYOUT ──────────────────────────────── */
-  .sec-block{margin-bottom:36px}
-  .sec-hd{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border2)}
-  .sec-hd-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-  .sec-hd-right{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
-  .sec-num{width:24px;height:24px;border-radius:50%;background:#0f2d5c;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-  .sec-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text1)}
+  /* ── PAGINAÇÃO ─────────────────────────────────────── */
+  .pag-btn{padding:4px 10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s}
+  .pag-btn:hover:not(:disabled){border-color:#0f2d5c;color:#0f2d5c}
+  .pag-btn.pag-active{background:#0f2d5c;color:#fff;border-color:#0f2d5c;font-weight:600}
+  .pag-btn:disabled{opacity:.35;cursor:default}
+
+  /* ── CABEÇALHO DE ABA ──────────────────────────────── */
+  .tab-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .tab-header-left .tab-title{font-size:15px;font-weight:700;color:var(--text1)}
+  .tab-header-left .tab-sub{font-size:12px;color:var(--text3);margin-top:3px}
+  .tab-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
   .forn-sugerida{font-size:12px;color:var(--teal);font-weight:600}
   .forn-sugerida-vazia{font-size:12px;color:var(--text3)}
 
@@ -226,55 +230,54 @@
 
     <!-- ══════════════════════ VIEW ADMIN ══════════════════════ -->
     <div id="view-admin" style="display:none">
+      <div class="tabs">
+        <button class="tab-btn" data-tab="solicitacoes" onclick="switchTab('solicitacoes')">Solicitações</button>
+        <button class="tab-btn" data-tab="processar" onclick="switchTab('processar')">Processar</button>
+        <button class="tab-btn" data-tab="pedidos" onclick="switchTab('pedidos')">Pedidos Gerados</button>
+      </div>
 
-      <!-- ─── SEÇÃO 1: SOLICITAÇÕES ─── -->
-      <div class="sec-block">
-        <div class="sec-hd">
-          <div class="sec-hd-left">
-            <span class="sec-num">1</span>
-            <span class="sec-title">Solicitações</span>
+      <!-- TAB: SOLICITAÇÕES -->
+      <div id="tab-solicitacoes" class="tab-pane">
+        <div class="tab-header">
+          <div class="tab-header-left">
+            <div class="tab-title">1. SOLICITAÇÕES</div>
+            <div class="tab-sub">Lista de solicitações enviadas pelas lojas</div>
           </div>
-        </div>
-        <div class="sc-grid" id="sol-cards" style="display:none"></div>
-        <div class="toolbar">
-          <select id="sol-fil-loja" style="font-size:13px;padding:7px 14px;min-width:180px;border:1.5px solid var(--teal);border-radius:8px;background:var(--bg2);color:var(--text1);cursor:pointer;outline:none;font-family:inherit">
-            <option value="">Todas as lojas</option>
-          </select>
-          <div style="display:flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <input type="date" class="field field-sm" id="sol-fil-de" title="Data inicial">
-            <span style="color:#94a3b8;font-size:12px">–</span>
-            <input type="date" class="field field-sm" id="sol-fil-ate" title="Data final">
+          <div class="tab-header-right">
+            <select id="sol-fil-loja" class="field field-sm" style="min-width:150px" onchange="renderSolicitacoes()">
+              <option value="">Todas as lojas</option>
+            </select>
+            <input type="date" class="field field-sm" id="sol-fil-de" onchange="renderSolicitacoes()">
+            <span style="font-size:12px;color:var(--text3)">até</span>
+            <input type="date" class="field field-sm" id="sol-fil-ate" onchange="renderSolicitacoes()">
+            <select class="field field-sm" id="sol-fil-status" onchange="renderSolicitacoes()">
+              <option value="">Todos os status</option>
+              <option value="solicitado">Aguardando</option>
+              <option value="processado">Processado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
           </div>
-          <select class="field field-sm" id="sol-fil-status">
-            <option value="">Todas</option>
-            <option value="solicitado">Aguardando</option>
-            <option value="processado">Processadas</option>
-            <option value="cancelado">Canceladas</option>
-          </select>
-          <button class="btn btn-ghost btn-sm" onclick="limparFiltrosSol()">✕ Limpar</button>
-          <button class="btn btn-primary btn-sm ml" onclick="renderSolicitacoes()">Consultar</button>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th>Data</th><th>Loja</th><th>Itens</th><th>Observação</th><th>Status</th><th></th>
+              <th>Data</th><th>Loja</th><th>Itens</th><th>Observação</th><th>Status</th><th>Ações</th>
             </tr></thead>
-            <tbody id="sol-body"><tr><td colspan="6" style="padding:36px;text-align:center;color:#94a3b8;font-size:13px">Selecione um filtro e clique em <b>Consultar</b>.</td></tr></tbody>
+            <tbody id="sol-body"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody>
           </table>
         </div></div>
+        <div id="sol-pag" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;padding:4px 0"></div>
       </div>
 
-      <!-- ─── SEÇÃO 2: PROCESSAR ─── -->
-      <div class="sec-block">
-        <div class="sec-hd">
-          <div class="sec-hd-left">
-            <span class="sec-num">2</span>
-            <span class="sec-title">Processar</span>
-            <span id="cons-desc" style="font-size:12px;color:var(--text3);margin-left:4px"></span>
+      <!-- TAB: PROCESSAR -->
+      <div id="tab-processar" class="tab-pane">
+        <div class="tab-header">
+          <div class="tab-header-left">
+            <div class="tab-title">2. PROCESSAR</div>
+            <div id="cons-desc" class="tab-sub"></div>
           </div>
-          <div class="sec-hd-right">
-            <span style="font-size:11px;color:var(--text3);max-width:240px;line-height:1.4">O sistema sugere o fornecedor com base no último preço e histórico de compras.</span>
+          <div class="tab-header-right">
+            <span style="font-size:11px;color:var(--text3);max-width:220px;line-height:1.4;text-align:right">O sistema sugere o fornecedor com base no último preço e histórico de compras.</span>
             <button class="btn btn-ghost btn-sm" onclick="carregarConsolidado()">↻ Recalcular sugestões</button>
             <button class="btn btn-primary btn-sm" onclick="gerarPedidos()" id="btn-gerar" disabled>Gerar pedidos por fornecedor</button>
           </div>
@@ -294,8 +297,6 @@
             <tbody id="cons-body"><tr><td colspan="8" class="empty">Nenhuma solicitação pendente</td></tr></tbody>
           </table>
         </div></div>
-
-        <!-- Painel de lojas (atualiza ao clicar em Ver lojas) -->
         <div id="cons-lojas-panel" style="display:none" class="lojas-panel">
           <div class="lojas-panel-hd">
             Solicitações por Loja —
@@ -310,14 +311,13 @@
         </div>
       </div>
 
-      <!-- ─── SEÇÃO 3: PEDIDOS GERADOS POR FORNECEDOR ─── -->
-      <div class="sec-block">
-        <div class="sec-hd">
-          <div class="sec-hd-left">
-            <span class="sec-num">3</span>
-            <span class="sec-title">Pedidos Gerados por Fornecedor</span>
+      <!-- TAB: PEDIDOS GERADOS -->
+      <div id="tab-pedidos" class="tab-pane">
+        <div class="tab-header">
+          <div class="tab-header-left">
+            <div class="tab-title">3. PEDIDOS GERADOS POR FORNECEDOR</div>
           </div>
-          <div class="sec-hd-right">
+          <div class="tab-header-right">
             <select class="field field-sm" id="ped-fil-status" onchange="renderPedidos()">
               <option value="ativos">Ativos (pendente + enviado)</option>
               <option value="pendente">Pendente</option>
@@ -536,9 +536,7 @@ async function carregar() {
     const fil = document.getElementById('sol-fil-loja');
     fil.innerHTML = '<option value="">Todas as lojas</option>' +
       lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
-    renderSolicitacoes();
-    carregarConsolidado();
-    renderPedidos();
+    switchTab('solicitacoes');
   }
 }
 
@@ -549,7 +547,13 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   const el = document.getElementById('tab-'+tab);
   if (el) el.classList.add('active');
-  if (tab==='solicitacoes') renderSolicitacoes();
+  if (tab==='solicitacoes') {
+    const de = document.getElementById('sol-fil-de');
+    const ate = document.getElementById('sol-fil-ate');
+    if (de && !de.value) de.value = _primeroDia();
+    if (ate && !ate.value) ate.value = hoje();
+    renderSolicitacoes();
+  }
   if (tab==='processar')    carregarConsolidado();
   if (tab==='pedidos')      renderPedidos();
   if (tab==='g-minhas')     renderMinhasSolicitacoes();
@@ -559,10 +563,25 @@ function switchTab(tab) {
 // ══════════════════════════════════════════════════════════════════════
 // ADMIN — SOLICITAÇÕES
 // ══════════════════════════════════════════════════════════════════════
+let _solRows = [], _solPage = 1;
+const SOL_PER_PAGE = 15;
+
+function _primeroDia() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2,'0');
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 function limparFiltrosSol() {
   document.getElementById('sol-fil-loja').value = '';
-  document.getElementById('sol-fil-de').value = '';
-  document.getElementById('sol-fil-ate').value = '';
+  document.getElementById('sol-fil-de').value = _primeroDia();
+  document.getElementById('sol-fil-ate').value = hoje();
   document.getElementById('sol-fil-status').value = '';
   renderSolicitacoes();
 }
@@ -572,58 +591,76 @@ async function renderSolicitacoes() {
   const deFil     = document.getElementById('sol-fil-de')?.value||'';
   const ateFil    = document.getElementById('sol-fil-ate')?.value||'';
   const statusFil = document.getElementById('sol-fil-status')?.value||'';
-  const temFiltro = lojaFil || deFil || ateFil || statusFil;
 
-  // Sem filtro: mostra estado vazio, não faz requisição
-  if (!temFiltro) {
-    const tbody = document.getElementById('sol-body');
-    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding:36px;text-align:center;color:#94a3b8;font-size:13px">Selecione um filtro (loja, data ou status) e clique em <b>Atualizar</b> para consultar.</td></tr>`;
-    const cardsEl = document.getElementById('sol-cards');
-    if (cardsEl) cardsEl.style.display = 'none';
-    return;
-  }
+  const tbody = document.getElementById('sol-body');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty">Carregando...</td></tr>';
+  document.getElementById('sol-pag').innerHTML = '';
 
   try {
-    const cardsEl = document.getElementById('sol-cards');
-    if (temFiltro) {
-      // Mostra cards só quando há filtro ativo
-      const totais = await api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&status=eq.solicitado&select=id,loja_id`);
-      const lojaSet = new Set(totais.map(s=>s.loja_id).filter(Boolean));
-      cardsEl.innerHTML = `
-        <div class="sc"><div class="sc-label">Aguardando</div><div class="sc-value c-amber">${totais.length}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">solicitações</div></div>
-        <div class="sc"><div class="sc-label">Lojas</div><div class="sc-value c-blue">${lojaSet.size}</div><div style="font-size:11px;color:var(--text3);margin-top:5px">com pedidos</div></div>`;
-      cardsEl.style.display = '';
-    } else {
-      cardsEl.style.display = 'none';
-    }
-
-    // Lista com filtros aplicados
-    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&order=data_pedido.desc,created_at.desc`;
+    let q = `pedidos_compra?tenant_id=eq.${TENANT_ID}&order=created_at.desc`;
     if (statusFil) q += `&status=eq.${statusFil}`;
+    else           q += `&status=in.(solicitado,processado,cancelado)`;
     if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
     if (deFil)     q += `&data_pedido=gte.${deFil}`;
     if (ateFil)    q += `&data_pedido=lte.${ateFil}`;
     solicitacoes = await api(q);
 
-    const tbody = document.getElementById('sol-body');
-    if (!solicitacoes.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma solicitação encontrada</td></tr>';
-      return;
+    // Busca contagem de itens por pedido em uma única query
+    const countMap = {};
+    if (solicitacoes.length) {
+      const ids = solicitacoes.map(s=>s.id).join(',');
+      const allItens = await api(`itens_pedido?pedido_id=in.(${ids})&select=pedido_id`);
+      allItens.forEach(it => { countMap[it.pedido_id] = (countMap[it.pedido_id]||0)+1; });
     }
-    tbody.innerHTML = solicitacoes.map(s => {
-      const loja = lojas.find(l=>l.id===s.loja_id);
-      const badgeMap = { solicitado:'b-solicitado', processado:'b-processado', cancelado:'b-cancelado' };
-      const labelMap = { solicitado:'Aguardando', processado:'Processada', cancelado:'Cancelada' };
-      return `<tr>
-        <td class="mono">${fmtData(s.data_pedido)}</td>
-        <td style="font-weight:600">${esc(loja?.nome||'—')}</td>
-        <td class="mono">—</td>
-        <td style="color:var(--text3)">${esc(s.observacao||'—')}</td>
-        <td><span class="badge ${badgeMap[s.status]||'b-solicitado'}">${labelMap[s.status]||s.status}</span></td>
-        <td><button class="btn btn-ghost btn-sm" onclick="verSolicitacao('${s.id}')">Ver itens</button></td>
-      </tr>`;
-    }).join('');
-  } catch(e) { toast('Erro: '+e.message,'err'); }
+    solicitacoes.forEach(s => { s._itemCount = countMap[s.id]||0; });
+
+    _solRows = solicitacoes;
+    _solPage = 1;
+    renderSolTabela();
+  } catch(e) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="empty">Erro ao carregar</td></tr>`;
+    toast('Erro: '+e.message,'err');
+  }
+}
+
+function renderSolTabela() {
+  const tbody = document.getElementById('sol-body');
+  const pag   = document.getElementById('sol-pag');
+  const badgeMap = { solicitado:'b-solicitado', processado:'b-processado', cancelado:'b-cancelado' };
+  const labelMap = { solicitado:'Aguardando', processado:'Processado', cancelado:'Cancelado' };
+
+  if (!_solRows.length) {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma solicitação encontrada</td></tr>';
+    if (pag)   pag.innerHTML = '';
+    return;
+  }
+
+  const start = (_solPage-1)*SOL_PER_PAGE;
+  const page  = _solRows.slice(start, start+SOL_PER_PAGE);
+
+  if (tbody) tbody.innerHTML = page.map(s => {
+    const loja = lojas.find(l=>l.id===s.loja_id);
+    return `<tr>
+      <td class="mono" style="white-space:nowrap;font-size:12px">${fmtDateTime(s.created_at)}</td>
+      <td style="font-weight:600">${esc(loja?.nome||'—')}</td>
+      <td style="text-align:center;font-weight:500">${s._itemCount||'—'}</td>
+      <td style="color:var(--text3);font-size:12px">${esc(s.observacao||'—')}</td>
+      <td><span class="badge ${badgeMap[s.status]||'b-solicitado'}">${labelMap[s.status]||s.status}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="verSolicitacao('${s.id}')">Ver itens</button></td>
+    </tr>`;
+  }).join('');
+
+  // Paginação
+  const pages = Math.max(1, Math.ceil(_solRows.length/SOL_PER_PAGE));
+  if (pag) {
+    if (pages <= 1) { pag.innerHTML = ''; return; }
+    let html = `<button class="pag-btn" onclick="_solPage=Math.max(1,_solPage-1);renderSolTabela()" ${_solPage===1?'disabled':''}>‹</button>`;
+    for (let i=1; i<=pages; i++) {
+      html += `<button class="pag-btn${i===_solPage?' pag-active':''}" onclick="_solPage=${i};renderSolTabela()">${i}</button>`;
+    }
+    html += `<button class="pag-btn" onclick="_solPage=Math.min(${pages},_solPage+1);renderSolTabela()" ${_solPage===pages?'disabled':''}>›</button>`;
+    pag.innerHTML = html;
+  }
 }
 
 async function verSolicitacao(id) {
