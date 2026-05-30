@@ -499,37 +499,48 @@
 
       <!-- Relatório -->
       <div id="est-relatorio" class="est-pane active">
-        <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap">
-          <div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">De</div>
-            <input type="date" id="rel-data-ini" class="field field-sm" onchange="carregarRelatorio()">
+        <div class="page-title" style="margin-bottom:4px">Relatório de Estoque</div>
+        <div class="page-sub" style="margin-bottom:16px">Acompanhe o saldo atual e a movimentação dos insumos.</div>
+        <div class="filter-bar-wrap" style="margin-bottom:14px">
+          <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+            <input type="date" id="rel-data-ini" class="fil-select" onchange="carregarRelatorio()" title="De">
+            <span style="color:var(--text3);font-size:12px">–</span>
+            <input type="date" id="rel-data-fim" class="fil-select" onchange="carregarRelatorio()" title="Até">
+            <select id="rel-cat-sel" class="fil-select" onchange="carregarRelatorio()" style="min-width:140px">
+              <option value="">Todas as categorias</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="carregarRelatorio()">↻ Atualizar</button>
+            <span id="rel-count" style="font-size:12px;color:var(--text3);margin-left:4px"></span>
+            <button class="btn btn-ghost btn-sm" onclick="exportarEstoqueRel()" style="margin-left:auto">↓ Exportar</button>
           </div>
-          <div>
-            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Até</div>
-            <input type="date" id="rel-data-fim" class="field field-sm" onchange="carregarRelatorio()">
+        </div>
+        <div class="tbl-card">
+          <div class="tbl-scroll">
+            <table class="tbl">
+              <thead><tr>
+                <th>Insumo</th><th>Un.</th>
+                <th class="r">Saldo Atual (Qtd.)</th>
+                <th class="r">Mínimo (Qtd.)</th>
+                <th class="r">Máximo (Qtd.)</th>
+                <th class="r">Entradas (Qtd.)</th>
+                <th class="r">Saídas (Qtd.)</th>
+                <th class="r">Valor Estoque (R$)</th>
+                <th>Última Mov.</th>
+              </tr></thead>
+              <tbody id="est-rel-body">
+                <tr><td colspan="9" class="empty">Selecione o período e clique em Atualizar.</td></tr>
+              </tbody>
+            </table>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="carregarRelatorio()">↻ Atualizar</button>
-        </div>
-        <div class="sc-grid">
-          <div class="sc"><div class="sc-label">Entradas (mov.)</div><div class="sc-value c-green" id="est-card-ent">—</div></div>
-          <div class="sc"><div class="sc-label">Saídas (mov.)</div><div class="sc-value c-red" id="est-card-sai">—</div></div>
-          <div class="sc"><div class="sc-label">Insumos em saldo</div><div class="sc-value" id="est-card-ins">—</div></div>
-        </div>
-        <div id="rel-inv-label" style="font-size:12px;color:var(--text3);margin-bottom:12px"></div>
-        <div class="cat-btns" id="rel-cat-btns"></div>
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead><tr>
-              <th>Insumo</th><th>Un.</th>
-              <th class="r">Est. Inicial</th>
-              <th class="r">Entradas</th>
-              <th class="r">Saídas</th>
-              <th class="r">Saldo</th>
-            </tr></thead>
-            <tbody id="est-rel-body">
-              <tr><td colspan="6" class="empty">Selecione o período.</td></tr>
-            </tbody>
-          </table>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);flex-wrap:wrap;gap:8px">
+            <span id="rel-pag-info">—</span>
+            <div style="display:flex;gap:4px" id="rel-pag-btns"></div>
+            <select id="rel-por-pag" class="field" style="padding:4px 8px;font-size:12px;width:auto" onchange="_relPorPag=+this.value;_relPag=1;_relRenderPag()">
+              <option value="10" selected>10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -1963,61 +1974,102 @@ function atualizarUnidadeMov() {
   document.getElementById('mov-un').textContent = opt?.dataset.un || '';
 }
 
+let _relRows=[], _relPag=1, _relPorPag=10;
+
+function _relRenderPag(){
+  const tbody=document.getElementById('est-rel-body');
+  const info=document.getElementById('rel-pag-info');
+  const btns=document.getElementById('rel-pag-btns');
+  if(!_relRows.length){tbody.innerHTML='<tr><td colspan="9" class="empty">Nenhum item encontrado.</td></tr>';if(info)info.textContent='';if(btns)btns.innerHTML='';return;}
+  const total=_relRows.length;
+  const totalPags=Math.ceil(total/_relPorPag);
+  _relPag=Math.min(_relPag,totalPags);
+  const slice=_relRows.slice((_relPag-1)*_relPorPag,_relPag*_relPorPag);
+  const fQ=v=>v!=null?Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:3}):'—';
+  const fBrl=v=>v>0?`R$ ${Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'—';
+  tbody.innerHTML=slice.map(({ins,ent,sai,saldo,minimo,maximo,custo_medio,ultima_mov})=>`<tr>
+    <td style="font-weight:600">${esc(ins.nome)}</td>
+    <td style="color:var(--text3);font-size:12px">${esc(ins.unidade_medida||ins.unidade_compra||'un')}</td>
+    <td class="r mono">${fQ(saldo)}</td>
+    <td class="r mono">${minimo!=null?fQ(minimo):'—'}</td>
+    <td class="r mono">${maximo!=null?fQ(maximo):'—'}</td>
+    <td class="r mono">${ent>0?fQ(ent):'—'}</td>
+    <td class="r mono">${sai>0?fQ(sai):'—'}</td>
+    <td class="r mono">${custo_medio>0?fBrl(saldo*custo_medio):'—'}</td>
+    <td style="font-size:12px;color:var(--text3)">${ultima_mov||'—'}</td>
+  </tr>`).join('');
+  if(info) info.textContent=`Mostrando ${(_relPag-1)*_relPorPag+1} a ${Math.min(_relPag*_relPorPag,total)} de ${total} itens`;
+  if(btns){
+    const pages=[];
+    if(_relPag>1) pages.push(`<button class="pag-btn" onclick="_relPag--;_relRenderPag()">‹</button>`);
+    for(let p=Math.max(1,_relPag-2);p<=Math.min(totalPags,_relPag+2);p++)
+      pages.push(`<button class="pag-btn${p===_relPag?' active':''}" onclick="_relPag=${p};_relRenderPag()">${p}</button>`);
+    if(_relPag<totalPags) pages.push(`<button class="pag-btn" onclick="_relPag++;_relRenderPag()">›</button>`);
+    btns.innerHTML=pages.join('');
+  }
+}
+
 async function carregarRelatorio() {
   const lojaId = userProfile?.loja_id;
   if (!lojaId) return;
   const container = document.getElementById('est-rel-body');
-  container.innerHTML = '<tr><td colspan="6" class="empty">Carregando...</td></tr>';
+  container.innerHTML = '<tr><td colspan="9" class="empty">Carregando...</td></tr>';
   const dataIni = document.getElementById('rel-data-ini').value;
   const dataFim = document.getElementById('rel-data-fim').value;
-  if (!dataIni || !dataFim) { container.innerHTML = '<tr><td colspan="6" class="empty">Selecione o período.</td></tr>'; return; }
+  if (!dataIni || !dataFim) { container.innerHTML = '<tr><td colspan="9" class="empty">Selecione o período e clique em Atualizar.</td></tr>'; return; }
+  // popular filtro de categoria
+  const selCat=document.getElementById('rel-cat-sel');
+  if(selCat&&selCat.options.length<=1){
+    const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o);});
+  }
+  const catFil=selCat?.value||'';
   try {
-    // Busca o inventário encerrado mais recente da loja (anterior ou igual ao início do período)
-    const invs = await api(`inventarios?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&status=eq.encerrado&data_final=lte.${dataIni}&order=data_final.desc&limit=1`);
-    const lastInv = invs[0] || null;
-    const invItens = lastInv ? await api(`inventario_itens?inventario_id=eq.${lastInv.id}`) : [];
-
     const [entradas, saidas, saldos] = await Promise.all([
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${dataIni}T00:00:00&criado_em=lte.${dataFim}T23:59:59`),
-      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${dataIni}T00:00:00&criado_em=lte.${dataFim}T23:59:59`),
-      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${dataIni}T00:00:00&criado_em=lte.${dataFim}T23:59:59`).catch(()=>[]),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${dataIni}T00:00:00&criado_em=lte.${dataFim}T23:59:59`).catch(()=>[]),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`).catch(()=>[]),
     ]);
-
-    // Mostra label do inventário base
-    const invLabel = lastInv
-      ? `Inventário base: ${fmtData(lastInv.data_final)}`
-      : 'Sem inventário base — Est. Inicial será 0';
-    document.getElementById('rel-inv-label').textContent = invLabel;
-
-    const lista = getInsumosFiltrados(relCatAtual);
-    const rows = lista.map(ins => {
-      const invItem = invItens.find(x => x.insumo_id === ins.id);
-      const inicial = Number(invItem?.qtd_contada) || 0;
+    // mapeia última movimentação por insumo
+    const ultimaMovMap={};
+    [...entradas.map(e=>({id:e.insumo_id,dt:e.criado_em||e.created_at})),
+     ...saidas.map(s=>({id:s.insumo_id,dt:s.criado_em||s.created_at}))].forEach(({id,dt})=>{
+      if(!dt) return;
+      if(!ultimaMovMap[id]||dt>ultimaMovMap[id]) ultimaMovMap[id]=dt;
+    });
+    const fmtMov=dt=>{if(!dt)return null;const d=new Date(dt);const hoje_=new Date();const ontem=new Date(hoje_);ontem.setDate(ontem.getDate()-1);const dStr=d.toLocaleDateString('pt-BR');const hStr=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(d.toDateString()===hoje_.toDateString())return`Hoje, ${hStr}`;if(d.toDateString()===ontem.toDateString())return`Ontem, ${hStr}`;return`${dStr}, ${hStr}`;};
+    let lista = insumos.filter(i=>i.ativo!==false);
+    if(catFil) lista=lista.filter(i=>(i.categoria||'')=== catFil);
+    _relRows = lista.map(ins => {
       const ent = entradas.filter(e=>e.insumo_id===ins.id).reduce((a,e)=>a+Number(e.quantidade||0),0);
       const sai = saidas.filter(x=>x.insumo_id===ins.id).reduce((a,x)=>a+Number(x.quantidade||0),0);
       const s = saldos.find(x=>x.insumo_id===ins.id);
       const saldo = Number(s?.quantidade)||0;
-      if (!inicial && !ent && !sai && !saldo) return null;
-      return { ins, inicial, ent, sai, saldo };
-    }).filter(Boolean);
+      const custo_medio = Number(s?.custo_medio)||0;
+      const minimo = s?.minimo!=null?Number(s.minimo):null;
+      const maximo = s?.maximo!=null?Number(s.maximo):null;
+      if (!ent && !sai && !saldo) return null;
+      const ultima_mov = fmtMov(ultimaMovMap[ins.id]);
+      return { ins, ent, sai, saldo, custo_medio, minimo, maximo, ultima_mov };
+    }).filter(Boolean).sort((a,b)=>a.ins.nome.localeCompare(b.ins.nome,'pt-BR'));
+    const countEl=document.getElementById('rel-count');
+    if(countEl) countEl.textContent=_relRows.length+' registros';
+    _relPag=1;
+    _relRenderPag();
+  } catch(e) { container.innerHTML = `<tr><td colspan="9" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
+}
 
-    document.getElementById('est-card-ent').textContent = entradas.length;
-    document.getElementById('est-card-sai').textContent = saidas.length;
-    document.getElementById('est-card-ins').textContent = rows.filter(r=>r.saldo>0).length;
-
-    if (!rows.length) {
-      container.innerHTML = '<tr><td colspan="6" class="empty">Nenhum item encontrado.</td></tr>';
-      return;
-    }
-    container.innerHTML = rows.map(({ins, inicial, ent, sai, saldo}) => `<tr>
-      <td style="font-weight:500">${esc(ins.nome)}</td>
-      <td style="color:var(--text3);font-size:12px">${esc(ins.unidade_medida||ins.unidade_compra||'un')}</td>
-      <td class="r mono">${fmtQtd(inicial)}</td>
-      <td class="r mono" style="color:var(--green)">${ent>0?'+':''}${fmtQtd(ent)}</td>
-      <td class="r mono" style="color:var(--red)">${sai>0?'-':''}${fmtQtd(sai)}</td>
-      <td class="r mono" style="font-weight:700">${fmtQtd(saldo)}</td>
-    </tr>`).join('');
-  } catch(e) { container.innerHTML = `<tr><td colspan="6" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
+function exportarEstoqueRel(){
+  if(!_relRows.length){toast('Nenhum dado.','err');return;}
+  const fQ=v=>v!=null?Number(v).toFixed(3):'';
+  const fBrl=v=>v>0?Number(v).toFixed(2):'';
+  const rows=[['Insumo','Un.','Saldo Atual','Mínimo','Máximo','Entradas','Saídas','Valor Estoque (R$)','Última Mov.']];
+  _relRows.forEach(({ins,ent,sai,saldo,custo_medio,minimo,maximo,ultima_mov})=>{
+    rows.push([ins.nome,ins.unidade_medida||ins.unidade_compra||'un',fQ(saldo),fQ(minimo),fQ(maximo),fQ(ent),fQ(sai),fBrl(saldo*custo_medio),ultima_mov||'']);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+  a.download=`estoque_${new Date().toISOString().slice(0,10)}.csv`;a.click();
 }
 
 function limparFiltrosMov() {
