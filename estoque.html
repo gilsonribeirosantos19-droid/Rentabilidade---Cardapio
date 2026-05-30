@@ -1023,11 +1023,12 @@
     <!-- TAB: SUGESTÃO DE COMPRAS -->
     <div id="tab-compras" class="tab-pane">
 
-      <!-- TÍTULO + FILTROS -->
+      <!-- TÍTULO + FILTROS (sticky) -->
+      <div style="position:sticky;top:114px;z-index:40;background:#fff;padding-bottom:12px;margin-bottom:0;border-bottom:1px solid #e2e8f0;margin-top:-18px;padding-top:18px">
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
         Sugestão de Compras <span style="font-weight:400;color:#94a3b8;font-size:13px">— baseada no consumo médio diário</span>
       </div>
-      <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:0;flex-wrap:wrap">
         <div>
           <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cobertura desejada</div>
           <select class="field field-sm" id="comp-dias" onchange="renderCompras()" style="min-width:110px">
@@ -1065,6 +1066,7 @@
           </button>
         </div>
       </div>
+      </div><!-- /sticky header -->
 
       <!-- KPI CARDS -->
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px">
@@ -1110,9 +1112,9 @@
 
         <!-- TABELA + PAGINAÇÃO -->
         <div>
-          <div class="tbl-wrap"><div class="tbl-scroll">
+          <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 420px);overflow-y:auto">
             <table class="tbl">
-              <thead><tr>
+              <thead style="position:sticky;top:0;z-index:5"><tr>
                 <th>Insumo</th><th>Un.</th>
                 <th class="r">Estoque Atual</th>
                 <th class="r">Consumo (Período)</th>
