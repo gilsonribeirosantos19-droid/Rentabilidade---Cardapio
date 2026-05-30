@@ -288,11 +288,14 @@
   .pcp-hub-name{font-size:14px;font-weight:700;color:var(--text1);margin-bottom:3px}
   .pcp-hub-desc{font-size:12px;color:var(--text3);line-height:1.4}
   .pcp-hub-arrow{color:var(--text3);flex-shrink:0}
-  .pcp-subhd{display:flex;align-items:center;gap:10px;margin-bottom:20px}
-  .pcp-back{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border2);border-radius:8px;background:var(--bg2);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
-  .pcp-back:hover{border-color:#0f2d5c;color:#0f2d5c}
-  .pcp-breadcrumb{font-size:14px;color:var(--text3)}
-  .pcp-breadcrumb strong{color:var(--text1);font-weight:700}
+  .pcp-tabs-bar{display:flex;align-items:stretch;border-bottom:2px solid var(--border2);margin-bottom:20px;overflow-x:auto;flex-shrink:0}
+  .pcp-tab-home{padding:0 14px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;display:flex;align-items:center;border-right:1px solid var(--border2);flex-shrink:0;transition:all .15s}
+  .pcp-tab-home:hover{background:var(--bg3);color:var(--text1)}
+  .pcp-tab-item{display:flex;align-items:center;gap:8px;padding:10px 16px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;border-right:1px solid var(--border2);border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0;margin-bottom:-2px;transition:all .15s}
+  .pcp-tab-item:hover{background:var(--bg3);color:var(--text1)}
+  .pcp-tab-item.active{color:var(--text1);font-weight:700;border-bottom:2px solid #f97316}
+  .pcp-tab-close{width:18px;height:18px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;border-radius:3px;padding:0;line-height:1;font-family:inherit;flex-shrink:0}
+  .pcp-tab-close:hover{background:rgba(0,0,0,.1);color:var(--text1)}
   /* ── PCP ── */
   .filter-bar-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;margin-bottom:18px}
   .fil-select{height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--text1);font-weight:500;background:var(--bg3);outline:none;cursor:pointer;min-width:130px}
@@ -865,14 +868,8 @@
         </div>
       </div>
 
-      <!-- BREADCRUMB (aparece ao entrar numa seção) -->
-      <div id="pcp-subhd" style="display:none" class="pcp-subhd">
-        <button class="pcp-back" onclick="pcpVoltar()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          PCP
-        </button>
-        <span class="pcp-breadcrumb">› <strong id="pcp-section-title"></strong></span>
-      </div>
+      <!-- BARRA DE ABAS (aparece ao abrir seções) -->
+      <div id="pcp-tabs-bar" style="display:none"></div>
 
       <!-- PRODUÇÃO DO DIA -->
       <div class="tab-pane active" id="pcppane-producao">
@@ -2589,11 +2586,30 @@ let _pcpIniciado=false;
 function _pcpLojaId(){return userProfile?.loja_id||null;}
 
 const _pcpTitles = {producao:'Produção do Dia',sugerida:'Produção Sugerida',sobras:'Sobras e Perdas',consumo:'Consumo Médio'};
+let _pcpOpenTabs = [], _pcpActiveTab = null;
 
-function setPcpTab(tab){
-  document.getElementById('pcp-hub').style.display='none';
-  document.getElementById('pcp-subhd').style.display='flex';
-  document.getElementById('pcp-section-title').textContent=_pcpTitles[tab]||tab;
+function _pcpRenderTabsBar() {
+  const bar = document.getElementById('pcp-tabs-bar');
+  if (!bar) return;
+  if (!_pcpOpenTabs.length) { bar.style.display='none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML =
+    `<button class="pcp-tab-home" onclick="pcpVoltar()" title="Voltar ao hub">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>` +
+    _pcpOpenTabs.map(t =>
+      `<div class="pcp-tab-item${t===_pcpActiveTab?' active':''}" onclick="setPcpTab('${t}')">
+        ${_pcpTitles[t]||t}
+        <button class="pcp-tab-close" onclick="event.stopPropagation();pcpCloseTab('${t}')">×</button>
+      </div>`
+    ).join('');
+}
+
+function setPcpTab(tab) {
+  if (!_pcpOpenTabs.includes(tab)) _pcpOpenTabs.push(tab);
+  _pcpActiveTab = tab;
+  document.getElementById('pcp-hub').style.display = 'none';
+  _pcpRenderTabsBar();
   document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('pcppane-'+tab)?.classList.add('active');
   if(tab==='sugerida') calcularSugestoes();
@@ -2602,16 +2618,27 @@ function setPcpTab(tab){
   if(tab==='producao') renderProducaoDia();
 }
 
-function pcpVoltar(){
-  document.getElementById('pcp-hub').style.display='';
-  document.getElementById('pcp-subhd').style.display='none';
+function pcpCloseTab(tab) {
+  _pcpOpenTabs = _pcpOpenTabs.filter(t=>t!==tab);
+  if (_pcpActiveTab === tab) {
+    if (_pcpOpenTabs.length) { setPcpTab(_pcpOpenTabs[_pcpOpenTabs.length-1]); return; }
+    else { pcpVoltar(); return; }
+  }
+  _pcpRenderTabsBar();
+}
+
+function pcpVoltar() {
+  document.getElementById('pcp-hub').style.display = '';
+  document.getElementById('pcp-tabs-bar').style.display = 'none';
   document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
+  _pcpActiveTab = null;
 }
 
 async function iniciarPcp(){
   // Sempre volta ao hub ao entrar no módulo
+  _pcpOpenTabs = []; _pcpActiveTab = null;
   document.getElementById('pcp-hub').style.display='';
-  document.getElementById('pcp-subhd').style.display='none';
+  document.getElementById('pcp-tabs-bar').style.display='none';
   document.querySelectorAll('#tab-pcp .tab-pane').forEach(p=>p.classList.remove('active'));
 
   const h=new Date().toISOString().slice(0,10);
