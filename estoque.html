@@ -747,14 +747,6 @@
                 </div>
               </div>
             </div>
-            <div class="inv-bbox" style="flex:1">
-              <span class="inv-bbox-ttl">Situação</span>
-              <div style="display:flex;align-items:center;gap:20px;height:100%;min-height:46px">
-                <label class="inv-slab"><input type="checkbox" id="inv-sit-ativo" checked> Ativo</label>
-                <label class="inv-slab"><input type="checkbox" id="inv-sit-encerrado" checked> Encerrado</label>
-                <label class="inv-slab"><input type="checkbox" id="inv-sit-cancelado"> Cancelado</label>
-              </div>
-            </div>
             <div style="display:flex;align-items:flex-end">
               <button class="btn btn-primary" onclick="renderInvLista()" style="height:42px;padding:0 28px;border-radius:21px;white-space:nowrap">Consultar</button>
             </div>
@@ -763,20 +755,6 @@
 
         <!-- PAINEL INVENTÁRIOS -->
         <div id="inv-pane-lista">
-          <div class="inv-toolbar">
-            <button class="inv-tbtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-              Colunas
-            </button>
-            <button class="inv-tbtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-              Filtros
-            </button>
-            <button class="inv-tbtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Exportar
-            </button>
-          </div>
           <div class="tbl-wrap"><div class="tbl-scroll">
             <table class="tbl">
               <thead><tr>
@@ -3260,24 +3238,20 @@ async function iniciarAbaInventario() {
 let _invLista = [], _invPagAtual = 1;
 
 async function renderInvLista() {
-  const lojaFil      = document.getElementById('inv-fil-loja')?.value||'';
-  const dataIni      = document.getElementById('inv-fil-ini')?.value||'';
-  const dataFim      = document.getElementById('inv-fil-fim')?.value||'';
-  const sitAtivo     = document.getElementById('inv-sit-ativo')?.checked;
-  const sitEncerrado = document.getElementById('inv-sit-encerrado')?.checked;
-  const sitCancelado = document.getElementById('inv-sit-cancelado')?.checked;
-  const situacoes = [];
-  if (sitAtivo)     situacoes.push('ativo');
-  if (sitEncerrado) situacoes.push('encerrado','fechado');
-  if (sitCancelado) situacoes.push('cancelado');
+  const lojaFil = document.getElementById('inv-fil-loja')?.value||'';
+  const dataIni = document.getElementById('inv-fil-ini')?.value||'';
+  const dataFim = document.getElementById('inv-fil-fim')?.value||'';
   const tbody = document.getElementById('inv-lista-body');
+  if (!dataIni || !dataFim) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Preencha o <b>período</b> (D. Inicial e D. Final) para consultar.</td></tr>';
+    return;
+  }
   tbody.innerHTML = '<tr><td colspan="7" class="empty">Carregando...</td></tr>';
   try {
     let q = `inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`;
-    if (situacoes.length) q += `&status=in.(${situacoes.join(',')})`;
-    if (lojaFil)   q += `&loja_id=eq.${lojaFil}`;
-    if (dataIni)   q += `&criado_em=gte.${dataIni}`;
-    if (dataFim)   q += `&criado_em=lte.${dataFim}T23:59:59`;
+    if (lojaFil) q += `&loja_id=eq.${lojaFil}`;
+    if (dataIni) q += `&criado_em=gte.${dataIni}`;
+    if (dataFim) q += `&criado_em=lte.${dataFim}T23:59:59`;
     const lista = await api(q);
     if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum inventário encontrado</td></tr>'; return; }
 
