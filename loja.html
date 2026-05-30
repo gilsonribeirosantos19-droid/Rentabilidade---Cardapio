@@ -310,6 +310,13 @@
   .td-mono{font-family:'DM Mono',monospace;font-size:12px}
   .sug-ok{color:#16a34a;font-weight:600}.sug-baixo{color:#f59e0b;font-weight:600}.sug-ruptura{color:#dc2626;font-weight:600}
   /* PCP modal styles */
+  /* ── MOV FORM ── */
+  .mov-lbl{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+  .mov-field{width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;box-sizing:border-box}
+  .mov-field:focus{border-color:var(--teal)}
+  .mov-sel{width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;cursor:pointer;box-sizing:border-box}
+  .mov-sel:focus{border-color:var(--teal)}
+  .mov-total-box{padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:15px;font-weight:700;color:#0f172a;font-family:'DM Mono',monospace;white-space:nowrap}
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:20px}
   .modal-overlay.open{display:flex}
   .modal-overlay .modal-box{background:#fff;border-radius:16px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto}
@@ -606,41 +613,87 @@
 
         <!-- Nova movimentação card -->
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:20px">
-          <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:16px">Nova movimentação</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px" class="mov-form-grid">
+          <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:18px">Nova movimentação</div>
+
+          <!-- Linha 1: Tipo + Data -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
             <div>
-              <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Tipo</div>
-              <select id="mov-tipo" onchange="onMovTipoChange()" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;cursor:pointer">
+              <div class="mov-lbl">Tipo</div>
+              <select id="mov-tipo" class="mov-sel" onchange="onMovTipoChange()">
                 <option value="">Selecione o tipo</option>
                 <option value="saida">Saída</option>
                 <option value="entrada">Entrada</option>
               </select>
             </div>
             <div>
-              <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Insumo</div>
-              <select id="mov-insumo" onchange="atualizarUnidadeMov()" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;cursor:pointer">
+              <div class="mov-lbl">Data</div>
+              <input type="date" id="mov-data" class="mov-field">
+            </div>
+          </div>
+
+          <!-- Linha 2: Insumo + Quantidade -->
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
+            <div>
+              <div class="mov-lbl">Insumo</div>
+              <select id="mov-insumo" class="mov-sel" onchange="atualizarUnidadeMov()">
                 <option value="">Selecione um insumo</option>
               </select>
             </div>
             <div>
-              <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Quantidade</div>
+              <div class="mov-lbl">Quantidade</div>
               <div style="display:flex;align-items:center;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff">
-                <input type="number" id="mov-qtd" min="0" step="0.001" placeholder="0,000" style="flex:1;border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;padding:9px 12px;background:transparent">
-                <span id="mov-un" style="font-size:13px;color:#94a3b8;padding:0 12px;font-weight:600;border-left:1px solid #e2e8f0;min-width:44px;text-align:center">kg</span>
+                <input type="number" id="mov-qtd" min="0" step="0.001" placeholder="0,000" oninput="calcValorTotalMov()" style="flex:1;border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;padding:9px 12px;background:transparent">
+                <span id="mov-un" style="font-size:13px;color:#94a3b8;padding:0 12px;font-weight:600;border-left:1px solid #e2e8f0;min-width:44px;text-align:center">—</span>
               </div>
             </div>
           </div>
-          <div style="margin-bottom:16px">
-            <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Observação (opcional)</div>
-            <textarea id="mov-obs" placeholder="Informe uma observação" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;resize:vertical;min-height:80px;background:#fff"></textarea>
-          </div>
-          <div style="text-align:right">
-            <button id="btn-registrar-mov" onclick="registrarMovimentacao()" style="padding:10px 24px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s" onmouseover="this.style.background='#ea6c00'" onmouseout="this.style.background='#f97316'">Registrar movimentação</button>
-          </div>
-          <!-- Campos ocultos para compatibilidade -->
+
+          <!-- Campos específicos de ENTRADA -->
           <div id="mov-campos-entrada" style="display:none">
-            <select id="mov-forn"><option value="">Sem fornecedor</option></select>
-            <input id="mov-unid"><input id="mov-fator" value="1"><input id="mov-custo"><input id="mov-lote"><input id="mov-val" type="date">
+            <!-- Linha 3: Fornecedor + Custo unit + Valor Total -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+              <div>
+                <div class="mov-lbl">Fornecedor</div>
+                <select id="mov-forn" class="mov-sel"><option value="">Sem fornecedor</option></select>
+              </div>
+              <div>
+                <div class="mov-lbl" id="mov-custo-label">Custo unitário</div>
+                <input type="number" id="mov-custo" class="mov-field" min="0" step="0.01" placeholder="0,00" oninput="calcValorTotalMov()">
+              </div>
+              <div>
+                <div class="mov-lbl">Valor Total</div>
+                <div class="mov-total-box" id="mov-valor-total">R$ 0,00</div>
+              </div>
+            </div>
+            <!-- Linha 4: Un. compra + Fator + Lote + Validade -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:14px">
+              <div>
+                <div class="mov-lbl">Un. de compra</div>
+                <input type="text" id="mov-unid" class="mov-field" placeholder="ex: cx, fardo">
+              </div>
+              <div>
+                <div class="mov-lbl">Fator conversão</div>
+                <input type="number" id="mov-fator" class="mov-field" value="1" min="0.001" step="0.001">
+              </div>
+              <div>
+                <div class="mov-lbl">Lote</div>
+                <input type="text" id="mov-lote" class="mov-field" placeholder="Opcional">
+              </div>
+              <div>
+                <div class="mov-lbl">Validade</div>
+                <input type="date" id="mov-val" class="mov-field">
+              </div>
+            </div>
+          </div>
+
+          <!-- Observação -->
+          <div style="margin-bottom:16px">
+            <div class="mov-lbl">Observação (opcional)</div>
+            <textarea id="mov-obs" placeholder="Informe uma observação" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;resize:vertical;min-height:70px;background:#fff;box-sizing:border-box"></textarea>
+          </div>
+
+          <div style="text-align:right">
+            <button id="btn-registrar-mov" onclick="registrarMovimentacao()" style="padding:10px 28px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer">Registrar movimentação</button>
           </div>
         </div>
 
@@ -2303,8 +2356,28 @@ function popularInsumosMov() {
 }
 
 function atualizarUnidadeMov() {
-  const opt = document.querySelector('#mov-insumo option:checked');
-  document.getElementById('mov-un').textContent = opt?.dataset.un || '';
+  const sel = document.getElementById('mov-insumo');
+  const insId = sel.value;
+  const ins = insumos.find(i=>i.id===insId);
+  const un = ins?.unidade_compra || ins?.unidade_medida || '—';
+  document.getElementById('mov-un').textContent = un;
+
+  // Auto-preenche custo unitário do insumo
+  if (ins?.preco_compra) {
+    document.getElementById('mov-custo').value = ins.preco_compra;
+    document.getElementById('mov-custo-label').textContent = `Custo unitário (R$/${un})`;
+  } else {
+    document.getElementById('mov-custo-label').textContent = `Custo unitário (R$/${un})`;
+  }
+  calcValorTotalMov();
+}
+
+function calcValorTotalMov() {
+  const qtd   = parseFloat(document.getElementById('mov-qtd')?.value)||0;
+  const custo = parseFloat(document.getElementById('mov-custo')?.value)||0;
+  const total = qtd * custo;
+  const el = document.getElementById('mov-valor-total');
+  if (el) el.textContent = 'R$ ' + total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
 let _relRows=[], _relPag=1, _relPorPag=10;
