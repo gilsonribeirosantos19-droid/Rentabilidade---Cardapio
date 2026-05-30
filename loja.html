@@ -245,6 +245,37 @@
     .sol-bottom div:last-child{order:3}
     .inv-filtros-grid .btn{grid-column:1/-1}
   }
+  /* ── TABELA DE GRUPO ─────────────────────────────────── */
+  .sol-grupo{background:#fff;border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
+  .sol-grupo-hdr{display:flex;align-items:center;gap:10px;padding:12px 18px;background:var(--bg3);border-bottom:1px solid var(--border2);cursor:pointer;user-select:none}
+  .sol-grupo-nome{font-size:13px;font-weight:700;color:var(--text1)}
+  .sol-grupo-count{font-size:12px;color:var(--text3);background:var(--border2);padding:2px 8px;border-radius:20px}
+  .sol-grupo-arrow{margin-left:auto;width:16px;height:16px;transition:transform .2s;color:var(--text3)}
+  .sol-grupo.collapsed .sol-grupo-arrow{transform:rotate(-90deg)}
+  .sol-grupo.collapsed .sol-grupo-body{display:none}
+  .sol-grupo-body .tbl thead tr{background:#0f2d5c}
+  .sol-grupo-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
+  .sol-grupo-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
+  .sol-grupo-body .tbl tbody tr:last-child td{border-bottom:none}
+  .sol-grupo-body .tbl tbody tr:hover{background:var(--bg3)}
+  .sol-tr-sel td{background:#eff6ff!important}
+  .sol-qty-inp{width:80px;text-align:right;background:#fff;border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit;outline:none}
+  .sol-qty-inp:focus{border-color:var(--teal)}
+  .sol-un-sel{background:#fff;border:1px solid var(--border2);border-radius:6px;padding:5px 6px;font-size:12px;font-family:inherit;outline:none;cursor:pointer}
+  /* ── BOTTOM SHEET ──────────────────────────────────────── */
+  .sol-sheet-bd{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none}
+  .sol-sheet-bd.open{display:block}
+  .sol-sheet{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border2);border-radius:16px 16px 0 0;z-index:201;max-height:75vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s ease}
+  .sol-sheet.open{transform:translateY(0)}
+  .sol-sheet-hd{padding:16px 22px;border-bottom:1px solid var(--border2);display:flex;align-items:center;flex-shrink:0}
+  .sol-sheet-title{font-size:15px;font-weight:700;flex:1;color:var(--text1)}
+  .sol-sheet-x{width:28px;height:28px;border:1px solid var(--border2);background:transparent;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-family:inherit}
+  .sol-sheet-top{display:flex;gap:16px;padding:14px 22px;border-bottom:1px solid var(--border2);flex-shrink:0;flex-wrap:wrap}
+  .sol-sheet-body{flex:1;overflow-y:auto}
+  .sol-sheet-body .tbl thead tr{background:#0f2d5c}
+  .sol-sheet-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
+  .sol-sheet-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
+  .sol-sheet-foot{padding:12px 22px;border-top:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
   /* ── PCP ── */
   .filter-bar-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;margin-bottom:18px}
   .fil-select{height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--text1);font-weight:500;background:var(--bg3);outline:none;cursor:pointer;min-width:130px}
@@ -441,7 +472,7 @@
       <div class="sol-search-bar">
         <div style="position:relative;flex:1">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="sol-search-inp" id="sol-busca" placeholder="Buscar item, categoria ou fornecedor..." oninput="renderSolicitacao()">
+          <input class="sol-search-inp" id="sol-busca" placeholder="Buscar item, categoria ou código..." oninput="renderSolicitacao()">
         </div>
         <button class="btn btn-ghost" style="gap:6px;white-space:nowrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -449,28 +480,7 @@
         </button>
       </div>
 
-      <!-- Pills de categoria -->
-      <div class="sol-cat-pills" id="sol-cat-pills">
-        <button class="sol-pill active" onclick="solSetCat('',this)">Todos</button>
-      </div>
-
-      <!-- Resumo -->
-      <div class="sol-summary" id="sol-summary" style="display:none">
-        <div class="sol-sum-item">
-          <div class="sol-sum-icon" style="background:#eff6ff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
-          <div><div class="sol-sum-lbl">Itens selecionados</div><div class="sol-sum-val" id="sol-sum-count">0 itens</div></div>
-        </div>
-        <div class="sol-sum-item">
-          <div class="sol-sum-icon" style="background:#f0fdf4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
-          <div><div class="sol-sum-lbl">Total estimado</div><div class="sol-sum-val" id="sol-sum-total">R$ 0,00</div></div>
-        </div>
-        <div class="sol-sum-item">
-          <div class="sol-sum-icon" style="background:#fff7ed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <div><div class="sol-sum-lbl">Último pedido</div><div class="sol-sum-val" id="sol-sum-ultimo">—</div></div>
-        </div>
-      </div>
-
-      <!-- Lista de itens -->
+      <!-- Grupos (tabelas) -->
       <div id="sol-lista"></div>
     </div>
 
@@ -1307,35 +1317,36 @@
   </div>
 </div>
 
-<!-- MODAL: QUANTIDADES SOLICITAÇÃO -->
-<div id="m-qtd" class="overlay" onclick="if(event.target===this)fecharModal('m-qtd')">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h2>Informar Quantidades</h2>
-    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <div style="flex:1;min-width:150px">
-        <div class="fg" style="margin:0">
-          <label>Entrega prevista</label>
-          <input type="date" id="sol-entrega" class="field" style="width:100%;margin-top:5px">
-        </div>
-      </div>
-      <div style="flex:2;min-width:200px">
-        <div class="fg" style="margin:0">
-          <label>Observação</label>
-          <input type="text" id="sol-obs" class="field" placeholder="Opcional" style="width:100%;margin-top:5px">
-        </div>
-      </div>
+<!-- BOTTOM SHEET: Informar Quantidades -->
+<div id="sol-sheet-bd" class="sol-sheet-bd" onclick="fecharSheet()"></div>
+<div id="sol-sheet" class="sol-sheet">
+  <div class="sol-sheet-hd">
+    <span class="sol-sheet-title">Informar Quantidades</span>
+    <button class="sol-sheet-x" onclick="fecharSheet()">✕</button>
+  </div>
+  <div class="sol-sheet-top">
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Entrega prevista</div>
+      <input type="date" class="field" id="sol-sheet-entrega" style="min-width:160px">
     </div>
-    <div class="tbl-wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Observação</div>
+      <input type="text" class="field" id="sol-sheet-obs" placeholder="Opcional" style="width:100%">
+    </div>
+  </div>
+  <div class="sol-sheet-body">
+    <div class="tbl-scroll">
       <table class="tbl">
-        <thead><tr><th>Item</th><th class="r">Sugestão</th><th class="r">Quantidade *</th><th>Embalagem</th></tr></thead>
-        <tbody id="qtd-body"></tbody>
+        <thead><tr>
+          <th>Item</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Sugestão</th><th>Quantidade *</th><th>Embalagem</th>
+        </tr></thead>
+        <tbody id="sol-sheet-tbody"></tbody>
       </table>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModal('m-qtd')">← Voltar</button>
-      <div class="ml"></div>
-      <button class="btn btn-primary" onclick="enviarSolicitacao()">Enviar Solicitação</button>
-    </div>
+  </div>
+  <div class="sol-sheet-foot">
+    <button class="btn btn-ghost" onclick="fecharSheet()">Voltar</button>
+    <button class="btn btn-primary" id="btn-enviar-sol" onclick="enviarSolicitacao()">Enviar Solicitação</button>
   </div>
 </div>
 
@@ -1459,6 +1470,7 @@ function switchTab(tab) {
   if (tab==='estoque') iniciarEstoque();
   if (tab==='pcp') iniciarPcp();
   if (tab==='porcionamento') iniciarPorcionamento();
+  if (tab==='solicitacao') carregarSaldosSol();
   window.scrollTo(0,0);
 }
 
@@ -1617,16 +1629,21 @@ async function confirmarInventario() {
 // ══════════════════════════════════════════════════════════════════
 // ── SOLICITAÇÃO NOVA UI ──────────────────────────────────────────
 let _solSel = {}; // {insumoId: qty}
+let _solUnSel = {}; // {insId: unidade}
+let _solSaldos = {}; // {insId: {saldo_atual, estoque_minimo}}
 let _solCat = '';
 const _solVerMais = {}; // {grupoId: bool}
 
-function renderGruposSol() {
-  // Popular pills de categoria
-  const pills = document.getElementById('sol-cat-pills');
-  if (pills) {
-    const gruposValidos = grupos.filter(g => (gruposItens[g.id]||[]).some(id => insumos.find(i=>i.id===id)));
-    pills.innerHTML = `<button class="sol-pill${_solCat===''?' active':''}" onclick="solSetCat('',this)">Todos</button>` +
-      gruposValidos.map(g=>`<button class="sol-pill${_solCat===g.id?' active':''}" onclick="solSetCat('${g.id}',this)">${esc(g.nome)}</button>`).join('');
+function renderGruposSol() { renderSolicitacao(); }
+
+async function carregarSaldosSol() {
+  const lojaId = userProfile?.loja_id;
+  if (lojaId) {
+    try {
+      const saldos = await api(`saldo_estoque?loja_id=eq.${lojaId}&tenant_id=eq.${TENANT_ID}&select=insumo_id,saldo_atual,estoque_minimo`);
+      _solSaldos = {};
+      saldos.forEach(s => { _solSaldos[s.insumo_id] = { saldo_atual: s.saldo_atual, estoque_minimo: s.estoque_minimo }; });
+    } catch(e) { console.warn('Saldo não carregado:', e.message); }
   }
   renderSolicitacao();
 }
@@ -1643,10 +1660,7 @@ function renderSolicitacao() {
   const lista = document.getElementById('sol-lista');
   if (!lista) return;
 
-  const gruposVisiveis = _solCat
-    ? grupos.filter(g=>g.id===_solCat)
-    : grupos.filter(g=>(gruposItens[g.id]||[]).length);
-
+  const gruposVisiveis = grupos.filter(g => (gruposItens[g.id]||[]).length);
   if (!gruposVisiveis.length) {
     lista.innerHTML = '<div class="empty-state"><div class="empty-title">Nenhum grupo cadastrado.</div><div class="empty-sub">Contate o administrador.</div></div>';
     return;
@@ -1656,56 +1670,88 @@ function renderSolicitacao() {
     let itens = (gruposItens[g.id]||[]).map(id=>insumos.find(i=>i.id===id)).filter(Boolean);
     if (busca) itens = itens.filter(i=>i.nome.toLowerCase().includes(busca)||(i.categoria||'').toLowerCase().includes(busca));
     if (!itens.length) return '';
-    const mostrar = _solVerMais[g.id] ? itens : itens.slice(0,5);
-    const cards = mostrar.map(ins => {
+
+    const rows = itens.map(ins => {
+      const saldo = _solSaldos[ins.id]||{};
+      const atual = saldo.saldo_atual != null ? Number(saldo.saldo_atual) : null;
+      const minimo = saldo.estoque_minimo != null ? Number(saldo.estoque_minimo) : null;
+      const sug = (atual != null && minimo != null) ? Math.max(0, Math.ceil(minimo - atual)) : null;
+      const un = ins.unidade_medida||ins.unidade_compra||'un';
       const sel = ins.id in _solSel;
-      const qty = _solSel[ins.id]||0;
-      const un = ins.unidade_compra||ins.unidade_medida||'un';
-      const sug = Math.max(0, Math.ceil((ins.preco_compra||0)*0 + 5)); // placeholder
-      return `<div class="sol-item${sel?' checked':''}" id="sol-card-${ins.id}">
-        <input type="checkbox" class="sol-item-chk" ${sel?'checked':''} onchange="solToggleCard('${ins.id}',this.checked)">
-        <div class="sol-item-body">
-          <div class="sol-item-nome">${esc(ins.nome)}</div>
-        </div>
-        <div class="sol-item-right">
-          <div class="sol-item-estoque" style="color:#64748b">Estoque atual: — ${un}</div>
-          <span style="display:none" class="sol-item-sug" data-sug="${sug}" data-un="${esc(un)}"></span>
-        </div>
-      </div>`;
+      const qty = _solSel[ins.id] || (sug != null ? sug : 0);
+      const selUn = _solUnSel[ins.id] || un;
+      const unOpts = UNIDADES_PEDIDO.map(u=>`<option value="${u}"${u===selUn?' selected':''}>${u}</option>`).join('');
+      const fmtV = (v,u) => v != null ? v+' '+u : '—';
+      return `<tr class="${sel?'sol-tr-sel':''}">
+        <td style="width:36px;text-align:center"><input type="checkbox" ${sel?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#6366f1" onchange="solToggleRow('${ins.id}',this.checked)"></td>
+        <td style="font-weight:600">${esc(ins.nome)}</td>
+        <td style="color:var(--text2)">${fmtV(atual,un)}</td>
+        <td style="color:var(--text2)">${fmtV(minimo,un)}</td>
+        <td style="color:var(--text2)">${fmtV(sug,un)}</td>
+        <td><div style="display:flex;gap:4px;align-items:center">
+          <input type="number" class="sol-qty-inp" id="sol-qty-${ins.id}"
+            value="${qty}" min="0" step="0.001" onchange="setSolQtyInline('${ins.id}',this)">
+          <select class="sol-un-sel" id="sol-un-${ins.id}" onchange="_solUnSel['${ins.id}']=this.value">${unOpts}</select>
+        </div></td>
+      </tr>`;
     }).join('');
-    const temMais = itens.length > 5 && !_solVerMais[g.id];
-    return `<div class="sol-section">
-      <div class="sol-sec-hdr">
-        <span class="sol-sec-nome">${esc(g.nome)}</span>
-        <span class="sol-sec-count">${itens.length} itens</span>
-        <label class="sol-sec-selall">
-          <input type="checkbox" style="accent-color:#6366f1" onchange="solSelAll('${g.id}',this.checked)">
-          Selecionar todos
-        </label>
+
+    return `<div class="sol-grupo" id="sol-g-${g.id}">
+      <div class="sol-grupo-hdr" onclick="toggleSolGrupo('${g.id}')">
+        <span class="sol-grupo-nome">${esc(g.nome)}</span>
+        <span class="sol-grupo-count">${itens.length} itens</span>
+        <svg class="sol-grupo-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
       </div>
-      ${cards}
-      ${temMais?`<button class="sol-ver-mais" onclick="_solVerMais['${g.id}']=true;renderSolicitacao()">Ver mais itens ∨</button>`:''}
+      <div class="sol-grupo-body">
+        <div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr><th></th><th>Item</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Sugestão</th><th>Solicitar</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
     </div>`;
   }).join('');
 
   updateSolSummary();
 }
 
-function solToggleCard(id, checked) {
-  const ins = insumos.find(i=>i.id===id);
-  const un = ins?.unidade_compra||ins?.unidade_medida||'un';
+function solToggleCard(id, checked) { solToggleRow(id, checked); }
+
+function solToggleRow(insId, checked) {
+  const ins = insumos.find(i=>i.id===insId);
+  const un = ins?.unidade_medida||ins?.unidade_compra||'un';
+  const qtyInp = document.getElementById(`sol-qty-${insId}`);
+  const qty = parseFloat(qtyInp?.value)||1;
   if (checked) {
-    if (!(id in _solSel)) _solSel[id] = 1;
+    _solSel[insId] = qty;
+    _solUnSel[insId] = document.getElementById(`sol-un-${insId}`)?.value||un;
   } else {
-    delete _solSel[id];
-    const inp = document.getElementById(`sol-qty-${id}`);
-    if (inp) inp.value = 0;
+    delete _solSel[insId];
   }
-  const card = document.getElementById(`sol-card-${id}`);
-  if (card) card.classList.toggle('checked', checked);
-  const sug = card?.querySelector('.sol-item-sug');
-  if (sug) sug.classList.toggle('active', checked);
+  qtyInp?.closest('tr')?.classList.toggle('sol-tr-sel', checked);
   updateSolSummary();
+}
+
+function setSolQtyInline(insId, inp) {
+  const qty = parseFloat(inp.value)||0;
+  const un = document.getElementById(`sol-un-${insId}`)?.value||'un';
+  const chk = inp.closest('tr')?.querySelector('input[type=checkbox]');
+  if (qty > 0) {
+    _solSel[insId] = qty;
+    _solUnSel[insId] = un;
+    if (chk && !chk.checked) chk.checked = true;
+    inp.closest('tr')?.classList.add('sol-tr-sel');
+  } else {
+    delete _solSel[insId];
+    if (chk) chk.checked = false;
+    inp.closest('tr')?.classList.remove('sol-tr-sel');
+  }
+  updateSolSummary();
+}
+
+function toggleSolGrupo(grupoId) {
+  document.getElementById(`sol-g-${grupoId}`)?.classList.toggle('collapsed');
 }
 
 function changeSolQty(id, un, delta) {
@@ -1713,133 +1759,114 @@ function changeSolQty(id, un, delta) {
   const cur = parseFloat(inp?.value)||0;
   const novo = Math.max(0, cur + delta);
   if (inp) inp.value = novo;
-  if (novo > 0) {
-    _solSel[id] = novo;
-    const chk = document.querySelector(`#sol-card-${id} .sol-item-chk`);
-    if (chk && !chk.checked) { chk.checked = true; solToggleCard(id, true); return; }
-  } else if (novo === 0 && id in _solSel) {
-    delete _solSel[id];
-    const chk = document.querySelector(`#sol-card-${id} .sol-item-chk`);
-    if (chk) { chk.checked = false; solToggleCard(id, false); return; }
-  } else {
-    _solSel[id] = novo;
-  }
-  updateSolSummary();
+  setSolQtyInline(id, inp);
 }
 
 function setSolQtyDirect(id, un, val) {
-  const novo = Math.max(0, parseFloat(val)||0);
-  if (novo > 0) { _solSel[id] = novo; }
-  else { delete _solSel[id]; }
-  updateSolSummary();
+  const inp = document.getElementById(`sol-qty-${id}`);
+  if (inp) { inp.value = val; setSolQtyInline(id, inp); }
 }
 
 function solSelAll(grupoId, checked) {
   const ids = gruposItens[grupoId]||[];
   ids.forEach(id=>{
-    const ins=insumos.find(i=>i.id===id);
-    if(!ins)return;
-    const chk=document.querySelector(`#sol-card-${id} .sol-item-chk`);
-    if(chk){chk.checked=checked;solToggleCard(id,checked);}
+    const chk=document.querySelector(`#sol-g-${grupoId} #sol-qty-${id}`)?.closest('tr')?.querySelector('input[type=checkbox]');
+    if(chk){chk.checked=checked;solToggleRow(id,checked);}
   });
 }
 
 function updateSolSummary() {
   const ids = Object.keys(_solSel);
   const n = ids.length;
-  const total = ids.reduce((s,id)=>{
-    const ins=insumos.find(i=>i.id===id);
-    const qty=_solSel[id]||0;
-    return s+(ins?.preco_compra||0)*qty;
-  },0);
+  const total = ids.reduce((s,id)=>{const ins=insumos.find(i=>i.id===id);return s+(ins?.preco_compra||0)*(_solSel[id]||0);},0);
   const kgTotal = ids.reduce((s,id)=>s+(_solSel[id]||0),0);
   const fmtBRL = v=>'R$ '+Number(v).toFixed(2).replace('.',',');
-
-  const sumEl=document.getElementById('sol-summary');
-  if(sumEl) sumEl.style.display=n>0?'flex':'none';
-  const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const el = (id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   el('sol-sum-count',n+' ite'+(n===1?'m':'ns'));
   el('sol-sum-total',fmtBRL(total));
-
   const bot=document.getElementById('sol-bottom');
   if(bot) bot.classList.toggle('show',n>0);
   el('sol-bot-count',n+' ite'+(n===1?'m':'ns')+' selecionado'+(n===1?'':'s'));
   el('sol-bot-kg',kgTotal.toFixed(1)+' kg no total');
-  document.getElementById('sol-bot-total').innerHTML='Total estimado: <strong>'+fmtBRL(total)+'</strong>';
+  const bt=document.getElementById('sol-bot-total');if(bt)bt.innerHTML='Total estimado: <strong>'+fmtBRL(total)+'</strong>';
 }
 
 function continuarPedido() {
   const ids = Object.keys(_solSel);
   if (!ids.length) { toast('Selecione pelo menos um item.','err'); return; }
-  // reutiliza o modal de quantidades existente
-  solChecked = new Set(ids);
-  ids.forEach(id=>{ _solSel[id]=_solSel[id]||1; });
-  abrirModalQtd();
+  document.getElementById('sol-sheet-entrega').value = hoje(7);
+  document.getElementById('sol-sheet-obs').value = '';
+  document.getElementById('sol-sheet-tbody').innerHTML = ids.map(insId => {
+    const ins = insumos.find(i=>i.id===insId);
+    const saldo = _solSaldos[insId]||{};
+    const atual = saldo.saldo_atual != null ? Number(saldo.saldo_atual) : null;
+    const minimo = saldo.estoque_minimo != null ? Number(saldo.estoque_minimo) : null;
+    const sug = (atual!=null&&minimo!=null) ? Math.max(0,Math.ceil(minimo-atual)) : null;
+    const un = ins?.unidade_medida||ins?.unidade_compra||'un';
+    const qty = _solSel[insId]||0;
+    const selUn = _solUnSel[insId]||un;
+    const fmtV = (v,u)=>v!=null?v+' '+u:'—';
+    const unOpts = UNIDADES_PEDIDO.map(u=>`<option value="${u}"${u===selUn?' selected':''}>${u}</option>`).join('');
+    return `<tr>
+      <td style="font-weight:600">${esc(ins?.nome||insId)}</td>
+      <td style="color:var(--text2)">${fmtV(atual,un)}</td>
+      <td style="color:var(--text2)">${fmtV(minimo,un)}</td>
+      <td style="color:var(--text2)">${fmtV(sug,un)}</td>
+      <td><input type="number" class="field field-sm" id="sheet-qty-${insId}" value="${qty}" min="0" step="0.001" style="width:80px;text-align:right"></td>
+      <td><select class="field field-sm" id="sheet-un-${insId}" style="width:70px">${unOpts}</select></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('sol-sheet-bd').classList.add('open');
+  document.getElementById('sol-sheet').classList.add('open');
+}
+
+function fecharSheet() {
+  document.getElementById('sol-sheet-bd').classList.remove('open');
+  document.getElementById('sol-sheet').classList.remove('open');
 }
 
 // compat aliases
 function selecionarGrupoSol(){}
 function solSelecionarTodos(){}
-function limparSelecaoSol(){ _solSel={}; _solVerMais[Object.keys(_solVerMais)[0]]=false; renderSolicitacao(); }
+function limparSelecaoSol(){ _solSel={}; _solUnSel={}; renderSolicitacao(); }
 
 const UNIDADES_PEDIDO = ['kg','g','un','pct','litro','ml','cx','fardo','bd','sc'];
 
-function abrirModalQtd() {
-  if (!solChecked.size) return;
-  document.getElementById('sol-entrega').value = hoje(7);
-  document.getElementById('qtd-body').innerHTML = [...solChecked].map(insId=>{
-    const ins=insumos.find(i=>i.id===insId);
-    const unPadrao=ins?.unidade_medida||ins?.unidade_compra||'un';
-    // pega sugestão do card se existir
-    const sugEl=document.querySelector(`#sol-card-${insId} .sol-item-sug`);
-    const sug=sugEl?.dataset?.sug||'0';
-    const sugUn=sugEl?.dataset?.un||unPadrao;
-    const opts=UNIDADES_PEDIDO.map(u=>`<option value="${u}"${u===unPadrao?' selected':''}>${u}</option>`).join('');
-    return `<tr>
-      <td style="font-weight:600;color:#0f172a">${esc(ins?.nome||insId)}</td>
-      <td class="r"><span style="font-size:13px;font-weight:700;color:#f97316;font-family:'DM Mono',monospace">${sug} ${sugUn}</span></td>
-      <td class="r"><input type="number" class="field field-sm" id="mq-${insId}"
-        min="0" step="0.001" value="${sug}"
-        style="width:90px;text-align:right"></td>
-      <td><select class="field field-sm" id="mu-${insId}" style="width:72px">${opts}</select></td>
-    </tr>`;
-  }).join('');
-  abrirModal('m-qtd');
-  setTimeout(()=>{document.querySelector('#qtd-body input')?.focus();},100);
-}
+function abrirModalQtd() { continuarPedido(); }
 
 async function enviarSolicitacao() {
   const lojaId = userProfile?.loja_id;
   if (!lojaId) { toast('Loja não associada ao seu perfil.','err'); return; }
-  const itensFinal=[];
-  for (const insId of solChecked) {
-    const inp=document.getElementById(`mq-${insId}`);
-    const qty=parseFloat(inp?.value)||0;
+  const itensFinal = [];
+  for (const insId of Object.keys(_solSel)) {
+    const inp = document.getElementById(`sheet-qty-${insId}`);
+    const qty = parseFloat(inp?.value)||0;
     if (qty<=0){toast('Informe a quantidade de todos os itens.','err');inp?.focus();return;}
-    const unidade=document.getElementById(`mu-${insId}`)?.value||'un';
-    itensFinal.push({insId,qty,unidade});
+    itensFinal.push({insId, qty, unidade: document.getElementById(`sheet-un-${insId}`)?.value||'un'});
   }
-  const entrega=document.getElementById('sol-entrega').value;
-  const obs=document.getElementById('sol-obs').value.trim();
-  const btn=document.querySelector('#m-qtd .btn-primary');
-  btn.disabled=true; btn.textContent='Enviando...';
+  if (!itensFinal.length){toast('Selecione ao menos um item.','err');return;}
+  const entrega = document.getElementById('sol-sheet-entrega').value;
+  const obs = document.getElementById('sol-sheet-obs').value.trim();
+  const btn = document.getElementById('btn-enviar-sol');
+  btn.disabled=true;btn.textContent='Enviando...';
   try {
-    const pedRes=await api('pedidos_compra',{method:'POST',body:JSON.stringify({
-      tenant_id:TENANT_ID,loja_id:lojaId,fornecedor_id:null,status:'solicitado',
-      data_pedido:hoje(),data_entrega_prevista:entrega||null,
-      observacao:obs||null,solicitante_id:userProfile?.id||null
+    const pedRes = await api('pedidos_compra',{method:'POST',body:JSON.stringify({
+      tenant_id:TENANT_ID,loja_id:lojaId,fornecedor_id:null,
+      status:'solicitado',data_pedido:hoje(),
+      data_entrega_prevista:entrega||null,observacao:obs||null,
+      solicitante_id:userProfile?.id||null
     })});
-    const pedId=pedRes[0]?.id;
+    const pedId = pedRes[0]?.id;
     if (!pedId) throw new Error('Falha ao criar solicitação.');
     await api('itens_pedido',{method:'POST',prefer:'return=minimal',
       body:JSON.stringify(itensFinal.map(it=>({
-        pedido_id:pedId,insumo_id:it.insId,quantidade:it.qty,unidade:it.unidade,preco_unitario:null
-      })))
-    });
-    solChecked.clear();
-    fecharModal('m-qtd');
+        pedido_id:pedId,insumo_id:it.insId,
+        quantidade:it.qty,unidade:it.unidade,preco_unitario:null
+      })))});
+    _solSel={}; _solUnSel={};
+    fecharSheet();
+    renderSolicitacao();
     toast('Solicitação enviada com sucesso!','ok');
-    switchTab('inventario');
   } catch(e){toast('Erro: '+e.message,'err');}
   finally{btn.disabled=false;btn.textContent='Enviar Solicitação';}
 }
@@ -2454,7 +2481,7 @@ let _tt;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3500);}
 function abrirModal(id){document.getElementById(id).classList.add('open');}
 function fecharModal(id){document.getElementById(id).classList.remove('open');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharModal('m-qtd');fecharModal('m-inv');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){fecharSheet();fecharModal('m-inv');}});
 
 function toggleSidebar(){
   const sb=document.querySelector('.sidebar');
