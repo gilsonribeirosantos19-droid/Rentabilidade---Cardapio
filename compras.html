@@ -155,6 +155,16 @@
   .toast.ok{background:var(--green)}
   .empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
 
+  /* ── 3-SECTION LAYOUT ──────────────────────────────── */
+  .sec-block{margin-bottom:36px}
+  .sec-hd{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border2)}
+  .sec-hd-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+  .sec-hd-right{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+  .sec-num{width:24px;height:24px;border-radius:50%;background:#0f2d5c;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .sec-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text1)}
+  .forn-sugerida{font-size:12px;color:var(--teal);font-weight:600}
+  .forn-sugerida-vazia{font-size:12px;color:var(--text3)}
+
   @media(max-width:700px){.sidebar{display:none}}
   .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
   .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
@@ -216,14 +226,15 @@
 
     <!-- ══════════════════════ VIEW ADMIN ══════════════════════ -->
     <div id="view-admin" style="display:none">
-      <div class="tabs">
-        <button class="tab-btn" data-tab="solicitacoes" onclick="switchTab('solicitacoes')">Solicitações</button>
-        <button class="tab-btn" data-tab="processar" onclick="switchTab('processar')">Processar</button>
-        <button class="tab-btn" data-tab="pedidos" onclick="switchTab('pedidos')">Pedidos Gerados</button>
-      </div>
 
-      <!-- TAB: SOLICITAÇÕES -->
-      <div id="tab-solicitacoes" class="tab-pane">
+      <!-- ─── SEÇÃO 1: SOLICITAÇÕES ─── -->
+      <div class="sec-block">
+        <div class="sec-hd">
+          <div class="sec-hd-left">
+            <span class="sec-num">1</span>
+            <span class="sec-title">Solicitações</span>
+          </div>
+        </div>
         <div class="sc-grid" id="sol-cards" style="display:none"></div>
         <div class="toolbar">
           <select id="sol-fil-loja" style="font-size:13px;padding:7px 14px;min-width:180px;border:1.5px solid var(--teal);border-radius:8px;background:var(--bg2);color:var(--text1);cursor:pointer;outline:none;font-family:inherit">
@@ -249,35 +260,42 @@
             <thead><tr>
               <th>Data</th><th>Loja</th><th>Itens</th><th>Observação</th><th>Status</th><th></th>
             </tr></thead>
-            <tbody id="sol-body"><tr><td colspan="6" class="empty">Carregando...</td></tr></tbody>
+            <tbody id="sol-body"><tr><td colspan="6" style="padding:36px;text-align:center;color:#94a3b8;font-size:13px">Selecione um filtro e clique em <b>Consultar</b>.</td></tr></tbody>
           </table>
         </div></div>
       </div>
 
-      <!-- TAB: PROCESSAR -->
-      <div id="tab-processar" class="tab-pane">
-        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">Necessidade de Compra</div>
-            <div style="font-size:12px;color:var(--text3)" id="cons-desc">Carregando...</div>
+      <!-- ─── SEÇÃO 2: PROCESSAR ─── -->
+      <div class="sec-block">
+        <div class="sec-hd">
+          <div class="sec-hd-left">
+            <span class="sec-num">2</span>
+            <span class="sec-title">Processar</span>
+            <span id="cons-desc" style="font-size:12px;color:var(--text3);margin-left:4px"></span>
           </div>
-          <button class="btn btn-primary" onclick="gerarPedidos()" id="btn-gerar" disabled>Gerar Pedidos por Fornecedor</button>
+          <div class="sec-hd-right">
+            <span style="font-size:11px;color:var(--text3);max-width:240px;line-height:1.4">O sistema sugere o fornecedor com base no último preço e histórico de compras.</span>
+            <button class="btn btn-ghost btn-sm" onclick="carregarConsolidado()">↻ Recalcular sugestões</button>
+            <button class="btn btn-primary btn-sm" onclick="gerarPedidos()" id="btn-gerar" disabled>Gerar pedidos por fornecedor</button>
+          </div>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl" id="cons-table">
             <thead><tr>
-              <th>Insumo</th>
-              <th class="r">Q. Solicitada</th>
-              <th class="r">Q. Comprar</th>
+              <th>Item</th>
+              <th class="r">Qtd. solicitada total</th>
+              <th class="r">Qtd. a comprar</th>
               <th>Un.</th>
-              <th>Últ. Compra</th>
-              <th>Fornecedor</th>
+              <th>Última compra</th>
+              <th>Fornecedor sugerido</th>
+              <th>Fornecedor selecionado</th>
+              <th></th>
             </tr></thead>
-            <tbody id="cons-body"><tr><td colspan="6" class="empty">Nenhuma solicitação pendente</td></tr></tbody>
+            <tbody id="cons-body"><tr><td colspan="8" class="empty">Nenhuma solicitação pendente</td></tr></tbody>
           </table>
         </div></div>
 
-        <!-- Painel de lojas (atualiza ao clicar em um item) -->
+        <!-- Painel de lojas (atualiza ao clicar em Ver lojas) -->
         <div id="cons-lojas-panel" style="display:none" class="lojas-panel">
           <div class="lojas-panel-hd">
             Solicitações por Loja —
@@ -292,21 +310,29 @@
         </div>
       </div>
 
-      <!-- TAB: PEDIDOS GERADOS -->
-      <div id="tab-pedidos" class="tab-pane">
-        <div class="toolbar">
-          <select class="field field-sm" id="ped-fil-status" onchange="renderPedidos()">
-            <option value="ativos">Ativos (pendente + enviado)</option>
-            <option value="pendente">Pendente</option>
-            <option value="enviado">Enviado</option>
-            <option value="baixado">Baixados</option>
-            <option value="cancelado">Cancelado</option>
-            <option value="">Todos</option>
-          </select>
-          <button class="btn btn-ghost btn-sm ml" onclick="renderPedidos()">↻ Atualizar</button>
+      <!-- ─── SEÇÃO 3: PEDIDOS GERADOS POR FORNECEDOR ─── -->
+      <div class="sec-block">
+        <div class="sec-hd">
+          <div class="sec-hd-left">
+            <span class="sec-num">3</span>
+            <span class="sec-title">Pedidos Gerados por Fornecedor</span>
+          </div>
+          <div class="sec-hd-right">
+            <select class="field field-sm" id="ped-fil-status" onchange="renderPedidos()">
+              <option value="ativos">Ativos (pendente + enviado)</option>
+              <option value="pendente">Pendente</option>
+              <option value="enviado">Enviado</option>
+              <option value="baixado">Baixados</option>
+              <option value="cancelado">Cancelado</option>
+              <option value="">Todos</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="imprimirTodosPorLoja()">📋 Por loja</button>
+            <button class="btn btn-ghost btn-sm" onclick="renderPedidos()">↻ Atualizar</button>
+          </div>
         </div>
         <div id="ped-body"><div class="empty">Carregando...</div></div>
       </div>
+
     </div>
 
     <!-- ══════════════════════ VIEW GERENTE ══════════════════════ -->
@@ -510,7 +536,9 @@ async function carregar() {
     const fil = document.getElementById('sol-fil-loja');
     fil.innerHTML = '<option value="">Todas as lojas</option>' +
       lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
-    switchTab('solicitacoes');
+    renderSolicitacoes();
+    carregarConsolidado();
+    renderPedidos();
   }
 }
 
@@ -688,24 +716,31 @@ function renderConsolidado() {
     const vinc = vinculosForn.find(v=>v.insumo_id===insId && v.fornecedor_id===d.fornecedorId)
                || vinculosForn.find(v=>v.insumo_id===insId);
     const ultCompra = vinc?.preco_unitario
-      ? 'R$ '+Number(vinc.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'/'+esc(d.unidade)
+      ? new Date(vinc.updated_at||vinc.created_at||'').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+        + ' · R$ '+Number(vinc.preco_unitario).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
       : '—';
-    return `<tr class="cons-row" id="crow-${insId}" onclick="mostrarLojaBreakdown('${insId}')">
+    const fornSugerido = d.fornecedorId ? fornecedores.find(f=>f.id===d.fornecedorId)?.nome : null;
+    return `<tr class="cons-row" id="crow-${insId}">
       <td style="font-weight:600">${esc(d.nome)}</td>
       <td class="r mono">${d.total.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
-      <td class="r" onclick="event.stopPropagation()">
+      <td class="r">
         <input type="number" class="qtd-comprar" id="qc-${insId}"
           value="${d.total.toFixed(3)}" min="0" step="0.001"
           onchange="consolidado['${insId}'].qComprar=parseFloat(this.value)||0">
       </td>
       <td>${esc(d.unidade)}</td>
-      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap">${ultCompra}</td>
-      <td onclick="event.stopPropagation()">
+      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap">${esc(ultCompra)}</td>
+      <td>${fornSugerido
+        ? `<span class="forn-sugerida">${esc(fornSugerido)}</span>`
+        : `<span class="forn-sugerida-vazia">—</span>`}
+      </td>
+      <td>
         <select class="forn-select ${d.fornecedorId?'':'sem-forn'}" id="forn-sel-${insId}"
           onchange="consolidado['${insId}'].fornecedorId=this.value||null;this.className='forn-select'+(this.value?'':' sem-forn')">
           ${fornOpts}
         </select>
       </td>
+      <td><button class="btn btn-ghost btn-sm" onclick="mostrarLojaBreakdown('${insId}')">Ver lojas</button></td>
     </tr>`;
   }).join('');
 
@@ -716,8 +751,6 @@ function renderConsolidado() {
 function mostrarLojaBreakdown(insId) {
   const d = consolidado[insId];
   if (!d) return;
-  document.querySelectorAll('.cons-row').forEach(r => r.classList.remove('sel'));
-  document.getElementById('crow-'+insId)?.classList.add('sel');
   document.getElementById('cons-lojas-titulo').textContent = d.nome;
   document.getElementById('cons-lojas-body').innerHTML = d.lojas.map(l =>
     `<tr>
@@ -860,7 +893,13 @@ async function renderPedidos() {
       return;
     }
 
-    // Group by fornecedor (null = sem fornecedor)
+    // Pre-fetch items for all pedidos in parallel
+    const itensMap = {};
+    await Promise.all(pedidosGerados.map(async p => {
+      itensMap[p.id] = await api(`itens_pedido?pedido_id=eq.${p.id}`);
+    }));
+
+    // Group by fornecedor
     const porForn = {};
     pedidosGerados.forEach(p => {
       const fKey = p.fornecedor_id || '__sem__';
@@ -873,25 +912,47 @@ async function renderPedidos() {
       const fornNome = forn?.nome || '⚠ Sem fornecedor';
       const fornStyle = forn ? '' : 'color:var(--amber)';
       const pedIdsStr = peds.map(p=>p.id).join(',');
+
+      // Consolidate items across all pedidos of this supplier
+      const cons = {};
+      peds.forEach(p => {
+        (itensMap[p.id]||[]).forEach(it => {
+          if (!cons[it.insumo_id]) {
+            const ins = insumos.find(i=>i.id===it.insumo_id);
+            cons[it.insumo_id] = { nome: ins?.nome||it.insumo_id, qty: 0, unidade: it.unidade||'un', preco: it.preco_unitario };
+          }
+          cons[it.insumo_id].qty += Number(it.quantidade)||0;
+        });
+      });
+      const consItens = Object.values(cons);
+      const totalValor = consItens.reduce((s,it) => s + it.qty*(it.preco||0), 0);
+      const latestStatus = peds[0]?.status;
+
       return `<div class="ped-card">
         <div class="ped-card-header">
           <div class="ped-card-forn" style="${fornStyle}">${esc(fornNome)}</div>
-          <div style="font-size:12px;color:var(--text3)">${peds.length} pedido(s)</div>
-          <button class="btn btn-ghost btn-sm ml" onclick="imprimirFornecedor('${fKey}','${pedIdsStr}')">🖨 Imprimir</button>
+          <div style="display:flex;align-items:center;gap:8px;margin-left:12px">${statusBadge(latestStatus)}</div>
+          <div style="font-size:12px;color:var(--text3);margin-left:8px">${peds.length} pedido(s)</div>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="verPedido('${peds[0]?.id}')">👁 Visualizar</button>
+            <button class="btn btn-ghost btn-sm" onclick="imprimirFornecedor('${fKey}','${pedIdsStr}')">🖨 PDF</button>
+            ${forn?.whatsapp&&latestStatus==='pendente'?`<button class="btn btn-green btn-sm" onclick="enviarWhatsApp('${peds[0]?.id}')">💬 WPP</button>`:''}
+          </div>
         </div>
         <div class="ped-card-body">
           <table class="tbl">
-            <thead><tr><th>Data</th><th>Lojas</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Item</th><th class="r">Quantidade</th><th>Un.</th></tr></thead>
             <tbody>
-              ${peds.map(p=>`<tr>
-                <td class="mono">${fmtData(p.data_pedido)}</td>
-                <td style="color:var(--text3);font-size:12px">${esc(p.observacao||'—')}</td>
-                <td>${statusBadge(p.status)}</td>
-                <td style="display:flex;gap:6px;justify-content:flex-end">
-                  <button class="btn btn-ghost btn-sm" onclick="verPedido('${p.id}')">Ver</button>
-                  ${forn?.whatsapp&&p.status==='pendente'?`<button class="btn btn-green btn-sm" onclick="enviarWhatsApp('${p.id}')">💬 WPP</button>`:''}
-                </td>
+              ${consItens.map(it=>`<tr>
+                <td style="font-weight:500">${esc(it.nome)}</td>
+                <td class="r mono">${it.qty.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
+                <td style="color:var(--text3)">${esc(it.unidade)}</td>
               </tr>`).join('')}
+              ${totalValor>0?`<tr style="background:var(--bg3)">
+                <td style="font-weight:700;font-size:12px;color:var(--text2)">Total</td>
+                <td class="r mono" style="font-weight:700">R$ ${totalValor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                <td></td>
+              </tr>`:''}
             </tbody>
           </table>
         </div>
