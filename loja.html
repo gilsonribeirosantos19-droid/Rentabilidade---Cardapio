@@ -1545,7 +1545,6 @@ async function carregar() {
 
     document.getElementById('conn-status').innerHTML = '<span class="conn-dot"></span><span class="conn-label">conectado</span>';
 
-    carregarInventarios();
     renderGruposSol();
     iniciarPerdas();
   } catch(e) {
@@ -1583,10 +1582,15 @@ function iniciarInventario() {
   const lojaNome = document.getElementById('sb-loja-nome')?.textContent || '—';
   const labelEl = document.getElementById('inv-empresa-label');
   if (labelEl) labelEl.textContent = lojaNome;
+  const container = document.getElementById('inv-lista');
+  if (container && !container.dataset.loaded) {
+    container.innerHTML = '<div class="empty">Preencha os filtros e clique em <strong>Consultar</strong>.</div>';
+  }
 }
 
 async function carregarInventarios() {
   const container = document.getElementById('inv-lista');
+  container.dataset.loaded = '1';
   container.innerHTML = '<div class="empty">Carregando...</div>';
   try {
     const lojaId = userProfile?.loja_id;
