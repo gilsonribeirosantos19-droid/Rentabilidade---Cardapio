@@ -659,25 +659,11 @@
                 <div class="mov-total-box" id="mov-valor-total">R$ 0,00</div>
               </div>
             </div>
-            <!-- Linha 4: Un. compra + Fator + Lote + Validade -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:14px">
-              <div>
-                <div class="mov-lbl">Un. de compra</div>
-                <input type="text" id="mov-unid" class="mov-field" placeholder="ex: cx, fardo">
-              </div>
-              <div>
-                <div class="mov-lbl">Fator conversão</div>
-                <input type="number" id="mov-fator" class="mov-field" value="1" min="0.001" step="0.001">
-              </div>
-              <div>
-                <div class="mov-lbl">Lote</div>
-                <input type="text" id="mov-lote" class="mov-field" placeholder="Opcional">
-              </div>
-              <div>
-                <div class="mov-lbl">Validade</div>
-                <input type="date" id="mov-val" class="mov-field">
-              </div>
-            </div>
+            <!-- campos ocultos: mantidos para compatibilidade com registrarMovimentacao() -->
+            <input type="hidden" id="mov-unid" value="">
+            <input type="hidden" id="mov-fator" value="1">
+            <input type="hidden" id="mov-lote" value="">
+            <input type="hidden" id="mov-val" value="">
           </div>
 
           <!-- Observação -->
