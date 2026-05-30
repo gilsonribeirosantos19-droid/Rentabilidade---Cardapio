@@ -105,6 +105,7 @@
   .form-hint{font-size:11px;color:#94a3b8}
   /* CONVERSÃO PREVIEW */
   .conv-preview{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;font-size:12px;color:#0369a1;margin-top:10px;display:flex;align-items:center;gap:8px}
+  #emb-sug div:hover{background:#f1f5f9}
   /* VINCULO FORNECEDOR HEADER */
   .vin-header{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:14px}
   .vin-header-info{flex:1;min-width:0}
@@ -318,8 +319,15 @@
             <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
               <div class="form-group">
                 <label class="form-label">Embalagem fornecedor</label>
-                <input class="form-input" id="v-embalagem" type="text" placeholder="Ex: CX 27x0,375 · FARDO 20KG" oninput="atualizarConversaoPreview(true)" list="emb-datalist" style="font-family:'DM Mono',monospace">
-                <datalist id="emb-datalist"></datalist>
+                <div style="position:relative">
+                  <input class="form-input" id="v-embalagem" type="text" placeholder="Ex: CX 27x0,375 · FARDO 20KG"
+                    oninput="atualizarConversaoPreview(true);filtrarEmbSug(this.value)"
+                    onblur="setTimeout(()=>fecharEmbSug(),150)"
+                    onfocus="filtrarEmbSug(this.value)"
+                    autocomplete="off"
+                    style="font-family:'DM Mono',monospace">
+                  <div id="emb-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.10);z-index:200;max-height:200px;overflow-y:auto;margin-top:2px"></div>
+                </div>
               </div>
               <div class="form-group">
                 <label class="form-label">Qt. na Embalagem (un. estoque)</label>
@@ -537,6 +545,31 @@ let fornecedores=[], insumos=[], vinculos=[];
 let _fornFiltrado=[], _vinFiltrado=[], _cusFiltrado=[];
 let _fpagAtual=1, _cpagAtual=1;
 let _fornEditing=null, _vinEditing=null, _vinFornSel=null, _cusDetalhe=null;
+let _embOpcoes=[];
+
+function filtrarEmbSug(val) {
+  const sug = document.getElementById('emb-sug');
+  if (!sug) return;
+  const q = (val||'').toLowerCase();
+  const opts = q ? _embOpcoes.filter(o=>o.toLowerCase().includes(q)) : _embOpcoes;
+  if (!opts.length) { sug.style.display='none'; return; }
+  sug.innerHTML = opts.map(o=>`<div style="padding:9px 14px;font-size:13px;cursor:pointer;color:#0f172a;font-family:'DM Mono',monospace"
+    onmousedown="selecionarEmb('${o.replace(/'/g,"\\'")}')">
+    ${esc(o)}
+  </div>`).join('');
+  sug.style.display = 'block';
+}
+
+function selecionarEmb(val) {
+  const inp = document.getElementById('v-embalagem');
+  if (inp) { inp.value = val; atualizarConversaoPreview(true); }
+  fecharEmbSug();
+}
+
+function fecharEmbSug() {
+  const sug = document.getElementById('emb-sug');
+  if (sug) sug.style.display = 'none';
+}
 
 /* ---- MODULE TABS ---- */
 function switchModulo(tab){
@@ -1006,12 +1039,11 @@ async function carregarTudo(){
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
     ]);
-    // Carregar embalagens cadastradas em Configurações e popular datalist
+    // Carregar embalagens cadastradas em Configurações
     try{
       const embs=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&tipo=eq.embalagem&ativo=eq.true&order=nome.asc`);
-      const dl=document.getElementById('emb-datalist');
-      if(dl) dl.innerHTML=embs.map(e=>`<option value="${esc(e.nome)}">`).join('');
-    }catch{}
+      _embOpcoes = embs.map(e=>e.nome);
+    }catch{ _embOpcoes=[]; }
     await carregarVinculos();
 
     // Popular filtro de cidades
