@@ -319,15 +319,9 @@
             <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
               <div class="form-group">
                 <label class="form-label">Embalagem fornecedor</label>
-                <div style="position:relative">
-                  <input class="form-input" id="v-embalagem" type="text" placeholder="Ex: CX 27x0,375 · FARDO 20KG"
-                    oninput="atualizarConversaoPreview(true);filtrarEmbSug(this.value)"
-                    onblur="setTimeout(()=>fecharEmbSug(),150)"
-                    onfocus="filtrarEmbSug(this.value)"
-                    autocomplete="off"
-                    style="font-family:'DM Mono',monospace">
-                  <div id="emb-sug" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.10);z-index:200;max-height:200px;overflow-y:auto;margin-top:2px"></div>
-                </div>
+                <select class="form-select" id="v-embalagem" onchange="atualizarConversaoPreview(true)" style="font-family:'DM Mono',monospace">
+                  <option value="">Selecione a embalagem...</option>
+                </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Qt. na Embalagem (un. estoque)</label>
@@ -547,29 +541,6 @@ let _fpagAtual=1, _cpagAtual=1;
 let _fornEditing=null, _vinEditing=null, _vinFornSel=null, _cusDetalhe=null;
 let _embOpcoes=[];
 
-function filtrarEmbSug(val) {
-  const sug = document.getElementById('emb-sug');
-  if (!sug) return;
-  const q = (val||'').toLowerCase();
-  const opts = q ? _embOpcoes.filter(o=>o.toLowerCase().includes(q)) : _embOpcoes;
-  if (!opts.length) { sug.style.display='none'; return; }
-  sug.innerHTML = opts.map(o=>`<div style="padding:9px 14px;font-size:13px;cursor:pointer;color:#0f172a;font-family:'DM Mono',monospace"
-    onmousedown="selecionarEmb('${o.replace(/'/g,"\\'")}')">
-    ${esc(o)}
-  </div>`).join('');
-  sug.style.display = 'block';
-}
-
-function selecionarEmb(val) {
-  const inp = document.getElementById('v-embalagem');
-  if (inp) { inp.value = val; atualizarConversaoPreview(true); }
-  fecharEmbSug();
-}
-
-function fecharEmbSug() {
-  const sug = document.getElementById('emb-sug');
-  if (sug) sug.style.display = 'none';
-}
 
 /* ---- MODULE TABS ---- */
 function switchModulo(tab){
@@ -1040,13 +1011,14 @@ async function carregarTudo(){
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
     ]);
     await carregarVinculos();
-    // Opções de embalagem: item_classificacoes + valores já usados nos vínculos
+    // Opções de embalagem: item_classificacoes
     try{
       const embs=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&tipo=eq.embalagem&ativo=eq.true&order=nome.asc`);
-      const deClassif = embs.map(e=>e.nome);
-      const deVinculos = vinculos.map(v=>v.embalagem_descricao).filter(Boolean);
-      _embOpcoes = [...new Set([...deClassif, ...deVinculos])].sort();
-    }catch{ _embOpcoes = [...new Set(vinculos.map(v=>v.embalagem_descricao).filter(Boolean))].sort(); }
+      _embOpcoes = embs.map(e=>e.nome);
+    }catch{ _embOpcoes=[]; }
+    const selEmb=document.getElementById('v-embalagem');
+    if(selEmb) selEmb.innerHTML='<option value="">Selecione a embalagem...</option>'+
+      _embOpcoes.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
 
     // Popular filtro de cidades
     const cidades=[...new Set(fornecedores.map(f=>f.cidade).filter(Boolean))].sort();
