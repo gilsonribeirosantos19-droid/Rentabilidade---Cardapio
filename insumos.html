@@ -940,7 +940,7 @@ function _popularGruposProd(){
 
 async function carregarClassificacoes(){
   try{
-    const list=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    const list=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
     const byTipo=(t)=>list.filter(c=>c.tipo===t);
 
     const fill=(id, items, placeholder)=>{

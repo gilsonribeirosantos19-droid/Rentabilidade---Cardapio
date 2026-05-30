@@ -989,7 +989,7 @@ async function carregarGeral() {
     const [cats, unidades, classificacoes] = await Promise.all([
       api(`categorias?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
       api(`unidades_medida?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
-      api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(() => []),
+      api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(() => []),
     ]);
     document.getElementById('conn-status').textContent = '● conectado';
     document.getElementById('conn-status').style.color = '#16a34a';
