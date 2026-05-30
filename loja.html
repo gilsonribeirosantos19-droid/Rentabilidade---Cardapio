@@ -808,6 +808,15 @@
       <div class="page-title">Porcionamento</div>
       <div class="page-sub">Controle de entrada de matéria-prima e filetagem</div>
 
+      <!-- NAVEGAÇÃO ABAS -->
+      <div style="display:flex;gap:4px;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:16px;width:fit-content">
+        <button id="porc-tab-lanc" onclick="porcSwitchTab('lancamentos')" style="padding:8px 16px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.1)">Lançamentos</button>
+        <button id="porc-tab-rel" onclick="porcSwitchTab('relatorio')" style="padding:8px 16px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#64748b">Relatório Consolidado</button>
+        <button id="porc-tab-saldo" onclick="porcSwitchTab('saldo-op')" style="padding:8px 16px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#64748b">Saldo Operacional</button>
+      </div>
+
+      <!-- PANE: LANÇAMENTOS -->
+      <div id="porc-pane-lanc">
       <!-- LISTA -->
       <div id="porc-list">
         <div class="filter-bar-wrap">
@@ -973,6 +982,83 @@
           <button class="btn btn-primary" id="porc-btn-salvar" onclick="porcSalvarLanc()">Salvar Lançamento</button>
         </div>
       </div>
+      </div><!-- /porc-pane-lanc -->
+
+      <!-- PANE: RELATÓRIO CONSOLIDADO -->
+      <div id="porc-pane-rel" style="display:none">
+        <div class="filter-bar-wrap">
+          <div class="toolbar" style="flex-wrap:wrap;gap:10px">
+            <select class="fil-select" id="lr-modelo" onchange="lrSetModelo(this.value)">
+              <option value="">Todos os modelos</option>
+              <option value="simples">Simples</option>
+              <option value="degelo">Degelo + Limpeza</option>
+              <option value="coccao">Cocção / Redução</option>
+              <option value="lote">Produção em Lote</option>
+            </select>
+            <select class="fil-select" id="lr-tipo" onchange="lrSetTipo(this.value)">
+              <option value="">Entrada + Saída</option>
+              <option value="entrada">↓ Entrada</option>
+              <option value="saida">↑ Saída</option>
+            </select>
+            <select class="fil-select" id="lr-insumo" style="min-width:160px">
+              <option value="">Todos os produtos</option>
+            </select>
+            <select class="fil-select" id="lr-loja">
+              <option value="">Todas as lojas</option>
+            </select>
+            <input type="date" class="fil-select" id="lr-de">
+            <span style="color:var(--text3);font-size:12px">–</span>
+            <input type="date" class="fil-select" id="lr-ate">
+            <button class="btn btn-primary btn-sm" onclick="lrFiltrar()">Filtrar</button>
+            <button class="btn btn-ghost btn-sm" onclick="lrLimpar()">Limpar</button>
+          </div>
+        </div>
+        <div id="lr-content" style="display:none">
+          <div class="tbl-card"><div class="tbl-scroll">
+            <table id="lr-table"><thead><tr id="lr-thead"></tr></thead>
+              <tbody id="lr-tbody"></tbody>
+              <tfoot id="lr-tfoot"></tfoot>
+            </table>
+          </div></div>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px">
+            <button class="btn btn-ghost btn-sm" onclick="lrExportar()">↓ Exportar CSV</button>
+          </div>
+        </div>
+        <div id="lr-empty" style="padding:48px;text-align:center;color:var(--text3);font-size:13px">Selecione o período e clique em Filtrar.</div>
+      </div><!-- /porc-pane-rel -->
+
+      <!-- PANE: SALDO OPERACIONAL -->
+      <div id="porc-pane-saldo" style="display:none">
+        <div style="font-size:15px;font-weight:700;color:var(--text1);margin-bottom:14px">
+          Saldo Operacional <span style="font-weight:400;color:var(--text3);font-size:13px">— estoque secundário (Simples e Degelo)</span>
+        </div>
+        <div class="filter-bar-wrap">
+          <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+            <select class="fil-select" id="lso-insumo" onchange="lsoRender()" style="min-width:160px">
+              <option value="">Todos os produtos</option>
+            </select>
+            <select class="fil-select" id="lso-loja" onchange="lsoRender()">
+              <option value="">Todas as lojas</option>
+            </select>
+            <input type="date" class="fil-select" id="lso-de" onchange="lsoRender()" title="De">
+            <span style="color:var(--text3);font-size:12px">–</span>
+            <input type="date" class="fil-select" id="lso-ate" onchange="lsoRender()" title="Até">
+            <button class="btn btn-ghost btn-sm" onclick="lsoRender()">↻ Atualizar</button>
+            <button class="btn btn-ghost btn-sm" onclick="lsoExport()" style="margin-left:auto">↓ Exportar CSV</button>
+          </div>
+        </div>
+        <div class="tbl-wrap"><table class="tbl" id="lso-table">
+          <thead id="lso-thead"><tr>
+            <th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th>
+            <th class="r">Entrada (kg)</th><th class="r">Saída (kg)</th><th class="r">Saldo (kg)</th>
+            <th>Responsável</th><th>Observação</th>
+          </tr></thead>
+          <tfoot id="lso-tfoot"></tfoot>
+          <tbody id="lso-body"><tr><td colspan="9" class="empty">Selecione os filtros e clique em Atualizar.</td></tr></tbody>
+        </table></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px">* Saldo calculado: Entradas – Saídas</div>
+      </div><!-- /porc-pane-saldo -->
+
     </div><!-- /tab-porcionamento -->
 
   </div>
@@ -2529,6 +2615,281 @@ function _pBrl(v){if(v==null||isNaN(v))return'—';return'R$ '+Number(v).toFixed
 function _pFmtDate(d){if(!d)return'—';const[y,m,dd]=(d+'').split('-');return`${dd}/${m}/${y}`;}
 
 const _porcModeloLabel={simples:'Simples',degelo:'Degelo + Limpeza',coccao:'Cocção / Redução',lote:'Prod. em Lote'};
+
+/* ── PORCIONAMENTO — ABAS ─────────────────────────────────────── */
+function porcSwitchTab(tab){
+  ['lanc','rel','saldo'].forEach(t=>{
+    const pane=document.getElementById('porc-pane-'+(t==='lanc'?'lanc':t==='rel'?'rel':'saldo'));
+    const btn=document.getElementById('porc-tab-'+(t==='lanc'?'lanc':t==='rel'?'rel':'saldo'));
+    const active=(t==='lanc'&&tab==='lancamentos')||(t==='rel'&&tab==='relatorio')||(t==='saldo'&&tab==='saldo-op');
+    if(pane) pane.style.display=active?'':'none';
+    if(btn){btn.style.background=active?'#fff':'transparent';btn.style.color=active?'#0f172a':'#64748b';btn.style.boxShadow=active?'0 1px 3px rgba(0,0,0,.1)':'none';}
+  });
+  if(tab==='relatorio') lrPopulateSelects();
+  if(tab==='saldo-op') lsoInit();
+}
+
+/* ── RELATÓRIO CONSOLIDADO (PORTAL) ─────────────────────────────── */
+const LR_COLS=[
+  {id:'data',lbl:'Data',on:true,m:'*'},
+  {id:'produto',lbl:'Produto',on:true,m:'*'},
+  {id:'loja_col',lbl:'Loja',on:false,m:'*'},
+  {id:'turno_col',lbl:'Turno',on:false,m:'*'},
+  {id:'peso_bruto_s',lbl:'Peso Entrada',on:true,m:'simples'},
+  {id:'p_cabeca',lbl:'Cabeça (kg)',on:false,m:'simples'},
+  {id:'p_pele_s',lbl:'Pele (kg)',on:true,m:'simples'},
+  {id:'p_outros_s',lbl:'Aparas (kg)',on:true,m:'simples'},
+  {id:'p_espinha',lbl:'Perdas (kg)',on:true,m:'simples'},
+  {id:'peso_limpo_s',lbl:'Filé limpo (kg)',on:true,m:'simples'},
+  {id:'p_congelado',lbl:'Peso Congelado',on:true,m:'degelo'},
+  {id:'p_descongelado',lbl:'Peso Descongelado',on:true,m:'degelo'},
+  {id:'perda_deg',lbl:'Perda Degelo',on:true,m:'degelo'},
+  {id:'peso_limpo_d',lbl:'Peso Limpo',on:true,m:'degelo'},
+  {id:'perda_limp',lbl:'Perda Limpeza',on:true,m:'degelo'},
+  {id:'peso_ini',lbl:'Peso Inicial',on:true,m:'coccao'},
+  {id:'peso_fin',lbl:'Peso Final',on:true,m:'coccao'},
+  {id:'reducao_col',lbl:'Redução (kg)',on:true,m:'coccao'},
+  {id:'qtd_prod',lbl:'Qtd. Produzida',on:true,m:'lote'},
+  {id:'qtd_cons',lbl:'Qtd. Consumida',on:true,m:'lote'},
+  {id:'sobra_col',lbl:'Sobra',on:true,m:'lote'},
+  {id:'rend_col',lbl:'Rendimento %',on:true,m:'*'},
+  {id:'custo_kg',lbl:'Custo/kg',on:true,m:'*'},
+  {id:'valor_total_col',lbl:'Valor Total',on:false,m:'*'},
+  {id:'responsavel',lbl:'Responsável',on:true,m:'*'},
+];
+let _lrTipo='',_lrModelo='',_lrData=[];
+
+function lrSetTipo(v){_lrTipo=v;_lrAdjustCols();}
+function lrSetModelo(v){_lrModelo=v;_lrAdjustCols();}
+function _lrAdjustCols(){
+  LR_COLS.forEach(c=>{
+    if(_lrModelo) c.on=c.m==='*'||c.m===_lrModelo;
+    else c.on=c.m==='*';
+  });
+  if(_lrData.length) lrRenderTable();
+}
+function lrPopulateSelects(){
+  const sIns=document.getElementById('lr-insumo');
+  if(sIns&&sIns.options.length<=1) insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;sIns.appendChild(o);});
+  const sLoja=document.getElementById('lr-loja');
+  if(sLoja&&sLoja.options.length<=1) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sLoja.appendChild(o);});
+}
+async function lrFiltrar(){
+  const insId=document.getElementById('lr-insumo').value;
+  const lojaId=document.getElementById('lr-loja').value;
+  const de=document.getElementById('lr-de').value;
+  const ate=document.getElementById('lr-ate').value;
+  let qs=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&order=data.desc,created_at.desc&limit=500`;
+  if(insId) qs+=`&insumo_id=eq.${insId}`;
+  if(lojaId) qs+=`&loja_id=eq.${lojaId}`;
+  if(_lrTipo) qs+=`&tipo=eq.${_lrTipo}`;
+  if(_lrModelo) qs+=`&modelo_processo=eq.${_lrModelo}`;
+  if(de) qs+=`&data=gte.${de}`;
+  if(ate) qs+=`&data=lte.${ate}`;
+  try{
+    _lrData=await api(qs);
+    lrRenderTable();
+    const hasData=_lrData.length>0;
+    document.getElementById('lr-content').style.display=hasData?'':'none';
+    document.getElementById('lr-empty').style.display=hasData?'none':'';
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+function lrLimpar(){
+  ['lr-modelo','lr-tipo','lr-loja','lr-insumo','lr-de','lr-ate'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  _lrTipo='';_lrModelo='';_lrData=[];
+  _lrAdjustCols();
+  document.getElementById('lr-content').style.display='none';
+  document.getElementById('lr-empty').style.display='';
+}
+function lrRenderTable(){
+  const visCols=LR_COLS.filter(c=>c.on);
+  document.getElementById('lr-thead').innerHTML=visCols.map(c=>`<th>${esc(c.lbl)}</th>`).join('');
+  const tbody=document.getElementById('lr-tbody');
+  if(!_lrData.length){tbody.innerHTML=`<tr><td colspan="${visCols.length}" class="empty-st">Nenhum dado.</td></tr>`;return;}
+  const fmtDate=d=>{if(!d)return'—';const dt=new Date(d);return dt.toLocaleDateString('pt-BR');};
+  const kg_=v=>v>0?`${Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})} kg`:'—';
+  const brl_=v=>v>0?`R$ ${Number(v).toFixed(2).replace('.',',')}` :'—';
+  const pct_=v=>v!=null?`${Number(v).toFixed(1)}%`:'—';
+  tbody.innerHTML=_lrData.map(l=>{
+    const ins=insumos.find(i=>i.id===l.insumo_id);
+    const loja=lojas.find(lj=>lj.id===l.loja_id);
+    const mod=l.modelo||l.modelo_processo||'';
+    const isS=mod==='simples',isD=mod==='degelo',isC=mod==='coccao',isL=mod==='lote';
+    const r3v=v=>Math.round((v||0)*1000)/1000;
+    const cells={
+      data:fmtDate(l.data),
+      produto:`<span style="font-weight:600">${esc(ins?.nome||'—')}</span>`,
+      loja_col:esc(loja?.nome||'—'),
+      turno_col:esc(l.turno||'—'),
+      peso_bruto_s:isS?`<span class="mono">${kg_(l.peso_bruto)}</span>`:'—',
+      p_cabeca:isS?`<span class="mono">${kg_(l.perda_cabeca)}</span>`:'—',
+      p_pele_s:isS?`<span class="mono">${kg_(l.perda_pele)}</span>`:'—',
+      p_outros_s:isS?`<span class="mono">${kg_(l.perda_outros)}</span>`:'—',
+      p_espinha:isS?`<span class="mono">${kg_(l.perda_espinha)}</span>`:'—',
+      peso_limpo_s:isS?`<span class="mono">${kg_(l.peso_limpo)}</span>`:'—',
+      p_congelado:isD?`<span class="mono">${kg_(l.peso_congelado)}</span>`:'—',
+      p_descongelado:isD?`<span class="mono">${kg_(l.peso_descongelado)}</span>`:'—',
+      perda_deg:isD?`<span class="mono">${kg_(r3v((parseFloat(l.peso_congelado)||0)-(parseFloat(l.peso_descongelado)||0)))}</span>`:'—',
+      peso_limpo_d:isD?`<span class="mono">${kg_(l.peso_limpo)}</span>`:'—',
+      perda_limp:isD?`<span class="mono">${kg_(r3v((parseFloat(l.peso_descongelado)||0)-(parseFloat(l.peso_limpo)||0)))}</span>`:'—',
+      peso_ini:isC?`<span class="mono">${kg_(l.peso_inicial)}</span>`:'—',
+      peso_fin:isC?`<span class="mono">${kg_(l.peso_final)}</span>`:'—',
+      reducao_col:isC?`<span class="mono" style="color:var(--red)">${kg_(r3v((parseFloat(l.peso_inicial)||0)-(parseFloat(l.peso_final)||0)))}</span>`:'—',
+      qtd_prod:isL?`<span class="mono">${kg_(l.qtd_produzida)}</span>`:'—',
+      qtd_cons:isL?`<span class="mono">${kg_(l.qtd_consumida)}</span>`:'—',
+      sobra_col:isL?`<span class="mono">${kg_(l.sobra_lote)}</span>`:'—',
+      rend_col:l.rendimento_pct!=null?`<span class="mono">${pct_(l.rendimento_pct)}</span>`:'—',
+      custo_kg:brl_(l.custo_unitario),
+      valor_total_col:brl_(l.valor_total),
+      responsavel:esc(l.responsavel||'—'),
+    };
+    return `<tr>${visCols.map(c=>`<td>${cells[c.id]??'—'}</td>`).join('')}</tr>`;
+  }).join('');
+  const sumF=field=>_lrData.reduce((s,l)=>s+(parseFloat(l[field])||0),0);
+  const avgF=field=>{const rs=_lrData.filter(l=>l[field]!=null);return rs.length?rs.reduce((s,l)=>s+parseFloat(l[field]),0)/rs.length:null;};
+  const lbl='<span style="color:#0f2d5c;font-size:10px;letter-spacing:.06em;text-transform:uppercase">TOTAL</span>';
+  const totals={
+    data:lbl,produto:'',loja_col:'',turno_col:'',
+    peso_bruto_s:kg_(Math.round(sumF('peso_bruto')*1000)/1000),
+    p_cabeca:kg_(Math.round(sumF('perda_cabeca')*1000)/1000),
+    p_pele_s:kg_(Math.round(sumF('perda_pele')*1000)/1000),
+    p_outros_s:kg_(Math.round(sumF('perda_outros')*1000)/1000),
+    p_espinha:kg_(Math.round(sumF('perda_espinha')*1000)/1000),
+    peso_limpo_s:kg_(Math.round(sumF('peso_limpo')*1000)/1000),
+    p_congelado:kg_(Math.round(sumF('peso_congelado')*1000)/1000),
+    p_descongelado:kg_(Math.round(sumF('peso_descongelado')*1000)/1000),
+    perda_deg:kg_(Math.round((sumF('peso_congelado')-sumF('peso_descongelado'))*1000)/1000),
+    peso_limpo_d:kg_(Math.round(sumF('peso_limpo')*1000)/1000),
+    perda_limp:kg_(Math.round((sumF('peso_descongelado')-sumF('peso_limpo'))*1000)/1000),
+    peso_ini:kg_(Math.round(sumF('peso_inicial')*1000)/1000),
+    peso_fin:kg_(Math.round(sumF('peso_final')*1000)/1000),
+    reducao_col:`<span style="color:var(--red)">${kg_(Math.round((sumF('peso_inicial')-sumF('peso_final'))*1000)/1000)}</span>`,
+    qtd_prod:kg_(Math.round(sumF('qtd_produzida')*1000)/1000),
+    qtd_cons:kg_(Math.round(sumF('qtd_consumida')*1000)/1000),
+    sobra_col:kg_(Math.round(sumF('sobra_lote')*1000)/1000),
+    rend_col:(()=>{const v=avgF('rendimento_pct');return v!=null?pct_(v):'—';})(),
+    custo_kg:'',valor_total_col:brl_(sumF('valor_total')),responsavel:'',
+  };
+  document.getElementById('lr-tfoot').innerHTML=`<tr style="background:#f8fafc;font-weight:700">${visCols.map(c=>`<td>${totals[c.id]??''}</td>`).join('')}</tr>`;
+}
+function lrExportar(){
+  if(!_lrData.length){toast('Nenhum dado.','err');return;}
+  const visCols=LR_COLS.filter(c=>c.on);
+  const fmtDate=d=>{if(!d)return'';const dt=new Date(d);return dt.toLocaleDateString('pt-BR');};
+  const rows=[visCols.map(c=>c.lbl)];
+  _lrData.forEach(l=>{
+    const ins=insumos.find(i=>i.id===l.insumo_id);
+    const loja=lojas.find(lj=>lj.id===l.loja_id);
+    const mod=l.modelo||l.modelo_processo||'';
+    const row=visCols.map(c=>{
+      if(c.id==='data') return fmtDate(l.data);
+      if(c.id==='produto') return ins?.nome||'';
+      if(c.id==='loja_col') return loja?.nome||'';
+      if(c.id==='turno_col') return l.turno||'';
+      if(c.id==='peso_bruto_s') return mod==='simples'?(l.peso_bruto||''):'';
+      if(c.id==='p_pele_s') return mod==='simples'?(l.perda_pele||''):'';
+      if(c.id==='p_outros_s') return mod==='simples'?(l.perda_outros||''):'';
+      if(c.id==='p_espinha') return mod==='simples'?(l.perda_espinha||''):'';
+      if(c.id==='peso_limpo_s'||c.id==='peso_limpo_d') return l.peso_limpo||'';
+      if(c.id==='p_congelado') return l.peso_congelado||'';
+      if(c.id==='p_descongelado') return l.peso_descongelado||'';
+      if(c.id==='rend_col') return l.rendimento_pct!=null?l.rendimento_pct.toFixed(1)+'%':'';
+      if(c.id==='custo_kg') return l.custo_unitario||'';
+      if(c.id==='valor_total_col') return l.valor_total||'';
+      if(c.id==='responsavel') return l.responsavel||'';
+      return '';
+    });
+    rows.push(row);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+  a.download=`relatorio_porcionamento_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+/* ── SALDO OPERACIONAL (PORTAL) ───────────────────────────────── */
+let _lsoData=[];
+function lsoInit(){
+  const sIns=document.getElementById('lso-insumo');
+  if(sIns&&sIns.options.length<=1) insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;sIns.appendChild(o);});
+  const sLoja=document.getElementById('lso-loja');
+  if(sLoja&&sLoja.options.length<=1) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sLoja.appendChild(o);});
+  const hoje_=new Date(),de=new Date(hoje_);de.setDate(de.getDate()-30);
+  const fmt=d=>d.toISOString().slice(0,10);
+  const elDe=document.getElementById('lso-de'),elAte=document.getElementById('lso-ate');
+  if(elDe&&!elDe.value) elDe.value=fmt(de);
+  if(elAte&&!elAte.value) elAte.value=fmt(hoje_);
+  lsoRender();
+}
+async function lsoRender(){
+  const insFil=document.getElementById('lso-insumo')?.value||'';
+  const lojaFil=document.getElementById('lso-loja')?.value||'';
+  const de=document.getElementById('lso-de')?.value||'';
+  const ate=document.getElementById('lso-ate')?.value||'';
+  const tbody=document.getElementById('lso-body');
+  const tfoot=document.getElementById('lso-tfoot');
+  const thead=document.getElementById('lso-thead');
+  tbody.innerHTML='<tr><td colspan="9" class="empty">Carregando...</td></tr>';
+  try{
+    let q=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&modelo_processo=in.(degelo,simples)&order=data.asc,created_at.asc&limit=1000`;
+    if(insFil) q+=`&insumo_id=eq.${insFil}`;
+    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
+    if(de) q+=`&data=gte.${de}`;
+    if(ate) q+=`&data=lte.${ate}`;
+    _lsoData=await api(q).catch(()=>[]);
+    const hasUnits=_lsoData.some(l=>(l.modelo||l.modelo_processo||'')==='simples');
+    const colspan=hasUnits?12:9;
+    if(thead) thead.innerHTML=hasUnits
+      ?`<tr><th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th class="r">Ent. (un)</th><th class="r">Entrada (kg)</th><th class="r">Saída (un)</th><th class="r">Saída (kg)</th><th class="r">Saldo (un)</th><th class="r">Saldo (kg)</th><th>Responsável</th><th>Observação</th></tr>`
+      :`<tr><th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th class="r">Entrada (kg)</th><th class="r">Saída (kg)</th><th class="r">Saldo (kg)</th><th>Responsável</th><th>Observação</th></tr>`;
+    if(!_lsoData.length){tbody.innerHTML=`<tr><td colspan="${colspan}" class="empty">Nenhum registro encontrado.</td></tr>`;tfoot.innerHTML='';return;}
+    let sKg=0,sUn=0,totEKg=0,totSKg=0,totEUn=0,totSUn=0;
+    const r3v=v=>Math.round(v*1000)/1000;
+    const kg_=v=>`${Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})} kg`;
+    tbody.innerHTML=_lsoData.map(l=>{
+      const ins=insumos.find(i=>i.id===l.insumo_id);
+      const loja=lojas.find(lj=>lj.id===l.loja_id);
+      const isEnt=l.tipo==='entrada';
+      const mod=l.modelo||l.modelo_processo||'';
+      const eKg=isEnt?(l.peso_bruto||0):0;
+      const sKgV=!isEnt?(mod==='degelo'?(l.peso_congelado||0):(l.peso_bruto||0)):0;
+      const eUn=isEnt?(l.qtd_consumida||0):0;
+      const sUnV=!isEnt?(l.qtd_consumida||0):0;
+      sKg=r3v(sKg+eKg-sKgV);sUn=r3v(sUn+eUn-sUnV);
+      totEKg=r3v(totEKg+eKg);totSKg=r3v(totSKg+sKgV);
+      totEUn=r3v(totEUn+eUn);totSUn=r3v(totSUn+sUnV);
+      const tipoLbl=isEnt?`<span style="color:var(--teal);font-weight:600">Entrada</span>`:`<span style="color:var(--red,#ef4444);font-weight:600">Saída</span>`;
+      const dataStr=l.data?new Date(l.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      if(hasUnits) return `<tr><td style="font-size:11px;color:#64748b">${dataStr}</td><td>${tipoLbl}</td><td style="font-weight:600">${esc(ins?.nome||'—')}</td><td>${esc(loja?.nome||'—')}</td><td class="r mono">${eUn>0?eUn:'—'}</td><td class="r mono">${eKg>0?kg_(eKg):'—'}</td><td class="r mono">${sUnV>0?sUnV:'—'}</td><td class="r mono">${sKgV>0?kg_(sKgV):'—'}</td><td class="r mono">${sUn!==0?sUn:'—'}</td><td class="r mono" style="font-weight:700;color:${sKg>=0?'var(--green,#16a34a)':'var(--red,#dc2626)'}">${kg_(sKg)}</td><td>${esc(l.responsavel||'—')}</td><td style="font-size:11px">${esc(l.observacoes||'—')}</td></tr>`;
+      return `<tr><td style="font-size:11px;color:#64748b">${dataStr}</td><td>${tipoLbl}</td><td style="font-weight:600">${esc(ins?.nome||'—')}</td><td>${esc(loja?.nome||'—')}</td><td class="r mono">${eKg>0?kg_(eKg):'—'}</td><td class="r mono">${sKgV>0?kg_(sKgV):'—'}</td><td class="r mono" style="font-weight:700;color:${sKg>=0?'var(--green,#16a34a)':'var(--red,#dc2626)'}">${kg_(sKg)}</td><td>${esc(l.responsavel||'—')}</td><td style="font-size:11px">${esc(l.observacoes||'—')}</td></tr>`;
+    }).join('');
+    const sF=r3v(totEKg-totSKg);
+    tfoot.innerHTML=hasUnits
+      ?`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="4" style="text-transform:uppercase;letter-spacing:.05em">TOTAL GERAL</td><td class="r mono">${totEUn||'—'}</td><td class="r mono">${kg_(totEKg)}</td><td class="r mono">${totSUn||'—'}</td><td class="r mono">${kg_(totSKg)}</td><td class="r mono">${r3v(totEUn-totSUn)||'—'}</td><td class="r mono" style="color:${sF>=0?'var(--green,#16a34a)':'var(--red,#dc2626)'}">${kg_(sF)}</td><td colspan="2"></td></tr>`
+      :`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="4" style="text-transform:uppercase;letter-spacing:.05em">TOTAL GERAL</td><td class="r mono">${kg_(totEKg)}</td><td class="r mono">${kg_(totSKg)}</td><td class="r mono" style="color:${sF>=0?'var(--green,#16a34a)':'var(--red,#dc2626)'}">${kg_(sF)}</td><td colspan="2"></td></tr>`;
+  }catch(e){tbody.innerHTML=`<tr><td colspan="9" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+function lsoExport(){
+  if(!_lsoData.length){toast('Nenhum dado.','err');return;}
+  const hasUnits=_lsoData.some(l=>(l.modelo||l.modelo_processo||'')==='simples');
+  let sKg=0,sUn=0;
+  const r3v=v=>Math.round(v*1000)/1000;
+  const header=hasUnits?['Data/Hora','Tipo','Produto','Loja','Ent.(un)','Entrada(kg)','Saída(un)','Saída(kg)','Saldo(un)','Saldo(kg)','Responsável','Observação']:['Data/Hora','Tipo','Produto','Loja','Entrada(kg)','Saída(kg)','Saldo(kg)','Responsável','Observação'];
+  const rows=[header];
+  _lsoData.forEach(l=>{
+    const ins=insumos.find(i=>i.id===l.insumo_id);
+    const loja=lojas.find(lj=>lj.id===l.loja_id);
+    const isEnt=l.tipo==='entrada';const mod=l.modelo||l.modelo_processo||'';
+    const eKg=isEnt?(l.peso_bruto||0):0;const sKgV=!isEnt?(mod==='degelo'?(l.peso_congelado||0):(l.peso_bruto||0)):0;
+    const eUn=isEnt?(l.qtd_consumida||0):0;const sUnV=!isEnt?(l.qtd_consumida||0):0;
+    sKg=r3v(sKg+eKg-sKgV);sUn=r3v(sUn+eUn-sUnV);
+    const dataStr=l.data?new Date(l.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    if(hasUnits) rows.push([dataStr,isEnt?'Entrada':'Saída',ins?.nome||'',loja?.nome||'',eUn||'',eKg||'',sUnV||'',sKgV||'',sUn,sKg,l.responsavel||'',l.observacoes||'']);
+    else rows.push([dataStr,isEnt?'Entrada':'Saída',ins?.nome||'',loja?.nome||'',eKg||'',sKgV||'',sKg,l.responsavel||'',l.observacoes||'']);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,﻿'+encodeURIComponent(csv);
+  a.download=`saldo_op_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
 
 async function iniciarPorcionamento(){
   if(!_porcIniciado){
