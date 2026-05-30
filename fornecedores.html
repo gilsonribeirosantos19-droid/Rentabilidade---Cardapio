@@ -841,6 +841,30 @@ async function salvarVinculo(){
   const insumoId=document.getElementById('v-insumo').value;
   if(!insumoId){toast('Selecione o item interno.','err');return;}
   if(!_vinFornSel){toast('Nenhum fornecedor selecionado.','err');return;}
+
+  // Bloquear item duplicado no mesmo fornecedor
+  const dupeItem=vinculos.find(v=>
+    v.insumo_id===insumoId &&
+    v.fornecedor_id===_vinFornSel.id &&
+    (!_vinEditing||v.id!==_vinEditing.id)
+  );
+  if(dupeItem){toast('Este item já está vinculado a este fornecedor.','err');return;}
+
+  // Bloquear código duplicado no mesmo fornecedor
+  const codigo=document.getElementById('v-codigo').value.trim();
+  if(codigo){
+    const dupeCodigo=vinculos.find(v=>
+      v.fornecedor_id===_vinFornSel.id &&
+      (v.codigo_fornecedor||'').toLowerCase()===codigo.toLowerCase() &&
+      (!_vinEditing||v.id!==_vinEditing.id)
+    );
+    if(dupeCodigo){
+      const ins=insumos.find(i=>i.id===dupeCodigo.insumo_id);
+      toast(`Código "${codigo}" já está em uso pelo item "${ins?.nome||'—'}".`,'err');
+      return;
+    }
+  }
+
   const payload={
     insumo_id: insumoId,
     fornecedor_id: _vinFornSel.id,
