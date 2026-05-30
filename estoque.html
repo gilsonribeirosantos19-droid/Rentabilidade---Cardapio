@@ -961,7 +961,7 @@
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <input class="field field-sm" type="date" id="mov-de" style="width:140px">
         <input class="field field-sm" type="date" id="mov-ate" style="width:140px">
-        <select class="field field-sm" id="mov-cat" style="min-width:160px"><option value="">Todas as categorias</option></select>
+        <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
         <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
         <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
         <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
@@ -1702,6 +1702,7 @@ async function api(endpoint, opts={}) {
 
 // ── STATE ─────────────────────────────────────────────────────────
 let insumos=[], saldos=[], entradas=[], saidas=[], vinculos=[], fornecedores=[], insumoFornVinculos=[];
+let gruposCompra=[], gruposCompraItens={};
 let lojas=[], lojaAtual=null;
 let nfeItens=[], tabAtual='hub';
 
@@ -1738,6 +1739,14 @@ async function carregar() {
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
     ]);
     insumoFornVinculos = await api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
+    // Carrega grupos de compra para o filtro de movimentação
+    if (!gruposCompra.length) {
+      gruposCompra = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
+      if (gruposCompra.length) {
+        const its = await Promise.all(gruposCompra.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}`).catch(()=>[])));
+        gruposCompra.forEach((g,i) => { gruposCompraItens[g.id] = its[i].map(r=>r.insumo_id); });
+      }
+    }
     popularSelects();
     // Inicializar datas dos filtros de entradas
     const _hoje=hoje(); const _ini=_hoje.slice(0,7)+'-01';
@@ -1777,10 +1786,9 @@ function popularSelects() {
   const saiIns = document.getElementById('sai-f-ins'); if (saiIns) saiIns.innerHTML = todos;
   document.getElementById('kx-ins').innerHTML = '<option value="">Selecione um insumo…</option>'+insOpts;
   document.getElementById('mov-ins').innerHTML = todos;
-  // categorias únicas
-  const cats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
-  document.getElementById('mov-cat').innerHTML = '<option value="">Todas categorias</option>'+
-    cats.map(c=>`<option value="${c}">${esc(c)}</option>`).join('');
+  // grupos de compra
+  document.getElementById('mov-cat').innerHTML = '<option value="">Todos os grupos</option>'+
+    gruposCompra.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
 }
 
 // ── SALDO DE ESTOQUE ─────────────────────────────────────────────
@@ -3626,10 +3634,21 @@ function exportFechamentoCSV() {
 // ── MOVIMENTAÇÃO NO PERÍODO ───────────────────────────────────────
 let _movRows = null, _movPagAtual = 1, _movTotais = null;
 
+function filtrarMovIns() {
+  const grpId = document.getElementById('mov-cat').value;
+  const sel = document.getElementById('mov-ins');
+  if (!sel) return;
+  const ids = grpId ? (gruposCompraItens[grpId]||[]) : null;
+  const filtrados = ids ? insumos.filter(i=>ids.includes(i.id)) : insumos;
+  sel.innerHTML = '<option value="">Todos os insumos</option>'+
+    filtrados.map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
+}
+
 function limparMovFiltros() {
   ['mov-de','mov-ate','mov-cat','mov-ins'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  filtrarMovIns();
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
   if (tbody) tbody.innerHTML = '<tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr>';
@@ -3746,7 +3765,7 @@ async function renderMovimentacao() {
   const saisPer = saidas.filter(s => s.criado_em >= de && s.criado_em <= ate + 'T23:59:59');
 
   let insFilt = insumos;
-  if (catF) insFilt = insFilt.filter(i => (i.categoria||'') === catF);
+  if (catF) { const ids = gruposCompraItens[catF]||[]; insFilt = insFilt.filter(i => ids.includes(i.id)); }
   if (insF) insFilt = insFilt.filter(i => i.id === insF);
 
   let tQAnt=0,tVAnt=0,tQEnt=0,tVEnt=0,tQCon=0,tVCon=0,tQPerd=0,tVPerd=0,tQFin=0,tVFin=0,tVFin2=0;
