@@ -1013,7 +1013,7 @@ async function carregarTudo(){
     await carregarVinculos();
     // Opções de embalagem: item_classificacoes
     try{
-      const embs=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&tipo=eq.embalagem&ativo=eq.true&order=nome.asc`);
+      const embs=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&tipo=eq.embalagem&order=nome.asc`);
       _embOpcoes = embs.map(e=>e.nome);
     }catch{ _embOpcoes=[]; }
     const selEmb=document.getElementById('v-embalagem');
