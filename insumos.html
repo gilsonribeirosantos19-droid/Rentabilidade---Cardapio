@@ -300,7 +300,7 @@
     </div>
 
     <!-- PANE 2: PRODUTOS / ITENS -->
-    <div class="mod-pane" id="pane-produtos" style="display:block">
+    <div class="mod-pane" id="pane-produtos" style="display:block;padding-top:4px">
       <div class="filter-bar-wrap">
         <div class="prod-toolbar">
           <div class="prod-search">
@@ -889,15 +889,21 @@ async function salvarCadastro(){
 function _gerarCodigo(idx){ return 'MP-'+String(idx+1).padStart(6,'0'); }
 
 function filtrarProdutos(){
-  const q=(document.getElementById('prod-busca')?.value||'').toLowerCase();
-  const filGrupo=document.getElementById('prod-grupo')?.value||'';
-  const filStatus=document.getElementById('prod-status')?.value;
-  const filEstq=document.getElementById('prod-estq')?.value||'';
-  let lista=todos;
-  if(q) lista=lista.filter(i=>i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q));
-  if(filGrupo) lista=lista.filter(i=>(i.categoria||'')==filGrupo);
+  const q        = (document.getElementById('prod-busca')?.value||'').toLowerCase();
+  const filTipo  = document.getElementById('prod-tipo')?.value||'';
+  const filFam   = document.getElementById('prod-familia')?.value||'';
+  const filGrupo = document.getElementById('prod-grupo')?.value||'';
+  const filSub   = document.getElementById('prod-subgrupo')?.value||'';
+  const filStatus= document.getElementById('prod-status')?.value;
+  const filEstq  = document.getElementById('prod-estq')?.value||'';
+  let lista = todos;
+  if(q)         lista=lista.filter(i=>i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q));
+  if(filTipo)   lista=lista.filter(i=>(i.tipo_item||'')==filTipo);
+  if(filFam)    lista=lista.filter(i=>(i.familia||'')==filFam);
+  if(filGrupo)  lista=lista.filter(i=>(i.categoria||'')==filGrupo);
+  if(filSub)    lista=lista.filter(i=>(i.subgrupo||'')==filSub);
   if(filStatus!==''&&filStatus!=null) lista=lista.filter(i=>String(i.ativo!==false)===filStatus);
-  if(filEstq) lista=lista.filter(i=>getStatus(i)===filEstq);
+  if(filEstq)   lista=lista.filter(i=>getStatus(i)===filEstq);
   _prodFiltrado=lista;
   renderProdutos();
 }
