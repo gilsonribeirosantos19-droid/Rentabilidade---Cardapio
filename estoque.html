@@ -325,7 +325,6 @@
         onchange="onLojaChange()">
         <option value="">Todas as lojas</option>
       </select>
-      <span id="conn-status" style="font-size:11px;color:#16a34a;font-weight:600;white-space:nowrap"></span>
       <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
       <button onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:12px;color:#dc2626;background:#fff;border:1px solid #fca5a5;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1993,7 +1992,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
 function getSaldo(insId) {
-  return saldos.find(s=>s.insumo_id===insId)||{quantidade:0,custo_medio:0,minimo:null,maximo:null};
+  const lojaId = getLojaId();
+  return saldos.find(s=>s.insumo_id===insId&&(!lojaId||s.loja_id===lojaId))||{quantidade:0,custo_medio:0,minimo:null,maximo:null};
 }
 function statusOf(s) {
   const q=s.quantidade||0;
