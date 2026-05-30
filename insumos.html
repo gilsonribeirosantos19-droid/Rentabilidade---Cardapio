@@ -866,6 +866,13 @@ async function salvarCadastro(){
     ativo: document.getElementById('cad-ativo').value!=='false',
   };
   if(!_cadEditId){
+    const nomeLower=nome.toLowerCase();
+    const existe=todos.some(i=>(i.nome||'').toLowerCase()===nomeLower);
+    if(existe){
+      toast(`Já existe um item com o nome "${nome}".`,'err');
+      if(btn){btn.disabled=false;btn.textContent='Salvar';}
+      return;
+    }
     payload.tenant_id=TENANT_ID;
     payload.preco_compra=0;
     payload.rendimento_pct=100;
