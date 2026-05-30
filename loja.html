@@ -417,7 +417,7 @@
       </span>
       <div class="bell-wrap">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="bell-badge">1</span>
+        <span class="bell-badge" id="bell-badge" style="display:none">0</span>
       </div>
     </div>
   </div>
@@ -1488,7 +1488,7 @@ function sair() {
 async function carregar() {
   userProfile = getUser();
   document.getElementById('sb-user-nome').textContent = userProfile?.nome || '—';
-  document.getElementById('conn-status').textContent = 'carregando...';
+  document.getElementById('conn-status').innerHTML = '<span style="font-size:12px;color:#94a3b8">carregando...</span>';
 
   try {
     const loja = await api(`lojas?id=eq.${userProfile?.loja_id}&limit=1`).then(r=>r[0]);
@@ -1510,14 +1510,13 @@ async function carregar() {
       grupos.forEach((g,i) => { gruposItens[g.id] = its[i].map(r=>r.insumo_id); });
     }
 
-    if(document.getElementById('conn-status')){/* conectado já exibido via CSS */}
+    document.getElementById('conn-status').innerHTML = '<span class="conn-dot"></span><span class="conn-label">conectado</span>';
 
     carregarInventarios();
     renderGruposSol();
     iniciarPerdas();
   } catch(e) {
-    document.getElementById('conn-status').textContent = '✕ erro';
-    document.getElementById('conn-status').style.color = 'var(--red)';
+    document.getElementById('conn-status').innerHTML = '<span style="font-size:12px;color:#dc2626;font-weight:600">✕ erro de conexão</span>';
     toast('Erro: '+e.message, 'err');
   }
 }
