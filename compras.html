@@ -169,6 +169,19 @@
   .forn-sugerida{font-size:12px;color:var(--teal);font-weight:600;text-transform:uppercase;letter-spacing:.02em}
   .forn-sugerida-vazia{font-size:12px;color:var(--text3)}
 
+  /* ── CARDS DE PEDIDOS ──────────────────────────────── */
+  .ped-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px}
+  .ped-card-v2{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px;display:flex;flex-direction:column;gap:12px}
+  .ped-card-v2-forn{font-size:12px;font-weight:700;color:var(--text1);text-transform:uppercase;letter-spacing:.04em;word-break:break-word}
+  .ped-card-v2-items{display:flex;flex-direction:column;gap:4px;flex:1}
+  .ped-item-row{display:flex;align-items:baseline;gap:3px;font-size:12px;line-height:1.5}
+  .ped-item-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;color:var(--text1)}
+  .ped-item-dots{flex:1;border-bottom:1.5px dotted #d1d5db;margin:0 3px;position:relative;top:-3px;min-width:8px}
+  .ped-item-qty{white-space:nowrap;font-family:'DM Mono',monospace;font-size:11px;color:var(--text1)}
+  .ped-item-total{margin-top:6px;padding-top:8px;border-top:1px solid var(--border2)}
+  .ped-item-total .ped-item-name,.ped-item-total .ped-item-qty{font-weight:700;color:var(--text1)}
+  .ped-card-v2-btns{display:flex;gap:6px}
+
   @media(max-width:700px){.sidebar{display:none}}
   .nav-sub-arrow{margin-left:auto;font-size:10px;color:#475569;display:inline-block;transition:transform .2s}
   .nav-sub-wrap:hover .nav-sub-arrow{transform:rotate(90deg);color:#2dd4bf}
@@ -320,18 +333,17 @@
         <div class="tab-header">
           <div class="tab-header-left">
             <div class="tab-title">3. PEDIDOS GERADOS POR FORNECEDOR</div>
+            <div class="tab-sub">Pedidos montados automaticamente, prontos para envio</div>
           </div>
           <div class="tab-header-right">
-            <select class="field field-sm" id="ped-fil-status" onchange="renderPedidos()">
-              <option value="ativos">Ativos (pendente + enviado)</option>
-              <option value="pendente">Pendente</option>
-              <option value="enviado">Enviado</option>
-              <option value="baixado">Baixados</option>
-              <option value="cancelado">Cancelado</option>
-              <option value="">Todos</option>
-            </select>
-            <button class="btn btn-ghost btn-sm" onclick="imprimirTodosPorLoja()">📋 Por loja</button>
-            <button class="btn btn-ghost btn-sm" onclick="renderPedidos()">↻ Atualizar</button>
+            <button class="btn btn-ghost btn-sm" onclick="visualizarTodosPedidos()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Visualizar todos
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="imprimirTodosPorLoja()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Baixar todos em PDF
+            </button>
           </div>
         </div>
         <div id="ped-body"><div class="empty">Carregando...</div></div>
@@ -955,58 +967,63 @@ async function renderPedidos() {
       porForn[fKey].push(p);
     });
 
-    container.innerHTML = Object.entries(porForn).map(([fKey, peds]) => {
+    const cards = Object.entries(porForn).map(([fKey, peds]) => {
       const forn = fKey === '__sem__' ? null : fornecedores.find(f=>f.id===fKey);
-      const fornNome = forn?.nome || '⚠ Sem fornecedor';
-      const fornStyle = forn ? '' : 'color:var(--amber)';
+      const fornNome = forn?.nome || 'Sem fornecedor';
       const pedIdsStr = peds.map(p=>p.id).join(',');
 
-      // Consolidate items across all pedidos of this supplier
+      // Consolida itens de todos os pedidos desse fornecedor
       const cons = {};
       peds.forEach(p => {
         (itensMap[p.id]||[]).forEach(it => {
           if (!cons[it.insumo_id]) {
             const ins = insumos.find(i=>i.id===it.insumo_id);
-            cons[it.insumo_id] = { nome: ins?.nome||it.insumo_id, qty: 0, unidade: it.unidade||'un', preco: it.preco_unitario };
+            cons[it.insumo_id] = { nome: ins?.nome||it.insumo_id, qty: 0, unidade: it.unidade||'un' };
           }
           cons[it.insumo_id].qty += Number(it.quantidade)||0;
         });
       });
       const consItens = Object.values(cons);
-      const totalValor = consItens.reduce((s,it) => s + it.qty*(it.preco||0), 0);
-      const latestStatus = peds[0]?.status;
 
-      return `<div class="ped-card">
-        <div class="ped-card-header">
-          <div class="ped-card-forn" style="${fornStyle}">${esc(fornNome)}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-left:12px">${statusBadge(latestStatus)}</div>
-          <div style="font-size:12px;color:var(--text3);margin-left:8px">${peds.length} pedido(s)</div>
-          <div style="margin-left:auto;display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm" onclick="verPedido('${peds[0]?.id}')">👁 Visualizar</button>
-            <button class="btn btn-ghost btn-sm" onclick="imprimirFornecedor('${fKey}','${pedIdsStr}')">🖨 PDF</button>
-            ${forn?.whatsapp&&latestStatus==='pendente'?`<button class="btn btn-green btn-sm" onclick="enviarWhatsApp('${peds[0]?.id}')">💬 WPP</button>`:''}
+      // Totais por unidade
+      const totais = {};
+      consItens.forEach(it => { totais[it.unidade] = (totais[it.unidade]||0) + it.qty; });
+      const totalStr = Object.entries(totais).map(([un,qty]) => `${fmtQty(qty)} ${un}`).join(' + ');
+
+      const itemRows = consItens.map(it =>
+        `<div class="ped-item-row">
+          <span class="ped-item-name">${esc(it.nome)}</span>
+          <span class="ped-item-dots"></span>
+          <span class="ped-item-qty">${fmtQty(it.qty)} ${esc(it.unidade)}</span>
+        </div>`
+      ).join('');
+
+      return `<div class="ped-card-v2">
+        <div class="ped-card-v2-forn">${esc(fornNome)}</div>
+        <div class="ped-card-v2-items">
+          ${itemRows}
+          <div class="ped-item-row ped-item-total">
+            <span class="ped-item-name">Total</span>
+            <span class="ped-item-dots"></span>
+            <span class="ped-item-qty">${esc(totalStr)}</span>
           </div>
         </div>
-        <div class="ped-card-body">
-          <table class="tbl">
-            <thead><tr><th>Item</th><th class="r">Quantidade</th><th>Un.</th></tr></thead>
-            <tbody>
-              ${consItens.map(it=>`<tr>
-                <td style="font-weight:500">${esc(it.nome)}</td>
-                <td class="r mono">${it.qty.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
-                <td style="color:var(--text3)">${esc(it.unidade)}</td>
-              </tr>`).join('')}
-              ${totalValor>0?`<tr style="background:var(--bg3)">
-                <td style="font-weight:700;font-size:12px;color:var(--text2)">Total</td>
-                <td class="r mono" style="font-weight:700">R$ ${totalValor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-                <td></td>
-              </tr>`:''}
-            </tbody>
-          </table>
+        <div class="ped-card-v2-btns">
+          <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;gap:5px" onclick="verPedido('${peds[0]?.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Visualizar
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="imprimirFornecedor('${fKey}','${pedIdsStr}')">PDF</button>
         </div>
       </div>`;
     }).join('');
+
+    container.innerHTML = `<div class="ped-cards-grid">${cards}</div>`;
   } catch(e) { container.innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; }
+}
+
+function visualizarTodosPedidos() {
+  toast('Selecione um pedido individual para visualizar.','ok');
 }
 
 async function verPedido(id) {
