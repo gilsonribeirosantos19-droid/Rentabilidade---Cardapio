@@ -850,6 +850,8 @@ function editarItemCadastro(id){
 async function salvarCadastro(){
   const nome=document.getElementById('cad-nome').value.trim();
   if(!nome){toast('Informe a descrição do item.','err');return;}
+  const btn=document.querySelector('#pane-cadastro .btn-primary');
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
   const und = document.getElementById('cad-und-med').value||null;
   const payload={
     nome,
@@ -880,6 +882,7 @@ async function salvarCadastro(){
     switchModulo('produtos');
     limparCadastro();
   }catch(e){toast('Erro: '+e.message,'err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Salvar';}}
 }
 
 // PANE 2 — PRODUTOS
