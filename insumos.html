@@ -39,7 +39,7 @@
   .metric-sub{font-size:11px;color:#94a3b8;margin-top:5px}
   .c-green{color:#16a34a}.c-amber{color:#f59e0b}.c-red{color:#e11d48}
   /* FILTER BAR — global */
-  .filter-bar-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:18px}
+  .filter-bar-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:18px;position:sticky;top:96px;z-index:30}
   .toolbar,.prod-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   /* Search */
   .search-wrap,.prod-search{position:relative;flex:0 0 280px}
@@ -80,7 +80,8 @@
   .body-main{flex:1;min-width:0;display:flex;flex-direction:column}
   /* TABLE */
   .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-  .tbl-scroll{overflow-x:auto}
+  .tbl-scroll{overflow-x:auto;max-height:calc(100vh - 320px);overflow-y:auto}
+  .tbl-scroll thead th{position:sticky;top:0;z-index:5;background:#0f2d5c}
   table{width:100%;border-collapse:collapse;font-size:13px}
   thead tr{background:#0f2d5c}
   th{padding:7px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
@@ -145,7 +146,7 @@
   .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
   .nav-sub-arrow{margin-left:auto;font-size:11px;color:#94a3b8}
   /* MODULE TABS */
-  .mod-tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid #e2e8f0;padding-bottom:0}
+  .mod-tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid #e2e8f0;padding-bottom:0;position:sticky;top:44px;z-index:40;background:#fff;padding-top:12px}
   .mod-tab{padding:8px 18px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;font-family:inherit;margin-bottom:-1px;transition:all .15s}
   .mod-tab.active{color:#f97316;border-bottom-color:#f97316}
   .mod-tab:hover{color:#0f172a}
