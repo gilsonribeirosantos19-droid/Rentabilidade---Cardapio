@@ -849,6 +849,8 @@
 
     <!-- TAB: FECHAMENTO MENSAL -->
     <div id="tab-fechamento" class="tab-pane">
+      <!-- FILTROS + KPI BAR (sticky) -->
+      <div style="position:sticky;top:114px;z-index:40;background:#fff;padding-bottom:12px;margin-top:-18px;padding-top:18px;border-bottom:1px solid #e2e8f0;margin-bottom:16px">
       <!-- FILTROS -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
@@ -919,12 +921,13 @@
           </div>
         </div>
       </div>
+      </div><!-- /sticky header -->
       <!-- TABELA -->
       <div id="fm-tabela" style="display:none">
         <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:12px">Detalhamento por insumo</div>
-        <div class="tbl-wrap"><div class="tbl-scroll">
+        <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 380px);overflow-y:auto">
           <table class="tbl">
-            <thead><tr>
+            <thead style="position:sticky;top:0;z-index:5"><tr>
               <th>Insumo</th><th>Categoria</th>
               <th class="r">Est. Inicial</th><th class="r">+ Compras</th>
               <th class="r">- Perdas</th><th class="r">Consumo</th>
