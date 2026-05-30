@@ -265,8 +265,9 @@
   /* ── BOTTOM SHEET ──────────────────────────────────────── */
   .sol-sheet-bd{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none}
   .sol-sheet-bd.open{display:block}
-  .sol-sheet{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border2);border-radius:16px 16px 0 0;z-index:201;max-height:75vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s ease}
+  .sol-sheet{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border2);border-radius:16px 16px 0 0;z-index:201;max-height:75vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s ease,max-height .3s ease,border-radius .3s ease}
   .sol-sheet.open{transform:translateY(0)}
+  .sol-sheet.expanded{max-height:100vh;border-radius:0}
   .sol-sheet-hd{padding:16px 22px;border-bottom:1px solid var(--border2);display:flex;align-items:center;flex-shrink:0}
   .sol-sheet-title{font-size:15px;font-weight:700;flex:1;color:var(--text1)}
   .sol-sheet-x{width:28px;height:28px;border:1px solid var(--border2);background:transparent;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-family:inherit}
@@ -1322,6 +1323,9 @@
 <div id="sol-sheet" class="sol-sheet">
   <div class="sol-sheet-hd">
     <span class="sol-sheet-title">Informar Quantidades</span>
+    <button class="sol-sheet-x" id="btn-sheet-expand" title="Expandir" onclick="toggleSheetExpand()" style="margin-right:6px">
+      <svg id="sheet-expand-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+    </button>
     <button class="sol-sheet-x" onclick="fecharSheet()">✕</button>
   </div>
   <div class="sol-sheet-top">
@@ -1821,8 +1825,20 @@ function continuarPedido() {
 }
 
 function fecharSheet() {
+  const sheet = document.getElementById('sol-sheet');
+  sheet.classList.remove('open','expanded');
   document.getElementById('sol-sheet-bd').classList.remove('open');
-  document.getElementById('sol-sheet').classList.remove('open');
+  _sheetExpanded = false;
+}
+
+let _sheetExpanded = false;
+function toggleSheetExpand() {
+  _sheetExpanded = !_sheetExpanded;
+  document.getElementById('sol-sheet').classList.toggle('expanded', _sheetExpanded);
+  const icon = document.getElementById('sheet-expand-icon');
+  if (icon) icon.innerHTML = _sheetExpanded
+    ? '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/>'
+    : '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>';
 }
 
 // compat aliases
