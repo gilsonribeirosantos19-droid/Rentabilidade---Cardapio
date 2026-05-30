@@ -2318,7 +2318,12 @@ function switchEstoqueTab(tab) {
   document.getElementById('est-'+tab).classList.add('active');
   document.querySelectorAll('.est-tab').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   if (tab==='relatorio') carregarRelatorio();
-  if (tab==='movimentacao') { popularInsumosMov(); carregarMovimentacoes(); }
+  if (tab==='movimentacao') {
+    const md = document.getElementById('mov-data');
+    if (md && !md.value) md.value = hoje();
+    popularInsumosMov();
+    carregarMovimentacoes();
+  }
 }
 
 function getInsumosFiltrados(catId) {
