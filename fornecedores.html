@@ -1039,12 +1039,14 @@ async function carregarTudo(){
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
     ]);
-    // Carregar embalagens cadastradas em Configurações
+    await carregarVinculos();
+    // Opções de embalagem: item_classificacoes + valores já usados nos vínculos
     try{
       const embs=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&tipo=eq.embalagem&ativo=eq.true&order=nome.asc`);
-      _embOpcoes = embs.map(e=>e.nome);
-    }catch{ _embOpcoes=[]; }
-    await carregarVinculos();
+      const deClassif = embs.map(e=>e.nome);
+      const deVinculos = vinculos.map(v=>v.embalagem_descricao).filter(Boolean);
+      _embOpcoes = [...new Set([...deClassif, ...deVinculos])].sort();
+    }catch{ _embOpcoes = [...new Set(vinculos.map(v=>v.embalagem_descricao).filter(Boolean))].sort(); }
 
     // Popular filtro de cidades
     const cidades=[...new Set(fornecedores.map(f=>f.cidade).filter(Boolean))].sort();
