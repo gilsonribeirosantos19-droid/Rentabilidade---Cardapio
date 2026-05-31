@@ -931,19 +931,44 @@ function renderProdutos(){
       <td style="color:#64748b">—</td>
       <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
       <td>
-        <button class="btn-ghost" onclick="event.stopPropagation();menuProduto('${ins.id}')" style="border-radius:6px;padding:1px 6px;font-size:14px;line-height:1;color:#94a3b8">⋮</button>
+        <button class="btn-ghost" onclick="event.stopPropagation();menuProduto('${ins.id}',this)" style="border-radius:6px;padding:1px 6px;font-size:14px;line-height:1;color:#94a3b8">⋮</button>
       </td>
     </tr>`;
   }).join('');
 }
 
-function menuProduto(id){
+function menuProduto(id, btn){
+  document.getElementById('_ctx-prod')?.remove();
   const ins=todos.find(x=>x.id===id);
   if(!ins) return;
-  const acao=prompt(`Ação para "${ins.nome}":\n1 - Editar cadastro\n2 - Ver custos\n3 - Excluir\n\nDigite o número:`);
-  if(acao==='1') editarItemCadastro(id);
-  else if(acao==='2') { switchModulo('custos'); abrirDetalhe(id); }
-  else if(acao==='3'){ if(confirm(`Desativar "${ins.nome}"?`)) deletar(id,ins.nome); }
+  const menu=document.createElement('div');
+  menu.id='_ctx-prod';
+  const rect=btn.getBoundingClientRect();
+  Object.assign(menu.style,{
+    position:'fixed',top:(rect.bottom+4)+'px',
+    left:Math.min(rect.left,window.innerWidth-200)+'px',
+    background:'#fff',border:'1px solid #e2e8f0',borderRadius:'8px',
+    boxShadow:'0 4px 16px rgba(0,0,0,.12)',zIndex:'999',
+    minWidth:'180px',overflow:'hidden',fontSize:'12px'
+  });
+  const itens=[
+    {label:'Editar cadastro',fn:()=>editarItemCadastro(id)},
+    {label:'Ver custos',fn:()=>{switchModulo('custos');abrirDetalhe(id);}},
+    {label:'Desativar',danger:true,fn:()=>{if(confirm(`Desativar "${ins.nome}"?`))deletar(id,ins.nome);}},
+  ];
+  itens.forEach(op=>{
+    const el=document.createElement('button');
+    el.textContent=op.label;
+    Object.assign(el.style,{display:'block',width:'100%',padding:'8px 14px',textAlign:'left',
+      border:'none',background:'transparent',cursor:'pointer',fontFamily:'inherit',
+      fontSize:'12px',color:op.danger?'#e11d48':'#0f172a'});
+    el.onmouseenter=()=>{el.style.background='#f8fafc';};
+    el.onmouseleave=()=>{el.style.background='transparent';};
+    el.onclick=()=>{menu.remove();op.fn();};
+    menu.appendChild(el);
+  });
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',()=>menu.remove(),{once:true}),0);
 }
 
 function _popularGruposProd(){
