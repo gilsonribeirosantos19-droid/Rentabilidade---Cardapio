@@ -3895,7 +3895,7 @@ async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maxi
   };
   if (minimo !== undefined) payload.minimo = minimo;
   if (maximo !== undefined) payload.maximo = maximo;
-  await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
+  await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates,return=minimal',
     body: JSON.stringify(payload)

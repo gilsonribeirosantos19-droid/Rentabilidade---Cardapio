@@ -1726,7 +1726,7 @@ async function confirmarInventario() {
       });
       // atualizar saldo_estoque com a quantidade contada fisicamente
       if (it.insumo_id && lojaId) {
-        await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
+        await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
           method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
           body: JSON.stringify({
             tenant_id: TENANT_ID, loja_id: lojaId, insumo_id: it.insumo_id,
@@ -2620,7 +2620,7 @@ async function registrarMovimentacao() {
       novaQtd = Math.max(0, qtdAtual - qtd);
     }
     // Atualiza saldo via upsert
-    await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
+    await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
       method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal',
       body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
         quantidade: parseFloat(novaQtd.toFixed(4)),
