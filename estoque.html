@@ -3096,11 +3096,16 @@ async function carregarGrupos() {
   try {
     grupos = await api(`grupos_inventario?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
   } catch(e) { grupos = []; return; }
-  for (const g of grupos) {
-    try {
-      g.itens = await api(`grupos_inventario_itens?grupo_id=eq.${g.id}`);
-    } catch { g.itens = []; }
-  }
+  if (!grupos.length) return;
+  try {
+    const ids = grupos.map(g => g.id).join(',');
+    const todosItens = await api(`grupos_inventario_itens?grupo_id=in.(${ids})`);
+    const itensMap = {};
+    todosItens.forEach(it => {
+      (itensMap[it.grupo_id] = itensMap[it.grupo_id] || []).push(it);
+    });
+    grupos.forEach(g => g.itens = itensMap[g.id] || []);
+  } catch { grupos.forEach(g => g.itens = []); }
 }
 
 async function abrirModalNovoInv() {
@@ -3393,15 +3398,30 @@ async function encerrarInventario() {
   if (!confirm('Encerrar o inventário? Os saldos serão ajustados com base nas quantidades contadas.')) return;
   try {
     const itens = await api(`inventario_itens?inventario_id=eq.${invAberto.id}`);
-    for (const it of itens) {
+    const updates = itens.map(it => {
       const inputEl = document.getElementById(`idet-${it.id}`);
       const qtdContada = inputEl ? (parseFloat(inputEl.value)||0) : (it.qtd_contada||it.qtd_sistema||0);
-      await api(`inventario_itens?id=eq.${it.id}`, {
-        method:'PATCH', prefer:'return=minimal',
-        body: JSON.stringify({ qtd_contada: qtdContada })
-      });
-      await upsertSaldo(it.insumo_id, qtdContada, it.custo_medio||0);
-    }
+      return { id: it.id, insumo_id: it.insumo_id, qtdContada, custo_medio: it.custo_medio||0 };
+    });
+    await api('inventario_itens?on_conflict=id', {
+      method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+      body: JSON.stringify(updates.map(u => ({ id: u.id, qtd_contada: u.qtdContada })))
+    });
+    const lojaId = getLojaId();
+    const saldoPayloads = updates.map(u => ({
+      tenant_id: TENANT_ID, loja_id: lojaId, insumo_id: u.insumo_id,
+      quantidade: parseFloat(u.qtdContada.toFixed(4)),
+      custo_medio: parseFloat(Number(u.custo_medio).toFixed(6)),
+      atualizado_em: new Date().toISOString()
+    }));
+    await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
+      method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+      body: JSON.stringify(saldoPayloads)
+    });
+    saldoPayloads.forEach(p => {
+      const ex = saldos.find(s => s.insumo_id === p.insumo_id && s.loja_id === p.loja_id);
+      if (ex) Object.assign(ex, p); else saldos.push({...p});
+    });
     await api(`inventarios?id=eq.${invAberto.id}`, {
       method:'PATCH', prefer:'return=minimal',
       body: JSON.stringify({ status:'encerrado' })
