@@ -1314,6 +1314,8 @@ function editarUsuario(id) {
   document.getElementById('u-role').value = u.role || 'operador';
   document.getElementById('u-loja-wrap').style.display = u.role === 'gerente' ? '' : 'none';
   document.getElementById('btn-usuario').textContent = 'Salvar alterações';
+  document.getElementById('modal-usuario').classList.add('open');
+}
 
 function fecharModalUsuario() { document.getElementById('modal-usuario').classList.remove('open'); }
 
