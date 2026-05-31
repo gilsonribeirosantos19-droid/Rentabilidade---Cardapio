@@ -3095,11 +3095,12 @@ let grupos = [], grupoSelecionados = new Set();
 async function carregarGrupos() {
   try {
     grupos = await api(`grupos_inventario?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
-    for (const g of grupos) {
-      const itens = await api(`grupos_inventario_itens?grupo_id=eq.${g.id}&tenant_id=eq.${TENANT_ID}`);
-      g.itens = itens;
-    }
-  } catch(e) { grupos = []; }
+  } catch(e) { grupos = []; return; }
+  for (const g of grupos) {
+    try {
+      g.itens = await api(`grupos_inventario_itens?grupo_id=eq.${g.id}`);
+    } catch { g.itens = []; }
+  }
 }
 
 async function abrirModalNovoInv() {
@@ -3493,13 +3494,13 @@ async function salvarGrupo() {
     let grupoId = id;
     if (id) {
       await api(`grupos_inventario?id=eq.${id}`, {method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,tipo})});
-      await api(`grupos_inventario_itens?grupo_id=eq.${id}&tenant_id=eq.${TENANT_ID}`, {method:'DELETE',prefer:'return=minimal'});
+      await api(`grupos_inventario_itens?grupo_id=eq.${id}`, {method:'DELETE',prefer:'return=minimal'});
     } else {
       const res = await api('grupos_inventario', {method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,tipo,ativo:true})});
       grupoId = res[0]?.id;
       if (!grupoId) throw new Error('Falha ao criar grupo.');
     }
-    const itens = [...grupoSelecionados].map((insId, ordem) => ({grupo_id:grupoId, insumo_id:insId, ordem}));
+    const itens = [...grupoSelecionados].map((insId, ordem) => ({tenant_id:TENANT_ID, grupo_id:grupoId, insumo_id:insId, ordem}));
     await api('grupos_inventario_itens', {method:'POST',prefer:'return=minimal',body:JSON.stringify(itens)});
     toast(`Grupo "${nome}" salvo com ${itens.length} insumos!`,'ok');
     fecharModal('m-grupo');

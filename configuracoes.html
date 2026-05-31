@@ -590,6 +590,31 @@
   </div>
 </div>
 
+<!-- MODAL GRUPO COMPRA (com seleção de insumos) -->
+<div class="overlay" id="modal-grupo-compra">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <span class="modal-title" id="mgc-title">Grupo de Compra</span>
+      <button class="modal-close" onclick="fecharModalGrupoCompra()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nome do grupo *</label>
+        <input class="form-input" id="mgc-nome" type="text" placeholder="Ex: Hortifruti">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Insumos do grupo</label>
+        <input class="form-input" id="mgc-busca" type="text" placeholder="Buscar insumo..." oninput="filtrarMgcInsumos()" style="margin-bottom:8px">
+        <div id="mgc-lista" style="max-height:260px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:4px 0"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalGrupoCompra()">Cancelar</button>
+      <button class="btn btn-primary" id="mgc-btn" onclick="salvarGrupoCompra()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMAR DELETE -->
 <div class="overlay" id="modal-confirm">
   <div class="modal" style="max-width:400px">
@@ -618,13 +643,16 @@
       <div class="form-group"><label class="form-label">Nome *</label><input class="form-input" id="u-nome" type="text" placeholder="Nome completo"></div>
       <div class="form-group"><label class="form-label">E-mail *</label><input class="form-input" id="u-email" type="email" placeholder="email@exemplo.com"></div>
       <div class="form-group"><label class="form-label">Papel / Perfil *</label>
-        <select class="form-select" id="u-role">
+        <select class="form-select" id="u-role" onchange="toggleLojaField()">
           <option value="admin">Administrador</option>
           <option value="gerente">Gerente</option>
           <option value="operador" selected>Operador</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">Senha inicial</label><input class="form-input" id="u-senha" type="password" placeholder="Deixe em branco para envio por e-mail"></div>
+      <div class="form-group" id="u-loja-wrap" style="display:none"><label class="form-label">Loja vinculada</label>
+        <select class="form-select" id="u-loja"><option value="">Selecione a loja...</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Senha inicial *</label><input class="form-input" id="u-senha" type="password" placeholder="Mínimo 6 caracteres"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModalUsuario()">Cancelar</button>
@@ -1045,6 +1073,7 @@ function renderUnidades(lista) {
    MODAL CRUD
 ================================================================ */
 function abrirModal(tipo) {
+  if (tipo === 'grupo_compra') { abrirModalGrupoCompra(null); return; }
   modalTipo = tipo; editId = null;
   document.getElementById('modal-title').textContent = 'Novo(a) ' + (TIPO_TITULO[tipo] || tipo);
   document.getElementById('f-nome').value = '';
@@ -1056,6 +1085,7 @@ function abrirModal(tipo) {
 }
 
 function abrirEditar(tipo, id) {
+  if (tipo === 'grupo_compra') { abrirModalGrupoCompra(id); return; }
   const item = _itemsMap[id] || {};
   modalTipo = tipo; editId = id;
   document.getElementById('modal-title').textContent = 'Editar ' + (TIPO_TITULO[tipo] || tipo);
@@ -1067,6 +1097,83 @@ function abrirEditar(tipo, id) {
 }
 
 function fecharModal() { document.getElementById('modal-form').classList.remove('open'); }
+
+/* ── GRUPO DE COMPRA — modal com insumos ── */
+let _mgcGrupoId = null;
+let _mgcInsumos = [];
+let _mgcSelecionados = new Set();
+
+async function abrirModalGrupoCompra(grupoId) {
+  _mgcGrupoId = grupoId || null;
+  const grupo = grupoId ? (_itemsMap[grupoId] || {}) : {};
+  document.getElementById('mgc-title').textContent = grupoId ? 'Editar Grupo de Compra' : 'Novo Grupo de Compra';
+  document.getElementById('mgc-nome').value = grupo.nome || '';
+  document.getElementById('mgc-btn').textContent = grupoId ? 'Salvar alterações' : 'Salvar';
+  document.getElementById('mgc-busca').value = '';
+  _mgcSelecionados = new Set();
+  // carregar insumos
+  try {
+    _mgcInsumos = await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+  } catch { _mgcInsumos = []; }
+  // carregar itens já vinculados
+  if (grupoId) {
+    try {
+      const itens = await api(`grupos_compra_itens?grupo_id=eq.${grupoId}&tenant_id=eq.${TENANT_ID}`);
+      itens.forEach(it => _mgcSelecionados.add(it.insumo_id));
+    } catch {}
+  }
+  renderMgcInsumos(_mgcInsumos);
+  document.getElementById('modal-grupo-compra').classList.add('open');
+}
+
+function filtrarMgcInsumos() {
+  const q = document.getElementById('mgc-busca').value.toLowerCase();
+  const filtrados = q ? _mgcInsumos.filter(i => i.nome.toLowerCase().includes(q)) : _mgcInsumos;
+  renderMgcInsumos(filtrados);
+}
+
+function renderMgcInsumos(lista) {
+  const el = document.getElementById('mgc-lista');
+  if (!lista.length) { el.innerHTML = '<div style="padding:12px;color:#94a3b8;font-size:13px;text-align:center">Nenhum insumo encontrado</div>'; return; }
+  el.innerHTML = lista.map(i => `
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background=''">
+      <input type="checkbox" ${_mgcSelecionados.has(i.id)?'checked':''} onchange="toggleMgcItem('${i.id}',this.checked)" style="accent-color:#f97316;width:15px;height:15px;flex-shrink:0">
+      <span>${escHtml(i.nome)}</span>
+      <span style="margin-left:auto;font-size:11px;color:#94a3b8">${escHtml(i.categoria||'')}</span>
+    </label>`).join('');
+}
+
+function toggleMgcItem(insId, checked) {
+  if (checked) _mgcSelecionados.add(insId); else _mgcSelecionados.delete(insId);
+}
+
+async function salvarGrupoCompra() {
+  const nome = document.getElementById('mgc-nome').value.trim();
+  if (!nome) { toast('Informe o nome do grupo', 'err'); return; }
+  const btn = document.getElementById('mgc-btn');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    let grupoId = _mgcGrupoId;
+    if (grupoId) {
+      await api(`grupos_compra?id=eq.${grupoId}`, { method:'PATCH', body:JSON.stringify({nome}), prefer:'return=minimal' });
+    } else {
+      const novo = await api('grupos_compra', { method:'POST', body:JSON.stringify({tenant_id:TENANT_ID, nome, ativo:true}) });
+      grupoId = novo[0]?.id;
+    }
+    if (grupoId) {
+      // deletar itens antigos e reinserir
+      await api(`grupos_compra_itens?grupo_id=eq.${grupoId}`, { method:'DELETE', prefer:'return=minimal' });
+      const itens = [..._mgcSelecionados].map(insId => ({ grupo_id:grupoId, insumo_id:insId }));
+      if (itens.length) await api('grupos_compra_itens', { method:'POST', body:JSON.stringify(itens), prefer:'return=minimal' });
+    }
+    toast(`Grupo salvo com ${_mgcSelecionados.size} insumo(s)`, 'ok');
+    fecharModalGrupoCompra();
+    await carregarGeral();
+  } catch(e) { toast('Erro: '+e.message, 'err'); }
+  finally { btn.disabled=false; btn.textContent=_mgcGrupoId?'Salvar alterações':'Salvar'; }
+}
+
+function fecharModalGrupoCompra() { document.getElementById('modal-grupo-compra').classList.remove('open'); }
 
 async function salvar() {
   const nome  = document.getElementById('f-nome').value.trim();
@@ -1283,12 +1390,20 @@ function renderUsuarios() {
   }).join('');
 }
 
-function abrirModalUsuario() {
+async function abrirModalUsuario() {
   _editUserId = null;
   document.getElementById('modal-usuario-titulo').textContent = 'Novo Usuário';
   ['u-nome','u-email','u-senha'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('u-role').value = 'operador';
+  document.getElementById('u-loja-wrap').style.display = 'none';
   document.getElementById('btn-usuario').textContent = 'Criar usuário';
+  // popular select de lojas
+  try {
+    const lojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    const sel = document.getElementById('u-loja');
+    sel.innerHTML = '<option value="">Selecione a loja...</option>' +
+      lojas.map(l => `<option value="${l.id}">${l.nome}</option>`).join('');
+  } catch {}
   document.getElementById('modal-usuario').classList.add('open');
 }
 
@@ -1301,35 +1416,64 @@ function editarUsuario(id) {
   document.getElementById('u-email').value = u.email || '';
   document.getElementById('u-senha').value = '';
   document.getElementById('u-role').value = u.role || 'operador';
+  document.getElementById('u-loja-wrap').style.display = u.role === 'gerente' ? '' : 'none';
   document.getElementById('btn-usuario').textContent = 'Salvar alterações';
   document.getElementById('modal-usuario').classList.add('open');
 }
 
 function fecharModalUsuario() { document.getElementById('modal-usuario').classList.remove('open'); }
 
-async function salvarUsuario() {
-  const nome = document.getElementById('u-nome').value.trim();
-  const email = document.getElementById('u-email').value.trim();
+function toggleLojaField() {
   const role = document.getElementById('u-role').value;
+  document.getElementById('u-loja-wrap').style.display = role === 'gerente' ? '' : 'none';
+}
+
+async function salvarUsuario() {
+  const nome  = document.getElementById('u-nome').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const role  = document.getElementById('u-role').value;
   const senha = document.getElementById('u-senha').value;
-  if (!nome) { toast('Informe o nome', 'err'); return; }
+  const lojaId = document.getElementById('u-loja').value || null;
+  if (!nome)  { toast('Informe o nome', 'err'); return; }
   if (!email) { toast('Informe o e-mail', 'err'); return; }
+  if (!_editUserId && !senha) { toast('Informe a senha inicial', 'err'); return; }
   const btn = document.getElementById('btn-usuario');
   btn.disabled = true; btn.textContent = 'Salvando...';
   try {
-    const body = { nome, email, role, tenant_id: TENANT_ID };
-    if (senha) body.senha_hash = senha;
     if (_editUserId) {
-      await api(`usuarios?id=eq.${_editUserId}`, { method: 'PATCH', body: JSON.stringify(body), prefer: 'return=minimal' });
+      // editar usuário existente
+      const body = { nome, role, tenant_id: TENANT_ID, loja_id: lojaId };
+      await api(`usuarios?id=eq.${_editUserId}`, { method:'PATCH', body:JSON.stringify(body), prefer:'return=minimal' });
+      // atualizar senha no Supabase Auth se preenchida
+      if (senha) {
+        const r = await fetch(`${SUPA_URL}/auth/v1/admin/users/${_editUserId}`, {
+          method:'PUT',
+          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+          body:JSON.stringify({password:senha})
+        });
+        if (!r.ok) { const e=await r.json(); throw new Error(e.message||'Erro ao atualizar senha'); }
+      }
       toast('Usuário atualizado', 'ok');
     } else {
-      await api('usuarios', { method: 'POST', body: JSON.stringify(body) });
-      toast('Usuário criado', 'ok');
+      // criar usuário novo — primeiro no Supabase Auth
+      const authRes = await fetch(`${SUPA_URL}/auth/v1/admin/users`, {
+        method:'POST',
+        headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({email, password:senha, email_confirm:true})
+      });
+      if (!authRes.ok) { const e=await authRes.json(); throw new Error(e.message||'Erro ao criar conta de acesso'); }
+      const authData = await authRes.json();
+      const userId = authData.id;
+      // depois na tabela usuarios com o mesmo UUID
+      await api('usuarios', { method:'POST', body:JSON.stringify({
+        id:userId, nome, role, tenant_id:TENANT_ID, loja_id:lojaId, ativo:true
+      })});
+      toast('Usuário criado com sucesso!', 'ok');
     }
     fecharModalUsuario();
     await carregarUsuarios();
   } catch (e) { toast('Erro: ' + e.message, 'err'); }
-  finally { btn.disabled = false; btn.textContent = _editUserId ? 'Salvar alterações' : 'Criar usuário'; }
+  finally { btn.disabled=false; btn.textContent=_editUserId?'Salvar alterações':'Criar usuário'; }
 }
 
 async function excluirUsuario(id, nome) {
