@@ -956,6 +956,7 @@ async function carregarLojas(){
     const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
     const sel=document.getElementById('sel-loja');
     if(sel) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sel.appendChild(o);});
+    if(lojas.length===1&&sel){sel.value=lojas[0].id;await onChangeLojaFT();}
   }catch{}
 }
 
