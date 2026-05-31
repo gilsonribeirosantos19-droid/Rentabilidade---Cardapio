@@ -3528,13 +3528,13 @@ async function calcFechamento() {
     let invIni = [];
     try {
       const r = await api(`inventarios?tenant_id=eq.${TENANT_ID}&criado_em=lt.${de}&status=eq.fechado&order=criado_em.desc&limit=1`);
-      if (r.length) invIni = await api(`itens_inventario?inventario_id=eq.${r[0].id}`);
+      if (r.length) invIni = await api(`inventario_itens?inventario_id=eq.${r[0].id}`);
     } catch(e) {}
 
     let invFin = []; let usaSaldo = true;
     try {
       const r = await api(`inventarios?tenant_id=eq.${TENANT_ID}&criado_em=lte.${ate}T23:59:59&status=eq.fechado&order=criado_em.desc&limit=1`);
-      if (r.length && r[0].criado_em >= de) { invFin = await api(`itens_inventario?inventario_id=eq.${r[0].id}`); usaSaldo = false; }
+      if (r.length && r[0].criado_em >= de) { invFin = await api(`inventario_itens?inventario_id=eq.${r[0].id}`); usaSaldo = false; }
     } catch(e) {}
 
     let totIni=0, totEnt=0, totPerd=0, totCons=0, totFin=0;
@@ -3747,7 +3747,7 @@ async function renderMovimentacao() {
   let invIni = [];
   try {
     const r = await api(`inventarios?tenant_id=eq.${TENANT_ID}&criado_em=lt.${de}&status=eq.fechado&order=criado_em.desc&limit=1`);
-    if (r.length) invIni = await api(`itens_inventario?inventario_id=eq.${r[0].id}`);
+    if (r.length) invIni = await api(`inventario_itens?inventario_id=eq.${r[0].id}`);
   } catch(e) {}
 
   // Perdas lançadas pelos gerentes no período
