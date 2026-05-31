@@ -1742,9 +1742,9 @@ async function carregarSaldosSol() {
   const lojaId = userProfile?.loja_id;
   if (lojaId) {
     try {
-      const saldos = await api(`saldo_estoque?loja_id=eq.${lojaId}&tenant_id=eq.${TENANT_ID}&select=insumo_id,saldo_atual,estoque_minimo`);
+      const saldos = await api(`saldo_estoque?loja_id=eq.${lojaId}&tenant_id=eq.${TENANT_ID}&select=insumo_id,quantidade,custo_medio`);
       _solSaldos = {};
-      saldos.forEach(s => { _solSaldos[s.insumo_id] = { saldo_atual: s.saldo_atual, estoque_minimo: s.estoque_minimo }; });
+      saldos.forEach(s => { _solSaldos[s.insumo_id] = { saldo_atual: s.quantidade, estoque_minimo: null }; });
     } catch(e) { console.warn('Saldo não carregado:', e.message); }
   }
   // Popula select de grupos
