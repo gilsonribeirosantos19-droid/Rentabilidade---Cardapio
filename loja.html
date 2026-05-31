@@ -2581,6 +2581,21 @@ async function registrarMovimentacao() {
           tipo:'manual', observacao:obs||null, criado_em:criadoEm})});
       novaQtd = qtdAtual + qtdEst;
       novoCm  = novaQtd>0 ? (qtdAtual*cmAtual + qtdEst*custoUnit)/novaQtd : custoUnit;
+      // registrar no historico_custo (igual ao fluxo de estoque.html)
+      try {
+        const impacto = cmAtual>0 ? parseFloat(((novoCm-cmAtual)/cmAtual*100).toFixed(4)) : null;
+        await api('historico_custo',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
+          tenant_id:TENANT_ID, insumo_id:insumoId, loja_id:lojaId,
+          saldo_anterior:parseFloat(qtdAtual.toFixed(4)),
+          custo_medio_anterior:parseFloat(cmAtual.toFixed(4)),
+          qtd_entrada:parseFloat(qtdEst.toFixed(4)),
+          custo_entrada:parseFloat(custoUnit.toFixed(4)),
+          novo_custo_medio:parseFloat(novoCm.toFixed(6)),
+          impacto_pct:impacto,
+          origem:'entrada_loja',
+          documento_ref:null,
+        })});
+      } catch {}
     } else {
       await api('saidas_estoque', {method:'POST', prefer:'return=minimal',
         body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
