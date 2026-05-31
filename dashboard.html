@@ -391,17 +391,7 @@ const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-0
 let lojas=[], insumos=[], saldos=[], entradas=[], saidas=[], inventarios=[], pedidos=[];
 let lojaAtual=null;
 
-async function api(endpoint, opts={}) {
-  const method=(opts.method||'GET').toUpperCase();
-  const headers={'apikey':SUPA_KEY,'Authorization':'Bearer '+(localStorage.getItem('sb_token')||SUPA_KEY)};
-  if(opts.body) headers['Content-Type']='application/json';
-  if(opts.prefer) headers['Prefer']=opts.prefer;
-  const res=await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,{method,headers,body:opts.body||undefined});
-  if(!res.ok){let msg=res.statusText;try{const j=await res.json();msg=j.message||j.error||msg;}catch{}throw new Error(`[${res.status}] ${msg}`);}
-  const ct=res.headers.get('content-type')||'';
-  if(ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
-  return [];
-}
+const api = createApi(SUPA_URL, SUPA_KEY);
 
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
 function toast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type==='err'?' err':'');setTimeout(()=>el.classList.remove('show'),3500);}
@@ -664,6 +654,7 @@ async function carregar(){
 initUser();
 carregar();
 </script>
+<script src="utils.js"></script>
 <script src="sidebar.js"></script>
 </body>
 </html>
