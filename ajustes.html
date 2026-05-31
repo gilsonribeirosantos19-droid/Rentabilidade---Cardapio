@@ -423,19 +423,7 @@ const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.9EGIFYLs9OYQO5aKUR3Ky7J_m3Hgdrys0lwmHkA-No8';
 const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
 
-async function api(endpoint, opts={}) {
-  const method = (opts.method||'GET').toUpperCase();
-  const headers = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer '+(localStorage.getItem('sb_token')||SUPA_KEY) };
-  if (opts.body) headers['Content-Type'] = 'application/json';
-  if (opts.prefer) headers['Prefer'] = opts.prefer;
-  else if (method==='POST') headers['Prefer'] = 'return=representation';
-  else if (method==='PATCH') headers['Prefer'] = 'return=representation';
-  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`, {method, headers, body: opts.body||undefined});
-  if (!res.ok) { let msg=res.statusText; try{const j=await res.json();msg=j.message||j.error||msg;}catch{} throw new Error(`[${res.status}] ${msg}`); }
-  const ct = res.headers.get('content-type')||'';
-  if (ct.includes('application/json')) { const t=await res.text(); return t?JSON.parse(t):[]; }
-  return [];
-}
+const api = createApi(SUPA_URL, SUPA_KEY);
 
 let insumos = [], saldos = [], lojas = [], lojaId = null;
 let aeInsumoId = null, aetipoSel = null;
@@ -825,6 +813,7 @@ function toast(msg, tipo='ok') {
 }
 </script>
 <script src="params.js"></script>
+<script src="utils.js"></script>
 <script src="sidebar.js"></script>
 </body>
 </html>
