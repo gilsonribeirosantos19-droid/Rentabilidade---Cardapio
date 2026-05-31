@@ -3095,11 +3095,12 @@ let grupos = [], grupoSelecionados = new Set();
 async function carregarGrupos() {
   try {
     grupos = await api(`grupos_inventario?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
-    for (const g of grupos) {
-      const itens = await api(`grupos_inventario_itens?grupo_id=eq.${g.id}&tenant_id=eq.${TENANT_ID}`);
-      g.itens = itens;
-    }
-  } catch(e) { grupos = []; }
+  } catch(e) { grupos = []; return; }
+  for (const g of grupos) {
+    try {
+      g.itens = await api(`grupos_inventario_itens?grupo_id=eq.${g.id}`);
+    } catch { g.itens = []; }
+  }
 }
 
 async function abrirModalNovoInv() {
