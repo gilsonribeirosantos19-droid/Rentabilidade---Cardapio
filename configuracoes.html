@@ -1336,7 +1336,7 @@ async function salvarUsuario() {
   try {
     if (_editUserId) {
       // editar usuário existente
-      const body = { nome, email, role, tenant_id: TENANT_ID, loja_id: lojaId };
+      const body = { nome, role, tenant_id: TENANT_ID, loja_id: lojaId };
       await api(`usuarios?id=eq.${_editUserId}`, { method:'PATCH', body:JSON.stringify(body), prefer:'return=minimal' });
       // atualizar senha no Supabase Auth se preenchida
       if (senha) {
@@ -1360,7 +1360,7 @@ async function salvarUsuario() {
       const userId = authData.id;
       // depois na tabela usuarios com o mesmo UUID
       await api('usuarios', { method:'POST', body:JSON.stringify({
-        id:userId, nome, email, role, tenant_id:TENANT_ID, loja_id:lojaId, ativo:true
+        id:userId, nome, role, tenant_id:TENANT_ID, loja_id:lojaId, ativo:true
       })});
       toast('Usuário criado com sucesso!', 'ok');
     }
