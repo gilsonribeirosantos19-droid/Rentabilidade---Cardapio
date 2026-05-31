@@ -523,8 +523,7 @@ async function calcular(){
     const realConsumido=saidas.filter(s=>['consumo','transferencia','producao'].includes(s.tipo));
     const realMap={};
     realConsumido.forEach(s=>{realMap[s.insumo_id]=(realMap[s.insumo_id]||0)+(s.quantidade||0);});
-    const totalReal=realConsumido.reduce((s,x)=>s+(x.quantidade||0)*(x.custo_unitario||saldos.find(sl=>sl.insumo_id===x.insumo_id)?.custo_medio||0),0)
-      ||entradas.reduce((s,e)=>s+(e.custo_total||0),0);
+    const totalReal=realConsumido.reduce((s,x)=>s+(x.quantidade||0)*(x.custo_unitario||saldos.find(sl=>sl.insumo_id===x.insumo_id)?.custo_medio||0),0);
 
     const pctTeo=totalFat>0?totalTeo/totalFat*100:0;
     const pctReal=totalFat>0?totalReal/totalFat*100:0;
