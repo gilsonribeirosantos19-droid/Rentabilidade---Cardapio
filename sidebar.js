@@ -147,11 +147,12 @@
   const isDash = page === 'dashboard.html';
 
   // Usuário do localStorage
+  const ROLE_LABELS = { admin: 'Administrador', gerente: 'Gerente', operador: 'Operador' };
   let userNome = '—', userRole = '';
   try {
     const u = JSON.parse(localStorage.getItem('sb_user') || '{}');
     userNome = u.nome || u.email || '—';
-    userRole = u.role || 'Operador';
+    userRole = ROLE_LABELS[(u.role||'').toLowerCase()] || u.role || 'Usuário';
   } catch {}
 
   const html = `
