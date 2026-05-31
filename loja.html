@@ -1709,6 +1709,7 @@ function atualizarSaldo(itemId, qtdEstoque) {
 async function confirmarInventario() {
   if (!invAtual) return;
   const itens = await api(`inventario_itens?inventario_id=eq.${invAtual.id}`);
+  const lojaId = invAtual.loja_id || userProfile?.loja_id;
   const btn = document.getElementById('btn-confirmar-inv');
   btn.disabled = true; btn.textContent = 'Salvando...';
   try {
@@ -1718,8 +1719,19 @@ async function confirmarInventario() {
         method:'PATCH', prefer:'return=minimal',
         body: JSON.stringify({ qtd_contada: qtd })
       });
+      // atualizar saldo_estoque com a quantidade contada fisicamente
+      if (it.insumo_id && lojaId) {
+        await api('saldo_estoque?on_conflict=insumo_id,loja_id', {
+          method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+          body: JSON.stringify({
+            tenant_id: TENANT_ID, loja_id: lojaId, insumo_id: it.insumo_id,
+            quantidade: parseFloat(qtd.toFixed(4)),
+            atualizado_em: new Date().toISOString()
+          })
+        });
+      }
     }
-    toast('Inventário salvo!','ok');
+    toast('Inventário salvo e saldos atualizados!','ok');
     fecharModal('m-inv');
     carregarInventarios();
   } catch(e) { toast('Erro: '+e.message,'err'); }
