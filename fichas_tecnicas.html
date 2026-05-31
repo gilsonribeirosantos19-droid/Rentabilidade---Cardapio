@@ -754,8 +754,9 @@ function switchDpTab(nome,btn){
       const ins=todosInsumos.find(i=>i.id===it.insumo_id);
       const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
       const isUnit=um==='un'||um==='pct'||um==='cx';
-      const cr=ins?ins.preco_compra/(ins.rendimento_pct/100):0;
-      const sub=ins?(isUnit?ins.preco_compra*it.quantidade_g:(it.quantidade_g/1000)*cr):0;
+      const cb=ins?_custoBase(ins):0;
+      const cr=ins?(isUnit?cb:cb/(ins.rendimento_pct/100)):0;
+      const sub=ins?custoIngrediente(ins,it.quantidade_g):0;
       const qtdDisplay=(um==='kg'||um==='litro')?`${(it.quantidade_g/1000).toFixed(3)} ${um}`:`${it.quantidade_g} ${um}`;
       return `<tr><td>${ins?esc(ins.nome):'—'}</td><td style="color:#64748b">${um}</td><td class="num">${qtdDisplay}</td><td class="num">R$ ${cr.toFixed(2)}</td><td class="num teal">R$ ${sub.toFixed(3)}</td></tr>`;
     }).join('');

@@ -396,7 +396,7 @@ function renderTabela(){
     const qTeo=(consumoTeoMap[i.id]||0)/div;
     const qReal=consumoRealMap[i.id]||0;
     const cm=saldos.find(s=>s.insumo_id===i.id)?.custo_medio||i.preco_compra||0;
-    const cTeo=qTeo*(i.preco_compra/(i.rendimento_pct/100)||cm);
+    const cTeo=qTeo*(cm/(i.rendimento_pct/100));
     const cReal=qReal*cm;
     const dQtd=qReal-qTeo;
     const dPct=qTeo>0?dQtd/qTeo*100:0;
@@ -573,7 +573,7 @@ function exportCSV(){
     const div=['kg','litro'].includes(un)?1000:1;
     const qT=(teoMap[i.id]||0)/div,qR=realMap[i.id]||0;
     const cm=saldos.find(s=>s.insumo_id===i.id)?.custo_medio||i.preco_compra||0;
-    const cT=qT*(i.preco_compra/(i.rendimento_pct/100)||cm),cR=qR*cm;
+    const cT=qT*(cm/(i.rendimento_pct/100)),cR=qR*cm;
     const dp=qT>0?(qR-qT)/qT*100:0;
     csv+=`${i.nome};${un};${qT.toFixed(3)};${cT.toFixed(2)};${qR.toFixed(3)};${cR.toFixed(2)};${(qR-qT).toFixed(3)};${dp.toFixed(1)};${(cR-cT).toFixed(2)};${getStatus(dp)}\n`;
   });
