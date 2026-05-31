@@ -434,7 +434,7 @@
         </div>
         <div class="dp-footer">
           <button class="btn" style="flex:1" onclick="fecharDetalhe()">Cancelar</button>
-          <button class="btn btn-primary" style="flex:2" id="dp-salvar" onclick="salvarDetalhe()">Salvar alterações</button>
+          <button class="btn btn-primary" style="flex:2" id="dp-salvar" onclick="salvarDetalhe()">Editar item</button>
         </div>
       </div>
 
@@ -684,16 +684,9 @@ function switchDpTab(nome, btn){
   }
 }
 
-async function salvarDetalhe(){
+function salvarDetalhe(){
   if(!insDetalhe) return;
-  const btn=document.getElementById('dp-salvar');
-  btn.disabled=true; btn.textContent='Salvando...';
-  try{
-    await api(`insumos?id=eq.${insDetalhe.id}`,{method:'PATCH',body:JSON.stringify({})});
-    toast('Insumo atualizado.','ok');
-    await carregarInsumos();
-  }catch(e){toast('Erro: '+e.message,'err');}
-  finally{btn.disabled=false;btn.textContent='Salvar alterações';}
+  editarItemCadastro(insDetalhe.id);
 }
 
 function menuAcoes(id){
