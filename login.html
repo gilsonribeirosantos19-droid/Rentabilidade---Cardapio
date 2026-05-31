@@ -271,7 +271,7 @@ async function entrar() {
 
     // Busca perfil do usuário
     const perfRes = await fetch(`${SUPA_URL}/rest/v1/usuarios?id=eq.${data.user?.id}&limit=1`, {
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (data.session?.access_token || SUPA_KEY) }
     });
     const perfil = perfRes.ok ? await perfRes.json() : [];
     if (perfil.length) {
