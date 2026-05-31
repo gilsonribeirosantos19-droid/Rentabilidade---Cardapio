@@ -590,6 +590,31 @@
   </div>
 </div>
 
+<!-- MODAL GRUPO COMPRA (com seleção de insumos) -->
+<div class="overlay" id="modal-grupo-compra">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <span class="modal-title" id="mgc-title">Grupo de Compra</span>
+      <button class="modal-close" onclick="fecharModalGrupoCompra()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nome do grupo *</label>
+        <input class="form-input" id="mgc-nome" type="text" placeholder="Ex: Hortifruti">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Insumos do grupo</label>
+        <input class="form-input" id="mgc-busca" type="text" placeholder="Buscar insumo..." oninput="filtrarMgcInsumos()" style="margin-bottom:8px">
+        <div id="mgc-lista" style="max-height:260px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:8px;padding:4px 0"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalGrupoCompra()">Cancelar</button>
+      <button class="btn btn-primary" id="mgc-btn" onclick="salvarGrupoCompra()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMAR DELETE -->
 <div class="overlay" id="modal-confirm">
   <div class="modal" style="max-width:400px">
@@ -1048,6 +1073,7 @@ function renderUnidades(lista) {
    MODAL CRUD
 ================================================================ */
 function abrirModal(tipo) {
+  if (tipo === 'grupo_compra') { abrirModalGrupoCompra(null); return; }
   modalTipo = tipo; editId = null;
   document.getElementById('modal-title').textContent = 'Novo(a) ' + (TIPO_TITULO[tipo] || tipo);
   document.getElementById('f-nome').value = '';
@@ -1059,6 +1085,7 @@ function abrirModal(tipo) {
 }
 
 function abrirEditar(tipo, id) {
+  if (tipo === 'grupo_compra') { abrirModalGrupoCompra(id); return; }
   const item = _itemsMap[id] || {};
   modalTipo = tipo; editId = id;
   document.getElementById('modal-title').textContent = 'Editar ' + (TIPO_TITULO[tipo] || tipo);
@@ -1070,6 +1097,83 @@ function abrirEditar(tipo, id) {
 }
 
 function fecharModal() { document.getElementById('modal-form').classList.remove('open'); }
+
+/* ── GRUPO DE COMPRA — modal com insumos ── */
+let _mgcGrupoId = null;
+let _mgcInsumos = [];
+let _mgcSelecionados = new Set();
+
+async function abrirModalGrupoCompra(grupoId) {
+  _mgcGrupoId = grupoId || null;
+  const grupo = grupoId ? (_itemsMap[grupoId] || {}) : {};
+  document.getElementById('mgc-title').textContent = grupoId ? 'Editar Grupo de Compra' : 'Novo Grupo de Compra';
+  document.getElementById('mgc-nome').value = grupo.nome || '';
+  document.getElementById('mgc-btn').textContent = grupoId ? 'Salvar alterações' : 'Salvar';
+  document.getElementById('mgc-busca').value = '';
+  _mgcSelecionados = new Set();
+  // carregar insumos
+  try {
+    _mgcInsumos = await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+  } catch { _mgcInsumos = []; }
+  // carregar itens já vinculados
+  if (grupoId) {
+    try {
+      const itens = await api(`grupos_compra_itens?grupo_id=eq.${grupoId}&tenant_id=eq.${TENANT_ID}`);
+      itens.forEach(it => _mgcSelecionados.add(it.insumo_id));
+    } catch {}
+  }
+  renderMgcInsumos(_mgcInsumos);
+  document.getElementById('modal-grupo-compra').classList.add('open');
+}
+
+function filtrarMgcInsumos() {
+  const q = document.getElementById('mgc-busca').value.toLowerCase();
+  const filtrados = q ? _mgcInsumos.filter(i => i.nome.toLowerCase().includes(q)) : _mgcInsumos;
+  renderMgcInsumos(filtrados);
+}
+
+function renderMgcInsumos(lista) {
+  const el = document.getElementById('mgc-lista');
+  if (!lista.length) { el.innerHTML = '<div style="padding:12px;color:#94a3b8;font-size:13px;text-align:center">Nenhum insumo encontrado</div>'; return; }
+  el.innerHTML = lista.map(i => `
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:13px" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background=''">
+      <input type="checkbox" ${_mgcSelecionados.has(i.id)?'checked':''} onchange="toggleMgcItem('${i.id}',this.checked)" style="accent-color:#f97316;width:15px;height:15px;flex-shrink:0">
+      <span>${escHtml(i.nome)}</span>
+      <span style="margin-left:auto;font-size:11px;color:#94a3b8">${escHtml(i.categoria||'')}</span>
+    </label>`).join('');
+}
+
+function toggleMgcItem(insId, checked) {
+  if (checked) _mgcSelecionados.add(insId); else _mgcSelecionados.delete(insId);
+}
+
+async function salvarGrupoCompra() {
+  const nome = document.getElementById('mgc-nome').value.trim();
+  if (!nome) { toast('Informe o nome do grupo', 'err'); return; }
+  const btn = document.getElementById('mgc-btn');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    let grupoId = _mgcGrupoId;
+    if (grupoId) {
+      await api(`grupos_compra?id=eq.${grupoId}`, { method:'PATCH', body:JSON.stringify({nome}), prefer:'return=minimal' });
+    } else {
+      const novo = await api('grupos_compra', { method:'POST', body:JSON.stringify({tenant_id:TENANT_ID, nome, ativo:true}) });
+      grupoId = novo[0]?.id;
+    }
+    if (grupoId) {
+      // deletar itens antigos e reinserir
+      await api(`grupos_compra_itens?grupo_id=eq.${grupoId}&tenant_id=eq.${TENANT_ID}`, { method:'DELETE', prefer:'return=minimal' });
+      const itens = [..._mgcSelecionados].map(insId => ({ tenant_id:TENANT_ID, grupo_id:grupoId, insumo_id:insId }));
+      if (itens.length) await api('grupos_compra_itens', { method:'POST', body:JSON.stringify(itens), prefer:'return=minimal' });
+    }
+    toast(`Grupo salvo com ${_mgcSelecionados.size} insumo(s)`, 'ok');
+    fecharModalGrupoCompra();
+    await carregarGeral();
+  } catch(e) { toast('Erro: '+e.message, 'err'); }
+  finally { btn.disabled=false; btn.textContent=_mgcGrupoId?'Salvar alterações':'Salvar'; }
+}
+
+function fecharModalGrupoCompra() { document.getElementById('modal-grupo-compra').classList.remove('open'); }
 
 async function salvar() {
   const nome  = document.getElementById('f-nome').value.trim();
