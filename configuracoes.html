@@ -672,7 +672,8 @@
    CONFIG
 ================================================================ */
 const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
-const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.9EGIFYLs9OYQO5aKUR3Ky7J_m3Hgdrys0lwmHkA-No8';
+const SUPA_ADMIN_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
 const TENANT_ID = localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -681,7 +682,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 ================================================================ */
 async function api(endpoint, opts = {}) {
   const method = (opts.method || 'GET').toUpperCase();
-  const headers = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
+  const headers = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (localStorage.getItem('sb_token')||SUPA_KEY) };
   if (opts.body) headers['Content-Type'] = 'application/json';
   if (opts.prefer) headers['Prefer'] = opts.prefer;
   else if (method === 'POST')  headers['Prefer'] = 'return=representation';
@@ -1448,7 +1449,7 @@ async function salvarUsuario() {
       if (senha) {
         const r = await fetch(`${SUPA_URL}/auth/v1/admin/users/${_editUserId}`, {
           method:'PUT',
-          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+          headers:{'apikey':SUPA_ADMIN_KEY,'Authorization':'Bearer '+SUPA_ADMIN_KEY,'Content-Type':'application/json'},
           body:JSON.stringify({password:senha})
         });
         if (!r.ok) { const e=await r.json(); throw new Error(e.message||'Erro ao atualizar senha'); }
@@ -1458,7 +1459,7 @@ async function salvarUsuario() {
       // criar usuário novo — primeiro no Supabase Auth
       const authRes = await fetch(`${SUPA_URL}/auth/v1/admin/users`, {
         method:'POST',
-        headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+        headers:{'apikey':SUPA_ADMIN_KEY,'Authorization':'Bearer '+SUPA_ADMIN_KEY,'Content-Type':'application/json'},
         body:JSON.stringify({email, password:senha, email_confirm:true})
       });
       if (!authRes.ok) { const e=await authRes.json(); throw new Error(e.message||'Erro ao criar conta de acesso'); }
