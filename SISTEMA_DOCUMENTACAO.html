@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Documentação — Aiko Gestão de Restaurante</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --orange: #f97316;
+    --blue: #1e40af;
+    --green: #16a34a;
+    --red: #dc2626;
+    --text1: #0f172a;
+    --text2: #475569;
+    --text3: #94a3b8;
+    --border: #e2e8f0;
+    --bg: #f8fafc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    color: var(--text1);
+    background: #fff;
+    line-height: 1.6;
+  }
+
+  /* CAPA */
+  .cover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f2d5c 100%);
+    color: #fff;
+    padding: 80px 60px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    page-break-after: always;
+  }
+  .cover-logo { font-size: 13px; font-weight: 600; color: var(--orange); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 60px; }
+  .cover-title { font-size: 42px; font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
+  .cover-sub { font-size: 18px; color: #94a3b8; font-weight: 400; margin-bottom: 8px; }
+  .cover-badge { display: inline-block; background: var(--orange); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: .08em; text-transform: uppercase; margin-top: 24px; }
+  .cover-footer { font-size: 12px; color: #475569; }
+  .cover-footer strong { color: #94a3b8; }
+
+  /* ÍNDICE */
+  .toc-page {
+    padding: 60px;
+    page-break-after: always;
+  }
+  .toc-title { font-size: 22px; font-weight: 800; color: var(--text1); margin-bottom: 32px; padding-bottom: 12px; border-bottom: 2px solid var(--orange); }
+  .toc-item { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px dotted #e2e8f0; font-size: 13px; }
+  .toc-item.h2 { font-weight: 600; color: var(--text1); }
+  .toc-item.h3 { font-weight: 400; color: var(--text2); padding-left: 20px; font-size: 12px; }
+  .toc-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); }
+
+  /* CONTEÚDO */
+  .content { padding: 50px 60px; max-width: 900px; margin: 0 auto; }
+
+  h1 { font-size: 28px; font-weight: 800; color: var(--text1); margin: 0 0 8px; }
+  h2 { font-size: 20px; font-weight: 700; color: var(--text1); margin: 40px 0 12px; padding-top: 20px; border-top: 2px solid var(--border); }
+  h2:first-of-type { border-top: none; margin-top: 0; }
+  h3 { font-size: 14px; font-weight: 700; color: var(--orange); margin: 24px 0 8px; text-transform: uppercase; letter-spacing: .06em; }
+  h4 { font-size: 13px; font-weight: 700; color: var(--blue); margin: 16px 0 6px; }
+
+  p { margin-bottom: 10px; color: var(--text1); }
+  ul, ol { margin: 8px 0 12px 20px; }
+  li { margin-bottom: 4px; }
+  strong { font-weight: 700; }
+  em { color: var(--text2); }
+  code { font-family: 'DM Mono', monospace; font-size: 11px; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; color: var(--blue); }
+  pre { background: #0f172a; color: #e2e8f0; padding: 16px 20px; border-radius: 10px; margin: 12px 0; overflow-x: auto; font-family: 'DM Mono', monospace; font-size: 11px; line-height: 1.7; }
+  pre code { background: none; color: inherit; padding: 0; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #fff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 32px 0 20px;
+    page-break-inside: avoid;
+  }
+  .section-num {
+    background: var(--orange);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title { font-size: 17px; font-weight: 700; }
+  .section-file { font-size: 11px; color: #94a3b8; font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+  /* CARD */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    page-break-inside: avoid;
+  }
+  .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 8px; }
+
+  /* BADGE */
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .05em; }
+  .badge-green { background: #dcfce7; color: var(--green); }
+  .badge-yellow { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: var(--red); }
+  .badge-blue { background: #dbeafe; color: var(--blue); }
+  .badge-orange { background: #fff7ed; color: var(--orange); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
+  thead tr { background: #0f172a; }
+  th { padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.8); text-transform: uppercase; letter-spacing: .06em; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--bg); }
+
+  /* FORMULA */
+  .formula {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--blue);
+  }
+
+  /* ALERT */
+  .alert {
+    border-left: 4px solid var(--orange);
+    background: #fff7ed;
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+  .alert strong { color: var(--orange); }
+
+  /* FLOW */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 16px 0;
+  }
+  .flow-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .flow-item:last-child { border-bottom: none; }
+  .flow-num {
+    background: var(--orange);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .flow-text strong { font-size: 13px; display: block; margin-bottom: 3px; }
+  .flow-text span { font-size: 11px; color: var(--text2); }
+
+  /* SEMAPHORE */
+  .semaphore { display: flex; gap: 8px; margin: 10px 0; }
+  .sem-item { flex: 1; border-radius: 8px; padding: 10px 12px; text-align: center; }
+  .sem-item .sem-val { font-size: 15px; font-weight: 800; font-family: 'DM Mono', monospace; }
+  .sem-item .sem-lbl { font-size: 10px; font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: .05em; }
+  .sem-green { background: #dcfce7; color: var(--green); }
+  .sem-yellow { background: #fef3c7; color: #92400e; }
+  .sem-red { background: #fee2e2; color: var(--red); }
+
+  /* PRINT */
+  @media print {
+    body { font-size: 11px; }
+    .cover { page-break-after: always; min-height: 100vh; }
+    .toc-page { page-break-after: always; }
+    .section-header { page-break-before: auto; }
+    h2 { page-break-before: auto; }
+    .card, table, .flow-item { page-break-inside: avoid; }
+    @page { margin: 15mm 15mm; size: A4; }
+    @page :first { margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CAPA -->
+<div class="cover">
+  <div>
+    <div class="cover-logo">Aiko · Sistema de Gestão</div>
+    <div style="height:1px;background:rgba(255,255,255,.1);margin-bottom:40px"></div>
+    <div class="cover-title">Documentação<br>do Sistema</div>
+    <div class="cover-sub">Funcionalidades, Relatórios e Fluxos Operacionais</div>
+    <div class="cover-badge">Versão 1.0 — Maio 2026</div>
+  </div>
+  <div class="cover-footer">
+    <strong>Desenvolvido para:</strong> Sushi Ponta Negra &nbsp;|&nbsp;
+    <strong>Plataforma:</strong> Web · Supabase · Vercel
+  </div>
+</div>
+
+<!-- ÍNDICE -->
+<div class="toc-page">
+  <div class="toc-title">Índice</div>
+  <div class="toc-item h2"><span>1. Visão Geral do Sistema</span><span class="toc-num">3</span></div>
+  <div class="toc-item h2"><span>2. Módulos Principais</span><span class="toc-num">4</span></div>
+  <div class="toc-item h3"><span>2.1 Insumos</span><span class="toc-num">4</span></div>
+  <div class="toc-item h3"><span>2.2 Fichas Técnicas</span><span class="toc-num">5</span></div>
+  <div class="toc-item h3"><span>2.3 Estoque</span><span class="toc-num">6</span></div>
+  <div class="toc-item h3"><span>2.4 Porcionamento / Rendimento Operacional</span><span class="toc-num">8</span></div>
+  <div class="toc-item h3"><span>2.5 Controle de Rendimento</span><span class="toc-num">10</span></div>
+  <div class="toc-item h3"><span>2.6 PCP — Planejamento de Produção</span><span class="toc-num">11</span></div>
+  <div class="toc-item h3"><span>2.7 Pedidos de Compra</span><span class="toc-num">11</span></div>
+  <div class="toc-item h3"><span>2.8 Fornecedores</span><span class="toc-num">12</span></div>
+  <div class="toc-item h3"><span>2.9 Configurações e Permissões</span><span class="toc-num">12</span></div>
+  <div class="toc-item h3"><span>2.10 Portal do Gerente</span><span class="toc-num">12</span></div>
+  <div class="toc-item h2"><span>3. Relatórios</span><span class="toc-num">13</span></div>
+  <div class="toc-item h3"><span>3.1 Saldo de Estoque</span><span class="toc-num">13</span></div>
+  <div class="toc-item h3"><span>3.2 Histórico de Custos</span><span class="toc-num">13</span></div>
+  <div class="toc-item h3"><span>3.3 Relatório Consolidado (Porcionamento)</span><span class="toc-num">14</span></div>
+  <div class="toc-item h3"><span>3.4 Saldo Operacional</span><span class="toc-num">14</span></div>
+  <div class="toc-item h3"><span>3.5 Controle de Rendimento</span><span class="toc-num">15</span></div>
+  <div class="toc-item h2"><span>4. Como os Custos Funcionam</span><span class="toc-num">15</span></div>
+  <div class="toc-item h2"><span>5. Fluxo Operacional</span><span class="toc-num">16</span></div>
+  <div class="toc-item h2"><span>6. Glossário</span><span class="toc-num">17</span></div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="content">
+
+<!-- 1. VISÃO GERAL -->
+<div class="section-header">
+  <div class="section-num">1</div>
+  <div><div class="section-title">Visão Geral do Sistema</div><div class="section-file">aiko.vercel.app</div></div>
+</div>
+
+<p>O <strong>Aiko</strong> é uma plataforma web de gestão operacional e financeira para restaurantes do grupo Sushi Ponta Negra. Centraliza o controle de custos, fichas técnicas, estoque, processamento de insumos e planejamento de produção em um único lugar, acessível por qualquer dispositivo com navegador.</p>
+
+<div class="card">
+  <div class="card-title">Características da plataforma</div>
+  <ul>
+    <li><strong>Multi-loja:</strong> cada unidade opera de forma independente com dados segregados por loja</li>
+    <li><strong>Custo Médio Ponderado:</strong> cada entrada no estoque recalcula o custo médio por loja automaticamente</li>
+    <li><strong>Tempo real:</strong> todos os indicadores (CMV, markup, margem) são calculados instantaneamente</li>
+    <li><strong>Permissões:</strong> controle de acesso por usuário, módulo e tipo de ação</li>
+    <li><strong>Importação NF-e:</strong> suporte a XML de nota fiscal para entrada automática no estoque</li>
+  </ul>
+</div>
+
+<!-- 2. MÓDULOS -->
+<div class="section-header">
+  <div class="section-num">2</div>
+  <div><div class="section-title">Módulos Principais</div></div>
+</div>
+
+<!-- 2.1 INSUMOS -->
+<h3>2.1 Insumos</h3>
+<p><em>Arquivo: insumos.html</em></p>
+<p>Cadastro central de todos os ingredientes e matérias-primas utilizados nas receitas e no estoque. É a base de todo o sistema de custeio.</p>
+
+<table>
+  <thead><tr><th>Campo</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Nome</strong></td><td>Identificação do insumo</td></tr>
+    <tr><td><strong>Unidade de medida</strong></td><td>Como é controlado: kg, g, litro, ml, un</td></tr>
+    <tr><td><strong>Unidade de compra</strong></td><td>Como é comprado do fornecedor</td></tr>
+    <tr><td><strong>Preço de compra</strong></td><td>Custo bruto por kg/unidade (conforme NF)</td></tr>
+    <tr><td><strong>Rendimento%</strong></td><td>Percentual aproveitável após perdas naturais (limpeza, cocção)</td></tr>
+    <tr><td><strong>Status</strong></td><td>Ativo / Inativo</td></tr>
+  </tbody>
+</table>
+
+<div class="formula">Custo real/kg = Preço de compra ÷ (Rendimento% ÷ 100)</div>
+<p><em>Exemplo: Salmão a R$ 50/kg com 85% de rendimento → custo real = R$ 58,82/kg</em></p>
+
+<!-- 2.2 FICHAS TÉCNICAS -->
+<h3>2.2 Fichas Técnicas</h3>
+<p><em>Arquivo: fichas_tecnicas.html</em></p>
+<p>Receituário completo do cardápio. Cada ficha representa um produto vendável e define ingredientes, quantidades, custo e indicadores financeiros.</p>
+
+<h4>Indicadores calculados automaticamente</h4>
+<table>
+  <thead><tr><th>Indicador</th><th>Fórmula</th><th>Referência</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Custo total</strong></td><td>Σ (custo ingrediente × quantidade)</td><td>Base para todos os outros</td></tr>
+    <tr><td><strong>CMV%</strong></td><td>Custo ÷ Preço venda × 100</td><td>Meta: ≤30%</td></tr>
+    <tr><td><strong>Markup</strong></td><td>Preço venda ÷ Custo</td><td>Quanto o preço supera o custo</td></tr>
+    <tr><td><strong>Margem (R$)</strong></td><td>Preço venda − Custo</td><td>Lucro bruto por unidade</td></tr>
+    <tr><td><strong>Margem%</strong></td><td>Margem ÷ Preço venda × 100</td><td>Rentabilidade percentual</td></tr>
+  </tbody>
+</table>
+
+<h4>Semáforo CMV</h4>
+<div class="semaphore">
+  <div class="sem-item sem-green"><div class="sem-val">≤30%</div><div class="sem-lbl">🟢 Excelente</div></div>
+  <div class="sem-item sem-yellow"><div class="sem-val">≤38%</div><div class="sem-lbl">🟡 Atenção</div></div>
+  <div class="sem-item sem-red"><div class="sem-val">&gt;38%</div><div class="sem-lbl">🔴 Crítico</div></div>
+</div>
+
+<div class="alert"><strong>Seletor de loja:</strong> ao selecionar uma loja nas fichas técnicas, o sistema usa o custo médio ponderado daquela loja (calculado no estoque) em vez do preço de compra padrão, refletindo o custo real praticado por unidade.</div>
+
+<h4>Painel de detalhe</h4>
+<p>Ao clicar em qualquer ficha da lista, abre um painel lateral com:</p>
+<ul>
+  <li>Tabela de ingredientes: ingrediente, categoria, quantidade utilizada, custo (R$), % do custo total</li>
+  <li>Resumo financeiro em cards: custo, preço de venda, CMV%, margem (R$), margem%, markup</li>
+  <li>Abas complementares: Ingredientes detalhados, Rendimento, Preços e custos, Histórico</li>
+  <li>Botão de expandir para visualização mais ampla</li>
+</ul>
+
+<!-- 2.3 ESTOQUE -->
+<h3>2.3 Estoque</h3>
+<p><em>Arquivo: estoque.html</em></p>
+<p>Controle completo de movimentação de estoque por loja. Usa o método de <strong>Custo Médio Ponderado (CMPon)</strong> para calcular o custo real de cada insumo por loja.</p>
+
+<h4>Entradas</h4>
+<ul>
+  <li>Registra toda entrada de mercadoria: insumo, quantidade, custo unitário, fornecedor, data, nota fiscal</li>
+  <li>Ao salvar, recalcula automaticamente o custo médio da loja</li>
+  <li>Suporta importação de <strong>XML de NF-e</strong> para entrada automática via nota fiscal</li>
+</ul>
+
+<h4>Saídas</h4>
+<ul>
+  <li>Registra consumo, perdas, transferências e ajustes</li>
+  <li>Tipos: venda, perda, transferência, consumo interno, ajuste</li>
+</ul>
+
+<h4>Kardex</h4>
+<p>Histórico completo linha a linha de um insumo com saldo acumulado. Filtros por insumo, loja e período.</p>
+
+<h4>Inventário</h4>
+<p>Contagem física do estoque. Compara saldo contado × saldo do sistema e gera ajuste automático.</p>
+
+<h4>Fechamento</h4>
+<p>Apuração mensal: Estoque inicial + Entradas − Saídas = Estoque final teórico. Calcula CMV do período.</p>
+
+<h4>Sugestão de Compras</h4>
+<p>Lista automática de insumos abaixo do estoque mínimo configurado, com sugestão de quantidade a comprar.</p>
+
+<!-- 2.4 PORCIONAMENTO -->
+<h3>2.4 Porcionamento / Rendimento Operacional</h3>
+<p><em>Arquivo: porcionamento.html</em></p>
+<p>Controla o processamento de insumos na cozinha. Registra o que entra para processamento, o que sai como produto e as perdas, calculando o rendimento real de cada processo.</p>
+
+<h4>Modelo Simples — Peixe e Carne</h4>
+<div class="card">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;margin-bottom:6px">↓ Entrada</div>
+      <ul style="font-size:12px">
+        <li>Insumo + quantidade (kg)</li>
+        <li>Valor (opcional)</li>
+        <li>Responsável e observação</li>
+        <li>Alimenta estoque secundário</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#f97316;text-transform:uppercase;margin-bottom:6px">↑ Saída — Filetagem</div>
+      <ul style="font-size:12px">
+        <li>Peso de entrada (kg)</li>
+        <li>Filé limpo (kg)</li>
+        <li>Pele (kg) — aproveitamento</li>
+        <li>Aparas (kg) — aproveitamento</li>
+        <li>Perdas (kg) — automático</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h4>Modelo Degelo + Limpeza — Camarão e Polvo</h4>
+<div class="card">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;margin-bottom:6px">↓ Entrada</div>
+      <ul style="font-size:12px">
+        <li>Quantidade (kg)</li>
+        <li>Valor (opcional)</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#f97316;text-transform:uppercase;margin-bottom:6px">↑ Saída — Processamento</div>
+      <ul style="font-size:12px">
+        <li>Peso congelado → Peso descongelado</li>
+        <li>Perda degelo (automático)</li>
+        <li>Peso limpo → Perda limpeza (automático)</li>
+        <li>Rendimento total e custo</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h4>Modelo Cocção / Redução — Shimeji, Caldos</h4>
+<p>Peso inicial → Peso final → Redução (automático) → Rendimento e custo.</p>
+
+<h4>Modelo Produção em Lote — Shari, Molhos</h4>
+<p>Quantidade produzida, matéria-prima consumida, sobra, validade, rendimento e valor de MP.</p>
+
+<!-- 2.5 RENDIMENTO -->
+<h3>2.5 Controle de Rendimento</h3>
+<p><em>Arquivo: rendimento.html</em></p>
+<p>Testa e registra o rendimento real de cada insumo de forma isolada. Serve para calibrar os percentuais de rendimento cadastrados nos insumos com base em medições reais da cozinha.</p>
+
+<div class="card">
+  <div class="card-title">Indicadores do painel</div>
+  <ul>
+    <li><strong>Total de testes:</strong> quantidade de registros no período</li>
+    <li><strong>Média de rendimento:</strong> média de todos os testes</li>
+    <li><strong>Menor rendimento:</strong> pior insumo testado (maior perda)</li>
+    <li><strong>Custo total da perda:</strong> valor financeiro perdido no período</li>
+    <li><strong>Distribuição:</strong> gráfico de barras por faixa (≤60%, 61-80%, 81-95%, >95%)</li>
+  </ul>
+</div>
+
+<!-- 2.6 PCP -->
+<h3>2.6 PCP — Planejamento e Controle de Produção</h3>
+<p><em>Arquivo: pcp.html</em></p>
+<p>Sugere automaticamente quanto produzir de cada item do cardápio com base no histórico de consumo e no dia da semana.</p>
+<ul>
+  <li>Analisa padrão de consumo por dia da semana (Seg–Dom)</li>
+  <li>Cruza com estoque disponível e fichas técnicas ativas</li>
+  <li>Sugere quantidade a produzir para o dia atual</li>
+  <li>Busca sobra do dia anterior para ajuste</li>
+  <li>Permite ajuste manual da sugestão</li>
+</ul>
+
+<!-- 2.7 COMPRAS -->
+<h3>2.7 Pedidos de Compra</h3>
+<p><em>Arquivo: compras.html</em></p>
+<p>Gerencia pedidos de compra para fornecedores com controle de status (rascunho → enviado → recebido) e histórico de pedidos por fornecedor.</p>
+
+<!-- 2.8 FORNECEDORES -->
+<h3>2.8 Fornecedores</h3>
+<p><em>Arquivo: fornecedores.html</em></p>
+<p>Cadastro completo de fornecedores: razão social, CNPJ, contato (e-mail, telefone, WhatsApp), endereço, categorias de produtos e histórico de compras.</p>
+
+<!-- 2.9 CONFIGURAÇÕES -->
+<h3>2.9 Configurações e Permissões</h3>
+<p><em>Arquivo: configuracoes.html</em></p>
+<table>
+  <thead><tr><th>Seção</th><th>Funcionalidade</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Usuários</strong></td><td>Cadastro de colaboradores com login, senha e nível de acesso</td></tr>
+    <tr><td><strong>Permissões</strong></td><td>Controle por módulo e ação (visualizar, criar, editar, excluir)</td></tr>
+    <tr><td><strong>Lojas</strong></td><td>Cadastro das unidades do grupo</td></tr>
+    <tr><td><strong>Categorias</strong></td><td>Categorias de fichas técnicas e insumos</td></tr>
+    <tr><td><strong>Parâmetros</strong></td><td>Configurações gerais do sistema por tenant</td></tr>
+  </tbody>
+</table>
+
+<!-- 2.10 PORTAL -->
+<h3>2.10 Portal do Gerente</h3>
+<p><em>Arquivo: portal_gerente.html</em></p>
+<p>Visão simplificada para gerentes de loja, com acesso às funcionalidades operacionais mais usadas:</p>
+<ul>
+  <li><strong>PCP completo:</strong> sugestão e controle de produção do dia</li>
+  <li><strong>Porcionamento:</strong> registro de entradas e saídas de processamento (todos os modelos)</li>
+</ul>
+<p>O acesso é controlado pelo administrador via módulo de Permissões.</p>
+
+<!-- 3. RELATÓRIOS -->
+<div class="section-header">
+  <div class="section-num">3</div>
+  <div><div class="section-title">Relatórios</div></div>
+</div>
+
+<!-- 3.1 SALDO DE ESTOQUE -->
+<h3>3.1 Saldo de Estoque</h3>
+<p><em>Localização: Estoque → hub Análises → Saldo de Estoque</em></p>
+<p>Mostra a <strong>posição financeira atual</strong> do estoque por loja.</p>
+<table>
+  <thead><tr><th>Coluna</th><th>O que mostra</th></tr></thead>
+  <tbody>
+    <tr><td>Insumo</td><td>Nome do ingrediente</td></tr>
+    <tr><td>Categoria</td><td>Categoria do insumo</td></tr>
+    <tr><td>Un.</td><td>Unidade de medida</td></tr>
+    <tr><td>Loja</td><td>Qual unidade tem o saldo</td></tr>
+    <tr><td>Saldo Atual</td><td>Quantidade disponível em estoque</td></tr>
+    <tr><td>Custo Médio</td><td>Custo médio ponderado vigente para a loja</td></tr>
+    <tr><td><strong>Valor em Estoque</strong></td><td><strong>Saldo × Custo médio = R$ investido</strong></td></tr>
+    <tr><td>Status</td><td>OK / Abaixo mínimo / Zerado</td></tr>
+  </tbody>
+</table>
+<p>Filtros: loja e categoria. Linha de total geral com valor total em R$ destacado.</p>
+
+<!-- 3.2 HISTÓRICO DE CUSTOS -->
+<h3>3.2 Histórico de Custos</h3>
+<p><em>Localização: Estoque → hub Análises → Histórico de Custos</em></p>
+<p>Auditoria completa de cada variação do custo médio ponderado. Registrado automaticamente a cada entrada no estoque.</p>
+<table>
+  <thead><tr><th>Coluna</th><th>O que mostra</th></tr></thead>
+  <tbody>
+    <tr><td>Data</td><td>Quando ocorreu a entrada</td></tr>
+    <tr><td>Insumo</td><td>Qual ingrediente foi movimentado</td></tr>
+    <tr><td>Loja</td><td>Qual unidade recebeu</td></tr>
+    <tr><td>Origem</td><td>Tipo: Entrada Manual, XML/NF-e, Ajuste</td></tr>
+    <tr><td>Saldo Ant.</td><td>Quantidade antes da entrada</td></tr>
+    <tr><td>Custo Ant.</td><td>Custo médio antes da entrada</td></tr>
+    <tr><td>Qtd. Entrada</td><td>Quantidade que entrou</td></tr>
+    <tr><td>Custo Entrada</td><td>Custo unitário da entrada</td></tr>
+    <tr><td>Novo Custo Médio</td><td>CMPon resultante</td></tr>
+    <tr><td><strong>Impacto %</strong></td><td><strong>Variação do custo: verde (redução) / vermelho (aumento)</strong></td></tr>
+  </tbody>
+</table>
+<p>Filtros: loja, insumo, origem e período.</p>
+
+<!-- 3.3 RELATÓRIO CONSOLIDADO -->
+<h3>3.3 Relatório Consolidado de Porcionamento</h3>
+<p><em>Localização: Porcionamento → Relatório Consolidado</em></p>
+<p>Análise de rendimento, perdas e custos por produto e período. As colunas se adaptam automaticamente ao modelo de processo selecionado.</p>
+
+<div class="card">
+  <div class="card-title">Colunas por modelo</div>
+  <p><strong>Simples (peixe/carne):</strong> Produto · Loja · Turno · Peso Entrada · Pele (kg) · Aparas (kg) · Perdas (kg) · Filé limpo · Rendimento% · Custo/kg</p>
+  <p style="margin-top:8px"><strong>Degelo + Limpeza:</strong> Produto · Loja · Peso Congelado · Peso Descongelado · Perda Degelo · Peso Limpo · Perda Limpeza · Rendimento%</p>
+  <p style="margin-top:8px"><strong>Cocção/Redução:</strong> Produto · Loja · Peso Inicial · Peso Final · Redução · Rendimento%</p>
+  <p style="margin-top:8px"><strong>Produção em Lote:</strong> Produto · Loja · Qtd. Produzida · Qtd. Consumida · Sobra · Rendimento%</p>
+</div>
+<p>Inclui linha de totais e exportação. Colunas configuráveis por seletor.</p>
+
+<!-- 3.4 SALDO OPERACIONAL -->
+<h3>3.4 Saldo Operacional</h3>
+<p><em>Localização: Porcionamento → Saldo Operacional</em></p>
+<p>Kardex do <strong>estoque secundário de processamento</strong>. Mostra em tempo real quanto de cada produto ainda está disponível para processar. <em>Este estoque é independente do estoque principal</em> — não impacta o fiscal.</p>
+
+<div class="card">
+  <div class="card-title">Salmão / Peixes (Modelo Simples) — com controle de unidades</div>
+  <table>
+    <thead><tr><th>Coluna</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td>Data / Hora</td><td>Quando foi registrado</td></tr>
+      <tr><td>Tipo</td><td>Entrada (azul) ou Saída (vermelho)</td></tr>
+      <tr><td>Produto / Loja</td><td>Insumo e unidade</td></tr>
+      <tr><td>Ent. (un)</td><td>Quantidade de peixes/unidades na entrada</td></tr>
+      <tr><td>Entrada (kg)</td><td>Peso total recebido</td></tr>
+      <tr><td>Saída (un)</td><td>Unidades processadas</td></tr>
+      <tr><td>Saída (kg)</td><td>Peso total processado</td></tr>
+      <tr><td>Saldo (un)</td><td>Unidades restantes acumuladas</td></tr>
+      <tr><td><strong>Saldo (kg)</strong></td><td><strong>Peso restante acumulado</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card" style="margin-top:8px">
+  <div class="card-title">Camarão / Polvo (Modelo Degelo) — somente kg</div>
+  <p>Mesmas colunas, porém sem as colunas de unidades (Ent. un, Saída un, Saldo un).</p>
+  <p>A saída contabiliza o <strong>peso congelado</strong> que entrou em processamento.</p>
+</div>
+
+<div class="formula">Saldo (kg) = Σ Entradas (kg) − Σ Saídas processadas (kg)</div>
+<p>Filtros: produto, loja, período. Exportação CSV disponível.</p>
+
+<!-- 3.5 CONTROLE DE RENDIMENTO -->
+<h3>3.5 Relatório de Rendimento</h3>
+<p><em>Localização: Controle de Rendimento</em></p>
+<p>Lista todos os testes de rendimento realizados com filtros por insumo e período. Mostra: peso bruto, peso líquido, rendimento%, perda (kg), perda%, custo real/kg e custo total da perda.</p>
+<p>Exportação CSV disponível.</p>
+
+<!-- 4. CUSTOS -->
+<div class="section-header">
+  <div class="section-num">4</div>
+  <div><div class="section-title">Como os Custos Funcionam</div></div>
+</div>
+
+<h3>4.1 Preço de Compra (base)</h3>
+<p>Cadastrado manualmente no insumo. É o custo bruto por kg/unidade conforme a nota fiscal.</p>
+
+<h3>4.2 Custo Real (fichas técnicas sem loja)</h3>
+<div class="formula">Custo real = Preço de compra ÷ (Rendimento% ÷ 100)</div>
+<p>Considera a perda natural do insumo. Um ingrediente com 85% de rendimento custa efetivamente mais por quilo aproveitado.</p>
+
+<h3>4.3 Custo Médio Ponderado por Loja (CMPon)</h3>
+<p>Calculado automaticamente a cada entrada no estoque da loja:</p>
+<div class="formula">
+Novo CMPon = (Saldo anterior × Custo médio anterior + Quantidade entrada × Custo entrada)<br>
+             ÷ (Saldo anterior + Quantidade entrada)
+</div>
+<p>Este é o custo mais preciso pois reflete o preço médio real de todas as compras realizadas para aquela loja no tempo.</p>
+
+<h3>4.4 Hierarquia de custo nas fichas técnicas</h3>
+<div class="card">
+  <ol>
+    <li><strong>Custo médio da loja selecionada</strong> — se há saldo com CMPon calculado (prioridade)</li>
+    <li><strong>Preço de compra do insumo</strong> — fallback quando não há saldo ou CMPon é zero</li>
+  </ol>
+</div>
+
+<!-- 5. FLUXO OPERACIONAL -->
+<div class="section-header">
+  <div class="section-num">5</div>
+  <div><div class="section-title">Fluxo Operacional</div></div>
+</div>
+
+<div class="flow">
+  <div class="flow-item">
+    <div class="flow-num">1</div>
+    <div class="flow-text"><strong>Cadastrar insumos</strong><span>Registrar ingredientes com preço de compra e rendimento percentual</span></div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-num">2</div>
+    <div class="flow-text"><strong>Criar fichas técnicas</strong><span>Montar receitas com ingredientes, quantidades e preço de venda</span></div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-num">3</div>
+    <div class="flow-text"><strong>Dar entrada no estoque</strong><span>Manual ou via XML de NF-e → sistema recalcula custo médio por loja automaticamente</span></div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-num">4</div>
+    <div class="flow-text"><strong>Registrar processamento</strong><span>Entrada de MP para processamento → Saída com resultado (filé, produto limpo) → Sistema calcula rendimento e perdas</span></div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-num">5</div>
+    <div class="flow-text"><strong>Acompanhar relatórios</strong><span>Saldo Operacional (quanto resta para processar) · Relatório Consolidado (rendimento e perdas) · Saldo de Estoque (valor financeiro) · Histórico de Custos (auditoria)</span></div>
+  </div>
+  <div class="flow-item">
+    <div class="flow-num">6</div>
+    <div class="flow-text"><strong>Fechar período</strong><span>Inventário físico → Fechamento mensal → Apuração de CMV real do período</span></div>
+  </div>
+</div>
+
+<!-- 6. GLOSSÁRIO -->
+<div class="section-header">
+  <div class="section-num">6</div>
+  <div><div class="section-title">Glossário</div></div>
+</div>
+
+<table>
+  <thead><tr><th>Termo</th><th>Significado</th></tr></thead>
+  <tbody>
+    <tr><td><strong>CMV%</strong></td><td>Custo da Mercadoria Vendida em percentual (custo ÷ venda × 100). Meta ideal: ≤30%</td></tr>
+    <tr><td><strong>CMPon</strong></td><td>Custo Médio Ponderado — método de valoração de estoque que considera todas as compras</td></tr>
+    <tr><td><strong>Rendimento%</strong></td><td>Percentual aproveitável de um insumo após perdas naturais (limpeza, cocção, descongelamento)</td></tr>
+    <tr><td><strong>Markup</strong></td><td>Quantas vezes o preço de venda é maior que o custo (preço venda ÷ custo)</td></tr>
+    <tr><td><strong>Margem%</strong></td><td>Percentual de lucro sobre o preço de venda: (preço venda − custo) ÷ preço venda × 100</td></tr>
+    <tr><td><strong>Ficha Técnica</strong></td><td>Receita padronizada de um produto do cardápio com ingredientes, quantidades e indicadores</td></tr>
+    <tr><td><strong>Insumo</strong></td><td>Matéria-prima ou ingrediente utilizado nas receitas</td></tr>
+    <tr><td><strong>Saldo Operacional</strong></td><td>Estoque secundário exclusivo para controle de processamento (não é o estoque fiscal)</td></tr>
+    <tr><td><strong>NF-e / XML</strong></td><td>Nota Fiscal Eletrônica em formato XML, importável diretamente no módulo de Estoque</td></tr>
+    <tr><td><strong>Tenant</strong></td><td>Grupo/empresa que opera o sistema (pode ter múltiplas lojas)</td></tr>
+    <tr><td><strong>PCP</strong></td><td>Planejamento e Controle de Produção — sugestão automática do que produzir</td></tr>
+    <tr><td><strong>Kardex</strong></td><td>Histórico linha a linha de movimentação de um item com saldo acumulado</td></tr>
+  </tbody>
+</table>
+
+<div style="margin-top:40px;padding-top:20px;border-top:1px solid #e2e8f0;text-align:center;color:#94a3b8;font-size:11px">
+  Aiko — Sistema de Gestão &nbsp;|&nbsp; Sushi Ponta Negra &nbsp;|&nbsp; Documentação versão 1.0 · Maio 2026
+</div>
+
+</div><!-- /content -->
+
+<script>
+  // Instrução de impressão ao abrir
+  window.addEventListener('load', () => {
+    const btn = document.createElement('div');
+    btn.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#f97316;color:#fff;padding:12px 20px;border-radius:10px;font-family:Inter,sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(249,115,22,.4);z-index:999;user-select:none';
+    btn.textContent = '⬇ Salvar como PDF (Ctrl+P)';
+    btn.onclick = () => window.print();
+    document.body.appendChild(btn);
+  });
+</script>
+</body>
+</html>
