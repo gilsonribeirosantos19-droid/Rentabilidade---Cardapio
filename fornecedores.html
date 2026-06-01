@@ -660,6 +660,15 @@ async function salvarForn(){
     observacoes: document.getElementById('f-obs').value.trim()||null,
     ativo: document.getElementById('f-status').value!=='inativo',
   };
+  // Validar duplicata de nome e CNPJ
+  const nomeBusca=(payload.nome||razao).toLowerCase();
+  const cnpjBusca=(payload.cnpj||'').replace(/\D/g,'');
+  const dupNome=fornecedores.find(f=>f.id!==(_fornEditing?.id)&&(f.nome||f.razao_social||'').toLowerCase()===nomeBusca);
+  if(dupNome){toast(`Já existe um fornecedor com o nome "${payload.nome||razao}".`,'err');return;}
+  if(cnpjBusca){
+    const dupCnpj=fornecedores.find(f=>f.id!==(_fornEditing?.id)&&(f.cnpj||'').replace(/\D/g,'')===cnpjBusca);
+    if(dupCnpj){toast(`CNPJ já cadastrado para o fornecedor "${dupCnpj.nome||dupCnpj.razao_social}".`,'err');return;}
+  }
   const btn=document.getElementById('btn-salvar-forn');
   btn.disabled=true; btn.textContent='Salvando...';
   try{
