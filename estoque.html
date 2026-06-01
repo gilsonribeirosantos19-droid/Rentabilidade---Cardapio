@@ -2281,6 +2281,18 @@ function handleNfeFile(file) {
       const itens=parseNfeXml(e.target.result);
       if(!itens.length){toast('Nenhum item encontrado no XML.','err');return;}
       nfeItens=itens;
+      // Verificar se esta NF-e já foi importada
+      const pi0=itens[0]||{};
+      if(pi0.nNF){
+        const nfeNum=`${pi0.nNF}/${pi0.serie}`;
+        const jaImportada=entradas.some(e=>e.nfe_numero===nfeNum&&e.tipo==='nfe');
+        if(jaImportada){
+          if(!confirm(`⚠️ A NF-e ${nfeNum} já foi importada anteriormente.\n\nImportar novamente vai duplicar as entradas no estoque.\n\nDeseja continuar mesmo assim?`)){
+            document.getElementById('nfe-file').value='';
+            return;
+          }
+        }
+      }
       document.getElementById('nfe-v1').style.display='none';
       const v2=document.getElementById('nfe-v2');
       v2.style.display='flex';v2.style.flexDirection='column';
