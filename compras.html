@@ -662,7 +662,7 @@ async function renderSolicitacoes() {
     const countMap = {};
     if (solicitacoes.length) {
       const ids = solicitacoes.map(s=>s.id).join(',');
-      const allItens = await api(`itens_pedido?pedido_id=in.(${ids})&tenant_id=eq.${TENANT_ID}&select=pedido_id`);
+      const allItens = await api(`itens_pedido?pedido_id=in.(${ids})&select=pedido_id`);
       allItens.forEach(it => { countMap[it.pedido_id] = (countMap[it.pedido_id]||0)+1; });
     }
     solicitacoes.forEach(s => { s._itemCount = countMap[s.id]||0; });
@@ -727,7 +727,7 @@ async function verSolicitacao(id) {
   document.getElementById('sol-drw-body').innerHTML = '<tr><td colspan="3" class="empty">Carregando...</td></tr>';
   abrirDrawer();
   try {
-    const itens = await api(`itens_pedido?pedido_id=eq.${id}&tenant_id=eq.${TENANT_ID}`);
+    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
     document.getElementById('sol-drw-body').innerHTML = itens.length
       ? itens.map(it => {
           const ins = insumos.find(i=>i.id===it.insumo_id);
@@ -769,7 +769,7 @@ async function carregarConsolidado() {
     }
 
     // Load all itens for all solicitacoes in parallel
-    const itensArrays = await Promise.all(sols.map(s => api(`itens_pedido?pedido_id=eq.${s.id}&tenant_id=eq.${TENANT_ID}`)));
+    const itensArrays = await Promise.all(sols.map(s => api(`itens_pedido?pedido_id=eq.${s.id}`)));
 
     // Build consolidated map
     sols.forEach((s, idx) => {
@@ -1079,7 +1079,7 @@ async function verPedido(id) {
     ${statusBadge(p.status)} &nbsp;
     <span style="color:var(--text3);font-size:12px">${esc(p.observacao||'')}</span>`;
   try {
-    const itens = await api(`itens_pedido?pedido_id=eq.${id}&tenant_id=eq.${TENANT_ID}`);
+    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
     document.getElementById('mp-body').innerHTML = itens.map(it => {
       const ins = insumos.find(i=>i.id===it.insumo_id);
       return `<tr>
@@ -1118,7 +1118,7 @@ async function enviarWhatsApp(id) {
   const forn = fornecedores.find(f=>f.id===p?.fornecedor_id);
   if (!forn?.whatsapp) { toast('Fornecedor sem WhatsApp.','err'); return; }
 
-  const itens = await api(`itens_pedido?pedido_id=eq.${id}&tenant_id=eq.${TENANT_ID}`);
+  const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
   let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`;
   itens.forEach(it => {
     const ins = insumos.find(i=>i.id===it.insumo_id);
@@ -1141,7 +1141,7 @@ let checkedItems = new Set(); // insumo_ids marcados na etapa 1
 
 async function carregarGrupos() {
   grupos = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
-  const itensPromises = grupos.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}&tenant_id=eq.${TENANT_ID}`));
+  const itensPromises = grupos.map(g => api(`grupos_compra_itens?grupo_id=eq.${g.id}`));
   const results = await Promise.all(itensPromises);
   grupos.forEach((g, i) => { gruposItens[g.id] = results[i].map(r=>r.insumo_id); });
 }
@@ -1331,7 +1331,7 @@ async function verSolicitacaoGerente(id) {
   document.getElementById('ms-titulo').textContent = 'Minha Solicitação';
   document.getElementById('ms-info').textContent = '';
   try {
-    const itens = await api(`itens_pedido?pedido_id=eq.${id}&tenant_id=eq.${TENANT_ID}`);
+    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
     document.getElementById('ms-body').innerHTML = itens.map(it => {
       const ins = insumos.find(i=>i.id===it.insumo_id);
       return `<tr><td>${esc(ins?.nome||it.insumo_id)}</td>
@@ -1350,7 +1350,7 @@ async function imprimirTodosPorLoja() {
     if (!peds.length) { toast('Nenhum pedido ativo para imprimir.','err'); return; }
 
     // Carrega itens de todos os pedidos
-    const itensArrays = await Promise.all(peds.map(p => api(`itens_pedido?pedido_id=eq.${p.id}&tenant_id=eq.${TENANT_ID}`)));
+    const itensArrays = await Promise.all(peds.map(p => api(`itens_pedido?pedido_id=eq.${p.id}`)));
     const lojasData   = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true`);
 
     // Consolida itens por loja
@@ -1470,7 +1470,7 @@ async function imprimirFornecedor(fornId, pedIdsStr) {
   // Load itens from all pedidos of this supplier
   const allItens = [];
   for (const id of pedIds) {
-    const itens = await api(`itens_pedido?pedido_id=eq.${id}&tenant_id=eq.${TENANT_ID}`);
+    const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
     allItens.push(...itens);
   }
   if (!allItens.length) { toast('Nenhum item nos pedidos.','err'); return; }
@@ -1580,7 +1580,7 @@ async function imprimirPedido(id) {
   const p = pedidosGerados.find(x=>x.id===id);
   if (!p) return;
   const forn = fornecedores.find(f=>f.id===p.fornecedor_id);
-  const itens = await api(`itens_pedido?pedido_id=eq.${id}&tenant_id=eq.${TENANT_ID}`);
+  const itens = await api(`itens_pedido?pedido_id=eq.${id}`);
 
   // Carrega lojas com dados completos
   const lojasData = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true`);
