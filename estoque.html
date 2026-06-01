@@ -1245,7 +1245,7 @@
           <div style="padding:8px">
             <div style="position:relative">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="vin-ins-busca" type="text" placeholder="Buscar insumo..." oninput="filtrarInsumosVincular()" autofocus
+              <input id="vin-ins-busca" type="text" placeholder="Buscar insumo..." oninput="filtrarInsumosVincular()" autofocus autocomplete="off"
                 style="width:100%;height:34px;padding:0 10px 0 30px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;font-family:inherit;outline:none;background:#f8fafc;color:#0f172a">
             </div>
           </div>
@@ -2531,11 +2531,8 @@ function filtrarInsumosVincular() {
     <tr onclick="selecionarInsumoVincular('${i.id}')"
       style="cursor:pointer;border-bottom:1px solid #f8fafc;transition:background .1s"
       onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
-      <td style="padding:7px 12px">
-        <div style="font-size:13px;font-weight:500;color:#0f172a">${esc(i.nome)}</div>
-        ${i.codigo_interno?`<div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace;margin-top:1px">${esc(i.codigo_interno)}</div>`:''}
-      </td>
-      <td style="padding:7px 12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;white-space:nowrap">${esc(i.unidade_medida||i.unidade_compra||'—')}</td>
+      <td style="padding:4px 10px;font-size:11px;font-weight:500;color:#0f172a">${esc(i.nome)}</td>
+      <td style="padding:4px 10px;text-align:right;font-size:10px;color:#94a3b8;white-space:nowrap">${esc(i.unidade_medida||i.unidade_compra||'—')}</td>
     </tr>`).join('');
   if(!filtrados.length) tbody.innerHTML='<tr><td colspan="3" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Nenhum insumo encontrado</td></tr>';
 }
