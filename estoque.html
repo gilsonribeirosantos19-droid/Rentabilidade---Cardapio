@@ -2352,7 +2352,37 @@ function renderNfePendentes() {
   const banner=document.getElementById('nfe-auto-banner');
   if(autoCount>0&&banner){
     banner.style.display='flex';
-    banner.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>${autoCount} ${autoCount===1?'item':'itens'} processado(s) automaticamente</strong> — vínculos já cadastrados foram aplicados.</span>`;
+    const rowsAuto=nfeItens.map((it,idx)=>{
+      const a=nfeAutoLinked[idx]; if(!a) return '';
+      const ins=insumos.find(x=>x.id===a.insId);
+      const total=parseFloat((it.quantidade*(it.valorUnit||0)).toFixed(2));
+      return `<tr style="background:#f0fdf4">
+        <td style="padding:4px 8px;font-size:11px;color:#0f172a;font-weight:500">${esc(it.descricao.substring(0,40))}${it.descricao.length>40?'…':''}</td>
+        <td style="padding:4px 8px;font-size:10px;color:#64748b;font-family:'DM Mono',monospace">${esc(it.codigo||'—')}</td>
+        <td style="padding:4px 8px;font-size:11px;color:#334155">${esc(it.unidade)}</td>
+        <td style="padding:4px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px">${fmtQtd(it.quantidade)}</td>
+        <td style="padding:4px 8px;font-size:11px;color:#16a34a">${esc(ins?.nome||'—')} (1${it.unidade}=${fmtQtd(a.fator)}${ins?.unidade_medida||'un'})</td>
+        <td style="padding:4px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px">${it.valorUnit?brl(it.valorUnit):'—'}</td>
+        <td style="padding:4px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;font-weight:600">${total?brl(total):'—'}</td>
+      </tr>`;
+    }).filter(Boolean).join('');
+    banner.innerHTML=`
+      <div style="width:100%">
+        <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.arr').style.transform=this.nextElementSibling.style.display===''?'rotate(0)':'rotate(-90deg)'"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:2px 0;user-select:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span><strong>${autoCount} ${autoCount===1?'item':'itens'} reconhecido(s) automaticamente</strong> — clique para ver</span>
+          <span class="arr" style="font-size:11px;margin-left:auto;transition:transform .2s">▼</span>
+        </div>
+        <div style="display:none;margin-top:8px;border:1px solid #bbf7d0;border-radius:8px;overflow:hidden">
+          <table class="nfe-tbl" style="font-size:11px">
+            <thead><tr style="background:#16a34a">
+              <th>Produto NF-e</th><th>Cód. Forn.</th><th>Un.</th><th class="r">Qtd.</th><th>Produto interno / Conversão</th><th class="r">Preço Unit.</th><th class="r">Preço Total</th>
+            </tr></thead>
+            <tbody>${rowsAuto}</tbody>
+          </table>
+        </div>
+      </div>`;
   } else if(banner) banner.style.display='none';
   const sub=document.getElementById('nfe-hdr-sub');
   const pendentes=nfeItens.filter((_,idx)=>!nfeAutoLinked[idx]&&!nfeSession[idx]);
