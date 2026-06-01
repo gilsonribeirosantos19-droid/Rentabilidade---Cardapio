@@ -2263,10 +2263,12 @@ function toggleNfeExpand() {
 
 function resetNfe() {
   document.getElementById('nfe-v1').style.display='';
-  const v2=document.getElementById('nfe-v2');
-  v2.style.display='none';
+  document.getElementById('nfe-v2').style.display='none';
+  document.getElementById('nfe-v3').style.display='none';
   document.getElementById('btn-nfe-outro').style.display='none';
   document.getElementById('btn-nfe-conf').style.display='none';
+  document.getElementById('btn-nfe-confirmar-def').style.display='none';
+  document.getElementById('btn-nfe-voltar-resumo').style.display='none';
   document.getElementById('nfe-file').value='';
   nfeItens=[]; nfeAutoLinked={}; nfeSession={}; nfeVinculandoIdx=null;
 }
@@ -2631,8 +2633,8 @@ async function confirmarNfe() {
   const fornId=document.getElementById('nfe-forn').value||null;
   const fornNome=fornId?(fornecedores.find(f=>f.id===fornId)?.nome||null):null;
   const dataStr=document.getElementById('nfe-data')?.value||hoje();
-  const btn=document.getElementById('btn-nfe-conf');
-  btn.disabled=true; btn.textContent='Importando…';
+  const btn=document.getElementById('btn-nfe-confirmar-def');
+  if(btn){btn.disabled=true; btn.textContent='Importando…';}
   try {
     const toProcess=[];
     nfeItens.forEach((it,idx)=>{
@@ -2640,36 +2642,44 @@ async function confirmarNfe() {
       const link=sess||auto; if(!link) return;
       toProcess.push({it,idx,insId:link.insId,fator:link.fator,isNew:!!sess});
     });
-    if(!toProcess.length){toast('Nenhum item para importar.','err');btn.disabled=false;return;}
+    if(!toProcess.length){toast('Nenhum item para importar.','err');if(btn)btn.disabled=false;return;}
+    // Processa entradas — erros individuais não bloqueiam os demais
+    let ok=0;
     for(const {it,insId,fator,isNew} of toProcess){
-      const qtdEst=parseFloat((it.quantidade*fator).toFixed(6));
-      const custoUnitEst=parseFloat((it.valorUnit/fator).toFixed(6));
-      await registrarEntrada(insId,{
-        fornecedor_id:fornId,fornecedor_nome:fornNome,
-        quantidade:qtdEst,unidade_compra:it.unidade,
-        fator_conversao:fator,custo_unitario:custoUnitEst,
-        tipo:'nfe',nfe_numero:`${it.nNF}/${it.serie}`,
-        observacao:`NF-e ${it.nNF}/${it.serie}`,
-        criado_em:dataStr+'T12:00:00.000Z',
-      },custoUnitEst);
+      try {
+        const qtdEst=parseFloat((it.quantidade*fator).toFixed(6));
+        const custoUnitEst=parseFloat((it.valorUnit/fator).toFixed(6));
+        await registrarEntrada(insId,{
+          fornecedor_id:fornId,fornecedor_nome:fornNome,
+          quantidade:qtdEst,unidade_compra:it.unidade,
+          fator_conversao:fator,custo_unitario:custoUnitEst,
+          tipo:'nfe',nfe_numero:`${it.nNF}/${it.serie}`,
+          observacao:`NF-e ${it.nNF}/${it.serie}`,
+          criado_em:dataStr+'T12:00:00.000Z',
+        },custoUnitEst);
+        ok++;
+      } catch(e){ console.warn('Erro ao registrar entrada:', it.descricao, e.message); }
+      // Salva vínculo NF-e de forma não-crítica
       if(isNew){
-        const existVin=(it.codigo&&vinculos.find(v=>v.codigo_nfe===it.codigo))||vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
-        if(!existVin){
-          const novo=await api('vinculos_nfe',{method:'POST',prefer:'return=representation',
-            body:JSON.stringify({tenant_id:TENANT_ID,descricao_nfe:it.descricao,codigo_nfe:it.codigo||null,insumo_id:insId,fator_conversao:fator})});
-          if(novo[0]) vinculos.push(novo[0]);
-        } else {
-          const patch={insumo_id:insId,fator_conversao:fator};
-          if(it.codigo&&!existVin.codigo_nfe) patch.codigo_nfe=it.codigo;
-          await api(`vinculos_nfe?id=eq.${existVin.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
-          Object.assign(existVin,patch);
-        }
+        try {
+          const existVin=(it.codigo&&vinculos.find(v=>v.codigo_nfe===it.codigo))||vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
+          if(!existVin){
+            const novo=await api('vinculos_nfe',{method:'POST',prefer:'return=representation',
+              body:JSON.stringify({tenant_id:TENANT_ID,descricao_nfe:it.descricao,codigo_nfe:it.codigo||null,insumo_id:insId,fator_conversao:fator})});
+            if(novo[0]) vinculos.push(novo[0]);
+          } else {
+            const patch={insumo_id:insId,fator_conversao:fator};
+            if(it.codigo&&!existVin.codigo_nfe) patch.codigo_nfe=it.codigo;
+            await api(`vinculos_nfe?id=eq.${existVin.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
+            Object.assign(existVin,patch);
+          }
+        } catch {}
       }
     }
-    toast(`${toProcess.length} entrada(s) importada(s) com sucesso!`,'ok');
+    toast(`${ok} entrada(s) importada(s) com sucesso!`,'ok');
     fecharModal('m-nfe'); resetNfe(); await carregar();
-  } catch(e){toast('Erro: '+e.message,'err');}
-  finally{btn.disabled=false;}
+  } catch(e){ toast('Erro: '+e.message,'err'); }
+  finally{ if(btn){btn.disabled=false; btn.textContent='✓ Confirmar entrada';} }
 }
 
 // ── SAÍDAS ────────────────────────────────────────────────────────
