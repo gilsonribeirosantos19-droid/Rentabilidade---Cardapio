@@ -1364,10 +1364,13 @@
         <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
           <table class="nfe-tbl">
             <thead><tr>
-              <th>Produto da NF-e<br><span style="font-weight:400;opacity:.7">Código</span></th>
-              <th>Unidade NF-e</th>
-              <th class="r">Quantidade NF-e</th>
-              <th style="width:100px">Ação</th>
+              <th>Produto da NF-e</th>
+              <th style="width:70px">Cód. Forn.</th>
+              <th style="width:45px">Un.</th>
+              <th class="r" style="width:80px">Quantidade</th>
+              <th class="r" style="width:85px">Preço Unit.</th>
+              <th class="r" style="width:85px">Preço Total</th>
+              <th style="width:90px">Ação</th>
             </tr></thead>
             <tbody id="nfe-body"></tbody>
           </table>
@@ -2361,22 +2364,25 @@ function renderNfePendentes() {
     if(auto) return '';
     const linked=!!sess;
     const ins=linked?insumos.find(x=>x.id===sess.insId):null;
+    const total=parseFloat((it.quantidade*(it.valorUnit||0)).toFixed(2));
     return `<tr id="nfe-row-${idx}" style="${linked?'background:#f0fdf4':''}">
-      <td style="padding:10px 12px">
-        <div style="font-weight:600;font-size:12px;line-height:1.3;color:#0f172a">${esc(it.descricao.substring(0,50))}${it.descricao.length>50?'…':''}</div>
-        <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace;margin-top:2px">${esc(it.codigo||'—')}</div>
-        ${linked?`<div style="font-size:11px;color:#16a34a;margin-top:4px;display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${esc(ins?.nome||'—')} · 1 ${esc(it.unidade)} = ${fmtQtd(sess.fator)} ${esc(sess.unEst)}</div>`:''}
+      <td style="padding:5px 8px">
+        <div style="font-weight:600;font-size:11px;line-height:1.3;color:#0f172a">${esc(it.descricao.substring(0,45))}${it.descricao.length>45?'…':''}</div>
+        ${linked?`<div style="font-size:10px;color:#16a34a;margin-top:2px;display:flex;align-items:center;gap:3px"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${esc(ins?.nome||'—')} · 1 ${esc(it.unidade)}=${fmtQtd(sess.fator)} ${esc(sess.unEst)}</div>`:''}
       </td>
-      <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#334155">${esc(it.unidade)}</td>
-      <td style="padding:10px 12px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:13px;color:#0f172a">${fmtQtd(it.quantidade)}</td>
-      <td style="padding:10px 12px">
+      <td style="padding:5px 8px;font-size:11px;color:#64748b;font-family:'DM Mono',monospace">${esc(it.codigo||'—')}</td>
+      <td style="padding:5px 8px;font-size:11px;font-weight:600;color:#334155">${esc(it.unidade)}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:12px;color:#0f172a">${fmtQtd(it.quantidade)}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:#334155">${it.valorUnit?brl(it.valorUnit):'—'}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:#0f172a">${total?brl(total):'—'}</td>
+      <td style="padding:5px 8px">
         ${linked
-          ?`<button onclick="abrirVincularModal(${idx})" style="padding:5px 12px;border-radius:7px;border:1px solid #bbf7d0;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✓ Editar</button>`
-          :`<button onclick="abrirVincularModal(${idx})" style="padding:5px 14px;border-radius:7px;border:none;background:#f97316;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Vincular</button>`}
+          ?`<button onclick="abrirVincularModal(${idx})" style="padding:3px 10px;border-radius:6px;border:1px solid #bbf7d0;background:#f0fdf4;color:#16a34a;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">✓ Editar</button>`
+          :`<button onclick="abrirVincularModal(${idx})" style="padding:3px 12px;border-radius:6px;border:none;background:#f97316;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Vincular</button>`}
       </td>
     </tr>`;
   }).filter(Boolean).join('');
-  tbody.innerHTML=rowsPendentes||`<tr><td colspan="4" style="padding:20px;text-align:center;color:#16a34a;font-size:13px;font-weight:600">
+  tbody.innerHTML=rowsPendentes||`<tr><td colspan="7" style="padding:20px;text-align:center;color:#16a34a;font-size:13px;font-weight:600">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
     Todos os itens foram vinculados. Clique em "Confirmar entrada".
   </td></tr>`;
