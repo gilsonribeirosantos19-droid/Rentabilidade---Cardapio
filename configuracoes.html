@@ -1159,7 +1159,7 @@ async function salvarGrupoCompra() {
     if (grupoId) {
       // deletar itens antigos e reinserir
       await api(`grupos_compra_itens?grupo_id=eq.${grupoId}`, { method:'DELETE', prefer:'return=minimal' });
-      const itens = [..._mgcSelecionados].map(insId => ({ grupo_id:grupoId, insumo_id:insId }));
+      const itens = [..._mgcSelecionados].map(insId => ({ tenant_id:TENANT_ID, grupo_id:grupoId, insumo_id:insId }));
       if (itens.length) await api('grupos_compra_itens', { method:'POST', body:JSON.stringify(itens), prefer:'return=minimal' });
     }
     toast(`Grupo salvo com ${_mgcSelecionados.size} insumo(s)`, 'ok');
