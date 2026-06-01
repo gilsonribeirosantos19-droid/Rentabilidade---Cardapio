@@ -2428,8 +2428,10 @@ function checkNfeConf() {
   btn.style.opacity=allDone?'1':'0.5';
   btn.style.cursor=allDone?'pointer':'not-allowed';
   btn.innerHTML=allDone
-    ?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Confirmar entrada (${nfeItens.length} ${nfeItens.length===1?'item':'itens'})`
+    ?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Ver resumo`
     :`Vincule os pendentes (${pendentes.length} restante${pendentes.length===1?'':'s'})`;
+  // Avança automaticamente para o resumo quando último item for vinculado
+  if(allDone) setTimeout(()=>mostrarResumoNfe(), 400);
 }
 
 function abrirVincularModal(idx) {
