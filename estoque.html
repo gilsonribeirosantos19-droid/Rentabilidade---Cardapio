@@ -1361,6 +1361,36 @@
       </div>
     </div>
 
+    <!-- VIEW 3: RESUMO -->
+    <div id="nfe-v3" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+      <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+        <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:2px">Resumo da entrada</div>
+        <div style="font-size:12px;color:#64748b">Revise todos os itens antes de confirmar o lançamento no estoque.</div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px 20px">
+        <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+          <table class="nfe-tbl">
+            <thead><tr>
+              <th>Produto NF-e</th>
+              <th>Produto interno</th>
+              <th class="r">Qtd. NF-e</th>
+              <th class="r">Qtd. Estoque</th>
+              <th>Unidade</th>
+              <th class="r">Custo unit.</th>
+              <th class="r">Total</th>
+              <th style="width:50px"></th>
+            </tr></thead>
+            <tbody id="nfe-resumo-body"></tbody>
+            <tfoot><tr>
+              <td colspan="6" style="font-weight:700;font-size:12px;color:#fff">Total geral — <span id="nfe-total-itens"></span></td>
+              <td class="r" style="font-weight:700;font-size:14px;color:#fff;font-family:'DM Mono',monospace" id="nfe-total-geral">—</td>
+              <td></td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- FOOTER -->
     <div class="nfe-footer">
       <button class="btn btn-ghost" onclick="fecharModal('m-nfe');resetNfe()">Cancelar</button>
@@ -1368,8 +1398,16 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Outro arquivo
       </button>
+      <button class="btn btn-ghost" id="btn-nfe-voltar-resumo" style="display:none;align-items:center;gap:6px" onclick="voltarParaPendentes()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Voltar
+      </button>
       <div style="flex:1"></div>
-      <button class="btn btn-primary" id="btn-nfe-conf" style="display:none;align-items:center;gap:6px" onclick="confirmarNfe()">
+      <button class="btn btn-primary" id="btn-nfe-conf" style="display:none;align-items:center;gap:6px" onclick="mostrarResumoNfe()">
+        Ver resumo
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="btn btn-primary" id="btn-nfe-confirmar-def" style="display:none;align-items:center;gap:6px;background:#16a34a;border-color:#16a34a" onclick="confirmarNfe()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         Confirmar entrada
       </button>
@@ -2403,23 +2441,68 @@ function onVinInsumoChange() {
     const firstEmb=embs[prev?.embIdx>=0?prev.embIdx:0];
     onVinEmbChange(prev?.embIdx??0,firstEmb.qtd_por_embalagem,firstEmb.embalagem_descricao,und);
   } else {
-    list.innerHTML=`
-      <div style="padding:12px 14px;font-size:12px;color:#64748b;text-align:center">
-        Nenhuma embalagem cadastrada para este insumo neste fornecedor.<br>
-        <a href="fornecedores.html" target="_blank" style="color:#f97316;font-size:12px;font-weight:600">Cadastrar em Fornecedores → Item × Fornecedor ↗</a>
-      </div>
-      <div style="padding:0 14px 12px;border-top:1px solid #f1f5f9;margin-top:4px">
-        <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;margin-top:8px">FATOR MANUAL</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+    list.innerHTML='<div style="padding:12px 14px;font-size:12px;color:#94a3b8;text-align:center">Carregando embalagens...</div>';
+    carregarEmbalagemGenerica(und,it,prev);
+  }
+}
+
+async function carregarEmbalagemGenerica(und,it,prev) {
+  const list=document.getElementById('vin-emb-list');
+  try {
+    const clsfs=await api(`item_classificacoes?tipo=eq.embalagem&tenant_id=eq.${TENANT_ID}&order=nome.asc`);
+    if(!clsfs.length){
+      list.innerHTML=`<div style="padding:14px;text-align:center;font-size:12px;color:#64748b">Nenhuma embalagem cadastrada.<br><a href="configuracoes.html" target="_blank" style="color:#f97316;font-weight:600">Cadastrar em Configurações ↗</a></div>`;
+      return;
+    }
+    list.innerHTML=clsfs.map((c,i)=>`
+      <div style="border-bottom:1px solid #f1f5f9;padding:10px 14px" id="vin-cls-row-${i}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:0">
+          <input type="radio" name="vin-emb-cls" value="${i}" id="vin-emb-cls-${i}" ${i===0&&!prev?'checked':''}
+            style="accent-color:#f97316;width:16px;height:16px;flex-shrink:0" onchange="onVinClsChange()">
+          <label for="vin-emb-cls-${i}" style="font-size:13px;font-weight:500;color:#0f172a;cursor:pointer;flex:1">${esc(c.nome)}</label>
+        </div>
+        <div id="vin-cls-qty-${i}" style="display:${i===0&&!prev?'flex':'none'};align-items:center;gap:8px;padding:8px 0 0 26px;font-size:13px">
           <span style="color:#64748b">1 ${esc(it?.unidade||'?')} =</span>
-          <input type="number" id="vin-fator-manual" value="${prev?.fator||1}" min="0.001" step="0.001"
+          <input type="number" id="vin-cls-qty-val-${i}" value="${i===0&&prev?.fator?prev.fator:1}" min="0.001" step="0.001"
             style="width:80px;padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none"
-            oninput="onVinFatorManualChange('${und}')">
+            oninput="onVinClsQtyChange(${i},'${c.nome.replace(/'/g,'&#39;').replace(/"/g,'&quot;')}','${und}')">
           <span style="color:#64748b">${und}</span>
         </div>
-      </div>`;
-    onVinFatorManualChange(und,prev?.fator||1);
+      </div>`).join('');
+    // Trigger first selection
+    const firstFator=prev?.fator||1;
+    onVinClsQtyChange(0,clsfs[0].nome,und,firstFator);
+  } catch(e){
+    list.innerHTML=`<div style="padding:14px;text-align:center;font-size:12px;color:#ef4444">Erro: ${e.message}</div>`;
   }
+}
+
+function onVinClsChange(){
+  const radios=document.querySelectorAll('[name="vin-emb-cls"]');
+  radios.forEach((r,i)=>{
+    const q=document.getElementById(`vin-cls-qty-${i}`);
+    if(q) q.style.display=r.checked?'flex':'none';
+  });
+  const checked=document.querySelector('[name="vin-emb-cls"]:checked');
+  if(!checked) return;
+  const idx=parseInt(checked.value);
+  const label=document.querySelector(`label[for="vin-emb-cls-${idx}"]`)?.textContent||'';
+  const und=document.getElementById('vin-und').textContent;
+  const fator=parseFloat(document.getElementById(`vin-cls-qty-val-${idx}`)?.value)||1;
+  onVinClsQtyChange(idx,label,und,fator);
+}
+
+function onVinClsQtyChange(clsIdx,clsNome,und,forceVal){
+  const idx=nfeVinculandoIdx; const it=nfeItens[idx]; if(!it) return;
+  const input=document.getElementById(`vin-cls-qty-val-${clsIdx}`);
+  const fator=forceVal||parseFloat(input?.value)||1;
+  if(input&&forceVal) input.value=fator;
+  const qtdR=parseFloat((it.quantidade*fator).toFixed(6));
+  const summary=document.getElementById('vin-conv-summary'); summary.style.display='';
+  document.getElementById('vin-conv-nf').textContent=`${fmtQtd(it.quantidade)} ${it.unidade}`;
+  document.getElementById('vin-conv-formula').textContent=`1 ${it.unidade} = ${fmtQtd(fator)} ${und}`;
+  document.getElementById('vin-conv-result').textContent=`${fmtQtd(qtdR)} ${und}`;
+  document.getElementById('vin-ins')._selectedEmb={embIdx:-1,fator,embDesc:clsNome,und,isGeneric:true};
 }
 
 function onVinEmbChange(embIdx,fator,embDesc,und) {
@@ -2432,29 +2515,77 @@ function onVinEmbChange(embIdx,fator,embDesc,und) {
   document.getElementById('vin-ins')._selectedEmb={embIdx,fator,embDesc,und};
 }
 
-function onVinFatorManualChange(und,forceVal) {
-  const idx=nfeVinculandoIdx; const it=nfeItens[idx]; if(!it) return;
-  const fator=forceVal||parseFloat(document.getElementById('vin-fator-manual')?.value)||1;
-  const qtdR=parseFloat((it.quantidade*fator).toFixed(6));
-  const summary=document.getElementById('vin-conv-summary'); summary.style.display='';
-  document.getElementById('vin-conv-nf').textContent=`${fmtQtd(it.quantidade)} ${it.unidade}`;
-  document.getElementById('vin-conv-formula').textContent=`1 ${it.unidade} = ${fmtQtd(fator)} ${und}`;
-  document.getElementById('vin-conv-result').textContent=`${fmtQtd(qtdR)} ${und}`;
-  document.getElementById('vin-ins')._selectedEmb={embIdx:-1,fator,embDesc:`${it.unidade} manual`,und};
-}
 
-function salvarVinculoNfe() {
+async function salvarVinculoNfe() {
   const idx=nfeVinculandoIdx;
   const insId=document.getElementById('vin-ins').value;
   if(!insId){toast('Selecione o produto interno.','err');return;}
   const emb=document.getElementById('vin-ins')._selectedEmb;
-  if(!emb?.fator){toast('Selecione a embalagem ou informe o fator.','err');return;}
+  if(!emb?.fator){toast('Selecione a embalagem.','err');return;}
   const ins=insumos.find(x=>x.id===insId);
   const und=ins?.unidade_medida||ins?.unidade_compra||'un';
+  // Se embalagem genérica (do item_classificacoes), cria o vínculo no fornecedor para usar automaticamente
+  if(emb.isGeneric){
+    const fornId=document.getElementById('nfe-forn')?.value||null;
+    if(fornId){
+      try{
+        const newLink=await api('insumo_fornecedores',{method:'POST',prefer:'return=representation',
+          body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,fornecedor_id:fornId,
+            embalagem_descricao:emb.embDesc,qtd_por_embalagem:emb.fator})});
+        if(newLink[0]) insumoFornVinculos.push(newLink[0]);
+      }catch{}
+    }
+  }
   nfeSession[idx]={insId,fator:emb.fator,embDesc:emb.embDesc,embIdx:emb.embIdx,insumoNome:ins?.nome||'—',unEst:und};
   fecharVincularModal();
   renderNfePendentes();
-  toast('Vínculo salvo! Confirme a entrada quando todos os itens estiverem prontos.','ok');
+  toast('Vínculo salvo!','ok');
+}
+
+function voltarParaPendentes(){
+  document.getElementById('nfe-v3').style.display='none';
+  const v2=document.getElementById('nfe-v2');
+  v2.style.display='flex'; v2.style.flexDirection='column';
+  document.getElementById('btn-nfe-conf').style.display='inline-flex';
+  document.getElementById('btn-nfe-confirmar-def').style.display='none';
+  document.getElementById('btn-nfe-voltar-resumo').style.display='none';
+}
+
+function mostrarResumoNfe(){
+  const fornId=document.getElementById('nfe-forn')?.value||null;
+  const toProcess=[];
+  nfeItens.forEach((it,idx)=>{
+    const auto=nfeAutoLinked[idx]; const sess=nfeSession[idx];
+    const link=sess||auto; if(!link) return;
+    const ins=insumos.find(x=>x.id===link.insId);
+    const qtdEst=parseFloat((it.quantidade*link.fator).toFixed(4));
+    const custoUnit=parseFloat((it.valorUnit/link.fator).toFixed(6));
+    toProcess.push({it,insNome:ins?.nome||'—',unEst:ins?.unidade_medida||ins?.unidade_compra||'un',
+      qtdEst,custoUnit,total:parseFloat((qtdEst*custoUnit).toFixed(2)),isAuto:!!auto&&!sess});
+  });
+  document.getElementById('nfe-v2').style.display='none';
+  const v3=document.getElementById('nfe-v3');
+  v3.style.display='flex'; v3.style.flexDirection='column';
+  const totalGeral=toProcess.reduce((s,r)=>s+r.total,0);
+  document.getElementById('nfe-resumo-body').innerHTML=toProcess.map(r=>`<tr>
+    <td style="padding:8px 10px">
+      <div style="font-weight:600;font-size:12px;line-height:1.3">${esc(r.it.descricao.substring(0,32))}${r.it.descricao.length>32?'…':''}</div>
+      <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${esc(r.it.codigo||'—')}</div>
+    </td>
+    <td style="padding:8px 10px;font-size:12px">${esc(r.insNome)}</td>
+    <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-size:12px">${fmtQtd(r.it.quantidade)} ${esc(r.it.unidade)}</td>
+    <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:13px">${fmtQtd(r.qtdEst)}</td>
+    <td style="padding:8px 10px;font-size:11px;color:#64748b">${esc(r.unEst)}</td>
+    <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-size:12px">${brl(r.custoUnit)}</td>
+    <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:700">${brl(r.total)}</td>
+    <td style="padding:8px 10px;text-align:center"><span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;${r.isAuto?'background:#dbeafe;color:#1d4ed8':'background:#dcfce7;color:#16a34a'}">${r.isAuto?'Auto':'Novo'}</span></td>
+  </tr>`).join('');
+  document.getElementById('nfe-total-geral').textContent=brl(totalGeral);
+  document.getElementById('nfe-total-itens').textContent=`${toProcess.length} ${toProcess.length===1?'item':'itens'}`;
+  document.getElementById('btn-nfe-conf').style.display='none';
+  document.getElementById('btn-nfe-outro').style.display='none';
+  document.getElementById('btn-nfe-voltar-resumo').style.display='inline-flex';
+  document.getElementById('btn-nfe-confirmar-def').style.display='inline-flex';
 }
 
 async function confirmarNfe() {
