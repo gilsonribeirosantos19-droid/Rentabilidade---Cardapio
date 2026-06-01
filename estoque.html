@@ -1221,17 +1221,12 @@
       <div style="font-size:15px;font-weight:700;color:#0f172a">Vincular item da NF-e</div>
       <button onclick="fecharVincularModal()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:2px 8px;border-radius:6px">✕</button>
     </div>
-    <!-- NF DATA (expansível) -->
-    <div style="border-bottom:1px solid #e2e8f0">
-      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.vin-arr').style.transform=this.nextElementSibling.style.display===''?'rotate(180deg)':'rotate(0)'" style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;cursor:pointer;font-size:12px;font-weight:600;color:#64748b;user-select:none">
-        <span>DADOS DA NF-e</span><span class="vin-arr" style="font-size:10px;transition:transform .2s">▲</span>
-      </div>
-      <div style="padding:0 20px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <!-- NF DATA -->
+    <div style="border-bottom:1px solid #e2e8f0;padding:10px 20px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f8fafc">
         <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Produto NF-e</div><div style="font-size:13px;font-weight:600;color:#0f172a" id="vin-desc">—</div></div>
         <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Código NF-e</div><div style="font-size:13px;font-family:'DM Mono',monospace;color:#0f172a" id="vin-cod">—</div></div>
         <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Quantidade NF-e</div><div style="font-size:13px;font-weight:600;color:#0f172a" id="vin-qtd">—</div></div>
         <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Fornecedor</div><div style="font-size:13px;font-weight:600;color:#0f172a" id="vin-forn">—</div></div>
-      </div>
     </div>
     <!-- INSUMO SELECTOR -->
     <div style="padding:14px 20px">
