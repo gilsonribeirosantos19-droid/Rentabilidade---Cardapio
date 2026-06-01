@@ -737,6 +737,9 @@ async function salvarNovo(){
   const fc=parseFloat(document.getElementById('f-fc').value)||100;
   const obs=document.getElementById('f-obs').value.trim();
   if(!nome||!cat||!und||isNaN(preco)){toast('Preencha os campos obrigatórios.','err');return;}
+  // Validar duplicata de nome
+  const dup=todos.find(i=>i.nome.trim().toLowerCase()===nome.toLowerCase());
+  if(dup){toast(`Já existe um insumo com o nome "${nome}". Verifique em Insumos.`,'err');return;}
   const btn=document.getElementById('btn-salvar');
   btn.disabled=true; btn.textContent='Salvando...';
   try{
