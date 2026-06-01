@@ -32,35 +32,56 @@
     {
       id: 'compras', label: 'Compras',
       items: [
-        { href: 'compras.html', label: 'Pedidos de Compra' },
-      ]
-    },
-    {
-      id: 'analises', label: 'Análises',
-      items: [
-        { href: 'relatorios.html', label: 'Relatórios' },
-        { href: 'cmv.html',        label: 'CMV Teórico x Real' },
-        { href: 'rendimento.html', label: 'Rendimentos' },
-        { href: 'pdv.html',        label: 'PDV / Vendas' },
+        { href: 'compras.html', tab: 'solicitacoes', label: 'Solicitações' },
+        { href: 'compras.html', tab: 'processar',    label: 'Pedidos' },
+        { href: '#',                                  label: 'Sugestão de Compras' },
       ]
     },
     {
       id: 'pcp', label: 'PCP',
       items: [
-        { href: 'pcp.html', tab: 'producao-dia', label: 'Produção do Dia' },
+        { href: 'pcp.html', tab: 'producao-dia', label: 'Produção' },
+        { href: '#',                              label: 'Degelo' },
+        { href: '#',                              label: 'Cocção' },
         { href: 'porcionamento.html',             label: 'Porcionamento' },
-        { href: 'pcp.html', tab: 'sugerida',     label: 'Produção Sugerida' },
-        { href: 'pcp.html', tab: 'sobras',        label: 'Sobras e Perdas' },
-        { href: 'pcp.html', tab: 'consumo',       label: 'Consumo Médio' },
+        { href: 'rendimento.html',                label: 'Rendimento' },
+      ]
+    },
+    {
+      id: 'vendas', label: 'Vendas',
+      items: [
+        { href: 'pdv.html', label: 'Dashboard' },
+        { href: '#',        label: 'Faturamento' },
+        { href: '#',        label: 'Produtos' },
+        { href: '#',        label: 'Engenharia Cardápio' },
+        { href: '#',        label: 'Importação / API' },
+      ]
+    },
+    {
+      id: 'analises', label: 'Análises',
+      items: [
+        { href: 'cmv.html',        label: 'CMV Teórico x Real' },
+        { href: 'rendimento.html', label: 'Rendimentos' },
+        { href: '#',               label: 'Curva ABC' },
+        { href: '#',               label: 'Inflação' },
+      ]
+    },
+    {
+      id: 'auditoria', label: 'Auditoria',
+      items: [
+        { href: '#', label: 'Conversões' },
+        { href: '#', label: 'Inventários' },
+        { href: '#', label: 'Custos' },
+        { href: '#', label: 'Logs' },
       ]
     },
     {
       id: 'configuracoes', label: 'Configurações',
       items: [
-        { href: 'configuracoes.html', tab: 'geral',        label: 'Geral' },
-        { href: 'configuracoes.html', tab: 'usuarios',     label: 'Usuários' },
-        { href: 'configuracoes.html', tab: 'permissoes',   label: 'Permissões' },
-        { href: 'configuracoes.html', tab: 'parametros',   label: 'Parâmetros' },
+        { href: 'configuracoes.html', tab: 'geral',      label: 'Geral' },
+        { href: 'configuracoes.html', tab: 'usuarios',   label: 'Usuários' },
+        { href: 'configuracoes.html', tab: 'permissoes', label: 'Permissões' },
+        { href: 'configuracoes.html', tab: 'parametros', label: 'Parâmetros' },
       ]
     },
   ];
