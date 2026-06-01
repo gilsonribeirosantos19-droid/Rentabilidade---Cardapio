@@ -2322,8 +2322,15 @@ function handleNfeFile(file) {
       if(emitEl) emitEl.textContent=`Emitente: ${pi.emitNome||'—'}`;
       if(dataEl) dataEl.textContent=hoje().split('-').reverse().join('/');
       // auto-fill fornecedor
-      const emitNome=pi.emitNome||'';
-      const fornMatch=fornecedores.find(f=>(f.nome||'').toLowerCase()===emitNome.toLowerCase()||(f.nome_fantasia||'').toLowerCase()===emitNome.toLowerCase());
+      const emitNome=(pi.emitNome||'').toLowerCase();
+      // Tenta match: exato → fantasia contém → nome contém → fantasia em emitNome
+      const fornMatch=fornecedores.find(f=>{
+        const n=(f.nome||'').toLowerCase();
+        const fn=(f.nome_fantasia||'').toLowerCase();
+        return n===emitNome||fn===emitNome||
+               (fn&&emitNome.includes(fn))||(n&&emitNome.includes(n))||
+               (fn&&fn.includes(emitNome.substring(0,6)))||(n&&n.includes(emitNome.substring(0,6)));
+      });
       const fornSel=document.getElementById('nfe-forn');
       if(fornMatch&&fornSel) fornSel.value=fornMatch.id;
       renderNfePendentes();
@@ -2671,6 +2678,7 @@ async function salvarVinculoNfe() {
   const codForn=(document.getElementById('vin-cod-forn')?.value||'').trim();
   const fornId=document.getElementById('nfe-forn')?.value||null;
   const it=nfeItens[idx];
+  if(!fornId){toast('⚠️ Selecione o fornecedor na tela da NF-e antes de vincular.','err');return;}
   // Sempre salva/atualiza em insumo_fornecedores com código do fornecedor
   if(fornId){
     try{
