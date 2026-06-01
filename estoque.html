@@ -2473,11 +2473,7 @@ function abrirVincularModal(idx) {
   const prev=nfeSession[idx];
   document.getElementById('vin-ins').value=prev?.insId||'';
   document.getElementById('vin-ins')._selectedEmb=null;
-  const panel=document.getElementById('vin-ins-panel');if(panel)panel.style.display='none';
-  const buscaEl=document.getElementById('vin-ins-busca');if(buscaEl)buscaEl.value='';
-  const label=document.getElementById('vin-ins-label');
-  if(prev?.insId){const ins=insumos.find(x=>x.id===prev.insId);if(ins&&label){label.textContent=ins.nome;label.style.color='#0f172a';label.style.fontWeight='600';}}
-  else if(label){label.textContent='— Selecione o produto interno —';label.style.color='#94a3b8';label.style.fontWeight='400';}
+  _popularSelectInsumo(prev?.insId||'');
   const codFornEl=document.getElementById('vin-cod-forn');
   if(codFornEl) codFornEl.value=prev?.codForn||it.codigo||'';
   const precoEl=document.getElementById('vin-preco-nfe');
@@ -2539,8 +2535,26 @@ function selecionarInsumoVincular(insId) {
   onVinInsumoChange();
 }
 
-function onVinSelectChange(){}
-function _popularSelectInsumo(){}
+function _popularSelectInsumo(selectedId) {
+  const sel=document.getElementById('vin-ins-select');
+  if(!sel) return;
+  sel.innerHTML='<option value="">— Selecione o produto interno —</option>'+
+    insumos.map(i=>`<option value="${i.id}"${i.id===selectedId?' selected':''}>${esc(i.nome)} (${esc(i.unidade_medida||i.unidade_compra||'un')})</option>`).join('');
+  if(selectedId) sel.value=selectedId;
+}
+
+function onVinSelectChange() {
+  const insId=document.getElementById('vin-ins-select')?.value||'';
+  document.getElementById('vin-ins').value=insId;
+  if(insId) onVinInsumoChange();
+  else {
+    document.getElementById('vin-und-row').style.display='none';
+    document.getElementById('vin-emb-section').style.display='none';
+    document.getElementById('vin-conv-summary').style.display='none';
+    const cr=document.getElementById('vin-cod-row');if(cr)cr.style.display='none';
+    const pr=document.getElementById('vin-preco-row');if(pr)pr.style.display='none';
+  }
+}
 
 function limparSelecaoInsumo() {
   document.getElementById('vin-ins').value='';
