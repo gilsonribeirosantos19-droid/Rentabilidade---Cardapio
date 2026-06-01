@@ -1232,30 +1232,29 @@
     <!-- campo oculto para manter compatibilidade com código que lê vin-ins.value -->
     <input type="hidden" id="vin-ins" value="">
     <div style="padding:14px 20px">
-      <!-- BUSCA + TABELA DE INSUMOS -->
-      <div style="margin-bottom:14px">
+      <!-- COMBOBOX DE INSUMO -->
+      <div style="margin-bottom:14px;position:relative">
         <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">Insumo (produto interno) *</label>
-        <!-- Item selecionado -->
-        <div id="vin-ins-selected" style="display:none;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;padding:8px 12px;margin-bottom:6px;display:none;align-items:center;justify-content:space-between">
-          <div>
-            <span style="font-size:13px;font-weight:700;color:#1e40af" id="vin-ins-nome">—</span>
-            <span style="font-size:11px;color:#3b82f6;margin-left:8px" id="vin-ins-info"></span>
-          </div>
-          <button onclick="limparSelecaoInsumo()" style="background:none;border:none;cursor:pointer;color:#3b82f6;font-size:12px;font-weight:600">Trocar</button>
+        <!-- Campo clicável -->
+        <div id="vin-ins-trigger" onclick="abrirComboInsumo()" style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#94a3b8;background:#f8fafc;cursor:pointer;display:flex;align-items:center;position:relative;user-select:none">
+          <span id="vin-ins-label">— Buscar produto interno —</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;right:10px"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <!-- Busca -->
-        <div id="vin-ins-search-wrap">
-          <div style="position:relative;margin-bottom:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input id="vin-ins-busca" type="text" placeholder="Digite o nome do insumo para filtrar..." oninput="filtrarInsumosVincular()"
-              style="width:100%;height:36px;padding:0 12px 0 32px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#f8fafc">
+        <!-- Painel dropdown (oculto por padrão) -->
+        <div id="vin-ins-panel" style="display:none;position:absolute;left:0;right:0;top:42px;z-index:100;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);overflow:hidden">
+          <div style="padding:8px 10px;border-bottom:1px solid #f1f5f9">
+            <div style="position:relative">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:8px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="vin-ins-busca" type="text" placeholder="Buscar..." oninput="filtrarInsumosVincular()" autofocus
+                style="width:100%;height:32px;padding:0 10px 0 28px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:inherit;outline:none;background:#f8fafc">
+            </div>
           </div>
-          <div style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;max-height:180px;overflow-y:auto">
+          <div style="max-height:200px;overflow-y:auto">
             <table style="width:100%;border-collapse:collapse;font-size:12px">
-              <thead><tr style="background:#f1f5f9;position:sticky;top:0">
-                <th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;width:90px">Código</th>
-                <th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Descrição</th>
-                <th style="padding:6px 10px;text-align:center;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;width:50px">Un.</th>
+              <thead><tr style="background:#f8fafc;position:sticky;top:0;border-bottom:1px solid #f1f5f9">
+                <th style="padding:5px 10px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;width:90px">Código</th>
+                <th style="padding:5px 10px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase">Descrição</th>
+                <th style="padding:5px 10px;text-align:center;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;width:45px">Un.</th>
               </tr></thead>
               <tbody id="vin-ins-tbody"></tbody>
             </table>
@@ -2485,18 +2484,14 @@ function abrirVincularModal(idx) {
   const prev=nfeSession[idx];
   document.getElementById('vin-ins').value=prev?.insId||'';
   document.getElementById('vin-ins')._selectedEmb=null;
-  // Reset busca/seleção
   document.getElementById('vin-ins-busca').value='';
-  const selEl=document.getElementById('vin-ins-selected');
-  const wrap=document.getElementById('vin-ins-search-wrap');
+  const panel=document.getElementById('vin-ins-panel');if(panel)panel.style.display='none';
+  const label=document.getElementById('vin-ins-label');
   if(prev?.insId){
     const ins=insumos.find(x=>x.id===prev.insId);
-    if(ins&&selEl){selEl.style.display='flex';document.getElementById('vin-ins-nome').textContent=ins.nome;document.getElementById('vin-ins-info').textContent=ins.unidade_medida||ins.unidade_compra||'';}
-    if(wrap) wrap.style.display='none';
+    if(ins&&label){label.textContent=ins.nome;label.style.color='#0f172a';label.style.fontWeight='600';}
   } else {
-    if(selEl) selEl.style.display='none';
-    if(wrap) wrap.style.display='';
-    filtrarInsumosVincular();
+    if(label){label.textContent='— Buscar produto interno —';label.style.color='#94a3b8';label.style.fontWeight='400';}
   }
   const codFornEl=document.getElementById('vin-cod-forn');
   if(codFornEl) codFornEl.value=prev?.codForn||it.codigo||'';
@@ -2514,17 +2509,35 @@ function abrirVincularModal(idx) {
 
 function fecharVincularModal() { fecharModal('m-nfe-vincular'); nfeVinculandoIdx=null; }
 
+function abrirComboInsumo() {
+  const panel=document.getElementById('vin-ins-panel');
+  if(!panel) return;
+  panel.style.display='';
+  filtrarInsumosVincular();
+  setTimeout(()=>document.getElementById('vin-ins-busca')?.focus(),50);
+  // Fechar ao clicar fora
+  setTimeout(()=>document.addEventListener('click',_fecharComboFora,{once:true}),10);
+}
+
+function _fecharComboFora(e) {
+  const panel=document.getElementById('vin-ins-panel');
+  const trigger=document.getElementById('vin-ins-trigger');
+  if(panel&&!panel.contains(e.target)&&!trigger?.contains(e.target)){
+    panel.style.display='none';
+  }
+}
+
 function filtrarInsumosVincular() {
   const q=(document.getElementById('vin-ins-busca')?.value||'').toLowerCase();
   const tbody=document.getElementById('vin-ins-tbody');
   if(!tbody) return;
-  const filtrados=q?insumos.filter(i=>i.nome.toLowerCase().includes(q)):insumos;
-  tbody.innerHTML=filtrados.slice(0,50).map(i=>`
+  const filtrados=q?insumos.filter(i=>i.nome.toLowerCase().includes(q)||((i.codigo_interno||'').toLowerCase().includes(q))):insumos;
+  tbody.innerHTML=filtrados.slice(0,60).map(i=>`
     <tr onclick="selecionarInsumoVincular('${i.id}')"
-      style="cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background .1s"
-      onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-size:11px;color:#64748b">${esc(i.codigo_interno||'—')}</td>
-      <td style="padding:6px 10px;font-weight:500;color:#0f172a">${esc(i.nome)}</td>
+      style="cursor:pointer;border-bottom:1px solid #f8fafc;transition:background .1s"
+      onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
+      <td style="padding:6px 10px;font-family:'DM Mono',monospace;font-size:11px;color:#94a3b8">${esc(i.codigo_interno||'—')}</td>
+      <td style="padding:6px 10px;font-size:13px;font-weight:500;color:#0f172a">${esc(i.nome)}</td>
       <td style="padding:6px 10px;text-align:center;font-size:11px;color:#64748b">${esc(i.unidade_medida||i.unidade_compra||'—')}</td>
     </tr>`).join('');
   if(!filtrados.length) tbody.innerHTML='<tr><td colspan="3" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Nenhum insumo encontrado</td></tr>';
@@ -2533,33 +2546,26 @@ function filtrarInsumosVincular() {
 function selecionarInsumoVincular(insId) {
   const ins=insumos.find(x=>x.id===insId);
   if(!ins) return;
-  // Atualiza o hidden input
   document.getElementById('vin-ins').value=insId;
-  // Mostra o item selecionado
-  const sel=document.getElementById('vin-ins-selected');
-  const nome=document.getElementById('vin-ins-nome');
-  const info=document.getElementById('vin-ins-info');
-  if(sel){sel.style.display='flex';}
-  if(nome) nome.textContent=ins.nome;
-  if(info) info.textContent=`${ins.unidade_medida||ins.unidade_compra||'un'} · ${ins.codigo_interno||''}`.trim().replace(/·\s*$/,'');
-  // Esconde a busca
-  const wrap=document.getElementById('vin-ins-search-wrap');
-  if(wrap) wrap.style.display='none';
-  // Dispara a lógica de insumo
+  // Atualiza o trigger
+  const label=document.getElementById('vin-ins-label');
+  if(label){label.textContent=ins.nome;label.style.color='#0f172a';label.style.fontWeight='600';}
+  // Fecha o painel
+  const panel=document.getElementById('vin-ins-panel');
+  if(panel) panel.style.display='none';
   onVinInsumoChange();
 }
 
 function limparSelecaoInsumo() {
   document.getElementById('vin-ins').value='';
-  const sel=document.getElementById('vin-ins-selected');if(sel)sel.style.display='none';
-  const wrap=document.getElementById('vin-ins-search-wrap');if(wrap)wrap.style.display='';
+  const label=document.getElementById('vin-ins-label');
+  if(label){label.textContent='— Buscar produto interno —';label.style.color='#94a3b8';label.style.fontWeight='400';}
   document.getElementById('vin-ins-busca').value='';
   document.getElementById('vin-und-row').style.display='none';
   document.getElementById('vin-emb-section').style.display='none';
   document.getElementById('vin-conv-summary').style.display='none';
   const cr=document.getElementById('vin-cod-row');if(cr)cr.style.display='none';
   const pr=document.getElementById('vin-preco-row');if(pr)pr.style.display='none';
-  filtrarInsumosVincular();
 }
 
 async function recarregarInsumosVincular(btn) {
