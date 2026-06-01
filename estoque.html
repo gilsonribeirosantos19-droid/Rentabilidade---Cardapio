@@ -1232,29 +1232,13 @@
     <!-- campo oculto para manter compatibilidade com código que lê vin-ins.value -->
     <input type="hidden" id="vin-ins" value="">
     <div style="padding:14px 20px">
-      <!-- COMBOBOX DE INSUMO -->
-      <div style="margin-bottom:14px;position:relative">
+      <!-- SELETOR DE INSUMO -->
+      <div style="margin-bottom:14px">
         <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">Insumo (produto interno) *</label>
-        <!-- Campo clicável -->
-        <div id="vin-ins-trigger" onclick="abrirComboInsumo()" style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#94a3b8;background:#f8fafc;cursor:pointer;display:flex;align-items:center;position:relative;user-select:none">
-          <span id="vin-ins-label">— Buscar produto interno —</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;right:10px"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <!-- Painel dropdown (oculto por padrão) -->
-        <div id="vin-ins-panel" style="display:none;position:absolute;left:0;right:0;top:42px;z-index:200;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.10);overflow:hidden">
-          <div style="padding:8px">
-            <div style="position:relative">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input id="vin-ins-busca" type="text" placeholder="Buscar insumo..." oninput="filtrarInsumosVincular()" autofocus autocomplete="off"
-                style="width:100%;height:34px;padding:0 10px 0 30px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;font-family:inherit;outline:none;background:#f8fafc;color:#0f172a">
-            </div>
-          </div>
-          <div style="max-height:280px;overflow-y:auto;border-top:1px solid #f1f5f9">
-            <table style="width:100%;border-collapse:collapse;zoom:0.82">
-              <tbody id="vin-ins-tbody"></tbody>
-            </table>
-          </div>
-        </div>
+        <input id="vin-ins-busca" type="text" list="vin-ins-datalist" placeholder="Digite para buscar..." autocomplete="off"
+          oninput="onVinBuscaInput()" onchange="onVinBuscaChange()"
+          style="width:100%;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;background:#f8fafc;outline:none">
+        <datalist id="vin-ins-datalist"></datalist>
       </div>
       <!-- LINHA: Unidade + Código Fornecedor + Preço -->
       <div style="display:grid;grid-template-columns:80px 1fr 130px;gap:10px;align-items:end;margin-bottom:14px">
@@ -2482,15 +2466,9 @@ function abrirVincularModal(idx) {
   const prev=nfeSession[idx];
   document.getElementById('vin-ins').value=prev?.insId||'';
   document.getElementById('vin-ins')._selectedEmb=null;
-  document.getElementById('vin-ins-busca').value='';
-  const panel=document.getElementById('vin-ins-panel');if(panel)panel.style.display='none';
-  const label=document.getElementById('vin-ins-label');
-  if(prev?.insId){
-    const ins=insumos.find(x=>x.id===prev.insId);
-    if(ins&&label){label.textContent=ins.nome;label.style.color='#0f172a';label.style.fontWeight='600';}
-  } else {
-    if(label){label.textContent='— Buscar produto interno —';label.style.color='#94a3b8';label.style.fontWeight='400';}
-  }
+  _popularDatalist();
+  const buscaEl=document.getElementById('vin-ins-busca');
+  if(buscaEl) buscaEl.value=prev?.insId?(insumos.find(x=>x.id===prev.insId)?.nome||''):'';
   const codFornEl=document.getElementById('vin-cod-forn');
   if(codFornEl) codFornEl.value=prev?.codForn||it.codigo||'';
   const precoEl=document.getElementById('vin-preco-nfe');
@@ -2507,56 +2485,42 @@ function abrirVincularModal(idx) {
 
 function fecharVincularModal() { fecharModal('m-nfe-vincular'); nfeVinculandoIdx=null; }
 
-function abrirComboInsumo() {
-  const panel=document.getElementById('vin-ins-panel');
-  if(!panel) return;
-  panel.style.display='';
-  filtrarInsumosVincular();
-  setTimeout(()=>document.getElementById('vin-ins-busca')?.focus(),50);
-  // Fechar ao clicar fora
-  setTimeout(()=>document.addEventListener('click',_fecharComboFora,{once:true}),10);
+function _popularDatalist() {
+  const dl=document.getElementById('vin-ins-datalist');
+  if(!dl) return;
+  dl.innerHTML=insumos.map(i=>`<option value="${esc(i.nome)}" data-id="${i.id}"></option>`).join('');
 }
 
-function _fecharComboFora(e) {
-  const panel=document.getElementById('vin-ins-panel');
-  const trigger=document.getElementById('vin-ins-trigger');
-  if(panel&&!panel.contains(e.target)&&!trigger?.contains(e.target)){
-    panel.style.display='none';
+function onVinBuscaInput() {
+  // Se o texto não bater exatamente com nenhum insumo, limpa a seleção
+  const q=(document.getElementById('vin-ins-busca')?.value||'').trim();
+  const match=insumos.find(i=>i.nome.toLowerCase()===q.toLowerCase());
+  if(!match) {
+    document.getElementById('vin-ins').value='';
+    document.getElementById('vin-und-row').style.display='none';
+    document.getElementById('vin-emb-section').style.display='none';
+    document.getElementById('vin-conv-summary').style.display='none';
+    const cr=document.getElementById('vin-cod-row');if(cr)cr.style.display='none';
+    const pr=document.getElementById('vin-preco-row');if(pr)pr.style.display='none';
+  } else {
+    document.getElementById('vin-ins').value=match.id;
+    onVinInsumoChange();
   }
 }
 
-function filtrarInsumosVincular() {
-  const q=(document.getElementById('vin-ins-busca')?.value||'').toLowerCase();
-  const tbody=document.getElementById('vin-ins-tbody');
-  if(!tbody) return;
-  const filtrados=q?insumos.filter(i=>i.nome.toLowerCase().includes(q)||((i.codigo_interno||'').toLowerCase().includes(q))):insumos;
-  tbody.innerHTML=filtrados.slice(0,60).map(i=>`
-    <tr onclick="selecionarInsumoVincular('${i.id}')"
-      style="cursor:pointer;border-bottom:1px solid #f8fafc;transition:background .1s"
-      onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
-      <td style="padding:3px 10px;font-size:13px;color:#0f172a;border-bottom:1px solid #f8fafc">${esc(i.nome)}</td>
-      <td style="padding:3px 10px;text-align:right;font-size:12px;color:#94a3b8;white-space:nowrap;border-bottom:1px solid #f8fafc">${esc(i.unidade_medida||i.unidade_compra||'—')}</td>
-    </tr>`).join('');
-  if(!filtrados.length) tbody.innerHTML='<tr><td colspan="3" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Nenhum insumo encontrado</td></tr>';
+function onVinBuscaChange() {
+  const q=(document.getElementById('vin-ins-busca')?.value||'').trim();
+  const match=insumos.find(i=>i.nome.toLowerCase()===q.toLowerCase());
+  if(match) { document.getElementById('vin-ins').value=match.id; onVinInsumoChange(); }
 }
 
-function selecionarInsumoVincular(insId) {
-  const ins=insumos.find(x=>x.id===insId);
-  if(!ins) return;
-  document.getElementById('vin-ins').value=insId;
-  // Atualiza o trigger
-  const label=document.getElementById('vin-ins-label');
-  if(label){label.textContent=ins.nome;label.style.color='#0f172a';label.style.fontWeight='600';}
-  // Fecha o painel
-  const panel=document.getElementById('vin-ins-panel');
-  if(panel) panel.style.display='none';
-  onVinInsumoChange();
-}
+function filtrarInsumosVincular() { _popularDatalist(); }
+function selecionarInsumoVincular() {}
+function abrirComboInsumo() {}
+function _fecharComboFora() {}
 
 function limparSelecaoInsumo() {
   document.getElementById('vin-ins').value='';
-  const label=document.getElementById('vin-ins-label');
-  if(label){label.textContent='— Buscar produto interno —';label.style.color='#94a3b8';label.style.fontWeight='400';}
   document.getElementById('vin-ins-busca').value='';
   document.getElementById('vin-und-row').style.display='none';
   document.getElementById('vin-emb-section').style.display='none';
