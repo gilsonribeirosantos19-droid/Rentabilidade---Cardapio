@@ -1232,22 +1232,12 @@
     <!-- campo oculto para manter compatibilidade com código que lê vin-ins.value -->
     <input type="hidden" id="vin-ins" value="">
     <div style="padding:14px 20px">
-      <!-- SELETOR DE INSUMO (combobox customizado) -->
-      <div style="margin-bottom:14px;position:relative">
+      <!-- SELETOR DE INSUMO (select nativo) -->
+      <div style="margin-bottom:14px">
         <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">Insumo (produto interno) *</label>
-        <div onclick="abrirComboInsumo()" id="vin-ins-trigger"
-          style="width:100%;height:38px;padding:0 36px 0 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;background:#f8fafc;cursor:pointer;display:flex;align-items:center;position:relative;user-select:none">
-          <span id="vin-ins-label" style="color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">— Selecione o produto interno —</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;right:10px;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <!-- Painel -->
-        <div id="vin-ins-panel" style="display:none;position:absolute;left:0;right:0;top:44px;z-index:250;background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.10);overflow:hidden">
-          <div style="padding:6px 8px;border-bottom:1px solid #f1f5f9">
-            <input id="vin-ins-busca" type="text" placeholder="Buscar..." autocomplete="off" oninput="filtrarInsumosVincular()"
-              style="width:100%;height:30px;padding:0 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;font-family:inherit;outline:none;background:#f8fafc;color:#0f172a">
-          </div>
-          <div id="vin-ins-lista" style="max-height:220px;overflow-y:auto"></div>
-        </div>
+        <select id="vin-ins-select" onchange="onVinSelectChange()" style="width:100%;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;background:#f8fafc;outline:none;cursor:pointer">
+          <option value="">— Selecione o produto interno —</option>
+        </select>
       </div>
       <!-- LINHA: Unidade + Código Fornecedor + Preço -->
       <div style="display:grid;grid-template-columns:80px 1fr 130px;gap:10px;align-items:end;margin-bottom:14px">
@@ -2475,11 +2465,7 @@ function abrirVincularModal(idx) {
   const prev=nfeSession[idx];
   document.getElementById('vin-ins').value=prev?.insId||'';
   document.getElementById('vin-ins')._selectedEmb=null;
-  const panel=document.getElementById('vin-ins-panel');if(panel)panel.style.display='none';
-  const buscaEl=document.getElementById('vin-ins-busca');if(buscaEl)buscaEl.value='';
-  const label=document.getElementById('vin-ins-label');
-  if(prev?.insId){const ins=insumos.find(x=>x.id===prev.insId);if(ins&&label){label.textContent=ins.nome;label.style.color='#0f172a';label.style.fontWeight='600';}}
-  else if(label){label.textContent='— Selecione o produto interno —';label.style.color='#94a3b8';label.style.fontWeight='400';}
+  _popularSelectInsumo(prev?.insId||'');
   const codFornEl=document.getElementById('vin-cod-forn');
   if(codFornEl) codFornEl.value=prev?.codForn||it.codigo||'';
   const precoEl=document.getElementById('vin-preco-nfe');
@@ -2496,51 +2482,33 @@ function abrirVincularModal(idx) {
 
 function fecharVincularModal() { fecharModal('m-nfe-vincular'); nfeVinculandoIdx=null; }
 
-function abrirComboInsumo() {
-  const panel=document.getElementById('vin-ins-panel');
-  if(!panel||panel.style.display!=='none') return;
-  panel.style.display='';
-  filtrarInsumosVincular();
-  setTimeout(()=>{ document.getElementById('vin-ins-busca')?.focus(); },30);
-  setTimeout(()=>document.addEventListener('mousedown',_fecharComboFora,{once:true}),50);
+function _popularSelectInsumo(selectedId) {
+  const sel=document.getElementById('vin-ins-select');
+  if(!sel) return;
+  sel.innerHTML='<option value="">— Selecione o produto interno —</option>'+
+    insumos.map(i=>`<option value="${i.id}"${i.id===selectedId?' selected':''}>${esc(i.nome)} (${esc(i.unidade_medida||i.unidade_compra||'un')})</option>`).join('');
 }
 
-function _fecharComboFora(e) {
-  const panel=document.getElementById('vin-ins-panel');
-  const trigger=document.getElementById('vin-ins-trigger');
-  if(panel&&!panel.contains(e.target)&&!trigger?.contains(e.target)) panel.style.display='none';
-  else setTimeout(()=>document.addEventListener('mousedown',_fecharComboFora,{once:true}),50);
-}
-
-function filtrarInsumosVincular() {
-  const q=(document.getElementById('vin-ins-busca')?.value||'').toLowerCase();
-  const lista=document.getElementById('vin-ins-lista');
-  if(!lista) return;
-  const filtrados=insumos.filter(i=>!q||i.nome.toLowerCase().includes(q));
-  lista.innerHTML=filtrados.slice(0,80).map(i=>`
-    <div onclick="selecionarInsumoVincular('${i.id}')"
-      style="padding:6px 12px;font-size:13px;color:#0f172a;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f8fafc"
-      onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
-      <span>${esc(i.nome)}</span>
-      <span style="font-size:11px;color:#94a3b8;margin-left:8px;flex-shrink:0">${esc(i.unidade_medida||i.unidade_compra||'')}</span>
-    </div>`).join('');
-  if(!filtrados.length) lista.innerHTML='<div style="padding:10px 12px;font-size:12px;color:#94a3b8;text-align:center">Nenhum resultado</div>';
-}
-
-function selecionarInsumoVincular(insId) {
-  const ins=insumos.find(x=>x.id===insId); if(!ins) return;
+function onVinSelectChange() {
+  const insId=document.getElementById('vin-ins-select').value;
   document.getElementById('vin-ins').value=insId;
-  const label=document.getElementById('vin-ins-label');
-  if(label){label.textContent=ins.nome;label.style.color='#0f172a';label.style.fontWeight='600';}
-  document.getElementById('vin-ins-panel').style.display='none';
-  document.getElementById('vin-ins-busca').value='';
-  onVinInsumoChange();
+  if(insId) onVinInsumoChange();
+  else {
+    document.getElementById('vin-und-row').style.display='none';
+    document.getElementById('vin-emb-section').style.display='none';
+    document.getElementById('vin-conv-summary').style.display='none';
+    const cr=document.getElementById('vin-cod-row');if(cr)cr.style.display='none';
+    const pr=document.getElementById('vin-preco-row');if(pr)pr.style.display='none';
+  }
 }
 
+function abrirComboInsumo(){}
+function _fecharComboFora(){}
+function filtrarInsumosVincular(){}
+function selecionarInsumoVincular(){}
 function limparSelecaoInsumo() {
   document.getElementById('vin-ins').value='';
-  const label=document.getElementById('vin-ins-label');
-  if(label){label.textContent='— Selecione o produto interno —';label.style.color='#94a3b8';label.style.fontWeight='400';}
+  const sel=document.getElementById('vin-ins-select');if(sel)sel.value='';
   document.getElementById('vin-und-row').style.display='none';
   document.getElementById('vin-emb-section').style.display='none';
   document.getElementById('vin-conv-summary').style.display='none';
