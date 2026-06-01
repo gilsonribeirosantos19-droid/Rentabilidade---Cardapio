@@ -2568,7 +2568,16 @@ async function salvarVinculoNfe() {
   }
   nfeSession[idx]={insId,fator:emb.fator,embDesc:emb.embDesc,embIdx:emb.embIdx,insumoNome:ins?.nome||'—',unEst:und};
   fecharVincularModal();
-  renderNfePendentes();
+  // Remove a linha diretamente do DOM com fade
+  const row=document.getElementById(`nfe-row-${idx}`);
+  if(row){
+    row.style.transition='opacity .25s,transform .25s';
+    row.style.opacity='0';
+    row.style.transform='translateX(20px)';
+    setTimeout(()=>{ row.remove(); checkNfeConf(); },250);
+  } else {
+    renderNfePendentes();
+  }
   toast('Vínculo salvo!','ok');
 }
 
