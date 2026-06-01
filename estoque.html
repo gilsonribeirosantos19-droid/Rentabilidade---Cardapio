@@ -2531,8 +2531,8 @@ function filtrarInsumosVincular() {
     <tr onclick="selecionarInsumoVincular('${i.id}')"
       style="cursor:pointer;border-bottom:1px solid #f8fafc;transition:background .1s"
       onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
-      <td style="padding:4px 10px;font-size:11px;font-weight:500;color:#0f172a">${esc(i.nome)}</td>
-      <td style="padding:4px 10px;text-align:right;font-size:10px;color:#94a3b8;white-space:nowrap">${esc(i.unidade_medida||i.unidade_compra||'—')}</td>
+      <td style="padding:2px 8px;font-size:9px;color:#0f172a;line-height:1.4">${esc(i.nome)}</td>
+      <td style="padding:2px 8px;text-align:right;font-size:9px;color:#94a3b8;white-space:nowrap">${esc(i.unidade_medida||i.unidade_compra||'—')}</td>
     </tr>`).join('');
   if(!filtrados.length) tbody.innerHTML='<tr><td colspan="3" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Nenhum insumo encontrado</td></tr>';
 }
