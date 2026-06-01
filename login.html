@@ -268,6 +268,7 @@ async function entrar() {
     const { data, error } = await sbAuth.auth.signInWithPassword({ email, password: senha });
     if (error) throw new Error(error.message);
     localStorage.setItem('sb_token', data.session?.access_token || '');
+    localStorage.setItem('sb_refresh_token', data.session?.refresh_token || '');
     localStorage.setItem('sb_user_id', data.user?.id || '');
 
     // Busca perfil do usuário
