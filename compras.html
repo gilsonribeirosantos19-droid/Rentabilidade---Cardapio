@@ -944,7 +944,6 @@ async function gerarPedidos() {
       const itensPay = itensForn.map(it => {
         const breakdown = it.lojas.map(l=>l.nome+': '+l.qty.toFixed(3)).join(', ');
         return {
-          tenant_id: TENANT_ID,
           pedido_id: pedId,
           insumo_id: it.insId,
           quantidade: it.qComprar,
@@ -1286,7 +1285,7 @@ async function enviarSolicitacao() {
 
     await api('itens_pedido', { method:'POST', prefer:'return=minimal',
       body: JSON.stringify(itensFinal.map(it => ({
-        tenant_id: TENANT_ID, pedido_id: pedId, insumo_id: it.insId,
+        pedido_id: pedId, insumo_id: it.insId,
         quantidade: it.qty, unidade: it.unidade, preco_unitario: null
       })))
     });
