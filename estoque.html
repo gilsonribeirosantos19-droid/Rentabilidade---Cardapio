@@ -1238,7 +1238,13 @@
       <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:14px">
         <div>
           <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Insumo (produto interno) *</label>
-          <select id="vin-ins" onchange="onVinInsumoChange()" style="width:100%;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;background:#f8fafc;outline:none"></select>
+          <div style="display:flex;gap:6px">
+            <select id="vin-ins" onchange="onVinInsumoChange()" style="flex:1;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;background:#f8fafc;outline:none"></select>
+            <button onclick="abrirNovoInsumoInline()" title="Cadastrar novo insumo" style="height:38px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#f97316;white-space:nowrap;flex-shrink:0">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo
+            </button>
+          </div>
         </div>
         <div id="vin-und-row" style="display:none">
           <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Unidade padrão *</label>
@@ -1290,6 +1296,44 @@
     <div style="padding:10px 20px;background:#fffbeb;border-top:1px solid #fde68a;font-size:11px;color:#92400e;display:flex;align-items:center;gap:6px">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       Este vínculo ficará salvo para este fornecedor e será usado automaticamente nas próximas importações.
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOVO INSUMO INLINE (dentro do fluxo NF-e) -->
+<div id="m-novo-ins-inline" class="overlay" onclick="if(event.target===this)fecharModal('m-novo-ins-inline')" style="z-index:330">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:420px;box-shadow:0 8px 40px rgba(0,0,0,.2)" onclick="event.stopPropagation()">
+    <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:14px;font-weight:700;color:#0f172a">Novo Insumo</div>
+      <button onclick="fecharModal('m-novo-ins-inline')" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px">✕</button>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Nome *</label>
+        <input id="ni-nome" type="text" placeholder="Ex: Salmão, Cebolinha, Arroz..." style="width:100%;height:36px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Unidade *</label>
+          <select id="ni-und" style="width:100%;height:36px;padding:0 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#f8fafc">
+            <option value="kg">kg</option><option value="litro">litro</option><option value="un">un</option><option value="g">g</option><option value="ml">ml</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Rendimento %</label>
+          <input id="ni-rend" type="number" value="100" min="1" max="100" style="width:100%;height:36px;padding:0 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;text-align:center">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Categoria</label>
+          <select id="ni-cat" style="width:100%;height:36px;padding:0 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#f8fafc">
+            <option value="hortifruti">Hortifruti</option><option value="proteina">Proteína</option><option value="graos">Grãos</option><option value="laticinios">Laticínios</option><option value="bebida">Bebida</option><option value="outros">Outros</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div style="padding:12px 20px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px">
+      <button onclick="fecharModal('m-novo-ins-inline')" style="padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>
+      <button onclick="salvarNovoInsumoInline()" style="padding:8px 20px;border-radius:8px;border:none;background:#f97316;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar e selecionar</button>
     </div>
   </div>
 </div>
@@ -2463,6 +2507,39 @@ function abrirVincularModal(idx) {
 }
 
 function fecharVincularModal() { fecharModal('m-nfe-vincular'); nfeVinculandoIdx=null; }
+
+function abrirNovoInsumoInline() {
+  const desc=nfeVinculandoIdx!==null?(nfeItens[nfeVinculandoIdx]?.descricao||''):'';
+  document.getElementById('ni-nome').value=desc;
+  document.getElementById('ni-und').value='kg';
+  document.getElementById('ni-rend').value='100';
+  abrirModal('m-novo-ins-inline');
+}
+
+async function salvarNovoInsumoInline() {
+  const nome=document.getElementById('ni-nome').value.trim();
+  const und=document.getElementById('ni-und').value;
+  const rend=parseFloat(document.getElementById('ni-rend').value)||100;
+  const cat=document.getElementById('ni-cat').value;
+  if(!nome){toast('Informe o nome do insumo.','err');return;}
+  try {
+    const novo=await api('insumos',{method:'POST',prefer:'return=representation',
+      body:JSON.stringify({tenant_id:TENANT_ID,nome,unidade_medida:und,unidade_compra:und,
+        rendimento_pct:rend,categoria:cat,preco_compra:0,ativo:true})});
+    if(novo[0]){
+      insumos.push(novo[0]);
+      insumos.sort((a,b)=>a.nome.localeCompare(b.nome));
+      // Seleciona o novo insumo no dropdown
+      const sel=document.getElementById('vin-ins');
+      const opt=document.createElement('option');
+      opt.value=novo[0].id; opt.textContent=nome; opt.selected=true;
+      sel.appendChild(opt);
+      fecharModal('m-novo-ins-inline');
+      onVinInsumoChange();
+      toast(`Insumo "${nome}" cadastrado e selecionado!`,'ok');
+    }
+  } catch(e){toast('Erro: '+e.message,'err');}
+}
 
 async function onVinInsumoChange() {
   const insId=document.getElementById('vin-ins').value;
