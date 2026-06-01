@@ -1214,6 +1214,72 @@
   </div>
 </div>
 
+<!-- MODAL: VINCULAR ITEM NF-e -->
+<div id="m-nfe-vincular" class="overlay" onclick="if(event.target===this)fecharVincularModal()" style="z-index:320">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)" onclick="event.stopPropagation()">
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1">
+      <div style="font-size:15px;font-weight:700;color:#0f172a">Vincular item da NF-e</div>
+      <button onclick="fecharVincularModal()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:2px 8px;border-radius:6px">✕</button>
+    </div>
+    <!-- NF DATA (expansível) -->
+    <div style="border-bottom:1px solid #e2e8f0">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.vin-arr').style.transform=this.nextElementSibling.style.display===''?'rotate(180deg)':'rotate(0)'" style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;cursor:pointer;font-size:12px;font-weight:600;color:#64748b;user-select:none">
+        <span>DADOS DA NF-e</span><span class="vin-arr" style="font-size:10px;transition:transform .2s">▲</span>
+      </div>
+      <div style="padding:0 20px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Produto NF-e</div><div style="font-size:13px;font-weight:600;color:#0f172a" id="vin-desc">—</div></div>
+        <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Código NF-e</div><div style="font-size:13px;font-family:'DM Mono',monospace;color:#0f172a" id="vin-cod">—</div></div>
+        <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Quantidade NF-e</div><div style="font-size:13px;font-weight:600;color:#0f172a" id="vin-qtd">—</div></div>
+        <div><div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Fornecedor</div><div style="font-size:13px;font-weight:600;color:#0f172a" id="vin-forn">—</div></div>
+      </div>
+    </div>
+    <!-- INSUMO SELECTOR -->
+    <div style="padding:16px 20px">
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Insumo (produto interno) *</label>
+        <select id="vin-ins" onchange="onVinInsumoChange()" style="width:100%;height:38px;padding:0 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;background:#f8fafc;outline:none"></select>
+      </div>
+      <div id="vin-und-row" style="display:none;margin-bottom:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px">
+        <div style="font-size:10px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Unidade padrão de estoque</div>
+        <div style="font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="vin-und">—</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px">Todas as entradas serão convertidas para esta unidade.</div>
+      </div>
+      <!-- EMBALAGENS -->
+      <div id="vin-emb-section" style="display:none;margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conversão *</label>
+        <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:1fr auto;padding:8px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em">
+            <span>Embalagem</span><span id="vin-emb-header">Qtd. na embalagem</span>
+          </div>
+          <div id="vin-emb-list"></div>
+        </div>
+      </div>
+      <!-- RESUMO CONVERSÃO -->
+      <div id="vin-conv-summary" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Resumo da conversão</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div><div style="font-size:10px;color:#3b82f6;margin-bottom:2px">Quantidade NF-e</div><div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="vin-conv-nf">—</div></div>
+          <div><div style="font-size:10px;color:#3b82f6;margin-bottom:2px">Conversão</div><div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="vin-conv-formula">—</div></div>
+          <div><div style="font-size:10px;color:#3b82f6;margin-bottom:2px">Entrada no estoque</div><div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#16a34a" id="vin-conv-result">—</div></div>
+        </div>
+      </div>
+      <!-- OBS -->
+      <div><label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Observações (opcional)</label>
+        <textarea id="vin-obs" maxlength="200" placeholder="Adicione uma observação..." style="width:100%;height:56px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;resize:none;outline:none;color:#0f172a"></textarea>
+      </div>
+    </div>
+    <!-- FOOTER -->
+    <div style="padding:12px 20px;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;bottom:0;background:#fff">
+      <button onclick="fecharVincularModal()" style="padding:8px 18px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>
+      <button onclick="salvarVinculoNfe()" id="btn-vin-salvar" style="padding:8px 22px;border-radius:8px;border:none;background:#f97316;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar vínculo</button>
+    </div>
+    <div style="padding:10px 20px;background:#fffbeb;border-top:1px solid #fde68a;font-size:11px;color:#92400e;display:flex;align-items:center;gap:6px">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Este vínculo ficará salvo para este fornecedor e será usado automaticamente nas próximas importações.
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: NF-e XML -->
 <div id="m-nfe" class="overlay" onclick="if(event.target===this){fecharModal('m-nfe');resetNfe()}">
   <div class="modal-nfe" id="modal-nfe-inner" onclick="event.stopPropagation()">
@@ -1222,56 +1288,13 @@
     <div class="nfe-hdr">
       <div>
         <div class="nfe-hdr-title">Entrada por NF-e / XML</div>
-        <div class="nfe-hdr-sub">Configure a conversão das embalagens de compra para as unidades de estoque.</div>
+        <div class="nfe-hdr-sub" id="nfe-hdr-sub">Importe o XML da nota fiscal para registrar a entrada no estoque.</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <button onclick="toggleNfeExpand()" title="Expandir" style="width:30px;height:30px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b" id="btn-nfe-expand">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
         </button>
         <button onclick="fecharModal('m-nfe');resetNfe()" style="width:30px;height:30px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:16px">✕</button>
-      </div>
-    </div>
-
-    <!-- STEPS -->
-    <div class="nfe-steps" id="nfe-steps">
-      <div class="nfe-step active" id="nfe-step-1">
-        <div class="nfe-step-circle">1</div>
-        <div class="nfe-step-info">
-          <div class="nfe-step-label">Vincular produto</div>
-          <div class="nfe-step-desc">Associe o item da NF-e ao produto do sistema</div>
-        </div>
-      </div>
-      <div class="nfe-step-sep"></div>
-      <div class="nfe-step inactive" id="nfe-step-2">
-        <div class="nfe-step-circle">2</div>
-        <div class="nfe-step-info">
-          <div class="nfe-step-label" style="color:#94a3b8">Definir embalagem</div>
-          <div class="nfe-step-desc">Informe a unidade de compra (fornecedor)</div>
-        </div>
-      </div>
-      <div class="nfe-step-sep"></div>
-      <div class="nfe-step inactive" id="nfe-step-3">
-        <div class="nfe-step-circle">3</div>
-        <div class="nfe-step-info">
-          <div class="nfe-step-label" style="color:#94a3b8">Definir conversão</div>
-          <div class="nfe-step-desc">Configure o fator de conversão</div>
-        </div>
-      </div>
-      <div class="nfe-step-sep"></div>
-      <div class="nfe-step inactive" id="nfe-step-4">
-        <div class="nfe-step-circle">4</div>
-        <div class="nfe-step-info">
-          <div class="nfe-step-label" style="color:#94a3b8">Prévia de entrada</div>
-          <div class="nfe-step-desc">Confira a quantidade e o custo unitário</div>
-        </div>
-      </div>
-      <div class="nfe-step-sep"></div>
-      <div class="nfe-step inactive" id="nfe-step-5">
-        <div class="nfe-step-circle">5</div>
-        <div class="nfe-step-info">
-          <div class="nfe-step-label" style="color:#94a3b8">Confirmar entrada</div>
-          <div class="nfe-step-desc">Finalize e registre a entrada no estoque</div>
-        </div>
       </div>
     </div>
 
@@ -1289,138 +1312,52 @@
       </div>
     </div>
 
-    <!-- VIEW 2: MAPEAMENTO -->
+    <!-- VIEW 2: PENDENTES -->
     <div id="nfe-v2" style="display:none;flex:1;overflow:hidden;flex-direction:column">
-
-      <!-- BANNER INFO -->
-      <div class="nfe-banner">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>Vincule o produto da NF-e ao seu produto interno. A conversão será salva e aplicada automaticamente nas próximas entradas.</span>
-        <a href="#" style="margin-left:auto;font-size:12px;color:#2563eb;white-space:nowrap;text-decoration:none;font-weight:600">Saiba mais</a>
-      </div>
-
       <!-- NF-e INFO BAR -->
-      <div class="nfe-info-bar">
+      <div class="nfe-info-bar" style="margin:12px 20px;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div style="width:32px;height:32px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           </div>
           <div>
-            <div class="nfe-info-val blue" id="nfe-num">NF-e —</div>
+            <div class="nfe-info-val blue" id="nfe-num" style="font-size:13px">NF-e —</div>
             <div style="font-size:11px;color:#64748b" id="nfe-emit">—</div>
           </div>
         </div>
-        <div style="margin-left:20px">
-          <div class="nfe-info-lbl">Data de emissão</div>
-          <div class="nfe-info-val blue" id="nfe-data-emissao">—</div>
+        <div><div class="nfe-info-lbl">Data emissão</div><div class="nfe-info-val" id="nfe-data-emissao" style="font-size:12px">—</div></div>
+        <div><div class="nfe-info-lbl">Fornecedor</div>
+          <select class="field field-sm" id="nfe-forn" style="min-width:140px;margin-top:2px" onclick="event.stopPropagation()"><option value="">Sem fornecedor</option></select>
         </div>
-        <div style="margin-left:20px">
-          <div class="nfe-info-lbl">Natureza da operação</div>
-          <div class="nfe-info-val">Compra de mercadoria</div>
-        </div>
-        <div style="margin-left:20px">
-          <div class="nfe-info-lbl">Fornecedor</div>
-          <select class="field field-sm" id="nfe-forn" style="min-width:160px;margin-top:2px"><option value="">Sem fornecedor</option></select>
-        </div>
-        <div style="margin-left:auto">
-          <input type="date" id="nfe-data" class="field field-sm">
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <input type="date" id="nfe-data" class="field field-sm" onclick="event.stopPropagation()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
 
-      <!-- LAYOUT: TABELA + PAINEL LATERAL -->
-      <div style="display:flex;flex:1;overflow:hidden">
+      <!-- AUTO-LINKED BANNER -->
+      <div id="nfe-auto-banner" style="display:none;margin:0 20px 8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;font-size:12px;color:#16a34a;display:flex;align-items:center;gap:8px"></div>
 
-        <!-- MAIN TABLE AREA -->
-        <div style="flex:1;overflow-y:auto;padding:0 20px 16px">
-
-          <div class="nfe-sec-title" style="margin-top:12px">1. Vincular produto da NF-e ao produto do sistema</div>
-
-          <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
-            <table class="nfe-tbl">
-              <thead><tr>
-                <th style="width:170px">Produto NF-e</th>
-                <th style="width:62px">Cód.</th>
-                <th>Produto do sistema</th>
-                <th class="r" style="width:58px">Qtd.</th>
-                <th style="width:65px">Emb.</th>
-                <th style="width:130px">Conversão</th>
-                <th class="r" style="width:72px">Convertido</th>
-                <th style="width:55px">Un.</th>
-                <th style="width:30px"></th>
-              </tr></thead>
-              <tbody id="nfe-body"></tbody>
-            </table>
-          </div>
-
-          <!-- CONVERSÕES SALVAS -->
-          <div class="nfe-sec-title" style="margin-top:18px">Conversões salvas para este produto do fornecedor
-            <span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:2px 10px;border-radius:12px;margin-left:8px">Vínculo será salvo</span>
-          </div>
-          <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
-            <table class="nfe-tbl">
-              <thead><tr>
-                <th>Cód. Forn. / EAN</th>
-                <th>Descrição do produto (fornecedor)</th>
-                <th>Produto do sistema</th>
-                <th>Embalagem compra</th>
-                <th>Conversão</th>
-                <th>Unid. estoque</th>
-                <th style="width:36px"></th>
-              </tr></thead>
-              <tbody id="nfe-vinculos-body">
-                <tr><td colspan="7" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">Selecione um insumo para ver os vínculos salvos</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div style="margin-top:8px;display:flex;align-items:center;gap:12px">
-            <button style="display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:#2563eb;font-size:12px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Novo vínculo
-            </button>
-            <a href="#" style="font-size:12px;color:#64748b;text-decoration:none;margin-left:auto">Gerenciar todos os vínculos ↗</a>
-          </div>
-
-          <!-- BOTTOM: OBSERVAÇÕES + CONFERÊNCIA + OUTRAS AÇÕES -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:18px">
-            <div>
-              <div class="nfe-info-lbl" style="margin-bottom:6px">Observações (opcional)</div>
-              <textarea id="nfe-obs" placeholder="Adicione alguma observação sobre esta entrada..." maxlength="200" style="width:100%;height:70px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;resize:none;outline:none;color:#0f172a"></textarea>
-              <div style="font-size:10px;color:#94a3b8;margin-top:2px">0 / 200 caracteres</div>
-            </div>
-            <div>
-              <div class="nfe-info-lbl" style="margin-bottom:6px">Conferência</div>
-              <div id="nfe-conf-status" style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b;padding:8px 0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Vincule os itens para conferir
-              </div>
-            </div>
-            <div>
-              <div class="nfe-info-lbl" style="margin-bottom:6px">Outras ações</div>
-              <div style="display:flex;flex-direction:column;gap:6px">
-                <button style="display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid #e2e8f0;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;color:#0f172a">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                  Salvar rascunho
-                  <span style="font-size:10px;color:#94a3b8;display:block;margin-top:0">Salvar e continuar depois</span>
-                </button>
-                <button onclick="resetNfe()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid #e2e8f0;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;color:#0f172a">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  Importar outro XML
-                  <span style="font-size:10px;color:#94a3b8;display:block;margin-top:0">Selecionar outro arquivo</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
+      <!-- PENDING TABLE -->
+      <div style="flex:1;overflow-y:auto;padding:0 20px 16px">
+        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:8px 0 10px;display:flex;align-items:center;justify-content:space-between">
+          <span>Itens pendentes de vínculo</span>
+          <button onclick="resetNfe()" style="background:none;border:none;color:#64748b;font-size:11px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Outro XML
+          </button>
         </div>
-
-        <!-- RIGHT PANEL: PRÉVIA -->
-        <div style="width:240px;flex-shrink:0;background:#f8fafc;border-left:1px solid #e2e8f0;padding:16px;overflow-y:auto">
-          <div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:12px">Impacto no estoque (prévia)</div>
-          <div id="nfe-preview-panel">
-            <div style="font-size:12px;color:#94a3b8;text-align:center;padding:16px 0">Selecione um insumo e fator para ver a prévia</div>
-          </div>
+        <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+          <table class="nfe-tbl">
+            <thead><tr>
+              <th>Produto da NF-e<br><span style="font-weight:400;opacity:.7">Código</span></th>
+              <th>Unidade NF-e</th>
+              <th class="r">Quantidade NF-e</th>
+              <th style="width:100px">Ação</th>
+            </tr></thead>
+            <tbody id="nfe-body"></tbody>
+          </table>
         </div>
-
       </div>
     </div>
 
@@ -1432,13 +1369,9 @@
         Outro arquivo
       </button>
       <div style="flex:1"></div>
-      <button class="btn btn-ghost" id="btn-nfe-voltar" style="display:none" onclick="">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Voltar
-      </button>
       <button class="btn btn-primary" id="btn-nfe-conf" style="display:none;align-items:center;gap:6px" onclick="confirmarNfe()">
-        Continuar
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirmar entrada
       </button>
     </div>
 
@@ -1636,6 +1569,7 @@ let insumos=[], saldos=[], entradas=[], saidas=[], vinculos=[], fornecedores=[],
 let gruposCompra=[], gruposCompraItens={};
 let lojas=[], lojaAtual=null;
 let nfeItens=[], tabAtual='hub';
+let nfeAutoLinked={}, nfeSession={}, nfeVinculandoIdx=null;
 
 function getLojaId() { return lojaAtual?.id||null; }
 
@@ -2278,10 +2212,8 @@ function resetNfe() {
   v2.style.display='none';
   document.getElementById('btn-nfe-outro').style.display='none';
   document.getElementById('btn-nfe-conf').style.display='none';
-  const bv=document.getElementById('btn-nfe-voltar');if(bv)bv.style.display='none';
   document.getElementById('nfe-file').value='';
-  nfeItens=[];
-  for(let i=1;i<=5;i++){const s=document.getElementById(`nfe-step-${i}`);if(s){s.className='nfe-step '+(i===1?'active':'inactive');const l=s.querySelector('.nfe-step-label');if(l)l.style.color=i===1?'':'#94a3b8';}}
+  nfeItens=[]; nfeAutoLinked={}; nfeSession={}; nfeVinculandoIdx=null;
 }
 
 function handleNfeFile(file) {
@@ -2292,28 +2224,26 @@ function handleNfeFile(file) {
       const itens=parseNfeXml(e.target.result);
       if(!itens.length){toast('Nenhum item encontrado no XML.','err');return;}
       nfeItens=itens;
-      renderNfeMap(itens);
       document.getElementById('nfe-v1').style.display='none';
       const v2=document.getElementById('nfe-v2');
       v2.style.display='flex';v2.style.flexDirection='column';
       document.getElementById('btn-nfe-outro').style.display='inline-flex';
       document.getElementById('btn-nfe-conf').style.display='inline-flex';
-      const bv=document.getElementById('btn-nfe-voltar');if(bv)bv.style.display='inline-flex';
       document.getElementById('nfe-data').value=hoje();
       // NF-e info bar
       const pi=itens[0]||{};
       const numEl=document.getElementById('nfe-num');
       const emitEl=document.getElementById('nfe-emit');
       const dataEl=document.getElementById('nfe-data-emissao');
-      if(numEl) numEl.textContent=`NF-e ${pi.nNF||'?'}/${pi.serie||'?'} · Série ${pi.serie||'?'} · ${itens.length} item(ns)`;
+      if(numEl) numEl.textContent=`NF-e ${pi.nNF||'?'} · Série ${pi.serie||'?'} · ${itens.length} item(ns)`;
       if(emitEl) emitEl.textContent=`Emitente: ${pi.emitNome||'—'}`;
       if(dataEl) dataEl.textContent=hoje().split('-').reverse().join('/');
       // auto-fill fornecedor
       const emitNome=pi.emitNome||'';
-      const fornMatch=fornecedores.find(f=>f.nome.toLowerCase()===emitNome.toLowerCase());
-      if(fornMatch) document.getElementById('nfe-forn').value=fornMatch.id;
-      // step 1 active
-      const s1=document.getElementById('nfe-step-1');if(s1)s1.className='nfe-step active';
+      const fornMatch=fornecedores.find(f=>(f.nome||'').toLowerCase()===emitNome.toLowerCase()||(f.nome_fantasia||'').toLowerCase()===emitNome.toLowerCase());
+      const fornSel=document.getElementById('nfe-forn');
+      if(fornMatch&&fornSel) fornSel.value=fornMatch.id;
+      renderNfePendentes();
     } catch(err){toast('Erro ao ler XML: '+err.message,'err');}
   };
   reader.readAsText(file,'utf-8');
@@ -2346,177 +2276,230 @@ function fmtQtd(n) {
   return v.toFixed(3).replace(/\.?0+$/,'');
 }
 
-function calcNfePreview(idx) {
-  const it=nfeItens[idx]; if(!it) return;
-  const insId=document.getElementById(`ns-${idx}`)?.value;
-  const fator=parseFloat(document.getElementById(`nf-${idx}`)?.value)||1;
-  const ins=insId?insumos.find(x=>x.id===insId):null;
-  const qtdEst=it.quantidade*fator;
-  const custoUnit=it.valorUnit/fator;
-  const unEst=ins?.unidade_medida||ins?.unidade_compra||'un';
-
-  // Atualiza colunas da tabela inline
-  const nqEl=document.getElementById(`nq-${idx}`);
-  const nuEl=document.getElementById(`nu-${idx}`);
-  const neEl=document.getElementById(`ne-${idx}`);
-  if(nqEl) nqEl.textContent=fmtQtd(qtdEst);
-  if(nuEl) nuEl.textContent=ins?unEst:'—';
-  if(neEl) neEl.textContent=ins?unEst:'—';
-
-  const panel=document.getElementById('nfe-preview-panel');
-  const confEl=document.getElementById('nfe-conf-status');
-  if(!ins||!insId){
-    if(panel) panel.innerHTML='<div style="font-size:12px;color:#94a3b8;text-align:center;padding:16px 0">Selecione um insumo e fator para ver a prévia</div>';
-    return;
-  }
-  if(panel) panel.innerHTML=`
-    <div style="margin-bottom:12px">
-      <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Quantidade que entrará</div>
-      <div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a">${fmtQtd(qtdEst)} <span style="font-size:13px;font-weight:600;color:#64748b">${unEst}</span></div>
-      <div style="font-size:11px;color:#64748b">${fmtQtd(it.quantidade)} ${esc(it.unidade)} × ${fmtQtd(fator)} = ${fmtQtd(qtdEst)} ${unEst}</div>
-    </div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Custo unitário no estoque</div>
-      <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${brl(custoUnit)}</div>
-      <div style="font-size:11px;color:#64748b">/ ${unEst}</div>
-    </div>
-    <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px">Este item impactará:</div>
-    ${['Estoque','Custo médio','Fichas técnicas','CMV'].map(l=>`
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px;color:#64748b">
-        <span style="width:16px;height:16px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-        </span>${l}
-      </div>`).join('')}
-  `;
-  if(confEl) confEl.innerHTML=`
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    <div><div style="font-weight:600;color:#16a34a">${nfeItens.filter((_,j)=>document.getElementById(`ns-${j}`)?.value).length} item conferido</div><div style="font-size:11px;color:#64748b">Tudo certo para confirmar a entrada.</div></div>
-  `;
-  // Atualiza vinculos salvos
-  renderNfeVinculos(insId);
-}
-
-function renderNfeVinculos(insId) {
-  const tbody=document.getElementById('nfe-vinculos-body'); if(!tbody) return;
-  const ins=insumos.find(x=>x.id===insId);
-  const vins=vinculos.filter(v=>v.insumo_id===insId);
-  const fornId=document.getElementById('nfe-forn')?.value;
-  const ifvs=insumoFornVinculos.filter(v=>v.insumo_id===insId);
-  const todos=[...vins.map(v=>({cod:v.codigo_nfe||'—',desc:v.descricao_nfe||'—',ins:ins?.nome||'—',insCode:insId.slice(-5).toUpperCase(),emb:v.unidade_compra||'—',conv:`1 ${v.unidade_compra||'?'} = ${fmtQtd(v.fator_conversao||1)} ${ins?.unidade_medida||'un'}`,un:ins?.unidade_medida||ins?.unidade_compra||'un',id:v.id}))];
-  if(!todos.length){tbody.innerHTML='<tr><td colspan="7" style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Nenhuma conversão salva para este insumo</td></tr>';return;}
-  tbody.innerHTML=todos.map((v,idx)=>`<tr>
-    <td><span class="cod-badge">${esc(v.cod)}</span></td>
-    <td style="font-size:12px">${esc(v.desc)}</td>
-    <td style="font-size:12px">${esc(v.ins)} <span style="color:#94a3b8">(INS-${v.insCode})</span></td>
-    <td style="font-size:12px">${esc(v.emb)}</td>
-    <td style="font-size:12px;font-family:'DM Mono',monospace">${esc(v.conv)}</td>
-    <td style="font-size:12px">${esc(v.un)}</td>
-    <td class="c"><button style="background:none;border:none;cursor:pointer;color:#94a3b8" onclick="" title="Remover">—</button></td>
-  </tr>`).join('');
-}
-
-function renderNfeMap(itens) {
-  const pi=itens[0]||{};
-  const fornMatch=fornecedores.find(f=>f.nome.toLowerCase()===(pi.emitNome||'').toLowerCase());
-  const fornId=fornMatch?.id||null;
-
-  const insOpts='<option value="">— Selecione o produto —</option>'+
-    insumos.map(i=>`<option value="${i.id}">${esc(i.nome)}</option>`).join('');
-
-  document.getElementById('nfe-body').innerHTML=itens.map((it,i)=>{
-    let vin=it.codigo?vinculos.find(v=>v.codigo_nfe&&v.codigo_nfe===it.codigo):null;
+function processNfeItems() {
+  nfeAutoLinked={}; nfeSession={};
+  const fornId=document.getElementById('nfe-forn')?.value||null;
+  nfeItens.forEach((it,idx)=>{
+    let vin=null;
+    if(it.codigo) vin=vinculos.find(v=>v.codigo_nfe&&v.codigo_nfe===it.codigo);
+    if(!vin?.insumo_id) vin=vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
     if(!vin?.insumo_id&&it.codigo){
       const ifv=insumoFornVinculos.find(v=>v.codigo_fornecedor===it.codigo&&(!fornId||v.fornecedor_id===fornId));
-      if(ifv) vin={insumo_id:ifv.insumo_id,fator_conversao:ifv.qtd_por_embalagem||1};
+      if(ifv) vin={insumo_id:ifv.insumo_id,fator_conversao:ifv.qtd_por_embalagem||1,embalagem_descricao:ifv.embalagem_descricao||''};
     }
-    if(!vin?.insumo_id) vin=vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
-
-    const selVal=vin?.insumo_id||'';
-    const fator=vin?.fator_conversao||1;
-    const autoFill=!!vin?.insumo_id;
-    const opts=insOpts.replace(`value="${selVal}"`,`value="${selVal}" selected`);
-    const ins=selVal?insumos.find(x=>x.id===selVal):null;
-    const qtdEst=it.quantidade*fator;
-    const unEst=ins?.unidade_medida||ins?.unidade_compra||'—';
-
-    return `<tr class="${autoFill?'linked-row':''}">
-      <td style="padding:6px 8px"><div style="font-weight:600;font-size:11px;line-height:1.3">${esc(it.descricao.substring(0,38))}${it.descricao.length>38?'…':''}</div></td>
-      <td style="padding:6px 8px"><span style="font-family:'DM Mono',monospace;font-size:10px;color:#64748b">${esc(it.codigo||'—')}</span></td>
-      <td style="padding:6px 8px">
-        <select class="field field-sm" id="ns-${i}" style="width:100%;font-size:11px;padding:4px 6px" onchange="checkNfeInc(${i});calcNfePreview(${i})">${opts}</select>
-        ${autoFill?`<span class="linked-badge" style="margin-top:2px;display:inline-flex;font-size:9px;padding:1px 6px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Vinculado</span>`:''}
-      </td>
-      <td style="text-align:right;padding:6px 8px"><span style="font-family:'DM Mono',monospace;font-weight:600;font-size:12px">${fmtQtd(it.quantidade)}</span></td>
-      <td style="padding:6px 8px"><span style="font-size:11px;font-weight:600;color:#334155">${esc(it.unidade)}</span></td>
-      <td style="padding:6px 8px">
-        <div style="font-size:10px;color:#94a3b8;margin-bottom:2px">1 ${esc(it.unidade)} =</div>
-        <div style="display:flex;align-items:center;gap:3px">
-          <input type="number" class="field field-sm" id="nf-${i}" value="${fator}" min="0.001" step="0.001" style="width:60px;font-size:11px;padding:3px 5px" oninput="calcNfePreview(${i})">
-          <span id="nu-${i}" style="font-size:11px;color:#64748b">${esc(unEst)}</span>
-        </div>
-      </td>
-      <td style="text-align:right;padding:6px 8px">
-        <span id="nq-${i}" style="font-family:'DM Mono',monospace;font-weight:700;font-size:12px;color:#0f172a">${fmtQtd(qtdEst)}</span>
-        <div style="margin-top:3px"><input type="checkbox" id="ni-${i}" ${autoFill?'checked':''} style="accent-color:#f97316"></div>
-      </td>
-      <td style="padding:6px 8px"><span id="ne-${i}" style="font-size:11px;font-weight:600;color:#334155">${esc(unEst)}</span></td>
-      <td style="padding:4px"><button style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:2px;border-radius:4px">⋮</button></td>
-    </tr>`;
-  }).join('');
+    if(vin?.insumo_id) nfeAutoLinked[idx]={insId:vin.insumo_id,fator:vin.fator_conversao||1,embDesc:vin.embalagem_descricao||'',vinId:vin.id};
+  });
 }
 
-function checkNfeInc(i) {
-  const selVal=document.getElementById(`ns-${i}`)?.value;
-  const cb=document.getElementById(`ni-${i}`);
-  if(cb) cb.checked=!!selVal;
+function renderNfePendentes() {
+  processNfeItems();
+  const autoCount=Object.keys(nfeAutoLinked).length;
+  const banner=document.getElementById('nfe-auto-banner');
+  if(autoCount>0&&banner){
+    banner.style.display='flex';
+    banner.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span><strong>${autoCount} ${autoCount===1?'item':'itens'} processado(s) automaticamente</strong> — vínculos já cadastrados foram aplicados.</span>`;
+  } else if(banner) banner.style.display='none';
+  const sub=document.getElementById('nfe-hdr-sub');
+  const pendentes=nfeItens.filter((_,idx)=>!nfeAutoLinked[idx]&&!nfeSession[idx]);
+  if(sub) sub.textContent=pendentes.length===0?`Todos os ${nfeItens.length} itens estão vinculados. Confirme para registrar a entrada.`:`${pendentes.length} item(ns) pendente(s) de vínculo. Revise e vincule para continuar.`;
+  const tbody=document.getElementById('nfe-body');
+  const rowsPendentes=nfeItens.map((it,idx)=>{
+    const auto=nfeAutoLinked[idx];
+    const sess=nfeSession[idx];
+    if(auto) return '';
+    const linked=!!sess;
+    const ins=linked?insumos.find(x=>x.id===sess.insId):null;
+    return `<tr id="nfe-row-${idx}" style="${linked?'background:#f0fdf4':''}">
+      <td style="padding:10px 12px">
+        <div style="font-weight:600;font-size:12px;line-height:1.3;color:#0f172a">${esc(it.descricao.substring(0,50))}${it.descricao.length>50?'…':''}</div>
+        <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace;margin-top:2px">${esc(it.codigo||'—')}</div>
+        ${linked?`<div style="font-size:11px;color:#16a34a;margin-top:4px;display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${esc(ins?.nome||'—')} · 1 ${esc(it.unidade)} = ${fmtQtd(sess.fator)} ${esc(sess.unEst)}</div>`:''}
+      </td>
+      <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#334155">${esc(it.unidade)}</td>
+      <td style="padding:10px 12px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:13px;color:#0f172a">${fmtQtd(it.quantidade)}</td>
+      <td style="padding:10px 12px">
+        ${linked
+          ?`<button onclick="abrirVincularModal(${idx})" style="padding:5px 12px;border-radius:7px;border:1px solid #bbf7d0;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✓ Editar</button>`
+          :`<button onclick="abrirVincularModal(${idx})" style="padding:5px 14px;border-radius:7px;border:none;background:#f97316;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Vincular</button>`}
+      </td>
+    </tr>`;
+  }).filter(Boolean).join('');
+  tbody.innerHTML=rowsPendentes||`<tr><td colspan="4" style="padding:20px;text-align:center;color:#16a34a;font-size:13px;font-weight:600">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
+    Todos os itens foram vinculados. Clique em "Confirmar entrada".
+  </td></tr>`;
+  checkNfeConf();
+}
+
+function checkNfeConf() {
+  const pendentes=nfeItens.filter((_,idx)=>!nfeAutoLinked[idx]&&!nfeSession[idx]);
+  const btn=document.getElementById('btn-nfe-conf');
+  if(!btn) return;
+  const allDone=pendentes.length===0&&nfeItens.length>0;
+  btn.disabled=!allDone;
+  btn.style.opacity=allDone?'1':'0.5';
+  btn.style.cursor=allDone?'pointer':'not-allowed';
+  btn.innerHTML=allDone
+    ?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Confirmar entrada (${nfeItens.length} ${nfeItens.length===1?'item':'itens'})`
+    :`Vincule os pendentes (${pendentes.length} restante${pendentes.length===1?'':'s'})`;
+}
+
+function abrirVincularModal(idx) {
+  nfeVinculandoIdx=idx;
+  const it=nfeItens[idx];
+  const fornId=document.getElementById('nfe-forn')?.value;
+  const forn=fornecedores.find(f=>f.id===fornId);
+  document.getElementById('vin-desc').textContent=it.descricao;
+  document.getElementById('vin-cod').textContent=it.codigo||'—';
+  document.getElementById('vin-qtd').textContent=`${fmtQtd(it.quantidade)} ${it.unidade}`;
+  document.getElementById('vin-forn').textContent=forn?.nome_fantasia||forn?.nome||it.emitNome||'—';
+  const sel=document.getElementById('vin-ins');
+  const prev=nfeSession[idx];
+  sel.innerHTML='<option value="">— Buscar produto interno —</option>'+
+    insumos.map(i=>`<option value="${i.id}"${prev?.insId===i.id?' selected':''}>${esc(i.nome)}</option>`).join('');
+  sel._selectedEmb=null;
+  document.getElementById('vin-und-row').style.display='none';
+  document.getElementById('vin-emb-section').style.display='none';
+  document.getElementById('vin-conv-summary').style.display='none';
+  document.getElementById('vin-obs').value='';
+  if(prev?.insId) onVinInsumoChange();
+  abrirModal('m-nfe-vincular');
+}
+
+function fecharVincularModal() { fecharModal('m-nfe-vincular'); nfeVinculandoIdx=null; }
+
+function onVinInsumoChange() {
+  const insId=document.getElementById('vin-ins').value;
+  const idx=nfeVinculandoIdx;
+  const it=idx!==null?nfeItens[idx]:null;
+  if(!insId){
+    document.getElementById('vin-und-row').style.display='none';
+    document.getElementById('vin-emb-section').style.display='none';
+    document.getElementById('vin-conv-summary').style.display='none';
+    return;
+  }
+  const ins=insumos.find(x=>x.id===insId);
+  const und=(ins?.unidade_medida||ins?.unidade_compra||'un').toUpperCase();
+  document.getElementById('vin-und').textContent=und;
+  document.getElementById('vin-und-row').style.display='';
+  const fornId=document.getElementById('nfe-forn')?.value||null;
+  const embs=insumoFornVinculos.filter(v=>v.insumo_id===insId&&v.qtd_por_embalagem&&v.embalagem_descricao&&(!fornId||v.fornecedor_id===fornId));
+  const section=document.getElementById('vin-emb-section');
+  const list=document.getElementById('vin-emb-list');
+  const hdr=document.getElementById('vin-emb-header');
+  if(hdr) hdr.textContent=`Qtd. na embalagem (em ${und})`;
+  section.style.display='';
+  const prev=nfeSession[idx];
+  if(embs.length>0){
+    list.innerHTML=embs.map((e,i)=>`
+      <label style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background .1s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="radio" name="vin-emb" value="${i}" ${(prev?.embIdx===i||(i===0&&!prev))?'checked':''}
+            onchange="onVinEmbChange(${i},${e.qtd_por_embalagem},'${e.embalagem_descricao.replace(/'/g,'&#39;')}','${und}')" style="accent-color:#f97316;width:16px;height:16px">
+          <span style="font-size:13px;font-weight:500;color:#0f172a">${esc(e.embalagem_descricao)}</span>
+        </div>
+        <span style="font-size:13px;font-family:'DM Mono',monospace;font-weight:700;color:#0f172a">${fmtQtd(e.qtd_por_embalagem)} ${und}</span>
+      </label>`).join('');
+    const firstEmb=embs[prev?.embIdx>=0?prev.embIdx:0];
+    onVinEmbChange(prev?.embIdx??0,firstEmb.qtd_por_embalagem,firstEmb.embalagem_descricao,und);
+  } else {
+    list.innerHTML=`
+      <div style="padding:12px 14px;font-size:12px;color:#64748b;text-align:center">
+        Nenhuma embalagem cadastrada para este insumo neste fornecedor.<br>
+        <a href="fornecedores.html" target="_blank" style="color:#f97316;font-size:12px;font-weight:600">Cadastrar em Fornecedores → Item × Fornecedor ↗</a>
+      </div>
+      <div style="padding:0 14px 12px;border-top:1px solid #f1f5f9;margin-top:4px">
+        <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;margin-top:8px">FATOR MANUAL</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+          <span style="color:#64748b">1 ${esc(it?.unidade||'?')} =</span>
+          <input type="number" id="vin-fator-manual" value="${prev?.fator||1}" min="0.001" step="0.001"
+            style="width:80px;padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;outline:none"
+            oninput="onVinFatorManualChange('${und}')">
+          <span style="color:#64748b">${und}</span>
+        </div>
+      </div>`;
+    onVinFatorManualChange(und,prev?.fator||1);
+  }
+}
+
+function onVinEmbChange(embIdx,fator,embDesc,und) {
+  const idx=nfeVinculandoIdx; const it=nfeItens[idx]; if(!it) return;
+  const qtdR=parseFloat((it.quantidade*fator).toFixed(6));
+  const summary=document.getElementById('vin-conv-summary'); summary.style.display='';
+  document.getElementById('vin-conv-nf').textContent=`${fmtQtd(it.quantidade)} ${it.unidade}`;
+  document.getElementById('vin-conv-formula').textContent=`1 ${it.unidade} = ${fmtQtd(fator)} ${und}`;
+  document.getElementById('vin-conv-result').textContent=`${fmtQtd(qtdR)} ${und}`;
+  document.getElementById('vin-ins')._selectedEmb={embIdx,fator,embDesc,und};
+}
+
+function onVinFatorManualChange(und,forceVal) {
+  const idx=nfeVinculandoIdx; const it=nfeItens[idx]; if(!it) return;
+  const fator=forceVal||parseFloat(document.getElementById('vin-fator-manual')?.value)||1;
+  const qtdR=parseFloat((it.quantidade*fator).toFixed(6));
+  const summary=document.getElementById('vin-conv-summary'); summary.style.display='';
+  document.getElementById('vin-conv-nf').textContent=`${fmtQtd(it.quantidade)} ${it.unidade}`;
+  document.getElementById('vin-conv-formula').textContent=`1 ${it.unidade} = ${fmtQtd(fator)} ${und}`;
+  document.getElementById('vin-conv-result').textContent=`${fmtQtd(qtdR)} ${und}`;
+  document.getElementById('vin-ins')._selectedEmb={embIdx:-1,fator,embDesc:`${it.unidade} manual`,und};
+}
+
+function salvarVinculoNfe() {
+  const idx=nfeVinculandoIdx;
+  const insId=document.getElementById('vin-ins').value;
+  if(!insId){toast('Selecione o produto interno.','err');return;}
+  const emb=document.getElementById('vin-ins')._selectedEmb;
+  if(!emb?.fator){toast('Selecione a embalagem ou informe o fator.','err');return;}
+  const ins=insumos.find(x=>x.id===insId);
+  const und=ins?.unidade_medida||ins?.unidade_compra||'un';
+  nfeSession[idx]={insId,fator:emb.fator,embDesc:emb.embDesc,embIdx:emb.embIdx,insumoNome:ins?.nome||'—',unEst:und};
+  fecharVincularModal();
+  renderNfePendentes();
+  toast('Vínculo salvo! Confirme a entrada quando todos os itens estiverem prontos.','ok');
 }
 
 async function confirmarNfe() {
   const fornId=document.getElementById('nfe-forn').value||null;
   const fornNome=fornId?(fornecedores.find(f=>f.id===fornId)?.nome||null):null;
-  const dataStr=document.getElementById('nfe-data').value||hoje();
-  const itensOk=[];
-  nfeItens.forEach((it,i)=>{
-    const insId=document.getElementById(`ns-${i}`)?.value;
-    const incl=document.getElementById(`ni-${i}`)?.checked;
-    const fator=parseFloat(document.getElementById(`nf-${i}`)?.value)||1;
-    if(incl&&insId) itensOk.push({...it,insId,fator});
-  });
-  if(!itensOk.length){toast('Selecione ao menos um item.','err');return;}
-
+  const dataStr=document.getElementById('nfe-data')?.value||hoje();
   const btn=document.getElementById('btn-nfe-conf');
-  btn.disabled=true;btn.textContent='Importando…';
+  btn.disabled=true; btn.textContent='Importando…';
   try {
-    for(const it of itensOk) {
-      const qtdEst=parseFloat((it.quantidade*it.fator).toFixed(6));
-      const custoUnitEst=parseFloat((it.valorUnit/it.fator).toFixed(6));
-      await registrarEntrada(it.insId, {
-        fornecedor_id:fornId, fornecedor_nome:fornNome,
-        quantidade:qtdEst, unidade_compra:it.unidade,
-        fator_conversao:it.fator, custo_unitario:parseFloat((it.valorUnit/it.fator).toFixed(6)),
-        tipo:'nfe', nfe_numero:`${it.nNF}/${it.serie}`,
+    const toProcess=[];
+    nfeItens.forEach((it,idx)=>{
+      const auto=nfeAutoLinked[idx]; const sess=nfeSession[idx];
+      const link=sess||auto; if(!link) return;
+      toProcess.push({it,idx,insId:link.insId,fator:link.fator,isNew:!!sess});
+    });
+    if(!toProcess.length){toast('Nenhum item para importar.','err');btn.disabled=false;return;}
+    for(const {it,insId,fator,isNew} of toProcess){
+      const qtdEst=parseFloat((it.quantidade*fator).toFixed(6));
+      const custoUnitEst=parseFloat((it.valorUnit/fator).toFixed(6));
+      await registrarEntrada(insId,{
+        fornecedor_id:fornId,fornecedor_nome:fornNome,
+        quantidade:qtdEst,unidade_compra:it.unidade,
+        fator_conversao:fator,custo_unitario:custoUnitEst,
+        tipo:'nfe',nfe_numero:`${it.nNF}/${it.serie}`,
         observacao:`NF-e ${it.nNF}/${it.serie}`,
         criado_em:dataStr+'T12:00:00.000Z',
-      }, custoUnitEst);
-      // salvar/atualizar vínculo
-      // Salva vínculo: prioriza match por código, depois por descrição
-      const vin = (it.codigo&&vinculos.find(v=>v.codigo_nfe===it.codigo))
-               || vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
-      if(!vin){
-        const novo = await api('vinculos_nfe',{method:'POST',prefer:'return=representation',
-          body:JSON.stringify({tenant_id:TENANT_ID,descricao_nfe:it.descricao,codigo_nfe:it.codigo||null,insumo_id:it.insId,fator_conversao:it.fator})});
-        if(novo[0]) vinculos.push(novo[0]);
-      } else {
-        const patch = {insumo_id:it.insId,fator_conversao:it.fator};
-        if(it.codigo&&!vin.codigo_nfe) patch.codigo_nfe=it.codigo;
-        await api(`vinculos_nfe?id=eq.${vin.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
-        Object.assign(vin,patch);
+      },custoUnitEst);
+      if(isNew){
+        const existVin=(it.codigo&&vinculos.find(v=>v.codigo_nfe===it.codigo))||vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
+        if(!existVin){
+          const novo=await api('vinculos_nfe',{method:'POST',prefer:'return=representation',
+            body:JSON.stringify({tenant_id:TENANT_ID,descricao_nfe:it.descricao,codigo_nfe:it.codigo||null,insumo_id:insId,fator_conversao:fator})});
+          if(novo[0]) vinculos.push(novo[0]);
+        } else {
+          const patch={insumo_id:insId,fator_conversao:fator};
+          if(it.codigo&&!existVin.codigo_nfe) patch.codigo_nfe=it.codigo;
+          await api(`vinculos_nfe?id=eq.${existVin.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
+          Object.assign(existVin,patch);
+        }
       }
     }
-    toast(`${itensOk.length} entrada(s) importada(s) com sucesso!`,'ok');
+    toast(`${toProcess.length} entrada(s) importada(s) com sucesso!`,'ok');
     fecharModal('m-nfe'); resetNfe(); await carregar();
   } catch(e){toast('Erro: '+e.message,'err');}
-  finally{btn.disabled=false;btn.textContent='Confirmar entradas';}
+  finally{btn.disabled=false;}
 }
 
 // ── SAÍDAS ────────────────────────────────────────────────────────
