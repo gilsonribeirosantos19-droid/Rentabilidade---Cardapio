@@ -701,7 +701,7 @@ async function carregarOpcoes(){
     unidadesMedida=unidades;
     const selCat=document.getElementById('f-cat');
     if(selCat) selCat.innerHTML='<option value="">Selecione...</option>'+cats.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('');
-    const undOpts='<option value="">Selecione...</option>'+unidades.map(u=>{const v=u.abreviacao||u.nome;const l=u.abreviacao?`${u.nome} (${u.abreviacao})`:u.nome;return `<option value="${esc(v)}">${esc(l)}</option>`;}).join('');
+    const undOpts='<option value="">Selecione...</option>'+unidades.map(u=>{const v=u.abreviacao||u.nome;return `<option value="${esc(v)}">${esc(u.nome)}</option>`;}).join('');
     const selUnd=document.getElementById('f-und');
     if(selUnd) selUnd.innerHTML=undOpts;
     const selUndMed=document.getElementById('cad-und-med');
