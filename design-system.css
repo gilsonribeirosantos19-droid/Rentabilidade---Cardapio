@@ -36,8 +36,8 @@
 
   /* ── Forma ── */
   --ds-radius:        6px;
-  --ds-radius-lg:     8px;
-  --ds-radius-xl:     12px;
+  --ds-radius-lg:     12px;
+  --ds-radius-xl:     16px;
   --ds-input-h:       36px;
 
   /* ── Tipografia ── */
@@ -97,10 +97,17 @@ body {
 /* ── TOPBAR: simples e limpo ──────────────────────────────────────── */
 .topbar {
   height: 50px !important;
+  min-height: 50px !important;
   padding: 0 24px !important;
   background: #fff !important;
   border-bottom: 1px solid var(--ds-border) !important;
   box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
 }
 
 /* ── TABELAS: densas, sem decoração ─────────────────────────────── */
@@ -139,6 +146,8 @@ tbody tr:hover { background: #f8fafc !important; }
 .tbl-card, .tbl-wrap,
 .inv-card, .kpi-card,
 .metric, .kpi,
+.right-panel, .filter-card,
+.acc-card, .cfg-card,
 .abc-kpi-bar, .kpi-6 > div {
   box-shadow: none !important;
   border: 1px solid var(--ds-border) !important;
