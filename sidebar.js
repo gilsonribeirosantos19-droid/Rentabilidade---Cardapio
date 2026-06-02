@@ -170,7 +170,7 @@
         </div>
       </div>
     </div>
-    <div class="nav-group" style="border-bottom:1px solid #e2e8f0;padding-bottom:10px;margin-bottom:4px">
+    <div class="nav-group" style="border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:10px;margin-bottom:4px">
       <a class="nav-item${isDash ? ' active' : ''}" href="dashboard.html">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
@@ -182,17 +182,39 @@
       Precisa de ajuda?<br>
       <a href="https://wa.me/5592994948230?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20sistema%20Aiko" target="_blank" rel="noopener">Acesse o suporte</a>
     </div>
-    <div style="padding:10px 14px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px">
-      <div style="width:30px;height:30px;background:#0f2d5c;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#fff">${(userNome[0]||'U').toUpperCase()}</div>
+    <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px">
+      <div style="width:30px;height:30px;background:#f97316;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:#fff">${(userNome[0]||'U').toUpperCase()}</div>
       <div style="min-width:0">
-        <div style="font-size:12px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${userNome}</div>
-        <div style="font-size:10px;color:#94a3b8">${userRole}</div>
+        <div style="font-size:12px;font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${userNome}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4)">${userRole}</div>
       </div>
     </div>`;
 
   const nav = document.querySelector('nav.sidebar');
   if (nav) {
     nav.innerHTML = html;
+    // Tema dark #0F172A no sidebar
+    nav.style.background = '#0f172a';
+    nav.style.borderRight = '1px solid rgba(255,255,255,.06)';
+    // Override CSS classes para dark theme
+    if (!document.getElementById('_sidebar-dark-css')) {
+      const s = document.createElement('style');
+      s.id = '_sidebar-dark-css';
+      s.textContent = `
+        nav.sidebar .logo-mark{color:#f1f5f9!important}
+        nav.sidebar .logo-sub{color:#f97316!important}
+        nav.sidebar .nav-label{color:rgba(255,255,255,.35)!important}
+        nav.sidebar .nav-item{color:rgba(255,255,255,.7)!important}
+        nav.sidebar .nav-item:hover{background:rgba(255,255,255,.06)!important;color:#fff!important}
+        nav.sidebar .nav-item.active{background:rgba(249,115,22,.2)!important;color:#f97316!important}
+        nav.sidebar .nav-group-header{color:rgba(255,255,255,.5)!important}
+        nav.sidebar .nav-group-header:hover{background:rgba(255,255,255,.04)!important}
+        nav.sidebar .nav-group-arrow{stroke:rgba(255,255,255,.3)!important}
+        nav.sidebar .nav-bottom{color:rgba(255,255,255,.35)!important;border-top:1px solid rgba(255,255,255,.06)!important}
+        nav.sidebar .nav-bottom a{color:#f97316!important}
+      `;
+      document.head.appendChild(s);
+    }
     if (window.lucide) lucide.createIcons();
   }
 
