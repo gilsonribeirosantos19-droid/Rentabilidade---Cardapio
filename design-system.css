@@ -380,6 +380,69 @@ input[type="date"]:focus, select:focus {
 /* ── EMPTY STATE ─────────────────────────────────────────────────── */
 .empty, td.empty, .empty-row td { text-align: center !important; color: var(--ds-text-3) !important; font-size: var(--ds-text-sm) !important; padding: 24px !important; }
 
+/* ── FEEDBACK VISUAL / MICRO-INTERAÇÕES ─────────────────────────── */
+
+/* Spinner de loading */
+@keyframes ds-spin { to { transform: rotate(360deg); } }
+.ds-spin { animation: ds-spin .7s linear infinite; display: inline-block; }
+
+/* Botão em loading */
+.btn-loading {
+  opacity: .75 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+.btn-loading::after {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ds-spin .6s linear infinite;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Transições suaves em todos os elementos interativos */
+.btn, .nav-item, a, button,
+.tbl-card, .tbl-wrap, .right-panel, .kpi-card, .metric {
+  transition: background .15s, border-color .15s, color .15s, opacity .15s !important;
+}
+input, select, textarea {
+  transition: border-color .15s, box-shadow .15s !important;
+}
+
+/* Hover nos rows de tabela mais suave */
+tbody tr {
+  transition: background .1s !important;
+}
+
+/* Input focus com destaque sutil */
+input:focus, select:focus, textarea:focus {
+  border-color: var(--ds-primary) !important;
+  outline: 3px solid rgba(249,115,22,.1) !important;
+  outline-offset: 0 !important;
+}
+
+/* Badge com transição */
+.badge { transition: background .15s !important; }
+
+/* Toast melhorado */
+.toast {
+  border-left: 4px solid var(--ds-border) !important;
+  border-radius: var(--ds-radius-lg) !important;
+}
+.toast.ok, .toast.suc {
+  border-left-color: var(--ds-success) !important;
+  color: var(--ds-success) !important;
+}
+.toast.err {
+  border-left-color: var(--ds-danger) !important;
+  color: var(--ds-danger) !important;
+}
+
 /* ── PDV: remover ícones coloridos dos kpi-cards ─────────────────── */
 .kpi-icon { display: none !important; }
 .kpi-card, .dash-card {
