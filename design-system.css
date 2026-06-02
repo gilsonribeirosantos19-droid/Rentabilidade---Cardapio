@@ -4,23 +4,61 @@
    ================================================================ */
 
 :root {
+  /* ── Brand ── */
   --ds-primary:       #f97316;
   --ds-primary-hover: #ea6c00;
+  --ds-primary-soft:  #fff7ed;
   --ds-navy:          #1e293b;
+
+  /* ── Texto ── */
   --ds-text-1:        #0f172a;
   --ds-text-2:        #64748b;
   --ds-text-3:        #94a3b8;
+
+  /* ── Bordas / Fundos ── */
   --ds-border:        #e2e8f0;
   --ds-border-2:      #f1f5f9;
   --ds-bg:            #f8fafc;
   --ds-white:         #ffffff;
-  --ds-green:         #16a34a;
-  --ds-red:           #dc2626;
+
+  /* ── Semânticas ── */
+  --ds-success:       #16a34a;
+  --ds-success-soft:  #f0fdf4;
+  --ds-warning:       #b45309;
+  --ds-warning-soft:  #fffbeb;
+  --ds-danger:        #dc2626;
+  --ds-danger-soft:   #fef2f2;
+  --ds-info:          #2563eb;
+  --ds-info-soft:     #eff6ff;
+  /* aliases legados */
+  --ds-green:         var(--ds-success);
+  --ds-red:           var(--ds-danger);
+
+  /* ── Forma ── */
   --ds-radius:        6px;
   --ds-radius-lg:     8px;
+  --ds-radius-xl:     12px;
   --ds-input-h:       36px;
+
+  /* ── Tipografia ── */
   --ds-font:          'Segoe UI', system-ui, -apple-system, sans-serif;
   --ds-mono:          'DM Mono', monospace;
+  --ds-text-xs:       11px;
+  --ds-text-sm:       12px;
+  --ds-text-base:     13px;
+  --ds-text-md:       15px;
+  --ds-text-lg:       18px;
+  --ds-text-xl:       22px;
+  --ds-text-2xl:      28px;
+
+  /* ── Espaçamento (escala 4px) ── */
+  --ds-sp-1: 4px;
+  --ds-sp-2: 8px;
+  --ds-sp-3: 12px;
+  --ds-sp-4: 16px;
+  --ds-sp-5: 20px;
+  --ds-sp-6: 24px;
+  --ds-sp-8: 32px;
 }
 
 /* ── BASE ────────────────────────────────────────────────────────── */
@@ -316,6 +354,22 @@ input[type="date"]:focus, select:focus {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+/* ── LABELS DE FORMULÁRIO ────────────────────────────────────────── */
+.form-label, label.form-label {
+  font-size: var(--ds-text-xs) !important;
+  font-weight: 700 !important;
+  color: var(--ds-text-2) !important;
+  text-transform: uppercase !important;
+  letter-spacing: .05em !important;
+  display: block !important;
+  margin-bottom: 5px !important;
+}
+/* ── SEÇÕES / SUBTÍTULOS ─────────────────────────────────────────── */
+.page-title { font-size: var(--ds-text-xl); font-weight: 800; color: var(--ds-text-1); letter-spacing: -.3px; line-height: 1.1; }
+.page-sub   { font-size: var(--ds-text-sm); color: var(--ds-text-3); margin-top: 2px; }
+/* ── EMPTY STATE ─────────────────────────────────────────────────── */
+.empty, td.empty, .empty-row td { text-align: center !important; color: var(--ds-text-3) !important; font-size: var(--ds-text-sm) !important; padding: 24px !important; }
 
 /* ── PDV: remover ícones coloridos dos kpi-cards ─────────────────── */
 .kpi-icon { display: none !important; }
