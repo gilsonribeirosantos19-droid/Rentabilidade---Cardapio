@@ -219,7 +219,7 @@
           color: #f97316 !important;
         }
         nav.sidebar .nav-group-header, .sidebar .nav-group-header {
-          color: rgba(255,255,255,.45) !important;
+          color: #fff !important;
         }
         nav.sidebar .nav-group-header:hover, .sidebar .nav-group-header:hover {
           background: rgba(255,255,255,.04) !important;
