@@ -199,7 +199,7 @@
       s.textContent = `
         nav.sidebar,
         .sidebar {
-          background: #0f172a !important;
+          background: #1e293b !important;
           border-right: 1px solid rgba(255,255,255,.07) !important;
         }
         nav.sidebar .logo,
