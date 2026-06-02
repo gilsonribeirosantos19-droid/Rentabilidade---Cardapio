@@ -255,6 +255,31 @@
       `;
       document.head.appendChild(s);
     }
+
+    // Tipografia global — títulos das páginas
+    if (!document.getElementById('_aiko-typography')) {
+      const t = document.createElement('style');
+      t.id = '_aiko-typography';
+      t.textContent = `
+        /* Título principal da topbar */
+        .topbar-title, [class*="topbar"] .title, #topbar-heading {
+          font-size: 22px !important;
+          font-weight: 800 !important;
+          color: #0f172a !important;
+          letter-spacing: -0.3px !important;
+          line-height: 1.1 !important;
+        }
+        /* Subtítulo da topbar */
+        .topbar-sub { font-size: 12px !important; color: #94a3b8 !important; margin-top: 2px !important; }
+        /* Títulos de seção dentro das páginas */
+        .sec-title { font-size: 11px !important; font-weight: 700 !important; letter-spacing: .08em !important; color: #64748b !important; }
+        .rp-title  { font-size: 11px !important; font-weight: 700 !important; letter-spacing: .08em !important; color: #64748b !important; }
+        /* Topbar altura e separação */
+        .topbar { border-bottom: 1px solid #e2e8f0 !important; }
+      `;
+      document.head.appendChild(t);
+    }
+
     nav.innerHTML = html;
     if (window.lucide) lucide.createIcons();
   }
