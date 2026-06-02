@@ -192,29 +192,50 @@
 
   const nav = document.querySelector('nav.sidebar');
   if (nav) {
-    nav.innerHTML = html;
-    // Tema dark #0F172A no sidebar
-    nav.style.background = '#0f172a';
-    nav.style.borderRight = '1px solid rgba(255,255,255,.06)';
-    // Override CSS classes para dark theme
+    // Injecta dark theme ANTES de popular o conteúdo
     if (!document.getElementById('_sidebar-dark-css')) {
       const s = document.createElement('style');
       s.id = '_sidebar-dark-css';
       s.textContent = `
-        nav.sidebar .logo-mark{color:#f1f5f9!important}
-        nav.sidebar .logo-sub{color:#f97316!important}
-        nav.sidebar .nav-label{color:rgba(255,255,255,.35)!important}
-        nav.sidebar .nav-item{color:rgba(255,255,255,.7)!important}
-        nav.sidebar .nav-item:hover{background:rgba(255,255,255,.06)!important;color:#fff!important}
-        nav.sidebar .nav-item.active{background:rgba(249,115,22,.2)!important;color:#f97316!important}
-        nav.sidebar .nav-group-header{color:rgba(255,255,255,.5)!important}
-        nav.sidebar .nav-group-header:hover{background:rgba(255,255,255,.04)!important}
-        nav.sidebar .nav-group-arrow{stroke:rgba(255,255,255,.3)!important}
-        nav.sidebar .nav-bottom{color:rgba(255,255,255,.35)!important;border-top:1px solid rgba(255,255,255,.06)!important}
-        nav.sidebar .nav-bottom a{color:#f97316!important}
+        nav.sidebar,
+        .sidebar {
+          background: #0f172a !important;
+          border-right: 1px solid rgba(255,255,255,.07) !important;
+        }
+        nav.sidebar .logo,
+        .sidebar .logo {
+          border-bottom: 1px solid rgba(255,255,255,.07) !important;
+        }
+        nav.sidebar .logo-mark, .sidebar .logo-mark { color: #f1f5f9 !important; }
+        nav.sidebar .logo-sub,  .sidebar .logo-sub  { color: #f97316 !important; }
+        nav.sidebar .nav-label, .sidebar .nav-label  { color: rgba(255,255,255,.3) !important; }
+        nav.sidebar .nav-item,  .sidebar .nav-item   { color: rgba(255,255,255,.65) !important; }
+        nav.sidebar .nav-item:hover, .sidebar .nav-item:hover {
+          background: rgba(255,255,255,.06) !important;
+          color: #fff !important;
+        }
+        nav.sidebar .nav-item.active, .sidebar .nav-item.active {
+          background: rgba(249,115,22,.18) !important;
+          color: #f97316 !important;
+        }
+        nav.sidebar .nav-group-header, .sidebar .nav-group-header {
+          color: rgba(255,255,255,.45) !important;
+        }
+        nav.sidebar .nav-group-header:hover, .sidebar .nav-group-header:hover {
+          background: rgba(255,255,255,.04) !important;
+        }
+        nav.sidebar .nav-group-arrow, .sidebar .nav-group-arrow {
+          stroke: rgba(255,255,255,.25) !important;
+        }
+        nav.sidebar .nav-bottom, .sidebar .nav-bottom {
+          color: rgba(255,255,255,.3) !important;
+          border-top: 1px solid rgba(255,255,255,.07) !important;
+        }
+        nav.sidebar .nav-bottom a, .sidebar .nav-bottom a { color: #f97316 !important; }
       `;
       document.head.appendChild(s);
     }
+    nav.innerHTML = html;
     if (window.lucide) lucide.createIcons();
   }
 
