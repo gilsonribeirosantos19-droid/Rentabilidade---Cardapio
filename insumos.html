@@ -829,15 +829,15 @@ function editarItemCadastro(id){
   setVal('cad-codigo', 'MP-'+String(idx+1).padStart(6,'0'));
   setVal('cad-nome', ins.nome||'');
   setVal('cad-ativo', ins.ativo===false?'false':'true');
-  setVal('cad-tipo', '');
-  setVal('cad-familia', '');
+  setVal('cad-tipo', ins.tipo_item||'');
+  setVal('cad-familia', ins.familia||'');
   setVal('cad-grupo', ins.categoria||'');
-  setVal('cad-subgrupo', '');
-  setVal('cad-cmv', 'sim');
+  setVal('cad-subgrupo', ins.subgrupo||'');
+  setVal('cad-cmv', ins.participa_cmv==='nao'?'nao':'sim');
   setVal('cad-und-med', ins.unidade_medida||'');
   setVal('cad-tipo-baixa', ins.tipo_baixa||'consumo');
-  setVal('cad-deposito', '');
-  setVal('cad-ncm', '');
+  setVal('cad-deposito', ins.deposito||'');
+  setVal('cad-ncm', ins.ncm||'');
   switchModulo('cadastro');
 }
 
