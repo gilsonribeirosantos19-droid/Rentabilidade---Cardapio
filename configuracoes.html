@@ -1144,7 +1144,7 @@ function toggleMgcItem(insId, checked) {
 }
 
 async function salvarGrupoCompra() {
-  const nome = document.getElementById('mgc-nome').value.trim();
+  const nome = toUpperName(document.getElementById('mgc-nome').value.trim());
   if (!nome) { toast('Informe o nome do grupo', 'err'); return; }
   const btn = document.getElementById('mgc-btn');
   btn.disabled = true; btn.textContent = 'Salvando...';
@@ -1172,7 +1172,7 @@ async function salvarGrupoCompra() {
 function fecharModalGrupoCompra() { document.getElementById('modal-grupo-compra').classList.remove('open'); }
 
 async function salvar() {
-  const nome  = document.getElementById('f-nome').value.trim();
+  const nome  = toUpperName(document.getElementById('f-nome').value.trim());
   const abrev = document.getElementById('f-abrev').value.trim();
   if (!nome) { toast('Informe o nome', 'err'); return; }
   if (modalTipo === 'unidade' && !abrev) { toast('Informe a abreviação', 'err'); return; }
@@ -1492,6 +1492,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const u = JSON.parse(localStorage.getItem('sb_user') || 'null');
     if (u) document.getElementById('sb-user-nome').textContent = u.nome || u.email || '—';
   } catch {}
+  // Campos de nome → automático MAIÚSCULO
+  upperInput('f-nome');
+  upperInput('mgc-nome');
   initSection();
 });
 </script>
