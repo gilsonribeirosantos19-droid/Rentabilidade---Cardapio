@@ -13,54 +13,72 @@
     configuracoes:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
   };
 
+  const I = {
+    box:       `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`,
+    sliders:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>`,
+    package:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+    clipboard: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
+    truck:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+    cart:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
+    chart:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+    trending:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+    receipt:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+    chef:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
+    scissors:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>`,
+    gear:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+    users:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    shield:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    knobs:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M4.22 4.22l2.12 2.12m11.32 11.32 2.12 2.12M2 12h3m14 0h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>`,
+  };
+
   const GROUPS = [
     {
       id: 'operacao', label: 'Operação',
       items: [
-        { href: 'estoque.html', label: 'Estoque' },
-        { href: 'ajustes.html', label: 'Ajustes' },
+        { href: 'estoque.html', label: 'Estoque',  icon: I.box },
+        { href: 'ajustes.html', label: 'Ajustes',  icon: I.sliders },
       ]
     },
     {
       id: 'cadastros', label: 'Cadastros',
       items: [
-        { href: 'insumos.html',         label: 'Insumos' },
-        { href: 'fichas_tecnicas.html', label: 'Fichas Técnicas' },
-        { href: 'fornecedores.html',    label: 'Fornecedores' },
+        { href: 'insumos.html',         label: 'Insumos',         icon: I.package },
+        { href: 'fichas_tecnicas.html', label: 'Fichas Técnicas', icon: I.clipboard },
+        { href: 'fornecedores.html',    label: 'Fornecedores',    icon: I.truck },
       ]
     },
     {
       id: 'compras', label: 'Compras',
       items: [
-        { href: 'compras.html', label: 'Pedidos de Compra' },
+        { href: 'compras.html', label: 'Pedidos de Compra', icon: I.cart },
       ]
     },
     {
       id: 'analises', label: 'Análises',
       items: [
-        { href: 'relatorios.html', label: 'Relatórios' },
-        { href: 'cmv.html',        label: 'CMV Teórico x Real' },
-        { href: 'rendimento.html', label: 'Rendimentos' },
-        { href: 'pdv.html',        label: 'PDV / Vendas' },
+        { href: 'relatorios.html', label: 'Relatórios',        icon: I.receipt },
+        { href: 'cmv.html',        label: 'CMV Teórico x Real', icon: I.chart },
+        { href: 'rendimento.html', label: 'Rendimentos',        icon: I.trending },
+        { href: 'pdv.html',        label: 'PDV / Vendas',       icon: I.cart },
       ]
     },
     {
       id: 'pcp', label: 'PCP',
       items: [
-        { href: 'pcp.html', tab: 'producao-dia', label: 'Produção do Dia' },
-        { href: 'porcionamento.html',             label: 'Porcionamento' },
-        { href: 'pcp.html', tab: 'sugerida',     label: 'Produção Sugerida' },
-        { href: 'pcp.html', tab: 'sobras',        label: 'Sobras e Perdas' },
-        { href: 'pcp.html', tab: 'consumo',       label: 'Consumo Médio' },
+        { href: 'pcp.html', tab: 'producao-dia', label: 'Produção do Dia',   icon: I.chef },
+        { href: 'porcionamento.html',             label: 'Porcionamento',     icon: I.scissors },
+        { href: 'pcp.html', tab: 'sugerida',     label: 'Produção Sugerida', icon: I.chef },
+        { href: 'pcp.html', tab: 'sobras',        label: 'Sobras e Perdas',   icon: I.box },
+        { href: 'pcp.html', tab: 'consumo',       label: 'Consumo Médio',     icon: I.trending },
       ]
     },
     {
       id: 'configuracoes', label: 'Configurações',
       items: [
-        { href: 'configuracoes.html', tab: 'geral',        label: 'Geral' },
-        { href: 'configuracoes.html', tab: 'usuarios',     label: 'Usuários' },
-        { href: 'configuracoes.html', tab: 'permissoes',   label: 'Permissões' },
-        { href: 'configuracoes.html', tab: 'parametros',   label: 'Parâmetros' },
+        { href: 'configuracoes.html', tab: 'geral',      label: 'Geral',       icon: I.gear },
+        { href: 'configuracoes.html', tab: 'usuarios',   label: 'Usuários',    icon: I.users },
+        { href: 'configuracoes.html', tab: 'permissoes', label: 'Permissões',  icon: I.shield },
+        { href: 'configuracoes.html', tab: 'parametros', label: 'Parâmetros',  icon: I.knobs },
       ]
     },
   ];
@@ -116,8 +134,10 @@
       active = true;
     }
     const href = item.tab ? `${item.href}?tab=${item.tab}` : item.href;
-    const dot = `<span style="width:15px;height:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5;display:inline-block"></span></span>`;
-    return `<a class="nav-item${active ? ' active' : ''}" href="${href}">${dot}${item.label}</a>`;
+    const icon = item.icon
+      ? `<span style="width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.7">${item.icon}</span>`
+      : `<span style="width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.4;display:inline-block"></span></span>`;
+    return `<a class="nav-item${active ? ' active' : ''}" href="${href}">${icon}${item.label}</a>`;
   }
 
   function navGroup(g) {
