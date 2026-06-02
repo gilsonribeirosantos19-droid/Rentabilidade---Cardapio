@@ -570,7 +570,7 @@ function filtrar(){
   const filStatus=document.getElementById('fil-status')?.value||'';
   const filEstoque=document.getElementById('fil-estoque')?.value||'';
   let lista=todos;
-  if(q) lista=lista.filter(i=>i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q));
+  if(q) lista=lista.filter(i=>normalizeSearch(i.nome).includes(normalizeSearch(q))||normalizeSearch(i.categoria||'').includes(normalizeSearch(q)));
   if(filCat) lista=lista.filter(i=>(i.categoria||'')===filCat);
   if(filStatus) lista=lista.filter(i=>getStatus(i)===filStatus);
   if(filEstoque==='em') lista=lista.filter(i=>getStatus(i)==='ativo');
@@ -730,7 +730,7 @@ function calcular(){
 }
 
 async function salvarNovo(){
-  const nome=document.getElementById('f-nome').value.trim();
+  const nome=toUpperName(document.getElementById('f-nome').value.trim());
   const cat=document.getElementById('f-cat').value;
   const und=document.getElementById('f-und').value;
   const preco=parseFloat(document.getElementById('f-preco').value);
@@ -844,7 +844,7 @@ function editarItemCadastro(id){
 }
 
 async function salvarCadastro(){
-  const nome=document.getElementById('cad-nome').value.trim();
+  const nome=toUpperName(document.getElementById('cad-nome').value.trim());
   if(!nome){toast('Informe a descrição do item.','err');return;}
   const btn=document.querySelector('#pane-cadastro .btn-primary');
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
@@ -900,7 +900,7 @@ function filtrarProdutos(){
   const filStatus= document.getElementById('prod-status')?.value;
   const filEstq  = document.getElementById('prod-estq')?.value||'';
   let lista = todos;
-  if(q)         lista=lista.filter(i=>i.nome.toLowerCase().includes(q)||(i.categoria||'').toLowerCase().includes(q));
+  if(q)         lista=lista.filter(i=>normalizeSearch(i.nome).includes(normalizeSearch(q))||normalizeSearch(i.categoria||'').includes(normalizeSearch(q)));
   if(filTipo)   lista=lista.filter(i=>(i.tipo_item||'')==filTipo);
   if(filFam)    lista=lista.filter(i=>(i.familia||'')==filFam);
   if(filGrupo)  lista=lista.filter(i=>(i.categoria||'')==filGrupo);
@@ -1006,6 +1006,10 @@ async function carregarClassificacoes(){
 }
 
 document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
+
+// Campos de nome → automático MAIÚSCULO
+upperInput('f-nome');
+upperInput('cad-nome');
 
 (async()=>{await carregarLojas();await Promise.all([carregarOpcoes(),carregarClassificacoes()]);await carregarInsumos();switchModulo('produtos');})();
 </script>

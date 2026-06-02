@@ -1,6 +1,35 @@
 // utils.js — Funções compartilhadas Aiko Sistema
 'use strict';
 
+// ── PADRONIZAÇÃO DE NOMES ──────────────────────────────────────────
+// Converte para MAIÚSCULO mantendo acentos (SALMÃO, CAMARÃO, AÇÚCAR)
+function toUpperName(str) {
+  return (str || '').toUpperCase();
+}
+
+// Normaliza para busca insensível a maiúsculas E acentos
+// "salmao" ou "salmão" ou "SALMÃO" → "salmao" para comparação
+function normalizeSearch(str) {
+  return (str || '').toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+}
+
+// Aplica maiúsculo em campo de input enquanto digita
+function bindUpperInput(el) {
+  if (!el) return;
+  el.addEventListener('input', function() {
+    const pos = this.selectionStart;
+    this.value = toUpperName(this.value);
+    try { this.setSelectionRange(pos, pos); } catch {}
+  });
+}
+
+// Aplica bindUpperInput por ID
+function upperInput(id) {
+  bindUpperInput(document.getElementById(id));
+}
+
 async function _refreshToken(supaUrl, supaKey) {
   const refreshToken = localStorage.getItem('sb_refresh_token');
   if (!refreshToken) return false;
