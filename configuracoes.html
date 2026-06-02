@@ -225,7 +225,7 @@
           <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div><div class="acc-content">
           <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-primary btn-sm" onclick="abrirModal('unidade')">+ Adicionar</button></div>
-          <table class="cfg-table"><thead><tr><th>Nome</th><th>Abreviação</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-unidade"><tr class="empty-row"><td colspan="4">Carregando...</td></tr></tbody></table>
+          <table class="cfg-table"><thead><tr><th>Nome</th><th>Criado em</th><th style="text-align:right">Ações</th></tr></thead><tbody id="tbody-unidade"><tr class="empty-row"><td colspan="3">Carregando...</td></tr></tbody></table>
         </div></div>
 
         <!-- CADASTROS OPERACIONAIS -->
@@ -1052,11 +1052,10 @@ function renderCats(tbodyId, lista, tipo) {
 function renderUnidades(lista) {
   const tbody = document.getElementById('tbody-unidade');
   if (!tbody) return;
-  if (!lista.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma unidade cadastrada</td></tr>'; return; }
+  if (!lista.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Nenhuma unidade cadastrada</td></tr>'; return; }
   lista.forEach(item => { _itemsMap[item.id] = item; });
   tbody.innerHTML = lista.map(item => `<tr>
     <td>${escHtml(item.nome)}</td>
-    <td class="td-mono">${escHtml(item.abreviacao || '—')}</td>
     <td class="td-mono">${formatDate(item.created_at)}</td>
     <td><div class="td-actions">
       <button class="btn btn-ghost btn-sm" onclick="abrirEditar('unidade','${item.id}')">Editar</button>
