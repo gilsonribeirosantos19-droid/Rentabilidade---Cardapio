@@ -519,7 +519,7 @@ function filtrar(){
   const status=document.getElementById('filtro-status').value;
   const cmvFiltro=(document.getElementById('filtro-cmv')||{value:''}).value;
   fichasFilt=todasFichas.filter(f=>{
-    if(busca&&!f.nome.toLowerCase().includes(busca))return false;
+    if(busca&&!normalizeSearch(f.nome).includes(normalizeSearch(busca)))return false;
     if(cat&&f.categoria!==cat)return false;
     if(catChipAtiva&&f.categoria!==catChipAtiva)return false;
     if(status&&f.status!==status)return false;
@@ -909,7 +909,7 @@ function atualizarCustoPreview(){
 }
 
 async function salvarFicha(){
-  const nome=document.getElementById('f-nome').value.trim();
+  const nome=toUpperName(document.getElementById('f-nome').value.trim());
   const cat=document.getElementById('f-cat').value;
   const porcoes=parseInt(document.getElementById('f-porcoes').value)||1;
   const preco=parseFloat(document.getElementById('f-preco').value)||null;
@@ -981,6 +981,7 @@ async function onChangeLojaFT(){
 
 function abrirModalNova(){ abrirModalNovo(); }
 
+upperInput('f-nome');
 carregarLojas();
 carregar();
 </script>

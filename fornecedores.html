@@ -560,7 +560,7 @@ function filtrarFornecedores(){
   const cidade=document.getElementById('forn-fil-cidade')?.value||'';
   const status=document.getElementById('forn-fil-status')?.value||'';
   let lista=fornecedores;
-  if(q) lista=lista.filter(f=>(f.nome||f.razao_social||'').toLowerCase().includes(q)||(f.nome_fantasia||'').toLowerCase().includes(q)||(f.cnpj||'').includes(q));
+  if(q) lista=lista.filter(f=>normalizeSearch(f.nome||f.razao_social||'').includes(normalizeSearch(q))||normalizeSearch(f.nome_fantasia||'').includes(normalizeSearch(q))||(f.cnpj||'').includes(q));
   if(cidade) lista=lista.filter(f=>(f.cidade||'')===cidade);
   if(status) lista=lista.filter(f=>(f.status||'ativo')===status);
   _fornFiltrado=lista;
@@ -644,12 +644,12 @@ function fecharModalForn(){
 }
 
 async function salvarForn(){
-  const razao=document.getElementById('f-razao').value.trim();
+  const razao=toUpperName(document.getElementById('f-razao').value.trim());
   if(!razao){toast('Informe a Razão Social.','err');return;}
   const payload={
     razao_social: razao,
-    nome_fantasia: document.getElementById('f-fantasia').value.trim()||null,
-    nome: document.getElementById('f-fantasia').value.trim()||razao,
+    nome_fantasia: toUpperName(document.getElementById('f-fantasia').value.trim())||null,
+    nome: toUpperName(document.getElementById('f-fantasia').value.trim())||razao,
     cnpj: document.getElementById('f-cnpj').value.trim()||null,
     contato: document.getElementById('f-contato').value.trim()||null,
     whatsapp: document.getElementById('f-wpp').value.trim()||null,
@@ -1079,6 +1079,8 @@ async function carregarTudo(){
 }
 
 document.getElementById('modal-forn').addEventListener('click',function(e){if(e.target===this)fecharModalForn();});
+upperInput('f-razao');
+upperInput('f-fantasia');
 
 carregarTudo();
 </script>
