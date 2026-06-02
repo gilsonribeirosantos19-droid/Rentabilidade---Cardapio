@@ -209,7 +209,7 @@
         nav.sidebar .logo-mark, .sidebar .logo-mark { color: #f1f5f9 !important; }
         nav.sidebar .logo-sub,  .sidebar .logo-sub  { color: #f97316 !important; }
         nav.sidebar .nav-label, .sidebar .nav-label  { color: rgba(255,255,255,.3) !important; }
-        nav.sidebar .nav-item,  .sidebar .nav-item   { color: rgba(255,255,255,.65) !important; }
+        nav.sidebar .nav-item,  .sidebar .nav-item   { color: #fff !important; }
         nav.sidebar .nav-item:hover, .sidebar .nav-item:hover {
           background: rgba(255,255,255,.06) !important;
           color: #fff !important;
