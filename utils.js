@@ -1,6 +1,22 @@
 // utils.js — Funções compartilhadas Aiko Sistema
 'use strict';
 
+// ── FEEDBACK VISUAL ───────────────────────────────────────────────
+// Coloca botão em estado de loading e retorna função para restaurar
+function btnLoading(btn, loadingText) {
+  if (!btn) return () => {};
+  const original = btn.innerHTML;
+  const originalDisabled = btn.disabled;
+  btn.disabled = true;
+  btn.classList.add('btn-loading');
+  if (loadingText) btn.textContent = loadingText;
+  return function restore(restoredText) {
+    btn.disabled = originalDisabled;
+    btn.classList.remove('btn-loading');
+    btn.innerHTML = restoredText !== undefined ? restoredText : original;
+  };
+}
+
 // ── PADRONIZAÇÃO DE NOMES ──────────────────────────────────────────
 // Converte para MAIÚSCULO mantendo acentos (SALMÃO, CAMARÃO, AÇÚCAR)
 function toUpperName(str) {
