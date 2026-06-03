@@ -129,8 +129,9 @@
 
       <!-- TABS -->
       <div class="tabs">
-        <button class="tab-btn active" id="mtab-nfe" onclick="switchMonitorTab('nfe')">NF-e <span id="tab-n-nfe" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
-        <button class="tab-btn" id="mtab-itens" onclick="switchMonitorTab('itens')">Itens <span id="tab-n-itens" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
+        <button class="tab-btn active" id="mtab-nfe"   onclick="switchMonitorTab('nfe')">DANFE <span id="tab-n-nfe" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
+        <button class="tab-btn"        id="mtab-itens" onclick="switchMonitorTab('itens')">Itens <span id="tab-n-itens" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
+        <button class="tab-btn"        id="mtab-erros" onclick="switchMonitorTab('erros')">Erros <span id="tab-n-erros" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
       </div>
 
       <!-- TAB: NF-E -->
@@ -178,15 +179,38 @@
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th>NF-e</th>
-              <th>Data / Hora</th>
-              <th>Fornecedor</th>
-              <th class="r">Valor Total</th>
-              <th class="c">Itens</th>
-              <th class="c">Status</th>
+              <th class="c">Sit.</th>
+              <th>Fornecedor / Razão</th>
+              <th>DANFE</th>
+              <th class="c">Série</th>
+              <th>D. Emissão</th>
+              <th>D. Integração</th>
+              <th class="r">V. Total</th>
+              <th class="r">V. Título</th>
+              <th>D. Vencimento</th>
+              <th>Portador</th>
             </tr></thead>
             <tbody id="tbody-nfe">
-              <tr><td colspan="6" class="empty"><b>Carregando…</b></td></tr>
+              <tr><td colspan="10" class="empty">Carregando…</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- TAB: ERROS -->
+      <div class="tab-pane" id="tab-erros">
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Fornecedor</th>
+              <th>DANFE</th>
+              <th>D. Emissão</th>
+              <th>Descrição do Erro</th>
+              <th class="r">V. Total</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="tbody-erros">
+              <tr><td colspan="6" class="empty">Nenhum erro encontrado.</td></tr>
             </tbody>
           </table>
         </div></div>
@@ -505,6 +529,10 @@ function fmtDate(iso) {
   const d=new Date(iso);
   return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 }
+function fmtDateShort(iso) {
+  if(!iso) return '—';
+  return new Date(iso).toLocaleDateString('pt-BR');
+}
 
 // ── CARREGAR DADOS ────────────────────────────────────────────────
 async function loadAll() {
@@ -580,11 +608,9 @@ function renderKpis() {
 
 // ── MONITOR TABS ──────────────────────────────────────────────────
 function switchMonitorTab(name) {
-  ['nfe','itens'].forEach(t => {
-    document.getElementById('mtab-'+t).classList.toggle('active', t===name);
-    const panel = document.getElementById('tab-'+t);
-    panel.classList.toggle('active', t===name);
-    panel.style.display = t===name ? 'block' : 'none';
+  ['nfe','itens','erros'].forEach(t => {
+    const btn   = document.getElementById('mtab-'+t); if(btn)   btn.classList.toggle('active', t===name);
+    const panel = document.getElementById('tab-'+t);  if(panel){ panel.classList.toggle('active', t===name); panel.style.display = t===name ? 'block' : 'none'; }
   });
 }
 
@@ -603,7 +629,10 @@ function renderTable() {
     if(filForn && e.fornecedor_id !== filForn) return;
     if(filLoja && e.loja_id !== filLoja) return;
     const key = e.nfe_numero || '—';
-    if(!groups[key]) groups[key] = { numero:key, criado_em:e.criado_em, fornecedor_nome:e.fornecedor_nome||'—', fornecedor_id:e.fornecedor_id, loja_id:e.loja_id, itens:[], total:0, status:'processada' };
+    if(!groups[key]) {
+      const parts = key.split('/');
+      groups[key] = { numero:parts[0]||key, serie:parts[1]||'1', criado_em:e.criado_em, fornecedor_nome:e.fornecedor_nome||'—', fornecedor_id:e.fornecedor_id, loja_id:e.loja_id, portador:'—', itens:[], total:0, status:'processada' };
+    }
     groups[key].itens.push(e);
     groups[key].total += (e.quantidade||0) * (e.custo_unitario||0);
   });
@@ -615,6 +644,8 @@ function renderTable() {
   });
 
   document.getElementById('tab-n-nfe').textContent = rows.length;
+  const nErros = rows.filter(g => g.status === 'com_erro').length;
+  document.getElementById('tab-n-erros').textContent = nErros || 0;
 
   const tbody = document.getElementById('tbody-nfe');
   if(!rows.length) {
@@ -623,12 +654,18 @@ function renderTable() {
   }
 
   tbody.innerHTML = rows.map(g => `<tr>
-    <td style="font-weight:600;font-family:'DM Mono',monospace">${esc(g.numero)}</td>
-    <td>${fmtDate(g.criado_em)}</td>
-    <td>${esc(g.fornecedor_nome)}</td>
+    <td class="c"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a" title="Processada"></span></td>
+    <td>
+      <div style="font-weight:500">${esc(g.fornecedor_nome)}</div>
+    </td>
+    <td style="font-family:'DM Mono',monospace;font-weight:600">${esc(g.numero)}</td>
+    <td class="c" style="font-family:'DM Mono',monospace">${g.serie||'1'}</td>
+    <td style="font-size:11px;white-space:nowrap">${fmtDateShort(g.criado_em)}</td>
+    <td style="font-size:11px;white-space:nowrap">${fmtDateShort(g.criado_em)}</td>
     <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(g.total)}</td>
-    <td class="c">${g.itens.length}</td>
-    <td class="c"><span class="badge b-ativo">Processada</span></td>
+    <td class="r" style="font-family:'DM Mono',monospace">${brl(g.total)}</td>
+    <td style="font-size:11px;color:#64748b">—</td>
+    <td style="font-size:11px;color:#64748b">${esc(g.portador||'—')}</td>
   </tr>`).join('');
 }
 
@@ -646,6 +683,7 @@ function renderItens() {
   });
 
   document.getElementById('tab-n-itens').textContent = filtered.length;
+  document.getElementById('itens-count').textContent = `${filtered.length} iten${filtered.length!==1?'s':''}`;
   document.getElementById('itens-count').textContent = `${filtered.length} iten${filtered.length!==1?'s':''}`;
 
   const tbody = document.getElementById('tbody-itens');
