@@ -113,8 +113,17 @@ body {
 /* ── TABELAS: densas, sem decoração ─────────────────────────────── */
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
+/* Unifica TODOS os thead para --ds-navy (#1e293b) */
 thead tr,
-.tbl thead tr { background: var(--ds-navy) !important; }
+table thead tr,
+.tbl thead tr,
+.tbl-card thead tr,
+.nfe-tbl thead tr,
+.cfg-table thead tr { background: var(--ds-navy) !important; }
+
+/* tfoot também */
+tfoot tr,
+.tbl tfoot tr { background: var(--ds-navy) !important; }
 
 th, .tbl th {
   padding: 7px 12px !important;
