@@ -8,15 +8,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Monitor NF-e · Aiko</title>
 <style>
-  /* ── NF-e modal específico ── */
-  .nfe-tbl tfoot tr td{background:#1e293b;color:#fff;padding:8px 10px;font-size:12px}
-  /* KPI bar */
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh;display:flex;font-size:13px}
+  .shell{display:flex;width:100%;min-height:100vh}
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e2e8f0;padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin:0 8px 4px;background:transparent;border-radius:0;box-shadow:none}
+  .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
+  .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
+  .nav-bottom{margin-top:auto;padding:16px 18px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8}
+  .nav-bottom a{color:#f97316;text-decoration:none}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .topbar{border-bottom:1px solid #e2e8f0;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;position:sticky;top:0;z-index:60;flex-shrink:0}
+  .topbar-title{font-size:20px;font-weight:700;color:#0f172a;line-height:1}
+  .topbar-sub{font-size:12px;color:#94a3b8;margin-top:3px}
+  .content{padding:20px 24px;flex:1;overflow-y:auto}
+  .field{background:#fff;border:1px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
+  .field:focus{border-color:#0d9488}
+  .field-sm{padding:6px 10px;font-size:12px}
+  .tabs{display:flex;gap:6px;margin-bottom:20px;position:sticky;top:58px;z-index:50;background:#fff;padding:10px 0;border-bottom:1px solid #e2e8f0;flex-wrap:wrap}
+  .tab-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-size:12px;font-weight:600;color:#fff;cursor:pointer;border:none;background:#0f2d5c;border-radius:8px;transition:all .15s;font-family:inherit;white-space:nowrap}
+  .tab-btn:hover{background:#1a3f7a}
+  .tab-btn.active{background:#f97316}
+  .tab-pane{display:none}
+  .tab-pane.active{display:block}
+  .btn{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:#f8fafc}
+  .btn-primary{background:#f97316;border-color:#f97316;color:#fff}
+  .btn-primary:hover{background:#ea6c00;border-color:#ea6c00}
+  .btn-ghost{background:transparent;border:none;color:#64748b;padding:5px 8px}
+  .btn-ghost:hover{background:#f1f5f9}
+  .tbl-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .tbl-scroll{overflow-x:auto}
+  table.tbl{width:100%;border-collapse:collapse;font-size:12px}
+  table.tbl thead tr{background:#0f2d5c}
+  table.tbl th{padding:8px 10px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  table.tbl th.r,table.tbl td.r{text-align:right}
+  table.tbl th.c,table.tbl td.c{text-align:center}
+  table.tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  table.tbl tbody tr:hover{background:#fafbfc}
+  table.tbl tbody tr:last-child td{border-bottom:none}
+  .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .b-ativo{background:#dcfce7;color:#16a34a}
+  .filter-bar-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px}
   .kpi-bar{display:flex;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:14px;flex-wrap:wrap}
   .kpi-item{padding:12px 18px;border-right:1px solid #e2e8f0;min-width:0}
   .kpi-item:last-child{border-right:none;flex:1}
   .kpi-label{font-size:11px;color:#94a3b8;margin-bottom:3px}
   .kpi-value{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a}
   .kpi-value.c-green{color:#16a34a}
+  #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .toast-item{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .2s ease}
+  .toast-ok{background:#16a34a}.toast-err{background:#dc2626}
+  @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
   /* ── NF-e MODAL (exato do estoque) ── */
   .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
