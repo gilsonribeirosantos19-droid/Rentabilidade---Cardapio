@@ -8,17 +8,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Monitor NF-e · Aiko</title>
 <style>
-  :root{
-    --bg:#f8fafc;--bg2:#ffffff;--border:#e2e8f0;--border2:#f1f5f9;
-    --text:#0f172a;--text2:#64748b;--text3:#94a3b8;
-    --primary:#f97316;--primary-h:#ea6c00;
-    --radius:10px;
-  }
+  :root{--bg:#f8fafc;--bg2:#ffffff;--border:#e2e8f0;--text:#0f172a;--text2:#64748b;--text3:#94a3b8;--primary:#f97316;--radius:10px;}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:13px}
   .shell{display:flex;width:100%;min-height:100vh}
-
-  /* SIDEBAR */
   .sidebar{width:220px;background:#fff;border-right:1px solid #e2e8f0;padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
   .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
   .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
@@ -28,11 +21,8 @@
   .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
   .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
   .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
-  .nav-icon{width:15px;height:15px;flex-shrink:0;stroke-width:1.8}
   .nav-bottom{margin-top:auto;padding:16px 18px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8}
   .nav-bottom a{color:#f97316;text-decoration:none}
-
-  /* MAIN */
   .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
   .topbar{height:52px;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
   .topbar-left{display:flex;flex-direction:column;justify-content:center}
@@ -40,24 +30,13 @@
   .topbar-sub{font-size:11px;color:#94a3b8;margin-top:2px}
   .content{flex:1;overflow-y:auto;padding:20px 24px}
 
-  /* STAT CARDS */
-  .stats{display:flex;gap:12px;margin-bottom:16px}
-  .stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;flex:1;border-left-width:3px}
-  .stat-label{font-size:10px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-  .stat-value{font-size:24px;font-weight:800;letter-spacing:-.5px;font-family:'DM Mono',monospace}
-  .stat-sub{font-size:11px;color:#94a3b8;margin-top:2px}
-
-  /* STATUS FILTER CHECKBOXES */
-  .filter-checks{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .filter-check{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:#334155;cursor:pointer;user-select:none;white-space:nowrap}
-  .filter-check input[type=checkbox]{width:14px;height:14px;cursor:pointer;flex-shrink:0;accent-color:#f97316}
-  .filter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-  .filter-count{font-size:10px;color:#94a3b8;font-weight:600;margin-left:1px}
-
-  /* FIELD (padrão do sistema) */
+  /* FIELD */
   .field{background:#fff;border:1px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
   .field:focus{border-color:#0d9488}
   .field-sm{padding:6px 10px;font-size:12px}
+
+  /* FILTER BAR */
+  .filter-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px}
 
   /* MONITOR TABS */
   .monitor-tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:14px}
@@ -69,152 +48,74 @@
   .tab-panel{display:none}
   .tab-panel.active{display:block}
 
-  /* TOOLBAR */
-  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-  .search-wrap{position:relative}
-  .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none}
-  .search-wrap input{height:36px;padding:0 10px 0 32px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#0f172a;background:#fff;outline:none;width:220px}
-  .search-wrap input:focus{border-color:#f97316}
-  .fil-select{height:36px;padding:0 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#0f172a;background:#fff;outline:none;cursor:pointer}
-  .fil-select:focus{border-color:#f97316}
-
   /* BUTTONS */
   .btn{height:36px;padding:0 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#334155;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit;transition:all .15s}
   .btn:hover{background:#f8fafc}
   .btn-primary{background:#f97316;border-color:#f97316;color:#fff}
   .btn-primary:hover{background:#ea6c00;border-color:#ea6c00}
   .btn-ghost{background:transparent;border-color:transparent;color:#64748b;padding:0 8px}
-  .btn-ghost:hover{background:#f1f5f9}
-  .btn-danger{color:#dc2626;border-color:#fca5a5}
-  .btn-danger:hover{background:#fef2f2}
+  .btn-ghost:hover{background:#f1f5f9;color:#0f172a}
   .ml-auto{margin-left:auto}
 
   /* TABLE */
-  .table-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
-  table{width:100%;border-collapse:collapse}
-  thead th{background:#1e293b;color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;white-space:nowrap}
-  tbody tr{border-bottom:1px solid #f1f5f9;transition:background .1s}
-  tbody tr:last-child{border-bottom:none}
-  tbody tr:hover{background:#f8fafc}
-  tbody tr[data-clickable]{cursor:pointer}
-  tbody td{padding:11px 14px;font-size:12px;color:#0f172a;vertical-align:middle}
+  .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+  .tbl-scroll{overflow-x:auto}
+  table.main-tbl{width:100%;border-collapse:collapse}
+  table.main-tbl thead th{background:#1e293b;color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;white-space:nowrap}
+  table.main-tbl tbody tr{border-bottom:1px solid #f1f5f9;transition:background .1s}
+  table.main-tbl tbody tr:last-child{border-bottom:none}
+  table.main-tbl tbody tr:hover{background:#f8fafc}
+  table.main-tbl tbody td{padding:10px 14px;font-size:12px;color:#0f172a;vertical-align:middle}
   .td-sub{font-size:11px;color:#94a3b8;margin-top:1px}
   .td-mono{font-family:'DM Mono',monospace;font-size:11px;color:#64748b}
   .td-right{text-align:right}
   .td-center{text-align:center}
+  .badge-nfe{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;background:#f0fdf4;color:#166534}
+  .badge-nfe-dot{width:6px;height:6px;border-radius:50%;background:#16a34a;flex-shrink:0}
 
-  /* BADGES */
-  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600}
-  .badge-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-  .badge-pendente   {background:#fffbeb;color:#b45309} .badge-pendente .badge-dot   {background:#f59e0b}
-  .badge-transito   {background:#dbeafe;color:#1d4ed8} .badge-transito .badge-dot   {background:#3b82f6}
-  .badge-vinculacao {background:#eff6ff;color:#2563eb} .badge-vinculacao .badge-dot {background:#2563eb}
-  .badge-pronta     {background:#f0fdf4;color:#15803d} .badge-pronta .badge-dot     {background:#22c55e}
-  .badge-processada {background:#f0fdf4;color:#166534} .badge-processada .badge-dot {background:#16a34a}
-  .badge-erro       {background:#fee2e2;color:#991b1b} .badge-erro .badge-dot       {background:#dc2626}
-  .badge-recusada   {background:#f1f5f9;color:#334155} .badge-recusada .badge-dot   {background:#475569}
-  .badge-cancelada  {background:#fef2f2;color:#dc2626} .badge-cancelada .badge-dot  {background:#ef4444}
+  /* FILTER CHECKS */
+  .filter-checks{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .filter-check{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:#334155;cursor:pointer;user-select:none;white-space:nowrap}
+  .filter-check input[type=checkbox]{width:14px;height:14px;cursor:pointer;flex-shrink:0;accent-color:#f97316}
+  .filter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .filter-count{font-size:10px;color:#94a3b8;font-weight:600;margin-left:1px}
 
-  /* MODAL */
-  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;padding-top:40px}
-  .overlay.open{display:flex}
-  .modal{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.2);width:880px;max-width:96vw;max-height:calc(100vh - 80px);display:flex;flex-direction:column;overflow:hidden}
-  .modal-sm{width:540px}
-  .modal-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e2e8f0;flex-shrink:0}
-  .modal-title{font-size:15px;font-weight:700;color:#0f172a}
-  .modal-sub{font-size:11px;color:#94a3b8;margin-top:2px}
-  .modal-body{flex:1;overflow-y:auto;padding:20px}
-  .modal-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid #e2e8f0;flex-shrink:0;background:#f8fafc}
-  .close-btn{background:none;border:none;color:#94a3b8;cursor:pointer;padding:4px;border-radius:4px}
-  .close-btn:hover{background:#f1f5f9;color:#0f172a}
-
-  /* MODAL TABS */
-  .modal-tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:16px}
-  .modal-tab{padding:7px 14px;font-size:12px;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:inline-flex;align-items:center;gap:5px}
-  .modal-tab:hover{color:#0f172a}
-  .modal-tab.active{color:#f97316;border-bottom-color:#f97316;font-weight:600}
-  .modal-tab-err{background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px}
-  .modal-tab-panel{display:none}
-  .modal-tab-panel.active{display:block}
-
-  /* NF-E META */
-  .nfe-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-  .nfe-meta-item{background:#f8fafc;border-radius:6px;padding:10px 12px}
-  .nfe-meta-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
-  .nfe-meta-value{font-size:13px;font-weight:600;color:#0f172a;margin-top:2px}
-
-  /* ITEMS TABLE inside modal */
-  .items-table{width:100%;border-collapse:collapse;margin-bottom:14px}
-  .items-table th{background:#f1f5f9;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;padding:8px 12px;text-align:left;border-bottom:1px solid #e2e8f0}
-  .items-table td{padding:9px 12px;border-bottom:1px solid #f1f5f9;font-size:12px}
-  .items-table tr:last-child td{border-bottom:none}
-  .tag-ok{color:#16a34a;font-weight:600}
-  .tag-err{color:#b45309;font-weight:600}
-  .link-corrigir{color:#2563eb;font-size:11px;font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:none;padding:0}
-  .link-corrigir:hover{color:#1d4ed8}
-
-  /* ERROR ITEMS */
-  .error-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid #fca5a5;border-radius:6px;background:#fff5f5;margin-bottom:10px}
-  .error-item-body{flex:1;font-size:12px;color:#7f1d1d}
-  .error-code{font-family:'DM Mono',monospace;font-weight:700;font-size:12px;display:block;margin-bottom:3px}
-  .error-desc{font-size:11px;color:#991b1b}
-
-  /* ALERT BOXES */
-  .alert{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:6px;margin-bottom:14px;font-size:12px}
-  .alert-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
-  .alert-ok  {background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
-  .alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
-
-  /* SECTION TITLE */
-  .sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:10px}
-
-  /* VINCULAR MODAL */
-  .stepper{display:flex;align-items:center;gap:8px;margin-bottom:22px}
-  .step-num{width:24px;height:24px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .step-num.active{background:#f97316;color:#fff}
-  .step-num.done{background:#16a34a;color:#fff}
-  .step-lbl{font-size:12px;color:#64748b}
-  .step-lbl.active{color:#0f172a;font-weight:600}
-  .step-sep{flex:1;height:1px;background:#e2e8f0;margin:0 4px}
-  .product-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 14px;margin-bottom:14px}
-  .product-card-label{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
-  .product-card-value{font-size:14px;font-weight:700;color:#0f172a;margin-top:2px;font-family:'DM Mono',monospace}
-  .product-card-sub{font-size:11px;color:#64748b;margin-top:4px}
-  .form-group{margin-bottom:13px}
-  .form-label{font-size:11px;font-weight:600;color:#374151;margin-bottom:5px;display:block}
-  .form-label span{color:#94a3b8;font-weight:400}
-  .form-input,.form-select{width:100%;height:36px;padding:0 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#0f172a;background:#fff;outline:none;font-family:inherit}
-  .form-input:focus,.form-select:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
-  .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .conversion-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-top:12px}
-  .conversion-box svg{color:#f97316;flex-shrink:0}
-  .conversion-result{font-size:15px;font-weight:700;color:#c2410c}
-  .conversion-sub{font-size:11px;color:#9a3412;margin-top:2px}
-  .form-check{display:flex;align-items:center;gap:8px;font-size:12px;color:#374151;cursor:pointer;margin-bottom:6px}
-  .form-check input{accent-color:#f97316;cursor:pointer}
-
-  /* CONFIRM SUMMARY */
-  .confirm-summary{background:#f8fafc;border-radius:6px;padding:14px 16px;margin-top:12px}
-  .confirm-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#64748b}
-  .confirm-row.total{font-size:14px;font-weight:700;color:#0f172a;border-top:1px solid #e2e8f0;margin-top:8px;padding-top:10px}
-
-  /* UPLOAD AREA */
-  .upload-area{border:2px dashed #e2e8f0;border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa}
-  .upload-area:hover,.upload-area.drag{border-color:#f97316;background:#fff7ed}
-  .upload-area p{font-size:13px;color:#64748b;margin-top:8px}
-  .upload-area strong{color:#f97316}
-
-  /* EMPTY STATE */
+  /* EMPTY */
   .empty-state{text-align:center;padding:48px 24px;color:#94a3b8}
   .empty-state p{font-size:13px;margin-top:8px}
 
   /* TOAST */
   #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-  .toast-item{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .2s ease;pointer-events:auto}
+  .toast-item{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .2s ease}
   .toast-ok{background:#16a34a}
   .toast-err{background:#dc2626}
-  .toast-info{background:#2563eb}
   @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ── NF-e MODAL (exato do estoque) ── */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+  .overlay.open{display:flex}
+  .modal-nfe{background:#fff;border-radius:12px;width:96vw;max-width:1100px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+  .modal-nfe.expanded{width:99vw;max-width:99vw;height:97vh;max-height:97vh;border-radius:8px}
+  .nfe-hdr{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+  .nfe-hdr-title{font-size:16px;font-weight:700;color:#0f172a}
+  .nfe-hdr-sub{font-size:12px;color:#94a3b8;margin-top:2px}
+  .nfe-body{flex:1;overflow-y:auto;padding:0}
+  .nfe-footer{padding:12px 20px;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;flex-shrink:0;background:#fff}
+  .nfe-info-bar{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin:12px 20px;display:flex;align-items:center;gap:24px;font-size:12px}
+  .nfe-info-lbl{font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+  .nfe-info-val{font-size:13px;font-weight:600;color:#0f172a}
+  .nfe-info-val.blue{color:#2563eb}
+  .nfe-tbl{width:100%;border-collapse:collapse;font-size:12px}
+  .nfe-tbl thead tr{background:#0f2d5c}
+  .nfe-tbl th{padding:7px 8px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  .nfe-tbl th.r{text-align:right}
+  .nfe-tbl td{padding:6px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  .nfe-tbl tr.linked-row{background:#f0fdf4}
+  .nfe-tbl tr.summary-row td{background:#f8fafc;font-size:11px;color:#64748b;padding:8px 10px;border-bottom:1px solid #e2e8f0}
+  .nfe-tbl tr:last-child td{border-bottom:none}
+  .nfe-drop{border:2px dashed #e2e8f0;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:border-color .15s;background:#fafbfc;margin:20px}
+  .nfe-drop:hover,.nfe-drop.drag{border-color:#f97316;background:#fff7ed}
+  .nfe-tbl tfoot tr td{background:#1e293b;color:#fff;padding:8px 10px;font-size:12px}
 </style>
 </head>
 <body>
@@ -222,7 +123,6 @@
   <nav class="sidebar"><div class="logo"><div style="display:flex;align-items:center;gap:8px"><div style="width:34px;height:34px;background:#f97316;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8"><polyline points="1,21 8,6 13,13 17,8 23,21"/><line x1="1" y1="21" x2="23" y2="21"/></svg></div><div><div class="logo-mark">Aiko</div><div class="logo-sub">sistema</div></div></div></div></nav>
 
   <div class="main">
-    <!-- TOPBAR -->
     <div class="topbar">
       <div class="topbar-left">
         <div class="topbar-title">Monitor NF-e</div>
@@ -232,16 +132,15 @@
         <span id="last-sync" style="font-size:11px;color:#94a3b8"></span>
         <button class="btn" onclick="loadAll()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          Sincronizar
+          Atualizar
         </button>
-        <button class="btn btn-primary" onclick="openUpload()">
+        <button class="btn btn-primary" onclick="openNFe()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Importar XML
+          Entrada por NF-e XML
         </button>
       </div>
     </div>
 
-    <!-- CONTENT -->
     <div class="content">
 
       <!-- MONITOR TABS -->
@@ -256,18 +155,12 @@
 
       <!-- TAB: NF-E -->
       <div class="tab-panel active" id="tab-nfe">
-        <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="filter-bar-wrap">
           <div style="position:relative">
-            <input class="field field-sm" id="search-fornecedor" placeholder="Fornecedor…" oninput="filterTable()" style="padding-left:30px;min-width:180px">
+            <input class="field field-sm" id="search-fornecedor" placeholder="Fornecedor…" oninput="renderTable()" style="padding-left:30px;min-width:180px">
             <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
-          <input class="field field-sm" id="search-numero" placeholder="Nº NF-e…" oninput="filterTable()" style="width:100px">
-          <div class="filter-checks" style="gap:12px">
-            <label class="filter-check"><input type="checkbox" data-s="pendente"   checked onchange="filterTable()"><span class="filter-dot" style="background:#f59e0b"></span>Pendente   <span class="filter-count" id="chip-n-pendente"></span></label>
-            <label class="filter-check"><input type="checkbox" data-s="processada" checked onchange="filterTable()"><span class="filter-dot" style="background:#16a34a"></span>Processada <span class="filter-count" id="chip-n-processada"></span></label>
-            <label class="filter-check"><input type="checkbox" data-s="erro"       checked onchange="filterTable()"><span class="filter-dot" style="background:#dc2626"></span>Com Erro   <span class="filter-count" id="chip-n-erro"></span></label>
-            <label class="filter-check"><input type="checkbox" data-s="cancelada"          onchange="filterTable()"><span class="filter-dot" style="background:#ef4444"></span>Cancelada  <span class="filter-count" id="chip-n-cancelada"></span></label>
-          </div>
+          <input class="field field-sm" id="search-numero" placeholder="Nº NF-e…" oninput="renderTable()" style="width:100px">
           <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
             <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:130px">
               <option value="periodo">Período</option>
@@ -282,228 +175,260 @@
             </div>
           </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>NF-e</th>
-                <th>Emissão</th>
-                <th>Fornecedor</th>
-                <th>Loja</th>
-                <th class="td-right">Valor Total</th>
-                <th class="td-center">Itens</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="tbody-nfe">
-              <tr><td colspan="8" style="text-align:center;padding:32px;color:#94a3b8">Carregando…</td></tr>
-            </tbody>
-          </table>
+        <div class="tbl-card">
+          <div class="tbl-scroll">
+            <table class="main-tbl">
+              <thead>
+                <tr>
+                  <th>NF-e</th>
+                  <th>Data/Hora</th>
+                  <th>Fornecedor</th>
+                  <th>Loja</th>
+                  <th class="td-right">Valor Total</th>
+                  <th class="td-center">Itens</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-nfe">
+                <tr><td colspan="7" style="text-align:center;padding:32px;color:#94a3b8">Carregando…</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- TAB: ITENS -->
       <div class="tab-panel" id="tab-itens">
-        <div class="toolbar">
-          <div class="search-wrap">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="search-itens" placeholder="Descrição do item, insumo…" oninput="filterItens()" style="width:260px">
+        <div class="filter-bar-wrap">
+          <div style="position:relative">
+            <input class="field field-sm" id="search-itens" placeholder="Insumo ou fornecedor…" oninput="renderItens()" style="padding-left:30px;min-width:220px">
+            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
-          <select class="fil-select" id="fil-itens-status" onchange="filterItens()">
-            <option value="">Todos os itens</option>
-            <option value="pendente">Só pendentes de vinculação</option>
-            <option value="vinculado">Só vinculados</option>
-          </select>
           <span id="itens-count" class="ml-auto" style="font-size:11px;color:#94a3b8"></span>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Descrição NF-e</th>
-                <th>NF-e</th>
-                <th>Fornecedor</th>
-                <th class="td-center">Qtd</th>
-                <th>Unid.</th>
-                <th class="td-right">Valor Unit.</th>
-                <th>Insumo Vinculado</th>
-                <th>Conversão</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="tbody-itens">
-              <tr><td colspan="9" style="text-align:center;padding:32px;color:#94a3b8">Carregando…</td></tr>
-            </tbody>
+        <div class="tbl-card">
+          <div class="tbl-scroll">
+            <table class="main-tbl">
+              <thead>
+                <tr>
+                  <th>Data/Hora</th>
+                  <th>Insumo</th>
+                  <th>Fornecedor</th>
+                  <th>NF-e</th>
+                  <th class="td-right">Qtd. Estoque</th>
+                  <th>Unidade</th>
+                  <th class="td-right">Custo Unit.</th>
+                  <th class="td-right">Total</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-itens">
+                <tr><td colspan="8" style="text-align:center;padding:32px;color:#94a3b8">Carregando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: VINCULAR ITEM NF-e (igual ao estoque) ══ -->
+<div id="m-nfe-vincular" class="overlay" onclick="if(event.target===this)fecharVincularModal()" style="z-index:320">
+  <div style="background:#fff;border-radius:14px;width:96vw;max-width:820px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)" onclick="event.stopPropagation()">
+    <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1">
+      <div style="font-size:15px;font-weight:700;color:#0f172a">Vincular item da NF-e</div>
+      <button onclick="fecharVincularModal()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:2px 8px;border-radius:6px">✕</button>
+    </div>
+    <input type="hidden" id="vin-ins" value="">
+    <div id="vin-ins-panel" style="display:none"></div>
+    <div style="padding:16px 20px">
+      <div style="display:grid;grid-template-columns:1fr 80px 130px;gap:10px;align-items:end;margin-bottom:14px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Insumo (produto interno) *</label>
+          <select id="vin-ins-select" onchange="onVinSelectChange()" style="width:100%;height:38px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;background:#f8fafc;outline:none;cursor:pointer">
+            <option value="">— Selecione —</option>
+          </select>
+        </div>
+        <div id="vin-und-row" style="display:none">
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Unidade</label>
+          <div style="height:38px;padding:0 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:4px">
+            <span style="font-size:14px;font-weight:800;font-family:'DM Mono',monospace;color:#0f172a" id="vin-und">—</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+        </div>
+        <div id="vin-preco-row" style="display:none">
+          <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Preço unit.</label>
+          <div style="height:38px;padding:0 10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;font-size:13px;font-family:'DM Mono',monospace;color:#334155" id="vin-preco-nfe">—</div>
+        </div>
+      </div>
+      <div id="vin-cod-row" style="display:none;margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Cód. no Fornecedor</label>
+        <input id="vin-cod-forn" type="text" placeholder="Código do item na nota" style="width:100%;height:36px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'DM Mono',monospace;outline:none;background:#f8fafc">
+      </div>
+      <div id="vin-emb-section" style="display:none;margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Conversão *</label>
+        <div style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:1fr auto;padding:8px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em">
+            <span>Embalagem</span><span id="vin-emb-header">Qt. na Emb.</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 130px;align-items:center;padding:10px 14px;gap:10px">
+            <select id="vin-emb-select" onchange="onVinEmbSelectChange()" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;outline:none;background:#f8fafc;color:#0f172a">
+              <option value="">Carregando...</option>
+            </select>
+            <div style="display:flex;align-items:center;gap:6px;border-left:1px solid #f1f5f9;padding-left:10px">
+              <input type="number" id="vin-emb-qty" min="0.001" step="0.001" value="1" style="width:70px;padding:8px;border:1px solid #e2e8f0;border-radius:7px;font-size:13px;text-align:right;outline:none;font-family:'DM Mono',monospace" oninput="onVinEmbQtyInput()">
+              <span id="vin-emb-und-label" style="font-size:12px;color:#64748b;white-space:nowrap;min-width:24px">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="vin-conv-summary" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Resumo da conversão</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div><div style="font-size:10px;color:#3b82f6;margin-bottom:2px">Quantidade NF-e</div><div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="vin-conv-nf">—</div></div>
+          <div><div style="font-size:10px;color:#3b82f6;margin-bottom:2px">Conversão</div><div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="vin-conv-formula">—</div></div>
+          <div><div style="font-size:10px;color:#3b82f6;margin-bottom:2px">Entrada no estoque</div><div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:#16a34a" id="vin-conv-result">—</div></div>
+        </div>
+      </div>
+      <div><label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Observações (opcional)</label>
+        <textarea id="vin-obs" maxlength="200" placeholder="Adicione uma observação..." style="width:100%;height:56px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;resize:none;outline:none;color:#0f172a"></textarea>
+      </div>
+    </div>
+    <div style="padding:12px 20px;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;bottom:0;background:#fff">
+      <button onclick="fecharVincularModal()" style="padding:8px 18px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Voltar à lista
+      </button>
+      <button onclick="salvarVinculoNfe()" id="btn-vin-salvar" style="padding:8px 22px;border-radius:8px;border:none;background:#f97316;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Salvar vínculo</button>
+    </div>
+    <div style="padding:8px 20px;background:#f8fafc;border-top:1px solid #e2e8f0;display:grid;grid-template-columns:2fr 1fr 1fr 2fr;gap:12px">
+      <div><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Produto NF-e</div><div style="font-size:11px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="vin-desc">—</div></div>
+      <div><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Código</div><div style="font-size:11px;font-family:'DM Mono',monospace;color:#0f172a" id="vin-cod">—</div></div>
+      <div><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Quantidade</div><div style="font-size:11px;font-weight:600;color:#0f172a" id="vin-qtd">—</div></div>
+      <div><div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em">Fornecedor</div><div style="font-size:11px;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="vin-forn">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: NF-e XML (igual ao estoque) ══ -->
+<div id="m-nfe" class="overlay" onclick="if(event.target===this){fecharModal('m-nfe');resetNfe()}">
+  <div class="modal-nfe" id="modal-nfe-inner" onclick="event.stopPropagation()">
+    <div class="nfe-hdr">
+      <div>
+        <div class="nfe-hdr-title">Entrada por NF-e / XML</div>
+        <div class="nfe-hdr-sub" id="nfe-hdr-sub">Importe o XML da nota fiscal para registrar a entrada no estoque.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="toggleNfeExpand()" title="Expandir" style="width:30px;height:30px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b" id="btn-nfe-expand">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+        <button onclick="fecharModal('m-nfe');resetNfe()" style="width:30px;height:30px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:16px">✕</button>
+      </div>
+    </div>
+    <div id="nfe-v1" class="nfe-body">
+      <div class="nfe-drop" id="drop"
+        onclick="document.getElementById('nfe-file').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="event.preventDefault();this.classList.remove('drag');handleNfeFile(event.dataTransfer.files[0])">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 12px;display:block"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:6px">Clique ou arraste o arquivo XML</div>
+        <div style="font-size:12px;color:#94a3b8">Suporta NF-e padrão SEFAZ · formatos .xml</div>
+        <input type="file" id="nfe-file" accept=".xml" style="display:none" onchange="handleNfeFile(this.files[0])">
+      </div>
+    </div>
+    <div id="nfe-v2" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+      <div class="nfe-info-bar" style="margin:12px 20px;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <div class="nfe-info-val blue" id="nfe-num" style="font-size:13px">NF-e —</div>
+            <div style="font-size:11px;color:#64748b" id="nfe-emit">—</div>
+          </div>
+        </div>
+        <div><div class="nfe-info-lbl">Data emissão</div><div class="nfe-info-val" id="nfe-data-emissao" style="font-size:12px">—</div></div>
+        <div><div class="nfe-info-lbl">Fornecedor</div>
+          <select class="field field-sm" id="nfe-forn" style="min-width:140px;margin-top:2px" onclick="event.stopPropagation()"><option value="">Sem fornecedor</option></select>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <input type="date" id="nfe-data" class="field field-sm" onclick="event.stopPropagation()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div id="nfe-auto-banner" style="display:none;margin:0 20px 8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;font-size:12px;color:#16a34a;display:flex;align-items:center;gap:8px"></div>
+      <div style="flex:1;overflow-y:auto;padding:0 20px 16px">
+        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:8px 0 10px;display:flex;align-items:center;justify-content:space-between">
+          <span>Itens pendentes de vínculo</span>
+          <button onclick="resetNfe()" style="background:none;border:none;color:#64748b;font-size:11px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Outro XML
+          </button>
+        </div>
+        <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+          <table class="nfe-tbl">
+            <thead><tr>
+              <th>Produto da NF-e</th>
+              <th style="width:70px">Cód. Forn.</th>
+              <th style="width:45px">Un.</th>
+              <th class="r" style="width:80px">Quantidade</th>
+              <th class="r" style="width:85px">Preço Unit.</th>
+              <th class="r" style="width:85px">Preço Total</th>
+              <th style="width:90px">Ação</th>
+            </tr></thead>
+            <tbody id="nfe-body"></tbody>
           </table>
         </div>
       </div>
-
-    </div><!-- /content -->
-  </div><!-- /main -->
-</div><!-- /shell -->
-
-<!-- ══ MODAL: DETALHE NF-E ══ -->
-<div class="overlay" id="overlay-detail">
-  <div class="modal">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" id="detail-title">NF-e</div>
-        <div class="modal-sub" id="detail-sub"></div>
-      </div>
-      <button class="close-btn" onclick="closeModal('overlay-detail')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
     </div>
-    <div class="modal-body">
-      <div class="nfe-meta" id="detail-meta"></div>
-      <div class="modal-tabs">
-        <div class="modal-tab active" id="dtab-danfe" onclick="switchDetailTab('danfe')">DANFE</div>
-        <div class="modal-tab" id="dtab-itens" onclick="switchDetailTab('itens')">
-          Itens <span class="tab-badge" id="dtab-n-itens">0</span>
-        </div>
-        <div class="modal-tab" id="dtab-erros" onclick="switchDetailTab('erros')" style="display:none">
-          Erros <span class="modal-tab-err" id="dtab-n-erros">0</span>
-        </div>
+    <div id="nfe-v3" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+      <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+        <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:2px">Resumo da entrada</div>
+        <div style="font-size:12px;color:#64748b">Revise todos os itens antes de confirmar o lançamento no estoque.</div>
       </div>
-      <div class="modal-tab-panel active" id="dpanel-danfe"></div>
-      <div class="modal-tab-panel" id="dpanel-itens"></div>
-      <div class="modal-tab-panel" id="dpanel-erros"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('overlay-detail')">Fechar</button>
-      <button class="btn btn-primary" id="btn-processar" onclick="processarNfe()" style="display:none">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Processar Entrada
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: VINCULAR ITEM ══ -->
-<div class="overlay" id="overlay-vincular">
-  <div class="modal modal-sm">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title">Vincular Item da NF-e</div>
-        <div class="modal-sub">Mapeamento salvo permanentemente para este fornecedor</div>
-      </div>
-      <button class="close-btn" onclick="closeModal('overlay-vincular')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="stepper">
-        <div class="step-num active" id="snum-1">1</div>
-        <div class="step-lbl active" id="slbl-1">Selecionar insumo</div>
-        <div class="step-sep"></div>
-        <div class="step-num" id="snum-2">2</div>
-        <div class="step-lbl" id="slbl-2">Definir embalagem</div>
-      </div>
-
-      <!-- STEP 1 -->
-      <div id="vstep-1">
-        <div class="product-card">
-          <div class="product-card-label">Produto na NF-e</div>
-          <div class="product-card-value" id="v-nfe-desc"></div>
-          <div class="product-card-sub" id="v-nfe-detail"></div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Insumo interno correspondente</label>
-          <select class="form-select" id="v-insumo-select">
-            <option value="">Selecione o insumo…</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Código do item no fornecedor <span>(opcional)</span></label>
-          <input class="form-input" type="text" id="v-cod-fornecedor" placeholder="Ex: 1234, SKU-OL-001…">
-        </div>
-        <div class="alert alert-info" style="font-size:11px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="v-fornecedor-info">Este mapeamento será <strong>salvo permanentemente</strong>. Nas próximas NF-e deste fornecedor, este item chegará vinculado automaticamente.</span>
-        </div>
-      </div>
-
-      <!-- STEP 2 -->
-      <div id="vstep-2" style="display:none">
-        <div class="product-card">
-          <div class="product-card-label">Produto na NF-e</div>
-          <div class="product-card-value" id="v2-nfe-desc"></div>
-          <div class="product-card-sub" id="v2-insumo-info"></div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Descrição da embalagem do fornecedor</label>
-          <input class="form-input" type="text" id="v-embalagem" placeholder="Ex: Caixa 20x900ml, Fardo 12kg…">
-        </div>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label class="form-label">Qtd por embalagem</label>
-            <input class="form-input" type="number" id="v-fator" value="1" min="0.001" step="0.001" oninput="updateConversion()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Unidade do estoque</label>
-            <select class="form-select" id="v-unidade" onchange="updateConversion()">
-              <option value="kg">KG</option>
-              <option value="litro">LITRO</option>
-              <option value="un">UN</option>
-              <option value="ml">ML</option>
-              <option value="g">G</option>
-            </select>
-          </div>
-        </div>
-        <div class="conversion-box" id="conversion-box">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          <div>
-            <div class="conversion-result" id="v-conversion-result"></div>
-            <div class="conversion-sub" id="v-conversion-sub"></div>
-          </div>
-        </div>
-        <div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
-          <label class="form-check"><input type="checkbox" id="v-auto-preco" checked> Atualizar preço do insumo automaticamente nas próximas entradas</label>
-          <label class="form-check"><input type="checkbox" id="v-padrao" checked> Esta é a embalagem padrão deste fornecedor para este item</label>
+      <div style="flex:1;overflow-y:auto;padding:16px 20px">
+        <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+          <table class="nfe-tbl">
+            <thead><tr>
+              <th>Produto NF-e</th>
+              <th>Produto interno</th>
+              <th class="r">Qtd. NF-e</th>
+              <th class="r">Qtd. Estoque</th>
+              <th>Unidade</th>
+              <th class="r">Custo unit.</th>
+              <th class="r">Total</th>
+              <th style="width:50px"></th>
+            </tr></thead>
+            <tbody id="nfe-resumo-body"></tbody>
+            <tfoot><tr>
+              <td colspan="6" style="font-weight:700;font-size:12px">Total geral — <span id="nfe-total-itens"></span></td>
+              <td class="r" style="font-weight:700;font-size:14px;font-family:'DM Mono',monospace" id="nfe-total-geral">—</td>
+              <td></td>
+            </tr></tfoot>
+          </table>
         </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" id="vbtn-back" style="display:none" onclick="vincStep(1)">Voltar</button>
-      <button class="btn" onclick="closeModal('overlay-vincular')">Cancelar</button>
-      <button class="btn btn-primary" id="vbtn-next" onclick="vincStep(2)">
-        Próximo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: UPLOAD XML ══ -->
-<div class="overlay" id="overlay-upload">
-  <div class="modal modal-sm">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title">Importar NF-e via XML</div>
-        <div class="modal-sub">Arraste o arquivo XML ou clique para selecionar</div>
-      </div>
-      <button class="close-btn" onclick="closeModal('overlay-upload')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="upload-area" id="upload-area" onclick="document.getElementById('xml-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-        <p>Clique ou arraste o arquivo <strong>.xml</strong> aqui</p>
-        <p style="font-size:11px;margin-top:4px">NF-e modelo 55 · Apenas um arquivo por vez</p>
-      </div>
-      <input type="file" id="xml-input" accept=".xml" style="display:none" onchange="handleFileSelect(this)">
-      <div id="upload-preview" style="display:none;margin-top:14px">
-        <div class="alert alert-ok" id="upload-preview-msg"></div>
-        <div class="nfe-meta" id="upload-meta" style="margin-bottom:0"></div>
-      </div>
-      <div id="upload-error" style="display:none;margin-top:14px"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('overlay-upload')">Cancelar</button>
-      <button class="btn btn-primary" id="btn-confirmar-upload" style="display:none" onclick="confirmarUpload()">
+    <div class="nfe-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('m-nfe');resetNfe()">Cancelar</button>
+      <button class="btn btn-ghost" id="btn-nfe-outro" style="display:none;align-items:center;gap:6px" onclick="resetNfe()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Importar Nota
+        Outro arquivo
+      </button>
+      <button class="btn btn-ghost" id="btn-nfe-voltar-resumo" style="display:none;align-items:center;gap:6px" onclick="voltarParaPendentes()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Voltar
+      </button>
+      <div style="flex:1"></div>
+      <button class="btn btn-primary" id="btn-nfe-conf" style="display:none;align-items:center;gap:6px" onclick="mostrarResumoNfe()">
+        Ver resumo
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button class="btn btn-primary" id="btn-nfe-confirmar-def" style="display:none;align-items:center;gap:6px;background:#16a34a;border-color:#16a34a" onclick="confirmarNfe()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirmar entrada
       </button>
     </div>
   </div>
@@ -521,696 +446,676 @@ const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 const TENANT_ID = '00000000-0000-0000-0000-000000000001';
 const api = createApi(SUPA_URL, SUPA_KEY);
 
-// ── ESTADO ─────────────────────────────────────────────────────────
-let allNfe       = [];   // nfe_recebidas do servidor
-let allItens     = [];   // nfe_itens do servidor (aba Itens)
-let insumos      = [];   // cache de insumos para o select
-let currentNfeId = null; // NF-e aberta no modal de detalhe
-let currentItem  = null; // item sendo vinculado
-let pendingXml   = null; // XML parseado aguardando confirmação
+// ── ESTADO ────────────────────────────────────────────────────────
+let entradasNfe    = [];
+let insumos        = [];
+let fornecedores   = [];
+let vinculos       = [];
+let insumoFornVinculos = [];
+let saldos         = [];
+let lojaAtual      = null;
 
-// ── TOAST ───────────────────────────────────────────────────────────
-function toast(msg, type = 'ok', ms = 3000) {
-  const el = document.createElement('div');
-  el.className = `toast-item toast-${type}`;
-  el.textContent = msg;
-  document.getElementById('toast').appendChild(el);
-  setTimeout(() => el.remove(), ms);
-}
+// ── NF-e vars (igual ao estoque) ─────────────────────────────────
+let nfeItens = [], nfeAutoLinked = {}, nfeSession = {}, nfeVinculandoIdx = null;
 
-// ── FORMATOS ────────────────────────────────────────────────────────
-function fmtDate(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+// ── HELPERS ───────────────────────────────────────────────────────
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+function hoje() { return new Date().toISOString().split('T')[0]; }
+function norm(s) { return (s||'').toLowerCase().trim(); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function brl(v) { if(v==null||v==='') return '—'; return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtQtd(n) { const v=parseFloat(n)||0; if(Number.isInteger(v)) return v.toString(); return v.toFixed(3).replace(/\.?0+$/,''); }
+function getLojaId() { return lojaAtual?.id || null; }
+function getSaldo(insId) {
+  const lojaId = getLojaId();
+  return saldos.find(s=>s.insumo_id===insId&&(!lojaId||s.loja_id===lojaId))||{quantidade:0,custo_medio:0};
 }
-function fmtDateShort(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('pt-BR');
-}
-function fmtMoney(v) {
-  if (v == null) return '—';
-  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-function statusBadge(s) {
-  const map = {
-    pendente:        ['badge-pendente',   'Pendente'],
-    em_transito:     ['badge-transito',   'Em Trânsito'],
-    aguard_vinculacao:['badge-vinculacao','Aguard. Vinculação'],
-    pronta:          ['badge-pronta',     'Pronta'],
-    processada:      ['badge-processada', 'Processada'],
-    com_erro:        ['badge-erro',       'Com Erro'],
-    recusada:        ['badge-recusada',   'Recusada'],
-    cancelada:       ['badge-cancelada',  'Cancelada'],
-  };
-  const [cls, label] = map[s] || ['', s];
-  return `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>`;
-}
-// status interno → data-s do chip
-function statusToChip(s) {
-  const map = {
-    pendente:          'pendente',
-    em_transito:       'pendente',
-    aguard_vinculacao: 'pendente',
-    pronta:            'pendente',
-    recusada:          'pendente',
-    processada:        'processada',
-    com_erro:          'erro',
-    cancelada:         'cancelada',
-  };
-  return map[s] || 'pendente';
+async function upsertSaldo(insId, quantidade, custoMedio) {
+  const lojaId = getLojaId();
+  const payload = { tenant_id:TENANT_ID, insumo_id:insId, loja_id:lojaId,
+    quantidade:parseFloat(Number(quantidade).toFixed(4)),
+    custo_medio:parseFloat(Number(custoMedio).toFixed(6)),
+    atualizado_em:new Date().toISOString() };
+  await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id',
+    {method:'POST', prefer:'resolution=merge-duplicates,return=minimal', body:JSON.stringify(payload)});
+  const ex=saldos.find(s=>s.insumo_id===insId&&s.loja_id===lojaId);
+  if(ex) Object.assign(ex,payload); else saldos.push({...payload});
 }
 
-// ── PERÍODO (padrão do sistema) ───────────────────────────────────────
 function setPeriodoRange(tipo, deId, ateId, fn) {
-  const d = new Date(); let de, ate;
-  if (tipo === 'mes_atual') {
-    de  = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
-    ate = d.toISOString().split('T')[0];
-  } else if (tipo === 'mes_anterior') {
-    const p = new Date(d.getFullYear(), d.getMonth()-1, 1);
-    const l = new Date(d.getFullYear(), d.getMonth(), 0);
-    de  = `${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;
-    ate = `${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;
+  const d=new Date(); let de, ate;
+  if(tipo==='mes_atual'){
+    de=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    ate=d.toISOString().split('T')[0];
+  } else if(tipo==='mes_anterior'){
+    const p=new Date(d.getFullYear(),d.getMonth()-1,1);
+    const l=new Date(d.getFullYear(),d.getMonth(),0);
+    de=`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;
+    ate=`${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;
   } else { return; }
-  const elD = document.getElementById(deId); if (elD) elD.value = de;
-  const elA = document.getElementById(ateId); if (elA) elA.value = ate;
-  if (fn) fn();
+  const elD=document.getElementById(deId); if(elD) elD.value=de;
+  const elA=document.getElementById(ateId); if(elA) elA.value=ate;
+  if(fn) fn();
 }
 
-function getPeriodFilter() {
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const el=document.createElement('div');
+  el.className=`toast-item toast-${type}`;
+  el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+// ── FORMATOS ──────────────────────────────────────────────────────
+function fmtDate(iso) {
+  if(!iso) return '—';
+  const d=new Date(iso);
+  return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── CARREGAR DADOS ────────────────────────────────────────────────
+async function loadAll() {
   const de  = document.getElementById('fil-de')?.value;
   const ate = document.getElementById('fil-ate')?.value;
-  let q = '';
-  if (de)  q += `&data_emissao=gte.${de}T00:00:00`;
-  if (ate) q += `&data_emissao=lte.${ate}T23:59:59`;
-  return q;
-}
-
-// ── CARREGAR DADOS ───────────────────────────────────────────────────
-async function loadAll() {
-  const filter = `tenant_id=eq.${TENANT_ID}&order=data_emissao.desc${getPeriodFilter()}`;
+  let dateFilter = '';
+  if(de)  dateFilter += `&criado_em=gte.${de}T00:00:00`;
+  if(ate) dateFilter += `&criado_em=lte.${ate}T23:59:59`;
 
   try {
-    const [nfeData, itensData] = await Promise.all([
-      api(`nfe_recebidas?${filter}&select=*`),
-      api(`nfe_itens?tenant_id=eq.${TENANT_ID}&select=*,vinculacao:fornecedor_produto_vinculado(id,insumo_id,descricao_embalagem,fator_conversao,unidade_estoque),insumo:fornecedor_produto_vinculado(insumos(nome))`),
+    const [entData, insData, fornData, vincData, ifvData, saldoData] = await Promise.all([
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&tipo=in.(nfe,nfe_importada)&order=criado_em.desc${dateFilter}&select=*`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=id,nome,unidade_medida,unidade_compra`),
+      api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=id,nome,nome_fantasia`).catch(()=>[]),
+      api(`vinculos_nfe?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
+      api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
     ]);
-    allNfe   = nfeData  || [];
-    allItens = itensData || [];
-    renderChipCounts();
+
+    entradasNfe       = entData   || [];
+    insumos           = insData   || [];
+    fornecedores      = fornData  || [];
+    vinculos          = vincData  || [];
+    insumoFornVinculos = ifvData  || [];
+    saldos            = saldoData || [];
+
+    // Popula select de fornecedores no modal NF-e
+    const selForn = document.getElementById('nfe-forn');
+    if(selForn) {
+      selForn.innerHTML = '<option value="">Sem fornecedor</option>' +
+        fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome)}</option>`).join('');
+    }
+
     renderTable();
     renderItens();
-    document.getElementById('last-sync').textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-  } catch (e) {
-    toast('Erro ao carregar NF-e: ' + e.message, 'err');
+    document.getElementById('last-sync').textContent = 'Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    toast('Erro ao carregar: '+e.message, 'err');
   }
 }
 
-async function loadInsumos() {
-  try {
-    insumos = await api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=id,nome,unidade_medida`);
-  } catch {}
-}
-
-// ── CONTADORES ───────────────────────────────────────────────────────
-function renderChipCounts() {
-  const counts = {};
-  allNfe.forEach(n => { const c = statusToChip(n.status); counts[c] = (counts[c]||0)+1; });
-  ['pendente','processada','erro','cancelada'].forEach(s => {
-    const el = document.getElementById('chip-n-' + s);
-    if (el) el.textContent = counts[s] ? `(${counts[s]})` : '';
+// ── MONITOR TABS ──────────────────────────────────────────────────
+function switchMonitorTab(name) {
+  ['nfe','itens'].forEach(t => {
+    document.getElementById('mtab-'+t).classList.toggle('active', t===name);
+    document.getElementById('tab-'+t).classList.toggle('active', t===name);
   });
-  document.getElementById('tab-n-nfe').textContent   = allNfe.length;
-  document.getElementById('tab-n-itens').textContent = allItens.length;
 }
 
-// ── TABELA NF-E ──────────────────────────────────────────────────────
+// ── TABELA NF-E ───────────────────────────────────────────────────
 function renderTable() {
-  const searchForn   = normalizeSearch(document.getElementById('search-fornecedor').value);
-  const searchNumero = (document.getElementById('search-numero').value || '').trim().replace(/\D/g,'');
-  const active       = activeStatuses();
+  const searchForn   = (document.getElementById('search-fornecedor')?.value||'').toLowerCase().trim();
+  const searchNumero = (document.getElementById('search-numero')?.value||'').replace(/\D/g,'');
 
-  const filtered = allNfe.filter(n => {
-    if (!active.has(statusToChip(n.status))) return false;
-    if (searchForn   && !normalizeSearch(n.nome_emitente + ' ' + n.cnpj_emitente).includes(searchForn)) return false;
-    if (searchNumero && !n.numero.replace(/\D/g,'').includes(searchNumero)) return false;
+  // Agrupa por nfe_numero
+  const groups = {};
+  entradasNfe.forEach(e => {
+    const key = e.nfe_numero || '—';
+    if(!groups[key]) groups[key] = { numero:key, criado_em:e.criado_em, fornecedor_nome:e.fornecedor_nome||'—', itens:[], total:0 };
+    groups[key].itens.push(e);
+    groups[key].total += (e.quantidade||0) * (e.custo_unitario||0);
+  });
+
+  const rows = Object.values(groups).filter(g => {
+    if(searchForn   && !g.fornecedor_nome.toLowerCase().includes(searchForn)) return false;
+    if(searchNumero && !g.numero.replace(/\D/g,'').includes(searchNumero)) return false;
     return true;
   });
 
+  document.getElementById('tab-n-nfe').textContent = rows.length;
+
   const tbody = document.getElementById('tbody-nfe');
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhuma NF-e encontrada</p></div></td></tr>`;
+  if(!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;display:block;margin:0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhuma NF-e encontrada</p></div></td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(n => {
-    const nItens = allItens.filter(i => i.nfe_id === n.id).length;
-    const nPend  = allItens.filter(i => i.nfe_id === n.id && !i.vinculacao_id).length;
-    let itensCell = `<div class="td-center">${nItens}</div>`;
-    if (nPend > 0) itensCell = `<div class="td-center">${nItens}<div class="td-sub" style="color:#dc2626;text-align:center">${nPend} pendente${nPend>1?'s':''}</div></div>`;
-    else if (n.status === 'pronta') itensCell = `<div class="td-center">${nItens}<div class="td-sub" style="color:#16a34a;text-align:center">vinculados</div></div>`;
-
-    const actionBtn = n.status === 'pronta'
-      ? `<button class="btn btn-primary" style="font-size:11px;height:28px" onclick="event.stopPropagation();openDetail('${n.id}')">Processar</button>`
-      : n.status === 'com_erro' || n.status === 'aguard_vinculacao'
-      ? `<button class="btn btn-danger" style="font-size:11px;height:28px" onclick="event.stopPropagation();openDetail('${n.id}')">Corrigir</button>`
-      : `<button class="btn btn-ghost" style="font-size:11px;height:28px" onclick="event.stopPropagation();openDetail('${n.id}')">Ver</button>`;
-
-    return `<tr data-status="${statusToChip(n.status)}" data-clickable onclick="openDetail('${n.id}')">
-      <td><div style="font-weight:600">NF-e ${n.numero}</div><div class="td-mono">${(n.chave_acesso||'').substring(0,20)}…</div></td>
-      <td>${fmtDateShort(n.data_emissao)}<div class="td-sub">${new Date(n.data_emissao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></td>
-      <td><div style="font-weight:500">${n.nome_emitente}</div><div class="td-sub">${n.cnpj_emitente}</div></td>
-      <td>${n.tenant_id === TENANT_ID ? 'Sushi PN' : '—'}</td>
-      <td class="td-right" style="font-weight:600">${fmtMoney(n.valor_total)}</td>
-      <td>${itensCell}</td>
-      <td>${statusBadge(n.status)}</td>
-      <td>${actionBtn}</td>
-    </tr>`;
-  }).join('');
+  tbody.innerHTML = rows.map(g => `<tr>
+    <td><div style="font-weight:600">${esc(g.numero)}</div></td>
+    <td>${fmtDate(g.criado_em)}</td>
+    <td style="font-weight:500">${esc(g.fornecedor_nome)}</td>
+    <td style="font-size:11px;color:#64748b">—</td>
+    <td class="td-right" style="font-weight:600">${brl(g.total)}</td>
+    <td class="td-center">${g.itens.length}</td>
+    <td><span class="badge-nfe"><span class="badge-nfe-dot"></span>Processada</span></td>
+  </tr>`).join('');
 }
 
 function filterTable() { renderTable(); }
 
-// ── TABELA ITENS ─────────────────────────────────────────────────────
+// ── TABELA ITENS ──────────────────────────────────────────────────
 function renderItens() {
-  const search  = normalizeSearch(document.getElementById('search-itens').value);
-  const filSt   = document.getElementById('fil-itens-status').value;
+  const search = (document.getElementById('search-itens')?.value||'').toLowerCase().trim();
 
-  const filtered = allItens.filter(i => {
-    if (filSt === 'pendente' && i.vinculacao_id) return false;
-    if (filSt === 'vinculado' && !i.vinculacao_id) return false;
-    if (search && !normalizeSearch(i.descricao_nfe).includes(search)) return false;
-    return true;
+  const filtered = entradasNfe.filter(e => {
+    if(!search) return true;
+    const ins = insumos.find(i=>i.id===e.insumo_id);
+    return (ins?.nome||'').toLowerCase().includes(search) ||
+           (e.fornecedor_nome||'').toLowerCase().includes(search);
   });
 
-  document.getElementById('itens-count').textContent = `${filtered.length} iten${filtered.length!==1?'s':''} de ${allItens.length} total`;
+  document.getElementById('tab-n-itens').textContent = filtered.length;
+  document.getElementById('itens-count').textContent = `${filtered.length} iten${filtered.length!==1?'s':''}`;
 
   const tbody = document.getElementById('tbody-itens');
-  if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:#94a3b8">Nenhum item encontrado</td></tr>`;
+  if(!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:#94a3b8">Nenhum item encontrado</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(i => {
-    const nfe = allNfe.find(n => n.id === i.nfe_id);
-    const insumoNome = i.vinculacao?.insumos?.nome || null;
-    const conv = i.vinculacao ? `${i.vinculacao.fator_conversao} ${i.vinculacao.unidade_estoque}` : '—';
-    const vinc = insumoNome
-      ? `<span class="tag-ok">✓ ${insumoNome}</span>`
-      : `<span class="tag-err">⚠ Não vinculado</span>`;
-    const btn = !i.vinculacao_id
-      ? `<button class="link-corrigir" onclick="openVincular('${i.id}')">Vincular</button>` : '';
-    return `<tr ${!i.vinculacao_id ? 'style="background:#fff5f5"' : ''}>
-      <td style="font-family:'DM Mono',monospace;font-size:11px;font-weight:${i.vinculacao_id?400:700};color:${i.vinculacao_id?'inherit':'#dc2626'}">${i.descricao_nfe}</td>
-      <td class="td-mono">${nfe ? nfe.numero : '—'}</td>
-      <td style="font-size:11px">${nfe ? nfe.nome_emitente : '—'}</td>
-      <td class="td-center">${i.quantidade}</td>
-      <td>${i.unidade_nfe}</td>
-      <td class="td-right">${fmtMoney(i.valor_unitario)}</td>
-      <td>${vinc}</td>
-      <td style="font-size:11px;color:#64748b">${conv}</td>
-      <td>${btn}</td>
+  tbody.innerHTML = filtered.map(e => {
+    const ins = insumos.find(i=>i.id===e.insumo_id);
+    const total = (e.quantidade||0) * (e.custo_unitario||0);
+    return `<tr>
+      <td>${fmtDate(e.criado_em)}</td>
+      <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
+      <td style="font-size:11px;color:#64748b">${esc(e.fornecedor_nome||'—')}</td>
+      <td class="td-mono">${esc(e.nfe_numero||'—')}</td>
+      <td class="td-right" style="font-family:'DM Mono',monospace">${fmtQtd(e.quantidade)}</td>
+      <td style="font-size:11px;color:#64748b">${esc(e.unidade_compra||ins?.unidade_medida||'—')}</td>
+      <td class="td-right" style="font-family:'DM Mono',monospace">${brl(e.custo_unitario)}</td>
+      <td class="td-right" style="font-weight:600;font-family:'DM Mono',monospace">${brl(total)}</td>
     </tr>`;
   }).join('');
 }
 
 function filterItens() { renderItens(); }
 
-// ── STATUS CHECKBOXES ────────────────────────────────────────────────
-function activeStatuses() {
-  return new Set([...document.querySelectorAll('.filter-check input[type=checkbox]:checked')].map(c => c.dataset.s));
-}
-
-// ── MONITOR TABS ──────────────────────────────────────────────────────
-function switchMonitorTab(name) {
-  ['nfe','itens'].forEach(t => {
-    document.getElementById('mtab-' + t).classList.toggle('active', t === name);
-    document.getElementById('tab-' + t).classList.toggle('active', t === name);
-  });
-}
-
-// ── MODAL DETALHE NF-E ───────────────────────────────────────────────
-async function openDetail(nfeId) {
-  currentNfeId = nfeId;
-  const nfe = allNfe.find(n => n.id === nfeId);
-  if (!nfe) return;
-
-  document.getElementById('detail-title').textContent = `NF-e ${nfe.numero} — ${nfe.nome_emitente}`;
-  document.getElementById('detail-sub').textContent   = `Chave: ${nfe.chave_acesso || '—'}`;
-
-  // Meta
-  document.getElementById('detail-meta').innerHTML = `
-    <div class="nfe-meta-item"><div class="nfe-meta-label">Fornecedor</div><div class="nfe-meta-value">${nfe.nome_emitente}</div></div>
-    <div class="nfe-meta-item"><div class="nfe-meta-label">CNPJ</div><div class="nfe-meta-value" style="font-family:monospace;font-size:12px">${nfe.cnpj_emitente}</div></div>
-    <div class="nfe-meta-item"><div class="nfe-meta-label">Valor Total</div><div class="nfe-meta-value">${fmtMoney(nfe.valor_total)}</div></div>
-    <div class="nfe-meta-item"><div class="nfe-meta-label">Status</div><div style="margin-top:4px">${statusBadge(nfe.status)}</div></div>
-  `;
-
-  const itens = allItens.filter(i => i.nfe_id === nfeId);
-  const pendentes = itens.filter(i => !i.vinculacao_id);
-
-  // Tab counts
-  document.getElementById('dtab-n-itens').textContent = itens.length;
-  document.getElementById('dtab-n-erros').textContent = pendentes.length;
-
-  const errosTab = document.getElementById('dtab-erros');
-  errosTab.style.display = pendentes.length > 0 ? '' : 'none';
-
-  // DANFE panel
-  document.getElementById('dpanel-danfe').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div>
-        <div class="sec-title" style="margin-bottom:8px">Dados da Nota</div>
-        <table style="width:100%;font-size:12px;border-collapse:collapse">
-          <tr><td style="padding:4px 0;color:#64748b;width:140px">Número</td><td style="font-weight:600">${nfe.numero}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b">Série</td><td>${nfe.serie}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b">Data de Emissão</td><td>${fmtDate(nfe.data_emissao)}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b">Data de Entrada</td><td>${fmtDate(nfe.data_integracao)}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b">Fonte</td><td style="text-transform:capitalize">${nfe.fonte || '—'}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b">Valor Total</td><td style="font-weight:700">${fmtMoney(nfe.valor_total)}</td></tr>
-        </table>
-      </div>
-      <div>
-        ${nfe.chave_acesso ? `<div class="sec-title" style="margin-bottom:8px">Chave de Acesso</div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;background:#f8fafc;padding:8px 10px;border-radius:6px;border:1px solid #e2e8f0;word-break:break-all;color:#475569;line-height:1.8">${nfe.chave_acesso}</div>` : ''}
-        <div class="sec-title" style="margin-top:14px;margin-bottom:8px">Financeiro</div>
-        <table style="width:100%;font-size:12px;border-collapse:collapse">
-          <tr><td style="padding:4px 0;color:#64748b;width:140px">Valor Título</td><td style="font-weight:600">${fmtMoney(nfe.valor_titulo)}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b">1º Vencimento</td><td>${nfe.data_vencimento ? new Date(nfe.data_vencimento+'T00:00:00').toLocaleDateString('pt-BR') : '—'}</td></tr>
-          <tr><td style="padding:4px 0;color:#64748b">Portador</td><td>${nfe.portador || '—'}</td></tr>
-        </table>
-      </div>
-    </div>`;
-
-  // Itens panel
-  const itensRows = itens.map(i => {
-    const insumoNome = i.vinculacao?.insumos?.nome || null;
-    const conv = i.vinculacao ? `${i.vinculacao.fator_conversao} ${i.vinculacao.unidade_estoque}` : '—';
-    const qtdEstoque = i.vinculacao ? (Number(i.quantidade) * Number(i.vinculacao.fator_conversao)).toFixed(3) + ' ' + i.vinculacao.unidade_estoque : '—';
-    return `<tr ${!i.vinculacao_id ? 'style="background:#fff5f5"' : ''}>
-      <td style="font-family:'DM Mono',monospace;font-size:11px;font-weight:${i.vinculacao_id?400:700};color:${i.vinculacao_id?'inherit':'#dc2626'}">${i.descricao_nfe}</td>
-      <td>${i.quantidade}</td><td>${i.unidade_nfe}</td>
-      <td style="font-size:11px;color:#64748b">${conv}</td>
-      <td>${insumoNome ? `<span class="tag-ok">✓ ${insumoNome}</span>` : `<span class="tag-err">⚠ Não vinculado</span>`}</td>
-      <td style="font-weight:600">${qtdEstoque}</td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('dpanel-itens').innerHTML = `
-    <table class="items-table">
-      <thead><tr><th>Descrição NF-e</th><th>Qtd</th><th>Unid.</th><th>Conversão</th><th>Insumo Interno</th><th>Entrada Estoque</th></tr></thead>
-      <tbody>${itensRows}</tbody>
-    </table>`;
-
-  // Erros panel
-  const errosHtml = pendentes.length === 0
-    ? `<div class="alert alert-ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg><div>Todos os itens estão vinculados.</div></div>`
-    : `<div class="alert alert-warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <div>Esta nota possui <strong>${pendentes.length} iten${pendentes.length>1?'s':''} não localizado${pendentes.length>1?'s':''}</strong> na tabela de preços. Clique em <strong>Corrigir</strong> para vincular.</div></div>
-    ${pendentes.map(i => `
-      <div class="error-item">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div class="error-item-body" style="flex:1">
-          <span class="error-code">${i.descricao_nfe}</span>
-          <span class="error-desc">Item não localizado na tabela de preços do fornecedor ${nfe.nome_emitente}. Qtd: ${i.quantidade} ${i.unidade_nfe} · Valor unit.: ${fmtMoney(i.valor_unitario)}</span>
-        </div>
-        <button class="btn btn-danger" style="font-size:11px;height:28px;flex-shrink:0" onclick="openVincular('${i.id}')">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          Corrigir
-        </button>
-      </div>`).join('')}`;
-
-  document.getElementById('dpanel-erros').innerHTML = errosHtml;
-
-  // Botão processar
-  const btnProc = document.getElementById('btn-processar');
-  btnProc.style.display = nfe.status === 'pronta' ? '' : 'none';
-
-  // Ativa aba DANFE por padrão
-  switchDetailTab('danfe');
-  document.getElementById('overlay-detail').classList.add('open');
-}
-
-function switchDetailTab(name) {
-  ['danfe','itens','erros'].forEach(t => {
-    const tab   = document.getElementById('dtab-' + t);
-    const panel = document.getElementById('dpanel-' + t);
-    if (!tab || !panel) return;
-    tab.classList.toggle('active', t === name);
-    panel.classList.toggle('active', t === name);
-  });
-}
-
-// ── PROCESSAR NF-E ────────────────────────────────────────────────────
-async function processarNfe() {
-  if (!currentNfeId) return;
-  const nfe = allNfe.find(n => n.id === currentNfeId);
-  if (!nfe || nfe.status !== 'pronta') return;
-
-  const itens = allItens.filter(i => i.nfe_id === currentNfeId);
-  if (itens.some(i => !i.vinculacao_id)) { toast('Ainda há itens não vinculados.', 'err'); return; }
-
-  if (!confirm(`Confirmar processamento da NF-e ${nfe.numero}?\n\nEsta ação irá:\n• Atualizar o custo médio dos insumos\n• Registrar movimentação de entrada no estoque`)) return;
-
+// ── REGISTRO NO ESTOQUE ────────────────────────────────────────────
+async function registrarEntrada(insId, dados, custoUnitEstoque) {
+  await api('entradas_estoque', {method:'POST', prefer:'return=minimal',
+    body:JSON.stringify({tenant_id:TENANT_ID, insumo_id:insId, loja_id:getLojaId(), ...dados})});
+  const s=getSaldo(insId);
+  const qA=s.quantidade||0, cmA=s.custo_medio||0;
+  const qN=qA+dados.quantidade;
+  const cmN=qN>0?(qA*cmA+dados.quantidade*custoUnitEstoque)/qN:custoUnitEstoque;
+  await upsertSaldo(insId, qN, parseFloat(cmN.toFixed(6)));
   try {
-    // Atualiza status da NF-e
-    await api(`nfe_recebidas?id=eq.${currentNfeId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: 'processada', processada_em: new Date().toISOString() }),
-      prefer: 'return=minimal',
-    });
-
-    // Atualiza preço dos insumos que têm atualizar_preco_auto = true
-    for (const item of itens) {
-      if (!item.vinculacao) continue;
-      if (!item.vinculacao.atualizar_preco_auto) continue;
-      const precoKg = Number(item.valor_unitario) / Number(item.vinculacao.fator_conversao);
-      await api(`insumos?id=eq.${item.vinculacao.insumo_id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ preco_compra: precoKg }),
-        prefer: 'return=minimal',
-      });
-    }
-
-    // Log de auditoria
-    await api('nfe_log', {
-      method: 'POST',
-      body: JSON.stringify({
-        tenant_id: TENANT_ID,
-        nfe_id: currentNfeId,
-        acao: 'processamento',
-        descricao: `NF-e ${nfe.numero} processada — ${itens.length} itens, ${fmtMoney(nfe.valor_total)}`,
-      }),
-      prefer: 'return=minimal',
-    });
-
-    toast('NF-e processada com sucesso!', 'ok');
-    closeModal('overlay-detail');
-    await loadAll();
-  } catch (e) {
-    toast('Erro ao processar: ' + e.message, 'err');
+    const impacto=cmA>0?parseFloat(((cmN-cmA)/cmA*100).toFixed(4)):null;
+    await api('historico_custo', {method:'POST', prefer:'return=minimal', body:JSON.stringify({
+      tenant_id:TENANT_ID, insumo_id:insId, loja_id:getLojaId(),
+      saldo_anterior:parseFloat(qA.toFixed(4)),
+      custo_medio_anterior:parseFloat(cmA.toFixed(4)),
+      qtd_entrada:parseFloat(dados.quantidade.toFixed(4)),
+      custo_entrada:parseFloat(custoUnitEstoque.toFixed(4)),
+      novo_custo_medio:parseFloat(cmN.toFixed(4)),
+      impacto_pct:impacto,
+      origem:dados.tipo||'nfe',
+      documento_ref:dados.documento_ref||null,
+    })});
+  } catch {}
+  if(dados.fornecedor_id) {
+    await api(`insumo_fornecedores?insumo_id=eq.${insId}&fornecedor_id=eq.${dados.fornecedor_id}`,
+      {method:'PATCH', prefer:'return=minimal',
+       body:JSON.stringify({preco_unitario:parseFloat(custoUnitEstoque.toFixed(6))})});
   }
 }
 
-// ── VINCULAR ITEM ─────────────────────────────────────────────────────
-function openVincular(itemId) {
-  currentItem = allItens.find(i => i.id === itemId);
-  if (!currentItem) return;
+// ── NF-e FUNCTIONS (igual ao estoque) ─────────────────────────────
+function openNFe() { resetNfe(); abrirModal('m-nfe'); }
 
-  const nfe = allNfe.find(n => n.id === currentItem.nfe_id);
-
-  document.getElementById('v-nfe-desc').textContent   = currentItem.descricao_nfe;
-  document.getElementById('v-nfe-detail').textContent = `Unidade: ${currentItem.unidade_nfe} · Valor unit.: ${fmtMoney(currentItem.valor_unitario)}`;
-  document.getElementById('v-fornecedor-info').innerHTML = `Este mapeamento será <strong>salvo permanentemente</strong> para o fornecedor <strong>${nfe?.nome_emitente || ''}</strong>. Nas próximas NF-e, este item chegará vinculado automaticamente.`;
-  document.getElementById('v-cod-fornecedor').value   = currentItem.codigo_item_fornecedor || '';
-
-  // Popula select de insumos
-  const sel = document.getElementById('v-insumo-select');
-  sel.innerHTML = '<option value="">Selecione o insumo…</option>' +
-    insumos.map(ins => `<option value="${ins.id}" data-unidade="${ins.unidade_medida}">${ins.nome} (${ins.unidade_medida})</option>`).join('');
-  sel.value = '';
-
-  vincStep(1);
-  document.getElementById('overlay-vincular').classList.add('open');
+function toggleNfeExpand() {
+  const modal=document.getElementById('modal-nfe-inner');
+  const btn=document.getElementById('btn-nfe-expand');
+  modal.classList.toggle('expanded');
+  const exp=modal.classList.contains('expanded');
+  btn.innerHTML=exp
+    ?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>'
+    :'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
 }
 
-function vincStep(step) {
-  document.getElementById('vstep-1').style.display = step === 1 ? 'block' : 'none';
-  document.getElementById('vstep-2').style.display = step === 2 ? 'block' : 'none';
-
-  document.getElementById('snum-1').className = 'step-num ' + (step === 1 ? 'active' : 'done');
-  document.getElementById('slbl-1').className = 'step-lbl ' + (step === 1 ? 'active' : '');
-  document.getElementById('snum-2').className = 'step-num ' + (step === 2 ? 'active' : '');
-  document.getElementById('slbl-2').className = 'step-lbl ' + (step === 2 ? 'active' : '');
-
-  document.getElementById('vbtn-back').style.display = step === 2 ? '' : 'none';
-
-  if (step === 2) {
-    const sel    = document.getElementById('v-insumo-select');
-    const insSel = insumos.find(i => i.id === sel.value);
-    if (!insSel) { toast('Selecione um insumo antes de continuar.', 'err'); vincStep(1); return; }
-
-    document.getElementById('v2-nfe-desc').textContent    = currentItem.descricao_nfe;
-    document.getElementById('v2-insumo-info').textContent = `→ ${insSel.nome} · Unidade padrão: ${insSel.unidade_medida.toUpperCase()}`;
-
-    // Pre-seleciona unidade do insumo
-    const unSel = document.getElementById('v-unidade');
-    const target = insSel.unidade_medida.toLowerCase();
-    [...unSel.options].forEach(o => { o.selected = o.value === target; });
-
-    document.getElementById('vbtn-next').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Salvar Vinculação`;
-    document.getElementById('vbtn-next').onclick = salvarVinculacao;
-    updateConversion();
-  } else {
-    document.getElementById('vbtn-next').innerHTML = `Próximo <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>`;
-    document.getElementById('vbtn-next').onclick = () => vincStep(2);
-  }
+function resetNfe() {
+  document.getElementById('nfe-v1').style.display='';
+  document.getElementById('nfe-v2').style.display='none';
+  document.getElementById('nfe-v3').style.display='none';
+  document.getElementById('btn-nfe-outro').style.display='none';
+  document.getElementById('btn-nfe-conf').style.display='none';
+  document.getElementById('btn-nfe-confirmar-def').style.display='none';
+  document.getElementById('btn-nfe-voltar-resumo').style.display='none';
+  document.getElementById('nfe-file').value='';
+  nfeItens=[]; nfeAutoLinked={}; nfeSession={}; nfeVinculandoIdx=null;
 }
 
-function updateConversion() {
-  const fator  = parseFloat(document.getElementById('v-fator').value) || 1;
-  const unid   = document.getElementById('v-unidade').value.toUpperCase();
-  const qtdNfe = Number(currentItem?.quantidade) || 1;
-  document.getElementById('v-conversion-result').textContent = `1 ${currentItem?.unidade_nfe || 'UN'} = ${fator} ${unid}`;
-  document.getElementById('v-conversion-sub').textContent    = `${qtdNfe} ${currentItem?.unidade_nfe || 'UN'} nesta NF-e → ${(qtdNfe * fator).toFixed(3)} ${unid} no estoque`;
-}
-
-async function salvarVinculacao() {
-  if (!currentItem) return;
-  const nfe       = allNfe.find(n => n.id === currentItem.nfe_id);
-  const insumoId  = document.getElementById('v-insumo-select').value;
-  const codForn   = document.getElementById('v-cod-fornecedor').value.trim();
-  const embalagem = document.getElementById('v-embalagem').value.trim();
-  const fator     = parseFloat(document.getElementById('v-fator').value) || 1;
-  const unidade   = document.getElementById('v-unidade').value;
-  const autoPreco = document.getElementById('v-auto-preco').checked;
-  const padrao    = document.getElementById('v-padrao').checked;
-
-  if (!insumoId) { toast('Selecione um insumo.', 'err'); return; }
-
-  try {
-    // Upsert na tabela de mapeamento persistente
-    const [vinc] = await api('fornecedor_produto_vinculado', {
-      method: 'POST',
-      body: JSON.stringify({
-        tenant_id: TENANT_ID,
-        cnpj_fornecedor: nfe?.cnpj_emitente || '',
-        descricao_nfe: currentItem.descricao_nfe,
-        codigo_item_fornecedor: codForn || null,
-        insumo_id: insumoId,
-        descricao_embalagem: embalagem || null,
-        fator_conversao: fator,
-        unidade_estoque: unidade,
-        atualizar_preco_auto: autoPreco,
-        embalagem_padrao: padrao,
-      }),
-      prefer: 'return=representation,resolution=merge-duplicates',
-    });
-
-    // Atualiza o item da NF-e com o vinculacao_id
-    await api(`nfe_itens?id=eq.${currentItem.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ vinculacao_id: vinc.id }),
-      prefer: 'return=minimal',
-    });
-
-    // Log
-    await api('nfe_log', {
-      method: 'POST',
-      body: JSON.stringify({
-        tenant_id: TENANT_ID,
-        nfe_id: currentItem.nfe_id,
-        acao: 'vinculacao',
-        descricao: `${currentItem.descricao_nfe} → insumo ${insumoId} (${fator} ${unidade})`,
-      }),
-      prefer: 'return=minimal',
-    });
-
-    toast('Vinculação salva com sucesso!', 'ok');
-    closeModal('overlay-vincular');
-
-    await loadAll();
-
-    // Verifica se a NF-e ficou pronta após esta vinculação
-    const itensRestantes = allItens.filter(i => i.nfe_id === currentItem.nfe_id && !i.vinculacao_id);
-    if (itensRestantes.length === 0) {
-      await api(`nfe_recebidas?id=eq.${currentItem.nfe_id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'pronta' }),
-        prefer: 'return=minimal',
-      });
-      await loadAll();
-      toast('Todos os itens vinculados! NF-e pronta para processar.', 'ok');
-    }
-
-    // Reabre o modal de detalhe atualizado
-    if (document.getElementById('overlay-detail').classList.contains('open')) {
-      openDetail(currentItem.nfe_id);
-    }
-  } catch (e) {
-    toast('Erro ao salvar vinculação: ' + e.message, 'err');
-  }
-}
-
-// ── UPLOAD XML ────────────────────────────────────────────────────────
-function openUpload() {
-  pendingXml = null;
-  document.getElementById('upload-preview').style.display = 'none';
-  document.getElementById('upload-error').style.display = 'none';
-  document.getElementById('btn-confirmar-upload').style.display = 'none';
-  document.getElementById('xml-input').value = '';
-  document.getElementById('overlay-upload').classList.add('open');
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-area').classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if (file) processXmlFile(file);
-}
-
-function handleFileSelect(input) {
-  if (input.files[0]) processXmlFile(input.files[0]);
-}
-
-function processXmlFile(file) {
-  if (!file.name.endsWith('.xml')) { showUploadError('Arquivo inválido. Selecione um arquivo .xml'); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
+function handleNfeFile(file) {
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
     try {
-      const xml   = new DOMParser().parseFromString(e.target.result, 'text/xml');
-      const inf   = xml.querySelector('infNFe');
-      if (!inf) { showUploadError('Arquivo XML não reconhecido como NF-e válida.'); return; }
-
-      const numero      = inf.querySelector('ide nNF')?.textContent || '';
-      const serie       = inf.querySelector('ide serie')?.textContent || '1';
-      const chave       = inf.querySelector('infNFe')?.getAttribute('Id')?.replace('NFe','') || '';
-      const cnpjEmit    = inf.querySelector('emit CNPJ')?.textContent || '';
-      const nomeEmit    = inf.querySelector('emit xNome')?.textContent || '';
-      const dataEmissao = inf.querySelector('ide dhEmi')?.textContent || inf.querySelector('ide dEmi')?.textContent || '';
-      const valorTotal  = parseFloat(inf.querySelector('ICMSTot vNF')?.textContent || '0');
-
-      const itensXml = [...inf.querySelectorAll('det')].map(det => ({
-        descricao_nfe:         (det.querySelector('prod xProd')?.textContent || '').toUpperCase(),
-        codigo_item_fornecedor: det.querySelector('prod cProd')?.textContent || null,
-        quantidade:            parseFloat(det.querySelector('prod qCom')?.textContent || '0'),
-        unidade_nfe:           (det.querySelector('prod uCom')?.textContent || '').toUpperCase(),
-        valor_unitario:        parseFloat(det.querySelector('prod vUnCom')?.textContent || '0'),
-        valor_total:           parseFloat(det.querySelector('prod vProd')?.textContent || '0'),
-      }));
-
-      pendingXml = { numero, serie, chave_acesso: chave, cnpj_emitente: cnpjEmit, nome_emitente: nomeEmit, data_emissao: dataEmissao, valor_total: valorTotal, xml_content: e.target.result, itens: itensXml };
-
-      document.getElementById('upload-error').style.display = 'none';
-      document.getElementById('upload-preview').style.display = 'block';
-      document.getElementById('upload-preview-msg').innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg><div>XML lido com sucesso — <strong>${itensXml.length} itens</strong> encontrados.</div>`;
-      document.getElementById('upload-meta').innerHTML = `
-        <div class="nfe-meta-item"><div class="nfe-meta-label">Fornecedor</div><div class="nfe-meta-value">${nomeEmit}</div></div>
-        <div class="nfe-meta-item"><div class="nfe-meta-label">NF-e / Série</div><div class="nfe-meta-value">${numero} / ${serie}</div></div>
-        <div class="nfe-meta-item"><div class="nfe-meta-label">Data Emissão</div><div class="nfe-meta-value">${dataEmissao ? new Date(dataEmissao).toLocaleDateString('pt-BR') : '—'}</div></div>
-        <div class="nfe-meta-item"><div class="nfe-meta-label">Valor Total</div><div class="nfe-meta-value">${fmtMoney(valorTotal)}</div></div>
-      `;
-      document.getElementById('btn-confirmar-upload').style.display = '';
-    } catch (err) {
-      showUploadError('Erro ao processar XML: ' + err.message);
-    }
+      const itens=parseNfeXml(e.target.result);
+      if(!itens.length){toast('Nenhum item encontrado no XML.','err');return;}
+      nfeItens=itens;
+      const pi0=itens[0]||{};
+      if(pi0.nNF){
+        const nfeNum=`${pi0.nNF}/${pi0.serie}`;
+        const jaImportada=entradasNfe.some(e=>e.nfe_numero===nfeNum&&(e.tipo==='nfe'||e.tipo==='nfe_importada'));
+        if(jaImportada){
+          if(!confirm(`⚠️ A NF-e ${nfeNum} já foi importada anteriormente.\n\nImportar novamente vai duplicar as entradas no estoque.\n\nDeseja continuar mesmo assim?`)){
+            document.getElementById('nfe-file').value='';
+            return;
+          }
+        }
+      }
+      document.getElementById('nfe-v1').style.display='none';
+      const v2=document.getElementById('nfe-v2');
+      v2.style.display='flex'; v2.style.flexDirection='column';
+      document.getElementById('btn-nfe-outro').style.display='inline-flex';
+      document.getElementById('btn-nfe-conf').style.display='inline-flex';
+      document.getElementById('nfe-data').value=hoje();
+      const pi=itens[0]||{};
+      const numEl=document.getElementById('nfe-num');
+      const emitEl=document.getElementById('nfe-emit');
+      const dataEl=document.getElementById('nfe-data-emissao');
+      if(numEl) numEl.textContent=`NF-e ${pi.nNF||'?'} · Série ${pi.serie||'?'} · ${itens.length} item(ns)`;
+      if(emitEl) emitEl.textContent=`Emitente: ${pi.emitNome||'—'}`;
+      if(dataEl) dataEl.textContent=hoje().split('-').reverse().join('/');
+      const emitNome=(pi.emitNome||'').toLowerCase();
+      const fornMatch=fornecedores.find(f=>{
+        const n=(f.nome||'').toLowerCase();
+        const fn=(f.nome_fantasia||'').toLowerCase();
+        return n===emitNome||fn===emitNome||
+               (fn&&emitNome.includes(fn))||(n&&emitNome.includes(n))||
+               (fn&&fn.includes(emitNome.substring(0,6)))||(n&&n.includes(emitNome.substring(0,6)));
+      });
+      const fornSel=document.getElementById('nfe-forn');
+      if(fornMatch&&fornSel) fornSel.value=fornMatch.id;
+      renderNfePendentes();
+    } catch(err){toast('Erro ao ler XML: '+err.message,'err');}
   };
-  reader.readAsText(file);
+  reader.readAsText(file,'utf-8');
 }
 
-function showUploadError(msg) {
-  document.getElementById('upload-error').style.display = 'block';
-  document.getElementById('upload-error').innerHTML = `<div class="alert alert-warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>${msg}</span></div>`;
-  document.getElementById('upload-preview').style.display = 'none';
-  document.getElementById('btn-confirmar-upload').style.display = 'none';
+function parseNfeXml(xml) {
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  if(doc.querySelector('parsererror')) throw new Error('XML inválido');
+  const nNF=doc.querySelector('nNF')?.textContent||'';
+  const serie=doc.querySelector('serie')?.textContent||'';
+  const emitNome=doc.querySelector('emit xNome')?.textContent?.trim()||'';
+  const itens=[];
+  doc.querySelectorAll('det').forEach(det=>{
+    const prod=det.querySelector('prod'); if(!prod) return;
+    itens.push({
+      descricao:prod.querySelector('xProd')?.textContent?.trim()||'',
+      codigo:   prod.querySelector('cProd')?.textContent?.trim()||'',
+      unidade:  prod.querySelector('uCom')?.textContent?.trim()||'',
+      quantidade:parseFloat(prod.querySelector('qCom')?.textContent||0),
+      valorUnit: parseFloat(prod.querySelector('vUnCom')?.textContent||0),
+      nNF, serie, emitNome,
+    });
+  });
+  return itens;
 }
 
-async function confirmarUpload() {
-  if (!pendingXml) return;
-  const btn = document.getElementById('btn-confirmar-upload');
-  btn.disabled = true; btn.textContent = 'Importando…';
-
-  try {
-    // Cria a NF-e
-    const [nfeCreated] = await api('nfe_recebidas', {
-      method: 'POST',
-      body: JSON.stringify({
-        tenant_id:    TENANT_ID,
-        numero:       pendingXml.numero,
-        serie:        pendingXml.serie,
-        chave_acesso: pendingXml.chave_acesso || null,
-        cnpj_emitente:pendingXml.cnpj_emitente,
-        nome_emitente:pendingXml.nome_emitente,
-        data_emissao: pendingXml.data_emissao,
-        valor_total:  pendingXml.valor_total,
-        status:       'pendente',
-        fonte:        'upload',
-        xml_content:  pendingXml.xml_content,
-      }),
-    });
-
-    // Busca mapeamentos existentes para o CNPJ do emitente
-    const vincExist = await api(`fornecedor_produto_vinculado?tenant_id=eq.${TENANT_ID}&cnpj_fornecedor=eq.${pendingXml.cnpj_emitente}&ativo=eq.true&select=id,descricao_nfe,codigo_item_fornecedor`);
-
-    // Cria os itens linkando ao mapeamento se existir
-    const itensBatch = pendingXml.itens.map(item => {
-      const vinc = vincExist.find(v =>
-        v.descricao_nfe === item.descricao_nfe ||
-        (item.codigo_item_fornecedor && v.codigo_item_fornecedor === item.codigo_item_fornecedor)
-      );
-      return { ...item, nfe_id: nfeCreated.id, tenant_id: TENANT_ID, vinculacao_id: vinc?.id || null };
-    });
-
-    await api('nfe_itens', { method: 'POST', body: JSON.stringify(itensBatch), prefer: 'return=minimal' });
-
-    // Determina status inicial
-    const semVinc = itensBatch.filter(i => !i.vinculacao_id).length;
-    const novoStatus = semVinc === 0 ? 'pronta' : 'aguard_vinculacao';
-    await api(`nfe_recebidas?id=eq.${nfeCreated.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: novoStatus }),
-      prefer: 'return=minimal',
-    });
-
-    // Log
-    await api('nfe_log', {
-      method: 'POST',
-      body: JSON.stringify({ tenant_id: TENANT_ID, nfe_id: nfeCreated.id, acao: 'importacao', descricao: `NF-e ${pendingXml.numero} importada via XML — ${itensBatch.length} itens, ${semVinc} sem vínculo` }),
-      prefer: 'return=minimal',
-    });
-
-    const msg = semVinc === 0
-      ? 'NF-e importada e pronta para processar!'
-      : `NF-e importada — ${semVinc} iten${semVinc>1?'s':''} precisam de vinculação.`;
-    toast(msg, 'ok', 4000);
-    closeModal('overlay-upload');
-    await loadAll();
-  } catch (e) {
-    if (e.message.includes('duplicate') || e.message.includes('unique')) {
-      showUploadError('Esta NF-e já foi importada anteriormente (chave de acesso duplicada).');
-    } else {
-      showUploadError('Erro ao importar: ' + e.message);
+function processNfeItems() {
+  nfeAutoLinked={}; nfeSession={};
+  const fornId=document.getElementById('nfe-forn')?.value||null;
+  nfeItens.forEach((it,idx)=>{
+    let vin=null;
+    if(it.codigo) vin=vinculos.find(v=>v.codigo_nfe&&v.codigo_nfe===it.codigo);
+    if(!vin?.insumo_id) vin=vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
+    if(!vin?.insumo_id&&it.codigo){
+      const ifv=insumoFornVinculos.find(v=>v.codigo_fornecedor===it.codigo&&(!fornId||v.fornecedor_id===fornId));
+      if(ifv) vin={insumo_id:ifv.insumo_id,fator_conversao:ifv.qtd_por_embalagem||1,embalagem_descricao:ifv.embalagem_descricao||''};
     }
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Importar Nota`;
+    if(vin?.insumo_id) nfeAutoLinked[idx]={insId:vin.insumo_id,fator:vin.fator_conversao||1,embDesc:vin.embalagem_descricao||'',vinId:vin.id};
+  });
+}
+
+function renderNfePendentes() {
+  processNfeItems();
+  const autoCount=Object.keys(nfeAutoLinked).length;
+  const banner=document.getElementById('nfe-auto-banner');
+  if(autoCount>0&&banner){
+    banner.style.display='flex';
+    const rowsAuto=nfeItens.map((it,idx)=>{
+      const a=nfeAutoLinked[idx]; if(!a) return '';
+      const ins=insumos.find(x=>x.id===a.insId);
+      const total=parseFloat((it.quantidade*(it.valorUnit||0)).toFixed(2));
+      return `<tr style="background:#f0fdf4">
+        <td style="padding:4px 8px;font-size:11px;color:#0f172a;font-weight:500">${esc(it.descricao.substring(0,40))}${it.descricao.length>40?'…':''}</td>
+        <td style="padding:4px 8px;font-size:10px;color:#64748b;font-family:'DM Mono',monospace">${esc(it.codigo||'—')}</td>
+        <td style="padding:4px 8px;font-size:11px;color:#334155">${esc(it.unidade)}</td>
+        <td style="padding:4px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px">${fmtQtd(it.quantidade)}</td>
+        <td style="padding:4px 8px;font-size:11px;color:#16a34a">${esc(ins?.nome||'—')} (1${it.unidade}=${fmtQtd(a.fator)}${ins?.unidade_medida||'un'})</td>
+        <td style="padding:4px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px">${it.valorUnit?brl(it.valorUnit):'—'}</td>
+        <td style="padding:4px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;font-weight:600">${total?brl(total):'—'}</td>
+      </tr>`;
+    }).filter(Boolean).join('');
+    banner.innerHTML=`
+      <div style="width:100%">
+        <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.querySelector('.arr').style.transform=this.nextElementSibling.style.display===''?'rotate(0)':'rotate(-90deg)'"
+          style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:2px 0;user-select:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span><strong>${autoCount} ${autoCount===1?'item':'itens'} reconhecido(s) automaticamente</strong> — clique para ver</span>
+          <span class="arr" style="font-size:11px;margin-left:auto;transition:transform .2s">▼</span>
+        </div>
+        <div style="display:none;margin-top:8px;border:1px solid #bbf7d0;border-radius:8px;overflow:hidden">
+          <table class="nfe-tbl" style="font-size:11px">
+            <thead><tr style="background:#16a34a">
+              <th>Produto NF-e</th><th>Cód. Forn.</th><th>Un.</th><th class="r">Qtd.</th><th>Produto interno / Conversão</th><th class="r">Preço Unit.</th><th class="r">Preço Total</th>
+            </tr></thead>
+            <tbody>${rowsAuto}</tbody>
+          </table>
+        </div>
+      </div>`;
+  } else if(banner) banner.style.display='none';
+  const sub=document.getElementById('nfe-hdr-sub');
+  const pendentes=nfeItens.filter((_,idx)=>!nfeAutoLinked[idx]&&!nfeSession[idx]);
+  if(sub) sub.textContent=pendentes.length===0?`Todos os ${nfeItens.length} itens estão vinculados. Confirme para registrar a entrada.`:`${pendentes.length} item(ns) pendente(s) de vínculo. Revise e vincule para continuar.`;
+  const tbody=document.getElementById('nfe-body');
+  const rowsPendentes=nfeItens.map((it,idx)=>{
+    const auto=nfeAutoLinked[idx]; const sess=nfeSession[idx];
+    if(auto) return ''; if(sess) return '';
+    const total=parseFloat((it.quantidade*(it.valorUnit||0)).toFixed(2));
+    return `<tr id="nfe-row-${idx}">
+      <td style="padding:5px 8px;font-weight:600;font-size:11px;color:#0f172a">${esc(it.descricao.substring(0,45))}${it.descricao.length>45?'…':''}</td>
+      <td style="padding:5px 8px;font-size:11px;color:#64748b;font-family:'DM Mono',monospace">${esc(it.codigo||'—')}</td>
+      <td style="padding:5px 8px;font-size:11px;font-weight:600;color:#334155">${esc(it.unidade)}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:12px;color:#0f172a">${fmtQtd(it.quantidade)}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:#334155">${it.valorUnit?brl(it.valorUnit):'—'}</td>
+      <td style="padding:5px 8px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:#0f172a">${total?brl(total):'—'}</td>
+      <td style="padding:5px 8px"><button onclick="abrirVincularModal(${idx})" style="padding:3px 12px;border-radius:6px;border:none;background:#f97316;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Vincular</button></td>
+    </tr>`;
+  }).filter(Boolean).join('');
+  tbody.innerHTML=rowsPendentes||`<tr><td colspan="7" style="padding:20px;text-align:center;color:#16a34a;font-size:13px;font-weight:600">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>
+    Todos os itens foram vinculados. Clique em "Confirmar entrada".
+  </td></tr>`;
+  checkNfeConf();
+}
+
+function checkNfeConf() {
+  const pendentes=nfeItens.filter((_,idx)=>!nfeAutoLinked[idx]&&!nfeSession[idx]);
+  const btn=document.getElementById('btn-nfe-conf');
+  if(!btn) return;
+  const allDone=pendentes.length===0&&nfeItens.length>0;
+  btn.disabled=!allDone;
+  btn.style.opacity=allDone?'1':'0.5';
+  btn.style.cursor=allDone?'pointer':'not-allowed';
+  btn.innerHTML=allDone
+    ?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Ver resumo`
+    :`Vincule os pendentes (${pendentes.length} restante${pendentes.length===1?'':'s'})`;
+  if(allDone) setTimeout(()=>mostrarResumoNfe(), 400);
+}
+
+function abrirVincularModal(idx) {
+  nfeVinculandoIdx=idx;
+  const it=nfeItens[idx];
+  const fornId=document.getElementById('nfe-forn')?.value;
+  const forn=fornecedores.find(f=>f.id===fornId);
+  document.getElementById('vin-desc').textContent=it.descricao;
+  document.getElementById('vin-cod').textContent=it.codigo||'—';
+  document.getElementById('vin-qtd').textContent=`${fmtQtd(it.quantidade)} ${it.unidade}`;
+  document.getElementById('vin-forn').textContent=forn?.nome_fantasia||forn?.nome||it.emitNome||'—';
+  const prev=nfeSession[idx];
+  document.getElementById('vin-ins').value=prev?.insId||'';
+  document.getElementById('vin-ins')._selectedEmb=null;
+  _popularSelectInsumo(prev?.insId||'');
+  const codFornEl=document.getElementById('vin-cod-forn');
+  if(codFornEl) codFornEl.value=prev?.codForn||it.codigo||'';
+  const precoEl=document.getElementById('vin-preco-nfe');
+  if(precoEl) precoEl.textContent=it.valorUnit?brl(it.valorUnit):'—';
+  document.getElementById('vin-und-row').style.display='none';
+  document.getElementById('vin-emb-section').style.display='none';
+  document.getElementById('vin-conv-summary').style.display='none';
+  const codRow=document.getElementById('vin-cod-row'); if(codRow) codRow.style.display='';
+  const precoRow=document.getElementById('vin-preco-row'); if(precoRow) precoRow.style.display='';
+  document.getElementById('vin-obs').value='';
+  if(prev?.insId) onVinInsumoChange();
+  abrirModal('m-nfe-vincular');
+}
+
+function fecharVincularModal() { fecharModal('m-nfe-vincular'); nfeVinculandoIdx=null; }
+
+function _popularSelectInsumo(selectedId) {
+  const sel=document.getElementById('vin-ins-select');
+  if(!sel) return;
+  sel.innerHTML='<option value="">— Selecione o produto interno —</option>'+
+    insumos.map(i=>`<option value="${i.id}"${i.id===selectedId?' selected':''}>${esc(i.nome)} (${esc(i.unidade_medida||i.unidade_compra||'un')})</option>`).join('');
+  if(selectedId) sel.value=selectedId;
+}
+
+function onVinSelectChange() {
+  const insId=document.getElementById('vin-ins-select')?.value||'';
+  document.getElementById('vin-ins').value=insId;
+  if(insId) onVinInsumoChange();
+  else {
+    document.getElementById('vin-und-row').style.display='none';
+    document.getElementById('vin-emb-section').style.display='none';
+    document.getElementById('vin-conv-summary').style.display='none';
+    const cr=document.getElementById('vin-cod-row'); if(cr) cr.style.display='none';
+    const pr=document.getElementById('vin-preco-row'); if(pr) pr.style.display='none';
   }
 }
 
-// ── UTILITÁRIOS MODAL ─────────────────────────────────────────────────
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+async function onVinInsumoChange() {
+  const insId=document.getElementById('vin-ins').value;
+  const idx=nfeVinculandoIdx;
+  if(!insId){
+    document.getElementById('vin-und-row').style.display='none';
+    document.getElementById('vin-emb-section').style.display='none';
+    document.getElementById('vin-conv-summary').style.display='none';
+    return;
+  }
+  const ins=insumos.find(x=>x.id===insId);
+  const und=(ins?.unidade_medida||ins?.unidade_compra||'un').toUpperCase();
+  document.getElementById('vin-und').textContent=und;
+  document.getElementById('vin-emb-und-label').textContent=und;
+  document.getElementById('vin-und-row').style.display='';
+  const cr=document.getElementById('vin-cod-row'); if(cr) cr.style.display='';
+  const pr=document.getElementById('vin-preco-row'); if(pr) pr.style.display='';
+  document.getElementById('vin-emb-section').style.display='';
+  const fornId=document.getElementById('nfe-forn')?.value||null;
+  const prev=nfeSession[idx];
+  const specific=insumoFornVinculos.filter(v=>v.insumo_id===insId&&v.qtd_por_embalagem&&v.embalagem_descricao&&(!fornId||v.fornecedor_id===fornId));
+  let generic=[];
+  try { generic=await api(`item_classificacoes?tipo=eq.embalagem&tenant_id=eq.${TENANT_ID}&order=nome.asc`); } catch{}
+  const sel=document.getElementById('vin-emb-select');
+  sel.innerHTML='<option value="">— Selecione a embalagem —</option>';
+  if(specific.length){
+    const grp=document.createElement('optgroup'); grp.label='Embalagens cadastradas';
+    specific.forEach((e,i)=>{
+      const o=document.createElement('option');
+      o.value=`s:${i}`; o.textContent=e.embalagem_descricao;
+      o.dataset.qty=e.qtd_por_embalagem; o.dataset.desc=e.embalagem_descricao;
+      grp.appendChild(o);
+    });
+    sel.appendChild(grp);
+  }
+  if(generic.length){
+    const grp=document.createElement('optgroup'); grp.label='Tipos de embalagem';
+    generic.forEach((c,i)=>{
+      const o=document.createElement('option');
+      o.value=`g:${i}`; o.textContent=c.nome;
+      o.dataset.qty=''; o.dataset.desc=c.nome; o.dataset.generic='1';
+      grp.appendChild(o);
+    });
+    sel.appendChild(grp);
+  }
+  if(prev?.embDesc){
+    for(const o of sel.options){ if(o.dataset.desc===prev.embDesc){sel.value=o.value;break;} }
+  } else if(sel.options.length>1){ sel.selectedIndex=1; }
+  onVinEmbSelectChange(prev?.fator);
 }
 
-document.querySelectorAll('.overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
-});
+function onVinEmbSelectChange(forceQty) {
+  const sel=document.getElementById('vin-emb-select');
+  const opt=sel.options[sel.selectedIndex];
+  if(!opt||!opt.value){ document.getElementById('vin-conv-summary').style.display='none'; document.getElementById('vin-ins')._selectedEmb=null; return; }
+  const preQty=parseFloat(opt.dataset.qty)||0;
+  const qtyInput=document.getElementById('vin-emb-qty');
+  if(preQty>0) qtyInput.value=preQty;
+  else if(forceQty) qtyInput.value=forceQty;
+  const isGeneric=!!opt.dataset.generic;
+  document.getElementById('vin-ins')._selectedEmb={embDesc:opt.dataset.desc||opt.textContent,fator:parseFloat(qtyInput.value)||1,embIdx:sel.selectedIndex,und:document.getElementById('vin-und').textContent,isGeneric};
+  onVinEmbQtyInput();
+}
 
-// ── INIT ──────────────────────────────────────────────────────────────
-(async function init() {
+function onVinEmbQtyInput(){
+  const idx=nfeVinculandoIdx; const it=nfeItens[idx]; if(!it) return;
+  const sel=document.getElementById('vin-emb-select');
+  const opt=sel?.options[sel.selectedIndex];
+  if(!opt?.value) return;
+  const fator=parseFloat(document.getElementById('vin-emb-qty')?.value)||1;
+  const und=document.getElementById('vin-und').textContent;
+  const qtdR=parseFloat((it.quantidade*fator).toFixed(6));
+  const summary=document.getElementById('vin-conv-summary'); summary.style.display='';
+  document.getElementById('vin-conv-nf').textContent=`${fmtQtd(it.quantidade)} ${it.unidade}`;
+  document.getElementById('vin-conv-formula').textContent=`1 ${it.unidade} = ${fmtQtd(fator)} ${und}`;
+  document.getElementById('vin-conv-result').textContent=`${fmtQtd(qtdR)} ${und}`;
+  if(document.getElementById('vin-ins')._selectedEmb) document.getElementById('vin-ins')._selectedEmb.fator=fator;
+}
+
+async function salvarVinculoNfe() {
+  const idx=nfeVinculandoIdx;
+  const insId=document.getElementById('vin-ins').value;
+  if(!insId){toast('Selecione o produto interno.','err');return;}
+  const emb=document.getElementById('vin-ins')._selectedEmb;
+  if(!emb?.fator){toast('Selecione a embalagem.','err');return;}
+  const ins=insumos.find(x=>x.id===insId);
+  const und=ins?.unidade_medida||ins?.unidade_compra||'un';
+  const codForn=(document.getElementById('vin-cod-forn')?.value||'').trim();
+  const fornId=document.getElementById('nfe-forn')?.value||null;
+  const it=nfeItens[idx];
+  if(!fornId){toast('⚠️ Selecione o fornecedor na tela da NF-e antes de vincular.','err');return;}
+  if(fornId){
+    try{
+      const existing=insumoFornVinculos.find(v=>v.insumo_id===insId&&v.fornecedor_id===fornId&&v.embalagem_descricao===emb.embDesc);
+      if(existing){
+        await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:it.valorUnit||null})});
+        Object.assign(existing,{qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null});
+      } else {
+        const newLink=await api('insumo_fornecedores',{method:'POST',prefer:'return=representation',body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,fornecedor_id:fornId,embalagem_descricao:emb.embDesc,qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:it.valorUnit||null})});
+        if(newLink[0]) insumoFornVinculos.push(newLink[0]);
+      }
+    }catch{}
+  }
+  nfeSession[idx]={insId,fator:emb.fator,embDesc:emb.embDesc,embIdx:emb.embIdx,insumoNome:ins?.nome||'—',unEst:und,codForn};
+  fecharVincularModal();
+  const row=document.getElementById(`nfe-row-${idx}`);
+  if(row){
+    row.style.transition='opacity .25s,transform .25s';
+    row.style.opacity='0';
+    row.style.transform='translateX(20px)';
+    setTimeout(()=>{ row.remove(); checkNfeConf(); },250);
+  } else { renderNfePendentes(); }
+  toast('Vínculo salvo!','ok');
+}
+
+function voltarParaPendentes(){
+  document.getElementById('nfe-v3').style.display='none';
+  const v2=document.getElementById('nfe-v2');
+  v2.style.display='flex'; v2.style.flexDirection='column';
+  document.getElementById('btn-nfe-conf').style.display='inline-flex';
+  document.getElementById('btn-nfe-confirmar-def').style.display='none';
+  document.getElementById('btn-nfe-voltar-resumo').style.display='none';
+}
+
+function mostrarResumoNfe(){
+  const toProcess=[];
+  nfeItens.forEach((it,idx)=>{
+    const auto=nfeAutoLinked[idx]; const sess=nfeSession[idx];
+    const link=sess||auto; if(!link) return;
+    const ins=insumos.find(x=>x.id===link.insId);
+    const qtdEst=parseFloat((it.quantidade*link.fator).toFixed(4));
+    const custoUnit=parseFloat((it.valorUnit/link.fator).toFixed(6));
+    toProcess.push({it,insNome:ins?.nome||'—',unEst:ins?.unidade_medida||ins?.unidade_compra||'un',qtdEst,custoUnit,total:parseFloat((qtdEst*custoUnit).toFixed(2)),isAuto:!!auto&&!sess});
+  });
+  document.getElementById('nfe-v2').style.display='none';
+  const v3=document.getElementById('nfe-v3');
+  v3.style.display='flex'; v3.style.flexDirection='column';
+  const totalGeral=toProcess.reduce((s,r)=>s+r.total,0);
+  document.getElementById('nfe-resumo-body').innerHTML=toProcess.map(r=>`<tr>
+    <td style="padding:8px 10px"><div style="font-weight:600;font-size:12px;line-height:1.3">${esc(r.it.descricao.substring(0,32))}${r.it.descricao.length>32?'…':''}</div><div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${esc(r.it.codigo||'—')}</div></td>
+    <td style="padding:8px 10px;font-size:12px">${esc(r.insNome)}</td>
+    <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-size:12px">${fmtQtd(r.it.quantidade)} ${esc(r.it.unidade)}</td>
+    <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;font-size:13px">${fmtQtd(r.qtdEst)}</td>
+    <td style="padding:8px 10px;font-size:11px;color:#64748b">${esc(r.unEst)}</td>
+    <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-size:12px">${brl(r.custoUnit)}</td>
+    <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;font-weight:700">${brl(r.total)}</td>
+    <td style="padding:8px 10px;text-align:center"><span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;${r.isAuto?'background:#dbeafe;color:#1d4ed8':'background:#dcfce7;color:#16a34a'}">${r.isAuto?'Auto':'Novo'}</span></td>
+  </tr>`).join('');
+  document.getElementById('nfe-total-geral').textContent=brl(totalGeral);
+  document.getElementById('nfe-total-itens').textContent=`${toProcess.length} ${toProcess.length===1?'item':'itens'}`;
+  document.getElementById('btn-nfe-conf').style.display='none';
+  document.getElementById('btn-nfe-outro').style.display='none';
+  document.getElementById('btn-nfe-voltar-resumo').style.display='inline-flex';
+  document.getElementById('btn-nfe-confirmar-def').style.display='inline-flex';
+}
+
+async function confirmarNfe() {
+  const fornId=document.getElementById('nfe-forn').value||null;
+  const fornNome=fornId?(fornecedores.find(f=>f.id===fornId)?.nome||null):null;
+  const dataStr=document.getElementById('nfe-data')?.value||hoje();
+  const btn=document.getElementById('btn-nfe-confirmar-def');
+  if(btn){btn.disabled=true; btn.textContent='Importando…';}
+  try {
+    const toProcess=[];
+    nfeItens.forEach((it,idx)=>{
+      const auto=nfeAutoLinked[idx]; const sess=nfeSession[idx];
+      const link=sess||auto; if(!link) return;
+      toProcess.push({it,idx,insId:link.insId,fator:link.fator,isNew:!!sess});
+    });
+    if(!toProcess.length){toast('Nenhum item para importar.','err');if(btn)btn.disabled=false;return;}
+    let ok=0;
+    for(const {it,insId,fator,isNew} of toProcess){
+      try {
+        const qtdEst=parseFloat((it.quantidade*fator).toFixed(6));
+        const custoUnitEst=parseFloat((it.valorUnit/fator).toFixed(6));
+        await registrarEntrada(insId,{fornecedor_id:fornId,fornecedor_nome:fornNome,quantidade:qtdEst,unidade_compra:it.unidade,fator_conversao:fator,custo_unitario:custoUnitEst,tipo:'nfe',nfe_numero:`${it.nNF}/${it.serie}`,observacao:`NF-e ${it.nNF}/${it.serie}`,criado_em:dataStr+'T12:00:00.000Z'},custoUnitEst);
+        ok++;
+      } catch(e){ console.warn('Erro ao registrar entrada:', it.descricao, e.message); }
+      if(isNew){
+        try {
+          const existVin=(it.codigo&&vinculos.find(v=>v.codigo_nfe===it.codigo))||vinculos.find(v=>norm(v.descricao_nfe)===norm(it.descricao));
+          if(!existVin){
+            const novo=await api('vinculos_nfe',{method:'POST',prefer:'return=representation',body:JSON.stringify({tenant_id:TENANT_ID,descricao_nfe:it.descricao,codigo_nfe:it.codigo||null,insumo_id:insId,fator_conversao:fator})});
+            if(novo[0]) vinculos.push(novo[0]);
+          } else {
+            const patch={insumo_id:insId,fator_conversao:fator};
+            if(it.codigo&&!existVin.codigo_nfe) patch.codigo_nfe=it.codigo;
+            await api(`vinculos_nfe?id=eq.${existVin.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify(patch)});
+            Object.assign(existVin,patch);
+          }
+        } catch {}
+      }
+    }
+    toast(`${ok} entrada(s) importada(s) com sucesso!`,'ok');
+    fecharModal('m-nfe'); resetNfe();
+    await loadAll();
+  } catch(e){ toast('Erro: '+e.message,'err'); }
+  finally{ if(btn){btn.disabled=false; btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Confirmar entrada';} }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+(function init() {
   setPeriodoRange('mes_atual', 'fil-de', 'fil-ate', null);
-  await Promise.all([loadAll(), loadInsumos()]);
+  // Carrega loja do localStorage
+  try {
+    const u = JSON.parse(localStorage.getItem('sb_user')||'{}');
+    if(u.loja_id) lojaAtual = {id: u.loja_id};
+  } catch {}
+  loadAll();
 })();
 </script>
 </body>
