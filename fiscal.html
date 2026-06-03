@@ -54,6 +54,13 @@
   .filter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
   .filter-count{font-size:10px;color:#94a3b8;font-weight:600;margin-left:1px}
 
+  /* PERIOD BUTTONS */
+  .period-btns{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff}
+  .period-btn{height:36px;padding:0 14px;font-size:12px;font-weight:500;color:#64748b;background:#fff;border:none;border-right:1px solid #e2e8f0;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .period-btn:last-child{border-right:none}
+  .period-btn:hover{background:#f8fafc;color:#0f172a}
+  .period-btn.active{background:#f97316;color:#fff;font-weight:600}
+
   /* MONITOR TABS */
   .monitor-tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:14px}
   .monitor-tab{padding:7px 16px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:inline-flex;align-items:center;gap:6px}
@@ -262,12 +269,18 @@
             <label class="filter-check"><input type="checkbox" data-s="erro"       checked onchange="filterTable()"><span class="filter-dot" style="background:#dc2626"></span>Com Erro   <span class="filter-count" id="chip-n-erro">(0)</span></label>
             <label class="filter-check"><input type="checkbox" data-s="cancelada"          onchange="filterTable()"><span class="filter-dot" style="background:#ef4444"></span>Cancelada  <span class="filter-count" id="chip-n-cancelada">(0)</span></label>
           </div>
-          <select class="fil-select" id="fil-periodo" onchange="loadAll()" style="margin-left:auto">
-            <option value="30">Últimos 30 dias</option>
-            <option value="7">Últimos 7 dias</option>
-            <option value="60">Últimos 60 dias</option>
-            <option value="0">Todos</option>
-          </select>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+            <div class="period-btns">
+              <button class="period-btn" data-p="prev" onclick="setPeriod('prev',this)">Mês Anterior</button>
+              <button class="period-btn active" data-p="curr" onclick="setPeriod('curr',this)">Mês Atual</button>
+              <button class="period-btn" data-p="custom" onclick="setPeriod('custom',this)">Período</button>
+            </div>
+            <div id="period-custom" style="display:none;align-items:center;gap:4px">
+              <input type="date" class="fil-select" id="period-from" onchange="loadAll()" style="width:130px">
+              <span style="font-size:11px;color:#94a3b8">até</span>
+              <input type="date" class="fil-select" id="period-to" onchange="loadAll()" style="width:130px">
+            </div>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
@@ -568,14 +581,44 @@ function statusToChip(s) {
   return map[s] || 'pendente';
 }
 
+// ── PERÍODO ──────────────────────────────────────────────────────────
+let currentPeriod = 'curr';
+
+function setPeriod(p, btn) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const customDiv = document.getElementById('period-custom');
+  customDiv.style.display = p === 'custom' ? 'flex' : 'none';
+  if (p !== 'custom') loadAll();
+}
+
+function getPeriodFilter() {
+  const now = new Date();
+  if (currentPeriod === 'curr') {
+    const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const to   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+    return `&data_emissao=gte.${from}&data_emissao=lte.${to}`;
+  }
+  if (currentPeriod === 'prev') {
+    const from = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+    const to   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
+    return `&data_emissao=gte.${from}&data_emissao=lte.${to}`;
+  }
+  if (currentPeriod === 'custom') {
+    const f = document.getElementById('period-from').value;
+    const t = document.getElementById('period-to').value;
+    let q = '';
+    if (f) q += `&data_emissao=gte.${f}T00:00:00`;
+    if (t) q += `&data_emissao=lte.${t}T23:59:59`;
+    return q;
+  }
+  return '';
+}
+
 // ── CARREGAR DADOS ───────────────────────────────────────────────────
 async function loadAll() {
-  const dias = parseInt(document.getElementById('fil-periodo').value) || 0;
-  let filter = `tenant_id=eq.${TENANT_ID}&order=data_emissao.desc`;
-  if (dias > 0) {
-    const from = new Date(Date.now() - dias * 86400000).toISOString();
-    filter += `&data_emissao=gte.${from}`;
-  }
+  const filter = `tenant_id=eq.${TENANT_ID}&order=data_emissao.desc${getPeriodFilter()}`;
 
   try {
     const [nfeData, itensData] = await Promise.all([
