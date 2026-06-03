@@ -33,12 +33,14 @@
   .field:focus{border-color:#f97316;background:#fff}
   .field-sm{padding:6px 10px;font-size:12px}
   /* TABS */
-  .tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid #e2e8f0;padding-bottom:0;flex-wrap:wrap;padding-top:4px}
-  .tab-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-size:12px;font-weight:600;color:#fff;cursor:pointer;border:none;background:#0f2d5c;border-radius:8px;margin-bottom:0;transition:all .15s;font-family:inherit;white-space:nowrap}
-  .tab-btn:hover{background:#1a3f7a}
-  .tab-btn.active{color:#fff;background:#f97316;font-weight:600}
-  .tab-pane{display:none}
-  .tab-pane.active{display:block;padding-top:18px}
+  .tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:0;flex-wrap:wrap}
+  .tab-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit;white-space:nowrap}
+  .tab-btn:hover{color:#0f172a;background:#f8fafc}
+  .tab-btn.active{color:#f97316;border-bottom-color:#f97316;font-weight:600}
+  .tab-cnt{font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;background:#f1f5f9;color:#64748b}
+  .tab-btn.active .tab-cnt{background:#fff7ed;color:#f97316}
+  .tab-pane{display:none;padding-top:14px}
+  .tab-pane.active{display:block}
   /* BUTTONS */
   .btn{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
   .btn:hover{background:#f8fafc}
@@ -127,16 +129,8 @@
 
     <div class="content">
 
-      <!-- TABS -->
-      <div class="tabs">
-        <button class="tab-btn active" id="mtab-nfe"   onclick="switchMonitorTab('nfe')">DANFE <span id="tab-n-nfe" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
-        <button class="tab-btn"        id="mtab-itens" onclick="switchMonitorTab('itens')">Itens <span id="tab-n-itens" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
-        <button class="tab-btn"        id="mtab-erros" onclick="switchMonitorTab('erros')">Erros <span id="tab-n-erros" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
-      </div>
-
-      <!-- TAB: NF-E -->
-      <div class="tab-pane active" id="tab-nfe">
-        <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <!-- FILTROS (compartilhados) -->
+      <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
           <!-- Situação -->
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span style="font-size:11px;font-weight:700;color:#64748b;white-space:nowrap">Situação:</span>
@@ -176,6 +170,15 @@
           <div class="kpi-item"><div class="kpi-label">Valor no período</div><div class="kpi-value c-green" id="kpi-valor">—</div></div>
         </div>
 
+      <!-- ABAS (abaixo do KPI, acima da tabela) -->
+      <div class="tabs" style="margin-top:6px">
+        <button class="tab-btn active" id="mtab-nfe"   onclick="switchMonitorTab('nfe')">DANFE <span class="tab-cnt" id="tab-n-nfe">0</span></button>
+        <button class="tab-btn"        id="mtab-itens" onclick="switchMonitorTab('itens')">Itens <span class="tab-cnt" id="tab-n-itens">0</span></button>
+        <button class="tab-btn"        id="mtab-erros" onclick="switchMonitorTab('erros')">Erros <span class="tab-cnt" id="tab-n-erros">0</span></button>
+      </div>
+
+      <!-- TAB: NF-E -->
+      <div class="tab-pane active" id="tab-nfe">
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
