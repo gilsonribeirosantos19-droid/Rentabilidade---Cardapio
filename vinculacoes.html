@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="design-system.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vinculações · Aiko</title>
+<style>
+  :root{--bg:#f8fafc;--bg2:#ffffff;--border:#e2e8f0;--text:#0f172a;--text2:#64748b;--text3:#94a3b8;--primary:#f97316;--radius:10px;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:13px}
+  .shell{display:flex;width:100%;min-height:100vh}
+
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e2e8f0;padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin:0 8px 4px}
+  .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
+  .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
+  .nav-bottom{margin-top:auto;padding:16px 18px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8}
+  .nav-bottom a{color:#f97316;text-decoration:none}
+
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .topbar{height:52px;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
+  .topbar-left{display:flex;flex-direction:column;justify-content:center}
+  .topbar-title{font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-.3px;line-height:1}
+  .topbar-sub{font-size:11px;color:#94a3b8;margin-top:2px}
+  .content{flex:1;overflow-y:auto;padding:20px 24px}
+
+  /* FIELD */
+  .field{background:#fff;border:1px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
+  .field:focus{border-color:#0d9488}
+  .field-sm{padding:6px 10px;font-size:12px}
+
+  /* FILTER BAR */
+  .filter-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px}
+
+  /* TABLE */
+  .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+  .tbl-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  thead th{background:#1e293b;color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;white-space:nowrap;position:sticky;top:0}
+  tbody tr{border-bottom:1px solid #f1f5f9;transition:background .1s}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:#f8fafc}
+  tbody td{padding:10px 14px;font-size:12px;color:#0f172a;vertical-align:middle}
+  .td-mono{font-family:'DM Mono',monospace;font-size:11px;color:#64748b}
+  .td-sub{font-size:11px;color:#94a3b8;margin-top:1px}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600}
+  .b-ativo{background:#dcfce7;color:#16a34a}
+  .b-inativo{background:#f1f5f9;color:#64748b}
+
+  /* CONVERSION BOX */
+  .conv-tag{display:inline-flex;align-items:center;gap:4px;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:#c2410c;font-family:'DM Mono',monospace}
+
+  /* BUTTONS */
+  .btn{height:34px;padding:0 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#334155;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit;transition:all .15s}
+  .btn:hover{background:#f8fafc}
+  .btn-primary{background:#f97316;border-color:#f97316;color:#fff}
+  .btn-primary:hover{background:#ea6c00;border-color:#ea6c00}
+  .btn-ghost{background:transparent;border-color:transparent;color:#64748b;padding:0 8px}
+  .btn-ghost:hover{background:#f1f5f9;color:#0f172a}
+  .btn-danger{color:#dc2626;border-color:#fca5a5}
+  .btn-danger:hover{background:#fef2f2}
+  .ml-auto{margin-left:auto}
+
+  /* MODAL */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:20px}
+  .overlay.open{display:flex}
+  .modal{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.2);width:480px;max-width:96vw;max-height:90vh;overflow-y:auto}
+  .modal-header{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #e2e8f0}
+  .modal-title{font-size:15px;font-weight:700;color:#0f172a}
+  .modal-sub{font-size:11px;color:#94a3b8;margin-top:2px}
+  .modal-body{padding:20px}
+  .modal-footer{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid #e2e8f0;background:#f8fafc}
+  .close-btn{background:none;border:none;color:#94a3b8;cursor:pointer;padding:4px;border-radius:4px;flex-shrink:0}
+  .close-btn:hover{background:#f1f5f9;color:#0f172a}
+
+  /* FORM */
+  .form-group{margin-bottom:14px}
+  .form-label{font-size:11px;font-weight:600;color:#374151;margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.04em}
+  .form-label span{color:#94a3b8;font-weight:400;text-transform:none}
+  .form-input,.form-select{width:100%;height:36px;padding:0 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#0f172a;background:#fff;outline:none;font-family:inherit}
+  .form-input:focus,.form-select:focus{border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.1)}
+  .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-check{display:flex;align-items:center;gap:8px;font-size:12px;color:#374151;cursor:pointer;padding:4px 0}
+  .form-check input{accent-color:#f97316;cursor:pointer;width:14px;height:14px}
+
+  /* CONVERSION PREVIEW */
+  .conv-preview{background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-top:12px}
+  .conv-preview svg{color:#f97316;flex-shrink:0}
+  .conv-result{font-size:15px;font-weight:700;color:#c2410c}
+  .conv-sub{font-size:11px;color:#9a3412;margin-top:2px}
+
+  /* EMPTY */
+  .empty-state{text-align:center;padding:48px 24px;color:#94a3b8}
+  .empty-state p{font-size:13px;margin-top:8px}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .toast-item{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .2s ease}
+  .toast-ok{background:#16a34a}
+  .toast-err{background:#dc2626}
+  @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* COUNTER */
+  .result-count{font-size:11px;color:#94a3b8}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar"><div class="logo"><div style="display:flex;align-items:center;gap:8px"><div style="width:34px;height:34px;background:#f97316;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8"><polyline points="1,21 8,6 13,13 17,8 23,21"/><line x1="1" y1="21" x2="23" y2="21"/></svg></div><div><div class="logo-mark">Aiko</div><div class="logo-sub">sistema</div></div></div></div></nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Tabela de Preços</div>
+        <div class="topbar-sub">Mapeamento de produtos NF-e → insumos internos</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="result-count" id="result-count"></span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar-wrap">
+        <div style="position:relative">
+          <input class="field field-sm" id="search-vinc" placeholder="Fornecedor ou produto NF-e…" oninput="renderTable()" style="padding-left:30px;min-width:220px">
+          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <select class="field field-sm" id="fil-insumo" onchange="renderTable()" style="min-width:160px">
+          <option value="">Todos os insumos</option>
+        </select>
+        <select class="field field-sm" id="fil-status" onchange="renderTable()">
+          <option value="">Todos</option>
+          <option value="ativo">Ativos</option>
+          <option value="inativo">Inativos</option>
+        </select>
+        <span class="ml-auto result-count" id="result-count-bar"></span>
+      </div>
+
+      <!-- TABLE -->
+      <div class="tbl-card">
+        <div class="tbl-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto na NF-e</th>
+                <th>Fornecedor (CNPJ)</th>
+                <th>Insumo interno</th>
+                <th>Embalagem</th>
+                <th>Conversão</th>
+                <th style="text-align:center">Auto-preço</th>
+                <th style="text-align:center">Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-vinc">
+              <tr><td colspan="8" class="empty-state"><p>Carregando…</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL EDITAR VINCULAÇÃO ══ -->
+<div class="overlay" id="overlay-edit">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Editar Vinculação</div>
+        <div class="modal-sub" id="edit-sub"></div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Produto NF-e (readonly) -->
+      <div class="form-group">
+        <label class="form-label">Produto na NF-e</label>
+        <input class="form-input" id="edit-desc-nfe" readonly style="background:#f8fafc;color:#64748b">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Insumo interno</label>
+        <select class="form-select" id="edit-insumo"></select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Código do item no fornecedor <span>(opcional)</span></label>
+        <input class="form-input" type="text" id="edit-cod-forn" placeholder="SKU ou código do fornecedor">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Descrição da embalagem</label>
+        <input class="form-input" type="text" id="edit-embalagem" placeholder="Ex: Caixa 20x900ml, Fardo 12kg…">
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Qtd por embalagem</label>
+          <input class="form-input" type="number" id="edit-fator" min="0.001" step="0.001" oninput="updateEditPreview()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unidade do estoque</label>
+          <select class="form-select" id="edit-unidade" onchange="updateEditPreview()">
+            <option value="kg">KG</option>
+            <option value="litro">LITRO</option>
+            <option value="un">UN</option>
+            <option value="ml">ML</option>
+            <option value="g">G</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="conv-preview">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <div>
+          <div class="conv-result" id="edit-conv-result">—</div>
+          <div class="conv-sub" id="edit-conv-sub"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;padding:12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
+        <label class="form-check"><input type="checkbox" id="edit-auto-preco"> Atualizar preço do insumo automaticamente nas entradas</label>
+        <label class="form-check"><input type="checkbox" id="edit-padrao"> Embalagem padrão deste fornecedor para este item</label>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-toggle-status" onclick="toggleStatus()"></button>
+      <div style="flex:1"></div>
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="utils.js"></script>
+<script src="sidebar.js"></script>
+<script>
+'use strict';
+
+const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+const api = createApi(SUPA_URL, SUPA_KEY);
+
+let allVinc   = [];
+let allInsumos = [];
+let currentId = null;
+
+// ── TOAST ──────────────────────────────────────────────────────────
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div');
+  el.className = `toast-item toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── FORMATOS ───────────────────────────────────────────────────────
+function normalizeSearch(s) {
+  return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
+function fmtCnpj(c) {
+  if (!c) return '—';
+  const d = c.replace(/\D/g,'');
+  if (d.length !== 14) return c;
+  return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`;
+}
+
+// ── CARREGAR ───────────────────────────────────────────────────────
+async function loadAll() {
+  try {
+    const [vincData, insData] = await Promise.all([
+      api(`fornecedor_produto_vinculado?tenant_id=eq.${TENANT_ID}&order=cnpj_fornecedor.asc,descricao_nfe.asc&select=*,insumo:insumos(id,nome,unidade_medida)`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=id,nome,unidade_medida`),
+    ]);
+    allVinc    = vincData  || [];
+    allInsumos = insData   || [];
+    populateInsumoFilter();
+    renderTable();
+  } catch (e) {
+    toast('Erro ao carregar: ' + e.message, 'err');
+  }
+}
+
+function populateInsumoFilter() {
+  const sel = document.getElementById('fil-insumo');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Todos os insumos</option>' +
+    allInsumos.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
+  sel.value = prev;
+}
+
+// ── TABELA ─────────────────────────────────────────────────────────
+function renderTable() {
+  const search   = normalizeSearch(document.getElementById('search-vinc').value);
+  const filIns   = document.getElementById('fil-insumo').value;
+  const filStatus= document.getElementById('fil-status').value;
+
+  const filtered = allVinc.filter(v => {
+    if (filStatus === 'ativo'   && !v.ativo) return false;
+    if (filStatus === 'inativo' &&  v.ativo) return false;
+    if (filIns && v.insumo_id !== filIns) return false;
+    if (search && !normalizeSearch(v.descricao_nfe + ' ' + v.cnpj_fornecedor + ' ' + (v.insumo?.nome||'')).includes(search)) return false;
+    return true;
+  });
+
+  document.getElementById('result-count-bar').textContent = `${filtered.length} vínculo${filtered.length !== 1 ? 's' : ''}`;
+
+  const tbody = document.getElementById('tbody-vinc');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;display:block;margin:0 auto"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><p>Nenhuma vinculação encontrada</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(v => {
+    const insumoNome = v.insumo?.nome || '—';
+    const insumoUn   = v.insumo?.unidade_medida || '';
+    const unNfe      = v.descricao_nfe.match(/\b(KG|UN|CX|SC|LT|TUB|PCT|FD|GL|LT)\b/i)?.[0]?.toUpperCase() || 'UN';
+
+    return `<tr>
+      <td>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600">${v.descricao_nfe}</div>
+        ${v.codigo_item_fornecedor ? `<div class="td-sub">Cód. forn.: ${v.codigo_item_fornecedor}</div>` : ''}
+      </td>
+      <td>
+        <div class="td-mono">${fmtCnpj(v.cnpj_fornecedor)}</div>
+      </td>
+      <td>
+        <div style="font-weight:500">${insumoNome}</div>
+        <div class="td-sub">${insumoUn.toUpperCase()}</div>
+      </td>
+      <td style="font-size:11px;color:#64748b">${v.descricao_embalagem || '—'}</td>
+      <td>
+        <span class="conv-tag">1 ${unNfe} = ${v.fator_conversao} ${v.unidade_estoque.toUpperCase()}</span>
+      </td>
+      <td style="text-align:center">
+        ${v.atualizar_preco_auto
+          ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+          : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`}
+      </td>
+      <td style="text-align:center">
+        <span class="badge ${v.ativo ? 'b-ativo' : 'b-inativo'}">${v.ativo ? 'Ativo' : 'Inativo'}</span>
+      </td>
+      <td>
+        <button class="btn btn-ghost" style="font-size:11px;height:28px" onclick="openEdit('${v.id}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── MODAL EDITAR ───────────────────────────────────────────────────
+function openEdit(id) {
+  const v = allVinc.find(x => x.id === id);
+  if (!v) return;
+  currentId = id;
+
+  document.getElementById('edit-sub').textContent      = `Fornecedor: ${fmtCnpj(v.cnpj_fornecedor)}`;
+  document.getElementById('edit-desc-nfe').value        = v.descricao_nfe;
+  document.getElementById('edit-cod-forn').value        = v.codigo_item_fornecedor || '';
+  document.getElementById('edit-embalagem').value       = v.descricao_embalagem || '';
+  document.getElementById('edit-fator').value           = v.fator_conversao;
+  document.getElementById('edit-auto-preco').checked    = v.atualizar_preco_auto;
+  document.getElementById('edit-padrao').checked        = v.embalagem_padrao;
+
+  // Popula select de insumos
+  const sel = document.getElementById('edit-insumo');
+  sel.innerHTML = allInsumos.map(i => `<option value="${i.id}" data-un="${i.unidade_medida}">${i.nome} (${i.unidade_medida})</option>`).join('');
+  sel.value = v.insumo_id || '';
+
+  // Unidade
+  const unSel = document.getElementById('edit-unidade');
+  [...unSel.options].forEach(o => { o.selected = o.value === v.unidade_estoque; });
+
+  // Botão de status
+  const btnToggle = document.getElementById('btn-toggle-status');
+  if (v.ativo) {
+    btnToggle.textContent = 'Desativar';
+    btnToggle.className = 'btn btn-danger';
+  } else {
+    btnToggle.textContent = 'Reativar';
+    btnToggle.className = 'btn';
+  }
+
+  updateEditPreview();
+  document.getElementById('overlay-edit').classList.add('open');
+}
+
+function updateEditPreview() {
+  const fator = parseFloat(document.getElementById('edit-fator').value) || 1;
+  const unid  = document.getElementById('edit-unidade').value.toUpperCase();
+  const desc  = document.getElementById('edit-desc-nfe').value;
+  const unNfe = desc.match(/\b(KG|UN|CX|SC|LT|TUB|PCT|FD|GL)\b/i)?.[0]?.toUpperCase() || 'UN';
+  document.getElementById('edit-conv-result').textContent = `1 ${unNfe} = ${fator} ${unid}`;
+  document.getElementById('edit-conv-sub').textContent    = `Cada unidade recebida na NF-e gera ${fator} ${unid.toLowerCase()} no estoque`;
+}
+
+async function salvarEdicao() {
+  if (!currentId) return;
+
+  const payload = {
+    insumo_id:              document.getElementById('edit-insumo').value || null,
+    codigo_item_fornecedor: document.getElementById('edit-cod-forn').value.trim() || null,
+    descricao_embalagem:    document.getElementById('edit-embalagem').value.trim() || null,
+    fator_conversao:        parseFloat(document.getElementById('edit-fator').value) || 1,
+    unidade_estoque:        document.getElementById('edit-unidade').value,
+    atualizar_preco_auto:   document.getElementById('edit-auto-preco').checked,
+    embalagem_padrao:       document.getElementById('edit-padrao').checked,
+    updated_at:             new Date().toISOString(),
+  };
+
+  if (!payload.insumo_id) { toast('Selecione um insumo.', 'err'); return; }
+
+  try {
+    await api(`fornecedor_produto_vinculado?id=eq.${currentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+      prefer: 'return=minimal',
+    });
+    toast('Vinculação salva!', 'ok');
+    closeModal();
+    await loadAll();
+  } catch (e) {
+    toast('Erro: ' + e.message, 'err');
+  }
+}
+
+async function toggleStatus() {
+  if (!currentId) return;
+  const v = allVinc.find(x => x.id === currentId);
+  if (!v) return;
+  const novoAtivo = !v.ativo;
+  try {
+    await api(`fornecedor_produto_vinculado?id=eq.${currentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ ativo: novoAtivo, updated_at: new Date().toISOString() }),
+      prefer: 'return=minimal',
+    });
+    toast(novoAtivo ? 'Vinculação reativada.' : 'Vinculação desativada.', 'ok');
+    closeModal();
+    await loadAll();
+  } catch (e) {
+    toast('Erro: ' + e.message, 'err');
+  }
+}
+
+function closeModal() {
+  document.getElementById('overlay-edit').classList.remove('open');
+  currentId = null;
+}
+
+document.getElementById('overlay-edit').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay-edit')) closeModal();
+});
+
+// ── INIT ──────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>

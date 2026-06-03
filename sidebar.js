@@ -58,7 +58,8 @@
     {
       id: 'fiscal', label: 'Fiscal',
       items: [
-        { href: 'fiscal.html', label: 'Monitor NF-e', icon: I.nfe },
+        { href: 'fiscal.html',        label: 'Monitor NF-e',    icon: I.nfe },
+        { href: 'vinculacoes.html',   label: 'Tabela de Preços', icon: I.clipboard },
       ]
     },
     {
@@ -104,6 +105,7 @@
     'fornecedores.html':    'fornecedores',
     'compras.html':         'compras',
     'fiscal.html':          'fiscal',
+    'vinculacoes.html':     'fiscal',
     'relatorios.html':      'relatorios',
     'cmv.html':             'cmv',
     'rendimento.html':      'rendimento',
