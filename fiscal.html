@@ -54,12 +54,10 @@
   .filter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
   .filter-count{font-size:10px;color:#94a3b8;font-weight:600;margin-left:1px}
 
-  /* PERIOD BUTTONS */
-  .period-btns{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;background:#fff}
-  .period-btn{height:36px;padding:0 14px;font-size:12px;font-weight:500;color:#64748b;background:#fff;border:none;border-right:1px solid #e2e8f0;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
-  .period-btn:last-child{border-right:none}
-  .period-btn:hover{background:#f8fafc;color:#0f172a}
-  .period-btn.active{background:#f97316;color:#fff;font-weight:600}
+  /* FIELD (padrão do sistema) */
+  .field{background:#fff;border:1px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
+  .field:focus{border-color:#0d9488}
+  .field-sm{padding:6px 10px;font-size:12px}
 
   /* MONITOR TABS */
   .monitor-tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:14px}
@@ -258,31 +256,29 @@
 
       <!-- TAB: NF-E -->
       <div class="tab-panel active" id="tab-nfe">
-        <div class="toolbar" style="margin-bottom:8px">
-          <div class="search-wrap">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="search-fornecedor" placeholder="Fornecedor…" oninput="filterTable()" style="width:200px">
+        <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <div style="position:relative">
+            <input class="field field-sm" id="search-fornecedor" placeholder="Fornecedor…" oninput="filterTable()" style="padding-left:30px;min-width:180px">
+            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
-          <div class="search-wrap">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <input type="text" id="search-numero" placeholder="Nº NF-e…" oninput="filterTable()" style="width:120px">
+          <input class="field field-sm" id="search-numero" placeholder="Nº NF-e…" oninput="filterTable()" style="width:100px">
+          <div class="filter-checks" style="gap:12px">
+            <label class="filter-check"><input type="checkbox" data-s="pendente"   checked onchange="filterTable()"><span class="filter-dot" style="background:#f59e0b"></span>Pendente   <span class="filter-count" id="chip-n-pendente"></span></label>
+            <label class="filter-check"><input type="checkbox" data-s="processada" checked onchange="filterTable()"><span class="filter-dot" style="background:#16a34a"></span>Processada <span class="filter-count" id="chip-n-processada"></span></label>
+            <label class="filter-check"><input type="checkbox" data-s="erro"       checked onchange="filterTable()"><span class="filter-dot" style="background:#dc2626"></span>Com Erro   <span class="filter-count" id="chip-n-erro"></span></label>
+            <label class="filter-check"><input type="checkbox" data-s="cancelada"          onchange="filterTable()"><span class="filter-dot" style="background:#ef4444"></span>Cancelada  <span class="filter-count" id="chip-n-cancelada"></span></label>
           </div>
-          <div class="filter-checks">
-            <label class="filter-check"><input type="checkbox" data-s="pendente"   checked onchange="filterTable()"><span class="filter-dot" style="background:#f59e0b"></span>Pendente   <span class="filter-count" id="chip-n-pendente">(0)</span></label>
-            <label class="filter-check"><input type="checkbox" data-s="processada" checked onchange="filterTable()"><span class="filter-dot" style="background:#16a34a"></span>Processada <span class="filter-count" id="chip-n-processada">(0)</span></label>
-            <label class="filter-check"><input type="checkbox" data-s="erro"       checked onchange="filterTable()"><span class="filter-dot" style="background:#dc2626"></span>Com Erro   <span class="filter-count" id="chip-n-erro">(0)</span></label>
-            <label class="filter-check"><input type="checkbox" data-s="cancelada"          onchange="filterTable()"><span class="filter-dot" style="background:#ef4444"></span>Cancelada  <span class="filter-count" id="chip-n-cancelada">(0)</span></label>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-            <div class="period-btns">
-              <button class="period-btn" data-p="prev" onclick="setPeriod('prev',this)">Mês Anterior</button>
-              <button class="period-btn active" data-p="curr" onclick="setPeriod('curr',this)">Mês Atual</button>
-              <button class="period-btn" data-p="custom" onclick="setPeriod('custom',this)">Período</button>
-            </div>
-            <div id="period-custom" style="display:none;align-items:center;gap:4px">
-              <input type="date" class="fil-select" id="period-from" onchange="loadAll()" style="width:130px">
-              <span style="font-size:11px;color:#94a3b8">até</span>
-              <input type="date" class="fil-select" id="period-to" onchange="loadAll()" style="width:130px">
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+            <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:130px">
+              <option value="periodo">Período</option>
+              <option value="mes_atual" selected>Mês Atual</option>
+              <option value="mes_anterior">Mês Anterior</option>
+            </select>
+            <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
+              <span style="color:#94a3b8">–</span>
+              <input type="date" id="fil-ate" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
             </div>
           </div>
         </div>
@@ -585,39 +581,30 @@ function statusToChip(s) {
   return map[s] || 'pendente';
 }
 
-// ── PERÍODO ──────────────────────────────────────────────────────────
-let currentPeriod = 'curr';
-
-function setPeriod(p, btn) {
-  currentPeriod = p;
-  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const customDiv = document.getElementById('period-custom');
-  customDiv.style.display = p === 'custom' ? 'flex' : 'none';
-  if (p !== 'custom') loadAll();
+// ── PERÍODO (padrão do sistema) ───────────────────────────────────────
+function setPeriodoRange(tipo, deId, ateId, fn) {
+  const d = new Date(); let de, ate;
+  if (tipo === 'mes_atual') {
+    de  = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    ate = d.toISOString().split('T')[0];
+  } else if (tipo === 'mes_anterior') {
+    const p = new Date(d.getFullYear(), d.getMonth()-1, 1);
+    const l = new Date(d.getFullYear(), d.getMonth(), 0);
+    de  = `${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;
+    ate = `${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;
+  } else { return; }
+  const elD = document.getElementById(deId); if (elD) elD.value = de;
+  const elA = document.getElementById(ateId); if (elA) elA.value = ate;
+  if (fn) fn();
 }
 
 function getPeriodFilter() {
-  const now = new Date();
-  if (currentPeriod === 'curr') {
-    const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const to   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
-    return `&data_emissao=gte.${from}&data_emissao=lte.${to}`;
-  }
-  if (currentPeriod === 'prev') {
-    const from = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-    const to   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
-    return `&data_emissao=gte.${from}&data_emissao=lte.${to}`;
-  }
-  if (currentPeriod === 'custom') {
-    const f = document.getElementById('period-from').value;
-    const t = document.getElementById('period-to').value;
-    let q = '';
-    if (f) q += `&data_emissao=gte.${f}T00:00:00`;
-    if (t) q += `&data_emissao=lte.${t}T23:59:59`;
-    return q;
-  }
-  return '';
+  const de  = document.getElementById('fil-de')?.value;
+  const ate = document.getElementById('fil-ate')?.value;
+  let q = '';
+  if (de)  q += `&data_emissao=gte.${de}T00:00:00`;
+  if (ate) q += `&data_emissao=lte.${ate}T23:59:59`;
+  return q;
 }
 
 // ── CARREGAR DADOS ───────────────────────────────────────────────────
@@ -1222,6 +1209,7 @@ document.querySelectorAll('.overlay').forEach(o => {
 
 // ── INIT ──────────────────────────────────────────────────────────────
 (async function init() {
+  setPeriodoRange('mes_atual', 'fil-de', 'fil-ate', null);
   await Promise.all([loadAll(), loadInsumos()]);
 })();
 </script>
