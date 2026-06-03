@@ -8,88 +8,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Monitor NF-e · Aiko</title>
 <style>
-  :root{--bg:#f8fafc;--bg2:#ffffff;--border:#e2e8f0;--text:#0f172a;--text2:#64748b;--text3:#94a3b8;--primary:#f97316;--radius:10px;}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:13px}
-  .shell{display:flex;width:100%;min-height:100vh}
-  .sidebar{width:220px;background:#fff;border-right:1px solid #e2e8f0;padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
-  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
-  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
-  .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
-  .nav-group{padding:0 10px;margin:0 8px 4px}
-  .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
-  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
-  .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
-  .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
-  .nav-bottom{margin-top:auto;padding:16px 18px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8}
-  .nav-bottom a{color:#f97316;text-decoration:none}
-  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
-  .topbar{height:52px;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
-  .topbar-left{display:flex;flex-direction:column;justify-content:center}
-  .topbar-title{font-size:18px;font-weight:800;color:#0f172a;letter-spacing:-.3px;line-height:1}
-  .topbar-sub{font-size:11px;color:#94a3b8;margin-top:2px}
-  .content{flex:1;overflow-y:auto;padding:20px 24px}
-
-  /* FIELD */
-  .field{background:#fff;border:1px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:8px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
-  .field:focus{border-color:#0d9488}
-  .field-sm{padding:6px 10px;font-size:12px}
-
-  /* FILTER BAR */
-  .filter-bar-wrap{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px}
-
-  /* MONITOR TABS */
-  .monitor-tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:14px}
-  .monitor-tab{padding:7px 16px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:inline-flex;align-items:center;gap:6px}
-  .monitor-tab:hover{color:#0f172a}
-  .monitor-tab.active{color:#f97316;border-bottom-color:#f97316;font-weight:600}
-  .tab-badge{background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px}
-  .monitor-tab.active .tab-badge{background:#fff7ed;color:#f97316}
-  .tab-panel{display:none}
-  .tab-panel.active{display:block}
-
-  /* BUTTONS */
-  .btn{height:36px;padding:0 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#334155;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-family:inherit;transition:all .15s}
-  .btn:hover{background:#f8fafc}
-  .btn-primary{background:#f97316;border-color:#f97316;color:#fff}
-  .btn-primary:hover{background:#ea6c00;border-color:#ea6c00}
-  .btn-ghost{background:transparent;border-color:transparent;color:#64748b;padding:0 8px}
-  .btn-ghost:hover{background:#f1f5f9;color:#0f172a}
-  .ml-auto{margin-left:auto}
-
-  /* TABLE */
-  .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
-  .tbl-scroll{overflow-x:auto}
-  table.main-tbl{width:100%;border-collapse:collapse}
-  table.main-tbl thead th{background:#1e293b;color:#fff;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;white-space:nowrap}
-  table.main-tbl tbody tr{border-bottom:1px solid #f1f5f9;transition:background .1s}
-  table.main-tbl tbody tr:last-child{border-bottom:none}
-  table.main-tbl tbody tr:hover{background:#f8fafc}
-  table.main-tbl tbody td{padding:10px 14px;font-size:12px;color:#0f172a;vertical-align:middle}
-  .td-sub{font-size:11px;color:#94a3b8;margin-top:1px}
-  .td-mono{font-family:'DM Mono',monospace;font-size:11px;color:#64748b}
-  .td-right{text-align:right}
-  .td-center{text-align:center}
-  .badge-nfe{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;background:#f0fdf4;color:#166534}
-  .badge-nfe-dot{width:6px;height:6px;border-radius:50%;background:#16a34a;flex-shrink:0}
-
-  /* FILTER CHECKS */
-  .filter-checks{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .filter-check{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:#334155;cursor:pointer;user-select:none;white-space:nowrap}
-  .filter-check input[type=checkbox]{width:14px;height:14px;cursor:pointer;flex-shrink:0;accent-color:#f97316}
-  .filter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-  .filter-count{font-size:10px;color:#94a3b8;font-weight:600;margin-left:1px}
-
-  /* EMPTY */
-  .empty-state{text-align:center;padding:48px 24px;color:#94a3b8}
-  .empty-state p{font-size:13px;margin-top:8px}
-
-  /* TOAST */
-  #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-  .toast-item{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .2s ease}
-  .toast-ok{background:#16a34a}
-  .toast-err{background:#dc2626}
-  @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  /* ── NF-e modal específico ── */
+  .nfe-tbl tfoot tr td{background:#1e293b;color:#fff;padding:8px 10px;font-size:12px}
+  /* KPI bar */
+  .kpi-bar{display:flex;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:14px;flex-wrap:wrap}
+  .kpi-item{padding:12px 18px;border-right:1px solid #e2e8f0;min-width:0}
+  .kpi-item:last-child{border-right:none;flex:1}
+  .kpi-label{font-size:11px;color:#94a3b8;margin-bottom:3px}
+  .kpi-value{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a}
+  .kpi-value.c-green{color:#16a34a}
 
   /* ── NF-e MODAL (exato do estoque) ── */
   .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
@@ -143,19 +70,15 @@
 
     <div class="content">
 
-      <!-- MONITOR TABS -->
-      <div class="monitor-tabs">
-        <div class="monitor-tab active" id="mtab-nfe" onclick="switchMonitorTab('nfe')">
-          NF-e <span class="tab-badge" id="tab-n-nfe">0</span>
-        </div>
-        <div class="monitor-tab" id="mtab-itens" onclick="switchMonitorTab('itens')">
-          Itens <span class="tab-badge" id="tab-n-itens">0</span>
-        </div>
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" id="mtab-nfe" onclick="switchMonitorTab('nfe')">NF-e <span id="tab-n-nfe" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
+        <button class="tab-btn" id="mtab-itens" onclick="switchMonitorTab('itens')">Itens <span id="tab-n-itens" style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:3px">0</span></button>
       </div>
 
       <!-- TAB: NF-E -->
-      <div class="tab-panel active" id="tab-nfe">
-        <div class="filter-bar-wrap">
+      <div class="tab-pane active" id="tab-nfe">
+        <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
           <div style="position:relative">
             <input class="field field-sm" id="search-fornecedor" placeholder="Fornecedor…" oninput="renderTable()" style="padding-left:30px;min-width:180px">
             <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -175,58 +98,57 @@
             </div>
           </div>
         </div>
-        <div class="tbl-card">
-          <div class="tbl-scroll">
-            <table class="main-tbl">
-              <thead>
-                <tr>
-                  <th>NF-e</th>
-                  <th>Data/Hora</th>
-                  <th>Fornecedor</th>
-                  <th>Loja</th>
-                  <th class="td-right">Valor Total</th>
-                  <th class="td-center">Itens</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-nfe">
-                <tr><td colspan="7" style="text-align:center;padding:32px;color:#94a3b8">Carregando…</td></tr>
-              </tbody>
-            </table>
-          </div>
+        <!-- KPI bar -->
+        <div class="kpi-bar">
+          <div class="kpi-item"><div class="kpi-label">NF-es no período</div><div class="kpi-value" id="kpi-nfe">—</div></div>
+          <div class="kpi-item"><div class="kpi-label">Itens no período</div><div class="kpi-value" id="kpi-itens">—</div></div>
+          <div class="kpi-item"><div class="kpi-label">Última entrada</div><div class="kpi-value" style="font-size:13px" id="kpi-ultima">—</div></div>
+          <div class="kpi-item"><div class="kpi-label">Valor no período</div><div class="kpi-value c-green" id="kpi-valor">—</div></div>
         </div>
+
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>NF-e</th>
+              <th>Data / Hora</th>
+              <th>Fornecedor</th>
+              <th class="r">Valor Total</th>
+              <th class="c">Itens</th>
+              <th class="c">Status</th>
+            </tr></thead>
+            <tbody id="tbody-nfe">
+              <tr><td colspan="6" class="empty"><b>Carregando…</b></td></tr>
+            </tbody>
+          </table>
+        </div></div>
       </div>
 
       <!-- TAB: ITENS -->
-      <div class="tab-panel" id="tab-itens">
-        <div class="filter-bar-wrap">
+      <div class="tab-pane" id="tab-itens">
+        <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
           <div style="position:relative">
             <input class="field field-sm" id="search-itens" placeholder="Insumo ou fornecedor…" oninput="renderItens()" style="padding-left:30px;min-width:220px">
             <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </div>
-          <span id="itens-count" class="ml-auto" style="font-size:11px;color:#94a3b8"></span>
+          <span id="itens-count" style="margin-left:auto;font-size:12px;color:#94a3b8"></span>
         </div>
-        <div class="tbl-card">
-          <div class="tbl-scroll">
-            <table class="main-tbl">
-              <thead>
-                <tr>
-                  <th>Data/Hora</th>
-                  <th>Insumo</th>
-                  <th>Fornecedor</th>
-                  <th>NF-e</th>
-                  <th class="td-right">Qtd. Estoque</th>
-                  <th>Unidade</th>
-                  <th class="td-right">Custo Unit.</th>
-                  <th class="td-right">Total</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-itens">
-                <tr><td colspan="8" style="text-align:center;padding:32px;color:#94a3b8">Carregando…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Data / Hora</th>
+              <th>Insumo</th>
+              <th>Fornecedor</th>
+              <th>NF-e</th>
+              <th class="r">Qtd. Estoque</th>
+              <th>Unidade</th>
+              <th class="r">Custo Unit.</th>
+              <th class="r">Total</th>
+            </tr></thead>
+            <tbody id="tbody-itens">
+              <tr><td colspan="8" class="empty"><b>Carregando…</b></td></tr>
+            </tbody>
+          </table>
+        </div></div>
       </div>
 
     </div>
@@ -549,17 +471,31 @@ async function loadAll() {
 
     renderTable();
     renderItens();
+    renderKpis();
     document.getElementById('last-sync').textContent = 'Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   } catch(e) {
     toast('Erro ao carregar: '+e.message, 'err');
   }
 }
 
+// ── KPI BAR ───────────────────────────────────────────────────────
+function renderKpis() {
+  const nfes = new Set(entradasNfe.map(e=>e.nfe_numero).filter(Boolean)).size;
+  const total = entradasNfe.reduce((s,e)=>(s + (e.quantidade||0)*(e.custo_unitario||0)),0);
+  const ultima = entradasNfe[0];
+  document.getElementById('kpi-nfe').textContent    = nfes;
+  document.getElementById('kpi-itens').textContent  = entradasNfe.length;
+  document.getElementById('kpi-ultima').textContent = ultima ? fmtDate(ultima.criado_em) : '—';
+  document.getElementById('kpi-valor').textContent  = brl(total);
+}
+
 // ── MONITOR TABS ──────────────────────────────────────────────────
 function switchMonitorTab(name) {
   ['nfe','itens'].forEach(t => {
     document.getElementById('mtab-'+t).classList.toggle('active', t===name);
-    document.getElementById('tab-'+t).classList.toggle('active', t===name);
+    const panel = document.getElementById('tab-'+t);
+    panel.classList.toggle('active', t===name);
+    panel.style.display = t===name ? 'block' : 'none';
   });
 }
 
@@ -587,18 +523,17 @@ function renderTable() {
 
   const tbody = document.getElementById('tbody-nfe');
   if(!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;display:block;margin:0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhuma NF-e encontrada</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">Nenhuma NF-e encontrada no período.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = rows.map(g => `<tr>
-    <td><div style="font-weight:600">${esc(g.numero)}</div></td>
+    <td style="font-weight:600;font-family:'DM Mono',monospace">${esc(g.numero)}</td>
     <td>${fmtDate(g.criado_em)}</td>
-    <td style="font-weight:500">${esc(g.fornecedor_nome)}</td>
-    <td style="font-size:11px;color:#64748b">—</td>
-    <td class="td-right" style="font-weight:600">${brl(g.total)}</td>
-    <td class="td-center">${g.itens.length}</td>
-    <td><span class="badge-nfe"><span class="badge-nfe-dot"></span>Processada</span></td>
+    <td>${esc(g.fornecedor_nome)}</td>
+    <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(g.total)}</td>
+    <td class="c">${g.itens.length}</td>
+    <td class="c"><span class="badge b-ativo">Processada</span></td>
   </tr>`).join('');
 }
 
@@ -620,7 +555,7 @@ function renderItens() {
 
   const tbody = document.getElementById('tbody-itens');
   if(!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:#94a3b8">Nenhum item encontrado</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="empty">Nenhum item encontrado.</td></tr>`;
     return;
   }
 
@@ -632,10 +567,10 @@ function renderItens() {
       <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
       <td style="font-size:11px;color:#64748b">${esc(e.fornecedor_nome||'—')}</td>
       <td class="td-mono">${esc(e.nfe_numero||'—')}</td>
-      <td class="td-right" style="font-family:'DM Mono',monospace">${fmtQtd(e.quantidade)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace">${fmtQtd(e.quantidade)}</td>
       <td style="font-size:11px;color:#64748b">${esc(e.unidade_compra||ins?.unidade_medida||'—')}</td>
-      <td class="td-right" style="font-family:'DM Mono',monospace">${brl(e.custo_unitario)}</td>
-      <td class="td-right" style="font-weight:600;font-family:'DM Mono',monospace">${brl(total)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace">${brl(e.custo_unitario)}</td>
+      <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(total)}</td>
     </tr>`;
   }).join('');
 }
