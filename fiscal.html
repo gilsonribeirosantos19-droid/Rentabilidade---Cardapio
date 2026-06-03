@@ -47,20 +47,12 @@
   .stat-value{font-size:24px;font-weight:800;letter-spacing:-.5px;font-family:'DM Mono',monospace}
   .stat-sub{font-size:11px;color:#94a3b8;margin-top:2px}
 
-  /* STATUS FILTER BAR */
-  .status-filter-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:14px}
-  .status-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 8px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;user-select:none;border:1.5px solid transparent;transition:opacity .15s}
-  .status-chip.off{opacity:.3}
-  .chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-  .chip-count{font-size:10px;font-weight:700;padding:0 5px;border-radius:99px;background:rgba(0,0,0,.08)}
-  .chip-pendente   {background:#fffbeb;color:#b45309;border-color:#fde68a}
-  .chip-transito   {background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
-  .chip-vinculacao {background:#eff6ff;color:#2563eb;border-color:#bfdbfe}
-  .chip-pronta     {background:#f0fdf4;color:#15803d;border-color:#bbf7d0}
-  .chip-processada {background:#f0fdf4;color:#166534;border-color:#86efac}
-  .chip-erro       {background:#fee2e2;color:#991b1b;border-color:#fca5a5}
-  .chip-recusada   {background:#f1f5f9;color:#334155;border-color:#cbd5e1}
-  .chip-cancelada  {background:#fef2f2;color:#dc2626;border-color:#fca5a5}
+  /* STATUS FILTER CHECKBOXES */
+  .filter-checks{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .filter-check{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:#334155;cursor:pointer;user-select:none;white-space:nowrap}
+  .filter-check input[type=checkbox]{width:14px;height:14px;cursor:pointer;flex-shrink:0;accent-color:#f97316}
+  .filter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .filter-count{font-size:10px;color:#94a3b8;font-weight:600;margin-left:1px}
 
   /* MONITOR TABS */
   .monitor-tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:14px}
@@ -247,15 +239,6 @@
     <!-- CONTENT -->
     <div class="content">
 
-      <!-- STATUS FILTER BAR -->
-      <div class="status-filter-bar">
-        <span style="font-size:11px;font-weight:600;color:#64748b;margin-right:2px">Filtrar:</span>
-        <label class="status-chip chip-pendente"   data-s="pendente"   onclick="toggleChip(this)"><span class="chip-dot" style="background:#f59e0b"></span>Pendente   <span class="chip-count" id="chip-n-pendente">0</span></label>
-        <label class="status-chip chip-processada" data-s="processada" onclick="toggleChip(this)"><span class="chip-dot" style="background:#16a34a"></span>Processada <span class="chip-count" id="chip-n-processada">0</span></label>
-        <label class="status-chip chip-erro"       data-s="erro"       onclick="toggleChip(this)"><span class="chip-dot" style="background:#dc2626"></span>Com Erro   <span class="chip-count" id="chip-n-erro">0</span></label>
-        <label class="status-chip chip-cancelada off" data-s="cancelada" onclick="toggleChip(this)"><span class="chip-dot" style="background:#ef4444"></span>Cancelada  <span class="chip-count" id="chip-n-cancelada">0</span></label>
-      </div>
-
       <!-- MONITOR TABS -->
       <div class="monitor-tabs">
         <div class="monitor-tab active" id="mtab-nfe" onclick="switchMonitorTab('nfe')">
@@ -273,10 +256,13 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="search-nfe" placeholder="Fornecedor, número NF, chave…" oninput="filterTable()">
           </div>
-          <select class="fil-select" id="fil-loja" onchange="filterTable()">
-            <option value="">Todas as lojas</option>
-          </select>
-          <select class="fil-select" id="fil-periodo" onchange="loadAll()">
+          <div class="filter-checks">
+            <label class="filter-check"><input type="checkbox" data-s="pendente"   checked onchange="filterTable()"><span class="filter-dot" style="background:#f59e0b"></span>Pendente   <span class="filter-count" id="chip-n-pendente">(0)</span></label>
+            <label class="filter-check"><input type="checkbox" data-s="processada" checked onchange="filterTable()"><span class="filter-dot" style="background:#16a34a"></span>Processada <span class="filter-count" id="chip-n-processada">(0)</span></label>
+            <label class="filter-check"><input type="checkbox" data-s="erro"       checked onchange="filterTable()"><span class="filter-dot" style="background:#dc2626"></span>Com Erro   <span class="filter-count" id="chip-n-erro">(0)</span></label>
+            <label class="filter-check"><input type="checkbox" data-s="cancelada"          onchange="filterTable()"><span class="filter-dot" style="background:#ef4444"></span>Cancelada  <span class="filter-count" id="chip-n-cancelada">(0)</span></label>
+          </div>
+          <select class="fil-select" id="fil-periodo" onchange="loadAll()" style="margin-left:auto">
             <option value="30">Últimos 30 dias</option>
             <option value="7">Últimos 7 dias</option>
             <option value="60">Últimos 60 dias</option>
@@ -619,7 +605,7 @@ function renderChipCounts() {
   allNfe.forEach(n => { const c = statusToChip(n.status); counts[c] = (counts[c]||0)+1; });
   ['pendente','processada','erro','cancelada'].forEach(s => {
     const el = document.getElementById('chip-n-' + s);
-    if (el) el.textContent = counts[s] || 0;
+    if (el) el.textContent = counts[s] ? `(${counts[s]})` : '';
   });
   document.getElementById('tab-n-nfe').textContent   = allNfe.length;
   document.getElementById('tab-n-itens').textContent = allItens.length;
@@ -627,12 +613,11 @@ function renderChipCounts() {
 
 // ── TABELA NF-E ──────────────────────────────────────────────────────
 function renderTable() {
-  const search = normalizeSearch(document.getElementById('search-nfe').value);
-  const activeChips = new Set([...document.querySelectorAll('.status-chip:not(.off)')].map(c => c.dataset.s));
+  const search  = normalizeSearch(document.getElementById('search-nfe').value);
+  const active  = activeStatuses();
 
   const filtered = allNfe.filter(n => {
-    const chipKey = statusToChip(n.status);
-    if (!activeChips.has(chipKey)) return false;
+    if (!active.has(statusToChip(n.status))) return false;
     if (search && !normalizeSearch(n.nome_emitente + n.numero + n.chave_acesso).includes(search)) return false;
     return true;
   });
@@ -716,14 +701,9 @@ function renderItens() {
 
 function filterItens() { renderItens(); }
 
-// ── STATUS CHIPS ─────────────────────────────────────────────────────
-function toggleChip(chip) {
-  chip.classList.toggle('off');
-  renderTable();
-}
-function resetChips() {
-  document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('off'));
-  renderTable();
+// ── STATUS CHECKBOXES ────────────────────────────────────────────────
+function activeStatuses() {
+  return new Set([...document.querySelectorAll('.filter-check input[type=checkbox]:checked')].map(c => c.dataset.s));
 }
 
 // ── MONITOR TABS ──────────────────────────────────────────────────────
