@@ -570,12 +570,16 @@ function statusBadge(s) {
 // status interno → data-s do chip
 function statusToChip(s) {
   const map = {
-    pendente:'pendente', em_transito:'transito',
-    aguard_vinculacao:'vinculacao', pronta:'pronta',
-    processada:'processada', com_erro:'erro',
-    recusada:'recusada', cancelada:'cancelada',
+    pendente:          'pendente',
+    em_transito:       'pendente',
+    aguard_vinculacao: 'pendente',
+    pronta:            'pendente',
+    recusada:          'pendente',
+    processada:        'processada',
+    com_erro:          'erro',
+    cancelada:         'cancelada',
   };
-  return map[s] || s;
+  return map[s] || 'pendente';
 }
 
 // ── CARREGAR DADOS ───────────────────────────────────────────────────
