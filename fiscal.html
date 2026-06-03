@@ -247,47 +247,13 @@
     <!-- CONTENT -->
     <div class="content">
 
-      <!-- STAT CARDS -->
-      <div class="stats" id="stats-row">
-        <div class="stat-card" style="border-left-color:#dc2626">
-          <div class="stat-label">Com Erro</div>
-          <div class="stat-value" style="color:#dc2626" id="cnt-erro">–</div>
-          <div class="stat-sub">aguardam correção</div>
-        </div>
-        <div class="stat-card" style="border-left-color:#3b82f6">
-          <div class="stat-label">Em Trânsito</div>
-          <div class="stat-value" style="color:#1d4ed8" id="cnt-transito">–</div>
-          <div class="stat-sub">aguardando SEFAZ</div>
-        </div>
-        <div class="stat-card" style="border-left-color:#2563eb">
-          <div class="stat-label">Aguard. Vinculação</div>
-          <div class="stat-value" style="color:#2563eb" id="cnt-vinculacao">–</div>
-          <div class="stat-sub">itens para mapear</div>
-        </div>
-        <div class="stat-card" style="border-left-color:#f97316">
-          <div class="stat-label">Prontas</div>
-          <div class="stat-value" style="color:#f97316" id="cnt-pronta">–</div>
-          <div class="stat-sub">prontas para processar</div>
-        </div>
-        <div class="stat-card" style="border-left-color:#16a34a">
-          <div class="stat-label">Processadas (mês)</div>
-          <div class="stat-value" style="color:#16a34a" id="cnt-processada">–</div>
-          <div class="stat-sub" id="val-processada">–</div>
-        </div>
-      </div>
-
       <!-- STATUS FILTER BAR -->
       <div class="status-filter-bar">
         <span style="font-size:11px;font-weight:600;color:#64748b;margin-right:2px">Filtrar:</span>
         <label class="status-chip chip-pendente"   data-s="pendente"   onclick="toggleChip(this)"><span class="chip-dot" style="background:#f59e0b"></span>Pendente   <span class="chip-count" id="chip-n-pendente">0</span></label>
-        <label class="status-chip chip-transito"   data-s="transito"   onclick="toggleChip(this)"><span class="chip-dot" style="background:#3b82f6"></span>Em Trânsito<span class="chip-count" id="chip-n-transito">0</span></label>
-        <label class="status-chip chip-vinculacao" data-s="vinculacao" onclick="toggleChip(this)"><span class="chip-dot" style="background:#2563eb"></span>Aguard. Vinculação<span class="chip-count" id="chip-n-vinculacao">0</span></label>
-        <label class="status-chip chip-pronta"     data-s="pronta"     onclick="toggleChip(this)"><span class="chip-dot" style="background:#22c55e"></span>Pronta     <span class="chip-count" id="chip-n-pronta">0</span></label>
         <label class="status-chip chip-processada" data-s="processada" onclick="toggleChip(this)"><span class="chip-dot" style="background:#16a34a"></span>Processada <span class="chip-count" id="chip-n-processada">0</span></label>
         <label class="status-chip chip-erro"       data-s="erro"       onclick="toggleChip(this)"><span class="chip-dot" style="background:#dc2626"></span>Com Erro   <span class="chip-count" id="chip-n-erro">0</span></label>
-        <label class="status-chip chip-recusada off" data-s="recusada" onclick="toggleChip(this)"><span class="chip-dot" style="background:#475569"></span>Recusada   <span class="chip-count" id="chip-n-recusada">0</span></label>
         <label class="status-chip chip-cancelada off" data-s="cancelada" onclick="toggleChip(this)"><span class="chip-dot" style="background:#ef4444"></span>Cancelada  <span class="chip-count" id="chip-n-cancelada">0</span></label>
-        <button onclick="resetChips()" class="btn btn-ghost ml-auto" style="font-size:11px">Mostrar todos</button>
       </div>
 
       <!-- MONITOR TABS -->
@@ -628,7 +594,6 @@ async function loadAll() {
     ]);
     allNfe   = nfeData  || [];
     allItens = itensData || [];
-    renderStats();
     renderChipCounts();
     renderTable();
     renderItens();
@@ -644,30 +609,15 @@ async function loadInsumos() {
   } catch {}
 }
 
-// ── STATS ────────────────────────────────────────────────────────────
-function renderStats() {
-  const counts = {};
-  let totalProcessado = 0;
-  allNfe.forEach(n => {
-    counts[n.status] = (counts[n.status] || 0) + 1;
-    if (n.status === 'processada') totalProcessado += Number(n.valor_total) || 0;
-  });
-  document.getElementById('cnt-erro').textContent      = counts.com_erro        || 0;
-  document.getElementById('cnt-transito').textContent  = counts.em_transito     || 0;
-  document.getElementById('cnt-vinculacao').textContent= counts.aguard_vinculacao || 0;
-  document.getElementById('cnt-pronta').textContent    = counts.pronta          || 0;
-  document.getElementById('cnt-processada').textContent= counts.processada      || 0;
-  document.getElementById('val-processada').textContent= fmtMoney(totalProcessado) + ' em entradas';
-}
-
+// ── CONTADORES ───────────────────────────────────────────────────────
 function renderChipCounts() {
   const counts = {};
   allNfe.forEach(n => { const c = statusToChip(n.status); counts[c] = (counts[c]||0)+1; });
-  ['pendente','transito','vinculacao','pronta','processada','erro','recusada','cancelada'].forEach(s => {
+  ['pendente','processada','erro','cancelada'].forEach(s => {
     const el = document.getElementById('chip-n-' + s);
     if (el) el.textContent = counts[s] || 0;
   });
-  document.getElementById('tab-n-nfe').textContent = allNfe.length;
+  document.getElementById('tab-n-nfe').textContent   = allNfe.length;
   document.getElementById('tab-n-itens').textContent = allItens.length;
 }
 
