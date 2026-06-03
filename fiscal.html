@@ -135,12 +135,24 @@
 
       <!-- TAB: NF-E -->
       <div class="tab-pane active" id="tab-nfe">
-        <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-          <div style="position:relative">
-            <input class="field field-sm" id="search-fornecedor" placeholder="Fornecedor…" oninput="renderTable()" style="padding-left:30px;min-width:180px">
-            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+          <!-- Situação -->
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:700;color:#64748b;white-space:nowrap">Situação:</span>
+            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-pendente" checked onchange="renderTable()" style="accent-color:#f59e0b"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>Pendente</label>
+            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-processada" checked onchange="renderTable()" style="accent-color:#16a34a"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block"></span>Processada</label>
+            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-erro" checked onchange="renderTable()" style="accent-color:#dc2626"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block"></span>Com Erro</label>
+            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-cancelada" onchange="renderTable()" style="accent-color:#ef4444"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>Cancelada</label>
           </div>
-          <input class="field field-sm" id="search-numero" placeholder="Nº NF-e…" oninput="renderTable()" style="width:100px">
+          <div style="width:1px;height:24px;background:#e2e8f0;flex-shrink:0"></div>
+          <!-- Fornecedor -->
+          <select class="field field-sm" id="fil-fornecedor" onchange="renderTable()" style="min-width:160px">
+            <option value="">Fornecedor: Todos</option>
+          </select>
+          <!-- Loja -->
+          <select class="field field-sm" id="fil-loja" onchange="renderTable()" style="min-width:140px">
+            <option value="">Loja: Todas</option>
+          </select>
           <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
             <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:130px">
               <option value="periodo">Período</option>
@@ -526,6 +538,7 @@ async function loadAll() {
         fornecedores.map(f=>`<option value="${f.id}">${esc(f.nome_fantasia||f.nome)}</option>`).join('');
     }
 
+    populateSelects();
     renderTable();
     renderItens();
     renderKpis();
@@ -533,6 +546,25 @@ async function loadAll() {
   } catch(e) {
     toast('Erro ao carregar: '+e.message, 'err');
   }
+}
+
+// ── POPULA SELECTS ────────────────────────────────────────────────
+function populateSelects() {
+  const fornMap = {};
+  entradasNfe.forEach(e => { if(e.fornecedor_id && e.fornecedor_nome) fornMap[e.fornecedor_id] = e.fornecedor_nome; });
+  const selForn = document.getElementById('fil-fornecedor');
+  const prevForn = selForn.value;
+  selForn.innerHTML = '<option value="">Fornecedor: Todos</option>' +
+    Object.entries(fornMap).map(([id, nome]) => `<option value="${id}">${esc(nome)}</option>`).join('');
+  selForn.value = prevForn;
+
+  const lojaMap = {};
+  entradasNfe.forEach(e => { if(e.loja_id) lojaMap[e.loja_id] = true; });
+  const selLoja = document.getElementById('fil-loja');
+  const prevLoja = selLoja.value;
+  selLoja.innerHTML = '<option value="">Loja: Todas</option>' +
+    Object.keys(lojaMap).map(id => `<option value="${id}">${id.substring(0,8)}…</option>`).join('');
+  selLoja.value = prevLoja;
 }
 
 // ── KPI BAR ───────────────────────────────────────────────────────
@@ -558,21 +590,27 @@ function switchMonitorTab(name) {
 
 // ── TABELA NF-E ───────────────────────────────────────────────────
 function renderTable() {
-  const searchForn   = (document.getElementById('search-fornecedor')?.value||'').toLowerCase().trim();
-  const searchNumero = (document.getElementById('search-numero')?.value||'').replace(/\D/g,'');
+  const filForn      = document.getElementById('fil-fornecedor')?.value || '';
+  const filLoja      = document.getElementById('fil-loja')?.value || '';
+  const showPendente = document.getElementById('fil-s-pendente')?.checked;
+  const showProcess  = document.getElementById('fil-s-processada')?.checked;
+  const showErro     = document.getElementById('fil-s-erro')?.checked;
+  const showCancel   = document.getElementById('fil-s-cancelada')?.checked;
 
   // Agrupa por nfe_numero
   const groups = {};
   entradasNfe.forEach(e => {
+    if(filForn && e.fornecedor_id !== filForn) return;
+    if(filLoja && e.loja_id !== filLoja) return;
     const key = e.nfe_numero || '—';
-    if(!groups[key]) groups[key] = { numero:key, criado_em:e.criado_em, fornecedor_nome:e.fornecedor_nome||'—', itens:[], total:0 };
+    if(!groups[key]) groups[key] = { numero:key, criado_em:e.criado_em, fornecedor_nome:e.fornecedor_nome||'—', fornecedor_id:e.fornecedor_id, loja_id:e.loja_id, itens:[], total:0, status:'processada' };
     groups[key].itens.push(e);
     groups[key].total += (e.quantidade||0) * (e.custo_unitario||0);
   });
 
   const rows = Object.values(groups).filter(g => {
-    if(searchForn   && !g.fornecedor_nome.toLowerCase().includes(searchForn)) return false;
-    if(searchNumero && !g.numero.replace(/\D/g,'').includes(searchNumero)) return false;
+    // Filtro de situação — todas entradas em entradas_estoque são "processada"
+    if(!showProcess) return false;
     return true;
   });
 
