@@ -258,10 +258,14 @@
 
       <!-- TAB: NF-E -->
       <div class="tab-panel active" id="tab-nfe">
-        <div class="toolbar">
+        <div class="toolbar" style="margin-bottom:8px">
           <div class="search-wrap">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="search-nfe" placeholder="Fornecedor, número NF, chave…" oninput="filterTable()">
+            <input type="text" id="search-fornecedor" placeholder="Fornecedor…" oninput="filterTable()" style="width:200px">
+          </div>
+          <div class="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <input type="text" id="search-numero" placeholder="Nº NF-e…" oninput="filterTable()" style="width:120px">
           </div>
           <div class="filter-checks">
             <label class="filter-check"><input type="checkbox" data-s="pendente"   checked onchange="filterTable()"><span class="filter-dot" style="background:#f59e0b"></span>Pendente   <span class="filter-count" id="chip-n-pendente">(0)</span></label>
@@ -656,12 +660,14 @@ function renderChipCounts() {
 
 // ── TABELA NF-E ──────────────────────────────────────────────────────
 function renderTable() {
-  const search  = normalizeSearch(document.getElementById('search-nfe').value);
-  const active  = activeStatuses();
+  const searchForn   = normalizeSearch(document.getElementById('search-fornecedor').value);
+  const searchNumero = (document.getElementById('search-numero').value || '').trim().replace(/\D/g,'');
+  const active       = activeStatuses();
 
   const filtered = allNfe.filter(n => {
     if (!active.has(statusToChip(n.status))) return false;
-    if (search && !normalizeSearch(n.nome_emitente + n.numero + n.chave_acesso).includes(search)) return false;
+    if (searchForn   && !normalizeSearch(n.nome_emitente + ' ' + n.cnpj_emitente).includes(searchForn)) return false;
+    if (searchNumero && !n.numero.replace(/\D/g,'').includes(searchNumero)) return false;
     return true;
   });
 
