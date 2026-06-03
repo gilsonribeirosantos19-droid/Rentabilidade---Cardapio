@@ -125,6 +125,9 @@ table thead tr,
 tfoot tr,
 .tbl tfoot tr { background: var(--ds-navy) !important; }
 
+tfoot td,
+.tbl tfoot td { color: #fff !important; border-bottom: none !important; }
+
 th, .tbl th {
   padding: 7px 12px !important;
   font-size: 11px !important;
