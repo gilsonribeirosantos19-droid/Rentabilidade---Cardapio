@@ -1135,15 +1135,62 @@ function renderNfePendentes() {
 function checkNfeConf() {
   const pendentes=nfeItens.filter((_,idx)=>!nfeAutoLinked[idx]&&!nfeSession[idx]);
   const btn=document.getElementById('btn-nfe-conf');
-  if(!btn) return;
-  const allDone=pendentes.length===0&&nfeItens.length>0;
-  btn.disabled=!allDone;
-  btn.style.opacity=allDone?'1':'0.5';
-  btn.style.cursor=allDone?'pointer':'not-allowed';
-  btn.innerHTML=allDone
-    ?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Ver resumo`
-    :`Vincule os pendentes (${pendentes.length} restante${pendentes.length===1?'':'s'})`;
-  if(allDone) setTimeout(()=>mostrarResumoNfe(), 400);
+  if(!btn||!nfeItens.length) return;
+  // Sempre habilitado — usuário registra no monitor e vincula de lá
+  btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
+  btn.onclick=registrarNfeNoMonitor;
+  btn.innerHTML=pendentes.length===0
+    ?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Registrar no Monitor`
+    :`Registrar no Monitor <span style="font-size:10px;background:rgba(255,255,255,.2);padding:1px 6px;border-radius:99px;margin-left:4px">${pendentes.length} pendente${pendentes.length===1?'':'s'}</span>`;
+}
+
+async function registrarNfeNoMonitor() {
+  if(!nfeItens.length) return;
+  const btn=document.getElementById('btn-nfe-conf');
+  if(btn){btn.disabled=true; btn.textContent='Salvando…';}
+  try {
+    const pi=nfeItens[0];
+    const dataStr=document.getElementById('nfe-data')?.value||hoje();
+    const pendentes=nfeItens.filter((_,idx)=>!nfeAutoLinked[idx]&&!nfeSession[idx]);
+    const status=pendentes.length===0?'pronta':'aguard_vinculacao';
+
+    // Cria nfe_recebidas
+    const [nfeRec]=await api('nfe_recebidas',{method:'POST',prefer:'return=representation',
+      body:JSON.stringify({
+        tenant_id:TENANT_ID, numero:pi.nNF||'0', serie:pi.serie||'1',
+        chave_acesso:pi.chaveAcesso||null, cnpj_emitente:pi.cnpjEmit||'',
+        nome_emitente:pi.emitNome||'', data_emissao:pi.dhEmi||(dataStr+'T12:00:00'),
+        valor_total:pi.vNF||0, status, fonte:'upload',
+      })
+    });
+
+    // Cria nfe_itens com vinculacao_id dos já mapeados
+    const itensBatch=nfeItens.map((it,idx)=>{
+      const link=nfeSession[idx]||nfeAutoLinked[idx];
+      const vinc=link?insumoFornVinculos.find(v=>v.insumo_id===link.insId&&v.embalagem_descricao===link.embDesc):null;
+      return {
+        nfe_id:nfeRec.id, tenant_id:TENANT_ID,
+        descricao_nfe:(it.descricao||'').toUpperCase(),
+        codigo_item_fornecedor:it.codigo||null,
+        quantidade:it.quantidade||0,
+        unidade_nfe:(it.unidade||'UN').toUpperCase(),
+        valor_unitario:it.valorUnit||0,
+        valor_total:parseFloat(((it.quantidade||0)*(it.valorUnit||0)).toFixed(2)),
+        vinculacao_id:vinc?.id||null,
+      };
+    });
+    await api('nfe_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(itensBatch)});
+
+    fecharModal('m-nfe'); resetNfe();
+    toast(pendentes.length===0
+      ?`NF-e ${pi.nNF} registrada e pronta para processar!`
+      :`NF-e ${pi.nNF} registrada — ${pendentes.length} item(ns) para vincular no monitor.`
+    ,'ok',5000);
+    await loadAll();
+  } catch(e){
+    toast('Erro ao registrar: '+e.message,'err');
+    if(btn){btn.disabled=false; btn.onclick=registrarNfeNoMonitor; checkNfeConf();}
+  }
 }
 
 function abrirVincularModal(idx) {
