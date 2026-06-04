@@ -143,10 +143,9 @@
       active = true;
     }
     const href = item.tab ? `${item.href}?tab=${item.tab}` : item.href;
-    const icon = item.icon
-      ? `<span style="width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;opacity:.7">${item.icon}</span>`
-      : `<span style="width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><span style="width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.4;display:inline-block"></span></span>`;
-    return `<a class="nav-item${active ? ' active' : ''}" href="${href}">${icon}${item.label}</a>`;
+    // Sub-itens: dot pequeno (sem ícone SVG grande)
+    const dot = `<span style="width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0"></span>`;
+    return `<a class="nav-item${active ? ' active' : ''}" href="${href}" style="display:flex;align-items:center;gap:9px">${dot}${item.label}</a>`;
   }
 
   function navGroup(g) {
@@ -226,36 +225,65 @@
       const s = document.createElement('style');
       s.id = '_sidebar-dark-css';
       s.textContent = `
-        nav.sidebar,
-        .sidebar {
+        /* ── BASE ── */
+        nav.sidebar, .sidebar {
           background: #1e293b !important;
           border-right: 1px solid rgba(255,255,255,.07) !important;
         }
-        nav.sidebar .logo,
-        .sidebar .logo {
+        nav.sidebar .logo, .sidebar .logo {
           border-bottom: 1px solid rgba(255,255,255,.07) !important;
         }
         nav.sidebar .logo-mark, .sidebar .logo-mark { color: #f1f5f9 !important; }
         nav.sidebar .logo-sub,  .sidebar .logo-sub  { color: #f97316 !important; }
-        nav.sidebar .nav-label, .sidebar .nav-label  { color: #fff !important; }
-        nav.sidebar .nav-item,  .sidebar .nav-item   { color: #fff !important; }
-        nav.sidebar .nav-item:hover, .sidebar .nav-item:hover {
-          background: rgba(255,255,255,.06) !important;
-          color: #fff !important;
-        }
-        nav.sidebar .nav-item.active, .sidebar .nav-item.active {
-          background: rgba(249,115,22,.18) !important;
-          color: #f97316 !important;
-        }
+
+        /* ── GRUPO (menu principal) ── */
         nav.sidebar .nav-group-header, .sidebar .nav-group-header {
-          color: #fff !important;
+          padding: 10px 16px 5px !important;
+          color: rgba(255,255,255,.95) !important;
         }
         nav.sidebar .nav-group-header:hover, .sidebar .nav-group-header:hover {
-          background: rgba(255,255,255,.04) !important;
+          background: transparent !important;
+        }
+        nav.sidebar .nav-label, .sidebar .nav-label {
+          font-size: 13px !important;
+          font-weight: 600 !important;
+          color: rgba(255,255,255,.95) !important;
+          text-transform: none !important;
+          letter-spacing: 0 !important;
         }
         nav.sidebar .nav-group-arrow, .sidebar .nav-group-arrow {
-          stroke: rgba(255,255,255,.25) !important;
+          stroke: rgba(255,255,255,.35) !important;
         }
+
+        /* ── SUBMENU (itens) — linha vertical + recuo ── */
+        nav.sidebar .nav-group-items, .sidebar .nav-group-items {
+          margin-left: 22px !important;
+          padding-left: 12px !important;
+          border-left: 1px solid rgba(255,255,255,.1) !important;
+        }
+
+        /* ── ITEM (sub-item) ── */
+        nav.sidebar .nav-item, .sidebar .nav-item {
+          color: rgba(255,255,255,.5) !important;
+          font-size: 12.5px !important;
+          font-weight: 400 !important;
+          padding: 6px 10px !important;
+          border-radius: 6px !important;
+          margin: 1px 0 !important;
+        }
+        nav.sidebar .nav-item:hover, .sidebar .nav-item:hover {
+          background: rgba(255,255,255,.07) !important;
+          color: rgba(255,255,255,.9) !important;
+        }
+
+        /* ── ITEM ATIVO ── */
+        nav.sidebar .nav-item.active, .sidebar .nav-item.active {
+          background: rgba(249,115,22,.15) !important;
+          color: #f97316 !important;
+          font-weight: 600 !important;
+        }
+
+        /* ── RODAPÉ ── */
         nav.sidebar .nav-bottom, .sidebar .nav-bottom {
           color: rgba(255,255,255,.3) !important;
           border-top: 1px solid rgba(255,255,255,.07) !important;
