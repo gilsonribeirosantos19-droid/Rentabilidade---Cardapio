@@ -102,9 +102,7 @@
   .nfe-drop{border:2px dashed #e2e8f0;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:border-color .15s;background:#fafbfc;margin:20px}
   .nfe-drop:hover,.nfe-drop.drag{border-color:#f97316;background:#fff7ed}
   .nfe-tbl tfoot tr td{background:#1e293b;color:#fff;padding:8px 10px;font-size:12px}
-  /* Linha selecionada na tabela DANFE */
-  #tbody-nfe tr.nfe-selected td { background:#dbeafe !important; }
-  #tbody-nfe tr.nfe-selected td:first-child { box-shadow: inset 3px 0 0 #2563eb; }
+  /* seleção de linha — injetada dinamicamente via JS */
 </style>
 </head>
 <body>
@@ -455,6 +453,7 @@
   </div>
 </div>
 
+<style id="nfe-sel-style"></style>
 <div id="toast"></div>
 
 <script src="utils.js"></script>
@@ -617,9 +616,11 @@ let currentNfeItens = [];
 // 1 clique — seleciona linha, atualiza contadores, NÃO troca aba
 async function selectNfe(nfeId) {
   selectedNfeKey = nfeId;
-  document.querySelectorAll('#tbody-nfe tr').forEach(tr => {
-    tr.classList.toggle('nfe-selected', tr.dataset.key === nfeId);
-  });
+  // Injeta CSS com especificidade máxima — sobrepõe qualquer regra externa
+  const selStyle = document.getElementById('nfe-sel-style');
+  if(selStyle) selStyle.textContent =
+    `#tbody-nfe tr[data-key="${nfeId}"] td { background-color: #1e40af !important; color: #fff !important; }
+     #tbody-nfe tr[data-key="${nfeId}"] td * { color: #fff !important; }`;
   try {
     currentNfeItens = await api(`nfe_itens?nfe_id=eq.${nfeId}&tenant_id=eq.${TENANT_ID}&select=*`);
   } catch { currentNfeItens = []; }
