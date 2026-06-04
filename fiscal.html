@@ -193,48 +193,53 @@
         </div></div>
       </div>
 
-      <!-- TAB: ERROS -->
-      <div class="tab-pane" id="tab-erros">
+      <!-- TAB: ITENS (itens da NF-e selecionada na DANFE) -->
+      <div class="tab-pane" id="tab-itens">
+        <div id="itens-header" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span id="itens-nfe-label" style="font-size:12px;color:#64748b">Selecione uma NF-e na aba DANFE para ver os itens</span>
+        </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th>Fornecedor</th>
-              <th>DANFE</th>
-              <th>D. Emissão</th>
-              <th>Descrição do Erro</th>
+              <th class="c">Seq.</th>
+              <th>Item Fornecedor</th>
+              <th>Descrição</th>
+              <th>Item Interno</th>
+              <th>Embalagem</th>
+              <th class="c">UM</th>
+              <th class="r">Q. na Emb.</th>
+              <th class="r">Q. Embalagem</th>
+              <th class="r">V. Unitário</th>
               <th class="r">V. Total</th>
-              <th></th>
+              <th class="r">Q. Estoque</th>
+              <th class="c">Detalhe</th>
             </tr></thead>
-            <tbody id="tbody-erros">
-              <tr><td colspan="6" class="empty">Nenhum erro encontrado.</td></tr>
+            <tbody id="tbody-itens">
+              <tr><td colspan="12" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>
             </tbody>
           </table>
         </div></div>
       </div>
 
-      <!-- TAB: ITENS -->
-      <div class="tab-pane" id="tab-itens">
-        <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-          <div style="position:relative">
-            <input class="field field-sm" id="search-itens" placeholder="Insumo ou fornecedor…" oninput="renderItens()" style="padding-left:30px;min-width:220px">
-            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </div>
-          <span id="itens-count" style="margin-left:auto;font-size:12px;color:#94a3b8"></span>
+      <!-- TAB: ERROS (erros da NF-e selecionada) -->
+      <div class="tab-pane" id="tab-erros">
+        <div id="erros-header" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="erros-nfe-label" style="font-size:12px;color:#dc2626">Selecione uma NF-e na aba DANFE para ver os erros</span>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th>Data / Hora</th>
-              <th>Insumo</th>
-              <th>Fornecedor</th>
-              <th>NF-e</th>
-              <th class="r">Qtd. Estoque</th>
+              <th>Produto NF-e</th>
+              <th>Cód. Fornecedor</th>
               <th>Unidade</th>
-              <th class="r">Custo Unit.</th>
-              <th class="r">Total</th>
+              <th class="r">Quantidade</th>
+              <th class="r">V. Unitário</th>
+              <th class="c">Ação</th>
             </tr></thead>
-            <tbody id="tbody-itens">
-              <tr><td colspan="8" class="empty"><b>Carregando…</b></td></tr>
+            <tbody id="tbody-erros">
+              <tr><td colspan="6" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>
             </tbody>
           </table>
         </div></div>
@@ -598,6 +603,100 @@ function switchMonitorTab(name) {
   });
 }
 
+// ── NF-E SELECIONADA ─────────────────────────────────────────────
+let selectedNfeKey = null;
+
+function selectNfe(nfeKey, tab = 'itens') {
+  selectedNfeKey = nfeKey;
+  // Destaca linha
+  document.querySelectorAll('#tbody-nfe tr').forEach(tr => {
+    tr.style.background = tr.dataset.key === nfeKey ? '#fff7ed' : '';
+    tr.style.fontWeight  = tr.dataset.key === nfeKey ? '600' : '';
+  });
+  switchMonitorTab(tab);
+  renderNfeItens();
+  renderNfeErros();
+}
+
+function renderNfeItens() {
+  const tbody = document.getElementById('tbody-itens');
+  const label = document.getElementById('itens-nfe-label');
+  if(!selectedNfeKey) {
+    tbody.innerHTML = `<tr><td colspan="12" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>`;
+    return;
+  }
+  const itens = allItens.filter(i => {
+    const parts = (i.nfe_numero||'').split('/');
+    const key = parts[0]+'/'+(parts[1]||'1');
+    return i.nfe_numero === selectedNfeKey || key === selectedNfeKey || i.nfe_numero?.startsWith(selectedNfeKey.split('/')[0]);
+  });
+  const nfe = entradasNfe.find(e => e.nfe_numero?.startsWith(selectedNfeKey.split('/')[0]));
+  if(label) label.textContent = `NF-e ${selectedNfeKey} — ${nfe?.fornecedor_nome||''}  ·  ${itens.length} item(ns)`;
+
+  if(!itens.length) {
+    tbody.innerHTML = `<tr><td colspan="12" class="empty">Nenhum item encontrado para esta NF-e.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = itens.map((item, i) => {
+    const ins = insumos.find(x => x.id === item.insumo_id);
+    const vinc = item.vinculacao;
+    const insumoNome = ins?.nome || '—';
+    const emb = vinc?.descricao_embalagem || '—';
+    const fator = vinc?.fator_conversao || null;
+    const unEst = vinc?.unidade_estoque?.toUpperCase() || ins?.unidade_medida?.toUpperCase() || '—';
+    const qtdEst = fator ? (item.quantidade * fator).toFixed(4) : '—';
+    const total = ((item.quantidade||0) * (item.valor_unitario||0)).toFixed(2);
+    const vinculado = !!vinc;
+    const rowStyle = vinculado ? '' : 'background:#fff5f5';
+    const detalheBtn = vinculado
+      ? `<button onclick="abrirVincularModal('${item.id}')" style="padding:2px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;font-size:11px;cursor:pointer;font-family:inherit">…</button>`
+      : `<button onclick="abrirVincularModal('${item.id}')" style="padding:2px 10px;border:none;border-radius:4px;background:#f97316;color:#fff;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">Vincular</button>`;
+    return `<tr style="${rowStyle}">
+      <td class="c" style="color:#94a3b8">${i+1}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px">${esc(item.codigo_item_fornecedor||'—')}</td>
+      <td style="font-weight:${vinculado?'400':'600'};color:${vinculado?'inherit':'#dc2626'}">${esc(item.descricao_nfe)}</td>
+      <td style="color:${vinculado?'#16a34a':'#94a3b8'};font-size:11px">${vinculado?'✓ '+esc(insumoNome):'—'}</td>
+      <td style="font-size:11px;color:#64748b">${esc(emb)}</td>
+      <td class="c" style="font-size:11px">${esc(item.unidade_nfe||'—')}</td>
+      <td class="r" style="font-family:'DM Mono',monospace">${fator||'—'}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${fmtQtd(item.quantidade)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace">${brl(item.valor_unitario)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${brl(parseFloat(total))}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;color:${vinculado?'#16a34a':'#94a3b8'};font-weight:600">${qtdEst} ${vinculado?unEst:''}</td>
+      <td class="c">${detalheBtn}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderNfeErros() {
+  const tbody = document.getElementById('tbody-erros');
+  const label = document.getElementById('erros-nfe-label');
+  if(!selectedNfeKey) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>`;
+    return;
+  }
+  const itens = allItens.filter(i => {
+    return (i.nfe_numero === selectedNfeKey || i.nfe_numero?.startsWith(selectedNfeKey.split('/')[0])) && !i.vinculacao_id;
+  });
+  if(label) label.textContent = itens.length > 0
+    ? `${itens.length} item(ns) sem vínculo — NF-e ${selectedNfeKey}`
+    : `Nenhum erro — NF-e ${selectedNfeKey}`;
+  if(!itens.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty" style="color:#16a34a">✓ Todos os itens estão vinculados.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = itens.map(item => `<tr style="background:#fff5f5">
+    <td style="font-weight:600;color:#dc2626">${esc(item.descricao_nfe)}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:11px">${esc(item.codigo_item_fornecedor||'—')}</td>
+    <td class="c">${esc(item.unidade_nfe||'—')}</td>
+    <td class="r" style="font-family:'DM Mono',monospace">${fmtQtd(item.quantidade)}</td>
+    <td class="r" style="font-family:'DM Mono',monospace">${brl(item.valor_unitario)}</td>
+    <td class="c">
+      <button onclick="abrirVincularModal('${item.id}')" style="padding:3px 12px;border:none;border-radius:6px;background:#f97316;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Vincular</button>
+    </td>
+  </tr>`).join('');
+}
+
 // ── TABELA NF-E ───────────────────────────────────────────────────
 function renderTable() {
   const filForn      = document.getElementById('fil-fornecedor')?.value || '';
@@ -637,20 +736,25 @@ function renderTable() {
     return;
   }
 
-  tbody.innerHTML = rows.map(g => `<tr>
-    <td class="c"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a" title="Processada"></span></td>
-    <td>
-      <div style="font-weight:500">${esc(g.fornecedor_nome)}</div>
-    </td>
-    <td style="font-family:'DM Mono',monospace;font-weight:600">${esc(g.numero)}</td>
-    <td class="c" style="font-family:'DM Mono',monospace">${g.serie||'1'}</td>
-    <td style="font-size:11px;white-space:nowrap">${fmtDateShort(g.criado_em)}</td>
-    <td style="font-size:11px;white-space:nowrap">${fmtDateShort(g.criado_em)}</td>
-    <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(g.total)}</td>
-    <td class="r" style="font-family:'DM Mono',monospace">${brl(g.total)}</td>
-    <td style="font-size:11px;color:#64748b">—</td>
-    <td style="font-size:11px;color:#64748b">${esc(g.portador||'—')}</td>
-  </tr>`).join('');
+  tbody.innerHTML = rows.map(g => {
+    const nfeKey = `${g.numero}/${g.serie}`;
+    const nErros = allItens.filter(i => i.nfe_numero?.startsWith(g.numero) && !i.vinculacao_id).length;
+    const erroIndicator = nErros > 0
+      ? `<span onclick="event.stopPropagation();selectNfe('${nfeKey}','erros')" title="${nErros} erro(s)" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;font-size:10px;font-weight:700;cursor:pointer">${nErros}</span>`
+      : `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a" title="OK"></span>`;
+    return `<tr data-key="${nfeKey}" onclick="selectNfe('${nfeKey}')" style="cursor:pointer">
+      <td class="c">${erroIndicator}</td>
+      <td style="font-weight:500">${esc(g.fornecedor_nome)}</td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${esc(g.numero)}</td>
+      <td class="c" style="font-family:'DM Mono',monospace">${g.serie||'1'}</td>
+      <td style="font-size:11px;white-space:nowrap">${fmtDateShort(g.criado_em)}</td>
+      <td style="font-size:11px;white-space:nowrap">${fmtDateShort(g.criado_em)}</td>
+      <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(g.total)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace">${brl(g.total)}</td>
+      <td style="font-size:11px;color:#64748b">—</td>
+      <td style="font-size:11px;color:#64748b">${esc(g.portador||'—')}</td>
+    </tr>`;
+  }).join('');
 }
 
 function filterTable() { renderTable(); }
