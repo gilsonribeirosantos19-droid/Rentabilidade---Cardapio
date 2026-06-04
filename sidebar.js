@@ -248,6 +248,7 @@
           font-size: 14px !important;
           font-weight: 500 !important;
           color: rgba(255,255,255,.75) !important;
+          font-family: 'Segoe UI', Tahoma, Geneva, sans-serif !important;
           text-transform: none !important;
           letter-spacing: 0 !important;
         }
@@ -267,6 +268,7 @@
           color: rgba(148,163,184,.85) !important;
           font-size: 12.5px !important;
           font-weight: 400 !important;
+          font-family: 'Segoe UI', Tahoma, Geneva, sans-serif !important;
           padding: 6px 10px !important;
           border-radius: 6px !important;
           margin: 1px 0 !important;
