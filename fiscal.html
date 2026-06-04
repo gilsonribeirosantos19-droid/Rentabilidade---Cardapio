@@ -1197,6 +1197,11 @@ async function registrarNfeNoMonitor() {
     await api('nfe_itens',{method:'POST',prefer:'return=minimal',body:JSON.stringify(itensBatch)});
 
     fecharModal('m-nfe'); resetNfe();
+    // Garante que o filtro de situação mostre a nota recém-registrada
+    const chipPend = document.getElementById('fil-s-pendente');
+    const chipProc = document.getElementById('fil-s-processada');
+    if(status==='aguard_vinculacao'||status==='pronta') { if(chipPend) chipPend.checked=true; }
+    if(status==='processada') { if(chipProc) chipProc.checked=true; }
     toast(pendentes.length===0
       ?`NF-e ${pi.nNF} registrada e pronta para processar!`
       :`NF-e ${pi.nNF} registrada — ${pendentes.length} item(ns) para vincular no monitor.`
