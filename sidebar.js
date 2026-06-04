@@ -246,8 +246,8 @@
         }
         nav.sidebar .nav-label, .sidebar .nav-label {
           font-size: 13px !important;
-          font-weight: 600 !important;
-          color: rgba(255,255,255,.95) !important;
+          font-weight: 500 !important;
+          color: rgba(255,255,255,.75) !important;
           text-transform: none !important;
           letter-spacing: 0 !important;
         }
