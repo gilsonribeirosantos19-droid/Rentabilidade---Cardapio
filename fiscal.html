@@ -619,8 +619,8 @@ async function selectNfe(nfeId) {
   // Injeta CSS com especificidade máxima — sobrepõe qualquer regra externa
   const selStyle = document.getElementById('nfe-sel-style');
   if(selStyle) selStyle.textContent =
-    `#tbody-nfe tr[data-key="${nfeId}"] td { background-color: #fed7aa !important; color: #0f172a !important; }
-     #tbody-nfe tr[data-key="${nfeId}"] td:first-child { border-left: 4px solid #f97316 !important; }
+    `#tbody-nfe tr[data-key="${nfeId}"] td { background-color: #e2e8f0 !important; color: #0f172a !important; }
+     #tbody-nfe tr[data-key="${nfeId}"] td:first-child { border-left: 4px solid #1e293b !important; }
      #tbody-nfe tr[data-key="${nfeId}"] td * { color: #0f172a !important; }`;
   try {
     currentNfeItens = await api(`nfe_itens?nfe_id=eq.${nfeId}&tenant_id=eq.${TENANT_ID}&select=*`);
