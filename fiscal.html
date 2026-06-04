@@ -565,7 +565,6 @@ async function loadAll() {
     populateSelects();
     renderTable();
     renderItens();
-    renderKpis();
     document.getElementById('last-sync').textContent = 'Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   } catch(e) {
     toast('Erro ao carregar: '+e.message, 'err');
@@ -589,17 +588,6 @@ function populateSelects() {
   selLoja.innerHTML = '<option value="">Loja: Todas</option>' +
     Object.keys(lojaMap).map(id => `<option value="${id}">${id.substring(0,8)}…</option>`).join('');
   selLoja.value = prevLoja;
-}
-
-// ── KPI BAR ───────────────────────────────────────────────────────
-function renderKpis() {
-  const nfes = new Set(entradasNfe.map(e=>e.nfe_numero).filter(Boolean)).size;
-  const total = entradasNfe.reduce((s,e)=>(s + (e.quantidade||0)*(e.custo_unitario||0)),0);
-  const ultima = entradasNfe[0];
-  document.getElementById('kpi-nfe').textContent    = nfes;
-  document.getElementById('kpi-itens').textContent  = entradasNfe.length;
-  document.getElementById('kpi-ultima').textContent = ultima ? fmtDate(ultima.criado_em) : '—';
-  document.getElementById('kpi-valor').textContent  = brl(total);
 }
 
 // ── MONITOR TABS ──────────────────────────────────────────────────
