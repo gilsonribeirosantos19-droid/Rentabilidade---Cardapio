@@ -502,8 +502,12 @@ async function upsertSaldo(insId, quantidade, custoMedio) {
 }
 
 function setPeriodoRange(tipo, deId, ateId, fn) {
-  const d=new Date(); let de, ate;
-  if(tipo==='mes_atual'){
+  const d=new Date(); let de='', ate='';
+  if(tipo==='todos') {
+    const elD=document.getElementById(deId); if(elD) elD.value='';
+    const elA=document.getElementById(ateId); if(elA) elA.value='';
+    if(fn) fn(); return;
+  } else if(tipo==='mes_atual'){
     de=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
     ate=d.toISOString().split('T')[0];
   } else if(tipo==='mes_anterior'){
@@ -541,9 +545,12 @@ function fmtDateShort(iso) {
 async function loadAll() {
   const de  = document.getElementById('fil-de')?.value;
   const ate = document.getElementById('fil-ate')?.value;
+  const periodo = document.getElementById('fil-periodo')?.value || 'todos';
   let dateFilter = '';
-  if(de)  dateFilter += `&data_integracao=gte.${de}T00:00:00`;
-  if(ate) dateFilter += `&data_integracao=lte.${ate}T23:59:59`;
+  if(periodo !== 'todos') {
+    if(de)  dateFilter += `&data_integracao=gte.${de}T00:00:00`;
+    if(ate) dateFilter += `&data_integracao=lte.${ate}T23:59:59`;
+  }
 
   try {
     const [nfeData, insData, fornData, vincData, ifvData, saldoData] = await Promise.all([
