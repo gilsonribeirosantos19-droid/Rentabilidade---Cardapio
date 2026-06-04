@@ -150,9 +150,10 @@
           </select>
           <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
             <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:130px">
-              <option value="periodo">Período</option>
-              <option value="mes_atual" selected>Mês Atual</option>
+              <option value="todos" selected>Todos</option>
+              <option value="mes_atual">Mês Atual</option>
               <option value="mes_anterior">Mês Anterior</option>
+              <option value="periodo">Período</option>
             </select>
             <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -541,8 +542,8 @@ async function loadAll() {
   const de  = document.getElementById('fil-de')?.value;
   const ate = document.getElementById('fil-ate')?.value;
   let dateFilter = '';
-  if(de)  dateFilter += `&data_emissao=gte.${de}T00:00:00`;
-  if(ate) dateFilter += `&data_emissao=lte.${ate}T23:59:59`;
+  if(de)  dateFilter += `&data_integracao=gte.${de}T00:00:00`;
+  if(ate) dateFilter += `&data_integracao=lte.${ate}T23:59:59`;
 
   try {
     const [nfeData, insData, fornData, vincData, ifvData, saldoData] = await Promise.all([
@@ -1486,7 +1487,7 @@ async function confirmarNfe() {
 
 // ── INIT ──────────────────────────────────────────────────────────
 (function init() {
-  setPeriodoRange('mes_atual', 'fil-de', 'fil-ate', null);
+  // Padrão: todos os períodos (sem filtro de data)
   // Carrega loja do localStorage
   try {
     const u = JSON.parse(localStorage.getItem('sb_user')||'{}');
