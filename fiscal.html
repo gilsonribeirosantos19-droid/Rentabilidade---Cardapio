@@ -611,18 +611,33 @@ let selectedNfeKey = null;
 
 let currentNfeItens = [];
 
-async function selectNfe(nfeId, tab = 'itens') {
+// 1 clique — seleciona linha, atualiza contadores, NÃO troca aba
+async function selectNfe(nfeId) {
   selectedNfeKey = nfeId;
   document.querySelectorAll('#tbody-nfe tr').forEach(tr => {
     tr.style.background = tr.dataset.key === nfeId ? '#fff7ed' : '';
+    tr.style.fontWeight  = tr.dataset.key === nfeId ? '600'    : '';
   });
-  switchMonitorTab(tab);
-  // Carrega itens de nfe_itens para esta nota
   try {
     currentNfeItens = await api(`nfe_itens?nfe_id=eq.${nfeId}&tenant_id=eq.${TENANT_ID}&select=*`);
   } catch { currentNfeItens = []; }
+  const pendentes = currentNfeItens.filter(i => !i.vinculacao_id).length;
+  document.getElementById('tab-n-itens').textContent = currentNfeItens.length;
+  document.getElementById('tab-n-erros').textContent = pendentes || 0;
   renderNfeItens();
   renderNfeErros();
+}
+
+// 2 cliques — vai direto para aba Itens
+async function openNfeItens(nfeId) {
+  await selectNfe(nfeId);
+  switchMonitorTab('itens');
+}
+
+// Clique no indicador de erro — vai para aba Erros
+async function openNfeErros(nfeId) {
+  await selectNfe(nfeId);
+  switchMonitorTab('erros');
 }
 
 function renderNfeItens() {
@@ -839,14 +854,14 @@ function renderTable() {
     const dotColor = STATUS_DOT[n.status] || '#94a3b8';
     const isErro   = n.status === 'com_erro' || n.status === 'aguard_vinculacao';
     const erroIndicator = isErro
-      ? `<span onclick="event.stopPropagation();selectNfe('${nfeKey}','erros')" title="Ver erros" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:700;cursor:pointer">!</span>`
+      ? `<span onclick="event.stopPropagation();openNfeErros('${nfeKey}')" title="Ver erros" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:700;cursor:pointer">!</span>`
       : `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor}"></span>`;
     const acaoBtn = n.status === 'pronta'
       ? `<button onclick="event.stopPropagation();processarNfeFiscal('${nfeKey}')" style="padding:3px 10px;border:none;border-radius:6px;background:#16a34a;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Processar</button>`
       : n.status === 'processada'
       ? `<span style="font-size:10px;color:#16a34a">✓ Processada</span>`
       : '';
-    return `<tr data-key="${nfeKey}" onclick="selectNfe('${nfeKey}')" style="cursor:pointer">
+    return `<tr data-key="${nfeKey}" onclick="selectNfe('${nfeKey}')" ondblclick="openNfeItens('${nfeKey}')" style="cursor:pointer">
       <td class="c">${erroIndicator}</td>
       <td style="font-weight:500">${esc(n.nome_emitente||'—')}</td>
       <td style="font-family:'DM Mono',monospace;font-weight:600">${esc(n.numero||'—')}</td>
