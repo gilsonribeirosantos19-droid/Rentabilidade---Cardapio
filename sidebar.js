@@ -264,7 +264,7 @@
 
         /* ── ITEM (sub-item) ── */
         nav.sidebar .nav-item, .sidebar .nav-item {
-          color: rgba(255,255,255,.5) !important;
+          color: rgba(148,163,184,.85) !important;
           font-size: 12.5px !important;
           font-weight: 400 !important;
           padding: 6px 10px !important;
