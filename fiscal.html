@@ -130,46 +130,72 @@
 
     <div class="content">
 
-      <!-- FILTROS (compartilhados) -->
-      <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-          <!-- Situação -->
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-size:11px;font-weight:700;color:#64748b;white-space:nowrap">Situação:</span>
-            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-pendente" checked onchange="renderTable()" style="accent-color:#f59e0b"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>Pendente</label>
-            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-erro" checked onchange="renderTable()" style="accent-color:#dc2626"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block"></span>Com Erro</label>
-            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-cancelada" onchange="renderTable()" style="accent-color:#ef4444"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>Cancelada</label>
-            <input type="hidden" id="fil-s-processada">
-          </div>
-          <div style="width:1px;height:24px;background:#e2e8f0;flex-shrink:0"></div>
-          <!-- Fornecedor -->
-          <select class="field field-sm" id="fil-fornecedor" onchange="renderTable()" style="min-width:160px">
-            <option value="">Fornecedor: Todos</option>
-          </select>
-          <!-- Loja -->
-          <select class="field field-sm" id="fil-loja" onchange="renderTable()" style="min-width:140px">
-            <option value="">Loja: Todas</option>
-          </select>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-            <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:130px">
-              <option value="todos" selected>Todos</option>
-              <option value="mes_atual">Mês Atual</option>
-              <option value="mes_anterior">Mês Anterior</option>
-              <option value="periodo">Período</option>
-            </select>
-            <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
-              <span style="color:#94a3b8">–</span>
-              <input type="date" id="fil-ate" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
-            </div>
-          </div>
+      <!-- FILTROS: linha 1 -->
+      <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+        <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Fornecedor:</span>
+        <select class="field field-sm" id="fil-fornecedor" onchange="renderTable()" style="min-width:150px">
+          <option value="">Todos</option>
+        </select>
+        <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Loja:</span>
+        <select class="field field-sm" id="fil-loja" onchange="renderTable()" style="min-width:120px">
+          <option value="">Todas</option>
+        </select>
+        <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Período:</span>
+        <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+          <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
+          <span style="color:#94a3b8">até</span>
+          <input type="date" id="fil-ate" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
         </div>
+        <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:120px">
+          <option value="todos" selected>Todos</option>
+          <option value="mes_atual">Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+          <option value="periodo">Período</option>
+        </select>
+        <button class="btn btn-ghost" onclick="limparFiltros()" style="margin-left:auto;gap:5px;font-size:12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Limpar filtros
+        </button>
+      </div>
 
-      <!-- ABAS (abaixo do KPI, acima da tabela) -->
-      <div class="tabs" style="margin-top:6px">
-        <button class="tab-btn active" id="mtab-nfe"   onclick="switchMonitorTab('nfe')">DANFE <span class="tab-cnt" id="tab-n-nfe">0</span></button>
-        <button class="tab-btn"        id="mtab-itens" onclick="switchMonitorTab('itens')">Itens <span class="tab-cnt" id="tab-n-itens">0</span></button>
-        <button class="tab-btn"        id="mtab-erros" onclick="switchMonitorTab('erros')">Erros <span class="tab-cnt" id="tab-n-erros">0</span></button>
+      <!-- FILTROS: linha 2 — chips de situação + processar selecionadas -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
+          <input type="checkbox" id="fil-s-pendente" checked onchange="renderTable()" style="accent-color:#f59e0b">
+          <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>
+          Pendente <span id="cnt-pendente" style="font-weight:700;color:#f59e0b">(0)</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
+          <input type="checkbox" id="fil-s-erro" checked onchange="renderTable()" style="accent-color:#dc2626">
+          <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block"></span>
+          Com Erro <span id="cnt-erro" style="font-weight:700;color:#dc2626">(0)</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
+          <input type="checkbox" id="fil-s-cancelada" onchange="renderTable()" style="accent-color:#94a3b8">
+          <span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block"></span>
+          Cancelada <span id="cnt-cancelada" style="font-weight:700;color:#94a3b8">(0)</span>
+        </label>
+        <input type="hidden" id="fil-s-processada">
+        <button id="btn-processar-sel" onclick="processarSelecionadas()" style="margin-left:auto;display:none;padding:7px 16px;border:none;border-radius:8px;background:#f97316;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;gap:6px;align-items:center">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Processar selecionadas (<span id="cnt-sel">0</span>)
+        </button>
+      </div>
+
+      <!-- ABAS -->
+      <div class="tabs" style="margin-top:4px">
+        <button class="tab-btn active" id="mtab-nfe" onclick="switchMonitorTab('nfe')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          DANFE <span class="tab-cnt" id="tab-n-nfe">0</span>
+        </button>
+        <button class="tab-btn" id="mtab-itens" onclick="switchMonitorTab('itens')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          ITENS NF <span class="tab-cnt" id="tab-n-itens">0</span>
+        </button>
+        <button class="tab-btn" id="mtab-erros" onclick="switchMonitorTab('erros')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          ERROS <span class="tab-cnt" id="tab-n-erros">0</span>
+        </button>
       </div>
 
       <!-- TAB: NF-E -->
@@ -177,8 +203,9 @@
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
+              <th style="width:36px;text-align:center"><input type="checkbox" id="chk-all" onchange="toggleSelectAll(this)" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer"></th>
               <th class="c">Sit.</th>
-              <th>Fornecedor / Razão</th>
+              <th>Fornecedor / Razão Social</th>
               <th>DANFE</th>
               <th class="c">Série</th>
               <th>D. Emissão</th>
@@ -187,7 +214,6 @@
               <th class="r">V. Título</th>
               <th>D. Vencimento</th>
               <th>Portador</th>
-              <th class="c">Ação</th>
             </tr></thead>
             <tbody id="tbody-nfe">
               <tr><td colspan="11" class="empty">Carregando…</td></tr>
@@ -848,25 +874,66 @@ function statusToChip(s) {
 }
 
 // ── TABELA NF-E ───────────────────────────────────────────────────
+let selectedIds = new Set();
+
+function atualizarChipsCounts(rows) {
+  const pend = rows.filter(n => statusToChip(n.status)==='pendente').length;
+  const erro = rows.filter(n => statusToChip(n.status)==='erro').length;
+  const canc = rows.filter(n => statusToChip(n.status)==='cancelada').length;
+  const elP = document.getElementById('cnt-pendente'); if(elP) elP.textContent = `(${pend})`;
+  const elE = document.getElementById('cnt-erro');     if(elE) elE.textContent = `(${erro})`;
+  const elC = document.getElementById('cnt-cancelada');if(elC) elC.textContent = `(${canc})`;
+}
+
+function atualizarBtnProcessar() {
+  const btn = document.getElementById('btn-processar-sel');
+  const cnt = document.getElementById('cnt-sel');
+  if(!btn||!cnt) return;
+  const n = selectedIds.size;
+  cnt.textContent = n;
+  btn.style.display = n > 0 ? 'inline-flex' : 'none';
+}
+
+function toggleSelectAll(chk) {
+  document.querySelectorAll('#tbody-nfe input[type=checkbox]').forEach(c => {
+    c.checked = chk.checked;
+    const nfeId = c.dataset.id;
+    if(nfeId) { if(chk.checked) selectedIds.add(nfeId); else selectedIds.delete(nfeId); }
+  });
+  atualizarBtnProcessar();
+}
+
+function limparFiltros() {
+  document.getElementById('fil-fornecedor').value = '';
+  document.getElementById('fil-loja').value = '';
+  document.getElementById('fil-periodo').value = 'todos';
+  const elD = document.getElementById('fil-de'); if(elD) elD.value = '';
+  const elA = document.getElementById('fil-ate'); if(elA) elA.value = '';
+  document.getElementById('fil-s-pendente').checked = true;
+  document.getElementById('fil-s-erro').checked = true;
+  document.getElementById('fil-s-cancelada').checked = false;
+  renderTable();
+}
+
 function renderTable() {
   const filForn      = document.getElementById('fil-fornecedor')?.value || '';
   const showPendente = document.getElementById('fil-s-pendente')?.checked;
-  const showProcess  = document.getElementById('fil-s-processada')?.checked;
   const showErro     = document.getElementById('fil-s-erro')?.checked;
   const showCancel   = document.getElementById('fil-s-cancelada')?.checked;
 
+  // Nunca mostra processadas no monitor
   const rows = entradasNfe.filter(n => {
+    if(n.status === 'processada') return false;
     if(filForn && n.cnpj_emitente !== filForn) return false;
     const chip = statusToChip(n.status);
-    if(chip==='pendente'   && !showPendente) return false;
-    if(chip==='processada' && !showProcess)  return false;
-    if(chip==='erro'       && !showErro)     return false;
-    if(chip==='cancelada'  && !showCancel)   return false;
+    if(chip==='pendente'  && !showPendente) return false;
+    if(chip==='erro'      && !showErro)     return false;
+    if(chip==='cancelada' && !showCancel)   return false;
     return true;
   });
 
+  atualizarChipsCounts(entradasNfe.filter(n => n.status !== 'processada'));
   document.getElementById('tab-n-nfe').textContent = rows.length;
-  // Erros: se há nota selecionada mostra itens pendentes, senão mostra notas com erro
   if(!selectedNfeKey) {
     document.getElementById('tab-n-erros').textContent = rows.filter(n => n.status === 'com_erro' || n.status === 'aguard_vinculacao').length || 0;
   }
@@ -878,54 +945,73 @@ function renderTable() {
   }
 
   tbody.innerHTML = rows.map(n => {
-    const nfeKey = n.id; // usa o UUID como chave única
+    const nfeKey   = n.id;
     const dotColor = STATUS_DOT[n.status] || '#94a3b8';
     const isErro   = n.status === 'com_erro' || n.status === 'aguard_vinculacao';
-    const erroIndicator = isErro
-      ? `<span onclick="event.stopPropagation();openNfeErros('${nfeKey}')" title="Ver erros" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:700;cursor:pointer">!</span>`
-      : `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor}"></span>`;
-    const acaoBtn = n.status === 'pronta'
-      ? `<button onclick="event.stopPropagation();processarNfeFiscal('${nfeKey}')" style="padding:3px 10px;border:none;border-radius:6px;background:#16a34a;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Processar</button>`
-      : n.status === 'processada'
-      ? `<span style="font-size:10px;color:#16a34a">✓ Processada</span>`
-      : '';
-    // Dot de situação
-    const dot = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor}" title="${n.status}"></span>`;
+    const isPronta = n.status === 'pronta';
     const sitIndicator = isErro
       ? `<span onclick="event.stopPropagation();openNfeErros('${nfeKey}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:700;cursor:pointer" title="Ver erros">!</span>`
-      : dot;
+      : `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor}" title="${n.status}"></span>`;
 
     return `<tr data-key="${nfeKey}" onclick="selectNfe('${nfeKey}')" ondblclick="openNfeItens('${nfeKey}')" style="cursor:pointer">
+      <td class="c" onclick="event.stopPropagation()">
+        <input type="checkbox" data-id="${nfeKey}" ${selectedIds.has(nfeKey)?'checked':''} ${isPronta?'':'disabled style="opacity:.3"'}
+          onchange="toggleRowSel(this,'${nfeKey}')" style="accent-color:#f97316;width:14px;height:14px;cursor:${isPronta?'pointer':'default'}">
+      </td>
       <td class="c">${sitIndicator}</td>
       <td>
         <div style="font-weight:500">${esc(n.nome_emitente||'—')}</div>
         <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${n.cnpj_emitente||''}</div>
       </td>
-      <td style="font-family:'DM Mono',monospace;font-weight:600">${esc(n.numero||'—')}</td>
+      <td>
+        <span style="color:#2563eb;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="event.stopPropagation();openNfeItens('${nfeKey}')">${esc(n.numero||'—')}</span>
+      </td>
       <td class="c" style="font-family:'DM Mono',monospace;color:#94a3b8">${n.serie||'1'}</td>
       <td>
         <div style="font-size:12px">${fmtDateShort(n.data_emissao)}</div>
         <div style="font-size:10px;color:#94a3b8">${n.data_emissao ? new Date(n.data_emissao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
       </td>
-      <td style="font-size:12px;color:#64748b">${fmtDateShort(n.data_integracao)}</td>
+      <td>
+        <div style="font-size:12px">${fmtDateShort(n.data_integracao)}</div>
+        <div style="font-size:10px;color:#94a3b8">${n.data_integracao ? new Date(n.data_integracao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
+      </td>
       <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(n.valor_total)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:#64748b">${brl(n.valor_titulo)}</td>
       <td style="font-size:11px;color:#64748b">${n.data_vencimento ? new Date(n.data_vencimento+'T00:00').toLocaleDateString('pt-BR') : '—'}</td>
       <td style="font-size:11px;color:#64748b">${esc(n.portador||'—')}</td>
-      <td class="c">${acaoBtn}</td>
     </tr>`;
   }).join('');
+}
+
+function toggleRowSel(chk, nfeId) {
+  if(chk.checked) selectedIds.add(nfeId); else selectedIds.delete(nfeId);
+  atualizarBtnProcessar();
+}
+
+async function processarSelecionadas() {
+  if(selectedIds.size === 0) return;
+  const prontas = [...selectedIds].filter(id => entradasNfe.find(n => n.id === id)?.status === 'pronta');
+  if(prontas.length === 0) { toast('Selecione apenas notas com status Pronta.', 'err'); return; }
+  if(!confirm(`Processar ${prontas.length} NF-e selecionada(s)?`)) return;
+  let ok = 0;
+  for(const nfeId of prontas) {
+    try { await processarNfeFiscal(nfeId, true); ok++; } catch {}
+  }
+  selectedIds.clear();
+  atualizarBtnProcessar();
+  const chkAll = document.getElementById('chk-all'); if(chkAll) chkAll.checked = false;
+  toast(`${ok} NF-e processada(s) com sucesso!`, 'ok');
+  await loadAll();
 }
 
 function filterTable() { renderTable(); }
 function filterItens() {}
 
 // ── PROCESSAR NF-E FISCAL ─────────────────────────────────────────
-async function processarNfeFiscal(nfeId) {
+async function processarNfeFiscal(nfeId, silent = false) {
   const nfe = entradasNfe.find(n => n.id === nfeId);
-  if(!nfe || nfe.status !== 'pronta') { toast('NF-e não está pronta para processar.', 'err'); return; }
-
-  if(!confirm(`Confirmar processamento da NF-e ${nfe.numero}?\n\nEsta ação irá atualizar o estoque e o custo médio dos insumos.`)) return;
+  if(!nfe || nfe.status !== 'pronta') { if(!silent) toast('NF-e não está pronta para processar.', 'err'); return; }
+  if(!silent && !confirm(`Confirmar processamento da NF-e ${nfe.numero}?\n\nEsta ação irá atualizar o estoque e o custo médio dos insumos.`)) return;
 
   // Carrega itens se necessário
   if(!currentNfeItens.length || selectedNfeKey !== nfeId) {
