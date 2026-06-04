@@ -185,6 +185,7 @@
               <th class="r">V. Título</th>
               <th>D. Vencimento</th>
               <th>Portador</th>
+              <th></th>
             </tr></thead>
             <tbody id="tbody-nfe">
               <tr><td colspan="10" class="empty">Carregando…</td></tr>
@@ -688,9 +689,111 @@ function renderNfeErros() {
   </tr>`).join('');
 }
 
+let fiscalVinculandoItemId = null;
+
 function openVincularNfeItem(itemId) {
-  // Placeholder — vincular via insumo_fornecedores (fluxo do estoque)
-  toast('Funcionalidade de vincular em desenvolvimento.', 'info');
+  const item = currentNfeItens.find(i => i.id === itemId);
+  if(!item) return;
+  fiscalVinculandoItemId = itemId;
+  const nfe = entradasNfe.find(n => n.id === selectedNfeKey);
+  document.getElementById('vin-desc').textContent = item.descricao_nfe;
+  document.getElementById('vin-cod').textContent  = item.codigo_item_fornecedor || '—';
+  document.getElementById('vin-qtd').textContent  = `${fmtQtd(item.quantidade)} ${item.unidade_nfe}`;
+  document.getElementById('vin-forn').textContent = nfe?.nome_emitente || '—';
+  document.getElementById('vin-ins').value = '';
+  document.getElementById('vin-ins')._selectedEmb = null;
+  document.getElementById('vin-cod-forn').value = item.codigo_item_fornecedor || '';
+  const precoEl = document.getElementById('vin-preco-nfe');
+  if(precoEl) precoEl.textContent = brl(item.valor_unitario);
+  document.getElementById('vin-und-row').style.display = 'none';
+  document.getElementById('vin-emb-section').style.display = 'none';
+  document.getElementById('vin-conv-summary').style.display = 'none';
+  const cr = document.getElementById('vin-cod-row');   if(cr) cr.style.display = '';
+  const pr = document.getElementById('vin-preco-row'); if(pr) pr.style.display = '';
+  _popularSelectInsumo('');
+  if(document.getElementById('vin-obs')) document.getElementById('vin-obs').value = '';
+  document.getElementById('btn-vin-salvar').onclick = salvarVincFiscal;
+  abrirModal('m-nfe-vincular');
+}
+
+async function salvarVincFiscal() {
+  const itemId = fiscalVinculandoItemId;
+  const item   = currentNfeItens.find(i => i.id === itemId);
+  if(!item) { toast('Item não encontrado.', 'err'); return; }
+  const insId = document.getElementById('vin-ins').value;
+  if(!insId) { toast('Selecione o produto interno.', 'err'); return; }
+  const emb = document.getElementById('vin-ins')._selectedEmb;
+  if(!emb?.fator) { toast('Selecione a embalagem e a quantidade.', 'err'); return; }
+  const codForn = (document.getElementById('vin-cod-forn')?.value || '').trim();
+  const nfe     = entradasNfe.find(n => n.id === selectedNfeKey);
+  const btn = document.getElementById('btn-vin-salvar');
+  if(btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+
+  try {
+    // Busca fornecedor_id pelo CNPJ
+    let fornId = null;
+    const cnpjLimpo = (nfe?.cnpj_emitente || '').replace(/\D/g, '');
+    if(cnpjLimpo) {
+      const fList = await api(`fornecedores?tenant_id=eq.${TENANT_ID}&select=id,cnpj`).catch(()=>[]);
+      const fMatch = fList.find(f => (f.cnpj||'').replace(/\D/g,'') === cnpjLimpo);
+      fornId = fMatch?.id || null;
+    }
+
+    // Salva/atualiza insumo_fornecedores
+    let vincId = null;
+    const existing = insumoFornVinculos.find(v =>
+      v.insumo_id === insId &&
+      (!fornId || v.fornecedor_id === fornId) &&
+      v.embalagem_descricao === emb.embDesc
+    );
+    if(existing) {
+      await api(`insumo_fornecedores?id=eq.${existing.id}`, {
+        method:'PATCH', prefer:'return=minimal',
+        body: JSON.stringify({ qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null })
+      });
+      vincId = existing.id;
+      Object.assign(existing, { qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null });
+    } else {
+      const [nl] = await api('insumo_fornecedores', {
+        method:'POST', prefer:'return=representation',
+        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:insId, fornecedor_id:fornId, embalagem_descricao:emb.embDesc, qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null })
+      });
+      vincId = nl?.id;
+      if(nl) insumoFornVinculos.push(nl);
+    }
+    if(!vincId) throw new Error('Falha ao salvar vínculo');
+
+    // Salva/atualiza vinculos_nfe para auto-match futuro
+    const existVin = vinculos.find(v => (item.codigo_item_fornecedor && v.codigo_nfe===item.codigo_item_fornecedor) || norm(v.descricao_nfe)===norm(item.descricao_nfe));
+    if(!existVin) {
+      const [novo] = await api('vinculos_nfe', { method:'POST', prefer:'return=representation', body:JSON.stringify({ tenant_id:TENANT_ID, descricao_nfe:item.descricao_nfe, codigo_nfe:item.codigo_item_fornecedor||null, insumo_id:insId, fator_conversao:emb.fator }) });
+      if(novo) vinculos.push(novo);
+    } else {
+      await api(`vinculos_nfe?id=eq.${existVin.id}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ insumo_id:insId, fator_conversao:emb.fator }) });
+      Object.assign(existVin, { insumo_id:insId, fator_conversao:emb.fator });
+    }
+
+    // Atualiza nfe_itens
+    await api(`nfe_itens?id=eq.${itemId}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ vinculacao_id:vincId }) });
+
+    fecharVincularModal();
+    toast('Vínculo salvo!', 'ok');
+
+    // Recarrega itens e verifica se NF-e ficou pronta
+    await loadNfeItens(selectedNfeKey);
+    renderNfeItens();
+    renderNfeErros();
+    const updItens = await api(`nfe_itens?nfe_id=eq.${selectedNfeKey}&tenant_id=eq.${TENANT_ID}&select=vinculacao_id`).catch(()=>[]);
+    if(updItens.length > 0 && updItens.every(i => i.vinculacao_id)) {
+      await api(`nfe_recebidas?id=eq.${selectedNfeKey}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ status:'pronta' }) });
+      toast('Todos vinculados! NF-e pronta para processar.', 'ok');
+      await loadAll();
+    }
+  } catch(e) {
+    toast('Erro: ' + e.message, 'err');
+  } finally {
+    if(btn) { btn.disabled=false; btn.textContent='Salvar vínculo'; btn.onclick=salvarVincFiscal; }
+  }
 }
 
 const STATUS_DOT = { pendente:'#94a3b8', em_transito:'#3b82f6', aguard_vinculacao:'#f59e0b', pronta:'#22c55e', processada:'#16a34a', com_erro:'#dc2626', recusada:'#475569', cancelada:'#ef4444' };
@@ -730,6 +833,11 @@ function renderTable() {
     const erroIndicator = isErro
       ? `<span onclick="event.stopPropagation();selectNfe('${nfeKey}','erros')" title="Ver erros" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:700;cursor:pointer">!</span>`
       : `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor}"></span>`;
+    const acaoBtn = n.status === 'pronta'
+      ? `<button onclick="event.stopPropagation();processarNfeFiscal('${nfeKey}')" style="padding:3px 10px;border:none;border-radius:6px;background:#16a34a;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Processar</button>`
+      : n.status === 'processada'
+      ? `<span style="font-size:10px;color:#16a34a">✓ Processada</span>`
+      : '';
     return `<tr data-key="${nfeKey}" onclick="selectNfe('${nfeKey}')" style="cursor:pointer">
       <td class="c">${erroIndicator}</td>
       <td style="font-weight:500">${esc(n.nome_emitente||'—')}</td>
@@ -741,13 +849,81 @@ function renderTable() {
       <td class="r" style="font-family:'DM Mono',monospace">${brl(n.valor_titulo)}</td>
       <td style="font-size:11px;color:#64748b">${n.data_vencimento ? new Date(n.data_vencimento+'T00:00').toLocaleDateString('pt-BR') : '—'}</td>
       <td style="font-size:11px;color:#64748b">${esc(n.portador||'—')}</td>
+      <td class="c">${acaoBtn}</td>
     </tr>`;
   }).join('');
 }
 
 function filterTable() { renderTable(); }
-
 function filterItens() {}
+
+// ── PROCESSAR NF-E FISCAL ─────────────────────────────────────────
+async function processarNfeFiscal(nfeId) {
+  const nfe = entradasNfe.find(n => n.id === nfeId);
+  if(!nfe || nfe.status !== 'pronta') { toast('NF-e não está pronta para processar.', 'err'); return; }
+
+  if(!confirm(`Confirmar processamento da NF-e ${nfe.numero}?\n\nEsta ação irá atualizar o estoque e o custo médio dos insumos.`)) return;
+
+  // Carrega itens se necessário
+  if(!currentNfeItens.length || selectedNfeKey !== nfeId) {
+    await loadNfeItens(nfeId);
+  }
+
+  if(!currentNfeItens.length) { toast('Nenhum item encontrado para processar.', 'err'); return; }
+
+  const pendentes = currentNfeItens.filter(i => !i.vinculacao_id);
+  if(pendentes.length > 0) { toast(`Ainda há ${pendentes.length} item(ns) sem vínculo.`, 'err'); return; }
+
+  // Busca o fornecedor pelo CNPJ
+  let fornId = null, fornNome = nfe.nome_emitente || null;
+  const cnpjLimpo = (nfe.cnpj_emitente||'').replace(/\D/g,'');
+  if(cnpjLimpo) {
+    const fList = await api(`fornecedores?tenant_id=eq.${TENANT_ID}&select=id,nome,cnpj`).catch(()=>[]);
+    const fMatch = fList.find(f => (f.cnpj||'').replace(/\D/g,'') === cnpjLimpo);
+    if(fMatch) { fornId = fMatch.id; fornNome = fMatch.nome; }
+  }
+
+  const dataStr = nfe.data_emissao?.split('T')[0] || hoje();
+  let ok = 0;
+
+  for(const item of currentNfeItens) {
+    const vinc = insumoFornVinculos.find(v => v.id === item.vinculacao_id);
+    if(!vinc) continue;
+    const fator = vinc.qtd_por_embalagem || 1;
+    const qtdEst = parseFloat((item.quantidade * fator).toFixed(6));
+    const custoUnit = parseFloat((item.valor_unitario / fator).toFixed(6));
+    try {
+      await registrarEntrada(vinc.insumo_id, {
+        fornecedor_id:   fornId,
+        fornecedor_nome: fornNome,
+        quantidade:      qtdEst,
+        unidade_compra:  item.unidade_nfe,
+        fator_conversao: fator,
+        custo_unitario:  custoUnit,
+        tipo:            'nfe',
+        nfe_numero:      `${nfe.numero}/${nfe.serie}`,
+        observacao:      `NF-e ${nfe.numero}/${nfe.serie}`,
+        criado_em:       dataStr + 'T12:00:00.000Z',
+      }, custoUnit);
+      ok++;
+    } catch(e) { console.warn('Erro ao registrar item:', item.descricao_nfe, e.message); }
+  }
+
+  // Atualiza status da NF-e para processada
+  await api(`nfe_recebidas?id=eq.${nfeId}`, {
+    method:'PATCH', prefer:'return=minimal',
+    body: JSON.stringify({ status:'processada', processada_em: new Date().toISOString() })
+  });
+
+  // Log de auditoria
+  await api('nfe_log', {
+    method:'POST', prefer:'return=minimal',
+    body: JSON.stringify({ tenant_id:TENANT_ID, nfe_id:nfeId, acao:'processamento', descricao:`NF-e ${nfe.numero} processada — ${ok} itens, ${brl(nfe.valor_total)}` })
+  }).catch(()=>{});
+
+  toast(`NF-e ${nfe.numero} processada — ${ok} entrada(s) no estoque!`, 'ok');
+  await loadAll();
+}
 
 // ── REGISTRO NO ESTOQUE ────────────────────────────────────────────
 async function registrarEntrada(insId, dados, custoUnitEstoque) {
