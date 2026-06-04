@@ -1154,15 +1154,30 @@ async function registrarNfeNoMonitor() {
     const pendentes=nfeItens.filter((_,idx)=>!nfeAutoLinked[idx]&&!nfeSession[idx]);
     const status=pendentes.length===0?'pronta':'aguard_vinculacao';
 
-    // Cria nfe_recebidas
-    const [nfeRec]=await api('nfe_recebidas',{method:'POST',prefer:'return=representation',
-      body:JSON.stringify({
-        tenant_id:TENANT_ID, numero:pi.nNF||'0', serie:pi.serie||'1',
-        chave_acesso:pi.chaveAcesso||null, cnpj_emitente:pi.cnpjEmit||'',
-        nome_emitente:pi.emitNome||'', data_emissao:pi.dhEmi||(dataStr+'T12:00:00'),
-        valor_total:pi.vNF||0, status, fonte:'upload',
-      })
-    });
+    // Cria nfe_recebidas (upsert por chave_acesso)
+    let nfeRec;
+    try {
+      const [r]=await api('nfe_recebidas',{method:'POST',prefer:'return=representation,resolution=ignore-duplicates',
+        body:JSON.stringify({
+          tenant_id:TENANT_ID, numero:pi.nNF||'0', serie:pi.serie||'1',
+          chave_acesso:pi.chaveAcesso||null, cnpj_emitente:pi.cnpjEmit||'',
+          nome_emitente:pi.emitNome||'', data_emissao:pi.dhEmi||(dataStr+'T12:00:00'),
+          valor_total:pi.vNF||0, status, fonte:'upload',
+        })
+      });
+      nfeRec=r;
+    } catch(dupErr) {}
+
+    // Se não criou (já existia), busca o registro existente
+    if(!nfeRec && pi.chaveAcesso) {
+      const existing=await api(`nfe_recebidas?chave_acesso=eq.${pi.chaveAcesso}&tenant_id=eq.${TENANT_ID}&select=id,status`).catch(()=>[]);
+      if(existing[0]) {
+        fecharModal('m-nfe'); resetNfe();
+        toast(`NF-e ${pi.nNF} já estava registrada no monitor.`,'info',4000);
+        await loadAll(); return;
+      }
+    }
+    if(!nfeRec) throw new Error('Não foi possível registrar a NF-e.');
 
     // Cria nfe_itens com vinculacao_id dos já mapeados
     const itensBatch=nfeItens.map((it,idx)=>{
