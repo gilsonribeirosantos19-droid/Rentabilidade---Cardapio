@@ -569,7 +569,8 @@ async function loadAll() {
 
     populateSelects();
     renderTable();
-    renderItens();
+    // Se há NF-e selecionada, atualiza os detalhes
+    if(selectedNfeKey) { renderNfeItens(); renderNfeErros(); }
     document.getElementById('last-sync').textContent = 'Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   } catch(e) {
     toast('Erro ao carregar: '+e.message, 'err');
@@ -625,45 +626,35 @@ function renderNfeItens() {
     tbody.innerHTML = `<tr><td colspan="12" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>`;
     return;
   }
-  const itens = allItens.filter(i => {
-    const parts = (i.nfe_numero||'').split('/');
-    const key = parts[0]+'/'+(parts[1]||'1');
-    return i.nfe_numero === selectedNfeKey || key === selectedNfeKey || i.nfe_numero?.startsWith(selectedNfeKey.split('/')[0]);
-  });
-  const nfe = entradasNfe.find(e => e.nfe_numero?.startsWith(selectedNfeKey.split('/')[0]));
+  // Usa entradasNfe filtradas pelo número da NF-e selecionada
+  const nfeNumero = selectedNfeKey.split('/')[0];
+  const itens = entradasNfe.filter(e => e.nfe_numero?.startsWith(nfeNumero));
+  const nfe = itens[0];
   if(label) label.textContent = `NF-e ${selectedNfeKey} — ${nfe?.fornecedor_nome||''}  ·  ${itens.length} item(ns)`;
+  document.getElementById('tab-n-itens').textContent = itens.length;
 
   if(!itens.length) {
     tbody.innerHTML = `<tr><td colspan="12" class="empty">Nenhum item encontrado para esta NF-e.</td></tr>`;
     return;
   }
-  tbody.innerHTML = itens.map((item, i) => {
-    const ins = insumos.find(x => x.id === item.insumo_id);
-    const vinc = item.vinculacao;
+  tbody.innerHTML = itens.map((e, i) => {
+    const ins = insumos.find(x => x.id === e.insumo_id);
     const insumoNome = ins?.nome || '—';
-    const emb = vinc?.descricao_embalagem || '—';
-    const fator = vinc?.fator_conversao || null;
-    const unEst = vinc?.unidade_estoque?.toUpperCase() || ins?.unidade_medida?.toUpperCase() || '—';
-    const qtdEst = fator ? (item.quantidade * fator).toFixed(4) : '—';
-    const total = ((item.quantidade||0) * (item.valor_unitario||0)).toFixed(2);
-    const vinculado = !!vinc;
-    const rowStyle = vinculado ? '' : 'background:#fff5f5';
-    const detalheBtn = vinculado
-      ? `<button onclick="abrirVincularModal('${item.id}')" style="padding:2px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;font-size:11px;cursor:pointer;font-family:inherit">…</button>`
-      : `<button onclick="abrirVincularModal('${item.id}')" style="padding:2px 10px;border:none;border-radius:4px;background:#f97316;color:#fff;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">Vincular</button>`;
-    return `<tr style="${rowStyle}">
+    const unidade = e.unidade_compra || ins?.unidade_medida || '—';
+    const total = ((e.quantidade||0) * (e.custo_unitario||0));
+    return `<tr>
       <td class="c" style="color:#94a3b8">${i+1}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:11px">${esc(item.codigo_item_fornecedor||'—')}</td>
-      <td style="font-weight:${vinculado?'400':'600'};color:${vinculado?'inherit':'#dc2626'}">${esc(item.descricao_nfe)}</td>
-      <td style="color:${vinculado?'#16a34a':'#94a3b8'};font-size:11px">${vinculado?'✓ '+esc(insumoNome):'—'}</td>
-      <td style="font-size:11px;color:#64748b">${esc(emb)}</td>
-      <td class="c" style="font-size:11px">${esc(item.unidade_nfe||'—')}</td>
-      <td class="r" style="font-family:'DM Mono',monospace">${fator||'—'}</td>
-      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${fmtQtd(item.quantidade)}</td>
-      <td class="r" style="font-family:'DM Mono',monospace">${brl(item.valor_unitario)}</td>
-      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${brl(parseFloat(total))}</td>
-      <td class="r" style="font-family:'DM Mono',monospace;color:${vinculado?'#16a34a':'#94a3b8'};font-weight:600">${qtdEst} ${vinculado?unEst:''}</td>
-      <td class="c">${detalheBtn}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px">—</td>
+      <td style="font-weight:500">${esc(insumoNome)}</td>
+      <td style="color:#16a34a;font-size:11px">✓ ${esc(insumoNome)}</td>
+      <td style="font-size:11px;color:#64748b">—</td>
+      <td class="c" style="font-size:11px">${esc(unidade.toUpperCase())}</td>
+      <td class="r" style="font-family:'DM Mono',monospace">${e.fator_conversao||'1'}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${fmtQtd(e.quantidade)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace">${brl(e.custo_unitario)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${brl(total)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;color:#16a34a;font-weight:600">${fmtQtd(e.quantidade)} ${esc(unidade.toUpperCase())}</td>
+      <td class="c"><button style="padding:2px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;font-size:11px;cursor:pointer;font-family:inherit">…</button></td>
     </tr>`;
   }).join('');
 }
@@ -675,7 +666,7 @@ function renderNfeErros() {
     tbody.innerHTML = `<tr><td colspan="6" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>`;
     return;
   }
-  const itens = allItens.filter(i => {
+  const itens = entradasNfe.filter(i => {
     return (i.nfe_numero === selectedNfeKey || i.nfe_numero?.startsWith(selectedNfeKey.split('/')[0])) && !i.vinculacao_id;
   });
   if(label) label.textContent = itens.length > 0
@@ -738,7 +729,7 @@ function renderTable() {
 
   tbody.innerHTML = rows.map(g => {
     const nfeKey = `${g.numero}/${g.serie}`;
-    const nErros = allItens.filter(i => i.nfe_numero?.startsWith(g.numero) && !i.vinculacao_id).length;
+    const nErros = entradasNfe.filter(i => i.nfe_numero?.startsWith(g.numero) && !i.vinculacao_id).length;
     const erroIndicator = nErros > 0
       ? `<span onclick="event.stopPropagation();selectNfe('${nfeKey}','erros')" title="${nErros} erro(s)" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#dc2626;color:#fff;font-size:10px;font-weight:700;cursor:pointer">${nErros}</span>`
       : `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a" title="OK"></span>`;
@@ -759,44 +750,7 @@ function renderTable() {
 
 function filterTable() { renderTable(); }
 
-// ── TABELA ITENS ──────────────────────────────────────────────────
-function renderItens() {
-  const search = (document.getElementById('search-itens')?.value||'').toLowerCase().trim();
-
-  const filtered = entradasNfe.filter(e => {
-    if(!search) return true;
-    const ins = insumos.find(i=>i.id===e.insumo_id);
-    return (ins?.nome||'').toLowerCase().includes(search) ||
-           (e.fornecedor_nome||'').toLowerCase().includes(search);
-  });
-
-  document.getElementById('tab-n-itens').textContent = filtered.length;
-  document.getElementById('itens-count').textContent = `${filtered.length} iten${filtered.length!==1?'s':''}`;
-  document.getElementById('itens-count').textContent = `${filtered.length} iten${filtered.length!==1?'s':''}`;
-
-  const tbody = document.getElementById('tbody-itens');
-  if(!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty">Nenhum item encontrado.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(e => {
-    const ins = insumos.find(i=>i.id===e.insumo_id);
-    const total = (e.quantidade||0) * (e.custo_unitario||0);
-    return `<tr>
-      <td>${fmtDate(e.criado_em)}</td>
-      <td style="font-weight:500">${esc(ins?.nome||'—')}</td>
-      <td style="font-size:11px;color:#64748b">${esc(e.fornecedor_nome||'—')}</td>
-      <td class="td-mono">${esc(e.nfe_numero||'—')}</td>
-      <td class="r" style="font-family:'DM Mono',monospace">${fmtQtd(e.quantidade)}</td>
-      <td style="font-size:11px;color:#64748b">${esc(e.unidade_compra||ins?.unidade_medida||'—')}</td>
-      <td class="r" style="font-family:'DM Mono',monospace">${brl(e.custo_unitario)}</td>
-      <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(total)}</td>
-    </tr>`;
-  }).join('');
-}
-
-function filterItens() { renderItens(); }
+function filterItens() {}
 
 // ── REGISTRO NO ESTOQUE ────────────────────────────────────────────
 async function registrarEntrada(insId, dados, custoUnitEstoque) {
