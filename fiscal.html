@@ -1034,16 +1034,21 @@ function parseNfeXml(xml) {
   const nNF=doc.querySelector('nNF')?.textContent||'';
   const serie=doc.querySelector('serie')?.textContent||'';
   const emitNome=doc.querySelector('emit xNome')?.textContent?.trim()||'';
+  const cnpjEmit=(doc.querySelector('emit CNPJ')?.textContent||'').replace(/\D/g,'');
+  const chaveId=doc.querySelector('infNFe')?.getAttribute('Id')||'';
+  const chaveAcesso=chaveId.replace(/^NFe/,'');
+  const dhEmi=doc.querySelector('ide dhEmi')?.textContent||doc.querySelector('ide dEmi')?.textContent||'';
+  const vNF=parseFloat(doc.querySelector('ICMSTot vNF')?.textContent||'0');
   const itens=[];
   doc.querySelectorAll('det').forEach(det=>{
     const prod=det.querySelector('prod'); if(!prod) return;
     itens.push({
-      descricao:prod.querySelector('xProd')?.textContent?.trim()||'',
-      codigo:   prod.querySelector('cProd')?.textContent?.trim()||'',
-      unidade:  prod.querySelector('uCom')?.textContent?.trim()||'',
+      descricao: prod.querySelector('xProd')?.textContent?.trim()||'',
+      codigo:    prod.querySelector('cProd')?.textContent?.trim()||'',
+      unidade:   prod.querySelector('uCom')?.textContent?.trim()||'',
       quantidade:parseFloat(prod.querySelector('qCom')?.textContent||0),
       valorUnit: parseFloat(prod.querySelector('vUnCom')?.textContent||0),
-      nNF, serie, emitNome,
+      nNF, serie, emitNome, cnpjEmit, chaveAcesso, dhEmi, vNF,
     });
   });
   return itens;
@@ -1382,6 +1387,28 @@ async function confirmarNfe() {
           }
         } catch {}
       }
+    }
+    // Cria registro no monitor para aparecer no fiscal
+    if(ok > 0 && nfeItens.length > 0) {
+      const pi = nfeItens[0];
+      try {
+        await api('nfe_recebidas', {
+          method:'POST', prefer:'return=minimal',
+          body: JSON.stringify({
+            tenant_id:     TENANT_ID,
+            numero:        pi.nNF || '0',
+            serie:         pi.serie || '1',
+            chave_acesso:  pi.chaveAcesso || null,
+            cnpj_emitente: pi.cnpjEmit || '',
+            nome_emitente: pi.emitNome || '',
+            data_emissao:  pi.dhEmi || (dataStr+'T12:00:00'),
+            valor_total:   pi.vNF || 0,
+            status:        'processada',
+            fonte:         'upload',
+            processada_em: new Date().toISOString(),
+          })
+        });
+      } catch(e) { console.warn('nfe_recebidas:', e.message); }
     }
     toast(`${ok} entrada(s) importada(s) com sucesso!`,'ok');
     fecharModal('m-nfe'); resetNfe();
