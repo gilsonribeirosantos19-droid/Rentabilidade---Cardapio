@@ -176,16 +176,20 @@
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th>NF-e</th>
-              <th>Emissão</th>
-              <th>Fornecedor</th>
-              <th class="r">Valor Total</th>
-              <th class="c">Itens</th>
-              <th>Status</th>
+              <th class="c">Sit.</th>
+              <th>Fornecedor / Razão</th>
+              <th>DANFE</th>
+              <th class="c">Série</th>
+              <th>D. Emissão</th>
+              <th>D. Integração</th>
+              <th class="r">V. Total</th>
+              <th class="r">V. Título</th>
+              <th>D. Vencimento</th>
+              <th>Portador</th>
               <th></th>
             </tr></thead>
             <tbody id="tbody-nfe">
-              <tr><td colspan="7" class="empty">Carregando…</td></tr>
+              <tr><td colspan="11" class="empty">Carregando…</td></tr>
             </tbody>
           </table>
         </div></div>
@@ -845,7 +849,7 @@ function renderTable() {
 
   const tbody = document.getElementById('tbody-nfe');
   if(!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty">Nenhuma NF-e encontrada no período.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="empty">Nenhuma NF-e encontrada no período.</td></tr>`;
     return;
   }
 
@@ -861,31 +865,29 @@ function renderTable() {
       : n.status === 'processada'
       ? `<span style="font-size:10px;color:#16a34a">✓ Processada</span>`
       : '';
-    const statusLabels = { pendente:'Pendente', em_transito:'Em Trânsito', aguard_vinculacao:'Aguard. Vinculação', pronta:'Pronta', processada:'Processada', com_erro:'Com Erro', recusada:'Recusada', cancelada:'Cancelada' };
-    const statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;background:${dotColor}22;color:${dotColor}"><span style="width:6px;height:6px;border-radius:50%;background:${dotColor};flex-shrink:0"></span>${statusLabels[n.status]||n.status}</span>`;
-    const chave = n.chave_acesso ? n.chave_acesso.substring(0,20)+'…' : '';
-    const nPend = n._itens_pendentes || 0;
-    const nTot  = n._itens_total;
-    const itensCell = nTot != null
-      ? `<div style="text-align:center;font-weight:600">${nTot}</div>${nPend>0?`<div style="font-size:10px;color:#dc2626;text-align:center">${nPend} pendente${nPend>1?'s':''}</div>`:(n.status==='pronta'?`<div style="font-size:10px;color:#16a34a;text-align:center">todos vinculados</div>`:'')}`
-      : `<span style="color:#94a3b8">—</span>`;
+    // Dot de situação
+    const dot = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor}" title="${n.status}"></span>`;
+    const sitIndicator = isErro
+      ? `<span onclick="event.stopPropagation();openNfeErros('${nfeKey}')" style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:700;cursor:pointer" title="Ver erros">!</span>`
+      : dot;
 
     return `<tr data-key="${nfeKey}" onclick="selectNfe('${nfeKey}')" ondblclick="openNfeItens('${nfeKey}')" style="cursor:pointer">
-      <td>
-        <div style="font-weight:600">NF-e ${esc(n.numero||'—')}</div>
-        <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${chave}</div>
-      </td>
-      <td>
-        <div>${fmtDateShort(n.data_emissao)}</div>
-        <div style="font-size:10px;color:#94a3b8">${n.data_emissao ? new Date(n.data_emissao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
-      </td>
+      <td class="c">${sitIndicator}</td>
       <td>
         <div style="font-weight:500">${esc(n.nome_emitente||'—')}</div>
         <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${n.cnpj_emitente||''}</div>
       </td>
+      <td style="font-family:'DM Mono',monospace;font-weight:600">${esc(n.numero||'—')}</td>
+      <td class="c" style="font-family:'DM Mono',monospace;color:#94a3b8">${n.serie||'1'}</td>
+      <td>
+        <div style="font-size:12px">${fmtDateShort(n.data_emissao)}</div>
+        <div style="font-size:10px;color:#94a3b8">${n.data_emissao ? new Date(n.data_emissao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
+      </td>
+      <td style="font-size:12px;color:#64748b">${fmtDateShort(n.data_integracao)}</td>
       <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(n.valor_total)}</td>
-      <td class="c">${itensCell}</td>
-      <td>${statusBadge}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;color:#64748b">${brl(n.valor_titulo)}</td>
+      <td style="font-size:11px;color:#64748b">${n.data_vencimento ? new Date(n.data_vencimento+'T00:00').toLocaleDateString('pt-BR') : '—'}</td>
+      <td style="font-size:11px;color:#64748b">${esc(n.portador||'—')}</td>
       <td class="c">${acaoBtn}</td>
     </tr>`;
   }).join('');
