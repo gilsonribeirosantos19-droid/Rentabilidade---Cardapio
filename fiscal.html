@@ -136,8 +136,8 @@
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span style="font-size:11px;font-weight:700;color:#64748b;white-space:nowrap">Situação:</span>
             <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-pendente" checked onchange="renderTable()" style="accent-color:#f59e0b"><span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>Pendente</label>
-            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-processada" checked onchange="renderTable()" style="accent-color:#16a34a"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block"></span>Processada</label>
             <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-erro" checked onchange="renderTable()" style="accent-color:#dc2626"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block"></span>Com Erro</label>
+            <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-processada" onchange="renderTable()" style="accent-color:#16a34a"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block"></span>Processada</label>
             <label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#334155;cursor:pointer;user-select:none"><input type="checkbox" id="fil-s-cancelada" onchange="renderTable()" style="accent-color:#ef4444"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>Cancelada</label>
           </div>
           <div style="width:1px;height:24px;background:#e2e8f0;flex-shrink:0"></div>
@@ -827,8 +827,25 @@ async function salvarVincFiscal() {
   }
 }
 
-const STATUS_DOT = { pendente:'#94a3b8', em_transito:'#3b82f6', aguard_vinculacao:'#f59e0b', pronta:'#22c55e', processada:'#16a34a', com_erro:'#dc2626', recusada:'#475569', cancelada:'#ef4444' };
-function statusToChip(s) { if(s==='processada') return 'processada'; if(s==='com_erro') return 'erro'; if(s==='cancelada') return 'cancelada'; return 'pendente'; }
+// Cores: amarelo=pendente, vermelho=erro, verde=processada
+const STATUS_DOT = {
+  pendente:          '#f59e0b', // amarelo — chegou, aguardando
+  em_transito:       '#f59e0b', // amarelo — em trânsito
+  aguard_vinculacao: '#dc2626', // vermelho — tem itens sem vínculo
+  pronta:            '#f59e0b', // amarelo — vinculada, aguardando processar
+  processada:        '#16a34a', // verde — processada
+  com_erro:          '#dc2626', // vermelho — erro
+  recusada:          '#475569', // cinza
+  cancelada:         '#ef4444', // vermelho claro
+};
+function statusToChip(s) {
+  if(s==='processada')        return 'processada';
+  if(s==='com_erro')          return 'erro';
+  if(s==='aguard_vinculacao') return 'erro';     // tem itens sem vínculo = erro
+  if(s==='cancelada')         return 'cancelada';
+  if(s==='recusada')          return 'cancelada';
+  return 'pendente'; // pendente, em_transito, pronta
+}
 
 // ── TABELA NF-E ───────────────────────────────────────────────────
 function renderTable() {
