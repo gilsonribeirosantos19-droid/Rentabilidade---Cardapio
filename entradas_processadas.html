@@ -12,46 +12,57 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg3);color:var(--text1);min-height:100vh;display:flex;font-size:13px}
   .shell{display:flex;width:100%;min-height:100vh}
-  .sidebar{width:220px;min-height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
+  .sidebar{width:220px;min-height:100vh;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
   .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
   .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
   .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
   .main{flex:1;display:flex;flex-direction:column;min-width:0}
   .topbar{border-bottom:1px solid #e2e8f0;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
+  .topbar-left{display:flex;flex-direction:column}
   .topbar-title{font-size:20px;font-weight:700;color:#0f172a;line-height:1}
-  .topbar-breadcrumb{font-size:12px;color:#94a3b8;margin-top:3px}
-  .topbar-breadcrumb span{color:#f97316;font-weight:500}
+  .topbar-sub{font-size:12px;color:#94a3b8;margin-top:3px}
   .content{padding:20px 24px;flex:1}
   .field{background:#f8fafc;border:1.5px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;font-size:13px;outline:none;font-family:inherit;transition:all .18s}
   .field:focus{border-color:#f97316;background:#fff}
   .field-sm{padding:6px 10px;font-size:12px}
   .btn{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
   .btn:hover{background:#f8fafc}
+  .btn-primary{background:#f97316;border-color:#f97316;color:#fff}
+  .btn-primary:hover{background:#ea6c00;border-color:#ea6c00}
   .btn-ghost{background:transparent;border:none;color:#64748b;padding:5px 8px}
   .btn-ghost:hover{background:#f1f5f9}
   .tbl-wrap{background:var(--bg2);border:1px solid var(--border1);border-radius:var(--radius);overflow:clip;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-  .tbl-scroll{overflow-x:auto;max-height:calc(100vh - 220px);overflow-y:auto}
+  .tbl-scroll{overflow-x:auto}
   table.tbl{width:100%;border-collapse:collapse;font-size:12px}
   table.tbl thead tr{background:#0f2d5c}
   table.tbl thead th{position:sticky;top:0;z-index:5;background:#0f2d5c}
-  table.tbl th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  table.tbl th{padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:pointer;user-select:none}
+  table.tbl th:hover{color:#fff}
   table.tbl th.r,table.tbl td.r{text-align:right}
   table.tbl th.c,table.tbl td.c{text-align:center}
-  table.tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-  table.tbl tbody tr{cursor:pointer;transition:background .1s}
-  table.tbl tbody tr:hover{background:#fafbfc}
+  table.tbl td{padding:9px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  table.tbl tbody tr{transition:background .1s}
+  table.tbl tbody tr:hover{background:#f8fafc}
   table.tbl tbody tr:last-child td{border-bottom:none}
-  .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
-  .badge-proc{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;background:#f0fdf4;color:#166534}
+  .empty{padding:40px;text-align:center;color:#94a3b8;font-size:13px}
+  .badge-proc{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;background:#f0fdf4;color:#166534}
+  .summary-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:12px;color:#64748b}
+  .summary-total{font-weight:700;color:#16a34a;font-family:'DM Mono',monospace;font-size:13px}
+  .pag-row{display:flex;align-items:center;justify-content:space-between;padding:12px 4px;font-size:12px;color:#94a3b8;margin-top:8px}
+  .pag-btns{display:flex;gap:4px;align-items:center}
+  .pag-btn{min-width:32px;height:32px;padding:0 6px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+  .pag-btn:hover{border-color:#f97316;color:#f97316}
+  .pag-btn.active{background:#0f2d5c;color:#fff;border-color:#0f2d5c;font-weight:700}
+  .pag-btn:disabled{opacity:.4;cursor:not-allowed}
   #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
   .toast-item{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .2s ease}
   .toast-ok{background:#16a34a}.toast-err{background:#dc2626}
   @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  .kpi-row{display:flex;gap:12px;margin-bottom:16px}
-  .kpi{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 18px;flex:1}
-  .kpi-label{font-size:11px;color:#94a3b8;margin-bottom:4px}
-  .kpi-value{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a}
-  .kpi-value.green{color:#16a34a}
+  .action-menu{position:relative;display:inline-block}
+  .action-btn{background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:4px;color:#64748b;font-size:16px}
+  .action-btn:hover{background:#f1f5f9;color:#0f172a}
+  .nfe-link{color:#2563eb;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer;text-decoration:none}
+  .nfe-link:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -60,9 +71,9 @@
 
   <div class="main">
     <div class="topbar">
-      <div>
+      <div class="topbar-left">
         <div class="topbar-title">Entradas Processadas</div>
-        <div class="topbar-breadcrumb">Fiscal › <span>Histórico de NF-e processadas</span></div>
+        <div class="topbar-sub">Notas fiscais processadas</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span id="last-sync" style="font-size:11px;color:#94a3b8"></span>
@@ -70,58 +81,95 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           Atualizar
         </button>
+        <button class="btn btn-primary" onclick="window.location.href='fiscal.html'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Entrada por NF-e XML
+        </button>
       </div>
     </div>
 
     <div class="content">
 
       <!-- FILTROS -->
-      <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="font-size:12px;color:#64748b;font-weight:500">Fornecedor:</span>
+        <select class="field field-sm" id="fil-fornecedor" onchange="applyFilters()" style="min-width:150px">
+          <option value="">Todos</option>
+        </select>
+
+        <span style="font-size:12px;color:#64748b;font-weight:500">Nº NF-e:</span>
         <div style="position:relative">
-          <input class="field field-sm" id="search-forn" placeholder="Fornecedor…" oninput="renderTable()" style="padding-left:30px;min-width:180px">
-          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="field field-sm" id="fil-numero" placeholder="Digite o nº da NF-e" oninput="applyFilters()" style="width:160px;padding-left:28px">
+          <svg style="position:absolute;left:8px;top:50%;transform:translateY(-50%);pointer-events:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
-        <input class="field field-sm" id="search-numero" placeholder="Nº NF-e…" oninput="renderTable()" style="width:100px">
-        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-          <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:130px">
-            <option value="todos" selected>Todos</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-            <option value="periodo">Período</option>
-          </select>
-          <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
-            <span style="color:#94a3b8">–</span>
-            <input type="date" id="fil-ate" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
-          </div>
+
+        <span style="font-size:12px;color:#64748b;font-weight:500">Loja:</span>
+        <select class="field field-sm" id="fil-loja" onchange="applyFilters()" style="min-width:120px">
+          <option value="">Todas</option>
+        </select>
+
+        <span style="font-size:12px;color:#64748b;font-weight:500">Período:</span>
+        <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:130px">
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+          <option value="todos">Todos</option>
+          <option value="periodo">Período</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+          <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
+          <span style="color:#94a3b8">até</span>
+          <input type="date" id="fil-ate" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
         </div>
+
+        <button class="btn btn-ghost" onclick="limparFiltros()" style="gap:5px;font-size:12px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Limpar filtros
+        </button>
+        <button class="btn btn-ghost" onclick="exportarExcel()" style="gap:5px;font-size:12px;margin-left:4px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Exportar Excel
+        </button>
       </div>
 
-      <!-- KPIs -->
-      <div class="kpi-row">
-        <div class="kpi"><div class="kpi-label">NF-e processadas</div><div class="kpi-value" id="kpi-total">—</div></div>
-        <div class="kpi"><div class="kpi-label">Total de itens</div><div class="kpi-value" id="kpi-itens">—</div></div>
-        <div class="kpi"><div class="kpi-label">Última processada</div><div class="kpi-value" style="font-size:13px" id="kpi-ultima">—</div></div>
-        <div class="kpi"><div class="kpi-label">Valor total</div><div class="kpi-value green" id="kpi-valor">—</div></div>
+      <!-- RESUMO -->
+      <div class="summary-row">
+        <span id="summary-count" style="color:#64748b;font-size:12px">—</span>
+        <span>Valor total filtrado: <span class="summary-total" id="summary-total">—</span></span>
       </div>
 
       <!-- TABELA -->
       <div class="tbl-wrap"><div class="tbl-scroll">
         <table class="tbl">
           <thead><tr>
-            <th>NF-e</th>
-            <th>D. Emissão</th>
-            <th>D. Processamento</th>
-            <th>Fornecedor</th>
-            <th class="r">V. Total</th>
-            <th class="c">Status</th>
+            <th onclick="sortBy('numero')">NF-E <span id="sort-numero"></span></th>
+            <th class="c">SÉRIE</th>
+            <th onclick="sortBy('data_emissao')">D. EMISSÃO <span id="sort-data_emissao"></span></th>
+            <th onclick="sortBy('processada_em')">D. PROCESSAMENTO <span id="sort-processada_em"></span></th>
+            <th>FORNECEDOR / RAZÃO SOCIAL</th>
+            <th class="r" onclick="sortBy('valor_total')">V. TOTAL <span id="sort-valor_total"></span></th>
+            <th class="c">ITENS</th>
+            <th class="c">STATUS</th>
+            <th class="c">AÇÃO</th>
           </tr></thead>
           <tbody id="tbody-main">
-            <tr><td colspan="6" class="empty">Carregando…</td></tr>
+            <tr><td colspan="9" class="empty">Carregando…</td></tr>
           </tbody>
         </table>
       </div></div>
+
+      <!-- PAGINAÇÃO -->
+      <div class="pag-row">
+        <span id="pag-info" style="font-size:12px;color:#64748b">—</span>
+        <div class="pag-btns" id="pag-btns"></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b">
+          Itens por página:
+          <select class="field field-sm" id="pag-size" onchange="changePagSize()" style="width:70px;padding:4px 8px">
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -139,7 +187,13 @@ const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
 const api = createApi(SUPA_URL, SUPA_KEY);
 
-let allData = [];
+let allData      = [];
+let filteredData = [];
+let currentPage  = 1;
+let pageSize     = 20;
+let sortField    = 'processada_em';
+let sortAsc      = false;
+let itensCounts  = {};
 
 function toast(msg, type = 'ok') {
   const el = document.createElement('div');
@@ -151,31 +205,34 @@ function toast(msg, type = 'ok') {
 
 function brl(v) { if(v==null||v==='') return '—'; return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function fmtDate(iso) { if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
-function fmtDateShort(iso) { if(!iso) return '—'; return new Date(iso).toLocaleDateString('pt-BR'); }
+function fmtDate(iso) {
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return `<div>${d.toLocaleDateString('pt-BR')}</div><div style="font-size:10px;color:#94a3b8">${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+}
 
 function setPeriodoRange(tipo, deId, ateId, fn) {
-  const d=new Date(); let de='', ate='';
-  if(tipo==='todos') {
-    const elD=document.getElementById(deId); if(elD) elD.value='';
-    const elA=document.getElementById(ateId); if(elA) elA.value='';
+  const d = new Date(); let de = '', ate = '';
+  if(tipo === 'mes_atual') {
+    de  = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    ate = d.toISOString().split('T')[0];
+  } else if(tipo === 'mes_anterior') {
+    const p = new Date(d.getFullYear(), d.getMonth()-1, 1);
+    const l = new Date(d.getFullYear(), d.getMonth(), 0);
+    de  = `${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;
+    ate = `${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;
+  } else {
+    const elD = document.getElementById(deId); if(elD) elD.value = '';
+    const elA = document.getElementById(ateId); if(elA) elA.value = '';
     if(fn) fn(); return;
-  } else if(tipo==='mes_atual'){
-    de=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
-    ate=d.toISOString().split('T')[0];
-  } else if(tipo==='mes_anterior'){
-    const p=new Date(d.getFullYear(),d.getMonth()-1,1);
-    const l=new Date(d.getFullYear(),d.getMonth(),0);
-    de=`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;
-    ate=`${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;
-  } else { return; }
-  const elD=document.getElementById(deId); if(elD) elD.value=de;
-  const elA=document.getElementById(ateId); if(elA) elA.value=ate;
+  }
+  const elD = document.getElementById(deId); if(elD) elD.value = de;
+  const elA = document.getElementById(ateId); if(elA) elA.value = ate;
   if(fn) fn();
 }
 
 async function loadAll() {
-  const periodo = document.getElementById('fil-periodo')?.value || 'todos';
+  const periodo = document.getElementById('fil-periodo')?.value || 'mes_atual';
   const de  = document.getElementById('fil-de')?.value;
   const ate = document.getElementById('fil-ate')?.value;
   let dateFilter = '';
@@ -185,64 +242,217 @@ async function loadAll() {
   }
 
   try {
-    const data = await api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&status=eq.processada&order=processada_em.desc${dateFilter}&select=*`);
-    allData = data || [];
-    renderKpis();
-    renderTable();
+    const [nfeData, itensData] = await Promise.all([
+      api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&status=eq.processada&order=processada_em.desc${dateFilter}&select=*`),
+      api(`nfe_itens?tenant_id=eq.${TENANT_ID}&select=nfe_id`).catch(()=>[]),
+    ]);
+
+    allData = nfeData || [];
+
+    // Conta itens por NF-e
+    itensCounts = {};
+    (itensData||[]).forEach(i => { itensCounts[i.nfe_id] = (itensCounts[i.nfe_id]||0)+1; });
+
+    // Popula selects
+    const fornMap = {};
+    allData.forEach(n => { if(n.cnpj_emitente && n.nome_emitente) fornMap[n.cnpj_emitente] = n.nome_emitente; });
+    const selForn = document.getElementById('fil-fornecedor');
+    const prevForn = selForn.value;
+    selForn.innerHTML = '<option value="">Todos</option>' +
+      Object.entries(fornMap).map(([c,n]) => `<option value="${c}">${esc(n)}</option>`).join('');
+    selForn.value = prevForn;
+
+    currentPage = 1;
+    applyFilters();
     document.getElementById('last-sync').textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   } catch(e) {
     toast('Erro ao carregar: ' + e.message, 'err');
   }
 }
 
-function renderKpis() {
-  const total = allData.reduce((s,n) => s + (Number(n.valor_total)||0), 0);
-  document.getElementById('kpi-total').textContent  = allData.length;
-  document.getElementById('kpi-itens').textContent  = '—';
-  document.getElementById('kpi-ultima').textContent = allData[0] ? fmtDateShort(allData[0].processada_em) : '—';
-  document.getElementById('kpi-valor').textContent  = brl(total);
-}
+function applyFilters() {
+  const filForn   = document.getElementById('fil-fornecedor')?.value || '';
+  const filNumero = (document.getElementById('fil-numero')?.value || '').replace(/\D/g,'');
 
-function renderTable() {
-  const searchForn   = (document.getElementById('search-forn')?.value||'').toLowerCase();
-  const searchNumero = (document.getElementById('search-numero')?.value||'').replace(/\D/g,'');
-
-  const filtered = allData.filter(n => {
-    if(searchForn   && !(n.nome_emitente||'').toLowerCase().includes(searchForn)) return false;
-    if(searchNumero && !(n.numero||'').replace(/\D/g,'').includes(searchNumero)) return false;
+  filteredData = allData.filter(n => {
+    if(filForn   && n.cnpj_emitente !== filForn) return false;
+    if(filNumero && !(n.numero||'').replace(/\D/g,'').includes(filNumero)) return false;
     return true;
   });
 
+  // Ordenação
+  filteredData.sort((a, b) => {
+    let va = a[sortField]||'', vb = b[sortField]||'';
+    if(sortField === 'valor_total') { va = Number(va)||0; vb = Number(vb)||0; }
+    if(va < vb) return sortAsc ? -1 : 1;
+    if(va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  // Resumo
+  const total = filteredData.reduce((s,n) => s + (Number(n.valor_total)||0), 0);
+  document.getElementById('summary-count').textContent = `${filteredData.length} registro${filteredData.length!==1?'s':''} encontrado${filteredData.length!==1?'s':''}`;
+  document.getElementById('summary-total').textContent = brl(total);
+
+  currentPage = 1;
+  renderTable();
+  renderPaginacao();
+}
+
+function sortBy(field) {
+  if(sortField === field) sortAsc = !sortAsc; else { sortField = field; sortAsc = false; }
+  ['numero','data_emissao','processada_em','valor_total'].forEach(f => {
+    const el = document.getElementById('sort-'+f); if(el) el.textContent = '';
+  });
+  const el = document.getElementById('sort-'+field);
+  if(el) el.textContent = sortAsc ? ' ↑' : ' ↓';
+  applyFilters();
+}
+
+function renderTable() {
+  const start = (currentPage-1)*pageSize;
+  const page  = filteredData.slice(start, start+pageSize);
   const tbody = document.getElementById('tbody-main');
-  if(!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty">Nenhuma NF-e processada encontrada.</td></tr>`;
+
+  if(!page.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Nenhuma NF-e processada encontrada.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(n => `<tr>
-    <td>
-      <div style="font-weight:600">${esc(n.numero||'—')}</div>
-      <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${(n.chave_acesso||'').substring(0,20)}${n.chave_acesso?'…':''}</div>
-    </td>
-    <td>
-      <div>${fmtDateShort(n.data_emissao)}</div>
-      <div style="font-size:10px;color:#94a3b8">${n.serie||'1'}</div>
-    </td>
-    <td style="font-size:12px">${fmtDate(n.processada_em)}</td>
-    <td>
-      <div style="font-weight:500">${esc(n.nome_emitente||'—')}</div>
-      <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${n.cnpj_emitente||''}</div>
-    </td>
-    <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(n.valor_total)}</td>
-    <td class="c">
-      <span class="badge-proc">
-        <span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span>
-        Processada
-      </span>
-    </td>
-  </tr>`).join('');
+  tbody.innerHTML = page.map(n => {
+    const itens = itensCounts[n.id] || '—';
+    const chave = (n.chave_acesso||'').substring(0,20) + (n.chave_acesso?'…':'');
+    return `<tr>
+      <td>
+        <span class="nfe-link" title="${esc(n.chave_acesso||'')}">${esc(n.numero||'—')}</span>
+        <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${chave}</div>
+      </td>
+      <td class="c" style="color:#94a3b8;font-family:'DM Mono',monospace">${n.serie||'1'}</td>
+      <td>${fmtDate(n.data_emissao)}</td>
+      <td>${fmtDate(n.processada_em)}</td>
+      <td>
+        <div style="font-weight:500">${esc(n.nome_emitente||'—')}</div>
+        <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${n.cnpj_emitente||''}</div>
+      </td>
+      <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(n.valor_total)}</td>
+      <td class="c" style="font-weight:600">${itens}</td>
+      <td class="c"><span class="badge-proc"><span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span>Processada</span></td>
+      <td class="c">
+        <button class="action-btn" onclick="abrirMenu(event,'${n.id}','${esc(n.numero||'')}')">⋮</button>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
+function renderPaginacao() {
+  const total  = filteredData.length;
+  const pages  = Math.ceil(total/pageSize);
+  const start  = (currentPage-1)*pageSize+1;
+  const end    = Math.min(currentPage*pageSize, total);
+
+  document.getElementById('pag-info').textContent =
+    total > 0 ? `Mostrando ${start} a ${end} de ${total} registros` : 'Nenhum registro';
+
+  const btns = document.getElementById('pag-btns');
+  if(pages <= 1) { btns.innerHTML = ''; return; }
+
+  let html = `<button class="pag-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+
+  const range = [];
+  if(pages <= 7) {
+    for(let i=1;i<=pages;i++) range.push(i);
+  } else {
+    range.push(1);
+    if(currentPage > 3) range.push('…');
+    for(let i=Math.max(2,currentPage-1);i<=Math.min(pages-1,currentPage+1);i++) range.push(i);
+    if(currentPage < pages-2) range.push('…');
+    range.push(pages);
+  }
+
+  range.forEach(p => {
+    if(p==='…') html += `<span style="padding:0 4px;color:#94a3b8">…</span>`;
+    else html += `<button class="pag-btn${p===currentPage?' active':''}" onclick="goPage(${p})">${p}</button>`;
+  });
+
+  html += `<button class="pag-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`;
+  btns.innerHTML = html;
+}
+
+function goPage(p) {
+  const pages = Math.ceil(filteredData.length/pageSize);
+  if(p<1||p>pages) return;
+  currentPage = p;
+  renderTable();
+  renderPaginacao();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function changePagSize() {
+  pageSize = parseInt(document.getElementById('pag-size').value)||20;
+  currentPage = 1;
+  renderTable();
+  renderPaginacao();
+}
+
+function limparFiltros() {
+  document.getElementById('fil-fornecedor').value = '';
+  document.getElementById('fil-numero').value = '';
+  document.getElementById('fil-loja').value = '';
+  document.getElementById('fil-periodo').value = 'mes_atual';
+  setPeriodoRange('mes_atual','fil-de','fil-ate', null);
+  loadAll();
+}
+
+function abrirMenu(e, nfeId, numero) {
+  e.stopPropagation();
+  // Remove menu existente
+  document.querySelectorAll('.floating-menu').forEach(m => m.remove());
+  const menu = document.createElement('div');
+  menu.className = 'floating-menu';
+  menu.style.cssText = `position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1000;min-width:160px;padding:4px 0`;
+  menu.innerHTML = `
+    <div style="padding:8px 14px;font-size:11px;color:#94a3b8;border-bottom:1px solid #f1f5f9">NF-e ${numero}</div>
+    <button onclick="verDetalhes('${nfeId}')" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:none;font-size:13px;cursor:pointer;color:#0f172a;font-family:inherit">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Ver detalhes
+    </button>`;
+  const rect = e.currentTarget.getBoundingClientRect();
+  menu.style.top = (rect.bottom+4)+'px';
+  menu.style.left = (rect.left-140)+'px';
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',()=>menu.remove(),{once:true}),10);
+}
+
+function verDetalhes(nfeId) {
+  const nfe = allData.find(n => n.id === nfeId);
+  if(!nfe) return;
+  alert(`NF-e: ${nfe.numero}/${nfe.serie}\nFornecedor: ${nfe.nome_emitente}\nChave: ${nfe.chave_acesso||'—'}\nValor: ${brl(nfe.valor_total)}\nProcessada em: ${new Date(nfe.processada_em).toLocaleString('pt-BR')}`);
+}
+
+function exportarExcel() {
+  if(!filteredData.length) { toast('Nenhum dado para exportar.', 'err'); return; }
+  const headers = ['NF-e','Série','D. Emissão','D. Processamento','Fornecedor','CNPJ','V. Total','Itens'];
+  const rows = filteredData.map(n => [
+    n.numero||'',
+    n.serie||'1',
+    n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('pt-BR') : '',
+    n.processada_em ? new Date(n.processada_em).toLocaleDateString('pt-BR') : '',
+    n.nome_emitente||'',
+    n.cnpj_emitente||'',
+    (n.valor_total||0).toFixed(2).replace('.',','),
+    itensCounts[n.id]||0,
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `entradas_processadas_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  toast('Exportação concluída!', 'ok');
+}
+
+// Init
+setPeriodoRange('mes_atual','fil-de','fil-ate',null);
 loadAll();
 </script>
 </body>
