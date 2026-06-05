@@ -43,13 +43,13 @@
   .topbar-title{font-size:15px;font-weight:600;flex:1}
   .content{padding:24px;flex:1}
 
-  .tabs{display:flex;gap:6px;margin-bottom:24px;position:sticky;top:40px;z-index:50;background:#f8fafc;padding:10px 12px;border-radius:0;border-bottom:1px solid #e2e8f0}
-  .tab-btn{padding:7px 18px;font-size:13px;font-weight:500;color:#ffffff;cursor:pointer;
-    border:none;background:#0f2d5c;border-radius:20px;margin-bottom:0;
-    transition:all .2s;font-family:inherit;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.12)}
-  .tab-btn:hover{background:#1a3f7a;box-shadow:0 2px 8px rgba(15,45,92,.25)}
-  .tab-btn.active{color:#fff;background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:600}
-  .tab-pane{display:none}.tab-pane.active{display:block}
+  .tabs{display:flex !important;gap:6px !important;margin-bottom:24px !important;position:sticky !important;top:40px !important;z-index:50 !important;background:#f8fafc !important;padding:10px 12px !important;border-radius:0 !important;border-bottom:1px solid #e2e8f0 !important}
+  .tab-btn{padding:7px 18px !important;font-size:13px !important;font-weight:500 !important;color:#ffffff !important;cursor:pointer !important;
+    border:none !important;background:#0f2d5c !important;border-radius:20px !important;margin-bottom:0 !important;
+    transition:all .2s !important;font-family:inherit !important;white-space:nowrap !important;box-shadow:0 1px 4px rgba(0,0,0,.12) !important;display:inline-flex !important;align-items:center !important;gap:6px !important;border-bottom:none !important}
+  .tab-btn:hover{background:#1a3f7a !important;box-shadow:0 2px 8px rgba(15,45,92,.25) !important;color:#fff !important}
+  .tab-btn.active{color:#fff !important;background:#f97316 !important;box-shadow:0 2px 8px rgba(249,115,22,.35) !important;font-weight:600 !important;border-bottom-color:transparent !important}
+  .tab-pane{display:none !important}.tab-pane.active{display:block !important}
 
   .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;
     border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
@@ -699,7 +699,13 @@ function renderSolTabela() {
       <td style="text-align:center;font-weight:500">${s._itemCount||'—'}</td>
       <td style="color:var(--text3);font-size:12px">${esc(s.observacao||'—')}</td>
       <td><span class="badge ${badgeMap[s.status]||'b-solicitado'}">${labelMap[s.status]||s.status}</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="verSolicitacao('${s.id}')">Ver itens</button></td>
+      <td style="display:flex;align-items:center;gap:6px">
+        <button onclick="verSolicitacao('${s.id}')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#2563eb;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Ver itens
+        </button>
+        <button onclick="abrirMenuSol(event,'${s.id}')" style="padding:4px 6px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-size:16px;line-height:1;cursor:pointer" title="Mais opções">⋮</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -714,6 +720,19 @@ function renderSolTabela() {
     html += `<button class="pag-btn" onclick="_solPage=Math.min(${pages},_solPage+1);renderSolTabela()" ${_solPage===pages?'disabled':''}>›</button>`;
     pag.innerHTML = html;
   }
+}
+
+function abrirMenuSol(e, id) {
+  e.stopPropagation();
+  document.querySelectorAll('.floating-menu').forEach(m=>m.remove());
+  const menu=document.createElement('div');
+  menu.className='floating-menu';
+  menu.style.cssText='position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1000;min-width:150px;padding:4px 0';
+  menu.innerHTML=`<button onclick="verSolicitacao('${id}')" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:none;font-size:13px;cursor:pointer;color:#0f172a;font-family:inherit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Ver itens</button>`;
+  const rect=e.currentTarget.getBoundingClientRect();
+  menu.style.top=(rect.bottom+4)+'px';menu.style.left=(rect.left-120)+'px';
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',()=>menu.remove(),{once:true}),10);
 }
 
 async function verSolicitacao(id) {
