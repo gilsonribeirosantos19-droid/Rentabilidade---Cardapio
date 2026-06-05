@@ -1402,7 +1402,7 @@ async function abrirModalUsuario() {
   document.getElementById('modal-usuario').classList.add('open');
 }
 
-function editarUsuario(id) {
+async function editarUsuario(id) {
   const u = _usuarios.find(x => x.id === id);
   if (!u) return;
   _editUserId = id;
@@ -1413,6 +1413,14 @@ function editarUsuario(id) {
   document.getElementById('u-role').value = u.role || 'operador';
   document.getElementById('u-loja-wrap').style.display = u.role === 'gerente' ? '' : 'none';
   document.getElementById('btn-usuario').textContent = 'Salvar alterações';
+  // Carrega lojas e pré-seleciona a loja atual do usuário
+  try {
+    const lojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
+    const sel = document.getElementById('u-loja');
+    sel.innerHTML = '<option value="">Selecione a loja...</option>' +
+      lojas.map(l => `<option value="${l.id}">${l.nome}</option>`).join('');
+    if (u.loja_id) sel.value = u.loja_id;
+  } catch {}
   document.getElementById('modal-usuario').classList.add('open');
 }
 

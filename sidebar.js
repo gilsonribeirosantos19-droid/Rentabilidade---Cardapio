@@ -58,7 +58,8 @@
     {
       id: 'fiscal', label: 'Fiscal',
       items: [
-        { href: 'fiscal.html', label: 'Monitor NF-e', icon: I.nfe },
+        { href: 'fiscal.html',              label: 'Monitor NF-e',        icon: I.nfe },
+        { href: 'entradas_processadas.html', label: 'Entradas Processadas', icon: I.clipboard },
       ]
     },
     {
@@ -103,7 +104,8 @@
     'fichas_tecnicas.html': 'fichas_tecnicas',
     'fornecedores.html':    'fornecedores',
     'compras.html':         'compras',
-    'fiscal.html':          'fiscal',
+    'fiscal.html':               'fiscal',
+    'entradas_processadas.html': 'fiscal',
     'relatorios.html':      'relatorios',
     'cmv.html':             'cmv',
     'rendimento.html':      'rendimento',

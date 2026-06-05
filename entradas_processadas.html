@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="design-system.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entradas Processadas · Aiko</title>
+<style>
+  :root{
+    --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
+    --border2:#e2e8f0;
+    --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
+    --radius:10px;--radius-lg:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+  .sidebar{width:220px;min-height:100vh;background:#fff;border-right:1px solid #e2e8f0;
+    display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
+  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:44px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;
+    padding:0 24px;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
+  .topbar-title{font-size:15px;font-weight:700;color:#0f172a;line-height:1}
+  .topbar-sub{font-size:11px;color:#94a3b8}
+  .content{padding:20px 24px;flex:1}
+  .field{background:#f8fafc;border:1.5px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;font-size:13px;outline:none;font-family:inherit;transition:all .18s}
+  .field:focus{border-color:#f97316;background:#fff}
+  .field-sm{padding:6px 10px;font-size:12px}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .btn-primary{background:#f97316;color:#fff}.btn-primary:hover{background:#ea6c00}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{border-color:var(--text2);color:var(--text1)}
+  .btn-sm{padding:5px 12px;font-size:12px}
+  /* TAB HEADER */
+  .tab-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .tab-header-left{}
+  .tab-title{font-size:13px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:.04em}
+  .tab-sub{font-size:12px;color:#94a3b8;margin-top:3px}
+  .tab-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  /* TABLE */
+  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .tbl-scroll{overflow-x:auto}
+  .tbl{width:100%;border-collapse:collapse;font-size:12px}
+  .tbl thead tr{background:#0f2d5c}
+  .tbl th{padding:9px 14px;text-align:left;font-size:11px;font-weight:600;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:pointer;user-select:none}
+  .tbl th:hover{color:#fff}
+  .tbl th.r,.tbl td.r{text-align:right}
+  .tbl th.c,.tbl td.c{text-align:center}
+  .tbl td{padding:9px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
+  .tbl tbody tr:last-child td{border-bottom:none}
+  .tbl tbody tr:hover{background:var(--bg3)}
+  .mono{font-family:'DM Mono',monospace}
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .b-proc{background:#dcfce7;color:#16a34a}
+  /* SUMMARY */
+  .summary-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:12px;color:#64748b}
+  .summary-val{font-weight:700;color:#16a34a;font-family:'DM Mono',monospace;font-size:13px}
+  /* PAGINATION */
+  .pag-row{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;font-size:12px;color:#94a3b8}
+  .pag-btns{display:flex;gap:4px;align-items:center}
+  .pag-btn{min-width:30px;height:30px;padding:0 6px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+  .pag-btn:hover{border-color:#f97316;color:#f97316}
+  .pag-btn.active{background:#0f2d5c;color:#fff;border-color:#0f2d5c;font-weight:700}
+  .pag-btn:disabled{opacity:.4;cursor:not-allowed}
+  /* MISC */
+  .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
+  .action-btn{background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:4px;color:#64748b;font-size:18px;line-height:1}
+  .action-btn:hover{background:#f1f5f9;color:#0f172a}
+  .nfe-link{color:#2563eb;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer}
+  .nfe-link:hover{text-decoration:underline}
+  #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .toast-item{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .2s ease}
+  .toast-ok{background:#16a34a}.toast-err{background:#dc2626}
+  @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar"><div class="logo"><div style="display:flex;align-items:center;gap:8px"><div style="width:34px;height:34px;background:#f97316;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8"><polyline points="1,21 8,6 13,13 17,8 23,21"/><line x1="1" y1="21" x2="23" y2="21"/></svg></div><div><div class="logo-mark">Aiko</div><div class="logo-sub">sistema</div></div></div></div></nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Entradas Processadas</div>
+      </div>
+      <span id="last-sync" style="font-size:11px;color:#94a3b8;margin-left:12px"></span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="loadAll()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Atualizar
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="window.location.href='fiscal.html'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Entrada por NF-e XML
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- HEADER DA SEÇÃO + FILTROS -->
+      <div class="tab-header">
+        <div class="tab-header-left">
+          <div class="tab-title">Notas Fiscais Processadas</div>
+          <div class="tab-sub">Histórico de NF-e confirmadas no estoque</div>
+        </div>
+        <div class="tab-header-right">
+          <select class="field field-sm" id="fil-fornecedor" onchange="applyFilters()" style="min-width:150px">
+            <option value="">Fornecedor: Todos</option>
+          </select>
+          <input class="field field-sm" id="fil-numero" placeholder="Nº NF-e…" oninput="applyFilters()" style="width:120px">
+          <select class="field field-sm" id="fil-periodo" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:130px">
+            <option value="mes_atual" selected>Mês Atual</option>
+            <option value="mes_anterior">Mês Anterior</option>
+            <option value="todos">Todos</option>
+            <option value="periodo">Período</option>
+          </select>
+          <input type="date" class="field field-sm" id="fil-de" onchange="loadAll()">
+          <span style="font-size:12px;color:#94a3b8">até</span>
+          <input type="date" class="field field-sm" id="fil-ate" onchange="loadAll()">
+          <button class="btn btn-ghost btn-sm" onclick="limparFiltros()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Limpar
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="exportarExcel()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Exportar
+          </button>
+        </div>
+      </div>
+
+      <!-- RESUMO -->
+      <div class="summary-row">
+        <span id="summary-count">—</span>
+        <span>Valor total filtrado: <span class="summary-val" id="summary-total">—</span></span>
+      </div>
+
+      <!-- TABELA -->
+      <div class="tbl-wrap"><div class="tbl-scroll">
+        <table class="tbl">
+          <thead><tr>
+            <th onclick="sortBy('numero')">NF-E <span id="s-numero"></span></th>
+            <th class="c">SÉRIE</th>
+            <th onclick="sortBy('data_emissao')">D. EMISSÃO <span id="s-data_emissao"></span></th>
+            <th onclick="sortBy('processada_em')">D. PROCESSAMENTO <span id="s-processada_em">↓</span></th>
+            <th>FORNECEDOR / RAZÃO SOCIAL</th>
+            <th class="r" onclick="sortBy('valor_total')">V. TOTAL <span id="s-valor_total"></span></th>
+            <th class="c">ITENS</th>
+            <th class="c">STATUS</th>
+            <th class="c">AÇÕES</th>
+          </tr></thead>
+          <tbody id="tbody-main">
+            <tr><td colspan="9" class="empty">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+
+      <!-- PAGINAÇÃO -->
+      <div class="pag-row">
+        <span id="pag-info">—</span>
+        <div class="pag-btns" id="pag-btns"></div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b">
+          Itens por página:
+          <select class="field field-sm" id="pag-size" onchange="changePagSize()" style="width:70px;padding:4px 8px">
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script src="utils.js"></script>
+<script src="sidebar.js"></script>
+<script>
+'use strict';
+
+const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
+const api = createApi(SUPA_URL, SUPA_KEY);
+
+let allData=[],filteredData=[],currentPage=1,pageSize=20,sortField='processada_em',sortAsc=false,itensCounts={};
+
+function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast-item toast-${type}`;el.textContent=msg;document.getElementById('toast').appendChild(el);setTimeout(()=>el.remove(),3500);}
+function brl(v){if(v==null||v==='')return'—';return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDt(iso){if(!iso)return'—';const d=new Date(iso);return`<span class="mono" style="white-space:nowrap;font-size:12px">${d.toLocaleDateString('pt-BR')}</span><br><span style="font-size:10px;color:#94a3b8">${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>`;}
+
+function setPeriodoRange(tipo,deId,ateId,fn){
+  const d=new Date();let de='',ate='';
+  if(tipo==='mes_atual'){de=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;ate=d.toISOString().split('T')[0];}
+  else if(tipo==='mes_anterior'){const p=new Date(d.getFullYear(),d.getMonth()-1,1);const l=new Date(d.getFullYear(),d.getMonth(),0);de=`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;ate=`${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;}
+  else{const elD=document.getElementById(deId);if(elD)elD.value='';const elA=document.getElementById(ateId);if(elA)elA.value='';if(fn)fn();return;}
+  const elD=document.getElementById(deId);if(elD)elD.value=de;
+  const elA=document.getElementById(ateId);if(elA)elA.value=ate;
+  if(fn)fn();
+}
+
+async function loadAll(){
+  const periodo=document.getElementById('fil-periodo')?.value||'mes_atual';
+  const de=document.getElementById('fil-de')?.value;
+  const ate=document.getElementById('fil-ate')?.value;
+  let df='';
+  if(periodo!=='todos'){if(de)df+=`&processada_em=gte.${de}T00:00:00`;if(ate)df+=`&processada_em=lte.${ate}T23:59:59`;}
+  try{
+    const [nfeData,itensData]=await Promise.all([
+      api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&status=eq.processada&order=processada_em.desc${df}&select=*`),
+      api(`nfe_itens?tenant_id=eq.${TENANT_ID}&select=nfe_id`).catch(()=>[]),
+    ]);
+    allData=nfeData||[];
+    itensCounts={};(itensData||[]).forEach(i=>{itensCounts[i.nfe_id]=(itensCounts[i.nfe_id]||0)+1;});
+    const fornMap={};allData.forEach(n=>{if(n.cnpj_emitente&&n.nome_emitente)fornMap[n.cnpj_emitente]=n.nome_emitente;});
+    const sel=document.getElementById('fil-fornecedor');const prev=sel.value;
+    sel.innerHTML='<option value="">Fornecedor: Todos</option>'+Object.entries(fornMap).map(([c,n])=>`<option value="${c}">${esc(n)}</option>`).join('');
+    sel.value=prev;
+    currentPage=1;applyFilters();
+    document.getElementById('last-sync').textContent='Atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+function applyFilters(){
+  const fForn=(document.getElementById('fil-fornecedor')?.value||'');
+  const fNum=(document.getElementById('fil-numero')?.value||'').replace(/\D/g,'');
+  filteredData=allData.filter(n=>{
+    if(fForn&&n.cnpj_emitente!==fForn)return false;
+    if(fNum&&!(n.numero||'').replace(/\D/g,'').includes(fNum))return false;
+    return true;
+  });
+  filteredData.sort((a,b)=>{let va=a[sortField]||'',vb=b[sortField]||'';if(sortField==='valor_total'){va=Number(va)||0;vb=Number(vb)||0;}if(va<vb)return sortAsc?-1:1;if(va>vb)return sortAsc?1:-1;return 0;});
+  const total=filteredData.reduce((s,n)=>s+(Number(n.valor_total)||0),0);
+  document.getElementById('summary-count').textContent=`${filteredData.length.toLocaleString('pt-BR')} registro${filteredData.length!==1?'s':''} encontrado${filteredData.length!==1?'s':''}`;
+  document.getElementById('summary-total').textContent=brl(total);
+  currentPage=1;renderTable();renderPag();
+}
+
+function sortBy(f){
+  if(sortField===f)sortAsc=!sortAsc;else{sortField=f;sortAsc=false;}
+  ['numero','data_emissao','processada_em','valor_total'].forEach(x=>{const el=document.getElementById('s-'+x);if(el)el.textContent='';});
+  const el=document.getElementById('s-'+f);if(el)el.textContent=sortAsc?' ↑':' ↓';
+  applyFilters();
+}
+
+function renderTable(){
+  const start=(currentPage-1)*pageSize;
+  const page=filteredData.slice(start,start+pageSize);
+  const tbody=document.getElementById('tbody-main');
+  if(!page.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">Nenhuma NF-e processada encontrada.</td></tr>`;return;}
+  tbody.innerHTML=page.map(n=>`<tr>
+    <td>
+      <span class="nfe-link" title="${esc(n.chave_acesso||'')}">${esc(n.numero||'—')}</span>
+      <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${(n.chave_acesso||'').substring(0,22)}${n.chave_acesso?'…':''}</div>
+    </td>
+    <td class="c mono" style="color:#94a3b8">${n.serie||'1'}</td>
+    <td>${fmtDt(n.data_emissao)}</td>
+    <td>${fmtDt(n.processada_em)}</td>
+    <td>
+      <div style="font-weight:600">${esc(n.nome_emitente||'—')}</div>
+      <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${n.cnpj_emitente||''}</div>
+    </td>
+    <td class="r mono" style="font-weight:600">${brl(n.valor_total)}</td>
+    <td class="c" style="font-weight:600">${itensCounts[n.id]||'—'}</td>
+    <td class="c"><span class="badge b-proc"><span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span>Processada</span></td>
+    <td class="c">
+      <button class="btn btn-ghost btn-sm" onclick="verDetalhes('${n.id}')">Ver detalhes</button>
+      <button class="action-btn" onclick="abrirMenu(event,'${n.id}','${esc(n.numero||'')}')">⋮</button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderPag(){
+  const total=filteredData.length,pages=Math.ceil(total/pageSize);
+  const start=(currentPage-1)*pageSize+1,end=Math.min(currentPage*pageSize,total);
+  document.getElementById('pag-info').textContent=total>0?`Mostrando ${start} a ${end} de ${total.toLocaleString('pt-BR')} registros`:'Nenhum registro';
+  const btns=document.getElementById('pag-btns');
+  if(pages<=1){btns.innerHTML='';return;}
+  let html=`<button class="pag-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  const range=[];
+  if(pages<=7){for(let i=1;i<=pages;i++)range.push(i);}
+  else{range.push(1);if(currentPage>3)range.push('…');for(let i=Math.max(2,currentPage-1);i<=Math.min(pages-1,currentPage+1);i++)range.push(i);if(currentPage<pages-2)range.push('…');range.push(pages);}
+  range.forEach(p=>{if(p==='…')html+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;else html+=`<button class="pag-btn${p===currentPage?' active':''}" onclick="goPage(${p})">${p}</button>`;});
+  html+=`<button class="pag-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`;
+  btns.innerHTML=html;
+}
+
+function goPage(p){const pages=Math.ceil(filteredData.length/pageSize);if(p<1||p>pages)return;currentPage=p;renderTable();renderPag();}
+function changePagSize(){pageSize=parseInt(document.getElementById('pag-size').value)||20;currentPage=1;renderTable();renderPag();}
+
+function limparFiltros(){
+  document.getElementById('fil-fornecedor').value='';
+  document.getElementById('fil-numero').value='';
+  document.getElementById('fil-periodo').value='mes_atual';
+  setPeriodoRange('mes_atual','fil-de','fil-ate',null);
+  loadAll();
+}
+
+function verDetalhes(nfeId){
+  const n=allData.find(x=>x.id===nfeId);if(!n)return;
+  alert(`NF-e ${n.numero}/${n.serie}\nFornecedor: ${n.nome_emitente}\nCNPJ: ${n.cnpj_emitente}\nChave: ${n.chave_acesso||'—'}\nValor: ${brl(n.valor_total)}\nProcessada: ${n.processada_em?new Date(n.processada_em).toLocaleString('pt-BR'):'—'}`);
+}
+
+function abrirMenu(e,nfeId,numero){
+  e.stopPropagation();
+  document.querySelectorAll('.floating-menu').forEach(m=>m.remove());
+  const menu=document.createElement('div');
+  menu.className='floating-menu';
+  menu.style.cssText=`position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1000;min-width:160px;padding:4px 0`;
+  menu.innerHTML=`<div style="padding:8px 14px;font-size:11px;color:#94a3b8;border-bottom:1px solid #f1f5f9">NF-e ${numero}</div>
+    <button onclick="exportarUma('${nfeId}')" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:none;font-size:13px;cursor:pointer;color:#0f172a;font-family:inherit">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar linha
+    </button>`;
+  const rect=e.currentTarget.getBoundingClientRect();
+  menu.style.top=(rect.bottom+4)+'px';
+  menu.style.left=(rect.left-130)+'px';
+  document.body.appendChild(menu);
+  setTimeout(()=>document.addEventListener('click',()=>menu.remove(),{once:true}),10);
+}
+
+function exportarExcel(){
+  if(!filteredData.length){toast('Nenhum dado para exportar.','err');return;}
+  const headers=['NF-e','Série','D. Emissão','D. Processamento','Fornecedor','CNPJ','V. Total','Itens'];
+  const rows=filteredData.map(n=>[n.numero||'',n.serie||'1',n.data_emissao?new Date(n.data_emissao).toLocaleDateString('pt-BR'):'',n.processada_em?new Date(n.processada_em).toLocaleDateString('pt-BR'):'',n.nome_emitente||'',n.cnpj_emitente||'',(n.valor_total||0).toFixed(2).replace('.',','),itensCounts[n.id]||0]);
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`entradas_processadas_${new Date().toISOString().split('T')[0]}.csv`;a.click();
+  toast('Exportação concluída!','ok');
+}
+
+function exportarUma(nfeId){
+  const n=allData.find(x=>x.id===nfeId);if(!n)return;
+  exportarExcel.call(null,()=>filteredData.filter(x=>x.id===nfeId));
+  toast('Exportação concluída!','ok');
+}
+
+setPeriodoRange('mes_atual','fil-de','fil-ate',null);
+loadAll();
+</script>
+</body>
+</html>
