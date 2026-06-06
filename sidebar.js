@@ -52,8 +52,7 @@
     {
       id: 'compras', label: 'Compras',
       items: [
-        { href: 'compras.html',                 label: 'Pedidos de Compra',   icon: I.cart },
-        { href: 'estoque.html', tab: 'compras', label: 'Sugestão de Compras', icon: I.trending },
+        { href: 'compras.html', label: 'Pedidos de Compra', icon: I.cart },
       ]
     },
     {
@@ -66,11 +65,10 @@
     {
       id: 'analises', label: 'Análises',
       items: [
-        { href: 'relatorios.html',                          label: 'Relatórios',          icon: I.receipt },
-        { href: 'cmv.html',                                 label: 'CMV Teórico x Real',  icon: I.chart },
-        { href: 'rendimento.html',                          label: 'Rendimentos',          icon: I.trending },
-        { href: 'pdv.html',                                 label: 'PDV / Vendas',        icon: I.cart },
-        { href: 'estoque.html', tab: 'historico-custo',    label: 'Histórico de Custos',  icon: I.receipt },
+        { href: 'relatorios.html', label: 'Relatórios',        icon: I.receipt },
+        { href: 'cmv.html',        label: 'CMV Teórico x Real', icon: I.chart },
+        { href: 'rendimento.html', label: 'Rendimentos',        icon: I.trending },
+        { href: 'pdv.html',        label: 'PDV / Vendas',       icon: I.cart },
       ]
     },
     {
