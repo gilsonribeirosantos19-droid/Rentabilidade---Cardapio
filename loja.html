@@ -1458,10 +1458,13 @@
 
 <!-- MODAL: PREENCHER INVENTÁRIO -->
 <div id="m-inv" class="overlay" onclick="if(event.target===this)fecharModal('m-inv')">
-  <div class="modal" style="max-width:980px" onclick="event.stopPropagation()">
+  <div class="modal" id="m-inv-box" style="max-width:980px" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
       <div>
-        <h2 id="m-inv-titulo" style="margin:0">Inventário</h2>
+        <div style="display:flex;align-items:center;gap:10px">
+          <h2 id="m-inv-titulo" style="margin:0">Inventário</h2>
+          <button id="btn-inv-expandir" class="btn btn-ghost" onclick="toggleExpandInv()" style="padding:4px 10px;font-size:12px">⤢ Expandir</button>
+        </div>
         <div id="m-inv-info" style="font-size:12px;color:var(--text3);margin-top:4px"></div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;min-width:280px">
@@ -1490,7 +1493,7 @@
         </div>
       </div>
     </div>
-    <div class="tbl-wrap" style="max-height:50vh;overflow-y:auto">
+    <div class="tbl-wrap" id="m-inv-wrap" style="max-height:50vh;overflow-y:auto">
       <table class="tbl">
         <thead><tr>
           <th>Item</th><th>Insumo</th><th>Embalagem</th><th>Un.</th>
@@ -1532,6 +1535,7 @@ let userProfile = null;
 let insumos = [], fichas = [], motivos = [], grupos = [], gruposItens = {}, fornecedores = [];
 let invAtual = null; // inventário aberto no modal
 let invItensAtual = []; // itens do inventário aberto (para busca/filtro/progresso)
+let invExpandido = false; // tela de inventário expandida?
 let solGrupoAtual = null;
 let solChecked = new Set();
 
@@ -1774,17 +1778,17 @@ function renderInvTabela() {
       const contada = parseFloat(String(it.qtd_contada).replace(',', '.')) || 0;
       const saldo = contada; // Q. Sistema permanece zerada
       return `<tr>
-        <td class="mono" style="color:var(--text3);font-size:11px">${esc(it.codigo)}</td>
-        <td style="font-weight:500">${esc(it.nome)}</td>
-        <td style="color:var(--text3);font-size:12px">${esc(it.embalagem)}</td>
-        <td style="color:var(--text3)">${esc(it.unidade)}</td>
+        <td class="mono" style="color:#0f172a;font-size:11px">${esc(it.codigo)}</td>
+        <td style="font-weight:500;color:#0f172a">${esc(it.nome)}</td>
+        <td style="color:#0f172a;font-size:12px">${esc(it.embalagem)}</td>
+        <td style="color:#0f172a">${esc(it.unidade)}</td>
         <td class="r">
           <input type="number" class="field field-sm" id="inv-qtd-${it.id}"
             value="${it.qtd_contada}" min="0" step="0.001" placeholder="0,000"
-            oninput="atualizarSaldo('${it.id}')" style="width:90px;text-align:right">
+            oninput="atualizarSaldo('${it.id}')" style="width:90px;text-align:right;color:#0f172a">
         </td>
-        <td class="r mono" style="color:var(--text3)">0,000</td>
-        <td class="r mono ${saldo >= 0 ? 'saldo-pos' : 'saldo-neg'}" id="inv-saldo-${it.id}">${saldo >= 0 ? '+' : ''}${saldo.toFixed(3)}</td>
+        <td class="r mono" style="color:#0f172a">0,000</td>
+        <td class="r mono" style="color:#0f172a" id="inv-saldo-${it.id}">${saldo >= 0 ? '+' : ''}${saldo.toFixed(3)}</td>
       </tr>`;
     }).join('');
   }
@@ -1797,11 +1801,29 @@ function atualizarSaldo(itemId) {
   const s = document.getElementById(`inv-saldo-${itemId}`);
   if (s) {
     s.textContent = (saldo >= 0 ? '+' : '') + saldo.toFixed(3);
-    s.className = `r mono ${saldo >= 0 ? 'saldo-pos' : 'saldo-neg'}`;
+    s.className = 'r mono';
+    s.style.color = '#0f172a';
   }
   const item = invItensAtual.find(i => i.id === itemId);
   if (item && el) item.qtd_contada = el.value;
   atualizarProgressoInv();
+}
+
+// Expandir / recolher a janela do inventário
+function toggleExpandInv() {
+  invExpandido = !invExpandido;
+  const box = document.getElementById('m-inv-box');
+  const wrap = document.getElementById('m-inv-wrap');
+  const btn = document.getElementById('btn-inv-expandir');
+  if (invExpandido) {
+    if (box) { box.style.maxWidth = '96vw'; box.style.width = '96vw'; }
+    if (wrap) wrap.style.maxHeight = '74vh';
+    if (btn) btn.textContent = '↙ Recolher';
+  } else {
+    if (box) { box.style.maxWidth = '980px'; box.style.width = ''; }
+    if (wrap) wrap.style.maxHeight = '50vh';
+    if (btn) btn.textContent = '⤢ Expandir';
+  }
 }
 
 function atualizarProgressoInv() {
