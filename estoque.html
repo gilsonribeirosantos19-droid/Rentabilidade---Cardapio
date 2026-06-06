@@ -898,6 +898,7 @@
         <input class="field field-sm" type="date" id="mov-ate" style="width:140px">
         <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
         <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente com saldo</label>
         <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
         <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
@@ -4080,7 +4081,6 @@ async function renderMovimentacao() {
   if (catF) { const ids = gruposCompraItens[catF]||[]; insFilt = insFilt.filter(i => ids.includes(i.id)); }
   if (insF) insFilt = insFilt.filter(i => i.id === insF);
 
-  let tQAnt=0,tVAnt=0,tQEnt=0,tVEnt=0,tQCon=0,tVCon=0,tQPerd=0,tVPerd=0,tQFin=0,tVFin=0,tVFin2=0;
   _movRows = insFilt.map(ins => {
     const s = getSaldo(ins.id); const cm = s.custo_medio||0;
     const antIt = invIni.find(i => i.insumo_id === ins.id);
@@ -4095,14 +4095,17 @@ async function renderMovimentacao() {
     const qPerdGerente = perdasMap[ins.id]||0;
     const qPerd = qPerdSaida + qPerdGerente; const vPerd=qPerd*cm;
     const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd); const vFin=qFin*cm;
-    tQAnt+=qAnt;tVAnt+=vAnt;tQEnt+=qEnt;tVEnt+=vEnt;tQCon+=qCon;tVCon+=vCon;
-    tQPerd+=qPerd;tVPerd+=vPerd;tQFin+=qFin;tVFin+=vFin;tVFin2+=vFin;
     return {nome:ins.nome, un:ins.unidade_medida||ins.unidade_compra||'—', cat:ins.categoria||'—',
       qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm};
   });
-  const cmGeral = tQFin > 0 ? tVFin2/tQFin : 0;
-  _movTotais = {qAnt:tQAnt,vAnt:tVAnt,qEnt:tQEnt,vEnt:tVEnt,qCon:tQCon,vCon:tVCon,
-    qPerd:tQPerd,vPerd:tVPerd,qFin:tQFin,vFin:tVFin,cmGeral};
+  // Filtro "Somente com saldo" (marcado por padrão): esconde itens com saldo final zerado
+  const _movComSaldo = document.getElementById('mov-com-saldo')?.checked;
+  if (_movComSaldo) _movRows = _movRows.filter(r => r.qFin > 0);
+  // Totais calculados a partir das linhas exibidas
+  const _t = _movRows.reduce((a,r)=>{a.qAnt+=r.qAnt;a.vAnt+=r.vAnt;a.qEnt+=r.qEnt;a.vEnt+=r.vEnt;a.qCon+=r.qCon;a.vCon+=r.vCon;a.qPerd+=r.qPerd;a.vPerd+=r.vPerd;a.qFin+=r.qFin;a.vFin+=r.vFin;return a;},
+    {qAnt:0,vAnt:0,qEnt:0,vEnt:0,qCon:0,vCon:0,qPerd:0,vPerd:0,qFin:0,vFin:0});
+  const cmGeral = _t.qFin > 0 ? _t.vFin/_t.qFin : 0;
+  _movTotais = {..._t, cmGeral};
   _movPagAtual = 1;
   _renderMovPage();
 }
