@@ -519,6 +519,7 @@ let fornecedores   = [];
 let vinculos       = [];
 let insumoFornVinculos = [];
 let saldos         = [];
+let lojas          = [];
 let lojaAtual      = null;
 
 // ── NF-e vars (igual ao estoque) ─────────────────────────────────
@@ -601,13 +602,14 @@ async function loadAll() {
   }
 
   try {
-    const [nfeData, insData, fornData, vincData, ifvData, saldoData] = await Promise.all([
+    const [nfeData, insData, fornData, vincData, ifvData, saldoData, lojaData] = await Promise.all([
       api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&order=data_emissao.desc${dateFilter}&select=*`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=id,nome,unidade_medida,unidade_compra`),
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=id,nome,nome_fantasia`).catch(()=>[]),
       api(`vinculos_nfe?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
       api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
+      api(`lojas?tenant_id=eq.${TENANT_ID}&select=id,nome`).catch(()=>[]),
     ]);
 
     entradasNfe        = nfeData   || [];
@@ -616,6 +618,9 @@ async function loadAll() {
     vinculos           = vincData  || [];
     insumoFornVinculos = ifvData   || [];
     saldos             = saldoData || [];
+    lojas              = lojaData  || [];
+    // Garante uma loja para as entradas (admin pode não ter loja_id no perfil)
+    if(!lojaAtual && lojas.length) lojaAtual = lojas[0];
 
     // Popula select de fornecedores no modal NF-e
     const selForn = document.getElementById('nfe-forn');
