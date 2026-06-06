@@ -796,8 +796,7 @@ async function carregarInsumos(){
     atualizarMetricas();
     filtrar();
     _popularGruposProd();
-    _prodFiltrado=todos.slice();
-    renderProdutos();
+    filtrarProdutos(); // reaplica os filtros ativos ao recarregar (ex: após salvar)
   }catch(e){
     if(tbody) tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
     const cs=document.getElementById('conn-status');
