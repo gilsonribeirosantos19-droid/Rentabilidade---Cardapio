@@ -898,7 +898,7 @@
         <input class="field field-sm" type="date" id="mov-ate" style="width:140px">
         <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
         <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
-        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente com saldo</label>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente com saldo/movimento</label>
         <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
         <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
@@ -4098,9 +4098,10 @@ async function renderMovimentacao() {
     return {nome:ins.nome, un:ins.unidade_medida||ins.unidade_compra||'—', cat:ins.categoria||'—',
       qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm};
   });
-  // Filtro "Somente com saldo" (marcado por padrão): esconde itens com saldo final zerado
+  // Filtro "Somente com saldo/movimento" (marcado por padrão): esconde itens totalmente
+  // zerados (sem saldo e sem nenhuma movimentação no período)
   const _movComSaldo = document.getElementById('mov-com-saldo')?.checked;
-  if (_movComSaldo) _movRows = _movRows.filter(r => r.qFin > 0);
+  if (_movComSaldo) _movRows = _movRows.filter(r => r.qFin > 0 || r.qAnt > 0 || r.qEnt > 0 || r.qCon > 0 || r.qPerd > 0);
   // Totais calculados a partir das linhas exibidas
   const _t = _movRows.reduce((a,r)=>{a.qAnt+=r.qAnt;a.vAnt+=r.vAnt;a.qEnt+=r.qEnt;a.vEnt+=r.vEnt;a.qCon+=r.qCon;a.vCon+=r.vCon;a.qPerd+=r.qPerd;a.vPerd+=r.vPerd;a.qFin+=r.qFin;a.vFin+=r.vFin;return a;},
     {qAnt:0,vAnt:0,qEnt:0,vEnt:0,qCon:0,vCon:0,qPerd:0,vPerd:0,qFin:0,vFin:0});
