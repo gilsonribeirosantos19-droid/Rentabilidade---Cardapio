@@ -1719,7 +1719,7 @@ async function confirmarInventario() {
     }));
     await api('inventario_itens?on_conflict=id', {
       method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
-      body: JSON.stringify(updates.map(u => ({ id: u.id, qtd_contada: u.qtd })))
+      body: JSON.stringify(updates.map(u => ({ id: u.id, qtd_contada: u.qtd, tenant_id: TENANT_ID })))
     });
     const saldoPayloads = updates.filter(u => u.insumo_id && lojaId).map(u => ({
       tenant_id: TENANT_ID, loja_id: lojaId, insumo_id: u.insumo_id,
