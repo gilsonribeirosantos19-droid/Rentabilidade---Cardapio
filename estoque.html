@@ -900,6 +900,7 @@
         <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
         <input class="field field-sm" id="mov-busca" placeholder="Pesquisar item..." oninput="aplicarFiltroBuscaMov()" style="min-width:160px">
         <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente com saldo/movimento</label>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-cmv" onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente CMV</label>
         <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
         <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
@@ -1101,6 +1102,7 @@
         <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
           <option value="">Todas as categorias</option>
         </select>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente CMV</label>
         <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
         <span id="se-valor-total" style="margin-left:auto;font-size:13px;font-weight:700;color:#0f172a"></span>
       </div>
@@ -1750,6 +1752,7 @@ function onSeTipoDataChange() {
 async function renderSaldoEst(){
   const lojaFil = getLojaId()||'';
   const catFil  = document.getElementById('se-cat')?.value||'';
+  const cmvF    = document.getElementById('se-cmv')?.checked;
   const tipoData= document.getElementById('se-tipo-data')?.value||'atual';
   const dataBase= document.getElementById('se-data')?.value||'';
   const tbody   = document.getElementById('se-body');
@@ -1799,6 +1802,7 @@ async function renderSaldoEst(){
       const loja = lojas.find(l=>l.id===s.loja_id);
       if (!ins) return null;
       if (catFil && (ins.categoria||'')!==catFil) return null;
+      if (cmvF && ins.participa_cmv==='nao') return null;
       const valor = (s.quantidade||0)*(s.custo_medio||0);
       const status = (ins.minimo>0&&s.quantidade<ins.minimo)?'<span class="badge" style="background:#fee2e2;color:#dc2626">Abaixo mín.</span>':
                      (s.quantidade===0?'<span class="badge" style="background:#f1f5f9;color:#64748b">Zerado</span>':
@@ -4035,6 +4039,7 @@ async function renderMovimentacao() {
   const ate = document.getElementById('mov-ate').value;
   const catF = document.getElementById('mov-cat').value;
   const insF = document.getElementById('mov-ins').value;
+  const cmvF = document.getElementById('mov-cmv')?.checked;
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
   if (!de || !ate) {
@@ -4068,6 +4073,7 @@ async function renderMovimentacao() {
   let insFilt = insumos;
   if (catF) insFilt = insFilt.filter(i => (i.categoria||'') === catF);
   if (insF) insFilt = insFilt.filter(i => i.id === insF);
+  if (cmvF) insFilt = insFilt.filter(i => i.participa_cmv !== 'nao');
 
   _movRows = insFilt.map(ins => {
     const s = getSaldo(ins.id); const cm = s.custo_medio||0;
