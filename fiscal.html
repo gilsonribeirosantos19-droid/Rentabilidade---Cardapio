@@ -60,6 +60,11 @@
   table.tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
   table.tbl tbody tr{cursor:pointer;transition:background .1s}
   table.tbl tbody tr:hover{background:#fafbfc}
+  /* Aba ITENS — visual de nota fiscal: grade fina + divisória entre blocos */
+  #tab-itens table.tbl th, #tab-itens table.tbl td{border-right:1px solid #eef2f7}
+  #tab-itens table.tbl th:last-child, #tab-itens table.tbl td:last-child{border-right:none}
+  #tab-itens table.tbl th:nth-child(8), #tab-itens table.tbl td:nth-child(8){border-left:2px solid #cbd5e1}
+  #tab-itens .nf-grp-th{text-align:center !important;font-size:11px !important;letter-spacing:.04em}
   table.tbl tbody tr:last-child td{border-bottom:none}
   .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
   .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
@@ -240,17 +245,22 @@
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
-            <thead><tr>
+            <thead>
+            <tr>
+              <th class="nf-grp-th" colspan="7">DADOS DA NOTA FISCAL</th>
+              <th class="nf-grp-th" colspan="5" style="border-left:2px solid #fff">VÍNCULO / ESTOQUE</th>
+            </tr>
+            <tr>
               <th class="c">Seq.</th>
               <th>Item Fornecedor</th>
               <th>Descrição</th>
-              <th>Item Interno</th>
-              <th>Embalagem</th>
               <th class="c">UM</th>
-              <th class="r">Q. na Emb.</th>
               <th class="r">Q. Embalagem</th>
               <th class="r">V. Unitário</th>
               <th class="r">V. Total</th>
+              <th>Item Interno</th>
+              <th>Embalagem</th>
+              <th class="r">Q. na Emb.</th>
               <th class="r">Q. Estoque</th>
               <th class="c">Detalhe</th>
             </tr></thead>
@@ -693,7 +703,13 @@ function renderNfeItens() {
   }
   const nfe = entradasNfe.find(n => n.id === selectedNfeKey);
   const itens = currentNfeItens;
-  if(label) label.textContent = `NF-e ${nfe?.numero||'—'} — ${nfe?.nome_emitente||''}  ·  ${itens.length} item(ns)`;
+  if(label) label.innerHTML = nfe
+    ? `<span style="font-weight:700;color:#0f172a">NF-e ${esc(nfe.numero||'—')}/${esc(nfe.serie||'1')}</span>`
+      + `<span style="color:#cbd5e1;margin:0 8px">|</span><span style="color:#94a3b8">Emitente:</span> <strong style="color:#0f172a">${esc(nfe.nome_emitente||'—')}</strong>`
+      + `<span style="color:#cbd5e1;margin:0 8px">|</span><span style="color:#94a3b8">Emissão:</span> <strong style="color:#0f172a">${nfe.data_emissao?fmtDateShort(nfe.data_emissao):'—'}</strong>`
+      + `<span style="color:#cbd5e1;margin:0 8px">|</span><span style="color:#94a3b8">Total:</span> <strong style="color:#0f172a">${brl(nfe.valor_total||0)}</strong>`
+      + `<span style="color:#cbd5e1;margin:0 8px">|</span><span style="color:#94a3b8">${itens.length} ${itens.length===1?'item':'itens'}</span>`
+    : 'Selecione uma NF-e na aba DANFE para ver os itens';
   document.getElementById('tab-n-itens').textContent = itens.length;
 
   if(!itens.length) {
@@ -707,21 +723,21 @@ function renderNfeItens() {
     const total   = ((item.quantidade||0) * (item.valor_unitario||0));
     const qtdEst  = vinc ? fmtQtd(item.quantidade * (vinc.qtd_por_embalagem||1)) : '—';
     const unEst   = ins?.unidade_medida?.toUpperCase() || '—';
-    const rowStyle = vinculado ? '' : 'background:#fff5f5';
+    const rowStyle = '';
     const detalheBtn = vinculado
       ? `<button style="padding:2px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;font-size:11px;cursor:pointer">…</button>`
       : `<button onclick="openVincularNfeItem('${item.id}')" style="padding:2px 10px;border:none;border-radius:4px;background:#f97316;color:#fff;font-size:11px;cursor:pointer;font-weight:600">Vincular</button>`;
     return `<tr style="${rowStyle}">
-      <td class="c" style="color:#94a3b8">${i+1}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:11px">${esc(item.codigo_item_fornecedor||'—')}</td>
-      <td style="font-weight:${vinculado?400:600};color:${vinculado?'inherit':'#dc2626'}">${esc(item.descricao_nfe)}</td>
+      <td class="c" style="color:#94a3b8;${vinculado?'':'border-left:3px solid #f59e0b'}">${i+1}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:#0f172a">${esc(item.codigo_item_fornecedor||'—')}</td>
+      <td style="font-weight:${vinculado?400:600};color:#0f172a">${esc(item.descricao_nfe)}</td>
+      <td class="c" style="font-size:11px;color:#0f172a">${esc(item.unidade_nfe||'—')}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600;color:#0f172a">${fmtQtd(item.quantidade)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;color:#0f172a">${brl(item.valor_unitario)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600;color:#0f172a">${brl(total)}</td>
       <td style="color:${vinculado?'#16a34a':'#94a3b8'};font-size:11px">${vinculado?'✓ '+esc(ins?.nome||'—'):'—'}</td>
       <td style="font-size:11px;color:#64748b">${esc(vinc?.embalagem_descricao||'—')}</td>
-      <td class="c" style="font-size:11px">${esc(item.unidade_nfe||'—')}</td>
       <td class="r" style="font-family:'DM Mono',monospace">${vinc?.qtd_por_embalagem||'—'}</td>
-      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${fmtQtd(item.quantidade)}</td>
-      <td class="r" style="font-family:'DM Mono',monospace">${brl(item.valor_unitario)}</td>
-      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${brl(total)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:${vinculado?'#16a34a':'#94a3b8'};font-weight:600">${qtdEst} ${vinculado?unEst:''}</td>
       <td class="c">${detalheBtn}</td>
     </tr>`;
