@@ -898,6 +898,9 @@
         <input class="field field-sm" type="date" id="mov-ate" style="width:140px">
         <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
         <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
+        <input class="field field-sm" id="mov-busca" placeholder="Pesquisar item..." oninput="aplicarFiltroBuscaMov()" style="min-width:160px">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente com saldo/movimento</label>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-cmv" onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente CMV</label>
         <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
         <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
@@ -946,7 +949,7 @@
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;font-size:12px;color:#94a3b8;margin-top:8px">
         <span id="mov-pag-info">—</span>
         <div style="display:flex;gap:4px" id="mov-pag-btns"></div>
-        <select class="field field-sm" id="mov-por-pag" onchange="_movPagAtual=1;_renderMovPage()" style="padding:3px 8px;font-size:11px;width:auto">
+        <select class="field field-sm" id="mov-por-pag" onchange="_movPagAtual=1;_renderMovPage()" style="display:none;padding:3px 8px;font-size:11px;width:auto">
           <option value="10">10 por página</option>
           <option value="20">20 por página</option>
           <option value="50">50 por página</option>
@@ -1099,6 +1102,7 @@
         <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
           <option value="">Todas as categorias</option>
         </select>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente CMV</label>
         <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
         <span id="se-valor-total" style="margin-left:auto;font-size:13px;font-weight:700;color:#0f172a"></span>
       </div>
@@ -1718,8 +1722,11 @@ function popularSelects() {
   // grupos de compra — Movimentação e Entradas
   const grpOpts = '<option value="">Grupo: Todos</option>'+
     gruposCompra.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
-  document.getElementById('mov-cat').innerHTML = grpOpts.replace('Grupo: Todos','Todos os grupos');
   document.getElementById('ent-f-cat').innerHTML = grpOpts;
+  // Movimentação: filtro por CATEGORIA do insumo (mesma coisa que a coluna GRUPO da tabela)
+  const _movCats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+  document.getElementById('mov-cat').innerHTML = '<option value="">Todos os grupos</option>'+
+    _movCats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 
 // ── SALDO DE ESTOQUE ─────────────────────────────────────────────
@@ -1745,6 +1752,7 @@ function onSeTipoDataChange() {
 async function renderSaldoEst(){
   const lojaFil = getLojaId()||'';
   const catFil  = document.getElementById('se-cat')?.value||'';
+  const cmvF    = document.getElementById('se-cmv')?.checked;
   const tipoData= document.getElementById('se-tipo-data')?.value||'atual';
   const dataBase= document.getElementById('se-data')?.value||'';
   const tbody   = document.getElementById('se-body');
@@ -1794,6 +1802,7 @@ async function renderSaldoEst(){
       const loja = lojas.find(l=>l.id===s.loja_id);
       if (!ins) return null;
       if (catFil && (ins.categoria||'')!==catFil) return null;
+      if (cmvF && ins.participa_cmv==='nao') return null;
       const valor = (s.quantidade||0)*(s.custo_medio||0);
       const status = (ins.minimo>0&&s.quantidade<ins.minimo)?'<span class="badge" style="background:#fee2e2;color:#dc2626">Abaixo mín.</span>':
                      (s.quantidade===0?'<span class="badge" style="background:#f1f5f9;color:#64748b">Zerado</span>':
@@ -3944,20 +3953,19 @@ function exportFechamentoCSV() {
 }
 
 // ── MOVIMENTAÇÃO NO PERÍODO ───────────────────────────────────────
-let _movRows = null, _movPagAtual = 1, _movTotais = null;
+let _movRows = null, _movRowsAll = null, _movPagAtual = 1, _movTotais = null;
 
 function filtrarMovIns() {
   const grpId = document.getElementById('mov-cat').value;
   const sel = document.getElementById('mov-ins');
   if (!sel) return;
-  const ids = grpId ? (gruposCompraItens[grpId]||[]) : null;
-  const filtrados = ids ? insumos.filter(i=>ids.includes(i.id)) : insumos;
+  const filtrados = grpId ? insumos.filter(i=>(i.categoria||'')===grpId) : insumos;
   sel.innerHTML = '<option value="">Todos os insumos</option>'+
     filtrados.map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
 }
 
 function limparMovFiltros() {
-  ['mov-de','mov-ate','mov-cat','mov-ins'].forEach(id => {
+  ['mov-de','mov-ate','mov-cat','mov-ins','mov-busca'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   filtrarMovIns();
@@ -3967,7 +3975,7 @@ function limparMovFiltros() {
   if (tfoot) tfoot.innerHTML = '';
   const pi = document.getElementById('mov-pag-info'); if (pi) pi.textContent = '—';
   const pb = document.getElementById('mov-pag-btns'); if (pb) pb.innerHTML = '';
-  _movRows = null; _movTotais = null;
+  _movRows = null; _movRowsAll = null; _movTotais = null;
 }
 
 function _renderMovPage() {
@@ -3975,29 +3983,14 @@ function _renderMovPage() {
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
   if (!tbody) return;
-  const porPag = parseInt(document.getElementById('mov-por-pag')?.value) || 10;
   const total = _movRows.length;
-  const totalPags = Math.max(1, Math.ceil(total / porPag));
-  _movPagAtual = Math.min(_movPagAtual, totalPags);
-  const start = (_movPagAtual - 1) * porPag;
-  const page = _movRows.slice(start, start + porPag);
+  const page = _movRows; // sem paginação — mostra todos os registros (a tela rola até o fim)
 
   const pagInfo = document.getElementById('mov-pag-info');
-  if (pagInfo) pagInfo.textContent = total ? `Mostrando ${start+1} a ${Math.min(start+porPag,total)} de ${total} registros` : '0 registros';
+  if (pagInfo) pagInfo.textContent = total ? `${total} registro(s)` : '0 registros';
 
   const btnsEl = document.getElementById('mov-pag-btns');
-  if (btnsEl) {
-    let html = `<button class="pag-btn" ${_movPagAtual===1?'disabled':''} onclick="_movPagAtual=Math.max(1,_movPagAtual-1);_renderMovPage()">‹</button>`;
-    for (let p=1; p<=totalPags; p++) {
-      if (totalPags>7 && p>2 && p<totalPags-1 && Math.abs(p-_movPagAtual)>1){
-        if(p===3||p===totalPags-2) html+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;
-        continue;
-      }
-      html+=`<button class="pag-btn ${p===_movPagAtual?'active':''}" onclick="_movPagAtual=${p};_renderMovPage()">${p}</button>`;
-    }
-    html+=`<button class="pag-btn" ${_movPagAtual===totalPags?'disabled':''} onclick="_movPagAtual=Math.min(${totalPags},_movPagAtual+1);_renderMovPage()">›</button>`;
-    btnsEl.innerHTML = html;
-  }
+  if (btnsEl) btnsEl.innerHTML = '';
 
   if (!page.length) {
     tbody.innerHTML = '<tr><td colspan="14" class="empty"><b>Nenhum dado encontrado</b></td></tr>';
@@ -4046,6 +4039,7 @@ async function renderMovimentacao() {
   const ate = document.getElementById('mov-ate').value;
   const catF = document.getElementById('mov-cat').value;
   const insF = document.getElementById('mov-ins').value;
+  const cmvF = document.getElementById('mov-cmv')?.checked;
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
   if (!de || !ate) {
@@ -4077,10 +4071,10 @@ async function renderMovimentacao() {
   const saisPer = saidas.filter(s => s.criado_em >= de && s.criado_em <= ate + 'T23:59:59');
 
   let insFilt = insumos;
-  if (catF) { const ids = gruposCompraItens[catF]||[]; insFilt = insFilt.filter(i => ids.includes(i.id)); }
+  if (catF) insFilt = insFilt.filter(i => (i.categoria||'') === catF);
   if (insF) insFilt = insFilt.filter(i => i.id === insF);
+  if (cmvF) insFilt = insFilt.filter(i => i.participa_cmv !== 'nao');
 
-  let tQAnt=0,tVAnt=0,tQEnt=0,tVEnt=0,tQCon=0,tVCon=0,tQPerd=0,tVPerd=0,tQFin=0,tVFin=0,tVFin2=0;
   _movRows = insFilt.map(ins => {
     const s = getSaldo(ins.id); const cm = s.custo_medio||0;
     const antIt = invIni.find(i => i.insumo_id === ins.id);
@@ -4095,14 +4089,24 @@ async function renderMovimentacao() {
     const qPerdGerente = perdasMap[ins.id]||0;
     const qPerd = qPerdSaida + qPerdGerente; const vPerd=qPerd*cm;
     const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd); const vFin=qFin*cm;
-    tQAnt+=qAnt;tVAnt+=vAnt;tQEnt+=qEnt;tVEnt+=vEnt;tQCon+=qCon;tVCon+=vCon;
-    tQPerd+=qPerd;tVPerd+=vPerd;tQFin+=qFin;tVFin+=vFin;tVFin2+=vFin;
     return {nome:ins.nome, un:ins.unidade_medida||ins.unidade_compra||'—', cat:ins.categoria||'—',
       qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm};
   });
-  const cmGeral = tQFin > 0 ? tVFin2/tQFin : 0;
-  _movTotais = {qAnt:tQAnt,vAnt:tVAnt,qEnt:tQEnt,vEnt:tVEnt,qCon:tQCon,vCon:tVCon,
-    qPerd:tQPerd,vPerd:tVPerd,qFin:tQFin,vFin:tVFin,cmGeral};
+  // Filtro "Somente com saldo/movimento" (marcado por padrão): esconde itens totalmente
+  // zerados (sem saldo e sem nenhuma movimentação no período)
+  const _movComSaldo = document.getElementById('mov-com-saldo')?.checked;
+  if (_movComSaldo) _movRows = _movRows.filter(r => r.qFin > 0 || r.qAnt > 0 || r.qEnt > 0 || r.qCon > 0 || r.qPerd > 0);
+  _movRowsAll = _movRows;       // conjunto completo (já filtrado por grupo/insumo/saldo)
+  aplicarFiltroBuscaMov();      // aplica a busca por texto, calcula totais e renderiza
+}
+
+// Busca por texto (nome do item) — filtra client-side sobre o conjunto já carregado
+function aplicarFiltroBuscaMov() {
+  const b = (document.getElementById('mov-busca')?.value || '').toLowerCase().trim();
+  _movRows = b ? (_movRowsAll||[]).filter(r => (r.nome||'').toLowerCase().includes(b)) : (_movRowsAll||[]).slice();
+  const _t = _movRows.reduce((a,r)=>{a.qAnt+=r.qAnt;a.vAnt+=r.vAnt;a.qEnt+=r.qEnt;a.vEnt+=r.vEnt;a.qCon+=r.qCon;a.vCon+=r.vCon;a.qPerd+=r.qPerd;a.vPerd+=r.vPerd;a.qFin+=r.qFin;a.vFin+=r.vFin;return a;},
+    {qAnt:0,vAnt:0,qEnt:0,vEnt:0,qCon:0,vCon:0,qPerd:0,vPerd:0,qFin:0,vFin:0});
+  _movTotais = {..._t, cmGeral: _t.qFin>0 ? _t.vFin/_t.qFin : 0};
   _movPagAtual = 1;
   _renderMovPage();
 }
