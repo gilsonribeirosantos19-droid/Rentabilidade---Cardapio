@@ -113,30 +113,31 @@ body {
 /* ── TABELAS: densas, sem decoração ─────────────────────────────── */
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
-/* Unifica TODOS os thead para --ds-navy (#1e293b) */
+/* Unifica TODOS os thead — estilo planilha (cabeçalho claro) */
 thead tr,
 table thead tr,
 .tbl thead tr,
 .tbl-card thead tr,
 .nfe-tbl thead tr,
-.cfg-table thead tr { background: var(--ds-navy) !important; }
+.cfg-table thead tr { background: #eef2f7 !important; }
 
-/* tfoot também */
+/* tfoot — linha de totais clara */
 tfoot tr,
-.tbl tfoot tr { background: var(--ds-navy) !important; }
+.tbl tfoot tr { background: #f1f5f9 !important; }
 
 tfoot td,
-.tbl tfoot td { color: #fff !important; border-bottom: none !important; }
+.tbl tfoot td { color: var(--ds-text-1) !important; font-weight: 700 !important; border-top: 2px solid #cbd5e1 !important; border-bottom: none !important; }
 
 th, .tbl th {
   padding: 7px 12px !important;
   font-size: 11px !important;
-  font-weight: 600 !important;
-  color: rgba(255,255,255,.75) !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
   text-transform: uppercase !important;
   letter-spacing: .05em !important;
   white-space: nowrap !important;
   text-align: left;
+  border-bottom: 1px solid #cbd5e1 !important;
 }
 th.r, .tbl th.r,
 th.c, .tbl th.c { text-align: right !important; }
