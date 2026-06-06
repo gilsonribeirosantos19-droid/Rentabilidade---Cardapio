@@ -1720,8 +1720,11 @@ function popularSelects() {
   // grupos de compra — Movimentação e Entradas
   const grpOpts = '<option value="">Grupo: Todos</option>'+
     gruposCompra.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
-  document.getElementById('mov-cat').innerHTML = grpOpts.replace('Grupo: Todos','Todos os grupos');
   document.getElementById('ent-f-cat').innerHTML = grpOpts;
+  // Movimentação: filtro por CATEGORIA do insumo (mesma coisa que a coluna GRUPO da tabela)
+  const _movCats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
+  document.getElementById('mov-cat').innerHTML = '<option value="">Todos os grupos</option>'+
+    _movCats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 
 // ── SALDO DE ESTOQUE ─────────────────────────────────────────────
@@ -3952,8 +3955,7 @@ function filtrarMovIns() {
   const grpId = document.getElementById('mov-cat').value;
   const sel = document.getElementById('mov-ins');
   if (!sel) return;
-  const ids = grpId ? (gruposCompraItens[grpId]||[]) : null;
-  const filtrados = ids ? insumos.filter(i=>ids.includes(i.id)) : insumos;
+  const filtrados = grpId ? insumos.filter(i=>(i.categoria||'')===grpId) : insumos;
   sel.innerHTML = '<option value="">Todos os insumos</option>'+
     filtrados.map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
 }
@@ -4064,7 +4066,7 @@ async function renderMovimentacao() {
   const saisPer = saidas.filter(s => s.criado_em >= de && s.criado_em <= ate + 'T23:59:59');
 
   let insFilt = insumos;
-  if (catF) { const ids = gruposCompraItens[catF]||[]; insFilt = insFilt.filter(i => ids.includes(i.id)); }
+  if (catF) insFilt = insFilt.filter(i => (i.categoria||'') === catF);
   if (insF) insFilt = insFilt.filter(i => i.id === insF);
 
   _movRows = insFilt.map(ins => {
