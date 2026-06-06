@@ -263,10 +263,9 @@
               <th class="r">V. Unitário</th>
               <th class="r">V. Total</th>
               <th class="r">Q. Estoque</th>
-              <th class="c">Detalhe</th>
             </tr></thead>
             <tbody id="tbody-itens">
-              <tr><td colspan="12" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>
+              <tr><td colspan="11" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>
             </tbody>
           </table>
         </div></div>
@@ -274,9 +273,9 @@
 
       <!-- TAB: ERROS (erros da NF-e selecionada) -->
       <div class="tab-pane" id="tab-erros">
-        <div id="erros-header" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:8px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="erros-nfe-label" style="font-size:12px;color:#dc2626">Selecione uma NF-e na aba DANFE para ver os erros</span>
+        <div id="erros-header" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="erros-nfe-label" style="font-size:12px;color:#475569">Selecione uma NF-e na aba DANFE para ver os erros</span>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
@@ -699,7 +698,7 @@ function renderNfeItens() {
   const tbody = document.getElementById('tbody-itens');
   const label = document.getElementById('itens-nfe-label');
   if(!selectedNfeKey) {
-    tbody.innerHTML = `<tr><td colspan="12" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>`;
     return;
   }
   const nfe = entradasNfe.find(n => n.id === selectedNfeKey);
@@ -714,7 +713,7 @@ function renderNfeItens() {
   document.getElementById('tab-n-itens').textContent = itens.length;
 
   if(!itens.length) {
-    tbody.innerHTML = `<tr><td colspan="12" class="empty">Nenhum item encontrado — os itens chegam quando a nota é processada automaticamente.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="empty">Nenhum item encontrado — os itens chegam quando a nota é processada automaticamente.</td></tr>`;
     return;
   }
   tbody.innerHTML = itens.map((item, i) => {
@@ -725,9 +724,6 @@ function renderNfeItens() {
     const qtdEst  = vinc ? fmtQtd(item.quantidade * (vinc.qtd_por_embalagem||1)) : '—';
     const unEst   = ins?.unidade_medida?.toUpperCase() || '—';
     const rowStyle = '';
-    const detalheBtn = vinculado
-      ? `<button style="padding:2px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;font-size:11px;cursor:pointer">…</button>`
-      : `<button onclick="openVincularNfeItem('${item.id}')" style="padding:2px 10px;border:none;border-radius:4px;background:#f97316;color:#fff;font-size:11px;cursor:pointer;font-weight:600">Vincular</button>`;
     return `<tr style="${rowStyle}">
       <td class="c" style="color:#94a3b8;${vinculado?'':'border-left:3px solid #f59e0b'}">${i+1}</td>
       <td style="font-family:'DM Mono',monospace;font-size:11px;color:#0f172a">${esc(item.codigo_item_fornecedor||'—')}</td>
@@ -740,7 +736,6 @@ function renderNfeItens() {
       <td class="r" style="font-family:'DM Mono',monospace;color:#0f172a">${brl(item.valor_unitario)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;font-weight:600;color:#0f172a">${brl(total)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:${vinculado?'#16a34a':'#94a3b8'};font-weight:600">${qtdEst} ${vinculado?unEst:''}</td>
-      <td class="c">${detalheBtn}</td>
     </tr>`;
   }).join('');
 }
@@ -761,8 +756,8 @@ function renderNfeErros() {
     tbody.innerHTML = `<tr><td colspan="6" class="empty" style="color:#16a34a">✓ Todos os itens estão vinculados.</td></tr>`;
     return;
   }
-  tbody.innerHTML = pendentes.map(item => `<tr style="background:#fff5f5">
-    <td style="font-weight:600;color:#dc2626">${esc(item.descricao_nfe)}</td>
+  tbody.innerHTML = pendentes.map(item => `<tr>
+    <td style="font-weight:600;color:#0f172a">${esc(item.descricao_nfe)}</td>
     <td style="font-family:'DM Mono',monospace;font-size:11px">${esc(item.codigo_item_fornecedor||'—')}</td>
     <td class="c">${esc(item.unidade_nfe||'—')}</td>
     <td class="r" style="font-family:'DM Mono',monospace">${fmtQtd(item.quantidade)}</td>
