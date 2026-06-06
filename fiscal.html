@@ -989,22 +989,13 @@ function renderTable() {
           onchange="toggleRowSel(this,'${nfeKey}')" style="accent-color:#f97316;width:14px;height:14px;cursor:${isPronta?'pointer':'default'}">
       </td>
       <td class="c">${sitIndicator}</td>
-      <td>
-        <div style="font-weight:500">${esc(n.nome_emitente||'—')}</div>
-        <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${n.cnpj_emitente||''}</div>
-      </td>
+      <td><div style="font-weight:500">${esc(n.nome_emitente||'—')}</div></td>
       <td>
         <span style="color:#2563eb;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="event.stopPropagation();openNfeItens('${nfeKey}')">${esc(n.numero||'—')}</span>
       </td>
       <td class="c" style="font-family:'DM Mono',monospace;color:#94a3b8">${n.serie||'1'}</td>
-      <td>
-        <div style="font-size:12px">${fmtDateShort(n.data_emissao)}</div>
-        <div style="font-size:10px;color:#94a3b8">${n.data_emissao ? new Date(n.data_emissao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
-      </td>
-      <td>
-        <div style="font-size:12px">${fmtDateShort(n.data_integracao)}</div>
-        <div style="font-size:10px;color:#94a3b8">${n.data_integracao ? new Date(n.data_integracao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
-      </td>
+      <td style="font-size:12px">${fmtDateShort(n.data_emissao)}</td>
+      <td style="font-size:12px">${fmtDateShort(n.data_integracao)}</td>
       <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(n.valor_total)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:#64748b">${brl(n.valor_titulo)}</td>
       <td style="font-size:11px;color:#64748b">${n.data_vencimento ? new Date(n.data_vencimento+'T00:00').toLocaleDateString('pt-BR') : '—'}</td>
