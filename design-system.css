@@ -138,6 +138,7 @@ th, .tbl th {
   white-space: nowrap !important;
   text-align: left;
   border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #dbe2ec !important;
 }
 th.r, .tbl th.r,
 th.c, .tbl th.c { text-align: right !important; }
@@ -145,10 +146,14 @@ th.c, .tbl th.c { text-align: right !important; }
 td, .tbl td {
   padding: 7px 12px !important;
   border-bottom: 1px solid var(--ds-border-2) !important;
+  border-right: 1px solid var(--ds-border-2) !important;
   vertical-align: middle !important;
   font-size: 13px !important;
   color: var(--ds-text-1);
 }
+/* Grade estilo planilha: remove a borda direita da última coluna (evita borda dupla) */
+th:last-child, td:last-child,
+.tbl th:last-child, .tbl td:last-child { border-right: none !important; }
 td.r, .tbl td.r { text-align: right !important; }
 td.c, .tbl td.c { text-align: center !important; }
 
