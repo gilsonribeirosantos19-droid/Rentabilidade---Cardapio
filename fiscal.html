@@ -60,11 +60,11 @@
   table.tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
   table.tbl tbody tr{cursor:pointer;transition:background .1s}
   table.tbl tbody tr:hover{background:#fafbfc}
-  /* Aba ITENS — visual de nota fiscal: grade fina + divisória entre blocos */
-  #tab-itens table.tbl th, #tab-itens table.tbl td{border-right:1px solid #eef2f7}
-  #tab-itens table.tbl th:last-child, #tab-itens table.tbl td:last-child{border-right:none}
-  #tab-itens table.tbl th:nth-child(8), #tab-itens table.tbl td:nth-child(8){border-left:2px solid #cbd5e1}
-  #tab-itens .nf-grp-th{text-align:center !important;font-size:11px !important;letter-spacing:.04em}
+  /* Aba ITENS — grade estilo planilha/ERP (referência do usuário) */
+  #tab-itens table.tbl{border-collapse:collapse;border:1px solid #b8c2d4}
+  #tab-itens table.tbl th, #tab-itens table.tbl td{border:1px solid #d7dee8 !important;padding:4px 8px !important;font-size:12px}
+  #tab-itens table.tbl thead th{background:#eef2f7 !important;color:#0f172a !important;font-weight:700;border-color:#c2cbdb !important}
+  #tab-itens table.tbl tbody tr:hover{background:#eaf2fd !important}
   table.tbl tbody tr:last-child td{border-bottom:none}
   .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
   .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
@@ -245,22 +245,17 @@
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
-            <thead>
-            <tr>
-              <th class="nf-grp-th" colspan="7">DADOS DA NOTA FISCAL</th>
-              <th class="nf-grp-th" colspan="5" style="border-left:2px solid #fff">VÍNCULO / ESTOQUE</th>
-            </tr>
-            <tr>
+            <thead><tr>
               <th class="c">Seq.</th>
               <th>Item Fornecedor</th>
               <th>Descrição</th>
+              <th>Item Interno</th>
+              <th>Embalagem</th>
               <th class="c">UM</th>
+              <th class="r">Q. na Emb.</th>
               <th class="r">Q. Embalagem</th>
               <th class="r">V. Unitário</th>
               <th class="r">V. Total</th>
-              <th>Item Interno</th>
-              <th>Embalagem</th>
-              <th class="r">Q. na Emb.</th>
               <th class="r">Q. Estoque</th>
               <th class="c">Detalhe</th>
             </tr></thead>
@@ -731,13 +726,13 @@ function renderNfeItens() {
       <td class="c" style="color:#94a3b8;${vinculado?'':'border-left:3px solid #f59e0b'}">${i+1}</td>
       <td style="font-family:'DM Mono',monospace;font-size:11px;color:#0f172a">${esc(item.codigo_item_fornecedor||'—')}</td>
       <td style="font-weight:${vinculado?400:600};color:#0f172a">${esc(item.descricao_nfe)}</td>
+      <td style="color:${vinculado?'#16a34a':'#94a3b8'};font-size:11px">${vinculado?'✓ '+esc(ins?.nome||'—'):'—'}</td>
+      <td style="font-size:11px;color:#64748b">${esc(vinc?.embalagem_descricao||'—')}</td>
       <td class="c" style="font-size:11px;color:#0f172a">${esc(item.unidade_nfe||'—')}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;color:#0f172a">${vinc?.qtd_por_embalagem||'—'}</td>
       <td class="r" style="font-family:'DM Mono',monospace;font-weight:600;color:#0f172a">${fmtQtd(item.quantidade)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:#0f172a">${brl(item.valor_unitario)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;font-weight:600;color:#0f172a">${brl(total)}</td>
-      <td style="color:${vinculado?'#16a34a':'#94a3b8'};font-size:11px">${vinculado?'✓ '+esc(ins?.nome||'—'):'—'}</td>
-      <td style="font-size:11px;color:#64748b">${esc(vinc?.embalagem_descricao||'—')}</td>
-      <td class="r" style="font-family:'DM Mono',monospace">${vinc?.qtd_por_embalagem||'—'}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:${vinculado?'#16a34a':'#94a3b8'};font-weight:600">${qtdEst} ${vinculado?unEst:''}</td>
       <td class="c">${detalheBtn}</td>
     </tr>`;
