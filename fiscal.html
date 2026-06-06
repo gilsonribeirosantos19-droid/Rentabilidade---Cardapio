@@ -60,11 +60,17 @@
   table.tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
   table.tbl tbody tr{cursor:pointer;transition:background .1s}
   table.tbl tbody tr:hover{background:#fafbfc}
-  /* Aba ITENS — grade estilo planilha/ERP (referência do usuário) */
-  #tab-itens table.tbl{border-collapse:collapse;border:1px solid #b8c2d4}
-  #tab-itens table.tbl th, #tab-itens table.tbl td{border:1px solid #d7dee8 !important;padding:4px 8px !important;font-size:12px}
-  #tab-itens table.tbl thead th{background:#eef2f7 !important;color:#0f172a !important;font-weight:700;border-color:#c2cbdb !important}
-  #tab-itens table.tbl tbody tr:hover{background:#eaf2fd !important}
+  /* Abas DANFE / Itens / Erros — grade estilo planilha/ERP (referência do usuário) */
+  #tab-nfe table.tbl, #tab-itens table.tbl, #tab-erros table.tbl{border-collapse:collapse;border:1px solid #b8c2d4}
+  #tab-nfe table.tbl th, #tab-nfe table.tbl td,
+  #tab-itens table.tbl th, #tab-itens table.tbl td,
+  #tab-erros table.tbl th, #tab-erros table.tbl td{border:1px solid #d7dee8 !important;padding:4px 8px !important;font-size:12px}
+  #tab-nfe table.tbl thead th,
+  #tab-itens table.tbl thead th,
+  #tab-erros table.tbl thead th{background:#eef2f7 !important;color:#0f172a !important;font-weight:700;border-color:#c2cbdb !important}
+  #tab-nfe table.tbl tbody tr:hover,
+  #tab-itens table.tbl tbody tr:hover,
+  #tab-erros table.tbl tbody tr:hover{background:#eaf2fd !important}
   table.tbl tbody tr:last-child td{border-bottom:none}
   .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
   .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
