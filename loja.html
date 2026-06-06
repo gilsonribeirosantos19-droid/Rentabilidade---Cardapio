@@ -1458,13 +1458,42 @@
 
 <!-- MODAL: PREENCHER INVENTÁRIO -->
 <div id="m-inv" class="overlay" onclick="if(event.target===this)fecharModal('m-inv')">
-  <div class="modal" style="max-width:700px" onclick="event.stopPropagation()">
-    <h2 id="m-inv-titulo">Inventário</h2>
-    <div id="m-inv-info" style="font-size:12px;color:var(--text3);margin-bottom:16px"></div>
-    <div class="tbl-wrap" style="max-height:55vh;overflow-y:auto">
+  <div class="modal" style="max-width:980px" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div>
+        <h2 id="m-inv-titulo" style="margin:0">Inventário</h2>
+        <div id="m-inv-info" style="font-size:12px;color:var(--text3);margin-top:4px"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;min-width:280px">
+        <div style="font-size:12px;color:var(--text3);white-space:nowrap">Itens lançados: <strong id="inv-prog-txt" style="color:var(--text1)">0 de 0</strong></div>
+        <div style="flex:1;height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;min-width:70px">
+          <div id="inv-prog-bar" style="height:100%;width:0%;background:#16a34a;border-radius:99px;transition:width .25s"></div>
+        </div>
+        <span id="inv-prog-pct" style="font-size:11px;color:var(--text3);white-space:nowrap;background:#f1f5f9;padding:3px 9px;border-radius:99px">0% concluído</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin:16px 0 12px">
+      <div>
+        <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:4px">Categoria</label>
+        <select id="inv-fil-cat" class="field" onchange="filtrarInv()" style="min-width:160px"><option value="">Todas</option></select>
+      </div>
+      <div style="flex:1;min-width:180px">
+        <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:4px">Pesquisar item</label>
+        <input id="inv-fil-busca" class="field" placeholder="Digite o nome do item..." oninput="filtrarInv()" style="width:100%">
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:4px">Mostrar</label>
+        <div style="display:flex;gap:14px;align-items:center;height:38px">
+          <label style="font-size:13px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="inv-mostrar" value="todos" checked onchange="filtrarInv()">Todos</label>
+          <label style="font-size:13px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="inv-mostrar" value="nao" onchange="filtrarInv()">Não lançados</label>
+          <label style="font-size:13px;display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="inv-mostrar" value="sim" onchange="filtrarInv()">Lançados</label>
+        </div>
+      </div>
+    </div>
+    <div class="tbl-wrap" style="max-height:50vh;overflow-y:auto">
       <table class="tbl">
         <thead><tr>
-          <th>Insumo</th><th>Un.</th>
+          <th>Item</th><th>Insumo</th><th>Embalagem</th><th>Un.</th>
           <th class="r">Q. Contada</th>
           <th class="r">Q. Sistema</th>
           <th class="r">Saldo</th>
@@ -1502,6 +1531,7 @@ const api = createApi(SUPA_URL, SUPA_KEY);
 let userProfile = null;
 let insumos = [], fichas = [], motivos = [], grupos = [], gruposItens = {}, fornecedores = [];
 let invAtual = null; // inventário aberto no modal
+let invItensAtual = []; // itens do inventário aberto (para busca/filtro/progresso)
 let solGrupoAtual = null;
 let solChecked = new Set();
 
@@ -1666,66 +1696,151 @@ async function abrirInventario(invId) {
 
   try {
     const itens = await api(`inventario_itens?inventario_id=eq.${invId}`);
-    const tbody = document.getElementById('m-inv-body');
-    if (!itens.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum item neste inventário. Contate o administrador.</td></tr>';
-      document.getElementById('btn-confirmar-inv').disabled = true;
-    } else {
-      tbody.innerHTML = itens.map(it => {
-        const ins = insumos.find(i=>i.id===it.insumo_id);
-        const saldo = (Number(it.qtd_contada)||0) - (Number(it.qtd_estoque)||0);
-        const saldoClass = saldo >= 0 ? 'saldo-pos' : 'saldo-neg';
-        return `<tr>
-          <td style="font-weight:500">${esc(ins?.nome||it.insumo_id)}</td>
-          <td style="color:var(--text3)">${esc(ins?.unidade_medida||ins?.unidade_compra||'un')}</td>
-          <td class="r">
-            <input type="number" class="field field-sm" id="inv-qtd-${it.id}"
-              value="${it.qtd_contada||''}" min="0" step="0.001" placeholder="0.000"
-              oninput="atualizarSaldo('${it.id}','${it.qtd_estoque||0}')"
-              style="width:90px;text-align:right">
-          </td>
-          <td class="r mono" style="color:var(--text3)">${Number(it.qtd_estoque||0).toFixed(3)}</td>
-          <td class="r mono ${saldoClass}" id="inv-saldo-${it.id}">
-            ${saldo >= 0 ? '+' : ''}${saldo.toFixed(3)}
-          </td>
-        </tr>`;
-      }).join('');
-      document.getElementById('btn-confirmar-inv').disabled = false;
-    }
+    invItensAtual = itens.map(it => {
+      const ins = insumos.find(i=>i.id===it.insumo_id);
+      return {
+        id: it.id,
+        insumo_id: it.insumo_id,
+        codigo: invCodigo(it.insumo_id),
+        nome: ins?.nome || it.insumo_id,
+        categoria: ins?.categoria || '',
+        embalagem: invEmbalagem(ins),
+        unidade: invUnidade(ins),
+        // qtd_contada: '' = ainda não lançado
+        qtd_contada: (it.qtd_contada===null||it.qtd_contada===undefined) ? '' : String(it.qtd_contada),
+      };
+    });
+    // popula o filtro de categorias com as categorias presentes
+    const cats = [...new Set(invItensAtual.map(i=>i.categoria).filter(Boolean))].sort();
+    const selCat = document.getElementById('inv-fil-cat');
+    if (selCat) selCat.innerHTML = '<option value="">Todas</option>' + cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    const inpBusca = document.getElementById('inv-fil-busca'); if (inpBusca) inpBusca.value = '';
+    const radioTodos = document.querySelector('input[name="inv-mostrar"][value="todos"]'); if (radioTodos) radioTodos.checked = true;
+    document.getElementById('btn-confirmar-inv').disabled = invItensAtual.length === 0;
+    renderInvTabela();
   } catch(e) { toast('Erro: '+e.message,'err'); }
   abrirModal('m-inv');
 }
 
-function atualizarSaldo(itemId, qtdEstoque) {
-  const qtdContada = parseFloat(document.getElementById(`inv-qtd-${itemId}`)?.value)||0;
-  const saldo = qtdContada - Number(qtdEstoque);
-  const el = document.getElementById(`inv-saldo-${itemId}`);
-  if (el) {
-    el.textContent = (saldo >= 0 ? '+' : '') + saldo.toFixed(3);
-    el.className = `r mono ${saldo >= 0 ? 'saldo-pos' : 'saldo-neg'}`;
+// Código interno gerado pelo sistema: "2" + posição (alfabética) do insumo, 6 dígitos → 2000026
+function invCodigo(insumoId) {
+  const idx = insumos.findIndex(i => i.id === insumoId);
+  return idx >= 0 ? '2' + String(idx + 1).padStart(6, '0') : '—';
+}
+
+// Embalagem por extenso, a partir da unidade de compra
+const _EMB_MAP = { kg:'QUILOGRAMA', g:'GRAMA', l:'LITRO', litro:'LITRO', ml:'MILILITRO', un:'UNIDADE', unid:'UNIDADE', cx:'CAIXA', pct:'PACOTE', fd:'FARDO', fardo:'FARDO' };
+function invEmbalagem(ins) {
+  const u = (ins?.unidade_compra || ins?.unidade_medida || '').toLowerCase().trim();
+  return _EMB_MAP[u] || (u ? u.toUpperCase() : '—');
+}
+function invUnidade(ins) {
+  const u = (ins?.unidade_medida || ins?.unidade_compra || 'un').toLowerCase().trim();
+  return u === 'un' ? 'unid' : u;
+}
+
+// Lê os valores digitados (visíveis) de volta para a memória — preserva ao filtrar
+function lerInputsInv() {
+  invItensAtual.forEach(it => {
+    const el = document.getElementById(`inv-qtd-${it.id}`);
+    if (el) it.qtd_contada = el.value;
+  });
+}
+
+function filtrarInv() { renderInvTabela(); }
+
+function renderInvTabela() {
+  lerInputsInv();
+  const cat = document.getElementById('inv-fil-cat')?.value || '';
+  const busca = (document.getElementById('inv-fil-busca')?.value || '').toLowerCase().trim();
+  const mostrar = document.querySelector('input[name="inv-mostrar"]:checked')?.value || 'todos';
+  const tbody = document.getElementById('m-inv-body');
+
+  const isLancado = it => it.qtd_contada !== '' && it.qtd_contada !== null && it.qtd_contada !== undefined;
+  const filtrados = invItensAtual.filter(it => {
+    if (cat && it.categoria !== cat) return false;
+    if (busca && !it.nome.toLowerCase().includes(busca) && !it.codigo.includes(busca)) return false;
+    if (mostrar === 'sim' && !isLancado(it)) return false;
+    if (mostrar === 'nao' && isLancado(it)) return false;
+    return true;
+  });
+
+  if (!invItensAtual.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum item neste inventário. Contate o administrador.</td></tr>';
+  } else if (!filtrados.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum item para este filtro.</td></tr>';
+  } else {
+    tbody.innerHTML = filtrados.map(it => {
+      const contada = parseFloat(String(it.qtd_contada).replace(',', '.')) || 0;
+      const saldo = contada; // Q. Sistema permanece zerada
+      return `<tr>
+        <td class="mono" style="color:var(--text3);font-size:11px">${esc(it.codigo)}</td>
+        <td style="font-weight:500">${esc(it.nome)}</td>
+        <td style="color:var(--text3);font-size:12px">${esc(it.embalagem)}</td>
+        <td style="color:var(--text3)">${esc(it.unidade)}</td>
+        <td class="r">
+          <input type="number" class="field field-sm" id="inv-qtd-${it.id}"
+            value="${it.qtd_contada}" min="0" step="0.001" placeholder="0,000"
+            oninput="atualizarSaldo('${it.id}')" style="width:90px;text-align:right">
+        </td>
+        <td class="r mono" style="color:var(--text3)">0,000</td>
+        <td class="r mono ${saldo >= 0 ? 'saldo-pos' : 'saldo-neg'}" id="inv-saldo-${it.id}">${saldo >= 0 ? '+' : ''}${saldo.toFixed(3)}</td>
+      </tr>`;
+    }).join('');
   }
+  atualizarProgressoInv();
+}
+
+function atualizarSaldo(itemId) {
+  const el = document.getElementById(`inv-qtd-${itemId}`);
+  const saldo = el ? (parseFloat(el.value.replace(',', '.')) || 0) : 0; // Q. Sistema = 0
+  const s = document.getElementById(`inv-saldo-${itemId}`);
+  if (s) {
+    s.textContent = (saldo >= 0 ? '+' : '') + saldo.toFixed(3);
+    s.className = `r mono ${saldo >= 0 ? 'saldo-pos' : 'saldo-neg'}`;
+  }
+  const item = invItensAtual.find(i => i.id === itemId);
+  if (item && el) item.qtd_contada = el.value;
+  atualizarProgressoInv();
+}
+
+function atualizarProgressoInv() {
+  lerInputsInv();
+  const total = invItensAtual.length;
+  const lancados = invItensAtual.filter(i => i.qtd_contada !== '' && i.qtd_contada !== null && i.qtd_contada !== undefined).length;
+  const pct = total ? Math.round((lancados / total) * 100) : 0;
+  const t = document.getElementById('inv-prog-txt'); if (t) t.textContent = `${lancados} de ${total}`;
+  const b = document.getElementById('inv-prog-bar'); if (b) b.style.width = pct + '%';
+  const p = document.getElementById('inv-prog-pct'); if (p) p.textContent = `${pct}% concluído`;
 }
 
 async function confirmarInventario() {
   if (!invAtual) return;
-  const itens = await api(`inventario_itens?inventario_id=eq.${invAtual.id}`);
+  lerInputsInv();
   const lojaId = invAtual.loja_id || userProfile?.loja_id;
   const btn = document.getElementById('btn-confirmar-inv');
   btn.disabled = true; btn.textContent = 'Salvando...';
+  const lancado = it => it.qtd_contada !== '' && it.qtd_contada !== null && it.qtd_contada !== undefined;
+  const num = v => parseFloat(String(v).replace(',', '.')) || 0;
   try {
-    const updates = itens.map(it => ({
-      id: it.id, insumo_id: it.insumo_id,
-      qtd: parseFloat(document.getElementById(`inv-qtd-${it.id}`)?.value)||0
+    // Salva a contagem de TODOS os itens (não lançado = null, segue como "não lançado")
+    const itensBody = invItensAtual.map(it => ({
+      id: it.id,
+      qtd_contada: lancado(it) ? num(it.qtd_contada) : null,
+      tenant_id: TENANT_ID,
     }));
     await api('inventario_itens?on_conflict=id', {
       method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
-      body: JSON.stringify(updates.map(u => ({ id: u.id, qtd_contada: u.qtd, tenant_id: TENANT_ID })))
+      body: JSON.stringify(itensBody)
     });
-    const saldoPayloads = updates.filter(u => u.insumo_id && lojaId).map(u => ({
-      tenant_id: TENANT_ID, loja_id: lojaId, insumo_id: u.insumo_id,
-      quantidade: parseFloat(u.qtd.toFixed(4)),
-      atualizado_em: new Date().toISOString()
-    }));
+    // Atualiza o saldo SOMENTE dos itens lançados (não zera os que não foram contados)
+    const saldoPayloads = invItensAtual
+      .filter(it => it.insumo_id && lojaId && lancado(it))
+      .map(it => ({
+        tenant_id: TENANT_ID, loja_id: lojaId, insumo_id: it.insumo_id,
+        quantidade: parseFloat(num(it.qtd_contada).toFixed(4)),
+        atualizado_em: new Date().toISOString()
+      }));
     if (saldoPayloads.length) {
       await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
         method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
