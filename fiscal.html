@@ -859,7 +859,7 @@ async function salvarVincFiscal() {
     toast('Vínculo salvo!', 'ok');
 
     // Recarrega itens e verifica se NF-e ficou pronta
-    await loadNfeItens(selectedNfeKey);
+    await selectNfe(selectedNfeKey);
     renderNfeItens();
     renderNfeErros();
     const updItens = await api(`nfe_itens?nfe_id=eq.${selectedNfeKey}&tenant_id=eq.${TENANT_ID}&select=vinculacao_id`).catch(()=>[]);
@@ -1031,7 +1031,7 @@ async function processarNfeFiscal(nfeId, silent = false) {
 
   // Carrega itens se necessário
   if(!currentNfeItens.length || selectedNfeKey !== nfeId) {
-    await loadNfeItens(nfeId);
+    await selectNfe(nfeId);
   }
 
   if(!currentNfeItens.length) { toast('Nenhum item encontrado para processar.', 'err'); return; }
