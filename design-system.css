@@ -129,7 +129,7 @@ tfoot td,
 .tbl tfoot td { color: var(--ds-text-1) !important; font-weight: 700 !important; border-top: 2px solid #cbd5e1 !important; border-bottom: none !important; }
 
 th, .tbl th {
-  padding: 7px 12px !important;
+  padding: 4px 8px !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   color: #475569 !important;
@@ -144,12 +144,13 @@ th.r, .tbl th.r,
 th.c, .tbl th.c { text-align: right !important; }
 
 td, .tbl td {
-  padding: 7px 12px !important;
+  padding: 4px 8px !important;
   border-bottom: 1px solid var(--ds-border-2) !important;
   border-right: 1px solid var(--ds-border-2) !important;
   vertical-align: middle !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: var(--ds-text-1);
+  white-space: nowrap !important;
 }
 /* Grade estilo planilha: remove a borda direita da última coluna (evita borda dupla) */
 th:last-child, td:last-child,
@@ -180,7 +181,7 @@ tbody tr:hover { background: #f8fafc !important; }
   background: #fff !important;
   border: 1px solid var(--ds-border) !important;
   border-radius: var(--ds-radius-lg) !important;
-  overflow: hidden !important;
+  overflow-x: auto !important;
 }
 
 /* ── INPUTS: simples, sem ruído visual ───────────────────────────── */
