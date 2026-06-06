@@ -980,8 +980,8 @@ function renderTable() {
 
     return `<tr data-key="${nfeKey}" onclick="selectNfe('${nfeKey}')" ondblclick="openNfeItens('${nfeKey}')" style="cursor:pointer">
       <td class="c" onclick="event.stopPropagation()">
-        <input type="checkbox" data-id="${nfeKey}" ${selectedIds.has(nfeKey)?'checked':''} ${isPronta?'':'disabled style="opacity:.3"'}
-          onchange="toggleRowSel(this,'${nfeKey}')" style="accent-color:#f97316;width:14px;height:14px;cursor:${isPronta?'pointer':'default'}">
+        <input type="checkbox" data-id="${nfeKey}" ${selectedIds.has(nfeKey)?'checked':''}
+          onchange="toggleRowSel(this,'${nfeKey}')" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">
       </td>
       <td class="c">${sitIndicator}</td>
       <td><div style="font-weight:500">${esc(n.nome_emitente||'—')}</div></td>
