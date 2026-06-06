@@ -60,6 +60,17 @@
   table.tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
   table.tbl tbody tr{cursor:pointer;transition:background .1s}
   table.tbl tbody tr:hover{background:#fafbfc}
+  /* Abas DANFE / Itens / Erros — grade estilo planilha/ERP (referência do usuário) */
+  #tab-nfe table.tbl, #tab-itens table.tbl, #tab-erros table.tbl{border-collapse:collapse;border:1px solid #b8c2d4}
+  #tab-nfe table.tbl th, #tab-nfe table.tbl td,
+  #tab-itens table.tbl th, #tab-itens table.tbl td,
+  #tab-erros table.tbl th, #tab-erros table.tbl td{border:1px solid #d7dee8 !important;padding:4px 8px !important;font-size:12px}
+  #tab-nfe table.tbl thead th,
+  #tab-itens table.tbl thead th,
+  #tab-erros table.tbl thead th{background:#eef2f7 !important;color:#0f172a !important;font-weight:700;border-color:#c2cbdb !important}
+  #tab-nfe table.tbl tbody tr:hover,
+  #tab-itens table.tbl tbody tr:hover,
+  #tab-erros table.tbl tbody tr:hover{background:#eaf2fd !important}
   table.tbl tbody tr:last-child td{border-bottom:none}
   .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
   .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
@@ -248,14 +259,13 @@
               <th>Embalagem</th>
               <th class="c">UM</th>
               <th class="r">Q. na Emb.</th>
-              <th class="r">Q. Embalagem</th>
+              <th class="r">Q. de Embalagens</th>
               <th class="r">V. Unitário</th>
               <th class="r">V. Total</th>
               <th class="r">Q. Estoque</th>
-              <th class="c">Detalhe</th>
             </tr></thead>
             <tbody id="tbody-itens">
-              <tr><td colspan="12" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>
+              <tr><td colspan="11" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>
             </tbody>
           </table>
         </div></div>
@@ -263,9 +273,9 @@
 
       <!-- TAB: ERROS (erros da NF-e selecionada) -->
       <div class="tab-pane" id="tab-erros">
-        <div id="erros-header" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:#fff5f5;border:1px solid #fca5a5;border-radius:8px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="erros-nfe-label" style="font-size:12px;color:#dc2626">Selecione uma NF-e na aba DANFE para ver os erros</span>
+        <div id="erros-header" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="erros-nfe-label" style="font-size:12px;color:#475569">Selecione uma NF-e na aba DANFE para ver os erros</span>
         </div>
         <div class="tbl-wrap"><div class="tbl-scroll">
           <table class="tbl">
@@ -521,7 +531,7 @@ function hoje() { return new Date().toISOString().split('T')[0]; }
 function norm(s) { return (s||'').toLowerCase().trim(); }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function brl(v) { if(v==null||v==='') return '—'; return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtQtd(n) { const v=parseFloat(n)||0; if(Number.isInteger(v)) return v.toString(); return v.toFixed(3).replace(/\.?0+$/,''); }
+function fmtQtd(n) { const v=parseFloat(n)||0; if(Number.isInteger(v)) return v.toLocaleString('pt-BR'); return v.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}); }
 function getLojaId() { return lojaAtual?.id || null; }
 function getSaldo(insId) {
   const lojaId = getLojaId();
@@ -688,16 +698,22 @@ function renderNfeItens() {
   const tbody = document.getElementById('tbody-itens');
   const label = document.getElementById('itens-nfe-label');
   if(!selectedNfeKey) {
-    tbody.innerHTML = `<tr><td colspan="12" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="empty">Selecione uma NF-e na aba DANFE.</td></tr>`;
     return;
   }
   const nfe = entradasNfe.find(n => n.id === selectedNfeKey);
   const itens = currentNfeItens;
-  if(label) label.textContent = `NF-e ${nfe?.numero||'—'} — ${nfe?.nome_emitente||''}  ·  ${itens.length} item(ns)`;
+  if(label) label.innerHTML = nfe
+    ? `<span style="font-weight:700;color:#0f172a">NF-e ${esc(nfe.numero||'—')}/${esc(nfe.serie||'1')}</span>`
+      + `<span style="color:#cbd5e1;margin:0 8px">|</span><span style="color:#94a3b8">Emitente:</span> <strong style="color:#0f172a">${esc(nfe.nome_emitente||'—')}</strong>`
+      + `<span style="color:#cbd5e1;margin:0 8px">|</span><span style="color:#94a3b8">Emissão:</span> <strong style="color:#0f172a">${nfe.data_emissao?fmtDateShort(nfe.data_emissao):'—'}</strong>`
+      + `<span style="color:#cbd5e1;margin:0 8px">|</span><span style="color:#94a3b8">Total:</span> <strong style="color:#0f172a">${brl(nfe.valor_total||0)}</strong>`
+      + `<span style="color:#cbd5e1;margin:0 8px">|</span><span style="color:#94a3b8">${itens.length} ${itens.length===1?'item':'itens'}</span>`
+    : 'Selecione uma NF-e na aba DANFE para ver os itens';
   document.getElementById('tab-n-itens').textContent = itens.length;
 
   if(!itens.length) {
-    tbody.innerHTML = `<tr><td colspan="12" class="empty">Nenhum item encontrado — os itens chegam quando a nota é processada automaticamente.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" class="empty">Nenhum item encontrado — os itens chegam quando a nota é processada automaticamente.</td></tr>`;
     return;
   }
   tbody.innerHTML = itens.map((item, i) => {
@@ -707,23 +723,19 @@ function renderNfeItens() {
     const total   = ((item.quantidade||0) * (item.valor_unitario||0));
     const qtdEst  = vinc ? fmtQtd(item.quantidade * (vinc.qtd_por_embalagem||1)) : '—';
     const unEst   = ins?.unidade_medida?.toUpperCase() || '—';
-    const rowStyle = vinculado ? '' : 'background:#fff5f5';
-    const detalheBtn = vinculado
-      ? `<button style="padding:2px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;font-size:11px;cursor:pointer">…</button>`
-      : `<button onclick="openVincularNfeItem('${item.id}')" style="padding:2px 10px;border:none;border-radius:4px;background:#f97316;color:#fff;font-size:11px;cursor:pointer;font-weight:600">Vincular</button>`;
+    const rowStyle = '';
     return `<tr style="${rowStyle}">
-      <td class="c" style="color:#94a3b8">${i+1}</td>
-      <td style="font-family:'DM Mono',monospace;font-size:11px">${esc(item.codigo_item_fornecedor||'—')}</td>
-      <td style="font-weight:${vinculado?400:600};color:${vinculado?'inherit':'#dc2626'}">${esc(item.descricao_nfe)}</td>
-      <td style="color:${vinculado?'#16a34a':'#94a3b8'};font-size:11px">${vinculado?'✓ '+esc(ins?.nome||'—'):'—'}</td>
+      <td class="c" style="color:#94a3b8;${vinculado?'':'border-left:3px solid #f59e0b'}">${i+1}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:#0f172a">${esc(item.codigo_item_fornecedor||'—')}</td>
+      <td style="font-weight:${vinculado?400:600};color:#0f172a">${esc(item.descricao_nfe)}</td>
+      <td style="color:#0f172a;font-family:'DM Mono',monospace;font-size:11px">${vinculado && ins ? '2'+String(insumos.findIndex(x=>x.id===ins.id)+1).padStart(6,'0') : '—'}</td>
       <td style="font-size:11px;color:#64748b">${esc(vinc?.embalagem_descricao||'—')}</td>
-      <td class="c" style="font-size:11px">${esc(item.unidade_nfe||'—')}</td>
-      <td class="r" style="font-family:'DM Mono',monospace">${vinc?.qtd_por_embalagem||'—'}</td>
-      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${fmtQtd(item.quantidade)}</td>
-      <td class="r" style="font-family:'DM Mono',monospace">${brl(item.valor_unitario)}</td>
-      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600">${brl(total)}</td>
+      <td class="c" style="font-size:11px;color:#0f172a">${esc(item.unidade_nfe||'—')}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;color:#0f172a">${vinc ? fmtQtd(vinc.qtd_por_embalagem) : '—'}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600;color:#0f172a">${fmtQtd(item.quantidade)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;color:#0f172a">${brl(item.valor_unitario)}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;font-weight:600;color:#0f172a">${brl(total)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:${vinculado?'#16a34a':'#94a3b8'};font-weight:600">${qtdEst} ${vinculado?unEst:''}</td>
-      <td class="c">${detalheBtn}</td>
     </tr>`;
   }).join('');
 }
@@ -744,8 +756,8 @@ function renderNfeErros() {
     tbody.innerHTML = `<tr><td colspan="6" class="empty" style="color:#16a34a">✓ Todos os itens estão vinculados.</td></tr>`;
     return;
   }
-  tbody.innerHTML = pendentes.map(item => `<tr style="background:#fff5f5">
-    <td style="font-weight:600;color:#dc2626">${esc(item.descricao_nfe)}</td>
+  tbody.innerHTML = pendentes.map(item => `<tr>
+    <td style="font-weight:600;color:#0f172a">${esc(item.descricao_nfe)}</td>
     <td style="font-family:'DM Mono',monospace;font-size:11px">${esc(item.codigo_item_fornecedor||'—')}</td>
     <td class="c">${esc(item.unidade_nfe||'—')}</td>
     <td class="r" style="font-family:'DM Mono',monospace">${fmtQtd(item.quantidade)}</td>
@@ -968,26 +980,17 @@ function renderTable() {
 
     return `<tr data-key="${nfeKey}" onclick="selectNfe('${nfeKey}')" ondblclick="openNfeItens('${nfeKey}')" style="cursor:pointer">
       <td class="c" onclick="event.stopPropagation()">
-        <input type="checkbox" data-id="${nfeKey}" ${selectedIds.has(nfeKey)?'checked':''} ${isPronta?'':'disabled style="opacity:.3"'}
-          onchange="toggleRowSel(this,'${nfeKey}')" style="accent-color:#f97316;width:14px;height:14px;cursor:${isPronta?'pointer':'default'}">
+        <input type="checkbox" data-id="${nfeKey}" ${selectedIds.has(nfeKey)?'checked':''}
+          onchange="toggleRowSel(this,'${nfeKey}')" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">
       </td>
       <td class="c">${sitIndicator}</td>
-      <td>
-        <div style="font-weight:500">${esc(n.nome_emitente||'—')}</div>
-        <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${n.cnpj_emitente||''}</div>
-      </td>
+      <td><div style="font-weight:500">${esc(n.nome_emitente||'—')}</div></td>
       <td>
         <span style="color:#2563eb;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="event.stopPropagation();openNfeItens('${nfeKey}')">${esc(n.numero||'—')}</span>
       </td>
       <td class="c" style="font-family:'DM Mono',monospace;color:#94a3b8">${n.serie||'1'}</td>
-      <td>
-        <div style="font-size:12px">${fmtDateShort(n.data_emissao)}</div>
-        <div style="font-size:10px;color:#94a3b8">${n.data_emissao ? new Date(n.data_emissao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
-      </td>
-      <td>
-        <div style="font-size:12px">${fmtDateShort(n.data_integracao)}</div>
-        <div style="font-size:10px;color:#94a3b8">${n.data_integracao ? new Date(n.data_integracao).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}</div>
-      </td>
+      <td style="font-size:12px">${fmtDateShort(n.data_emissao)}</td>
+      <td style="font-size:12px">${fmtDateShort(n.data_integracao)}</td>
       <td class="r" style="font-weight:600;font-family:'DM Mono',monospace">${brl(n.valor_total)}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:#64748b">${brl(n.valor_titulo)}</td>
       <td style="font-size:11px;color:#64748b">${n.data_vencimento ? new Date(n.data_vencimento+'T00:00').toLocaleDateString('pt-BR') : '—'}</td>
