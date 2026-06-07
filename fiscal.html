@@ -1508,19 +1508,31 @@ async function onVinInsumoChange() {
   onVinEmbSelectChange(prev?.fator);
 }
 
+// Converte "quantidade + unidade" para a unidade de estoque.
+function _embToStock(numStr, unit, stockUnit) {
+  let q = parseFloat(String(numStr).replace(',','.')); if(isNaN(q)||q<=0) return 0;
+  let u = String(unit).toUpperCase();
+  // "0,900ml" quase sempre é litro mal escrito (ninguém usa decimal em ml) → trata como L
+  if(u==='ML' && /[.,]/.test(numStr)) u='L';
+  const s = (stockUnit||'').toUpperCase();
+  if(u==='KG'){ if(s==='KG') return q; if(s==='G') return q*1000; }
+  if(u==='G'){ if(s==='KG') return q/1000; if(s==='G') return q; }
+  if(u==='L'){ if(s==='LITRO'||s==='L') return q; if(s==='ML') return q*1000; }
+  if(u==='ML'){ if(s==='LITRO'||s==='L') return q/1000; if(s==='ML') return q; }
+  if(u.startsWith('UN')){ if(s.startsWith('UN')) return q; }
+  return 0;
+}
 // Lê a conversão (qtd na unidade de estoque) a partir do NOME da embalagem.
-// Ex: "CAIXA C/ 9 KG" → 9 (estoque kg); "PACOTE C/ 70 G" → 0,07; "UNIDADE C/ 100 G" → 0,1
+// Ex: "CAIXA C/ 9 KG" → 9; "PACOTE C/ 70 G" → 0,07; "CAIXA C/ 20X0,900ML" → 18 (estoque litro).
 function _parseEmbFator(desc, stockUnit) {
   if(!desc) return 0;
-  const m = String(desc).toUpperCase().match(/(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
-  if(!m) return 0;
-  const n = parseFloat(m[1].replace(',','.')); if(isNaN(n)||n<=0) return 0;
-  const u = m[2]; const s = (stockUnit||'').toUpperCase();
-  if(u==='KG'){ if(s==='KG') return n; if(s==='G') return n*1000; }
-  if(u==='G'){ if(s==='KG') return +(n/1000).toFixed(6); if(s==='G') return n; }
-  if(u==='L'){ if(s==='LITRO'||s==='L') return n; if(s==='ML') return n*1000; }
-  if(u==='ML'){ if(s==='LITRO'||s==='L') return +(n/1000).toFixed(6); if(s==='ML') return n; }
-  if(u.startsWith('UN')){ if(s.startsWith('UN')) return n; }
+  const D = String(desc).toUpperCase();
+  // Formato "N x M unidade" (ex: 20X900ML, 20X0,900ML, 12X1,5L) → N × (M convertido)
+  let m = D.match(/(\d+(?:[.,]\d+)?)\s*[X×]\s*(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
+  if(m){ const r = parseFloat(m[1].replace(',','.')) * _embToStock(m[2], m[3], stockUnit); if(r>0) return +r.toFixed(6); }
+  // Formato "C/ M unidade" ou "M unidade" (ex: C/ 9 KG, 70 G)
+  m = D.match(/(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
+  if(m){ const r = _embToStock(m[1], m[2], stockUnit); if(r>0) return +r.toFixed(6); }
   return 0;
 }
 
