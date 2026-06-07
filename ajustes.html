@@ -276,49 +276,38 @@
       <!-- TAB: AJUSTE DE ESTOQUE -->
       <div id="tab-estoque" class="tab-pane">
         <button class="adj-back" onclick="goHub()">← Ajustes</button>
-        <div class="split">
-          <!-- FORMULÁRIO -->
-          <div class="card">
-            <div class="card-title">Ajuste de Estoque</div>
-            <div class="card-sub">Corrija o saldo quando uma nota errada afetou a quantidade.</div>
-
-            <div class="fg">
-              <label>Loja</label>
-              <select id="ae-loja" onchange="onAeLojaChange()">
-                <option value="">Selecione a loja...</option>
-              </select>
+        <div class="card" style="margin-bottom:16px">
+          <div class="sec-head"><span class="sec-ic">▣</span> Informações do Ajuste</div>
+          <div class="adj-grid">
+            <div class="fg" style="margin:0">
+              <label>Loja *</label>
+              <select id="ae-loja" onchange="onAeLojaChange()"><option value="">Selecione a loja...</option></select>
             </div>
-
-            <div class="fg">
-              <label>Insumo</label>
-              <select id="ae-insumo" onchange="onAeInsumoChange()">
-                <option value="">Selecione um insumo...</option>
-              </select>
+            <div class="fg" style="margin:0">
+              <label>Insumo *</label>
+              <select id="ae-insumo" onchange="onAeInsumoChange()"><option value="">Selecione um insumo...</option></select>
             </div>
-
-            <div id="ae-saldo-preview" class="saldo-preview"></div>
-
-            <div class="tipo-wrap">
-              <button class="tipo-btn pos" id="ae-btn-pos" onclick="selecionarTipo('pos')">＋ Acréscimo</button>
-              <button class="tipo-btn neg" id="ae-btn-neg" onclick="selecionarTipo('neg')">－ Redução</button>
+            <div class="fg" style="margin:0">
+              <label>Quantidade *</label>
+              <input type="number" id="ae-qtd" min="0.001" step="0.001" placeholder="0,000" oninput="calcPreview()">
             </div>
-
-            <div class="row2">
-              <div class="fg" style="margin-bottom:0">
-                <label>Quantidade</label>
-                <input type="number" id="ae-qtd" min="0.001" step="0.001" placeholder="0.000" oninput="calcPreview()">
-              </div>
-              <div class="fg" style="margin-bottom:0">
-                <label>Unidade</label>
-                <input type="text" id="ae-un" readonly style="background:var(--bg3);color:var(--text3)">
-              </div>
+            <div class="fg" style="margin:0">
+              <label>Unidade</label>
+              <input type="text" id="ae-un" readonly style="background:var(--bg3);color:var(--text3)">
             </div>
-            <div style="margin-bottom:14px"></div>
+          </div>
 
-            <div id="ae-novo-saldo" class="infobox"></div>
+          <div class="tipo-wrap" style="margin-top:14px;max-width:440px">
+            <button class="tipo-btn pos" id="ae-btn-pos" onclick="selecionarTipo('pos')">＋ Acréscimo</button>
+            <button class="tipo-btn neg" id="ae-btn-neg" onclick="selecionarTipo('neg')">－ Redução</button>
+          </div>
 
-            <div class="fg">
-              <label>Motivo</label>
+          <div id="ae-saldo-preview" class="saldo-preview" style="margin-top:14px"></div>
+          <div id="ae-novo-saldo" class="infobox"></div>
+
+          <div class="adj-grid2" style="margin-top:14px">
+            <div class="fg" style="margin:0">
+              <label>Motivo *</label>
               <select id="ae-motivo">
                 <option value="nota_errada">Nota fiscal errada</option>
                 <option value="contagem">Correção de contagem</option>
@@ -327,20 +316,25 @@
                 <option value="outro">Outro</option>
               </select>
             </div>
-
-            <div class="fg">
-              <label>Observação (opcional)</label>
-              <textarea id="ae-obs" rows="2" placeholder="Opcional..."></textarea>
+            <div class="fg" style="margin:0">
+              <label>Observação <span style="text-transform:none;font-weight:400;color:var(--text3)">(opcional)</span></label>
+              <textarea id="ae-obs" rows="2" maxlength="300" oninput="aeObsCount()" placeholder="Descreva o motivo com mais detalhes..."></textarea>
+              <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px"><span id="ae-obs-count">0</span>/300</div>
             </div>
-
-            <button class="btn btn-primary" style="width:100%" onclick="salvarAjusteEstoque()" id="btn-ae">Confirmar ajuste</button>
           </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+            <button class="btn btn-ghost" onclick="limparAeForm()">＋ Novo</button>
+            <button class="btn btn-primary" onclick="salvarAjusteEstoque()" id="btn-ae">Salvar Ajuste</button>
+          </div>
+        </div>
 
           <!-- HISTÓRICO -->
           <div class="hist-card">
             <div class="hist-header">
-              <span class="hist-title">Histórico</span>
+              <span class="hist-title">Histórico de Ajustes</span>
               <div class="hist-filter">
+                <span style="font-size:12px;color:var(--text3)">Período:</span>
                 <input type="date" id="ae-filtro-ini" onchange="filtrarAeLog()">
                 <span style="font-size:12px;color:var(--text3)">até</span>
                 <input type="date" id="ae-filtro-fim" onchange="filtrarAeLog()">
@@ -361,7 +355,6 @@
               </tbody>
             </table>
           </div>
-        </div>
       </div>
 
       <!-- TAB: AJUSTE DE CUSTO MÉDIO -->
@@ -759,7 +752,9 @@ function limparAeForm() {
   document.getElementById('ae-btn-pos').classList.remove('sel');
   document.getElementById('ae-btn-neg').classList.remove('sel');
   aeInsumoId = null; aetipoSel = null;
+  aeObsCount();
 }
+function aeObsCount() { const el = document.getElementById('ae-obs-count'); if (el) el.textContent = (document.getElementById('ae-obs').value || '').length; }
 
 // ── AJUSTE DE CUSTO MÉDIO ──────────────────────────────────────────────
 let todosSaldosCm = []; // saldos de todas as lojas para o insumo selecionado
