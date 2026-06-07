@@ -77,7 +77,11 @@
         { href: 'pdv.html', tab: 'dashboard',   label: 'Dashboard',          icon: I.chart },
         { href: 'pdv.html', tab: 'faturamento', label: 'Faturamento',        icon: I.receipt },
         { href: 'pdv.html', tab: 'vendas',      label: 'Vendas por Produto', icon: I.cart },
-        { href: 'pdv.html', tab: 'relatorios',  label: 'Relatórios',         icon: I.chart },
+        { id: 'pdv-rel', label: 'Relatórios', children: [
+          { href: 'pdv.html', tab: 'relatorios', rel: 'abc',        label: 'Curva ABC' },
+          { href: 'pdv.html', tab: 'relatorios', rel: 'cmv',        label: 'CMV por Produto' },
+          { href: 'pdv.html', tab: 'relatorios', rel: 'engenharia', label: 'Engenharia de Cardápio' },
+        ]},
         { href: 'pdv.html', tab: 'importar',    label: 'Importar / API',     icon: I.box },
       ]
     },
@@ -103,6 +107,7 @@
   ];
 
   const _urlTab = new URLSearchParams(location.search).get('tab') || '';
+  const _urlRel = new URLSearchParams(location.search).get('rel') || '';
 
   // Mapeamento href → módulo para filtragem por permissão
   const _MODULO_MAP = {
@@ -160,10 +165,34 @@
     return `<a class="nav-item${active ? ' active' : ''}" href="${href}" style="display:flex;align-items:center;gap:9px">${dot}${item.label}</a>`;
   }
 
+  // Submenu aninhado dentro de um grupo (ex.: PDV → Relatórios → Curva ABC / CMV / Engenharia)
+  function navSubmenu(item) {
+    const kids = item.children.filter(c => _canView(c.href));
+    if (!kids.length) return '';
+    const anyActive = kids.some(c => c.href === page && c.tab === _urlTab && (c.rel ? c.rel === _urlRel : true));
+    const key = 'nav-sub-' + item.id;
+    const saved = localStorage.getItem(key);
+    const collapsed = saved === '1' ? true : saved === '0' ? false : !anyActive;
+    const dot = `<span style="width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0"></span>`;
+    const kidsHtml = kids.map(c => {
+      const active = c.href === page && c.tab === _urlTab && (c.rel ? c.rel === _urlRel : true);
+      const href = `${c.href}?tab=${c.tab}${c.rel ? '&rel=' + c.rel : ''}`;
+      return `<a class="nav-item nav-subitem${active ? ' active' : ''}" href="${href}" style="display:flex;align-items:center;gap:9px">${dot}${c.label}</a>`;
+    }).join('');
+    return `<div class="nav-sub${collapsed ? ' collapsed' : ''}" id="${key}">
+      <div class="nav-subhead" onclick="toggleNavGroup('${key}')">
+        <span style="display:flex;align-items:center;gap:9px">${dot}${item.label}</span>
+        <svg class="nav-sub-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="nav-sub-items">${kidsHtml}</div>
+    </div>`;
+  }
+
   function navGroup(g) {
-    const visibleItems = g.items.filter(i => _canView(i.href));
+    const visibleItems = g.items.filter(i => i.children ? i.children.some(c => _canView(c.href)) : _canView(i.href));
     if (!visibleItems.length) return '';
     const hasActive = visibleItems.some(i => {
+      if (i.children) return i.children.some(c => c.href === page && c.tab === _urlTab && (c.rel ? c.rel === _urlRel : true));
       if (i.tab) return i.href === page && i.tab === _urlTab;
       if (i.href === page) return true;
       // Expandir configuracoes quando estiver na página
@@ -180,7 +209,7 @@
         </span>
         <svg class="nav-group-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div class="nav-group-items">${visibleItems.map(navItem).join('')}</div>
+      <div class="nav-group-items">${visibleItems.map(it => it.children ? navSubmenu(it) : navItem(it)).join('')}</div>
     </div>`;
   }
 
@@ -297,6 +326,30 @@
           font-weight: 600 !important;
         }
 
+        /* ── SUBMENU ANINHADO (ex.: Relatórios) ── */
+        nav.sidebar .nav-subhead, .sidebar .nav-subhead {
+          display: flex !important; align-items: center !important; justify-content: space-between !important;
+          color: rgba(148,163,184,.85) !important;
+          font-size: 12.5px !important;
+          font-family: 'Segoe UI', Tahoma, Geneva, sans-serif !important;
+          padding: 6px 10px !important;
+          border-radius: 6px !important;
+          margin: 1px 0 !important;
+          cursor: pointer !important;
+        }
+        nav.sidebar .nav-subhead:hover, .sidebar .nav-subhead:hover {
+          background: rgba(255,255,255,.07) !important;
+          color: rgba(255,255,255,.9) !important;
+        }
+        nav.sidebar .nav-sub-arrow, .sidebar .nav-sub-arrow { stroke: rgba(255,255,255,.35) !important; transition: transform .15s; }
+        nav.sidebar .nav-sub.collapsed .nav-sub-items, .sidebar .nav-sub.collapsed .nav-sub-items { display: none !important; }
+        nav.sidebar .nav-sub.collapsed .nav-sub-arrow, .sidebar .nav-sub.collapsed .nav-sub-arrow { transform: rotate(-90deg); }
+        nav.sidebar .nav-sub-items, .sidebar .nav-sub-items {
+          margin-left: 10px !important;
+          padding-left: 10px !important;
+          border-left: 1px solid rgba(255,255,255,.1) !important;
+        }
+
         /* ── RODAPÉ ── */
         nav.sidebar .nav-bottom, .sidebar .nav-bottom {
           color: rgba(255,255,255,.3) !important;
@@ -333,6 +386,26 @@
 
     nav.innerHTML = html;
     if (window.lucide) lucide.createIcons();
+
+    // Multi-abas pelo menu: já estando no PDV, clicar num item abre a aba no MESMO workspace
+    // (sem recarregar a página), acumulando as abas. Vindo de outra tela, navega normalmente.
+    if (page === 'pdv.html') {
+      nav.addEventListener('click', function (e) {
+        const a = e.target.closest('a.nav-item');
+        if (!a) return;
+        let url; try { url = new URL(a.href, location.href); } catch { return; }
+        if (url.pathname.split('/').pop() !== 'pdv.html') return;
+        const t = url.searchParams.get('tab');
+        if (!t || typeof window.switchTab !== 'function') return;
+        e.preventDefault();
+        window.switchTab(t);
+        const r = url.searchParams.get('rel');
+        if (r && typeof window.switchRelTab === 'function') window.switchRelTab(r);
+        try { history.replaceState({}, '', a.getAttribute('href')); } catch (_) {}
+        nav.querySelectorAll('a.nav-item.active').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+      });
+    }
   }
 
   window.toggleNavGroup = function (id) {

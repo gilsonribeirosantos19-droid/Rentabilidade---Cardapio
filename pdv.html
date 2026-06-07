@@ -2643,9 +2643,12 @@ document.querySelectorAll('.tab-btn').forEach(b=>{
 });
 
 carregar().finally(() => {
-  // Abre a aba indicada na URL (ex: pdv.html?tab=faturamento) vinda do menu lateral
-  const _urlTab = new URLSearchParams(location.search).get('tab');
-  if (_urlTab) setTimeout(() => switchTab(_urlTab), 0);
+  // Sem ?tab na URL, abre direto no Dashboard (sem hub). Com ?tab, abre a aba indicada;
+  // ?rel abre a sub-aba de Relatórios (curva ABC / CMV / engenharia).
+  const _p = new URLSearchParams(location.search);
+  const _t = _p.get('tab') || 'dashboard';
+  const _r = _p.get('rel');
+  setTimeout(() => { switchTab(_t); if (_r && window.switchRelTab) switchRelTab(_r); }, 0);
 });
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
