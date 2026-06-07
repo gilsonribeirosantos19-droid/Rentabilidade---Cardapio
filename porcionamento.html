@@ -858,8 +858,7 @@ function _populateSelects(){
   const lojaOpts='<option value="">Selecione...</option>'+
     _lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
   document.getElementById('f-loja').innerHTML=lojaOpts;
-  const relLojaOpts='<option value="">Todas as lojas</option>'+
-    _lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+  const relLojaOpts=lojaFiltroHtml(_lojas);
   document.getElementById('rel-loja').innerHTML=relLojaOpts;
 }
 

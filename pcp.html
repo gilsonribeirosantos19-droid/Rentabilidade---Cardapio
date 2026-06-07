@@ -650,7 +650,7 @@ async function carregar(){
       api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]),
     ]);
     // Popular selects de loja
-    const lojaOpts='<option value="">Todas as lojas</option>'+lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    const lojaOpts=lojaFiltroHtml(lojas);
     const selLoja=document.getElementById('sel-loja');if(selLoja)selLoja.innerHTML=lojaOpts;
     const lojaOptsModal='<option value="">Sem loja</option>'+lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
     ['mp-loja','ms-loja'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=lojaOptsModal;});

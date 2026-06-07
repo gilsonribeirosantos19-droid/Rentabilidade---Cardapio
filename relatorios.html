@@ -86,6 +86,8 @@
   .tbl th.r,.tbl td.r{text-align:right}
   .tbl th.c,.tbl td.c{text-align:center}
   .tbl td{padding:10px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
+  /* Texto das células dos relatórios sempre em preto (sobrepõe cinzas inline). Badges/spans coloridos seguem suas próprias cores. */
+  .tbl td{color:#0f172a !important}
   .tbl tbody tr:last-child td{border-bottom:none}
   .tbl tbody tr:hover{background:var(--bg3)}
   .mono{font-family:'DM Mono',monospace}
@@ -320,16 +322,8 @@
       <!-- FILTROS -->
       <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px">
         <div>
-          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Grupo</div>
-          <select id="abc-grupo" onchange="renderABC()" class="field" style="min-width:120px"><option value="">Todos</option></select>
-        </div>
-        <div>
           <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Categoria</div>
           <select id="abc-cat" onchange="renderABC()" class="field" style="min-width:120px"><option value="">Todas</option></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Fornecedor</div>
-          <select id="abc-forn" onchange="renderABC()" class="field" style="min-width:120px"><option value="">Todos</option></select>
         </div>
         <div style="flex:1;min-width:180px;position:relative">
           <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -408,10 +402,6 @@
           </select>
         </div>
         <input type="text" id="inf-busca" placeholder="Filtrar insumo, categoria ou fornecedor..." oninput="renderInflacao()" class="field" style="flex:1;min-width:220px">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Grupo</div>
-          <select id="inf-grupo" onchange="renderInflacao()" class="field" style="min-width:110px"><option value="">Todos</option></select>
-        </div>
         <div>
           <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Categoria</div>
           <select id="inf-cat" onchange="renderInflacao()" class="field" style="min-width:110px"><option value="">Todas</option></select>
@@ -1213,8 +1203,7 @@ async function init() {
   try {
     lojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
     const sel = document.getElementById('sel-loja');
-    sel.innerHTML = '<option value="">Todas as lojas</option>' +
-      lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    sel.innerHTML = lojaFiltroHtml(lojas);
   } catch {}
   await carregar();
 }

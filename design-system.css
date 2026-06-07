@@ -70,7 +70,8 @@ body {
   background: var(--ds-bg);
 }
 
-/* ── SIDEBAR: sem boxes, sem sombras ─────────────────────────────── */
+/* ── SIDEBAR: tema navy direto no CSS (evita piscar branco quando o sidebar.js demora) ── */
+nav.sidebar, .sidebar { background: #1e293b !important; }
 .nav-group {
   background: transparent !important;
   box-shadow: none !important;
@@ -79,17 +80,17 @@ body {
   margin: 0 !important;
 }
 .nav-item {
-  color: #334155 !important;
+  color: rgba(148,163,184,.9) !important;
   font-size: 13px !important;
   padding: 7px 10px !important;
   border-radius: 6px !important;
 }
 .nav-item:hover {
-  background: #f1f5f9 !important;
-  color: var(--ds-text-1) !important;
+  background: rgba(255,255,255,.07) !important;
+  color: #fff !important;
 }
 .nav-item.active {
-  background: #fff7ed !important;
+  background: rgba(249,115,22,.15) !important;
   color: var(--ds-primary) !important;
   font-weight: 600 !important;
 }
@@ -113,41 +114,48 @@ body {
 /* ── TABELAS: densas, sem decoração ─────────────────────────────── */
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
-/* Unifica TODOS os thead para --ds-navy (#1e293b) */
+/* Unifica TODOS os thead — estilo planilha (cabeçalho claro) */
 thead tr,
 table thead tr,
 .tbl thead tr,
 .tbl-card thead tr,
 .nfe-tbl thead tr,
-.cfg-table thead tr { background: var(--ds-navy) !important; }
+.cfg-table thead tr { background: #eef2f7 !important; }
 
-/* tfoot também */
+/* tfoot — linha de totais clara */
 tfoot tr,
-.tbl tfoot tr { background: var(--ds-navy) !important; }
+.tbl tfoot tr { background: #f1f5f9 !important; }
 
 tfoot td,
-.tbl tfoot td { color: #fff !important; border-bottom: none !important; }
+.tbl tfoot td { color: var(--ds-text-1) !important; font-weight: 700 !important; border-top: 2px solid #cbd5e1 !important; border-bottom: none !important; }
 
 th, .tbl th {
-  padding: 7px 12px !important;
+  padding: 4px 8px !important;
   font-size: 11px !important;
-  font-weight: 600 !important;
-  color: rgba(255,255,255,.75) !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
   text-transform: uppercase !important;
   letter-spacing: .05em !important;
   white-space: nowrap !important;
   text-align: left;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #dbe2ec !important;
 }
 th.r, .tbl th.r,
 th.c, .tbl th.c { text-align: right !important; }
 
 td, .tbl td {
-  padding: 7px 12px !important;
+  padding: 7px 8px !important;
   border-bottom: 1px solid var(--ds-border-2) !important;
+  border-right: 1px solid var(--ds-border-2) !important;
   vertical-align: middle !important;
-  font-size: 13px !important;
+  font-size: 11px !important;
   color: var(--ds-text-1);
+  white-space: nowrap !important;
 }
+/* Grade estilo planilha: remove a borda direita da última coluna (evita borda dupla) */
+th:last-child, td:last-child,
+.tbl th:last-child, .tbl td:last-child { border-right: none !important; }
 td.r, .tbl td.r { text-align: right !important; }
 td.c, .tbl td.c { text-align: center !important; }
 
@@ -174,7 +182,7 @@ tbody tr:hover { background: #f8fafc !important; }
   background: #fff !important;
   border: 1px solid var(--ds-border) !important;
   border-radius: var(--ds-radius-lg) !important;
-  overflow: hidden !important;
+  overflow-x: auto !important;
 }
 
 /* ── INPUTS: simples, sem ruído visual ───────────────────────────── */
@@ -258,12 +266,12 @@ input[type="date"]:focus, select:focus {
 .badge {
   display: inline-flex !important;
   align-items: center !important;
-  padding: 2px 8px !important;
+  padding: 1px 8px !important;
   border-radius: 4px !important;
   font-size: 11px !important;
   font-weight: 600 !important;
   white-space: nowrap !important;
-  line-height: 1.5 !important;
+  line-height: 1.25 !important;
 }
 /* Status: cores funcionais apenas */
 .b-ativo, .b-ativa, .b-green { background: #f0fdf4 !important; color: var(--ds-green) !important; }

@@ -9,6 +9,7 @@
     cadastros:      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
     compras:        `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
     analises:       `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+    pdv:            `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
     pcp:            `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`,
     fiscal:         `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
     configuracoes:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
@@ -68,7 +69,20 @@
         { href: 'relatorios.html', label: 'Relatórios',        icon: I.receipt },
         { href: 'cmv.html',        label: 'CMV Teórico x Real', icon: I.chart },
         { href: 'rendimento.html', label: 'Rendimentos',        icon: I.trending },
-        { href: 'pdv.html',        label: 'PDV / Vendas',       icon: I.cart },
+      ]
+    },
+    {
+      id: 'pdv', label: 'PDV',
+      items: [
+        { href: 'pdv.html', tab: 'dashboard',   label: 'Dashboard',          icon: I.chart },
+        { href: 'pdv.html', tab: 'faturamento', label: 'Faturamento',        icon: I.receipt },
+        { href: 'pdv.html', tab: 'vendas',      label: 'Vendas por Produto', icon: I.cart },
+        { id: 'pdv-rel', label: 'Relatórios', children: [
+          { href: 'pdv.html', tab: 'relatorios', rel: 'abc',        label: 'Curva ABC' },
+          { href: 'pdv.html', tab: 'relatorios', rel: 'cmv',        label: 'CMV por Produto' },
+          { href: 'pdv.html', tab: 'relatorios', rel: 'engenharia', label: 'Engenharia de Cardápio' },
+        ]},
+        { href: 'pdv.html', tab: 'importar',    label: 'Importar / API',     icon: I.box },
       ]
     },
     {
@@ -93,6 +107,7 @@
   ];
 
   const _urlTab = new URLSearchParams(location.search).get('tab') || '';
+  const _urlRel = new URLSearchParams(location.search).get('rel') || '';
 
   // Mapeamento href → módulo para filtragem por permissão
   const _MODULO_MAP = {
@@ -150,10 +165,34 @@
     return `<a class="nav-item${active ? ' active' : ''}" href="${href}" style="display:flex;align-items:center;gap:9px">${dot}${item.label}</a>`;
   }
 
+  // Submenu aninhado dentro de um grupo (ex.: PDV → Relatórios → Curva ABC / CMV / Engenharia)
+  function navSubmenu(item) {
+    const kids = item.children.filter(c => _canView(c.href));
+    if (!kids.length) return '';
+    const anyActive = kids.some(c => c.href === page && c.tab === _urlTab && (c.rel ? c.rel === _urlRel : true));
+    const key = 'nav-sub-' + item.id;
+    const saved = localStorage.getItem(key);
+    const collapsed = saved === '1' ? true : saved === '0' ? false : !anyActive;
+    const dot = `<span style="width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0"></span>`;
+    const kidsHtml = kids.map(c => {
+      const active = c.href === page && c.tab === _urlTab && (c.rel ? c.rel === _urlRel : true);
+      const href = `${c.href}?tab=${c.tab}${c.rel ? '&rel=' + c.rel : ''}`;
+      return `<a class="nav-item nav-subitem${active ? ' active' : ''}" href="${href}" style="display:flex;align-items:center;gap:9px">${dot}${c.label}</a>`;
+    }).join('');
+    return `<div class="nav-sub${collapsed ? ' collapsed' : ''}" id="${key}">
+      <div class="nav-subhead" onclick="toggleNavGroup('${key}')">
+        <span style="display:flex;align-items:center;gap:9px">${dot}${item.label}</span>
+        <svg class="nav-sub-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="nav-sub-items">${kidsHtml}</div>
+    </div>`;
+  }
+
   function navGroup(g) {
-    const visibleItems = g.items.filter(i => _canView(i.href));
+    const visibleItems = g.items.filter(i => i.children ? i.children.some(c => _canView(c.href)) : _canView(i.href));
     if (!visibleItems.length) return '';
     const hasActive = visibleItems.some(i => {
+      if (i.children) return i.children.some(c => c.href === page && c.tab === _urlTab && (c.rel ? c.rel === _urlRel : true));
       if (i.tab) return i.href === page && i.tab === _urlTab;
       if (i.href === page) return true;
       // Expandir configuracoes quando estiver na página
@@ -170,7 +209,7 @@
         </span>
         <svg class="nav-group-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div class="nav-group-items">${visibleItems.map(navItem).join('')}</div>
+      <div class="nav-group-items">${visibleItems.map(it => it.children ? navSubmenu(it) : navItem(it)).join('')}</div>
     </div>`;
   }
 
@@ -287,6 +326,30 @@
           font-weight: 600 !important;
         }
 
+        /* ── SUBMENU ANINHADO (ex.: Relatórios) ── */
+        nav.sidebar .nav-subhead, .sidebar .nav-subhead {
+          display: flex !important; align-items: center !important; justify-content: space-between !important;
+          color: rgba(148,163,184,.85) !important;
+          font-size: 12.5px !important;
+          font-family: 'Segoe UI', Tahoma, Geneva, sans-serif !important;
+          padding: 6px 10px !important;
+          border-radius: 6px !important;
+          margin: 1px 0 !important;
+          cursor: pointer !important;
+        }
+        nav.sidebar .nav-subhead:hover, .sidebar .nav-subhead:hover {
+          background: rgba(255,255,255,.07) !important;
+          color: rgba(255,255,255,.9) !important;
+        }
+        nav.sidebar .nav-sub-arrow, .sidebar .nav-sub-arrow { stroke: rgba(255,255,255,.35) !important; transition: transform .15s; }
+        nav.sidebar .nav-sub.collapsed .nav-sub-items, .sidebar .nav-sub.collapsed .nav-sub-items { display: none !important; }
+        nav.sidebar .nav-sub.collapsed .nav-sub-arrow, .sidebar .nav-sub.collapsed .nav-sub-arrow { transform: rotate(-90deg); }
+        nav.sidebar .nav-sub-items, .sidebar .nav-sub-items {
+          margin-left: 10px !important;
+          padding-left: 10px !important;
+          border-left: 1px solid rgba(255,255,255,.1) !important;
+        }
+
         /* ── RODAPÉ ── */
         nav.sidebar .nav-bottom, .sidebar .nav-bottom {
           color: rgba(255,255,255,.3) !important;
@@ -323,6 +386,26 @@
 
     nav.innerHTML = html;
     if (window.lucide) lucide.createIcons();
+
+    // Multi-abas pelo menu: já estando no PDV, clicar num item abre a aba no MESMO workspace
+    // (sem recarregar a página), acumulando as abas. Vindo de outra tela, navega normalmente.
+    if (page === 'pdv.html') {
+      nav.addEventListener('click', function (e) {
+        const a = e.target.closest('a.nav-item');
+        if (!a) return;
+        let url; try { url = new URL(a.href, location.href); } catch { return; }
+        if (url.pathname.split('/').pop() !== 'pdv.html') return;
+        const t = url.searchParams.get('tab');
+        if (!t || typeof window.switchTab !== 'function') return;
+        e.preventDefault();
+        window.switchTab(t);
+        const r = url.searchParams.get('rel');
+        if (r && typeof window.switchRelTab === 'function') window.switchRelTab(r);
+        try { history.replaceState({}, '', a.getAttribute('href')); } catch (_) {}
+        nav.querySelectorAll('a.nav-item.active').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+      });
+    }
   }
 
   window.toggleNavGroup = function (id) {

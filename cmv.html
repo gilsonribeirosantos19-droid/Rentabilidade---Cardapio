@@ -340,8 +340,7 @@ async function carregarFiltros(){
   }
   const sl=document.getElementById('fil-loja');
   if(sl){
-    sl.innerHTML='<option value="">Todas as lojas</option>'+
-      lojas.map(l=>`<option value="${esc(l.id)}">${esc(l.nome)}</option>`).join('');
+    sl.innerHTML=lojaFiltroHtml(lojas);
   }
 
   // Grupos: tenta tabela categorias, depois categorias distintas nos insumos

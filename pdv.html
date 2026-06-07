@@ -2642,7 +2642,14 @@ document.querySelectorAll('.tab-btn').forEach(b=>{
   if(m) b.dataset.tab=m[1];
 });
 
-carregar();
+carregar().finally(() => {
+  // Sem ?tab na URL, abre direto no Dashboard (sem hub). Com ?tab, abre a aba indicada;
+  // ?rel abre a sub-aba de Relatórios (curva ABC / CMV / engenharia).
+  const _p = new URLSearchParams(location.search);
+  const _t = _p.get('tab') || 'dashboard';
+  const _r = _p.get('rel');
+  setTimeout(() => { switchTab(_t); if (_r && window.switchRelTab) switchRelTab(_r); }, 0);
+});
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>

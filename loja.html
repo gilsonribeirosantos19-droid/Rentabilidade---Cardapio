@@ -82,16 +82,17 @@
   .field:focus{border-color:var(--teal)}
   .field-sm{padding:5px 8px;font-size:12px}
   select.field{cursor:pointer}
-  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
-  .tbl{width:100%;border-collapse:collapse;font-size:12px}
-  .tbl thead tr{background:#0f2d5c;border-bottom:none}
-  .tbl th{padding:6px 12px;text-align:left;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
+  .tbl-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow-x:auto;margin-bottom:20px}
+  .tbl{width:100%;border-collapse:collapse;font-size:11px}
+  .tbl thead tr{background:#eef2f7;border-bottom:none}
+  .tbl th{padding:4px 8px;text-align:left;font-size:11px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #cbd5e1;border-right:1px solid #dbe2ec;white-space:nowrap}
   .tbl th.r,.tbl td.r{text-align:right}
-  .tbl td{padding:3px 12px;border-bottom:1px solid var(--border2);vertical-align:middle}
+  .tbl td{padding:7px 8px;border-bottom:1px solid var(--border2);border-right:1px solid var(--border2);vertical-align:middle;white-space:nowrap}
+  .tbl th:last-child,.tbl td:last-child{border-right:none}
   .tbl tbody tr:last-child td{border-bottom:none}
   .tbl tbody tr:hover{background:var(--bg3)}
   .mono{font-family:'DM Mono',monospace}
-  .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge{display:inline-flex;align-items:center;padding:1px 8px;border-radius:4px;font-size:11px;font-weight:600;line-height:1.25}
   .b-ativo{background:#dcfce7;color:#16a34a}
   .b-encerrado{background:#dbeafe;color:#1d4ed8}
   .b-cancelado{background:#fee2e2;color:#dc2626}
@@ -259,15 +260,16 @@
   .sol-grupo-arrow{margin-left:auto;width:16px;height:16px;transition:transform .2s;color:var(--text3)}
   .sol-grupo.collapsed .sol-grupo-arrow{transform:rotate(-90deg)}
   .sol-grupo.collapsed .sol-grupo-body{display:none}
-  .sol-grupo-body .tbl thead tr{background:#0f2d5c}
-  .sol-grupo-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
-  .sol-grupo-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
+  .sol-grupo-body .tbl thead tr{background:#eef2f7}
+  .sol-grupo-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em}
+  .sol-grupo-body .tbl td{padding:3px 8px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:11px}
   .sol-grupo-body .tbl tbody tr:last-child td{border-bottom:none}
   .sol-grupo-body .tbl tbody tr:hover{background:var(--bg3)}
   .sol-tr-sel td{background:#eff6ff!important}
-  .sol-qty-inp{width:80px;text-align:right;background:#fff;border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit;outline:none}
+  .sol-grupo-body .tbl td{padding-top:3px;padding-bottom:3px}
+  .sol-qty-inp{width:72px;text-align:right;background:#fff;border:1px solid var(--border2);border-radius:6px;padding:2px 8px;font-size:12px;font-family:inherit;outline:none}
   .sol-qty-inp:focus{border-color:var(--teal)}
-  .sol-un-sel{background:#fff;border:1px solid var(--border2);border-radius:6px;padding:5px 6px;font-size:12px;font-family:inherit;outline:none;cursor:pointer}
+  .sol-un-sel{background:#fff;border:1px solid var(--border2);border-radius:6px;padding:2px 6px;font-size:12px;font-family:inherit;outline:none;cursor:pointer}
   /* ── BOTTOM SHEET ──────────────────────────────────────── */
   .sol-sheet-bd{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;display:none}
   .sol-sheet-bd.open{display:block}
@@ -279,9 +281,9 @@
   .sol-sheet-x{width:28px;height:28px;border:1px solid var(--border2);background:transparent;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-family:inherit}
   .sol-sheet-top{display:flex;gap:16px;padding:14px 22px;border-bottom:1px solid var(--border2);flex-shrink:0;flex-wrap:wrap}
   .sol-sheet-body{flex:1;overflow-y:auto}
-  .sol-sheet-body .tbl thead tr{background:#0f2d5c}
-  .sol-sheet-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
-  .sol-sheet-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
+  .sol-sheet-body .tbl thead tr{background:#eef2f7}
+  .sol-sheet-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em}
+  .sol-sheet-body .tbl td{padding:7px 8px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:11px}
   .sol-sheet-foot{padding:12px 22px;border-top:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
   /* ── PCP HUB ── */
   .pcp-hub-section{margin-bottom:28px}
@@ -1660,14 +1662,14 @@ async function carregarInventarios() {
     const stCfg={ativo:{bg:'#f0fdf4',color:'#16a34a',label:'Ativo'},encerrado:{bg:'#eff6ff',color:'#2563eb',label:'Encerrado'},cancelado:{bg:'#fff1f2',color:'#e11d48',label:'Cancelado'}};
     container.innerHTML = `
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead><tr style="background:#0f2d5c">
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">N. Inventário</th>
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Descrição</th>
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">D. Inicial</th>
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">D. Final</th>
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Situação</th>
-            <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Ações</th>
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="background:#eef2f7">
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">N. Inventário</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">Descrição</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">D. Inicial</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">D. Final</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">Situação</th>
+            <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">Ações</th>
           </tr></thead>
           <tbody>
             ${invs.map(inv=>{

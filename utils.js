@@ -101,3 +101,14 @@ function createApi(supaUrl, supaKey) {
     return [];
   };
 }
+
+// ── FILTRO DE LOJA ─────────────────────────────────────────────────
+// Monta as <option> do filtro de loja mantendo o padrão visual em todas as telas.
+// Com apenas 1 loja, mostra o NOME dela direto (value="" = sem filtro, seguro —
+// não esconde dados sem loja). Com 2+ lojas, mostra "Todas as lojas" + as opções.
+function lojaFiltroHtml(lojas, allLabel) {
+  allLabel = allLabel || 'Todas as lojas';
+  const e = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  if (lojas && lojas.length === 1) return `<option value="">${e(lojas[0].nome)}</option>`;
+  return `<option value="">${allLabel}</option>` + (lojas || []).map(l => `<option value="${l.id}">${e(l.nome)}</option>`).join('');
+}
