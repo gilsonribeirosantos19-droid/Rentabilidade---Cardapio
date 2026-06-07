@@ -322,6 +322,10 @@
           <input id="vin-cod-forn" type="text" placeholder="Código do item na nota" style="width:100%;height:38px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'DM Mono',monospace;outline:none;background:#f8fafc">
         </div>
       </div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Descrição no fornecedor</label>
+        <input id="vin-descricao" type="text" placeholder="Como o fornecedor descreve o produto" style="width:100%;height:38px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#f8fafc;color:#0f172a">
+      </div>
 
       <!-- SEÇÃO: EMBALAGEM E CONVERSÃO -->
       <div id="vin-emb-section" style="display:none;margin-bottom:18px">
@@ -798,6 +802,7 @@ function openVincularNfeItem(itemId) {
   document.getElementById('vin-ins').value = '';
   document.getElementById('vin-ins')._selectedEmb = null;
   document.getElementById('vin-cod-forn').value = item.codigo_item_fornecedor || '';
+  const _vd1=document.getElementById('vin-descricao'); if(_vd1) _vd1.value=item.descricao_nfe||'';
   const precoEl = document.getElementById('vin-preco-nfe');
   if(precoEl) precoEl.textContent = brl(item.valor_unitario);
   document.getElementById('vin-und-row').style.display = 'none';
@@ -840,6 +845,7 @@ async function salvarVincFiscal() {
 
     // Salva/atualiza insumo_fornecedores
     const vinPadrao = document.getElementById('vin-padrao')?.checked || false;
+    const vinDesc = (document.getElementById('vin-descricao')?.value || '').trim() || null;
     let vincId = null;
     const existing = insumoFornVinculos.find(v =>
       v.insumo_id === insId &&
@@ -849,14 +855,14 @@ async function salvarVincFiscal() {
     if(existing) {
       await api(`insumo_fornecedores?id=eq.${existing.id}`, {
         method:'PATCH', prefer:'return=minimal',
-        body: JSON.stringify({ qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null, embalagem_padrao:vinPadrao })
+        body: JSON.stringify({ qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null, embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
       });
       vincId = existing.id;
       Object.assign(existing, { qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null });
     } else {
       const [nl] = await api('insumo_fornecedores', {
         method:'POST', prefer:'return=representation',
-        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:insId, fornecedor_id:fornId, embalagem_descricao:emb.embDesc, qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null, embalagem_padrao:vinPadrao })
+        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:insId, fornecedor_id:fornId, embalagem_descricao:emb.embDesc, qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null, embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
       });
       vincId = nl?.id;
       if(nl) insumoFornVinculos.push(nl);
@@ -1415,6 +1421,7 @@ function abrirVincularModal(idx) {
   _popularSelectInsumo(prev?.insId||'');
   const codFornEl=document.getElementById('vin-cod-forn');
   if(codFornEl) codFornEl.value=prev?.codForn||it.codigo||'';
+  const _vd2=document.getElementById('vin-descricao'); if(_vd2) _vd2.value=it.descricao||'';
   const precoEl=document.getElementById('vin-preco-nfe');
   if(precoEl) precoEl.textContent=it.valorUnit?brl(it.valorUnit):'—';
   document.getElementById('vin-und-row').style.display='none';
