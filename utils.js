@@ -136,7 +136,10 @@ function custoMedioNaData(insumoId, dataLimite, ctx) {
   movs.sort((a, b) => a.d < b.d ? -1 : (a.d > b.d ? 1 : 0));
   let q = 0, cm = 0;
   movs.forEach(m => {
-    if (m.ent) { const nq = q + m.q; cm = nq > 0 ? (q * cm + m.q * m.v) / nq : cm; q = nq; }
+    if (m.ent) {
+      if (m.q === 0) { cm = m.v; }                                  // ajuste de custo médio (redefine o custo)
+      else { const nq = q + m.q; cm = nq > 0 ? (q * cm + m.q * m.v) / nq : cm; q = nq; }
+    }
     else { q = Math.max(0, q - m.q); }
   });
   return { custo: cm, quantidade: q };
