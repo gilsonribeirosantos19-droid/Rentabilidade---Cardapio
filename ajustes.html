@@ -67,6 +67,19 @@
   .ws-tab.active{background:#fff !important;color:#0f172a !important;font-weight:600 !important;border-top-color:#f97316 !important;border-bottom-color:#fff !important}
   .ws-tab-close{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;color:#94a3b8;transition:all .12s;cursor:pointer;user-select:none}
   .ws-tab-close:hover{background:#e2e8f0;color:#0f172a}
+  /* AJUSTE — layout mockup */
+  .sec-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text1);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border2)}
+  .sec-ic{color:#f97316;font-size:15px}
+  .adj-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .adj-grid2{display:grid;grid-template-columns:1fr 2fr;gap:14px}
+  @media(max-width:860px){.adj-grid{grid-template-columns:1fr 1fr}.adj-grid2{grid-template-columns:1fr}}
+  .cm-loja-btn{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text1);text-align:left;cursor:pointer;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cm-loja-btn:hover{border-color:#f97316}
+  .cm-loja-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:30;max-height:240px;overflow-y:auto;margin-top:4px}
+  .cm-loja-drop.open{display:block}
+  .cm-loja-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #f1f5f9;color:var(--text1)}
+  .cm-loja-opt:hover{background:var(--bg3)}
+  .cm-loja-opt input{width:auto;cursor:pointer;accent-color:#f97316}
 
   /* LAYOUT DOIS COLUNAS */
   .split{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
@@ -354,79 +367,57 @@
       <!-- TAB: AJUSTE DE CUSTO MÉDIO -->
       <div id="tab-custo" class="tab-pane">
         <button class="adj-back" onclick="goHub()">← Ajustes</button>
-        <div class="split">
-        <div class="card">
-          <div class="card-title">Ajuste de Custo Médio</div>
-          <div class="card-sub">Informe o novo custo e escolha em quais lojas aplicar. O saldo não é alterado.</div>
-
-          <div class="row2">
-            <div class="fg" style="margin-bottom:0">
-              <label>Insumo</label>
-              <select id="cm-insumo" onchange="onCmInsumoChange()">
-                <option value="">Selecione um insumo...</option>
-              </select>
+        <div class="card" style="margin-bottom:16px">
+          <div class="sec-head"><span class="sec-ic">▣</span> Informações do Ajuste</div>
+          <div class="adj-grid">
+            <div class="fg" style="margin:0">
+              <label>Insumo *</label>
+              <select id="cm-insumo" onchange="onCmInsumoChange()"><option value="">Selecione um insumo...</option></select>
             </div>
-            <div class="fg" style="margin-bottom:0">
-              <label>Data do ajuste</label>
+            <div class="fg" style="margin:0">
+              <label>Data do Ajuste *</label>
               <input type="date" id="cm-data">
             </div>
-          </div>
-          <div style="margin-bottom:14px"></div>
-
-          <div class="row2">
-            <div class="fg" style="margin-bottom:0">
-              <label>Novo custo médio (R$/kg)</label>
-              <input type="number" id="cm-novo" min="0.01" step="0.01" placeholder="0.00">
+            <div class="fg cm-loja-fg" style="margin:0;position:relative">
+              <label>Loja(s) *</label>
+              <button type="button" id="cm-loja-btn" class="cm-loja-btn" onclick="toggleLojaDrop(event)">Selecione as lojas...</button>
+              <div id="cm-loja-drop" class="cm-loja-drop">
+                <label class="cm-loja-opt"><input type="checkbox" id="cm-chk-all" onchange="toggleTodasLojas(this.checked)"> <b>Todas as lojas</b></label>
+                <div id="cm-lojas-body"><div style="padding:8px 12px;color:var(--text3);font-size:12px">Selecione um insumo primeiro</div></div>
+              </div>
             </div>
-            <div class="fg" style="margin-bottom:0">
-              <label>Motivo</label>
+            <div class="fg" style="margin:0">
+              <label>Novo Custo Médio (R$/KG) *</label>
+              <input type="number" id="cm-novo" min="0.01" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+          <div class="adj-grid2" style="margin-top:14px">
+            <div class="fg" style="margin:0">
+              <label>Motivo *</label>
               <select id="cm-motivo">
                 <option value="nota_errada">Nota fiscal com valor errado</option>
                 <option value="correcao_manual">Correção manual</option>
                 <option value="outro">Outro</option>
               </select>
             </div>
-          </div>
-          <div style="margin-bottom:14px"></div>
-
-          <!-- LOJAS CHECKBOX -->
-          <div class="fg">
-            <label style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
-              <span>Lojas para aplicar</span>
-              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;cursor:pointer">
-                <input type="checkbox" id="cm-chk-all" onchange="toggleTodasLojas(this.checked)"> Selecionar todas
-              </label>
-            </label>
-            <div id="cm-lojas-wrap" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;overflow:hidden">
-              <table class="tbl" style="font-size:13px">
-                <thead>
-                  <tr>
-                    <th style="width:40px">Sel.</th>
-                    <th>Loja</th>
-                    <th class="r">Custo atual</th>
-                    <th class="r">Saldo atual</th>
-                  </tr>
-                </thead>
-                <tbody id="cm-lojas-body">
-                  <tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>
-                </tbody>
-              </table>
+            <div class="fg" style="margin:0">
+              <label>Observação <span style="text-transform:none;font-weight:400;color:var(--text3)">(opcional)</span></label>
+              <textarea id="cm-obs" rows="2" maxlength="300" oninput="cmObsCount()" placeholder="Descreva o motivo com mais detalhes..."></textarea>
+              <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px"><span id="cm-obs-count">0</span>/300</div>
             </div>
           </div>
-
-          <div class="fg">
-            <label>Observação (opcional)</label>
-            <textarea id="cm-obs" rows="2" placeholder="Descreva o motivo com mais detalhes..."></textarea>
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+            <button class="btn btn-ghost" onclick="limparCmForm()">＋ Novo</button>
+            <button class="btn btn-primary" onclick="salvarAjusteCusto()" id="btn-cm">Salvar Ajuste</button>
           </div>
-
-          <button class="btn btn-primary" style="width:100%" onclick="salvarAjusteCusto()" id="btn-cm">Confirmar ajuste</button>
         </div>
 
         <!-- HISTÓRICO -->
         <div class="hist-card">
           <div class="hist-header">
-            <span class="hist-title">Histórico</span>
+            <span class="hist-title">Histórico de Ajustes</span>
             <div class="hist-filter">
+              <span style="font-size:12px;color:var(--text3)">Período:</span>
               <input type="date" id="cm-filtro-ini" onchange="filtrarCmLog()">
               <span style="font-size:12px;color:var(--text3)">até</span>
               <input type="date" id="cm-filtro-fim" onchange="filtrarCmLog()">
@@ -447,7 +438,6 @@
             </tbody>
           </table>
         </div>
-        </div><!-- fim split -->
       </div>
 
       <!-- RECALCULAR -->
@@ -776,45 +766,56 @@ let todosSaldosCm = []; // saldos de todas as lojas para o insumo selecionado
 
 async function onCmInsumoChange() {
   cmInsumoId = document.getElementById('cm-insumo').value || null;
-  document.getElementById('cm-chk-all').checked = false;
-
+  const _drop = document.getElementById('cm-lojas-body');
   if (!cmInsumoId) {
-    document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>';
+    _drop.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Selecione um insumo primeiro</div>';
+    updLojaBtn();
     return;
   }
-
-  document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Carregando...</td></tr>';
+  _drop.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Carregando...</div>';
   try {
-    // Busca lojas e saldos em paralelo, sem filtro ativo
     const [lojasAtual, saldosInsumo] = await Promise.all([
       api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${cmInsumoId}`),
     ]);
-    if (lojasAtual.length) lojas = lojasAtual; // atualiza cache global
+    if (lojasAtual.length) lojas = lojasAtual;
     todosSaldosCm = saldosInsumo;
     renderizarLojasCheckbox();
   } catch(e) {
-    document.getElementById('cm-lojas-body').innerHTML = `<tr><td colspan="4" class="empty">Erro: ${esc(e.message)}</td></tr>`;
+    _drop.innerHTML = `<div style="padding:8px 12px;color:#dc2626;font-size:12px">Erro: ${esc(e.message)}</div>`;
   }
 }
 
 function renderizarLojasCheckbox() {
-  const tbody = document.getElementById('cm-lojas-body');
-  if (!lojas.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhuma loja cadastrada.</td></tr>'; return; }
-  tbody.innerHTML = lojas.map(l => {
+  const wrap = document.getElementById('cm-lojas-body');
+  if (!lojas.length) { wrap.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Nenhuma loja cadastrada.</div>'; return; }
+  wrap.innerHTML = lojas.map(l => {
     const s = todosSaldosCm.find(x => x.loja_id === l.id) || { quantidade: 0, custo_medio: 0 };
-    return `<tr>
-      <td><input type="checkbox" class="cm-loja-chk" value="${l.id}" style="cursor:pointer;width:auto"></td>
-      <td style="font-weight:500">${esc(l.nome)}</td>
-      <td class="r mono" style="color:var(--text2)">${s.custo_medio ? brl(s.custo_medio) : '—'}</td>
-      <td class="r mono" style="color:var(--text3)">${fmtQtd(s.quantidade)}</td>
-    </tr>`;
+    return `<label class="cm-loja-opt"><input type="checkbox" class="cm-loja-chk" value="${l.id}" onchange="updLojaBtn()"><span>${esc(l.nome)}</span><span style="margin-left:auto;color:var(--text2);font-size:11px">${s.custo_medio ? brl(s.custo_medio) : '—'}</span></label>`;
   }).join('');
+  updLojaBtn();
 }
 
 function toggleTodasLojas(checked) {
   document.querySelectorAll('.cm-loja-chk').forEach(c => c.checked = checked);
+  updLojaBtn();
 }
+
+function toggleLojaDrop(e) { if (e) e.stopPropagation(); document.getElementById('cm-loja-drop').classList.toggle('open'); }
+function updLojaBtn() {
+  const sel = [...document.querySelectorAll('.cm-loja-chk:checked')];
+  const btn = document.getElementById('cm-loja-btn'); if (!btn) return;
+  const a = document.getElementById('cm-chk-all'); if (a) a.checked = (lojas.length > 0 && sel.length === lojas.length);
+  if (!sel.length) btn.textContent = 'Selecione as lojas...';
+  else if (sel.length === 1) { const l = lojas.find(x => x.id === sel[0].value); btn.textContent = l ? l.nome : '1 loja'; }
+  else if (sel.length === lojas.length) btn.textContent = 'Todas as lojas';
+  else btn.textContent = sel.length + ' lojas selecionadas';
+}
+function cmObsCount() { const el = document.getElementById('cm-obs-count'); if (el) el.textContent = (document.getElementById('cm-obs').value || '').length; }
+document.addEventListener('click', e => {
+  const d = document.getElementById('cm-loja-drop'), b = document.getElementById('cm-loja-btn');
+  if (d && b && !d.contains(e.target) && !b.contains(e.target)) d.classList.remove('open');
+});
 
 async function salvarAjusteCusto() {
   if (!cmInsumoId) { toast('Selecione um insumo.','err'); return; }
@@ -869,8 +870,10 @@ function limparCmForm() {
   document.getElementById('cm-novo').value = '';
   document.getElementById('cm-obs').value = '';
   document.getElementById('cm-chk-all').checked = false;
-  document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>';
+  document.getElementById('cm-lojas-body').innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Selecione um insumo primeiro</div>';
   cmInsumoId = null; todosSaldosCm = [];
+  cmObsCount();
+  updLojaBtn();
 }
 
 // ── SALDO UPSERT ───────────────────────────────────────────────────────
