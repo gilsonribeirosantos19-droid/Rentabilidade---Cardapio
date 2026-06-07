@@ -123,11 +123,36 @@ function fmtCodigoInterno(v) {
 }
 
 // ── FONTE ÚNICA DE CUSTO (ver ARQUITETURA.md §5) ───────────────────
-// Custo de UM insumo (R$ por unidade de estoque — kg/un/litro), nesta ordem:
+// Reconstrói o custo médio de um insumo COMO ESTAVA numa data (média móvel ponderada,
+// igual ao Kardex). Percorre entradas/saídas até dataLimite. custo_unitario já é por unidade.
+// ctx = { entradas, saidas }. dataLimite = 'YYYY-MM-DD' (ou ISO); null/ausente = considera tudo.
+function custoMedioNaData(insumoId, dataLimite, ctx) {
+  ctx = ctx || {};
+  const lim = dataLimite ? (String(dataLimite).length === 10 ? dataLimite + 'T23:59:59' : dataLimite) : null;
+  const dt = m => m.criado_em || m.created_at || '';
+  const movs = [];
+  (ctx.entradas || []).forEach(e => { if (e.insumo_id === insumoId && (!lim || dt(e) <= lim)) movs.push({ d: dt(e), ent: true, q: +e.quantidade || 0, v: +e.custo_unitario || 0 }); });
+  (ctx.saidas || []).forEach(s => { if (s.insumo_id === insumoId && (!lim || dt(s) <= lim)) movs.push({ d: dt(s), ent: false, q: +s.quantidade || 0 }); });
+  movs.sort((a, b) => a.d < b.d ? -1 : (a.d > b.d ? 1 : 0));
+  let q = 0, cm = 0;
+  movs.forEach(m => {
+    if (m.ent) { const nq = q + m.q; cm = nq > 0 ? (q * cm + m.q * m.v) / nq : cm; q = nq; }
+    else { q = Math.max(0, q - m.q); }
+  });
+  return { custo: cm, quantidade: q };
+}
+
+// Custo de UM insumo (R$ por unidade de estoque — kg/un/litro).
+// Se ctx.dataLimite estiver definido (+ entradas/saidas no ctx), reconstrói o custo médio
+// HISTÓRICO daquela data (modo "Everest" — custo do período). Senão, usa a fonte atual, nesta ordem:
 //   1) custo_medio do saldo (da loja)  2) preco_unitario do vínculo  3) preco_compra do insumo
-// ctx = { saldos, vinculos, insumos }
+// ctx = { saldos, vinculos, insumos, entradas?, saidas?, dataLimite? }
 function custoDoInsumo(insumoId, lojaId, ctx) {
   ctx = ctx || {};
+  if (ctx.dataLimite && (ctx.entradas || ctx.saidas)) {
+    const r = custoMedioNaData(insumoId, ctx.dataLimite, ctx);
+    if (r.custo > 0) return r.custo;
+  }
   const saldos = ctx.saldos || [], vinculos = ctx.vinculos || [], insumos = ctx.insumos || [];
   const salLoja = lojaId && saldos.find(s => s.insumo_id === insumoId && s.loja_id === lojaId && +s.custo_medio > 0);
   if (salLoja) return +salLoja.custo_medio;
