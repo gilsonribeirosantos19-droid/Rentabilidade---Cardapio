@@ -2098,7 +2098,7 @@ async function salvarEntrada() {
       quantidade: qtdEst,
       quantidade_fornecedor: qtd_,
       unidade_compra: document.getElementById('ef-unid').value.trim()||null,
-      fator_conversao: fator, custo_unitario: custo,
+      fator_conversao: fator, custo_unitario: custoUnit,
       lote: document.getElementById('ef-lote').value.trim()||null,
       validade: document.getElementById('ef-val').value||null,
       tipo: 'manual',
@@ -3053,7 +3053,7 @@ function renderKardex() {
   // Monta todos os movimentos sem filtro de data (para calcular custo médio correto)
   let todos = [];
   entradas.filter(e=>e.insumo_id===insId).forEach(e=>{
-    const vUnit = e.fator_conversao>0 ? (e.custo_unitario/e.fator_conversao) : (e.custo_unitario||0);
+    const vUnit = (e.custo_unitario||0); // custo_unitario já é por unidade de estoque (padronizado — ver ARQUITETURA.md)
     todos.push({ data:e.criado_em, tipo:'entrada',
       desc: e.tipo==='nfe' ? `NF-e ${e.nfe_numero||''}` : `Manual${e.fornecedor_nome?' · '+e.fornecedor_nome:''}`,
       qMov: e.quantidade, vUnit });
