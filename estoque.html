@@ -1788,6 +1788,7 @@ async function renderSaldoEst(){
         const key = e.insumo_id+'|'+(e.loja_id||'');
         if (!map[key]) map[key] = { insumo_id:e.insumo_id, loja_id:e.loja_id||null, quantidade:0, custo_medio:0 };
         const cur = map[key]; const qtdE=e.quantidade||0; const custoE=e.custo_unitario||0;
+        if (qtdE === 0) { cur.custo_medio = custoE; continue; } // ajuste de custo médio (não muda quantidade)
         const nq = cur.quantidade + qtdE;
         if (nq > 0) cur.custo_medio = (cur.quantidade*cur.custo_medio + qtdE*custoE) / nq;
         cur.quantidade = nq;
@@ -3058,7 +3059,7 @@ function renderKardex() {
   entradas.filter(e=>e.insumo_id===insId).forEach(e=>{
     const vUnit = (e.custo_unitario||0); // custo_unitario já é por unidade de estoque (padronizado — ver ARQUITETURA.md)
     todos.push({ data:e.criado_em, tipo:'entrada',
-      desc: e.tipo==='nfe' ? `NF-e ${e.nfe_numero||''}` : `Manual${e.fornecedor_nome?' · '+e.fornecedor_nome:''}`,
+      desc: (+e.quantidade===0) ? 'Ajuste de custo médio' : (e.tipo==='nfe' ? `NF-e ${e.nfe_numero||''}` : `Manual${e.fornecedor_nome?' · '+e.fornecedor_nome:''}`),
       qMov: e.quantidade, vUnit });
   });
   saidas.filter(s=>s.insumo_id===insId).forEach(s=>{
@@ -3072,6 +3073,11 @@ function renderKardex() {
   let qAcum = 0, vAcum = 0, cmedio = 0;
   todos = todos.map(m => {
     if (m.tipo === 'entrada') {
+      if (+m.qMov === 0) { // ajuste de custo médio — redefine o custo sem mexer na quantidade
+        cmedio = m.vUnit;
+        vAcum = qAcum * cmedio;
+        return { ...m, vEntrada:0, vSaida:0, qAcum, vAcum, cmedio };
+      }
       const vEntrada = m.qMov * m.vUnit;
       qAcum  += m.qMov;
       vAcum  += vEntrada;

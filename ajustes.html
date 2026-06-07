@@ -686,6 +686,13 @@ async function salvarAjusteCusto() {
         method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
         body: JSON.stringify(payload)
       });
+      // Registra o ajuste como MOVIMENTO (quantidade 0) — aparece no Kardex e nos relatórios por período
+      await api('entradas_estoque', { method:'POST', prefer:'return=minimal', body: JSON.stringify({
+        tenant_id: TENANT_ID, insumo_id: cmInsumoId, loja_id: lId,
+        quantidade: 0, custo_unitario: parseFloat(Number(novoCusto).toFixed(6)),
+        tipo: 'ajuste', observacao: 'Ajuste de custo médio' + (motivo ? ' · ' + motivo : '') + (obs ? ' · ' + obs : ''),
+        criado_em: agora
+      }) });
       // atualiza cache local
       const ex = todosSaldosCm.find(x => x.insumo_id === cmInsumoId && x.loja_id === lId);
       if (ex) Object.assign(ex, payload); else todosSaldosCm.push({...payload});
