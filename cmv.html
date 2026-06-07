@@ -378,7 +378,7 @@ function getCausa(pct){
 function renderTabela(){
   if(!_res)return;
   const apDiv=document.getElementById('tog-div')?.checked;
-  const{insumos,consumoTeoMap,consumoRealMap,saldos}=_res;
+  const{insumos,consumoTeoMap,consumoRealMap,saldos,entradas,saidas,ate}=_res;
 
   const ins=insumos.filter(i=>consumoTeoMap[i.id]||consumoRealMap[i.id]);
   let rows=ins.map(i=>{
@@ -386,7 +386,7 @@ function renderTabela(){
     const div=['kg','litro'].includes(un)?1000:1;
     const qTeo=(consumoTeoMap[i.id]||0)/div;
     const qReal=consumoRealMap[i.id]||0;
-    const cm=custoDoInsumo(i.id,null,{saldos,insumos});
+    const cm=custoDoInsumo(i.id,null,{saldos,insumos,entradas,saidas,dataLimite:ate});
     const cTeo=qTeo*(cm/(i.rendimento_pct/100));
     const cReal=qReal*cm;
     const dQtd=qReal-qTeo;
@@ -499,8 +499,7 @@ async function calcular(){
     let itFichas=ids.length?await api(`itens_ficha?ficha_id=in.(${ids.join(',')})&tenant_id=eq.${TENANT_ID}&select=*`):[];
 
     const totalFat=fats.reduce((s,f)=>s+(f.total||f.valor_total||0),0)+vendas.reduce((s,v)=>s+(v.valor_total||0),0);
-    let totalTeo=0;
-    vendas.forEach(v=>{totalTeo+=(v.custo_unitario||0)*(v.quantidade||0);});
+    // totalTeo/totalReal calculados abaixo (pela ficha + custo do período — modo Everest)
 
     const teoMap={};
     vendas.forEach(v=>{
@@ -514,7 +513,16 @@ async function calcular(){
     const realConsumido=saidas.filter(s=>['consumo','transferencia','producao'].includes(s.tipo));
     const realMap={};
     realConsumido.forEach(s=>{realMap[s.insumo_id]=(realMap[s.insumo_id]||0)+(s.quantidade||0);});
-    const totalReal=realConsumido.reduce((s,x)=>s+(x.quantidade||0)*(x.custo_unitario||saldos.find(sl=>sl.insumo_id===x.insumo_id)?.custo_medio||0),0);
+    let totalTeo=0, totalReal=0;
+    insumos.forEach(i=>{
+      if(!(teoMap[i.id]||realMap[i.id])) return;
+      const un=i.unidade_medida||i.unidade_compra||'un';
+      const dv=['kg','litro'].includes(un)?1000:1;
+      const qT=(teoMap[i.id]||0)/dv, qR=realMap[i.id]||0;
+      const cm=custoDoInsumo(i.id,null,{saldos,insumos,entradas,saidas,dataLimite:ate});
+      totalTeo+=qT*(cm/((i.rendimento_pct||100)/100));
+      totalReal+=qR*cm;
+    });
 
     const pctTeo=totalFat>0?totalTeo/totalFat*100:0;
     const pctReal=totalFat>0?totalReal/totalFat*100:0;
@@ -543,7 +551,7 @@ async function calcular(){
     set('k-prods-div',comDiv.length);
     set('k-prods-sub',`de ${insAll.length} insumos`);
 
-    _res={de,ate,insumos,saldos,consumoTeoMap:teoMap,consumoRealMap:realMap};
+    _res={de,ate,insumos,saldos,entradas,saidas,consumoTeoMap:teoMap,consumoRealMap:realMap};
     renderTabela();
 
     const now=new Date();
@@ -557,13 +565,13 @@ async function calcular(){
 
 function exportCSV(){
   if(!_res){toast('Calcule primeiro.','err');return;}
-  const{insumos,saldos,consumoTeoMap:teoMap,consumoRealMap:realMap,de,ate}=_res;
+  const{insumos,saldos,consumoTeoMap:teoMap,consumoRealMap:realMap,de,ate,entradas,saidas}=_res;
   let csv='Insumo;UN;Qtd Teo;Custo Teo;Qtd Real;Custo Real;Dif Qtd;Dif%;Impacto;Status\n';
   insumos.filter(i=>teoMap[i.id]||realMap[i.id]).forEach(i=>{
     const un=i.unidade_medida||i.unidade_compra||'un';
     const div=['kg','litro'].includes(un)?1000:1;
     const qT=(teoMap[i.id]||0)/div,qR=realMap[i.id]||0;
-    const cm=custoDoInsumo(i.id,null,{saldos,insumos});
+    const cm=custoDoInsumo(i.id,null,{saldos,insumos,entradas,saidas,dataLimite:ate});
     const cT=qT*(cm/(i.rendimento_pct/100)),cR=qR*cm;
     const dp=qT>0?(qR-qT)/qT*100:0;
     csv+=`${i.nome};${un};${qT.toFixed(3)};${cT.toFixed(2)};${qR.toFixed(3)};${cR.toFixed(2)};${(qR-qT).toFixed(3)};${dp.toFixed(1)};${(cR-cT).toFixed(2)};${getStatus(dp)}\n`;
