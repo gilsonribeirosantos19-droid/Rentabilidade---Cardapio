@@ -158,8 +158,10 @@ essa ordem. É proibido cada tela inventar a própria fonte.
    período filtrado; início p/ saldo anterior). Kardex já usava o custo do momento.
 4. ✅ **RESOLVIDO** — Inventário gera movimento de ajuste (entrada/saída tipo `ajuste`),
    rastreável no Kardex/Movimentação, preservando o custo médio.
-5. **Duplicação:** `vinculos_nfe.fator_conversao` repete `insumo_fornecedores.qtd_por_embalagem`;
-   custo aparece em `insumos.preco_compra` e `saldo_estoque.custo_medio`.
+5. ✅ **RESOLVIDO (fator)** — o auto-reconhecimento de NF-e lê o fator SEMPRE do cadastro
+   (`insumo_fornecedores.qtd_por_embalagem`); `vinculos_nfe.fator_conversao` virou só fallback
+   legado, então não dá mais pra dessincronizar. (Custo em `preco_compra` × `custo_medio` segue
+   como nota — são campos com papéis diferentes, não duplicação real.)
 6. ✅ **RESOLVIDO** — Painel de Divergências em Análises (`divergencias.html`).
 7. `vendas_item` possivelmente sem `loja_id` — risco ao operar com mais de uma loja.
 
@@ -171,5 +173,5 @@ essa ordem. É proibido cada tela inventar a própria fonte.
 2. ⏸️ Elo Venda↔Estoque (§7.2) — adiado (PDV não integrado ainda).
 3. ✅ Painel de Divergências (§7.6).
 4. ✅ Inventário com ajuste rastreável (§7.4).
-5. ⬜ Unificar fator de conversão numa tabela só (§7.5).
+5. ✅ Fator de conversão: fonte única no cadastro — auto-reconhecimento lê do `insumo_fornecedores` (§7.5).
 6. ✅ Custo por período (Everest) — CMV + Movimentação + Fechamento (§7.3).

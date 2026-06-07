@@ -1257,7 +1257,18 @@ function processNfeItems() {
       const ifv=insumoFornVinculos.find(v=>v.codigo_fornecedor===it.codigo&&(!fornId||v.fornecedor_id===fornId));
       if(ifv) vin={insumo_id:ifv.insumo_id,fator_conversao:ifv.qtd_por_embalagem||1,embalagem_descricao:ifv.embalagem_descricao||''};
     }
-    if(vin?.insumo_id) nfeAutoLinked[idx]={insId:vin.insumo_id,fator:vin.fator_conversao||1,embDesc:vin.embalagem_descricao||'',vinId:vin.id};
+    if(vin?.insumo_id){
+      // Fator SEMPRE do cadastro (insumo_fornecedores) — fonte única; vinculos_nfe é só o de-para descrição→item.
+      // (Ver ARQUITETURA.md) Se não houver cadastro p/ esse item, cai no fator antigo do vínculo (legado).
+      const ifvF = insumoFornVinculos.find(v=>v.insumo_id===vin.insumo_id&&(!fornId||v.fornecedor_id===fornId)&&+v.qtd_por_embalagem>0)
+                || insumoFornVinculos.find(v=>v.insumo_id===vin.insumo_id&&+v.qtd_por_embalagem>0);
+      nfeAutoLinked[idx]={
+        insId: vin.insumo_id,
+        fator: ifvF ? (+ifvF.qtd_por_embalagem||1) : (vin.fator_conversao||1),
+        embDesc: (ifvF&&ifvF.embalagem_descricao) || vin.embalagem_descricao || '',
+        vinId: vin.id
+      };
+    }
   });
 }
 
