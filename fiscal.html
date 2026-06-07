@@ -1533,6 +1533,8 @@ function _parseEmbFator(desc, stockUnit) {
   // Formato "C/ M unidade" ou "M unidade" (ex: C/ 9 KG, 70 G)
   m = D.match(/(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
   if(m){ const r = _embToStock(m[1], m[2], stockUnit); if(r>0) return +r.toFixed(6); }
+  // Embalagem só "UNIDADE"/"UN" (sem tamanho) e item em unidade → 1 (1 un = 1 un)
+  if(/^(UNIDADES?|UN|UNID)\.?$/.test(D.trim()) && (stockUnit||'').toUpperCase().startsWith('UN')) return 1;
   return 0;
 }
 
@@ -1543,9 +1545,9 @@ function onVinEmbSelectChange(forceQty) {
   const preQty=parseFloat(opt.dataset.qty)||0;
   const qtyInput=document.getElementById('vin-emb-qty');
   const autoFator=_parseEmbFator(opt.dataset.desc||opt.textContent, document.getElementById('vin-und').textContent);
-  if(preQty>0) qtyInput.value=preQty;
+  if(autoFator>0) qtyInput.value=autoFator;
+  else if(preQty>0) qtyInput.value=preQty;
   else if(forceQty) qtyInput.value=forceQty;
-  else if(autoFator>0) qtyInput.value=autoFator;
   const isGeneric=!!opt.dataset.generic;
   document.getElementById('vin-ins')._selectedEmb={embDesc:opt.dataset.desc||opt.textContent,fator:parseFloat(qtyInput.value)||1,embIdx:sel.selectedIndex,und:document.getElementById('vin-und').textContent,isGeneric};
   onVinEmbQtyInput();
