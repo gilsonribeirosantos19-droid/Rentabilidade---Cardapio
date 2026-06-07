@@ -1856,6 +1856,7 @@ async function confirmarInventario() {
     // Salva a contagem de TODOS os itens (não lançado = null, segue como "não lançado")
     const itensBody = invItensAtual.map(it => ({
       id: it.id,
+      inventario_id: invAtual.id,
       qtd_contada: lancado(it) ? num(it.qtd_contada) : null,
       tenant_id: TENANT_ID,
     }));
