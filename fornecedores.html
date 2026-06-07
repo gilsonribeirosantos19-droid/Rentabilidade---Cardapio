@@ -329,6 +329,10 @@
                 <input class="form-input" id="v-qtd-emb" type="number" step="0.001" min="0" placeholder="Auto" oninput="atualizarConversaoPreview(false)" style="font-family:'DM Mono',monospace">
               </div>
             </div>
+            <label style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#334155;cursor:pointer">
+              <input type="checkbox" id="v-padrao" style="width:15px;height:15px;accent-color:#f97316;cursor:pointer">
+              Embalagem padrão deste fornecedor
+            </label>
             <div class="conv-preview" id="conv-preview" style="display:none">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
               <span id="conv-preview-txt"></span>
@@ -357,7 +361,7 @@
                 <th>Código</th>
                 <th>Embalagem</th>
                 <th class="r">Qtd. Emb.</th>
-                <th>Conversão</th>
+                <th class="c">Padrão</th>
                 <th class="r">Último preço</th>
                 <th class="r">Última entrada</th>
                 <th>Ações</th>
@@ -769,7 +773,7 @@ function renderVinculos(lista) {
       <td class="td-mono" style="color:#64748b;font-size:11px">${esc(v.codigo_fornecedor||'—')}</td>
       <td style="color:#64748b">${esc(v.embalagem_descricao||'—')}</td>
       <td class="r td-mono" style="color:#64748b">${v.qtd_por_embalagem!=null?v.qtd_por_embalagem:'—'}</td>
-      <td style="color:#64748b;font-size:12px">${esc(conv)}</td>
+      <td class="c">${v.embalagem_padrao?'<span class="badge b-cat" style="background:#fff7ed;color:#f97316">★ Padrão</span>':'<span style="color:#cbd5e1">—</span>'}</td>
       <td class="r td-mono" style="font-weight:600;color:#0f172a">${brl(v.preco_unitario)}</td>
       <td class="r td-mono" style="color:#64748b;font-size:12px">${fmtDate(v.ultima_entrada)}</td>
       <td><button class="btn-ghost" onclick="event.stopPropagation();confirmarExcluirVin('${v.id}')" style="padding:1px 6px;font-size:14px;color:#94a3b8">⋮</button></td>
@@ -790,6 +794,7 @@ function abrirFormVinculo(id) {
   setVal('v-qtd-emb', v?.qtd_por_embalagem||'');
   setVal('v-preco', v?.preco_unitario||'');
   setVal('v-ultima-entrada', v?.ultima_entrada||'');
+  const cpad = document.getElementById('v-padrao'); if (cpad) cpad.checked = !!(v && v.embalagem_padrao);
   const titulo = document.getElementById('vin-form-titulo');
   if (titulo) titulo.textContent = v ? 'Editar Vínculo' : 'Vincular Item ao Fornecedor';
   const btn = document.getElementById('btn-salvar-vin');
@@ -885,6 +890,7 @@ async function salvarVinculo(){
     qtd_por_embalagem: parseFloat(document.getElementById('v-qtd-emb').value)||null,
     preco_unitario: parseFloat(document.getElementById('v-preco').value)||null,
     ultima_entrada: document.getElementById('v-ultima-entrada').value||null,
+    embalagem_padrao: document.getElementById('v-padrao').checked,
   };
   const btn=document.getElementById('btn-salvar-vin');
   btn.disabled=true; btn.textContent='Salvando...';
