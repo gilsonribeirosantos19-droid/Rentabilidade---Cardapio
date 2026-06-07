@@ -855,14 +855,14 @@ async function salvarVincFiscal() {
     if(existing) {
       await api(`insumo_fornecedores?id=eq.${existing.id}`, {
         method:'PATCH', prefer:'return=minimal',
-        body: JSON.stringify({ qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null, embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
+        body: JSON.stringify({ qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:(emb.fator>0?+(item.valor_unitario/emb.fator).toFixed(4):(item.valor_unitario||null)), embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
       });
       vincId = existing.id;
       Object.assign(existing, { qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null });
     } else {
       const [nl] = await api('insumo_fornecedores', {
         method:'POST', prefer:'return=representation',
-        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:insId, fornecedor_id:fornId, embalagem_descricao:emb.embDesc, qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null, embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
+        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:insId, fornecedor_id:fornId, embalagem_descricao:emb.embDesc, qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:(emb.fator>0?+(item.valor_unitario/emb.fator).toFixed(4):(item.valor_unitario||null)), embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
       });
       vincId = nl?.id;
       if(nl) insumoFornVinculos.push(nl);
@@ -1552,10 +1552,10 @@ async function salvarVinculoNfe() {
     try{
       const existing=insumoFornVinculos.find(v=>v.insumo_id===insId&&v.fornecedor_id===fornId&&v.embalagem_descricao===emb.embDesc);
       if(existing){
-        await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:it.valorUnit||null})});
+        await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:(emb.fator>0?+(it.valorUnit/emb.fator).toFixed(4):(it.valorUnit||null))})});
         Object.assign(existing,{qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null});
       } else {
-        const newLink=await api('insumo_fornecedores',{method:'POST',prefer:'return=representation',body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,fornecedor_id:fornId,embalagem_descricao:emb.embDesc,qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:it.valorUnit||null})});
+        const newLink=await api('insumo_fornecedores',{method:'POST',prefer:'return=representation',body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,fornecedor_id:fornId,embalagem_descricao:emb.embDesc,qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:(emb.fator>0?+(it.valorUnit/emb.fator).toFixed(4):(it.valorUnit||null))})});
         if(newLink[0]) insumoFornVinculos.push(newLink[0]);
       }
     }catch{}
