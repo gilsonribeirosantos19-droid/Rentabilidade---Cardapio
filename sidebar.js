@@ -86,16 +86,7 @@
         { href: 'pdv.html', tab: 'importar',    label: 'Importar / API',     icon: I.box },
       ]
     },
-    {
-      id: 'pcp', label: 'PCP',
-      items: [
-        { href: 'pcp.html', tab: 'producao-dia', label: 'Produção do Dia',   icon: I.chef },
-        { href: 'porcionamento.html',             label: 'Porcionamento',     icon: I.scissors },
-        { href: 'pcp.html', tab: 'sugerida',     label: 'Produção Sugerida', icon: I.chef },
-        { href: 'pcp.html', tab: 'sobras',        label: 'Sobras e Perdas',   icon: I.box },
-        { href: 'pcp.html', tab: 'consumo',       label: 'Consumo Médio',     icon: I.trending },
-      ]
-    },
+    { id: 'pcp', label: 'PCP', single: true, href: 'pcp.html' },
     {
       id: 'configuracoes', label: 'Configurações',
       items: [
@@ -190,6 +181,14 @@
   }
 
   function navGroup(g) {
+    // Item único (sem submenu) — clica e vai direto (ex.: PCP abre o hub)
+    if (g.single) {
+      if (!_canView(g.href)) return '';
+      const act = page === g.href;
+      return `<div class="nav-group"><a class="nav-group-header" href="${g.href}" style="text-decoration:none;cursor:pointer">
+        <span class="nav-label" style="display:flex;align-items:center;gap:6px;margin-bottom:0;${act ? 'color:#f97316 !important' : ''}">${GROUP_ICONS[g.id] || ''}${g.label}</span>
+      </a></div>`;
+    }
     const visibleItems = g.items.filter(i => i.children ? i.children.some(c => _canView(c.href)) : _canView(i.href));
     if (!visibleItems.length) return '';
     const hasActive = visibleItems.some(i => {
