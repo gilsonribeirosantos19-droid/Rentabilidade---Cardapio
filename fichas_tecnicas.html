@@ -412,7 +412,7 @@
           <div style="display:flex;gap:8px;align-items:center">
             <input type="number" id="f-rendimento" placeholder="Ex: 800" min="1" step="0.1" oninput="atualizarCustoPreview()" disabled style="flex:1">
             <select id="f-rendimento-unidade" onchange="atualizarCustoPreview()" disabled style="width:72px">
-              <option value="g">g</option><option value="ml">ml</option><option value="L">L</option>
+              <option value="kg">kg</option><option value="g">g</option><option value="L">litro</option><option value="ml">ml</option>
             </select>
           </div>
           <div id="custo-kg-preview" style="margin-top:5px;font-size:12px;color:#94a3b8"></div>
@@ -952,7 +952,7 @@ function atualizarCustoPreview(){
   if(rendEl&&kgEl&&!rendEl.disabled){
     const rendVal=parseFloat(rendEl.value)||0;
     const rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
-    const rend=rendUnid==='L'?rendVal*1000:rendVal;
+    const rend=(rendUnid==='L'||rendUnid==='kg')?rendVal*1000:rendVal;
     const insVincId=document.getElementById('f-insumo-vinculado')?.value;
     const insVinc=insVincId?todosInsumos.find(i=>i.id===insVincId):null;
     const umVinc=insVinc?(insVinc.unidade_medida||insVinc.unidade_compra||'kg'):'kg';
@@ -989,7 +989,7 @@ async function salvarFicha(){
     const insumoVinculadoId=document.getElementById('f-insumo-vinculado').value||null;
     const _rendVal=parseFloat(document.getElementById('f-rendimento').value)||null;
     const _rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
-    const rendimentoReceita=_rendVal!=null?(_rendUnid==='L'?_rendVal*1000:_rendVal):null;
+    const rendimentoReceita=_rendVal!=null?((_rendUnid==='L'||_rendUnid==='kg')?_rendVal*1000:_rendVal):null;
     if(editId){
       await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,modo_preparo:preparo||null,observacoes:obs||null,status,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita,atualizado_em:new Date().toISOString()})});
       await api(`itens_ficha?ficha_id=eq.${editId}&tenant_id=eq.${TENANT_ID}`,{method:'DELETE',prefer:'return=minimal'});
@@ -1001,7 +1001,7 @@ async function salvarFicha(){
     if(insumoVinculadoId){
       const _rVal=parseFloat(document.getElementById('f-rendimento').value)||0;
       const _rUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
-      const rendimento=_rUnid==='L'?_rVal*1000:_rVal;
+      const rendimento=(_rUnid==='L'||_rUnid==='kg')?_rVal*1000:_rVal;
       if(!rendimento){toast('Informe o rendimento da receita.','err');btn.disabled=false;btn.textContent='Salvar ficha';return;}
       const custoTotal=ingValidos.reduce((acc,ing)=>{const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;const um=ins.unidade_medida||ins.unidade_compra||'g';const qtdG=(um==='kg'||um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);return acc+custoIngrediente(ins,qtdG);},0);
       const custoKg=custoTotal/rendimento*1000;
