@@ -136,14 +136,17 @@
   /* MODAL */
   .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
   .overlay.open{display:flex}
-  .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.14)}
-  .modal h2{font-size:16px;font-weight:700;margin-bottom:18px}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-  .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:18px 22px;box-shadow:0 8px 32px rgba(0,0,0,.14)}
+  .modal h2{font-size:16px;font-weight:700;margin-bottom:12px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:9px}
+  .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:9px}
+  .ft-tabs{display:flex;gap:14px;margin-bottom:6px;border-bottom:1px solid #e2e8f0}
+  .ft-tab{background:transparent;border:none;border-bottom:2px solid transparent;padding:4px 2px 6px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;font-family:inherit;margin-bottom:-1px}
+  .ft-tab.active{color:#f97316;border-bottom-color:#f97316}
   .form-group label{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
   .form-group input,.form-group select,.form-group textarea{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;width:100%}
   .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#0d9488}
-  .form-group textarea{resize:vertical;min-height:60px}
+  .form-group textarea{resize:vertical;min-height:42px}
   .ing-header{display:flex;align-items:center;margin-bottom:8px}
   .ing-header h3{font-size:14px;font-weight:600}
   .ing-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
@@ -389,10 +392,14 @@
         <div id="precif-preview" style="padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#94a3b8;font-family:'DM Mono',monospace">Informe o preço de venda</div>
       </div>
     </div>
-    <div class="form-group"><label>Modo de preparo</label>
-      <textarea id="f-preparo" placeholder="Descreva o processo..."></textarea></div>
-    <div class="form-group"><label>Observações</label>
-      <textarea id="f-obs" placeholder="Alérgenos, variações, notas..."></textarea></div>
+    <div class="form-group">
+      <div class="ft-tabs">
+        <button type="button" class="ft-tab active" id="ft-tab-prep" onclick="ftTab('prep')">Modo de preparo</button>
+        <button type="button" class="ft-tab" id="ft-tab-obs" onclick="ftTab('obs')">Observações</button>
+      </div>
+      <textarea id="f-preparo" placeholder="Descreva o processo..." rows="2"></textarea>
+      <textarea id="f-obs" placeholder="Alérgenos, variações, notas..." rows="2" style="display:none"></textarea>
+    </div>
     <div style="border-top:1px solid #e2e8f0;padding-top:14px;margin-bottom:14px">
       <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Vincular a insumo existente</div>
       <div class="form-row" style="margin-bottom:0">
@@ -811,6 +818,7 @@ function abrirModalNovo(){
   document.getElementById('f-status').value='ativa';
   document.getElementById('f-preparo').value='';
   document.getElementById('f-obs').value='';
+  ftTab('prep');
   document.getElementById('ing-list').innerHTML='';
   document.getElementById('custo-preview').style.display='none';
   preencherSelectInsumos('');
@@ -835,6 +843,7 @@ function editarFicha(id){
     document.getElementById('f-status').value=f.status;
     document.getElementById('f-preparo').value=f.modo_preparo||'';
     document.getElementById('f-obs').value=f.observacoes||'';
+    ftTab('prep');
     preencherSelectInsumos(f.insumo_vinculado_id||'');
     document.getElementById('f-rendimento').value=f.rendimento_receita_g||'';
     document.getElementById('f-rendimento').disabled=!f.insumo_vinculado_id;
@@ -893,6 +902,16 @@ function remIngRow(idx){
   document.getElementById('ing-list').innerHTML='';
   ingredientes.forEach((_,i)=>addIngRow(i));
   atualizarCustoPreview();
+}
+
+// Abas Modo de preparo / Observações (mostra uma de cada vez — deixa o form compacto)
+function ftTab(which){
+  const prep=which==='prep';
+  const pEl=document.getElementById('f-preparo'), oEl=document.getElementById('f-obs');
+  if(pEl)pEl.style.display=prep?'':'none';
+  if(oEl)oEl.style.display=prep?'none':'';
+  document.getElementById('ft-tab-prep')?.classList.toggle('active',prep);
+  document.getElementById('ft-tab-obs')?.classList.toggle('active',!prep);
 }
 
 function preencherSelectInsumos(selectedId){
