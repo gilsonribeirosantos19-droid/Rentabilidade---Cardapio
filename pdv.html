@@ -2642,7 +2642,11 @@ document.querySelectorAll('.tab-btn').forEach(b=>{
   if(m) b.dataset.tab=m[1];
 });
 
-carregar();
+carregar().finally(() => {
+  // Abre a aba indicada na URL (ex: pdv.html?tab=faturamento) vinda do menu lateral
+  const _urlTab = new URLSearchParams(location.search).get('tab');
+  if (_urlTab) setTimeout(() => switchTab(_urlTab), 0);
+});
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
