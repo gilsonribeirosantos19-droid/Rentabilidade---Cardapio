@@ -228,7 +228,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const SUPA_ANON = 'sb_publishable_GJqQ_qWVg5Y8GWaKy1qe7w_VvZiIQ3i';
 const { createClient } = supabase;
 const sb = createClient(SUPA_URL, SUPA_KEY);
-const sbAuth = createClient(SUPA_URL, SUPA_ANON);
+const sbAuth = createClient(SUPA_URL, SUPA_KEY); // usa a mesma chave anon (JWT) do resto do app
 
 function showAlert(panelId, msg, tipo) {
   const el = document.getElementById('alert-' + panelId);
