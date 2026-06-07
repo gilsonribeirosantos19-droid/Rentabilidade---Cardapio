@@ -144,7 +144,7 @@ th.r, .tbl th.r,
 th.c, .tbl th.c { text-align: right !important; }
 
 td, .tbl td {
-  padding: 4px 8px !important;
+  padding: 7px 8px !important;
   border-bottom: 1px solid var(--ds-border-2) !important;
   border-right: 1px solid var(--ds-border-2) !important;
   vertical-align: middle !important;
