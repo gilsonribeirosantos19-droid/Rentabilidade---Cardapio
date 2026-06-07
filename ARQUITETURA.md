@@ -153,8 +153,9 @@ essa ordem. É proibido cada tela inventar a própria fonte.
 2. **Venda (PDV) não baixa estoque** — `vendas_item` não gera `saidas_estoque`.
    Logo o **CMV Real não reflete vendas** e o "Teórico × Real" não fecha.
    ⏸️ Adiado: PDV ainda não será integrado.
-3. **Custo histórico vs atual:** Kardex usa o custo do momento (certo); Movimentação
-   e Fechamento valorizam movimentos passados com o custo médio **de hoje** → divergem.
+3. ✅ **RESOLVIDO** — Custo por período (modo Everest): `custoMedioNaData()` reconstrói o
+   custo médio na data. CMV, Movimentação e Fechamento usam o custo **da época** (fim do
+   período filtrado; início p/ saldo anterior). Kardex já usava o custo do momento.
 4. ✅ **RESOLVIDO** — Inventário gera movimento de ajuste (entrada/saída tipo `ajuste`),
    rastreável no Kardex/Movimentação, preservando o custo médio.
 5. **Duplicação:** `vinculos_nfe.fator_conversao` repete `insumo_fornecedores.qtd_por_embalagem`;
@@ -171,4 +172,4 @@ essa ordem. É proibido cada tela inventar a própria fonte.
 3. ✅ Painel de Divergências (§7.6).
 4. ✅ Inventário com ajuste rastreável (§7.4).
 5. ⬜ Unificar fator de conversão numa tabela só (§7.5).
-6. ⬜ Custo histórico na Movimentação/Fechamento (§7.3).
+6. ✅ Custo por período (Everest) — CMV + Movimentação + Fechamento (§7.3).

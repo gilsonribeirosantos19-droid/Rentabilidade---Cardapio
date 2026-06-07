@@ -3868,18 +3868,21 @@ async function calcFechamento() {
 
     let totIni=0, totEnt=0, totPerd=0, totCons=0, totFin=0;
     const rows = insumos.map(ins => {
-      const s = getSaldo(ins.id); const cm = s.custo_medio || 0;
+      // Custo da ÉPOCA (ver ARQUITETURA.md): fim do período p/ perdas/consumo/saldo final; início p/ estoque inicial
+      const cmFim = custoDoInsumo(ins.id, null, {entradas, saidas, insumos, saldos, dataLimite: ate});
+      const cmIni = custoDoInsumo(ins.id, null, {entradas, saidas, insumos, saldos, dataLimite: de});
+      const s = getSaldo(ins.id);
       const iniIt = invIni.find(i => i.insumo_id === ins.id);
-      const qIni = iniIt?.qtd_contada || 0; const vIni = qIni * (iniIt?.custo_medio || cm);
+      const qIni = iniIt?.qtd_contada || 0; const vIni = qIni * (iniIt?.custo_medio || cmIni);
       const entsIns = entsPer.filter(e => e.insumo_id === ins.id);
       const qEnt = entsIns.reduce((a,e) => a + (e.quantidade||0), 0);
-      const vEnt = entsIns.reduce((a,e) => a + (e.custo_total||0), 0);
+      const vEnt = entsIns.reduce((a,e) => a + ((e.quantidade||0)*(e.custo_unitario||0)), 0);
       const perdIns = saisPer.filter(x => x.insumo_id === ins.id && ['perda','vencimento','descarte'].includes(x.tipo));
-      const qPerd = perdIns.reduce((a,p) => a + (p.quantidade||0), 0); const vPerd = qPerd * cm;
+      const qPerd = perdIns.reduce((a,p) => a + (p.quantidade||0), 0); const vPerd = qPerd * cmFim;
       const consIns = saisPer.filter(x => x.insumo_id === ins.id && ['consumo','transferencia'].includes(x.tipo));
-      const qCons = consIns.reduce((a,c) => a + (c.quantidade||0), 0); const vCons = qCons * cm;
+      const qCons = consIns.reduce((a,c) => a + (c.quantidade||0), 0); const vCons = qCons * cmFim;
       const finIt = usaSaldo ? null : invFin.find(i => i.insumo_id === ins.id);
-      const qFin = finIt?.qtd_contada ?? (s.quantidade||0); const vFin = Math.max(0,qFin) * cm;
+      const qFin = finIt?.qtd_contada ?? (s.quantidade||0); const vFin = Math.max(0,qFin) * cmFim;
       const cmv = vIni + vEnt + vPerd - vFin;
       totIni+=vIni; totEnt+=vEnt; totPerd+=vPerd; totCons+=vCons; totFin+=vFin;
       if (!qIni && !qEnt && !qPerd && !qCons && !qFin) return null;
@@ -4088,21 +4091,23 @@ async function renderMovimentacao() {
   if (cmvF) insFilt = insFilt.filter(i => i.participa_cmv !== 'nao');
 
   _movRows = insFilt.map(ins => {
-    const s = getSaldo(ins.id); const cm = s.custo_medio||0;
+    // Custo da ÉPOCA (ver ARQUITETURA.md): fim do período p/ consumo/perdas/saldo final; início p/ saldo anterior
+    const cmFim = custoDoInsumo(ins.id, null, {entradas, saidas, insumos, saldos, dataLimite: ate});
+    const cmIni = custoDoInsumo(ins.id, null, {entradas, saidas, insumos, saldos, dataLimite: de});
     const antIt = invIni.find(i => i.insumo_id === ins.id);
-    const qAnt = antIt?.qtd_contada||0; const vAnt = qAnt*(antIt?.custo_medio||cm);
+    const qAnt = antIt?.qtd_contada||0; const vAnt = qAnt*(antIt?.custo_medio||cmIni);
     const entsI = entsPer.filter(e => e.insumo_id === ins.id);
     const qEnt = entsI.reduce((a,e)=>a+(e.quantidade||0),0);
-    const vEnt = entsI.reduce((a,e)=>a+(e.custo_total||0),0);
+    const vEnt = entsI.reduce((a,e)=>a+((e.quantidade||0)*(e.custo_unitario||0)),0);
     const conI = saisPer.filter(x=>x.insumo_id===ins.id&&['consumo','transferencia'].includes(x.tipo));
-    const qCon = conI.reduce((a,c)=>a+(c.quantidade||0),0); const vCon=qCon*cm;
+    const qCon = conI.reduce((a,c)=>a+(c.quantidade||0),0); const vCon=qCon*cmFim;
     const perI = saisPer.filter(x=>x.insumo_id===ins.id&&['perda','vencimento','descarte'].includes(x.tipo));
     const qPerdSaida = perI.reduce((a,p)=>a+(p.quantidade||0),0);
     const qPerdGerente = perdasMap[ins.id]||0;
-    const qPerd = qPerdSaida + qPerdGerente; const vPerd=qPerd*cm;
-    const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd); const vFin=qFin*cm;
+    const qPerd = qPerdSaida + qPerdGerente; const vPerd=qPerd*cmFim;
+    const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd); const vFin=qFin*cmFim;
     return {nome:ins.nome, un:ins.unidade_medida||ins.unidade_compra||'—', cat:ins.categoria||'—',
-      qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm};
+      qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm:cmFim};
   });
   // Filtro "Somente com saldo/movimento" (marcado por padrão): esconde itens totalmente
   // zerados (sem saldo e sem nenhuma movimentação no período)
