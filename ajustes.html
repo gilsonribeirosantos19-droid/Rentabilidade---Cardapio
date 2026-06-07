@@ -221,6 +221,7 @@
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('estoque')">Ajuste de Estoque</button>
         <button class="tab-btn" onclick="switchTab('custo')">Ajuste de Custo Médio</button>
+        <button class="tab-btn" onclick="switchTab('recalcular')">Recalcular</button>
       </div>
 
       <!-- TAB: AJUSTE DE ESTOQUE -->
@@ -411,6 +412,28 @@
         </div><!-- fim split -->
       </div>
 
+      <!-- RECALCULAR -->
+      <div id="tab-recalcular" class="tab-pane">
+        <div class="card" style="max-width:560px">
+          <div class="card-title">Recalcular Custos</div>
+          <div class="card-sub">Reconstrói o custo médio (e a quantidade) a partir de TODOS os movimentos — deixa o saldo igual ao Kardex. Use depois de corrigir notas, ajustes ou conversões.</div>
+          <div class="row2">
+            <div class="fg" style="margin-bottom:0"><label>Loja</label>
+              <select id="rc-loja"><option value="">Selecione a loja...</option></select></div>
+            <div class="fg" style="margin-bottom:0"><label>Item</label>
+              <select id="rc-insumo"><option value="">Todos os itens</option></select></div>
+          </div>
+          <div style="margin-bottom:14px"></div>
+          <div class="fg">
+            <label style="margin-bottom:8px">O que recalcular</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="rc-cm" checked style="width:15px;height:15px;accent-color:#f97316"> Custo médio (saldo = Kardex)</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer"><input type="checkbox" id="rc-ficha" style="width:15px;height:15px;accent-color:#f97316"> Custo das fichas de processado</label>
+          </div>
+          <div id="rc-result" class="saldo-preview" style="white-space:pre-line"></div>
+          <button class="btn btn-primary" style="width:100%" onclick="recalcularCustos()" id="btn-rc">Recalcular</button>
+        </div>
+      </div>
+
     </div><!-- fim conteudo-admin -->
   </div><!-- fim content -->
 </div><!-- fim main -->
@@ -485,6 +508,8 @@ function popularLojas() {
   if (selTop) selTop.innerHTML = opts.replace('Selecione a loja...','Todas as lojas');
   const selAe = document.getElementById('ae-loja');
   if (selAe) selAe.innerHTML = opts;
+  const selRc = document.getElementById('rc-loja');
+  if (selRc) { selRc.innerHTML = opts; if (lojas.length === 1) selRc.value = lojas[0].id; }
 }
 
 function onAeLojaChange() {
@@ -498,6 +523,8 @@ function popularInsumos() {
     insumos.map(i => `<option value="${i.id}">${esc(i.nome)}</option>`).join('');
   document.getElementById('ae-insumo').innerHTML = opts;
   document.getElementById('cm-insumo').innerHTML = opts;
+  const rcIns = document.getElementById('rc-insumo');
+  if (rcIns) rcIns.innerHTML = '<option value="">Todos os itens</option>' + insumos.map(i => `<option value="${i.id}">${esc(i.nome)}</option>`).join('');
 }
 
 async function onLojaChange() {
@@ -512,11 +539,79 @@ function getSaldo(insId) {
   return saldos.find(s => s.insumo_id === insId) || { quantidade: 0, custo_medio: 0 };
 }
 
+// ── RECALCULAR CUSTOS ──────────────────────────────────────────────────
+async function recalcularCustos() {
+  const lId = document.getElementById('rc-loja').value;
+  if (!lId) { toast('Selecione a loja.','err'); return; }
+  const doCM = document.getElementById('rc-cm').checked;
+  const doFicha = document.getElementById('rc-ficha').checked;
+  if (!doCM && !doFicha) { toast('Marque o que recalcular.','err'); return; }
+  const alvoIns = document.getElementById('rc-insumo').value || null;
+  const btn = document.getElementById('btn-rc');
+  btn.disabled = true; btn.textContent = 'Recalculando...';
+  const res = document.getElementById('rc-result'); res.classList.remove('show'); res.textContent = '';
+  let msg = '';
+  try {
+    if (doCM) {
+      const [ents, sais] = await Promise.all([
+        api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,custo_unitario,criado_em`).catch(()=>[]),
+        api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,criado_em`).catch(()=>[]),
+      ]);
+      const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map(e=>e.insumo_id), ...sais.map(s=>s.insumo_id)])];
+      const agora = new Date().toISOString();
+      const payloads = insIds.filter(Boolean).map(insId => {
+        const r = custoMedioNaData(insId, null, { entradas: ents, saidas: sais });
+        return { tenant_id: TENANT_ID, insumo_id: insId, loja_id: lId,
+          quantidade: parseFloat((r.quantidade||0).toFixed(4)),
+          custo_medio: parseFloat((r.custo||0).toFixed(6)),
+          atualizado_em: agora };
+      });
+      for (let i = 0; i < payloads.length; i += 200) {
+        await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
+          method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+          body: JSON.stringify(payloads.slice(i, i+200)) });
+      }
+      msg += `✓ Custo médio recalculado: ${payloads.length} item(ns).\n`;
+    }
+    if (doFicha) {
+      const n = await recalcularFichas(lId, alvoIns);
+      msg += `✓ Fichas de processado recalculadas: ${n}.`;
+    }
+    res.textContent = msg.trim(); res.classList.add('show');
+    toast('Recálculo concluído!','ok');
+    if (lId === lojaId) { try { saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}`); } catch{} }
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  finally { btn.disabled = false; btn.textContent = 'Recalcular'; }
+}
+
+async function recalcularFichas(lId, alvoIns) {
+  const [fichas, saldosLoja, vinc] = await Promise.all([
+    api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&insumo_vinculado_id=not.is.null&select=id,insumo_vinculado_id,rendimento_receita_g,itens_ficha(insumo_id,quantidade_g)`).catch(()=>[]),
+    api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,custo_medio`).catch(()=>[]),
+    api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=insumo_id,preco_unitario`).catch(()=>[]),
+  ]);
+  const ctx = { saldos: saldosLoja, vinculos: vinc, insumos };
+  let n = 0;
+  for (const f of fichas) {
+    if (alvoIns && f.insumo_vinculado_id !== alvoIns) continue;
+    const rendG = +f.rendimento_receita_g || 0;
+    if (!rendG || !(f.itens_ficha||[]).length) continue;
+    const custoTotal = custoFichaPorcao(f.itens_ficha, 1, lId, ctx);
+    const custoKg = custoTotal / rendG * 1000;
+    await api(`insumos?id=eq.${f.insumo_vinculado_id}`, { method:'PATCH', prefer:'return=minimal',
+      body: JSON.stringify({ preco_compra: parseFloat(custoKg.toFixed(4)) }) });
+    const ins = insumos.find(i => i.id === f.insumo_vinculado_id); if (ins) ins.preco_compra = parseFloat(custoKg.toFixed(4));
+    n++;
+  }
+  return n;
+}
+
 // ── TAB SWITCH ─────────────────────────────────────────────────────────
 function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='estoque')||(i===1&&tab==='custo')));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='estoque')||(i===1&&tab==='custo')||(i===2&&tab==='recalcular')));
   document.getElementById('tab-estoque').classList.toggle('active', tab==='estoque');
   document.getElementById('tab-custo').classList.toggle('active', tab==='custo');
+  document.getElementById('tab-recalcular').classList.toggle('active', tab==='recalcular');
 }
 
 // ── AJUSTE DE ESTOQUE ──────────────────────────────────────────────────
