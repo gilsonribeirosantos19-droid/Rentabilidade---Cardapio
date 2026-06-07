@@ -168,11 +168,6 @@
             <div class="hub-body"><div class="hub-title">Produção do Dia</div><div class="hub-desc">Apontar e acompanhar a produção diária por turno.</div></div>
             <div class="hub-arrow">›</div>
           </div>
-          <div class="hub-card" onclick="switchTab('semiacabados')">
-            <div class="hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8l-1 9H9z"/><path d="M6 21h12"/><path d="M9 12v9"/><path d="M15 12v9"/></svg></div>
-            <div class="hub-body"><div class="hub-title">Produção de Semiacabados</div><div class="hub-desc">Produzir semiacabado, calcular custo e rendimento.</div></div>
-            <div class="hub-arrow">›</div>
-          </div>
           <div class="hub-card" onclick="switchTab('programada')">
             <div class="hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
             <div class="hub-body"><div class="hub-title">Produção Programada</div><div class="hub-desc">Planejar produção por dia, turno e responsável.</div></div>
@@ -243,17 +238,6 @@
           <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:12px">Alertas</div>
           <div id="dash-alertas"><div class="empty-st" style="padding:24px">Sem alertas no momento.</div></div>
         </div>
-      </div>
-    </div>
-
-    <!-- PRODUÇÃO DE SEMIACABADOS -->
-    <div id="tab-semiacabados" class="tab-pane">
-      <div style="font-size:13px;color:#64748b;margin-bottom:12px">Produza um semiacabado para calcular o <b>custo por kg</b> e registrar o <b>rendimento</b>. <span style="color:#94a3b8">Não movimenta estoque.</span></div>
-      <div class="tbl-card">
-        <div class="tbl-scroll"><table>
-          <thead><tr><th>Semiacabado</th><th class="r">Último custo</th><th class="c">Unid.</th><th>Última produção</th><th class="c">Ação</th></tr></thead>
-          <tbody id="semi-body"><tr><td colspan="5" class="empty-st">Carregando...</td></tr></tbody>
-        </table></div>
       </div>
     </div>
 
@@ -506,58 +490,6 @@
   </div>
 </div>
 
-<!-- MODAL: PRODUZIR SEMIACABADO -->
-<div class="modal-overlay" id="modal-semi">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <span class="modal-title" id="semi-modal-titulo">Produzir Semiacabado</span>
-      <button class="modal-close" onclick="fecharModalSemi()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-section">
-        <div class="form-section-title">Dados da produção</div>
-        <div class="form-grid">
-          <div class="form-group"><label class="form-label">Data *</label><input class="form-input" type="date" id="semi-data"></div>
-          <div class="form-group"><label class="form-label">Responsável</label><input class="form-input" type="text" id="semi-resp" placeholder="Nome do responsável"></div>
-          <div class="form-group"><label class="form-label">Qtd produzida (kg) *</label><input class="form-input td-mono" type="number" step="0.001" min="0" id="semi-qtd" placeholder="0" oninput="calcSemiPreview()" style="font-size:16px;font-weight:700"></div>
-          <div class="form-group"><label class="form-label">Rendimento previsto <span style="color:#94a3b8;font-size:10px">(da ficha)</span></label><input class="form-input td-mono" type="text" id="semi-prev" readonly style="color:#64748b"></div>
-          <div class="form-group full"><label class="form-label">Observação</label><textarea class="form-input" id="semi-obs" rows="2" style="resize:vertical"></textarea></div>
-        </div>
-      </div>
-      <div class="form-section" style="margin-bottom:0">
-        <div class="form-section-title">Ingredientes da receita (custo atual)</div>
-        <div class="tbl-scroll"><table>
-          <thead><tr><th>Insumo</th><th class="r">Qtd</th><th class="r">Custo</th></tr></thead>
-          <tbody id="semi-ings"></tbody>
-        </table></div>
-        <div class="calc-row"><span class="calc-lbl">Custo total da receita</span><span class="calc-val" id="semi-custo-total">R$ 0,00</span></div>
-        <div class="calc-row" style="background:#eff6ff;border-color:#bfdbfe"><span class="calc-lbl" style="color:#2563eb">Custo por kg (÷ qtd produzida)</span><span class="calc-val" style="color:#2563eb" id="semi-custo-kg">R$ 0,00</span></div>
-        <div class="calc-row" style="background:#fff7ed;border-color:#fed7aa"><span class="calc-lbl" style="color:#f97316">Rendimento real</span><span class="calc-val" style="color:#f97316" id="semi-rend-pct">—</span></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="fecharModalSemi()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-semi-salvar" onclick="finalizarSemi()">Finalizar produção</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: HISTÓRICO SEMIACABADO -->
-<div class="modal-overlay" id="modal-semi-hist">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <span class="modal-title" id="semi-hist-titulo">Histórico de produções</span>
-      <button class="modal-close" onclick="document.getElementById('modal-semi-hist').classList.remove('open')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="tbl-scroll"><table>
-        <thead><tr><th>Data</th><th class="r">Produzido</th><th class="r">Custo total</th><th class="r">Custo/kg</th><th class="r">Rend.</th><th>Responsável</th></tr></thead>
-        <tbody id="semi-hist-body"><tr><td colspan="6" class="empty-st">Carregando...</td></tr></tbody>
-      </table></div>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL: SOBRA / PERDA -->
 <div class="modal-overlay" id="modal-sobra">
   <div class="modal">
@@ -645,8 +577,7 @@ let _editProdId=null, _editSobraId=null;
 const _tabNames={
   'dashboard':'Dashboard PCP','producao-dia':'Produção do Dia',
   'sugerida':'Produção Sugerida','sobras':'Sobras e Perdas',
-  'consumo':'Consumo Médio','programada':'Prod. Programada','relatorios':'Relatórios',
-  'semiacabados':'Semiacabados'
+  'consumo':'Consumo Médio','programada':'Prod. Programada','relatorios':'Relatórios'
 };
 let _openTabs=[], _activeTab=null, _loadedTabs={};
 
@@ -674,7 +605,6 @@ function switchTab(nome){
     if(nome==='sugerida') calcularSugestoes();
     if(nome==='sobras') iniciarSobras();
     if(nome==='consumo') renderConsumo();
-    if(nome==='semiacabados') iniciarSemiacabados();
   }
   _renderTabStrip();
 }
@@ -728,134 +658,6 @@ async function carregar(){
     const fichaOpts='<option value="">Selecione...</option>'+fichas.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join('');
     ['mp-ficha','ms-ficha'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=fichaOpts;});
   }catch(e){toast('Erro ao carregar dados: '+e.message,'err');}
-}
-
-/* ── PRODUÇÃO DE SEMIACABADOS ─────────────────────────────── */
-let _semiFichas=[], _semiInsumos=[], _semiSaldos=[], _semiVinculos=[], _semiAtual=null;
-
-async function iniciarSemiacabados(){
-  const tbody=document.getElementById('semi-body');
-  tbody.innerHTML='<tr><td colspan="5" class="empty-st">Carregando...</td></tr>';
-  try{
-    const lojaId=_lojaAtual();
-    [_semiFichas,_semiInsumos,_semiSaldos,_semiVinculos]=await Promise.all([
-      api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&insumo_vinculado_id=not.is.null&order=nome.asc&select=id,nome,insumo_vinculado_id,rendimento_receita_g,itens_ficha(insumo_id,quantidade_g)`).catch(()=>[]),
-      api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,nome,rendimento_pct,preco_compra,unidade_medida,unidade_compra`).catch(()=>[]),
-      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}${lojaId?`&loja_id=eq.${lojaId}`:''}&select=insumo_id,loja_id,custo_medio`).catch(()=>[]),
-      api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=insumo_id,preco_unitario`).catch(()=>[]),
-    ]);
-    renderSemiLista();
-  }catch(e){ tbody.innerHTML=`<tr><td colspan="5" class="empty-st">Erro: ${esc(e.message)}</td></tr>`; }
-}
-
-function _semiCtx(){ return {saldos:_semiSaldos, vinculos:_semiVinculos, insumos:_semiInsumos, lojaId:_lojaAtual()||null}; }
-function _custoReceitaSemi(f){ return custoFichaPorcao(f.itens_ficha||[], 1, _lojaAtual()||null, _semiCtx()); }
-
-function renderSemiLista(){
-  const tbody=document.getElementById('semi-body');
-  if(!_semiFichas.length){ tbody.innerHTML='<tr><td colspan="5" class="empty-st">Nenhum semiacabado. Crie uma ficha vinculada a um insumo (em Fichas Técnicas → "Vincular a insumo existente").</td></tr>'; return; }
-  tbody.innerHTML=_semiFichas.map(f=>{
-    const ins=_semiInsumos.find(i=>i.id===f.insumo_vinculado_id);
-    const custo=ins?(+ins.preco_compra||0):0;
-    const un=ins?(ins.unidade_medida||ins.unidade_compra||'kg'):'kg';
-    return `<tr>
-      <td style="font-weight:600">${esc(f.nome)}</td>
-      <td class="r td-mono">${custo>0?brl(custo):'—'}</td>
-      <td class="c">${esc(un)}</td>
-      <td id="semi-ult-${f.id}" style="color:#64748b">—</td>
-      <td class="c" style="white-space:nowrap">
-        <button class="btn btn-primary" style="padding:4px 12px;font-size:12px" onclick="abrirProduzirSemi('${f.id}')">Produzir</button>
-        <button class="btn" style="padding:4px 12px;font-size:12px" onclick="verHistoricoSemi('${f.id}')">Histórico</button>
-      </td>
-    </tr>`;
-  }).join('');
-  _semiFichas.forEach(async f=>{
-    try{
-      const r=await api(`producoes_semi?tenant_id=eq.${TENANT_ID}&ficha_id=eq.${f.id}&order=data.desc&limit=1`);
-      const el=document.getElementById('semi-ult-'+f.id);
-      if(el&&r.length) el.textContent=new Date(r[0].data+'T12:00:00').toLocaleDateString('pt-BR');
-    }catch{}
-  });
-}
-
-function abrirProduzirSemi(fid){
-  const f=_semiFichas.find(x=>x.id===fid); if(!f) return;
-  _semiAtual=f;
-  document.getElementById('semi-modal-titulo').textContent='Produzir — '+f.nome;
-  document.getElementById('semi-data').value=hoje();
-  document.getElementById('semi-resp').value='';
-  document.getElementById('semi-qtd').value='';
-  document.getElementById('semi-obs').value='';
-  const prevKg=(+f.rendimento_receita_g||0)/1000;
-  document.getElementById('semi-prev').value=prevKg>0?fmtN(prevKg,3)+' kg':'—';
-  const tb=document.getElementById('semi-ings');
-  tb.innerHTML=(f.itens_ficha||[]).map(it=>{
-    const ins=_semiInsumos.find(i=>i.id===it.insumo_id);
-    const custoIng=custoFichaPorcao([it],1,_lojaAtual()||null,_semiCtx());
-    return `<tr><td>${esc(ins?ins.nome:'—')}</td><td class="r td-mono">${fmtN(it.quantidade_g,0)} g</td><td class="r td-mono">${brl(custoIng)}</td></tr>`;
-  }).join('')||'<tr><td colspan="3" class="empty-st">Sem ingredientes na ficha.</td></tr>';
-  calcSemiPreview();
-  document.getElementById('modal-semi').classList.add('open');
-}
-
-function calcSemiPreview(){
-  if(!_semiAtual) return;
-  const custoTotal=_custoReceitaSemi(_semiAtual);
-  const qtd=parseFloat(document.getElementById('semi-qtd').value)||0;
-  const prevKg=(+_semiAtual.rendimento_receita_g||0)/1000;
-  document.getElementById('semi-custo-total').textContent=brl(custoTotal);
-  document.getElementById('semi-custo-kg').textContent=qtd>0?brl(custoTotal/qtd)+' /kg':'R$ 0,00';
-  document.getElementById('semi-rend-pct').textContent=(qtd>0&&prevKg>0)?fmtN(qtd/prevKg*100,1)+'%':'—';
-}
-
-function fecharModalSemi(){ document.getElementById('modal-semi').classList.remove('open'); _semiAtual=null; }
-
-async function finalizarSemi(){
-  if(!_semiAtual) return;
-  const btn=document.getElementById('btn-semi-salvar');
-  const qtd=parseFloat(document.getElementById('semi-qtd').value)||0;
-  if(qtd<=0){toast('Informe a quantidade produzida.','err');return;}
-  const data=document.getElementById('semi-data').value||hoje();
-  const resp=document.getElementById('semi-resp').value.trim()||null;
-  const obs=document.getElementById('semi-obs').value.trim()||null;
-  const custoTotal=_custoReceitaSemi(_semiAtual);
-  const custoKg=custoTotal/qtd;
-  const prevKg=(+_semiAtual.rendimento_receita_g||0)/1000;
-  const rendPct=prevKg>0?+(qtd/prevKg*100).toFixed(2):null;
-  btn.disabled=true; btn.textContent='Salvando...';
-  try{
-    await api(`insumos?id=eq.${_semiAtual.insumo_vinculado_id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({preco_compra:+custoKg.toFixed(4)})});
-    await api('producoes_semi',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
-      tenant_id:TENANT_ID, loja_id:_lojaAtual()||null, insumo_id:_semiAtual.insumo_vinculado_id, ficha_id:_semiAtual.id,
-      data, qtd_prevista:prevKg||null, qtd_produzida:qtd, custo_total:+custoTotal.toFixed(4), custo_unitario:+custoKg.toFixed(4),
-      rendimento_pct:rendPct, responsavel:resp, observacao:obs
-    })});
-    const ins=_semiInsumos.find(i=>i.id===_semiAtual.insumo_vinculado_id); if(ins) ins.preco_compra=+custoKg.toFixed(4);
-    toast(`Produção registrada · ${_semiAtual.nome}: ${brl(custoKg)}/kg`,'ok');
-    fecharModalSemi();
-    renderSemiLista();
-  }catch(e){ toast('Erro: '+e.message,'err'); }
-  finally{ btn.disabled=false; btn.textContent='Finalizar produção'; }
-}
-
-async function verHistoricoSemi(fid){
-  const f=_semiFichas.find(x=>x.id===fid); if(!f) return;
-  document.getElementById('semi-hist-titulo').textContent='Histórico — '+f.nome;
-  const tb=document.getElementById('semi-hist-body');
-  tb.innerHTML='<tr><td colspan="6" class="empty-st">Carregando...</td></tr>';
-  document.getElementById('modal-semi-hist').classList.add('open');
-  try{
-    const r=await api(`producoes_semi?tenant_id=eq.${TENANT_ID}&ficha_id=eq.${fid}&order=data.desc&limit=100`);
-    if(!r.length){ tb.innerHTML='<tr><td colspan="6" class="empty-st">Nenhuma produção registrada ainda.</td></tr>'; return; }
-    tb.innerHTML=r.map(p=>`<tr>
-      <td>${new Date(p.data+'T12:00:00').toLocaleDateString('pt-BR')}</td>
-      <td class="r td-mono">${fmtN(p.qtd_produzida,3)} kg</td>
-      <td class="r td-mono">${brl(p.custo_total)}</td>
-      <td class="r td-mono" style="font-weight:600">${brl(p.custo_unitario)}/kg</td>
-      <td class="r td-mono">${p.rendimento_pct!=null?fmtN(p.rendimento_pct,1)+'%':'—'}</td>
-      <td style="color:#64748b">${esc(p.responsavel||'—')}</td>
-    </tr>`).join('');
-  }catch(e){ tb.innerHTML=`<tr><td colspan="6" class="empty-st">Erro: ${esc(e.message)}</td></tr>`; }
 }
 
 /* ── DASHBOARD ───────────────────────────────────────────── */
