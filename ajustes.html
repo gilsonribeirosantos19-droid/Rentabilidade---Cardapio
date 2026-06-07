@@ -58,6 +58,15 @@
   .adj-hub-arrow{color:#cbd5e1;font-size:20px}
   .adj-back{display:inline-flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px 0;margin-bottom:14px}
   .adj-back:hover{color:#f97316}
+  /* WS TAB STRIP (multi-abas) */
+  .ws-tab-strip{display:none;align-items:center;border-bottom:1px solid #e2e8f0;background:#f1f5f9;position:sticky;top:40px;z-index:50;padding:0 4px;overflow-x:auto;gap:0;flex-shrink:0}
+  .ws-home-btn{display:flex;align-items:center;justify-content:center;width:32px;height:36px;border:none;background:transparent;cursor:pointer;color:#94a3b8;flex-shrink:0;transition:color .12s;border-right:1px solid #e2e8f0;margin-right:2px;padding:0 8px}
+  .ws-home-btn:hover{color:#f97316}
+  .ws-tab{display:flex;align-items:center;gap:6px;padding:0 12px;height:36px;font-size:12px;color:#64748b;border:none;background:transparent;border-top:2px solid transparent;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .12s;margin-bottom:-1px}
+  .ws-tab:hover{color:#0f172a;background:#fff}
+  .ws-tab.active{background:#fff !important;color:#0f172a !important;font-weight:600 !important;border-top-color:#f97316 !important;border-bottom-color:#fff !important}
+  .ws-tab-close{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;color:#94a3b8;transition:all .12s;cursor:pointer;user-select:none}
+  .ws-tab-close:hover{background:#e2e8f0;color:#0f172a}
 
   /* LAYOUT DOIS COLUNAS */
   .split{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
@@ -216,6 +225,7 @@
       <span onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:12px;color:#dc2626;cursor:pointer;border:1px solid #fca5a5;padding:4px 12px;border-radius:20px;font-weight:600;white-space:nowrap">← Sair</span>
     </div>
   </div>
+  <div class="ws-tab-strip" id="adj-tab-strip"></div>
   <div class="content" id="conteudo-principal">
 
     <!-- BLOQUEIO PARA NÃO-ADMIN -->
@@ -479,6 +489,8 @@ const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-00
 const api = createApi(SUPA_URL, SUPA_KEY);
 
 let insumos = [], saldos = [], lojas = [], lojaId = null;
+const _tabNames = { estoque:'Ajuste de Estoque', custo:'Ajuste de Custo Médio', recalcular:'Recalcular' };
+let _openTabs = [], _activeTab = null;
 let aeInsumoId = null, aetipoSel = null;
 let cmInsumoId = null;
 let aeLog = [], cmLog = [];
@@ -636,10 +648,35 @@ async function recalcularFichas(lId, alvoIns) {
 }
 
 // ── TAB SWITCH ─────────────────────────────────────────────────────────
-function switchTab(tab) {
-  ['hub','estoque','custo','recalcular'].forEach(t => document.getElementById('tab-'+t).classList.toggle('active', t===tab));
+function switchTab(nome) {
+  if (!_openTabs.includes(nome)) _openTabs.push(nome);
+  _activeTab = nome;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  const pane = document.getElementById('tab-' + nome);
+  if (pane) pane.classList.add('active');
+  _renderTabStrip();
 }
-function goHub() { switchTab('hub'); }
+function goHub() {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-hub').classList.add('active');
+  _activeTab = null;
+  _renderTabStrip();
+}
+function closeTab(nome) {
+  _openTabs = _openTabs.filter(t => t !== nome);
+  if (_activeTab === nome) {
+    if (_openTabs.length) switchTab(_openTabs[_openTabs.length - 1]);
+    else goHub();
+  } else { _renderTabStrip(); }
+}
+function _renderTabStrip() {
+  const strip = document.getElementById('adj-tab-strip');
+  if (!strip) return;
+  if (!_openTabs.length) { strip.style.display = 'none'; return; }
+  strip.style.display = 'flex';
+  strip.innerHTML = `<button class="ws-home-btn" onclick="goHub()" title="Hub Ajustes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>` +
+    _openTabs.map(t => `<button class="ws-tab${_activeTab===t?' active':''}" onclick="switchTab('${t}')">${_tabNames[t]||t}<span class="ws-tab-close" onclick="event.stopPropagation();closeTab('${t}')">✕</span></button>`).join('');
+}
 
 // ── AJUSTE DE ESTOQUE ──────────────────────────────────────────────────
 async function onAeInsumoChange() {
