@@ -152,6 +152,22 @@
   .ing-row input{width:90px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:#0f172a;outline:none}
   .btn-remove{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;padding:2px 6px;border-radius:4px}
   .btn-remove:hover{color:#e11d48;background:#fff1f2}
+  .ing-tbl-wrap{border:1px solid #e2e8f0;border-radius:10px;overflow:auto;margin-bottom:12px}
+  .ing-tbl{width:100%;border-collapse:collapse;font-size:12px}
+  .ing-tbl thead th{background:#eef2f7;color:#1e293b;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:7px 10px;text-align:left;border-bottom:1px solid #cbd5e1;white-space:nowrap}
+  .ing-tbl th.c,.ing-tbl td.c{text-align:center}
+  .ing-tbl th.r,.ing-tbl td.r{text-align:right}
+  .ing-tbl tbody td{padding:5px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle;color:#0f172a}
+  .ing-tbl tbody tr:last-child td{border-bottom:none}
+  .ing-tbl .mono{font-family:'DM Mono',monospace}
+  .ing-sel{width:100%;min-width:150px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;color:#0f172a;outline:none}
+  .ing-qtd{width:84px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:'DM Mono',monospace;color:#0f172a;outline:none;text-align:right}
+  .ing-foot{display:flex;gap:10px;justify-content:flex-end;margin-bottom:12px}
+  .ing-foot-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 16px;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+  .ing-foot-box span{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+  .ing-foot-box strong{font-size:16px;font-family:'DM Mono',monospace;color:#0f172a}
+  .ing-foot-box.azul{background:#eff6ff;border-color:#bfdbfe}
+  .ing-foot-box.azul strong{color:#2563eb}
   .custo-prev{background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px}
   .modal-footer{display:flex;align-items:center;gap:10px;padding-top:16px;border-top:1px solid #e2e8f0;margin-top:4px}
   /* COMP TABLE */
@@ -359,7 +375,7 @@
     </div>
     <div class="form-row">
       <div class="form-group"><label>Rendimento (porções) *</label>
-        <input type="number" id="f-porcoes" value="1" min="1"></div>
+        <input type="number" id="f-porcoes" value="1" min="1" oninput="atualizarCustoPreview()"></div>
       <div class="form-group"><label>Preço de venda (R$)</label>
         <input type="number" id="f-preco" placeholder="Ex: 49.90" min="0" step="0.01" oninput="atualizarCustoPreview()"></div>
     </div>
@@ -400,9 +416,17 @@
       <h3>Ingredientes</h3><div style="flex:1"></div>
       <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="addIngRow()">+ Adicionar</button>
     </div>
-    <div id="ing-list" class="ing-list"></div>
-    <div id="custo-preview" class="custo-prev" style="display:none">
-      Custo total: <strong id="custo-total-preview" style="font-family:'DM Mono',monospace;color:#f59e0b">R$ 0,00</strong>
+    <div class="ing-tbl-wrap">
+      <table class="ing-tbl">
+        <thead><tr>
+          <th>Insumo</th><th class="c">UM</th><th class="r">Qtd</th><th class="r">% Aprov.</th><th class="r">Custo unit.</th><th class="r">Custo total</th><th></th>
+        </tr></thead>
+        <tbody id="ing-list"></tbody>
+      </table>
+    </div>
+    <div id="custo-preview" class="ing-foot" style="display:none">
+      <div class="ing-foot-box"><span>Custo Unitário da Receita</span><strong id="custo-unit-preview">R$ 0,00</strong></div>
+      <div class="ing-foot-box azul"><span>Custo Total da Receita</span><strong id="custo-total-preview">R$ 0,00</strong></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModal('modal-form')">Cancelar</button>
@@ -827,25 +851,40 @@ function addIngRow(idx=null){
   if(idx===null){ingredientes.push({insumo_id:'',quantidade_g:''});idx=ingredientes.length-1;}
   const ing=ingredientes[idx];
   const opts=todosInsumos.map(i=>`<option value="${i.id}"${i.id===ing.insumo_id?' selected':''}>${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><select class="ing-sel" onchange="ingChange(${idx},'insumo_id',this.value)"><option value="">Selecione o insumo...</option>${opts}</select></td>
+    <td class="c" id="ing-um-${idx}" style="color:#64748b">—</td>
+    <td class="r"><input class="ing-qtd" type="number" id="ing-qtd-${idx}" min="0" step="0.001" value="${ing.quantidade_g||''}" oninput="ingChange(${idx},'quantidade_g',this.value)"></td>
+    <td class="r" id="ing-aprov-${idx}" style="color:#64748b">—</td>
+    <td class="r mono" id="ing-cunit-${idx}" style="color:#64748b">—</td>
+    <td class="r mono" id="ing-ctot-${idx}" style="font-weight:600">—</td>
+    <td class="c"><button class="btn-remove" onclick="remIngRow(${idx})">✕</button></td>`;
+  document.getElementById('ing-list').appendChild(tr);
+  _updIngRow(idx);
+}
+
+// Preenche as colunas calculadas de uma linha (UM, % aprov., custo unit., custo total)
+function _updIngRow(idx){
+  const ing=ingredientes[idx]; if(!ing) return;
   const ins=todosInsumos.find(i=>i.id===ing.insumo_id);
-  const unid=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
-  const row=document.createElement('div');
-  row.className='ing-row';
-  row.innerHTML=`<select onchange="ingChange(${idx},'insumo_id',this.value)"><option value="">Selecione o insumo...</option>${opts}</select><input type="number" id="ing-qtd-${idx}" placeholder="Qtd (${unid})" min="0" step="0.01" value="${ing.quantidade_g||''}" oninput="ingChange(${idx},'quantidade_g',this.value)"><span id="ing-unit-${idx}" style="color:#94a3b8;font-size:12px;min-width:28px">${unid}</span><button class="btn-remove" onclick="remIngRow(${idx})">✕</button>`;
-  document.getElementById('ing-list').appendChild(row);
+  const setT=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'—';
+  setT(`ing-um-${idx}`, ins?um:'—');
+  setT(`ing-aprov-${idx}`, ins?((+ins.rendimento_pct||100)+'%'):'—');
+  const qEl=document.getElementById(`ing-qtd-${idx}`); if(qEl&&ins) qEl.placeholder=um;
+  if(!ins){ setT(`ing-cunit-${idx}`,'—'); setT(`ing-ctot-${idx}`,'—'); return; }
+  const cunit=_custoBase(ins);
+  const qtdNum=parseFloat(ing.quantidade_g)||0;
+  const qtdG=(um==='kg'||um==='litro')?qtdNum*1000:qtdNum;
+  setT(`ing-cunit-${idx}`, cunit>0?fmt(cunit):'—');
+  setT(`ing-ctot-${idx}`, qtdNum>0?fmt(custoIngrediente(ins,qtdG)):'—');
 }
 
 function ingChange(idx,field,val){
   if(!ingredientes[idx])return;
-  ingredientes[idx][field]=field==='quantidade_g'?parseFloat(val)||'':val;
-  if(field==='insumo_id'){
-    const ins=todosInsumos.find(i=>i.id===val);
-    const unid=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';
-    const unitEl=document.getElementById(`ing-unit-${idx}`);
-    const qtdEl=document.getElementById(`ing-qtd-${idx}`);
-    if(unitEl)unitEl.textContent=unid;
-    if(qtdEl)qtdEl.placeholder=`Qtd (${unid})`;
-  }
+  ingredientes[idx][field]=field==='quantidade_g'?(parseFloat(val)||''):val;
+  _updIngRow(idx);
   atualizarCustoPreview();
 }
 
@@ -882,7 +921,12 @@ function atualizarCustoPreview(){
     return acc+custoIngrediente(ins,qtdG);
   },0);
   const el=document.getElementById('custo-preview');
-  if(total>0){el.style.display='';document.getElementById('custo-total-preview').textContent=fmt(total);}
+  if(total>0){
+    el.style.display='';
+    document.getElementById('custo-total-preview').textContent=fmt(total);
+    const _porc=parseFloat(document.getElementById('f-porcoes').value)||1;
+    const _ue=document.getElementById('custo-unit-preview'); if(_ue) _ue.textContent=fmt(total/(_porc>0?_porc:1));
+  }
   else el.style.display='none';
   const rendEl=document.getElementById('f-rendimento');
   const kgEl=document.getElementById('custo-kg-preview');
