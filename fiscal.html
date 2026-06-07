@@ -620,7 +620,7 @@ async function loadAll() {
   try {
     const [nfeData, insData, fornData, vincData, ifvData, saldoData, lojaData] = await Promise.all([
       api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&order=data_emissao.desc${dateFilter}&select=*`),
-      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=id,nome,unidade_medida,unidade_compra`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=id,nome,unidade_medida,unidade_compra,codigo_interno`),
       api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=id,nome,nome_fantasia,cnpj`).catch(()=>[]),
       api(`vinculos_nfe?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
       api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
@@ -748,7 +748,7 @@ function renderNfeItens() {
       <td class="c" style="color:#94a3b8;${vinculado?'':'border-left:3px solid #f59e0b'}">${i+1}</td>
       <td style="font-family:'DM Mono',monospace;font-size:11px;color:#0f172a">${esc(item.codigo_item_fornecedor||'—')}</td>
       <td style="font-weight:${vinculado?400:600};color:#0f172a">${esc(item.descricao_nfe)}</td>
-      <td style="color:#0f172a;font-family:'DM Mono',monospace;font-size:11px">${vinculado && ins ? '2'+String(insumos.findIndex(x=>x.id===ins.id)+1).padStart(6,'0') : '—'}</td>
+      <td style="color:#0f172a;font-family:'DM Mono',monospace;font-size:11px">${vinculado && ins ? fmtCodigoInterno(ins.codigo_interno) : '—'}</td>
       <td style="font-size:11px;color:#64748b">${esc(vinc?.embalagem_descricao||'—')}</td>
       <td class="c" style="font-size:11px;color:#0f172a">${esc(item.unidade_nfe||'—')}</td>
       <td class="r" style="font-family:'DM Mono',monospace;color:#0f172a">${vinc ? fmtQtd(vinc.qtd_por_embalagem) : '—'}</td>
