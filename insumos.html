@@ -741,8 +741,8 @@ async function salvarNovo(){
   const fc=parseFloat(document.getElementById('f-fc').value)||100;
   const obs=document.getElementById('f-obs').value.trim();
   if(!nome||!cat||!und||isNaN(preco)){toast('Preencha os campos obrigatórios.','err');return;}
-  // Validar duplicata de nome
-  const dup=todos.find(i=>i.nome.trim().toLowerCase()===nome.toLowerCase());
+  // Validar duplicata de nome (sem diferenciar acento/maiúscula)
+  const dup=todos.find(i=>normalizeSearch(i.nome||'')===normalizeSearch(nome));
   if(dup){toast(`Já existe um insumo com o nome "${nome}". Verifique em Insumos.`,'err');return;}
   const btn=document.getElementById('btn-salvar');
   btn.disabled=true; btn.textContent='Salvando...';
@@ -868,14 +868,15 @@ async function salvarCadastro(){
     participa_cmv: document.getElementById('cad-cmv')?.value||'sim',
     ativo: document.getElementById('cad-ativo').value!=='false',
   };
+  // Bloqueia nome duplicado — ao CRIAR e ao EDITAR (ignora o próprio item), sem diferenciar acento/maiúscula
+  const nomeNorm=normalizeSearch(nome);
+  const existe=todos.some(i=>normalizeSearch(i.nome||'')===nomeNorm && i.id!==_cadEditId);
+  if(existe){
+    toast(`Já existe um item com o nome "${nome}".`,'err');
+    if(btn){btn.disabled=false;btn.textContent='Salvar';}
+    return;
+  }
   if(!_cadEditId){
-    const nomeLower=nome.toLowerCase();
-    const existe=todos.some(i=>(i.nome||'').toLowerCase()===nomeLower);
-    if(existe){
-      toast(`Já existe um item com o nome "${nome}".`,'err');
-      if(btn){btn.disabled=false;btn.textContent='Salvar';}
-      return;
-    }
     payload.tenant_id=TENANT_ID;
     payload.preco_compra=0;
     payload.rendimento_pct=100;
