@@ -581,8 +581,7 @@ async function carregar() {
     document.getElementById('view-admin').style.display = '';
     // Popula filtro de lojas
     const fil = document.getElementById('sol-fil-loja');
-    fil.innerHTML = '<option value="">Todas as lojas</option>' +
-      lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    fil.innerHTML = lojaFiltroHtml(lojas);
     switchTab('solicitacoes');
   }
 }

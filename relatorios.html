@@ -1203,8 +1203,7 @@ async function init() {
   try {
     lojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
     const sel = document.getElementById('sel-loja');
-    sel.innerHTML = '<option value="">Todas as lojas</option>' +
-      lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    sel.innerHTML = lojaFiltroHtml(lojas);
   } catch {}
   await carregar();
 }

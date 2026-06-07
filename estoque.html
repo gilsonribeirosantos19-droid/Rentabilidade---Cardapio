@@ -3488,8 +3488,7 @@ async function iniciarAbaInventario() {
   if (!_invLojas.length) {
     try { _invLojas = await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`); } catch{}
     const sel = document.getElementById('inv-fil-loja');
-    if (sel) sel.innerHTML = '<option value="">Todas as lojas</option>' +
-      _invLojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    if (sel) sel.innerHTML = lojaFiltroHtml(_invLojas);
   }
   const invBody = document.getElementById('inv-lista-body');
   if (invBody) invBody.innerHTML =

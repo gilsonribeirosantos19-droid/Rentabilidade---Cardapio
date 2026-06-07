@@ -645,7 +645,7 @@ async function carregar(){
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
     ]);
     const sel=document.getElementById('sel-loja');
-    if(sel) sel.innerHTML='<option value="">Todas as lojas</option>'+lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    if(sel) sel.innerHTML=lojaFiltroHtml(lojas);
 
     [saldos,entradas,saidas,inventarios,pedidos]=await Promise.all([
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`),
