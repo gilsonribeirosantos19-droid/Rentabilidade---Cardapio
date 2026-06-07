@@ -1182,6 +1182,7 @@ async function salvar() {
     if (!table) { toast('Tipo não configurado', 'err'); return; }
     let body;
     if (modalTipo === 'unidade') body = { nome, abreviacao: abrev, tenant_id: TENANT_ID };
+    else if (modalTipo === 'cat_ficha') body = { nome, tipo: 'ficha', tenant_id: TENANT_ID };
     else if (CLSF_TIPOS.includes(modalTipo)) body = { nome, tipo: modalTipo, ativo: true, tenant_id: TENANT_ID };
     else body = { nome, tenant_id: TENANT_ID };
     if (editId) {
