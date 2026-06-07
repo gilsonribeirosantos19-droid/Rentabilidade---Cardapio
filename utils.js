@@ -112,3 +112,12 @@ function lojaFiltroHtml(lojas, allLabel) {
   if (lojas && lojas.length === 1) return `<option value="">${e(lojas[0].nome)}</option>`;
   return `<option value="">${allLabel}</option>` + (lojas || []).map(l => `<option value="${l.id}">${e(l.nome)}</option>`).join('');
 }
+
+// ── CÓDIGO INTERNO ─────────────────────────────────────────────────
+// Formata o código interno do item (número sequencial guardado no banco) com 6 dígitos.
+// Mesmo código em todas as telas, estável (não muda quando se adiciona/remove item).
+function fmtCodigoInterno(v) {
+  if (v == null || v === '') return '—';
+  const n = parseInt(v, 10);
+  return isNaN(n) ? String(v) : String(n).padStart(6, '0');
+}

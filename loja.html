@@ -1728,10 +1728,10 @@ async function abrirInventario(invId) {
   abrirModal('m-inv');
 }
 
-// Código interno gerado pelo sistema: "2" + posição (alfabética) do insumo, 6 dígitos → 2000026
+// Código interno do item (número sequencial guardado no banco), 6 dígitos → 000026
 function invCodigo(insumoId) {
-  const idx = insumos.findIndex(i => i.id === insumoId);
-  return idx >= 0 ? '2' + String(idx + 1).padStart(6, '0') : '—';
+  const ins = insumos.find(i => i.id === insumoId);
+  return fmtCodigoInterno(ins?.codigo_interno);
 }
 
 // Embalagem por extenso, a partir da unidade de compra

@@ -671,7 +671,7 @@ function switchDpTab(nome, btn){
     body.innerHTML=`
       <div class="dp-field"><span class="dp-field-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Categoria</span><span class="dp-field-val">${esc(i.categoria||'—')}</span></div>
       <div class="dp-field"><span class="dp-field-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8"/></svg>Unidade</span><span class="dp-field-val">${esc(i.unidade_compra||i.unidade_medida||'—')}</span></div>
-      <div class="dp-field"><span class="dp-field-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Código interno</span><span class="dp-field-val" style="font-family:'DM Mono',monospace;font-size:11px">${_gerarCodigo(todos.indexOf(i))}</span></div>
+      <div class="dp-field"><span class="dp-field-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Código interno</span><span class="dp-field-val" style="font-family:'DM Mono',monospace;font-size:11px">${fmtCodigoInterno(i.codigo_interno)}</span></div>
       <div class="dp-field"><span class="dp-field-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Preço de compra</span><span class="dp-field-val" style="font-family:'DM Mono',monospace">${brl(i.preco_compra)}</span></div>
       <div class="dp-field"><span class="dp-field-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Custo real / kg</span><span class="dp-field-val" style="font-family:'DM Mono',monospace">${brl(custo)}</span></div>
       <div class="dp-field"><span class="dp-field-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Rendimento</span><span class="dp-field-val">${rend.toFixed(0)}%</span></div>
@@ -741,13 +741,14 @@ async function salvarNovo(){
   const fc=parseFloat(document.getElementById('f-fc').value)||100;
   const obs=document.getElementById('f-obs').value.trim();
   if(!nome||!cat||!und||isNaN(preco)){toast('Preencha os campos obrigatórios.','err');return;}
-  // Validar duplicata de nome
-  const dup=todos.find(i=>i.nome.trim().toLowerCase()===nome.toLowerCase());
+  // Validar duplicata de nome (sem diferenciar acento/maiúscula)
+  const dup=todos.find(i=>normalizeSearch(i.nome||'')===normalizeSearch(nome));
   if(dup){toast(`Já existe um insumo com o nome "${nome}". Verifique em Insumos.`,'err');return;}
   const btn=document.getElementById('btn-salvar');
   btn.disabled=true; btn.textContent='Salvando...';
   try{
-    await api('insumos',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,unidade_compra:und,preco_compra:preco,rendimento_pct:fc,observacao:obs||null,ativo:true})});
+    const _nextCod=todos.reduce((m,i)=>Math.max(m,parseInt(i.codigo_interno)||0),0)+1;
+    await api('insumos',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,unidade_compra:und,preco_compra:preco,rendimento_pct:fc,observacao:obs||null,ativo:true,codigo_interno:_nextCod})});
     toast(`${nome} cadastrado com sucesso.`,'ok');
     fecharModalNovo();
     await carregarInsumos();
@@ -835,7 +836,7 @@ function editarItemCadastro(id){
   _cadEditId = id;
   const idx = todos.indexOf(ins);
   const setVal=(elId,v)=>{const e=document.getElementById(elId);if(e)e.value=v!=null?v:'';};
-  setVal('cad-codigo', 'MP-'+String(idx+1).padStart(6,'0'));
+  setVal('cad-codigo', fmtCodigoInterno(ins.codigo_interno));
   setVal('cad-nome', ins.nome||'');
   setVal('cad-ativo', ins.ativo===false?'false':'true');
   setVal('cad-tipo', ins.tipo_item||'');
@@ -868,17 +869,19 @@ async function salvarCadastro(){
     participa_cmv: document.getElementById('cad-cmv')?.value||'sim',
     ativo: document.getElementById('cad-ativo').value!=='false',
   };
+  // Bloqueia nome duplicado — ao CRIAR e ao EDITAR (ignora o próprio item), sem diferenciar acento/maiúscula
+  const nomeNorm=normalizeSearch(nome);
+  const existe=todos.some(i=>normalizeSearch(i.nome||'')===nomeNorm && i.id!==_cadEditId);
+  if(existe){
+    toast(`Já existe um item com o nome "${nome}".`,'err');
+    if(btn){btn.disabled=false;btn.textContent='Salvar';}
+    return;
+  }
   if(!_cadEditId){
-    const nomeLower=nome.toLowerCase();
-    const existe=todos.some(i=>(i.nome||'').toLowerCase()===nomeLower);
-    if(existe){
-      toast(`Já existe um item com o nome "${nome}".`,'err');
-      if(btn){btn.disabled=false;btn.textContent='Salvar';}
-      return;
-    }
     payload.tenant_id=TENANT_ID;
     payload.preco_compra=0;
     payload.rendimento_pct=100;
+    payload.codigo_interno=todos.reduce((m,i)=>Math.max(m,parseInt(i.codigo_interno)||0),0)+1;
   }
   try{
     if(_cadEditId){
@@ -926,7 +929,7 @@ function renderProdutos(){
   }
   tbody.innerHTML=_prodFiltrado.map((ins)=>{
     const realIdx=todos.indexOf(ins);
-    const codigo=_gerarCodigo(realIdx);
+    const codigo=fmtCodigoInterno(ins.codigo_interno);
     const st=getStatus(ins);
     return `<tr onclick="editarItemCadastro('${ins.id}')" style="cursor:pointer">
       <td class="td-mono" style="color:#64748b;font-size:11px">${esc(codigo)}</td>
