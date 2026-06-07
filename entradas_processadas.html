@@ -273,9 +273,46 @@ function renderTable(){
     <td class="c"><span class="badge b-proc"><span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span>Processada</span></td>
     <td class="c">
       <button class="btn btn-ghost btn-sm" onclick="verDetalhes('${n.id}')">Ver detalhes</button>
+      <button class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="estornarNota('${n.id}')">↩ Estornar</button>
       <button class="action-btn" onclick="abrirMenu(event,'${n.id}','${esc(n.numero||'')}')">⋮</button>
     </td>
   </tr>`).join('');
+}
+
+// ── ESTORNO DE NOTA ─────────────────────────────────────────────────
+// Remove as entradas de estoque da nota, recalcula saldo + custo médio dos
+// itens afetados (do que sobrou) e devolve a nota ao Monitor para reprocessar.
+async function estornarNota(nfeId){
+  const nfe=allData.find(x=>x.id===nfeId); if(!nfe) return;
+  const ref=`${nfe.numero}/${nfe.serie}`;
+  if(!confirm(`Estornar a NF-e ${nfe.numero}?\n\nIsto vai REMOVER as entradas dela do estoque, recalcular o custo médio dos itens e devolver a nota ao Monitor para reprocessar.`)) return;
+  if(!confirm(`Tem certeza? Esta ação não pode ser desfeita.`)) return;
+  try{
+    const refEnc=encodeURIComponent(ref);
+    // 1. Acha as entradas dessa nota (itens/lojas afetados)
+    const ents=await api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&nfe_numero=eq.${refEnc}&select=insumo_id,loja_id`);
+    if(!ents.length){ toast('Nenhuma entrada de estoque encontrada para esta nota.','err'); return; }
+    const seen={},pares=[];
+    ents.forEach(e=>{const k=e.insumo_id+'|'+(e.loja_id||'');if(!seen[k]){seen[k]=1;pares.push({insumo_id:e.insumo_id,loja_id:e.loja_id});}});
+    // 2. Remove as entradas da nota
+    await api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&nfe_numero=eq.${refEnc}`,{method:'DELETE',prefer:'return=minimal'});
+    // 3. Recalcula saldo e custo médio de cada item afetado (com o que sobrou)
+    for(const p of pares){
+      const lf=p.loja_id?`&loja_id=eq.${p.loja_id}`:`&loja_id=is.null`;
+      const e2=await api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${p.insumo_id}${lf}&select=quantidade,custo_unitario`);
+      const s2=await api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${p.insumo_id}${lf}&select=quantidade`).catch(()=>[]);
+      const tot=e2.reduce((a,x)=>a+(+x.quantidade||0),0);
+      const sai=s2.reduce((a,x)=>a+(+x.quantidade||0),0);
+      const cm=tot>0?+(e2.reduce((a,x)=>a+(+x.quantidade||0)*(+x.custo_unitario||0),0)/tot).toFixed(6):0;
+      await api(`saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id`,{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:p.insumo_id,loja_id:p.loja_id||null,quantidade:+(tot-sai).toFixed(6),custo_medio:cm})});
+    }
+    // 4. Devolve a nota ao Monitor (status 'pronta')
+    await api(`nfe_recebidas?id=eq.${nfeId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({status:'pronta',processada_em:null})});
+    // 5. Log de auditoria
+    await api('nfe_log',{method:'POST',prefer:'return=minimal',body:JSON.stringify({tenant_id:TENANT_ID,nfe_id:nfeId,acao:'estorno',descricao:`NF-e ${nfe.numero} estornada — entradas removidas do estoque, voltou ao Monitor`})}).catch(()=>{});
+    toast(`NF-e ${nfe.numero} estornada! Voltou ao Monitor para reprocessar.`,'ok');
+    await loadAll();
+  }catch(e){ toast('Erro ao estornar: '+e.message,'err'); }
 }
 
 function renderPag(){
