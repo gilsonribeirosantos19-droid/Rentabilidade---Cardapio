@@ -157,10 +157,6 @@
         <select class="field field-sm" id="fil-fornecedor" onchange="renderTable()" style="min-width:150px">
           <option value="">Todos</option>
         </select>
-        <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Loja:</span>
-        <select class="field field-sm" id="fil-loja" onchange="renderTable()" style="min-width:120px">
-          <option value="">Todas</option>
-        </select>
         <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Período:</span>
         <div id="fil-periodo-datas" style="display:none;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
           <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
@@ -648,7 +644,6 @@ function populateSelects() {
   selForn.innerHTML = '<option value="">Fornecedor: Todos</option>' +
     Object.entries(fornMap).map(([cnpj, nome]) => `<option value="${cnpj}">${esc(nome)}</option>`).join('');
   selForn.value = prevForn;
-  document.getElementById('fil-loja').innerHTML = '<option value="">Loja: Todas</option>';
 }
 
 // ── MONITOR TABS ──────────────────────────────────────────────────
@@ -935,7 +930,6 @@ function toggleSelectAll(chk) {
 
 function limparFiltros() {
   document.getElementById('fil-fornecedor').value = '';
-  document.getElementById('fil-loja').value = '';
   document.getElementById('fil-periodo').value = 'todos';
   const elBox = document.getElementById('fil-periodo-datas'); if(elBox) elBox.style.display = 'none';
   const elD = document.getElementById('fil-de'); if(elD) elD.value = '';
