@@ -278,6 +278,42 @@ function renderTable(){
   </tr>`).join('');
 }
 
+// ── ESTORNO DE NOTA ─────────────────────────────────────────────────
+// Remove as entradas de estoque da nota, recalcula saldo + custo médio dos
+// itens afetados (do que sobrou) e devolve a nota ao Monitor para reprocessar.
+async function estornarNota(nfeId){
+  const nfe=allData.find(x=>x.id===nfeId); if(!nfe) return;
+  const ref=`${nfe.numero}/${nfe.serie}`;
+  if(!confirm(`Estornar a NF-e ${nfe.numero}?\n\nIsto vai REMOVER as entradas dela do estoque, recalcular o custo médio dos itens e devolver a nota ao Monitor para reprocessar.`)) return;
+  if(!confirm(`Tem certeza? Esta ação não pode ser desfeita.`)) return;
+  try{
+    const refEnc=encodeURIComponent(ref);
+    // 1. Acha as entradas dessa nota (itens/lojas afetados)
+    const ents=await api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&nfe_numero=eq.${refEnc}&select=insumo_id,loja_id`);
+    if(!ents.length){ toast('Nenhuma entrada de estoque encontrada para esta nota.','err'); return; }
+    const seen={},pares=[];
+    ents.forEach(e=>{const k=e.insumo_id+'|'+(e.loja_id||'');if(!seen[k]){seen[k]=1;pares.push({insumo_id:e.insumo_id,loja_id:e.loja_id});}});
+    // 2. Remove as entradas da nota
+    await api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&nfe_numero=eq.${refEnc}`,{method:'DELETE',prefer:'return=minimal'});
+    // 3. Recalcula saldo e custo médio de cada item afetado (com o que sobrou)
+    for(const p of pares){
+      const lf=p.loja_id?`&loja_id=eq.${p.loja_id}`:`&loja_id=is.null`;
+      const e2=await api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${p.insumo_id}${lf}&select=quantidade,custo_unitario`);
+      const s2=await api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${p.insumo_id}${lf}&select=quantidade`).catch(()=>[]);
+      const tot=e2.reduce((a,x)=>a+(+x.quantidade||0),0);
+      const sai=s2.reduce((a,x)=>a+(+x.quantidade||0),0);
+      const cm=tot>0?+(e2.reduce((a,x)=>a+(+x.quantidade||0)*(+x.custo_unitario||0),0)/tot).toFixed(6):0;
+      await api(`saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id`,{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:p.insumo_id,loja_id:p.loja_id||null,quantidade:+(tot-sai).toFixed(6),custo_medio:cm})});
+    }
+    // 4. Devolve a nota ao Monitor (status 'pronta')
+    await api(`nfe_recebidas?id=eq.${nfeId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({status:'pronta',processada_em:null})});
+    // 5. Log de auditoria
+    await api('nfe_log',{method:'POST',prefer:'return=minimal',body:JSON.stringify({tenant_id:TENANT_ID,nfe_id:nfeId,acao:'estorno',descricao:`NF-e ${nfe.numero} estornada — entradas removidas do estoque, voltou ao Monitor`})}).catch(()=>{});
+    toast(`NF-e ${nfe.numero} estornada! Voltou ao Monitor para reprocessar.`,'ok');
+    await loadAll();
+  }catch(e){ toast('Erro ao estornar: '+e.message,'err'); }
+}
+
 function renderPag(){
   const total=filteredData.length,pages=Math.ceil(total/pageSize);
   const start=(currentPage-1)*pageSize+1,end=Math.min(currentPage*pageSize,total);
@@ -304,9 +340,43 @@ function limparFiltros(){
   loadAll();
 }
 
-function verDetalhes(nfeId){
+async function verDetalhes(nfeId){
   const n=allData.find(x=>x.id===nfeId);if(!n)return;
-  alert(`NF-e ${n.numero}/${n.serie}\nFornecedor: ${n.nome_emitente}\nCNPJ: ${n.cnpj_emitente}\nChave: ${n.chave_acesso||'—'}\nValor: ${brl(n.valor_total)}\nProcessada: ${n.processada_em?new Date(n.processada_em).toLocaleString('pt-BR'):'—'}`);
+  let itens=[];
+  try{ itens=await api(`nfe_itens?nfe_id=eq.${nfeId}&order=id.asc&select=*`); }catch{}
+  const linhas = itens.length ? itens.map(it=>`<tr>
+      <td>${esc(it.descricao_nfe||'—')}</td>
+      <td class="mono" style="font-size:11px;color:#64748b">${esc(it.codigo_item_fornecedor||'—')}</td>
+      <td class="r mono">${(+it.quantidade||0).toLocaleString('pt-BR',{maximumFractionDigits:3})} ${esc(it.unidade_nfe||'')}</td>
+      <td class="r mono">${brl(it.valor_unitario)}</td>
+      <td class="r mono">${brl(it.valor_total)}</td>
+    </tr>`).join('') : `<tr><td colspan="5" class="empty">Sem itens registrados.</td></tr>`;
+  const lbl='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em';
+  const html=`<div class="det-bd" onclick="if(event.target===this)this.remove()" style="position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div onclick="event.stopPropagation()" style="background:#fff;border-radius:14px;width:96vw;max-width:840px;max-height:90vh;overflow:auto;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+      <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff">
+        <div style="font-size:15px;font-weight:700;color:#0f172a">NF-e ${esc(n.numero||'—')} / ${esc(n.serie||'1')}</div>
+        <button onclick="this.closest('.det-bd').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#94a3b8;padding:2px 8px">✕</button>
+      </div>
+      <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;color:#0f172a">
+        <div><div style="${lbl}">Fornecedor</div>${esc(n.nome_emitente||'—')}</div>
+        <div><div style="${lbl}">CNPJ</div><span class="mono">${esc(n.cnpj_emitente||'—')}</span></div>
+        <div><div style="${lbl}">Emissão</div>${fmtDt(n.data_emissao)}</div>
+        <div><div style="${lbl}">Processada</div>${fmtDt(n.processada_em)}</div>
+        <div style="grid-column:1/-1"><div style="${lbl}">Chave de acesso</div><span class="mono" style="font-size:11px;word-break:break-all">${esc(n.chave_acesso||'—')}</span></div>
+        <div><div style="${lbl}">Valor total</div><b style="font-size:15px">${brl(n.valor_total)}</b></div>
+      </div>
+      <div style="padding:0 20px 20px">
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Itens da nota (${itens.length})</div>
+        <div class="tbl-card"><div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>Descrição</th><th>Código</th><th class="r">Qtd.</th><th class="r">V. Unit.</th><th class="r">V. Total</th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table></div></div>
+      </div>
+    </div>
+  </div>`;
+  const wrap=document.createElement('div'); wrap.innerHTML=html;
+  document.body.appendChild(wrap.firstElementChild);
 }
 
 function abrirMenu(e,nfeId,numero){
@@ -319,6 +389,10 @@ function abrirMenu(e,nfeId,numero){
     <button onclick="exportarUma('${nfeId}')" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:none;font-size:13px;cursor:pointer;color:#0f172a;font-family:inherit">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Exportar linha
+    </button>
+    <button onclick="estornarNota('${nfeId}')" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;border-top:1px solid #f1f5f9;background:none;font-size:13px;cursor:pointer;color:#dc2626;font-family:inherit">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      Estornar nota
     </button>`;
   const rect=e.currentTarget.getBoundingClientRect();
   menu.style.top=(rect.bottom+4)+'px';
