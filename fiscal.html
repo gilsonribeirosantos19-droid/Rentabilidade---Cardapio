@@ -855,14 +855,14 @@ async function salvarVincFiscal() {
     if(existing) {
       await api(`insumo_fornecedores?id=eq.${existing.id}`, {
         method:'PATCH', prefer:'return=minimal',
-        body: JSON.stringify({ qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null, embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
+        body: JSON.stringify({ qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:(emb.fator>0?+(item.valor_unitario/emb.fator).toFixed(4):(item.valor_unitario||null)), embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
       });
       vincId = existing.id;
       Object.assign(existing, { qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null });
     } else {
       const [nl] = await api('insumo_fornecedores', {
         method:'POST', prefer:'return=representation',
-        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:insId, fornecedor_id:fornId, embalagem_descricao:emb.embDesc, qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:item.valor_unitario||null, embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
+        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:insId, fornecedor_id:fornId, embalagem_descricao:emb.embDesc, qtd_por_embalagem:emb.fator, codigo_fornecedor:codForn||null, preco_unitario:(emb.fator>0?+(item.valor_unitario/emb.fator).toFixed(4):(item.valor_unitario||null)), embalagem_padrao:vinPadrao, descricao_fornecedor:vinDesc })
       });
       vincId = nl?.id;
       if(nl) insumoFornVinculos.push(nl);
@@ -1508,13 +1508,45 @@ async function onVinInsumoChange() {
   onVinEmbSelectChange(prev?.fator);
 }
 
+// Converte "quantidade + unidade" para a unidade de estoque.
+function _embToStock(numStr, unit, stockUnit) {
+  let q = parseFloat(String(numStr).replace(',','.')); if(isNaN(q)||q<=0) return 0;
+  let u = String(unit).toUpperCase();
+  // "0,900ml" quase sempre é litro mal escrito (ninguém usa decimal em ml) → trata como L
+  if(u==='ML' && /[.,]/.test(numStr)) u='L';
+  const s = (stockUnit||'').toUpperCase();
+  if(u==='KG'){ if(s==='KG') return q; if(s==='G') return q*1000; }
+  if(u==='G'){ if(s==='KG') return q/1000; if(s==='G') return q; }
+  if(u==='L'){ if(s==='LITRO'||s==='L') return q; if(s==='ML') return q*1000; }
+  if(u==='ML'){ if(s==='LITRO'||s==='L') return q/1000; if(s==='ML') return q; }
+  if(u.startsWith('UN')){ if(s.startsWith('UN')) return q; }
+  return 0;
+}
+// Lê a conversão (qtd na unidade de estoque) a partir do NOME da embalagem.
+// Ex: "CAIXA C/ 9 KG" → 9; "PACOTE C/ 70 G" → 0,07; "CAIXA C/ 20X0,900ML" → 18 (estoque litro).
+function _parseEmbFator(desc, stockUnit) {
+  if(!desc) return 0;
+  const D = String(desc).toUpperCase();
+  // Formato "N x M unidade" (ex: 20X900ML, 20X0,900ML, 12X1,5L) → N × (M convertido)
+  let m = D.match(/(\d+(?:[.,]\d+)?)\s*[X×]\s*(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
+  if(m){ const r = parseFloat(m[1].replace(',','.')) * _embToStock(m[2], m[3], stockUnit); if(r>0) return +r.toFixed(6); }
+  // Formato "C/ M unidade" ou "M unidade" (ex: C/ 9 KG, 70 G)
+  m = D.match(/(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
+  if(m){ const r = _embToStock(m[1], m[2], stockUnit); if(r>0) return +r.toFixed(6); }
+  // Embalagem só "UNIDADE"/"UN" (sem tamanho) e item em unidade → 1 (1 un = 1 un)
+  if(/^(UNIDADES?|UN|UNID)\.?$/.test(D.trim()) && (stockUnit||'').toUpperCase().startsWith('UN')) return 1;
+  return 0;
+}
+
 function onVinEmbSelectChange(forceQty) {
   const sel=document.getElementById('vin-emb-select');
   const opt=sel.options[sel.selectedIndex];
   if(!opt||!opt.value){ document.getElementById('vin-conv-summary').style.display='none'; document.getElementById('vin-ins')._selectedEmb=null; return; }
   const preQty=parseFloat(opt.dataset.qty)||0;
   const qtyInput=document.getElementById('vin-emb-qty');
-  if(preQty>0) qtyInput.value=preQty;
+  const autoFator=_parseEmbFator(opt.dataset.desc||opt.textContent, document.getElementById('vin-und').textContent);
+  if(autoFator>0) qtyInput.value=autoFator;
+  else if(preQty>0) qtyInput.value=preQty;
   else if(forceQty) qtyInput.value=forceQty;
   const isGeneric=!!opt.dataset.generic;
   document.getElementById('vin-ins')._selectedEmb={embDesc:opt.dataset.desc||opt.textContent,fator:parseFloat(qtyInput.value)||1,embIdx:sel.selectedIndex,und:document.getElementById('vin-und').textContent,isGeneric};
@@ -1552,10 +1584,10 @@ async function salvarVinculoNfe() {
     try{
       const existing=insumoFornVinculos.find(v=>v.insumo_id===insId&&v.fornecedor_id===fornId&&v.embalagem_descricao===emb.embDesc);
       if(existing){
-        await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:it.valorUnit||null})});
+        await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:(emb.fator>0?+(it.valorUnit/emb.fator).toFixed(4):(it.valorUnit||null))})});
         Object.assign(existing,{qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null});
       } else {
-        const newLink=await api('insumo_fornecedores',{method:'POST',prefer:'return=representation',body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,fornecedor_id:fornId,embalagem_descricao:emb.embDesc,qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:it.valorUnit||null})});
+        const newLink=await api('insumo_fornecedores',{method:'POST',prefer:'return=representation',body:JSON.stringify({tenant_id:TENANT_ID,insumo_id:insId,fornecedor_id:fornId,embalagem_descricao:emb.embDesc,qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:(emb.fator>0?+(it.valorUnit/emb.fator).toFixed(4):(it.valorUnit||null))})});
         if(newLink[0]) insumoFornVinculos.push(newLink[0]);
       }
     }catch{}
