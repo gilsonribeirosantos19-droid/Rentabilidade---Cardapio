@@ -121,3 +121,50 @@ function fmtCodigoInterno(v) {
   const n = parseInt(v, 10);
   return isNaN(n) ? String(v) : String(n).padStart(6, '0');
 }
+
+// ── FONTE ÚNICA DE CUSTO (ver ARQUITETURA.md §5) ───────────────────
+// Custo de UM insumo (R$ por unidade de estoque — kg/un/litro), nesta ordem:
+//   1) custo_medio do saldo (da loja)  2) preco_unitario do vínculo  3) preco_compra do insumo
+// ctx = { saldos, vinculos, insumos }
+function custoDoInsumo(insumoId, lojaId, ctx) {
+  ctx = ctx || {};
+  const saldos = ctx.saldos || [], vinculos = ctx.vinculos || [], insumos = ctx.insumos || [];
+  const salLoja = lojaId && saldos.find(s => s.insumo_id === insumoId && s.loja_id === lojaId && +s.custo_medio > 0);
+  if (salLoja) return +salLoja.custo_medio;
+  const salAny = saldos.find(s => s.insumo_id === insumoId && +s.custo_medio > 0);
+  if (salAny) return +salAny.custo_medio;
+  const vin = vinculos.find(v => v.insumo_id === insumoId && +v.preco_unitario > 0);
+  if (vin) return +vin.preco_unitario;
+  const ins = insumos.find(i => i.id === insumoId);
+  return ins && +ins.preco_compra > 0 ? +ins.preco_compra : 0;
+}
+
+// Custo de UMA PORÇÃO de uma ficha técnica, usando custoDoInsumo + rendimento dos insumos.
+// itens = [{insumo_id, quantidade_g}], rendimentoPorcoes = nº de porções da receita.
+// Fórmula por ingrediente: custo_kg / (rendimento_pct/100) / 1000 × quantidade_g; soma ÷ porções.
+function custoFichaPorcao(itens, rendimentoPorcoes, lojaId, ctx) {
+  ctx = ctx || {};
+  const insumos = ctx.insumos || [];
+  let total = 0;
+  (itens || []).forEach(it => {
+    const ins = insumos.find(i => i.id === it.insumo_id);
+    const rend = (ins && +ins.rendimento_pct > 0) ? ins.rendimento_pct / 100 : 1;
+    const custoKg = custoDoInsumo(it.insumo_id, lojaId, ctx);
+    total += (custoKg / rend / 1000) * (+it.quantidade_g || 0);
+  });
+  const por = +rendimentoPorcoes > 0 ? +rendimentoPorcoes : 1;
+  return total / por;
+}
+
+// Custo unitário de um item de venda: pela FICHA (fonte única) quando há ficha vinculada;
+// senão, cai no custo_unitario gravado na venda. v = registro de vendas_item.
+// ctx = { saldos, vinculos, insumos, fichas, lojaId }
+function custoVendaItem(v, ctx) {
+  ctx = ctx || {};
+  const fichas = ctx.fichas || [];
+  const ficha = v && v.ficha_id ? fichas.find(f => f.id === v.ficha_id) : null;
+  if (ficha && (ficha.itens_ficha || ficha.itens)) {
+    return custoFichaPorcao(ficha.itens_ficha || ficha.itens, ficha.rendimento_porcoes, ctx.lojaId, ctx);
+  }
+  return +(v && v.custo_unitario) || 0;
+}
