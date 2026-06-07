@@ -69,6 +69,7 @@
         { href: 'relatorios.html', label: 'Relatórios',        icon: I.receipt },
         { href: 'cmv.html',        label: 'CMV Teórico x Real', icon: I.chart },
         { href: 'rendimento.html', label: 'Rendimentos',        icon: I.trending },
+        { href: 'divergencias.html', label: 'Divergências',     icon: I.shield },
       ]
     },
     {
@@ -281,6 +282,7 @@
         nav.sidebar .nav-group-header, .sidebar .nav-group-header {
           padding: 10px 16px 5px !important;
           color: rgba(255,255,255,.95) !important;
+          display: flex !important; align-items: center !important; justify-content: space-between !important; cursor: pointer !important;
         }
         nav.sidebar .nav-group-header:hover, .sidebar .nav-group-header:hover {
           background: transparent !important;
@@ -295,7 +297,10 @@
         }
         nav.sidebar .nav-group-arrow, .sidebar .nav-group-arrow {
           stroke: rgba(255,255,255,.35) !important;
+          transition: transform .15s !important;
         }
+        nav.sidebar .nav-group.collapsed .nav-group-items, .sidebar .nav-group.collapsed .nav-group-items { display: none !important; }
+        nav.sidebar .nav-group.collapsed .nav-group-arrow, .sidebar .nav-group.collapsed .nav-group-arrow { transform: rotate(-90deg) !important; }
 
         /* ── SUBMENU (itens) — linha vertical + recuo ── */
         nav.sidebar .nav-group-items, .sidebar .nav-group-items {
@@ -307,6 +312,7 @@
         /* ── ITEM (sub-item) ── */
         nav.sidebar .nav-item, .sidebar .nav-item {
           color: rgba(148,163,184,.85) !important;
+          text-decoration: none !important;
           font-size: 12.5px !important;
           font-weight: 400 !important;
           font-family: 'Segoe UI', Tahoma, Geneva, sans-serif !important;
