@@ -46,6 +46,18 @@
   .tab-btn:hover{background:#1a3f7a}
   .tab-btn.active{background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:600}
   .tab-pane{display:none}.tab-pane.active{display:block}
+  /* HUB */
+  .adj-hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;max-width:940px}
+  .adj-hub-card{display:flex;align-items:center;gap:16px;padding:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .15s}
+  .adj-hub-card:hover{border-color:#f97316;box-shadow:0 4px 14px rgba(249,115,22,.12);transform:translateY(-2px)}
+  .adj-hub-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .adj-hub-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .adj-hub-body{flex:1;min-width:0}
+  .adj-hub-title{font-size:15px;font-weight:700;color:var(--text1)}
+  .adj-hub-desc{font-size:12px;color:var(--text3);margin-top:3px;line-height:1.4}
+  .adj-hub-arrow{color:#cbd5e1;font-size:20px}
+  .adj-back{display:inline-flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px 0;margin-bottom:14px}
+  .adj-back:hover{color:#f97316}
 
   /* LAYOUT DOIS COLUNAS */
   .split{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
@@ -217,15 +229,30 @@
     <!-- CONTEÚDO ADMIN -->
     <div id="conteudo-admin">
 
-      <!-- TABS -->
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('estoque')">Ajuste de Estoque</button>
-        <button class="tab-btn" onclick="switchTab('custo')">Ajuste de Custo Médio</button>
-        <button class="tab-btn" onclick="switchTab('recalcular')">Recalcular</button>
+      <!-- HUB -->
+      <div id="tab-hub" class="tab-pane active">
+        <div class="adj-hub-grid">
+          <div class="adj-hub-card" onclick="switchTab('estoque')">
+            <div class="adj-hub-icon" style="background:#fff7ed;color:#f97316"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+            <div class="adj-hub-body"><div class="adj-hub-title">Ajuste de Estoque</div><div class="adj-hub-desc">Corrija o saldo quando uma nota errada afetou a quantidade.</div></div>
+            <div class="adj-hub-arrow">›</div>
+          </div>
+          <div class="adj-hub-card" onclick="switchTab('custo')">
+            <div class="adj-hub-icon" style="background:#eff6ff;color:#2563eb"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="adj-hub-body"><div class="adj-hub-title">Ajuste de Custo Médio</div><div class="adj-hub-desc">Corrija o custo médio quando entrou um valor errado.</div></div>
+            <div class="adj-hub-arrow">›</div>
+          </div>
+          <div class="adj-hub-card" onclick="switchTab('recalcular')">
+            <div class="adj-hub-icon" style="background:#f0fdfa;color:#0d9488"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+            <div class="adj-hub-body"><div class="adj-hub-title">Recalcular</div><div class="adj-hub-desc">Reconstrói custo médio e custo das fichas a partir dos movimentos.</div></div>
+            <div class="adj-hub-arrow">›</div>
+          </div>
+        </div>
       </div>
 
       <!-- TAB: AJUSTE DE ESTOQUE -->
-      <div id="tab-estoque" class="tab-pane active">
+      <div id="tab-estoque" class="tab-pane">
+        <button class="adj-back" onclick="goHub()">← Ajustes</button>
         <div class="split">
           <!-- FORMULÁRIO -->
           <div class="card">
@@ -316,6 +343,7 @@
 
       <!-- TAB: AJUSTE DE CUSTO MÉDIO -->
       <div id="tab-custo" class="tab-pane">
+        <button class="adj-back" onclick="goHub()">← Ajustes</button>
         <div class="split">
         <div class="card">
           <div class="card-title">Ajuste de Custo Médio</div>
@@ -414,6 +442,7 @@
 
       <!-- RECALCULAR -->
       <div id="tab-recalcular" class="tab-pane">
+        <button class="adj-back" onclick="goHub()">← Ajustes</button>
         <div class="card" style="max-width:560px">
           <div class="card-title">Recalcular Custos</div>
           <div class="card-sub">Reconstrói o custo médio (e a quantidade) a partir de TODOS os movimentos — deixa o saldo igual ao Kardex. Use depois de corrigir notas, ajustes ou conversões.</div>
@@ -608,11 +637,9 @@ async function recalcularFichas(lId, alvoIns) {
 
 // ── TAB SWITCH ─────────────────────────────────────────────────────────
 function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='estoque')||(i===1&&tab==='custo')||(i===2&&tab==='recalcular')));
-  document.getElementById('tab-estoque').classList.toggle('active', tab==='estoque');
-  document.getElementById('tab-custo').classList.toggle('active', tab==='custo');
-  document.getElementById('tab-recalcular').classList.toggle('active', tab==='recalcular');
+  ['hub','estoque','custo','recalcular'].forEach(t => document.getElementById('tab-'+t).classList.toggle('active', t===tab));
 }
+function goHub() { switchTab('hub'); }
 
 // ── AJUSTE DE ESTOQUE ──────────────────────────────────────────────────
 async function onAeInsumoChange() {
