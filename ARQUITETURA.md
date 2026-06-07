@@ -152,7 +152,10 @@ essa ordem. É proibido cada tela inventar a própria fonte.
 1. ✅ **RESOLVIDO** — CMV usa fonte única de custo (`custoDoInsumo`) no PDV e no CMV.
 2. **Venda (PDV) não baixa estoque** — `vendas_item` não gera `saidas_estoque`.
    Logo o **CMV Real não reflete vendas** e o "Teórico × Real" não fecha.
-   ⏸️ Adiado: PDV ainda não será integrado.
+   ⏸️ Adiado: PDV ainda não será integrado. Quando for: o "código PDV" deve ficar numa
+   **camada/de-para SEPARADA** (preferência do usuário — **não** misturar na ficha técnica).
+   Os cadastros atuais (insumos/fichas) continuam válidos — a integração só adiciona a ligação,
+   sem refazer cadastro.
 3. ✅ **RESOLVIDO** — Custo por período (modo Everest): `custoMedioNaData()` reconstrói o
    custo médio na data. CMV, Movimentação e Fechamento usam o custo **da época** (fim do
    período filtrado; início p/ saldo anterior). Kardex já usava o custo do momento.
