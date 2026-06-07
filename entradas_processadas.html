@@ -273,7 +273,6 @@ function renderTable(){
     <td class="c"><span class="badge b-proc"><span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span>Processada</span></td>
     <td class="c">
       <button class="btn btn-ghost btn-sm" onclick="verDetalhes('${n.id}')">Ver detalhes</button>
-      <button class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="estornarNota('${n.id}')">↩ Estornar</button>
       <button class="action-btn" onclick="abrirMenu(event,'${n.id}','${esc(n.numero||'')}')">⋮</button>
     </td>
   </tr>`).join('');
@@ -341,9 +340,43 @@ function limparFiltros(){
   loadAll();
 }
 
-function verDetalhes(nfeId){
+async function verDetalhes(nfeId){
   const n=allData.find(x=>x.id===nfeId);if(!n)return;
-  alert(`NF-e ${n.numero}/${n.serie}\nFornecedor: ${n.nome_emitente}\nCNPJ: ${n.cnpj_emitente}\nChave: ${n.chave_acesso||'—'}\nValor: ${brl(n.valor_total)}\nProcessada: ${n.processada_em?new Date(n.processada_em).toLocaleString('pt-BR'):'—'}`);
+  let itens=[];
+  try{ itens=await api(`nfe_itens?nfe_id=eq.${nfeId}&order=id.asc&select=*`); }catch{}
+  const linhas = itens.length ? itens.map(it=>`<tr>
+      <td>${esc(it.descricao_nfe||'—')}</td>
+      <td class="mono" style="font-size:11px;color:#64748b">${esc(it.codigo_item_fornecedor||'—')}</td>
+      <td class="r mono">${(+it.quantidade||0).toLocaleString('pt-BR',{maximumFractionDigits:3})} ${esc(it.unidade_nfe||'')}</td>
+      <td class="r mono">${brl(it.valor_unitario)}</td>
+      <td class="r mono">${brl(it.valor_total)}</td>
+    </tr>`).join('') : `<tr><td colspan="5" class="empty">Sem itens registrados.</td></tr>`;
+  const lbl='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em';
+  const html=`<div class="det-bd" onclick="if(event.target===this)this.remove()" style="position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div onclick="event.stopPropagation()" style="background:#fff;border-radius:14px;width:96vw;max-width:840px;max-height:90vh;overflow:auto;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+      <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff">
+        <div style="font-size:15px;font-weight:700;color:#0f172a">NF-e ${esc(n.numero||'—')} / ${esc(n.serie||'1')}</div>
+        <button onclick="this.closest('.det-bd').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#94a3b8;padding:2px 8px">✕</button>
+      </div>
+      <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px;color:#0f172a">
+        <div><div style="${lbl}">Fornecedor</div>${esc(n.nome_emitente||'—')}</div>
+        <div><div style="${lbl}">CNPJ</div><span class="mono">${esc(n.cnpj_emitente||'—')}</span></div>
+        <div><div style="${lbl}">Emissão</div>${fmtDt(n.data_emissao)}</div>
+        <div><div style="${lbl}">Processada</div>${fmtDt(n.processada_em)}</div>
+        <div style="grid-column:1/-1"><div style="${lbl}">Chave de acesso</div><span class="mono" style="font-size:11px;word-break:break-all">${esc(n.chave_acesso||'—')}</span></div>
+        <div><div style="${lbl}">Valor total</div><b style="font-size:15px">${brl(n.valor_total)}</b></div>
+      </div>
+      <div style="padding:0 20px 20px">
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Itens da nota (${itens.length})</div>
+        <div class="tbl-card"><div class="tbl-scroll"><table class="tbl">
+          <thead><tr><th>Descrição</th><th>Código</th><th class="r">Qtd.</th><th class="r">V. Unit.</th><th class="r">V. Total</th></tr></thead>
+          <tbody>${linhas}</tbody>
+        </table></div></div>
+      </div>
+    </div>
+  </div>`;
+  const wrap=document.createElement('div'); wrap.innerHTML=html;
+  document.body.appendChild(wrap.firstElementChild);
 }
 
 function abrirMenu(e,nfeId,numero){
@@ -356,6 +389,10 @@ function abrirMenu(e,nfeId,numero){
     <button onclick="exportarUma('${nfeId}')" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;background:none;font-size:13px;cursor:pointer;color:#0f172a;font-family:inherit">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Exportar linha
+    </button>
+    <button onclick="estornarNota('${nfeId}')" style="display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;border:none;border-top:1px solid #f1f5f9;background:none;font-size:13px;cursor:pointer;color:#dc2626;font-family:inherit">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      Estornar nota
     </button>`;
   const rect=e.currentTarget.getBoundingClientRect();
   menu.style.top=(rect.bottom+4)+'px';
