@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="design-system.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divergências · Aiko</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh;display:flex}
+  .shell{display:flex;width:100%;min-height:100vh}
+  nav.sidebar{width:220px;flex-shrink:0}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{height:50px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:#fff;position:sticky;top:0;z-index:50}
+  .topbar-title{font-size:20px;font-weight:800;color:#0f172a}
+  .topbar-sub{font-size:12px;color:#94a3b8;margin-left:10px;font-weight:400}
+  .content{padding:20px 24px;flex:1;overflow:auto}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:22px}
+  .kpi{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s}
+  .kpi:hover{border-color:#94a3b8}
+  .kpi-lbl{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;line-height:1.3;min-height:28px}
+  .kpi-val{font-size:30px;font-weight:800;margin-top:8px;font-family:'DM Mono',monospace}
+  .kpi.ok .kpi-val{color:#16a34a}
+  .kpi.warn .kpi-val{color:#dc2626}
+  .sec{background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .sec-h{padding:12px 16px;font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+  .sec-b{display:none;border-top:1px solid #f1f5f9}
+  .sec.open .sec-b{display:block}
+  .empty-ok{padding:18px;text-align:center;color:#16a34a;font-size:13px;font-weight:600}
+  .loading{padding:40px;text-align:center;color:#94a3b8}
+</style>
+<script src="utils.js"></script>
+</head>
+<body>
+<div class="shell">
+<nav class="sidebar"></nav>
+<div class="main">
+  <div class="topbar">
+    <div><span class="topbar-title">Divergências</span><span class="topbar-sub">Raio-x de inconsistências do sistema</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="carregar()">↻ Atualizar</button>
+  </div>
+  <div class="content">
+    <div id="kpis" class="kpi-grid"></div>
+    <div id="secoes"><div class="loading">Carregando verificações…</div></div>
+  </div>
+</div>
+</div>
+<script>
+const SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
+const api = createApi(SUPA_URL, SUPA_KEY);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num = v => (+v||0).toLocaleString('pt-BR',{maximumFractionDigits:3});
+
+async function carregar(){
+  document.getElementById('secoes').innerHTML = '<div class="loading">Carregando verificações…</div>';
+  const [insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas] = await Promise.all([
+    api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,nome`).catch(()=>[]),
+    api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,loja_id,quantidade,custo_medio`).catch(()=>[]),
+    api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&select=id,nome,preco_venda,status`).catch(()=>[]),
+    api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=id,insumo_id,qtd_por_embalagem,embalagem_descricao`).catch(()=>[]),
+    api(`nfe_itens?tenant_id=eq.${TENANT_ID}&vinculacao_id=is.null&select=id,descricao_nfe,nfe_id`).catch(()=>[]),
+    api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&select=id,numero,status`).catch(()=>[]),
+    api(`vendas_item?tenant_id=eq.${TENANT_ID}&ficha_id=is.null&select=produto_nome,quantidade`).catch(()=>[]),
+  ]);
+  const insMap = {}; insumos.forEach(i => insMap[i.id] = i.nome);
+  const recMap = {}; nfeRec.forEach(n => recMap[n.id] = n);
+
+  const checks = [];
+
+  // 1. Itens de NF-e sem vínculo (de notas ainda não processadas)
+  checks.push({ key:'nfe', titulo:'Itens de NF-e sem vínculo', cols:['NF-e','Produto da nota'],
+    rows: nfeItens.filter(it => { const n = recMap[it.nfe_id]; return n && n.status !== 'processada'; })
+      .map(it => ({ a: recMap[it.nfe_id]?.numero || '—', b: it.descricao_nfe || '—' })) });
+
+  // 2. Insumos com saldo mas custo médio zerado
+  checks.push({ key:'custo', titulo:'Saldo com custo médio zerado', cols:['Insumo','Saldo'],
+    rows: saldos.filter(s => (+s.quantidade > 0) && !(+s.custo_medio > 0))
+      .map(s => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) })) });
+
+  // 3. Estoque negativo
+  checks.push({ key:'neg', titulo:'Estoque negativo', cols:['Insumo','Saldo'],
+    rows: saldos.filter(s => +s.quantidade < 0)
+      .map(s => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) })) });
+
+  // 4. Produtos vendidos sem ficha técnica
+  const vMap = {}; vendas.forEach(v => vMap[v.produto_nome||'—'] = (vMap[v.produto_nome||'—']||0) + (+v.quantidade||0));
+  checks.push({ key:'venda', titulo:'Produtos vendidos sem ficha técnica', cols:['Produto','Qtd vendida'],
+    rows: Object.entries(vMap).map(([n,q]) => ({ a:n, b:num(q) })) });
+
+  // 5. Fichas técnicas ativas sem preço de venda
+  checks.push({ key:'ficha', titulo:'Fichas ativas sem preço de venda', cols:['Ficha','Preço'],
+    rows: fichas.filter(f => f.status==='ativa' && !(+f.preco_venda > 0))
+      .map(f => ({ a: f.nome || '—', b: '—' })) });
+
+  // 6. Vínculos item-fornecedor sem conversão
+  checks.push({ key:'conv', titulo:'Vínculos sem conversão (qtd na embalagem)', cols:['Insumo','Embalagem'],
+    rows: vinc.filter(v => !(+v.qtd_por_embalagem > 0))
+      .map(v => ({ a: insMap[v.insumo_id] || '—', b: v.embalagem_descricao || '—' })) });
+
+  render(checks);
+}
+
+function render(checks){
+  const totalProblemas = checks.reduce((s,c)=>s+c.rows.length,0);
+  document.getElementById('kpis').innerHTML = checks.map(c => `
+    <div class="kpi ${c.rows.length?'warn':'ok'}" onclick="abrirSec('${c.key}')">
+      <div class="kpi-lbl">${esc(c.titulo)}</div>
+      <div class="kpi-val">${c.rows.length}</div>
+    </div>`).join('');
+  document.getElementById('secoes').innerHTML = checks.map(c => `
+    <div class="sec ${c.rows.length?'open':''}" id="sec-${c.key}">
+      <div class="sec-h" onclick="this.parentElement.classList.toggle('open')">
+        <span style="font-size:15px">${c.rows.length?'⚠️':'✅'}</span>
+        ${esc(c.titulo)}
+        <span style="margin-left:auto;font-weight:600;color:${c.rows.length?'#dc2626':'#16a34a'}">${c.rows.length}</span>
+      </div>
+      <div class="sec-b">
+        ${c.rows.length
+          ? `<div class="tbl-wrap" style="border:none;border-radius:0"><table class="tbl">
+               <thead><tr><th>${esc(c.cols[0])}</th><th>${esc(c.cols[1])}</th></tr></thead>
+               <tbody>${c.rows.map(r=>`<tr><td>${esc(r.a)}</td><td>${esc(r.b)}</td></tr>`).join('')}</tbody>
+             </table></div>`
+          : `<div class="empty-ok">✓ Nenhuma divergência aqui</div>`}
+      </div>
+    </div>`).join('');
+}
+
+function abrirSec(key){
+  const el = document.getElementById('sec-'+key);
+  if(el){ el.classList.add('open'); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+}
+
+carregar();
+</script>
+<script src="sidebar.js"></script>
+</body>
+</html>

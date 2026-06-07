@@ -69,6 +69,7 @@
         { href: 'relatorios.html', label: 'Relatórios',        icon: I.receipt },
         { href: 'cmv.html',        label: 'CMV Teórico x Real', icon: I.chart },
         { href: 'rendimento.html', label: 'Rendimentos',        icon: I.trending },
+        { href: 'divergencias.html', label: 'Divergências',     icon: I.shield },
       ]
     },
     {
