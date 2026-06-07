@@ -86,7 +86,13 @@
         { href: 'pdv.html', tab: 'importar',    label: 'Importar / API',     icon: I.box },
       ]
     },
-    { id: 'pcp', label: 'PCP', single: true, href: 'pcp.html' },
+    {
+      id: 'pcp', label: 'PCP',
+      items: [
+        { href: 'pcp.html',           label: 'Produção',      icon: I.chef },
+        { href: 'porcionamento.html', label: 'Porcionamento', icon: I.scissors },
+      ]
+    },
     {
       id: 'configuracoes', label: 'Configurações',
       items: [

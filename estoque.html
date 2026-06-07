@@ -58,8 +58,11 @@
   .est-hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .est-hub-card{display:flex;align-items:center;gap:16px;padding:18px 20px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s;user-select:none}
   .est-hub-card:hover{border-color:#f97316}
-  .est-hub-icon{width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .est-hub-icon svg{width:20px;height:20px;stroke:#64748b;stroke-width:1.8;fill:none}
+  .est-hub-icon{width:40px;height:40px;border-radius:8px;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .est-hub-icon svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.8;fill:none}
+  .est-hub-card:nth-child(1) .est-hub-icon{background:#fff7ed;color:#f97316}
+  .est-hub-card:nth-child(2) .est-hub-icon{background:#eff6ff;color:#2563eb}
+  .est-hub-card:nth-child(3) .est-hub-icon{background:#f0fdfa;color:#0d9488}
   .est-hub-body{flex:1}
   .est-hub-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px}
   .est-hub-desc{font-size:12px;color:#64748b;line-height:1.4}
