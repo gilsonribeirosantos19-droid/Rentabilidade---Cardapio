@@ -1508,14 +1508,32 @@ async function onVinInsumoChange() {
   onVinEmbSelectChange(prev?.fator);
 }
 
+// Lê a conversão (qtd na unidade de estoque) a partir do NOME da embalagem.
+// Ex: "CAIXA C/ 9 KG" → 9 (estoque kg); "PACOTE C/ 70 G" → 0,07; "UNIDADE C/ 100 G" → 0,1
+function _parseEmbFator(desc, stockUnit) {
+  if(!desc) return 0;
+  const m = String(desc).toUpperCase().match(/(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
+  if(!m) return 0;
+  const n = parseFloat(m[1].replace(',','.')); if(isNaN(n)||n<=0) return 0;
+  const u = m[2]; const s = (stockUnit||'').toUpperCase();
+  if(u==='KG'){ if(s==='KG') return n; if(s==='G') return n*1000; }
+  if(u==='G'){ if(s==='KG') return +(n/1000).toFixed(6); if(s==='G') return n; }
+  if(u==='L'){ if(s==='LITRO'||s==='L') return n; if(s==='ML') return n*1000; }
+  if(u==='ML'){ if(s==='LITRO'||s==='L') return +(n/1000).toFixed(6); if(s==='ML') return n; }
+  if(u.startsWith('UN')){ if(s.startsWith('UN')) return n; }
+  return 0;
+}
+
 function onVinEmbSelectChange(forceQty) {
   const sel=document.getElementById('vin-emb-select');
   const opt=sel.options[sel.selectedIndex];
   if(!opt||!opt.value){ document.getElementById('vin-conv-summary').style.display='none'; document.getElementById('vin-ins')._selectedEmb=null; return; }
   const preQty=parseFloat(opt.dataset.qty)||0;
   const qtyInput=document.getElementById('vin-emb-qty');
+  const autoFator=_parseEmbFator(opt.dataset.desc||opt.textContent, document.getElementById('vin-und').textContent);
   if(preQty>0) qtyInput.value=preQty;
   else if(forceQty) qtyInput.value=forceQty;
+  else if(autoFator>0) qtyInput.value=autoFator;
   const isGeneric=!!opt.dataset.generic;
   document.getElementById('vin-ins')._selectedEmb={embDesc:opt.dataset.desc||opt.textContent,fator:parseFloat(qtyInput.value)||1,embIdx:sel.selectedIndex,und:document.getElementById('vin-und').textContent,isGeneric};
   onVinEmbQtyInput();
