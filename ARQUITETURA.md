@@ -132,8 +132,8 @@ margem = (faturamento − custo) / faturamento ≥ média_de_margem
 ficha técnica) deve usar a **mesma função** `custoDoInsumo(insumoId, lojaId)` seguindo
 essa ordem. É proibido cada tela inventar a própria fonte.
 
-> Status: **a padronizar** (hoje o PDV usa `vendas_item.custo_unitario` digitado, e
-> o CMV usa `custo_medio` — fontes diferentes geram CMV divergente para o mesmo produto).
+> Status: ✅ **implementado** — `custoDoInsumo()` / `custoFichaPorcao()` / `custoVendaItem()`
+> em `utils.js`; PDV e CMV usam essa fonte única (mesmo CMV para o mesmo produto em todas as telas).
 
 ---
 
@@ -149,26 +149,26 @@ essa ordem. É proibido cada tela inventar a própria fonte.
 
 ## 7. ⚠️ Divergências conhecidas (a corrigir)
 
-1. **CMV com 3 fontes de custo** (PDV digitado × custo médio) → mesmo produto, CMV
-   diferente em telas diferentes. **(prioridade alta — ver §5)**
+1. ✅ **RESOLVIDO** — CMV usa fonte única de custo (`custoDoInsumo`) no PDV e no CMV.
 2. **Venda (PDV) não baixa estoque** — `vendas_item` não gera `saidas_estoque`.
    Logo o **CMV Real não reflete vendas** e o "Teórico × Real" não fecha.
-   Decisão pendente: PDV passar a baixar estoque, ou manter baixa manual.
+   ⏸️ Adiado: PDV ainda não será integrado.
 3. **Custo histórico vs atual:** Kardex usa o custo do momento (certo); Movimentação
    e Fechamento valorizam movimentos passados com o custo médio **de hoje** → divergem.
-4. **Inventário** sobrescreve `saldo_estoque` sem gerar ajuste rastreável.
+4. ✅ **RESOLVIDO** — Inventário gera movimento de ajuste (entrada/saída tipo `ajuste`),
+   rastreável no Kardex/Movimentação, preservando o custo médio.
 5. **Duplicação:** `vinculos_nfe.fator_conversao` repete `insumo_fornecedores.qtd_por_embalagem`;
    custo aparece em `insumos.preco_compra` e `saldo_estoque.custo_medio`.
-6. **Sem painel central de divergências** (itens sem vínculo, custo zerado, venda sem
-   ficha, estoque negativo).
+6. ✅ **RESOLVIDO** — Painel de Divergências em Análises (`divergencias.html`).
 7. `vendas_item` possivelmente sem `loja_id` — risco ao operar com mais de uma loja.
 
 ---
 
 ## 8. Roadmap de padronização
 
-1. Implementar `custoDoInsumo()` e ligar todas as telas de CMV (resolve §7.1).
-2. Decidir e implementar o elo Venda↔Estoque (§7.2).
-3. Painel de Divergências (§7.6).
-4. Inventário com movimento de ajuste rastreável (§7.4).
-5. Unificar fator de conversão numa tabela só (§7.5).
+1. ✅ `custoDoInsumo()` + PDV/CMV na fonte única (§7.1).
+2. ⏸️ Elo Venda↔Estoque (§7.2) — adiado (PDV não integrado ainda).
+3. ✅ Painel de Divergências (§7.6).
+4. ✅ Inventário com ajuste rastreável (§7.4).
+5. ⬜ Unificar fator de conversão numa tabela só (§7.5).
+6. ⬜ Custo histórico na Movimentação/Fechamento (§7.3).

@@ -1714,6 +1714,8 @@ async function abrirInventario(invId) {
         unidade: invUnidade(ins),
         // qtd_contada: '' = ainda não lançado
         qtd_contada: (it.qtd_contada===null||it.qtd_contada===undefined) ? '' : String(it.qtd_contada),
+        qtd_sistema: it.qtd_sistema||0,
+        custo_medio: it.custo_medio||0,
       };
     });
     // popula o filtro de categorias com as categorias presentes
@@ -1857,6 +1859,16 @@ async function confirmarInventario() {
       method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
       body: JSON.stringify(itensBody)
     });
+    // Movimentos de AJUSTE rastreáveis para as diferenças contadas (entram no Kardex/Movimentação)
+    const dataInv = new Date().toISOString();
+    const entAj = [], saiAj = [];
+    invItensAtual.filter(it => it.insumo_id && lojaId && lancado(it)).forEach(it => {
+      const diff = parseFloat((num(it.qtd_contada) - (+it.qtd_sistema||0)).toFixed(4));
+      if (diff > 0) entAj.push({ tenant_id:TENANT_ID, insumo_id:it.insumo_id, loja_id:lojaId, quantidade:diff, custo_unitario:+it.custo_medio||0, tipo:'ajuste', observacao:'Ajuste de inventário', criado_em:dataInv });
+      else if (diff < 0) saiAj.push({ tenant_id:TENANT_ID, insumo_id:it.insumo_id, loja_id:lojaId, quantidade:Math.abs(diff), tipo:'ajuste', motivo:'Ajuste de inventário', criado_em:dataInv });
+    });
+    if (entAj.length) await api('entradas_estoque', {method:'POST', prefer:'return=minimal', body:JSON.stringify(entAj)});
+    if (saiAj.length) await api('saidas_estoque', {method:'POST', prefer:'return=minimal', body:JSON.stringify(saiAj)});
     // Atualiza o saldo SOMENTE dos itens lançados (não zera os que não foram contados)
     const saldoPayloads = invItensAtual
       .filter(it => it.insumo_id && lojaId && lancado(it))
