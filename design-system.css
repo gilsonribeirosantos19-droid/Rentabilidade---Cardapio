@@ -148,7 +148,7 @@ td, .tbl td {
   border-bottom: 1px solid var(--ds-border-2) !important;
   border-right: 1px solid var(--ds-border-2) !important;
   vertical-align: middle !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   color: var(--ds-text-1);
   white-space: nowrap !important;
 }
