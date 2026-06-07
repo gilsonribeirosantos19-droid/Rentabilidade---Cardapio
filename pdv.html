@@ -1326,18 +1326,20 @@ const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-00
 const api = createApi(SUPA_URL, SUPA_KEY);
 
 // ── STATE ──────────────────────────────────────────────────────────
-let fichas = [], mapeamentos = [], _insumos = [], _saldos = [], _vinculos = [];
+let fichas = [], mapeamentos = [], _insumos = [], _saldos = [], _vinculos = [], _entradas = [], _saidas = [];
 let tabAtual = 'hub';
 
 // ── INIT ───────────────────────────────────────────────────────────
 async function carregar() {
   document.getElementById('conn-status').textContent = 'carregando...';
   try {
-    [fichas, _insumos, _saldos, _vinculos] = await Promise.all([
+    [fichas, _insumos, _saldos, _vinculos, _entradas, _saidas] = await Promise.all([
       api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&status=eq.ativa&order=nome.asc&select=*,itens_ficha(insumo_id,quantidade_g)`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,nome,categoria,rendimento_pct,preco_compra,unidade_medida`).catch(()=>[]),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,loja_id,custo_medio`).catch(()=>[]),
       api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=insumo_id,preco_unitario`).catch(()=>[]),
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,loja_id,quantidade,custo_unitario,criado_em`).catch(()=>[]),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,loja_id,quantidade,criado_em`).catch(()=>[]),
     ]);
     popularFichasSelect();
     const hoje2 = new Date();
@@ -1366,7 +1368,7 @@ function popularFichasSelect() {
 }
 
 // Contexto da fonte única de custo para os relatórios de venda — ver ARQUITETURA.md §5
-function _custoCtx(){ return { saldos:_saldos, vinculos:_vinculos, insumos:_insumos, fichas, lojaId:null }; }
+function _custoCtx(ate){ return { saldos:_saldos, vinculos:_vinculos, insumos:_insumos, entradas:_entradas, saidas:_saidas, fichas, lojaId:null, dataLimite: ate||null }; }
 
 // ── TABS ───────────────────────────────────────────────────────────
 // ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
@@ -1469,7 +1471,7 @@ async function renderDashboard() {
 
     const totalFat   = fats.reduce((s,f)=>s+(f.valor||0),0);
     const totalQtd   = vendas.reduce((s,v)=>s+(v.quantidade||0),0);
-    const totalCusto = vendas.reduce((s,v)=>s+custoVendaItem(v,_custoCtx())*(v.quantidade||0),0);
+    const totalCusto = vendas.reduce((s,v)=>s+custoVendaItem(v,_custoCtx(ate))*(v.quantidade||0),0);
     const totalPed   = fats.length;
     const cmvPct     = totalFat>0 ? (totalCusto/totalFat*100) : null;
     const ticketMed  = totalPed>0 ? totalFat/totalPed : 0;
@@ -1588,7 +1590,7 @@ async function renderAlertas(fats, vendas) {
 
     // CMV acima do esperado (>38%)
     const totalFat   = fats.reduce((s,f)=>s+(f.valor||0),0);
-    const totalCusto = vendas.reduce((s,v)=>s+custoVendaItem(v,_custoCtx())*(v.quantidade||0),0);
+    const totalCusto = vendas.reduce((s,v)=>s+custoVendaItem(v,_custoCtx(ate))*(v.quantidade||0),0);
     const cmvPct = totalFat>0 ? totalCusto/totalFat*100 : null;
     if (cmvPct!==null && cmvPct>38)
       alertas.push({cor:'ai-blue',emoji:'📊',titulo:'CMV acima do esperado',sub:`${cmvPct.toFixed(2)}% está acima do limite de 38%`,href:'cmv.html'});
@@ -1844,7 +1846,7 @@ async function renderVendas() {
 
     const totalFat   = data.reduce((s,v)=>s+(v.valor_total||0),0);
     const totalQtd   = data.reduce((s,v)=>s+(v.quantidade||0),0);
-    const totalCusto = data.reduce((s,v)=>s+custoVendaItem(v,_custoCtx())*(v.quantidade||0),0);
+    const totalCusto = data.reduce((s,v)=>s+custoVendaItem(v,_custoCtx(ate))*(v.quantidade||0),0);
     const margemPct  = totalFat>0 ? (totalFat-totalCusto)/totalFat*100 : 0;
     const prodsUniq  = new Set(data.map(v=>v.produto_nome)).size;
 
@@ -1865,7 +1867,7 @@ async function renderVendas() {
       if (!porProd[n]) porProd[n]={nome:n,cat:v.categoria||'',qtd:0,fat:0,custo:0};
       porProd[n].qtd   += (v.quantidade||0);
       porProd[n].fat   += (v.valor_total||0);
-      porProd[n].custo += custoVendaItem(v,_custoCtx())*(v.quantidade||0);
+      porProd[n].custo += custoVendaItem(v,_custoCtx(ate))*(v.quantidade||0);
     });
     _vndPorProd = Object.values(porProd).sort((a,b)=>b.fat-a.fat);
 
@@ -2456,7 +2458,7 @@ async function renderRelatorios() {
       if(!porProd[k]) porProd[k]={nome:k,cat:v.categoria||'—',qtd:0,fat:0,custo:0};
       porProd[k].qtd+=(v.quantidade||0);
       porProd[k].fat+=(v.valor_total||0);
-      porProd[k].custo+=custoVendaItem(v,_custoCtx())*(v.quantidade||0);
+      porProd[k].custo+=custoVendaItem(v,_custoCtx(ate))*(v.quantidade||0);
     });
     const prods = Object.values(porProd).sort((a,b)=>b.fat-a.fat);
     const totalFat = prods.reduce((s,p)=>s+p.fat,0);
