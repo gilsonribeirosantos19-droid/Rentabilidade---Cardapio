@@ -260,8 +260,8 @@
   .sol-grupo-arrow{margin-left:auto;width:16px;height:16px;transition:transform .2s;color:var(--text3)}
   .sol-grupo.collapsed .sol-grupo-arrow{transform:rotate(-90deg)}
   .sol-grupo.collapsed .sol-grupo-body{display:none}
-  .sol-grupo-body .tbl thead tr{background:#0f2d5c}
-  .sol-grupo-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
+  .sol-grupo-body .tbl thead tr{background:#eef2f7}
+  .sol-grupo-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em}
   .sol-grupo-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
   .sol-grupo-body .tbl tbody tr:last-child td{border-bottom:none}
   .sol-grupo-body .tbl tbody tr:hover{background:var(--bg3)}
@@ -281,8 +281,8 @@
   .sol-sheet-x{width:28px;height:28px;border:1px solid var(--border2);background:transparent;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-family:inherit}
   .sol-sheet-top{display:flex;gap:16px;padding:14px 22px;border-bottom:1px solid var(--border2);flex-shrink:0;flex-wrap:wrap}
   .sol-sheet-body{flex:1;overflow-y:auto}
-  .sol-sheet-body .tbl thead tr{background:#0f2d5c}
-  .sol-sheet-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em}
+  .sol-sheet-body .tbl thead tr{background:#eef2f7}
+  .sol-sheet-body .tbl th{padding:9px 12px;font-size:11px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em}
   .sol-sheet-body .tbl td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:13px}
   .sol-sheet-foot{padding:12px 22px;border-top:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
   /* ── PCP HUB ── */
@@ -1663,13 +1663,13 @@ async function carregarInventarios() {
     container.innerHTML = `
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
         <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead><tr style="background:#0f2d5c">
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">N. Inventário</th>
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Descrição</th>
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">D. Inicial</th>
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">D. Final</th>
-            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Situação</th>
-            <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em">Ações</th>
+          <thead><tr style="background:#eef2f7">
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">N. Inventário</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">Descrição</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">D. Inicial</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">D. Final</th>
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">Situação</th>
+            <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em">Ações</th>
           </tr></thead>
           <tbody>
             ${invs.map(inv=>{
