@@ -252,7 +252,24 @@ function searchableAuto(min){
     if(sel._ss){ sel._ssSync && sel._ssSync(); return; }
     if(sel.options.length >= min) searchableSelect(sel);
   });
+  _removePagination();
   if(_ssObs){ try { _ssObs.observe(document.body, { childList:true, subtree:true }); } catch {} }
+}
+
+// Remove a paginação: nos seletores "X por página", adiciona "Todos" (mostra a lista inteira)
+// e esconde os botões de página do mesmo bloco. Não mexe em telas sem esse seletor.
+function _removePagination(){
+  document.querySelectorAll('select').forEach(sel => {
+    if(![...sel.options].some(o => /por p[áa]g/i.test(o.text))) return;
+    if(!sel._allP){
+      sel._allP = true;
+      const o = document.createElement('option'); o.value = '100000'; o.textContent = 'Todos'; sel.appendChild(o);
+      sel.style.display = 'none';
+      const btns = sel.parentElement && sel.parentElement.querySelector('.pag-btns');
+      if(btns) btns.style.display = 'none';
+    }
+    if(sel.value !== '100000'){ sel.value = '100000'; sel.dispatchEvent(new Event('change', { bubbles:true })); }
+  });
 }
 
 // Injeta o CSS do seletor + liga o auto (em qualquer página que carregue o utils.js).
