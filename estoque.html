@@ -1110,14 +1110,14 @@
         <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
         <span id="se-valor-total" style="margin-left:auto;font-size:13px;font-weight:700;color:#0f172a"></span>
       </div>
-      <div class="tbl-wrap"><table class="tbl">
-        <thead><tr>
+      <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 250px);overflow-y:auto"><table class="tbl">
+        <thead style="position:sticky;top:0;z-index:5"><tr>
           <th>Insumo</th><th>Categoria</th><th>Un.</th><th>Loja</th>
           <th class="r" id="se-th-saldo">Saldo Atual</th><th class="r">Custo Médio</th><th class="r">Valor em Estoque</th><th class="c">Status</th>
         </tr></thead>
         <tfoot id="se-tfoot"></tfoot>
         <tbody id="se-body"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
-      </table></div>
+      </table></div></div>
     </div>
 
     <!-- TAB: HISTÓRICO DE CUSTOS -->
