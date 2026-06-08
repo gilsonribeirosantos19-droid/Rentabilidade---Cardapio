@@ -233,6 +233,7 @@ function searchableSelect(sel){
     else { drop.style.bottom = 'auto'; drop.style.top = (rect.bottom + 4) + 'px'; }
     list.style.maxHeight = (maxH - 44) + 'px';
   }
+  drop._place = place;
   btn.onclick = ev => { ev.stopPropagation(); if(sel.disabled) return; const open = drop.classList.toggle('open'); if(open){ place(); render(''); search.value = ''; setTimeout(() => search.focus(), 0); } };
   search.oninput = () => render(search.value);
   list.onclick = ev => { const o = ev.target.closest('.ss-opt'); if(!o) return; sel.value = o.dataset.v; sync(); drop.classList.remove('open'); sel.dispatchEvent(new Event('change', { bubbles: true })); };
@@ -264,7 +265,8 @@ if(typeof document !== 'undefined'){
       document.querySelectorAll('.ss-drop.open').forEach(d => { if(!d.parentNode.contains(e.target)) d.classList.remove('open'); });
     });
     // Fecha o dropdown ao rolar (já que ele flutua em posição fixa)
-    window.addEventListener('scroll', e => { document.querySelectorAll('.ss-drop.open').forEach(d => { if(!d.contains(e.target)) d.classList.remove('open'); }); }, true);
+    // Ao rolar, o dropdown ACOMPANHA o botão (não fecha). Fecha só ao clicar fora.
+    window.addEventListener('scroll', () => { document.querySelectorAll('.ss-drop.open').forEach(d => d._place && d._place()); }, true);
     let t;
     _ssObs = new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => searchableAuto(), 200); });
     searchableAuto();
