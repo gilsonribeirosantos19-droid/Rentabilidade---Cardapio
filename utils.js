@@ -264,7 +264,7 @@ if(typeof document !== 'undefined'){
       document.querySelectorAll('.ss-drop.open').forEach(d => { if(!d.parentNode.contains(e.target)) d.classList.remove('open'); });
     });
     // Fecha o dropdown ao rolar (já que ele flutua em posição fixa)
-    window.addEventListener('scroll', () => { document.querySelectorAll('.ss-drop.open').forEach(d => d.classList.remove('open')); }, true);
+    window.addEventListener('scroll', e => { document.querySelectorAll('.ss-drop.open').forEach(d => { if(!d.contains(e.target)) d.classList.remove('open'); }); }, true);
     let t;
     _ssObs = new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => searchableAuto(), 200); });
     searchableAuto();
