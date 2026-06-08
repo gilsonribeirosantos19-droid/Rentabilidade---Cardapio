@@ -218,7 +218,22 @@ function searchableSelect(sel){
     list.innerHTML = [...sel.options].filter(o => o.text.toLowerCase().includes(f))
       .map(o => `<div class="ss-opt${o.value===sel.value?' sel':''}" data-v="${e2(o.value)}">${e2(o.text)}</div>`).join('')
       || '<div class="ss-empty">Nada encontrado</div>'; }
-  btn.onclick = ev => { ev.stopPropagation(); if(sel.disabled) return; const open = drop.classList.toggle('open'); if(open){ render(''); search.value = ''; setTimeout(() => search.focus(), 0); } };
+  // Posiciona o dropdown como "fixed" (flutua por cima — não é cortado por tabela/modal com overflow)
+  function place(){
+    const rect = btn.getBoundingClientRect();
+    drop.style.position = 'fixed';
+    drop.style.right = 'auto';
+    drop.style.left = rect.left + 'px';
+    drop.style.width = rect.width + 'px';
+    drop.style.zIndex = '99999';
+    const below = window.innerHeight - rect.bottom - 8, above = rect.top - 8;
+    const up = below < 200 && above > below;
+    const maxH = Math.max(140, Math.min(300, up ? above : below));
+    if(up){ drop.style.top = 'auto'; drop.style.bottom = (window.innerHeight - rect.top + 4) + 'px'; }
+    else { drop.style.bottom = 'auto'; drop.style.top = (rect.bottom + 4) + 'px'; }
+    list.style.maxHeight = (maxH - 44) + 'px';
+  }
+  btn.onclick = ev => { ev.stopPropagation(); if(sel.disabled) return; const open = drop.classList.toggle('open'); if(open){ place(); render(''); search.value = ''; setTimeout(() => search.focus(), 0); } };
   search.oninput = () => render(search.value);
   list.onclick = ev => { const o = ev.target.closest('.ss-opt'); if(!o) return; sel.value = o.dataset.v; sync(); drop.classList.remove('open'); sel.dispatchEvent(new Event('change', { bubbles: true })); };
   sel._ssSync = sync; sync();
@@ -248,6 +263,8 @@ if(typeof document !== 'undefined'){
     document.addEventListener('click', e => {
       document.querySelectorAll('.ss-drop.open').forEach(d => { if(!d.parentNode.contains(e.target)) d.classList.remove('open'); });
     });
+    // Fecha o dropdown ao rolar (já que ele flutua em posição fixa)
+    window.addEventListener('scroll', () => { document.querySelectorAll('.ss-drop.open').forEach(d => d.classList.remove('open')); }, true);
     let t;
     _ssObs = new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => searchableAuto(), 200); });
     searchableAuto();
