@@ -68,7 +68,7 @@ const num = v => (+v||0).toLocaleString('pt-BR',{maximumFractionDigits:3});
 
 async function carregar(){
   document.getElementById('secoes').innerHTML = '<div class="loading">Carregando verificações…</div>';
-  const [insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas] = await Promise.all([
+  const [insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas] = await Promise.all([
     api(`insumos?tenant_id=eq.${TENANT_ID}&select=id,nome`).catch(()=>[]),
     api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=insumo_id,loja_id,quantidade,custo_medio`).catch(()=>[]),
     api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&select=id,nome,preco_venda,status`).catch(()=>[]),
@@ -76,6 +76,7 @@ async function carregar(){
     api(`nfe_itens?tenant_id=eq.${TENANT_ID}&vinculacao_id=is.null&select=id,descricao_nfe,nfe_id`).catch(()=>[]),
     api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&select=id,numero,status`).catch(()=>[]),
     api(`vendas_item?tenant_id=eq.${TENANT_ID}&ficha_id=is.null&select=produto_nome,quantidade`).catch(()=>[]),
+    api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&status=eq.em_transito&select=numero,serie,nome_emitente,valor_total,created_at`).catch(()=>[]),
   ]);
   const insMap = {}; insumos.forEach(i => insMap[i.id] = i.nome);
   const recMap = {}; nfeRec.forEach(n => recMap[n.id] = n);
@@ -111,6 +112,14 @@ async function carregar(){
   checks.push({ key:'conv', titulo:'Vínculos sem conversão (qtd na embalagem)', cols:['Insumo','Embalagem'],
     rows: vinc.filter(v => !(+v.qtd_por_embalagem > 0))
       .map(v => ({ a: insMap[v.insumo_id] || '—', b: v.embalagem_descricao || '—' })) });
+
+  // 7. NF-e presas em trânsito (XML não baixou) há mais de X horas
+  const LIM_H = 6, agoraMs = Date.now();
+  checks.push({ key:'transito', titulo:`NF-e presas há +${LIM_H}h (XML não baixou)`, cols:['NF-e / Fornecedor','Parada há'],
+    rows: (nfePresas||[]).filter(n => n.created_at && (agoraMs - new Date(n.created_at).getTime())/3600000 >= LIM_H)
+      .sort((a,b) => new Date(a.created_at) - new Date(b.created_at))
+      .map(n => { const h = Math.floor((agoraMs - new Date(n.created_at).getTime())/3600000);
+        return { a:`${esc(n.numero)}/${esc(n.serie)} · ${esc(n.nome_emitente||'—')}`, b:`há ${h}h · R$ ${(+n.valor_total||0).toFixed(2)}` }; }) });
 
   render(checks);
 }
