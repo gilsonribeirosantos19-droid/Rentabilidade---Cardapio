@@ -46,6 +46,40 @@
   .tab-btn:hover{background:#1a3f7a}
   .tab-btn.active{background:#f97316;box-shadow:0 2px 8px rgba(249,115,22,.35);font-weight:600}
   .tab-pane{display:none}.tab-pane.active{display:block}
+  /* HUB */
+  .adj-hub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;max-width:940px}
+  .adj-hub-card{display:flex;align-items:center;gap:16px;padding:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .15s}
+  .adj-hub-card:hover{border-color:#f97316;box-shadow:0 4px 14px rgba(249,115,22,.12);transform:translateY(-2px)}
+  .adj-hub-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .adj-hub-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .adj-hub-body{flex:1;min-width:0}
+  .adj-hub-title{font-size:15px;font-weight:700;color:var(--text1)}
+  .adj-hub-desc{font-size:12px;color:var(--text3);margin-top:3px;line-height:1.4}
+  .adj-hub-arrow{color:#cbd5e1;font-size:20px}
+  .adj-back{display:inline-flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px 0;margin-bottom:14px}
+  .adj-back:hover{color:#f97316}
+  /* WS TAB STRIP (multi-abas) */
+  .ws-tab-strip{display:none;align-items:center;border-bottom:1px solid #e2e8f0;background:#f1f5f9;position:sticky;top:40px;z-index:50;padding:0 4px;overflow-x:auto;gap:0;flex-shrink:0}
+  .ws-home-btn{display:flex;align-items:center;justify-content:center;width:32px;height:36px;border:none;background:transparent;cursor:pointer;color:#94a3b8;flex-shrink:0;transition:color .12s;border-right:1px solid #e2e8f0;margin-right:2px;padding:0 8px}
+  .ws-home-btn:hover{color:#f97316}
+  .ws-tab{display:flex;align-items:center;gap:6px;padding:0 12px;height:36px;font-size:12px;color:#64748b;border:none;background:transparent;border-top:2px solid transparent;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .12s;margin-bottom:-1px}
+  .ws-tab:hover{color:#0f172a;background:#fff}
+  .ws-tab.active{background:#fff !important;color:#0f172a !important;font-weight:600 !important;border-top-color:#f97316 !important;border-bottom-color:#fff !important}
+  .ws-tab-close{width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;color:#94a3b8;transition:all .12s;cursor:pointer;user-select:none}
+  .ws-tab-close:hover{background:#e2e8f0;color:#0f172a}
+  /* AJUSTE — layout mockup */
+  .sec-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text1);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border2)}
+  .sec-ic{color:#f97316;font-size:15px}
+  .adj-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .adj-grid2{display:grid;grid-template-columns:1fr 2fr;gap:14px}
+  @media(max-width:860px){.adj-grid{grid-template-columns:1fr 1fr}.adj-grid2{grid-template-columns:1fr}}
+  .cm-loja-btn{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text1);text-align:left;cursor:pointer;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cm-loja-btn:hover{border-color:#f97316}
+  .cm-loja-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:30;max-height:240px;overflow-y:auto;margin-top:4px}
+  .cm-loja-drop.open{display:block}
+  .cm-loja-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #f1f5f9;color:var(--text1)}
+  .cm-loja-opt:hover{background:var(--bg3)}
+  .cm-loja-opt input{width:auto;cursor:pointer;accent-color:#f97316}
 
   /* LAYOUT DOIS COLUNAS */
   .split{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
@@ -204,6 +238,7 @@
       <span onclick="(function(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';})()" style="font-size:12px;color:#dc2626;cursor:pointer;border:1px solid #fca5a5;padding:4px 12px;border-radius:20px;font-weight:600;white-space:nowrap">← Sair</span>
     </div>
   </div>
+  <div class="ws-tab-strip" id="adj-tab-strip"></div>
   <div class="content" id="conteudo-principal">
 
     <!-- BLOQUEIO PARA NÃO-ADMIN -->
@@ -217,57 +252,61 @@
     <!-- CONTEÚDO ADMIN -->
     <div id="conteudo-admin">
 
-      <!-- TABS -->
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('estoque')">Ajuste de Estoque</button>
-        <button class="tab-btn" onclick="switchTab('custo')">Ajuste de Custo Médio</button>
+      <!-- HUB -->
+      <div id="tab-hub" class="tab-pane active">
+        <div class="adj-hub-grid">
+          <div class="adj-hub-card" onclick="switchTab('estoque')">
+            <div class="adj-hub-icon" style="background:#fff7ed;color:#f97316"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+            <div class="adj-hub-body"><div class="adj-hub-title">Ajuste de Estoque</div><div class="adj-hub-desc">Corrija o saldo quando uma nota errada afetou a quantidade.</div></div>
+            <div class="adj-hub-arrow">›</div>
+          </div>
+          <div class="adj-hub-card" onclick="switchTab('custo')">
+            <div class="adj-hub-icon" style="background:#eff6ff;color:#2563eb"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="adj-hub-body"><div class="adj-hub-title">Ajuste de Custo Médio</div><div class="adj-hub-desc">Corrija o custo médio quando entrou um valor errado.</div></div>
+            <div class="adj-hub-arrow">›</div>
+          </div>
+          <div class="adj-hub-card" onclick="switchTab('recalcular')">
+            <div class="adj-hub-icon" style="background:#f0fdfa;color:#0d9488"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+            <div class="adj-hub-body"><div class="adj-hub-title">Recalcular</div><div class="adj-hub-desc">Reconstrói custo médio e custo das fichas a partir dos movimentos.</div></div>
+            <div class="adj-hub-arrow">›</div>
+          </div>
+        </div>
       </div>
 
       <!-- TAB: AJUSTE DE ESTOQUE -->
-      <div id="tab-estoque" class="tab-pane active">
-        <div class="split">
-          <!-- FORMULÁRIO -->
-          <div class="card">
-            <div class="card-title">Ajuste de Estoque</div>
-            <div class="card-sub">Corrija o saldo quando uma nota errada afetou a quantidade.</div>
-
-            <div class="fg">
-              <label>Loja</label>
-              <select id="ae-loja" onchange="onAeLojaChange()">
-                <option value="">Selecione a loja...</option>
-              </select>
+      <div id="tab-estoque" class="tab-pane">
+        <div class="card" style="margin-bottom:16px">
+          <div class="sec-head"><span class="sec-ic">▣</span> Informações do Ajuste</div>
+          <div class="adj-grid">
+            <div class="fg" style="margin:0">
+              <label>Loja *</label>
+              <select id="ae-loja" onchange="onAeLojaChange()"><option value="">Selecione a loja...</option></select>
             </div>
-
-            <div class="fg">
-              <label>Insumo</label>
-              <select id="ae-insumo" onchange="onAeInsumoChange()">
-                <option value="">Selecione um insumo...</option>
-              </select>
+            <div class="fg" style="margin:0">
+              <label>Insumo *</label>
+              <select id="ae-insumo" onchange="onAeInsumoChange()"><option value="">Selecione um insumo...</option></select>
             </div>
-
-            <div id="ae-saldo-preview" class="saldo-preview"></div>
-
-            <div class="tipo-wrap">
-              <button class="tipo-btn pos" id="ae-btn-pos" onclick="selecionarTipo('pos')">＋ Acréscimo</button>
-              <button class="tipo-btn neg" id="ae-btn-neg" onclick="selecionarTipo('neg')">－ Redução</button>
+            <div class="fg" style="margin:0">
+              <label>Quantidade *</label>
+              <input type="number" id="ae-qtd" min="0.001" step="0.001" placeholder="0,000" oninput="calcPreview()">
             </div>
-
-            <div class="row2">
-              <div class="fg" style="margin-bottom:0">
-                <label>Quantidade</label>
-                <input type="number" id="ae-qtd" min="0.001" step="0.001" placeholder="0.000" oninput="calcPreview()">
-              </div>
-              <div class="fg" style="margin-bottom:0">
-                <label>Unidade</label>
-                <input type="text" id="ae-un" readonly style="background:var(--bg3);color:var(--text3)">
-              </div>
+            <div class="fg" style="margin:0">
+              <label>Unidade</label>
+              <input type="text" id="ae-un" readonly style="background:var(--bg3);color:var(--text3)">
             </div>
-            <div style="margin-bottom:14px"></div>
+          </div>
 
-            <div id="ae-novo-saldo" class="infobox"></div>
+          <div class="tipo-wrap" style="margin-top:14px;max-width:440px">
+            <button class="tipo-btn pos" id="ae-btn-pos" onclick="selecionarTipo('pos')">＋ Acréscimo</button>
+            <button class="tipo-btn neg" id="ae-btn-neg" onclick="selecionarTipo('neg')">－ Redução</button>
+          </div>
 
-            <div class="fg">
-              <label>Motivo</label>
+          <div id="ae-saldo-preview" class="saldo-preview" style="margin-top:14px"></div>
+          <div id="ae-novo-saldo" class="infobox"></div>
+
+          <div class="adj-grid2" style="margin-top:14px">
+            <div class="fg" style="margin:0">
+              <label>Motivo *</label>
               <select id="ae-motivo">
                 <option value="nota_errada">Nota fiscal errada</option>
                 <option value="contagem">Correção de contagem</option>
@@ -276,20 +315,25 @@
                 <option value="outro">Outro</option>
               </select>
             </div>
-
-            <div class="fg">
-              <label>Observação (opcional)</label>
-              <textarea id="ae-obs" rows="2" placeholder="Opcional..."></textarea>
+            <div class="fg" style="margin:0">
+              <label>Observação <span style="text-transform:none;font-weight:400;color:var(--text3)">(opcional)</span></label>
+              <textarea id="ae-obs" rows="2" maxlength="300" oninput="aeObsCount()" placeholder="Descreva o motivo com mais detalhes..."></textarea>
+              <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px"><span id="ae-obs-count">0</span>/300</div>
             </div>
-
-            <button class="btn btn-primary" style="width:100%" onclick="salvarAjusteEstoque()" id="btn-ae">Confirmar ajuste</button>
           </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+            <button class="btn btn-ghost" onclick="limparAeForm()">＋ Novo</button>
+            <button class="btn btn-primary" onclick="salvarAjusteEstoque()" id="btn-ae">Salvar Ajuste</button>
+          </div>
+        </div>
 
           <!-- HISTÓRICO -->
           <div class="hist-card">
             <div class="hist-header">
-              <span class="hist-title">Histórico</span>
+              <span class="hist-title">Histórico de Ajustes</span>
               <div class="hist-filter">
+                <span style="font-size:12px;color:var(--text3)">Período:</span>
                 <input type="date" id="ae-filtro-ini" onchange="filtrarAeLog()">
                 <span style="font-size:12px;color:var(--text3)">até</span>
                 <input type="date" id="ae-filtro-fim" onchange="filtrarAeLog()">
@@ -310,84 +354,61 @@
               </tbody>
             </table>
           </div>
-        </div>
       </div>
 
       <!-- TAB: AJUSTE DE CUSTO MÉDIO -->
       <div id="tab-custo" class="tab-pane">
-        <div class="split">
-        <div class="card">
-          <div class="card-title">Ajuste de Custo Médio</div>
-          <div class="card-sub">Informe o novo custo e escolha em quais lojas aplicar. O saldo não é alterado.</div>
-
-          <div class="row2">
-            <div class="fg" style="margin-bottom:0">
-              <label>Insumo</label>
-              <select id="cm-insumo" onchange="onCmInsumoChange()">
-                <option value="">Selecione um insumo...</option>
-              </select>
+        <div class="card" style="margin-bottom:16px">
+          <div class="sec-head"><span class="sec-ic">▣</span> Informações do Ajuste</div>
+          <div class="adj-grid">
+            <div class="fg" style="margin:0">
+              <label>Insumo *</label>
+              <select id="cm-insumo" onchange="onCmInsumoChange()"><option value="">Selecione um insumo...</option></select>
             </div>
-            <div class="fg" style="margin-bottom:0">
-              <label>Data do ajuste</label>
+            <div class="fg" style="margin:0">
+              <label>Data do Ajuste *</label>
               <input type="date" id="cm-data">
             </div>
-          </div>
-          <div style="margin-bottom:14px"></div>
-
-          <div class="row2">
-            <div class="fg" style="margin-bottom:0">
-              <label>Novo custo médio (R$/kg)</label>
-              <input type="number" id="cm-novo" min="0.01" step="0.01" placeholder="0.00">
+            <div class="fg cm-loja-fg" style="margin:0;position:relative">
+              <label>Loja(s) *</label>
+              <button type="button" id="cm-loja-btn" class="cm-loja-btn" onclick="toggleLojaDrop(event)">Selecione as lojas...</button>
+              <div id="cm-loja-drop" class="cm-loja-drop">
+                <label class="cm-loja-opt"><input type="checkbox" id="cm-chk-all" onchange="toggleTodasLojas(this.checked)"> <b>Todas as lojas</b></label>
+                <div id="cm-lojas-body"><div style="padding:8px 12px;color:var(--text3);font-size:12px">Selecione um insumo primeiro</div></div>
+              </div>
             </div>
-            <div class="fg" style="margin-bottom:0">
-              <label>Motivo</label>
+            <div class="fg" style="margin:0">
+              <label>Novo Custo Médio (R$/KG) *</label>
+              <input type="number" id="cm-novo" min="0.01" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+          <div class="adj-grid2" style="margin-top:14px">
+            <div class="fg" style="margin:0">
+              <label>Motivo *</label>
               <select id="cm-motivo">
                 <option value="nota_errada">Nota fiscal com valor errado</option>
                 <option value="correcao_manual">Correção manual</option>
                 <option value="outro">Outro</option>
               </select>
             </div>
-          </div>
-          <div style="margin-bottom:14px"></div>
-
-          <!-- LOJAS CHECKBOX -->
-          <div class="fg">
-            <label style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
-              <span>Lojas para aplicar</span>
-              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;cursor:pointer">
-                <input type="checkbox" id="cm-chk-all" onchange="toggleTodasLojas(this.checked)"> Selecionar todas
-              </label>
-            </label>
-            <div id="cm-lojas-wrap" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;overflow:hidden">
-              <table class="tbl" style="font-size:13px">
-                <thead>
-                  <tr>
-                    <th style="width:40px">Sel.</th>
-                    <th>Loja</th>
-                    <th class="r">Custo atual</th>
-                    <th class="r">Saldo atual</th>
-                  </tr>
-                </thead>
-                <tbody id="cm-lojas-body">
-                  <tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>
-                </tbody>
-              </table>
+            <div class="fg" style="margin:0">
+              <label>Observação <span style="text-transform:none;font-weight:400;color:var(--text3)">(opcional)</span></label>
+              <textarea id="cm-obs" rows="2" maxlength="300" oninput="cmObsCount()" placeholder="Descreva o motivo com mais detalhes..."></textarea>
+              <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px"><span id="cm-obs-count">0</span>/300</div>
             </div>
           </div>
-
-          <div class="fg">
-            <label>Observação (opcional)</label>
-            <textarea id="cm-obs" rows="2" placeholder="Descreva o motivo com mais detalhes..."></textarea>
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+            <button class="btn btn-ghost" onclick="limparCmForm()">＋ Novo</button>
+            <button class="btn btn-primary" onclick="salvarAjusteCusto()" id="btn-cm">Salvar Ajuste</button>
           </div>
-
-          <button class="btn btn-primary" style="width:100%" onclick="salvarAjusteCusto()" id="btn-cm">Confirmar ajuste</button>
         </div>
 
         <!-- HISTÓRICO -->
         <div class="hist-card">
           <div class="hist-header">
-            <span class="hist-title">Histórico</span>
+            <span class="hist-title">Histórico de Ajustes</span>
             <div class="hist-filter">
+              <span style="font-size:12px;color:var(--text3)">Período:</span>
               <input type="date" id="cm-filtro-ini" onchange="filtrarCmLog()">
               <span style="font-size:12px;color:var(--text3)">até</span>
               <input type="date" id="cm-filtro-fim" onchange="filtrarCmLog()">
@@ -408,7 +429,28 @@
             </tbody>
           </table>
         </div>
-        </div><!-- fim split -->
+      </div>
+
+      <!-- RECALCULAR -->
+      <div id="tab-recalcular" class="tab-pane">
+        <div class="card" style="max-width:560px">
+          <div class="card-title">Recalcular Custos</div>
+          <div class="card-sub">Reconstrói o custo médio (e a quantidade) a partir de TODOS os movimentos — deixa o saldo igual ao Kardex. Use depois de corrigir notas, ajustes ou conversões.</div>
+          <div class="row2">
+            <div class="fg" style="margin-bottom:0"><label>Loja</label>
+              <select id="rc-loja"><option value="">Selecione a loja...</option></select></div>
+            <div class="fg" style="margin-bottom:0"><label>Item</label>
+              <select id="rc-insumo"><option value="">Todos os itens</option></select></div>
+          </div>
+          <div style="margin-bottom:14px"></div>
+          <div class="fg">
+            <label style="margin-bottom:8px">O que recalcular</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="rc-cm" checked style="width:15px;height:15px;accent-color:#f97316"> Custo médio (saldo = Kardex)</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer"><input type="checkbox" id="rc-ficha" style="width:15px;height:15px;accent-color:#f97316"> Custo das fichas de processado</label>
+          </div>
+          <div id="rc-result" class="saldo-preview" style="white-space:pre-line"></div>
+          <button class="btn btn-primary" style="width:100%" onclick="recalcularCustos()" id="btn-rc">Recalcular</button>
+        </div>
       </div>
 
     </div><!-- fim conteudo-admin -->
@@ -427,6 +469,8 @@ const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-00
 const api = createApi(SUPA_URL, SUPA_KEY);
 
 let insumos = [], saldos = [], lojas = [], lojaId = null;
+const _tabNames = { estoque:'Ajuste de Estoque', custo:'Ajuste de Custo Médio', recalcular:'Recalcular' };
+let _openTabs = [], _activeTab = null;
 let aeInsumoId = null, aetipoSel = null;
 let cmInsumoId = null;
 let aeLog = [], cmLog = [];
@@ -485,6 +529,8 @@ function popularLojas() {
   if (selTop) selTop.innerHTML = opts.replace('Selecione a loja...','Todas as lojas');
   const selAe = document.getElementById('ae-loja');
   if (selAe) selAe.innerHTML = opts;
+  const selRc = document.getElementById('rc-loja');
+  if (selRc) { selRc.innerHTML = opts; if (lojas.length === 1) selRc.value = lojas[0].id; }
 }
 
 function onAeLojaChange() {
@@ -498,6 +544,8 @@ function popularInsumos() {
     insumos.map(i => `<option value="${i.id}">${esc(i.nome)}</option>`).join('');
   document.getElementById('ae-insumo').innerHTML = opts;
   document.getElementById('cm-insumo').innerHTML = opts;
+  const rcIns = document.getElementById('rc-insumo');
+  if (rcIns) rcIns.innerHTML = '<option value="">Todos os itens</option>' + insumos.map(i => `<option value="${i.id}">${esc(i.nome)}</option>`).join('');
 }
 
 async function onLojaChange() {
@@ -512,11 +560,102 @@ function getSaldo(insId) {
   return saldos.find(s => s.insumo_id === insId) || { quantidade: 0, custo_medio: 0 };
 }
 
+// ── RECALCULAR CUSTOS ──────────────────────────────────────────────────
+async function recalcularCustos() {
+  const lId = document.getElementById('rc-loja').value;
+  if (!lId) { toast('Selecione a loja.','err'); return; }
+  const doCM = document.getElementById('rc-cm').checked;
+  const doFicha = document.getElementById('rc-ficha').checked;
+  if (!doCM && !doFicha) { toast('Marque o que recalcular.','err'); return; }
+  const alvoIns = document.getElementById('rc-insumo').value || null;
+  const btn = document.getElementById('btn-rc');
+  btn.disabled = true; btn.textContent = 'Recalculando...';
+  const res = document.getElementById('rc-result'); res.classList.remove('show'); res.textContent = '';
+  let msg = '';
+  try {
+    if (doCM) {
+      const [ents, sais] = await Promise.all([
+        api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,custo_unitario,criado_em`).catch(()=>[]),
+        api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,criado_em`).catch(()=>[]),
+      ]);
+      const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map(e=>e.insumo_id), ...sais.map(s=>s.insumo_id)])];
+      const agora = new Date().toISOString();
+      const payloads = insIds.filter(Boolean).map(insId => {
+        const r = custoMedioNaData(insId, null, { entradas: ents, saidas: sais });
+        return { tenant_id: TENANT_ID, insumo_id: insId, loja_id: lId,
+          quantidade: parseFloat((r.quantidade||0).toFixed(4)),
+          custo_medio: parseFloat((r.custo||0).toFixed(6)),
+          atualizado_em: agora };
+      });
+      for (let i = 0; i < payloads.length; i += 200) {
+        await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
+          method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+          body: JSON.stringify(payloads.slice(i, i+200)) });
+      }
+      msg += `✓ Custo médio recalculado: ${payloads.length} item(ns).\n`;
+    }
+    if (doFicha) {
+      const n = await recalcularFichas(lId, alvoIns);
+      msg += `✓ Fichas de processado recalculadas: ${n}.`;
+    }
+    res.textContent = msg.trim(); res.classList.add('show');
+    toast('Recálculo concluído!','ok');
+    if (lId === lojaId) { try { saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}`); } catch{} }
+  } catch(e) { toast('Erro: '+e.message,'err'); }
+  finally { btn.disabled = false; btn.textContent = 'Recalcular'; }
+}
+
+async function recalcularFichas(lId, alvoIns) {
+  const [fichas, saldosLoja, vinc] = await Promise.all([
+    api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&insumo_vinculado_id=not.is.null&select=id,insumo_vinculado_id,rendimento_receita_g,itens_ficha(insumo_id,quantidade_g)`).catch(()=>[]),
+    api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,custo_medio`).catch(()=>[]),
+    api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=insumo_id,preco_unitario`).catch(()=>[]),
+  ]);
+  const ctx = { saldos: saldosLoja, vinculos: vinc, insumos };
+  let n = 0;
+  for (const f of fichas) {
+    if (alvoIns && f.insumo_vinculado_id !== alvoIns) continue;
+    const rendG = +f.rendimento_receita_g || 0;
+    if (!rendG || !(f.itens_ficha||[]).length) continue;
+    const custoTotal = custoFichaPorcao(f.itens_ficha, 1, lId, ctx);
+    const custoKg = custoTotal / rendG * 1000;
+    await api(`insumos?id=eq.${f.insumo_vinculado_id}`, { method:'PATCH', prefer:'return=minimal',
+      body: JSON.stringify({ preco_compra: parseFloat(custoKg.toFixed(4)) }) });
+    const ins = insumos.find(i => i.id === f.insumo_vinculado_id); if (ins) ins.preco_compra = parseFloat(custoKg.toFixed(4));
+    n++;
+  }
+  return n;
+}
+
 // ── TAB SWITCH ─────────────────────────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='estoque')||(i===1&&tab==='custo')));
-  document.getElementById('tab-estoque').classList.toggle('active', tab==='estoque');
-  document.getElementById('tab-custo').classList.toggle('active', tab==='custo');
+function switchTab(nome) {
+  if (!_openTabs.includes(nome)) _openTabs.push(nome);
+  _activeTab = nome;
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  const pane = document.getElementById('tab-' + nome);
+  if (pane) pane.classList.add('active');
+  _renderTabStrip();
+}
+function goHub() {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-hub').classList.add('active');
+  _activeTab = null;
+  _renderTabStrip();
+}
+function closeTab(nome) {
+  _openTabs = _openTabs.filter(t => t !== nome);
+  if (_activeTab === nome) {
+    if (_openTabs.length) switchTab(_openTabs[_openTabs.length - 1]);
+    else goHub();
+  } else { _renderTabStrip(); }
+}
+function _renderTabStrip() {
+  const strip = document.getElementById('adj-tab-strip');
+  if (!strip) return;
+  if (!_openTabs.length) { strip.style.display = 'none'; return; }
+  strip.style.display = 'flex';
+  strip.innerHTML = `<button class="ws-home-btn" onclick="goHub()" title="Hub Ajustes"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>` +
+    _openTabs.map(t => `<button class="ws-tab${_activeTab===t?' active':''}" onclick="switchTab('${t}')">${_tabNames[t]||t}<span class="ws-tab-close" onclick="event.stopPropagation();closeTab('${t}')">✕</span></button>`).join('');
 }
 
 // ── AJUSTE DE ESTOQUE ──────────────────────────────────────────────────
@@ -610,52 +749,65 @@ function limparAeForm() {
   document.getElementById('ae-btn-pos').classList.remove('sel');
   document.getElementById('ae-btn-neg').classList.remove('sel');
   aeInsumoId = null; aetipoSel = null;
+  aeObsCount();
 }
+function aeObsCount() { const el = document.getElementById('ae-obs-count'); if (el) el.textContent = (document.getElementById('ae-obs').value || '').length; }
 
 // ── AJUSTE DE CUSTO MÉDIO ──────────────────────────────────────────────
 let todosSaldosCm = []; // saldos de todas as lojas para o insumo selecionado
 
 async function onCmInsumoChange() {
   cmInsumoId = document.getElementById('cm-insumo').value || null;
-  document.getElementById('cm-chk-all').checked = false;
-
+  const _drop = document.getElementById('cm-lojas-body');
   if (!cmInsumoId) {
-    document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>';
+    _drop.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Selecione um insumo primeiro</div>';
+    updLojaBtn();
     return;
   }
-
-  document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Carregando...</td></tr>';
+  _drop.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Carregando...</div>';
   try {
-    // Busca lojas e saldos em paralelo, sem filtro ativo
     const [lojasAtual, saldosInsumo] = await Promise.all([
       api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${cmInsumoId}`),
     ]);
-    if (lojasAtual.length) lojas = lojasAtual; // atualiza cache global
+    if (lojasAtual.length) lojas = lojasAtual;
     todosSaldosCm = saldosInsumo;
     renderizarLojasCheckbox();
   } catch(e) {
-    document.getElementById('cm-lojas-body').innerHTML = `<tr><td colspan="4" class="empty">Erro: ${esc(e.message)}</td></tr>`;
+    _drop.innerHTML = `<div style="padding:8px 12px;color:#dc2626;font-size:12px">Erro: ${esc(e.message)}</div>`;
   }
 }
 
 function renderizarLojasCheckbox() {
-  const tbody = document.getElementById('cm-lojas-body');
-  if (!lojas.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhuma loja cadastrada.</td></tr>'; return; }
-  tbody.innerHTML = lojas.map(l => {
+  const wrap = document.getElementById('cm-lojas-body');
+  if (!lojas.length) { wrap.innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Nenhuma loja cadastrada.</div>'; return; }
+  wrap.innerHTML = lojas.map(l => {
     const s = todosSaldosCm.find(x => x.loja_id === l.id) || { quantidade: 0, custo_medio: 0 };
-    return `<tr>
-      <td><input type="checkbox" class="cm-loja-chk" value="${l.id}" style="cursor:pointer;width:auto"></td>
-      <td style="font-weight:500">${esc(l.nome)}</td>
-      <td class="r mono" style="color:var(--text2)">${s.custo_medio ? brl(s.custo_medio) : '—'}</td>
-      <td class="r mono" style="color:var(--text3)">${fmtQtd(s.quantidade)}</td>
-    </tr>`;
+    return `<label class="cm-loja-opt"><input type="checkbox" class="cm-loja-chk" value="${l.id}" onchange="updLojaBtn()"><span>${esc(l.nome)}</span><span style="margin-left:auto;color:var(--text2);font-size:11px">${s.custo_medio ? brl(s.custo_medio) : '—'}</span></label>`;
   }).join('');
+  updLojaBtn();
 }
 
 function toggleTodasLojas(checked) {
   document.querySelectorAll('.cm-loja-chk').forEach(c => c.checked = checked);
+  updLojaBtn();
 }
+
+function toggleLojaDrop(e) { if (e) e.stopPropagation(); document.getElementById('cm-loja-drop').classList.toggle('open'); }
+function updLojaBtn() {
+  const sel = [...document.querySelectorAll('.cm-loja-chk:checked')];
+  const btn = document.getElementById('cm-loja-btn'); if (!btn) return;
+  const a = document.getElementById('cm-chk-all'); if (a) a.checked = (lojas.length > 0 && sel.length === lojas.length);
+  if (!sel.length) btn.textContent = 'Selecione as lojas...';
+  else if (sel.length === 1) { const l = lojas.find(x => x.id === sel[0].value); btn.textContent = l ? l.nome : '1 loja'; }
+  else if (sel.length === lojas.length) btn.textContent = 'Todas as lojas';
+  else btn.textContent = sel.length + ' lojas selecionadas';
+}
+function cmObsCount() { const el = document.getElementById('cm-obs-count'); if (el) el.textContent = (document.getElementById('cm-obs').value || '').length; }
+document.addEventListener('click', e => {
+  const d = document.getElementById('cm-loja-drop'), b = document.getElementById('cm-loja-btn');
+  if (d && b && !d.contains(e.target) && !b.contains(e.target)) d.classList.remove('open');
+});
 
 async function salvarAjusteCusto() {
   if (!cmInsumoId) { toast('Selecione um insumo.','err'); return; }
@@ -710,8 +862,10 @@ function limparCmForm() {
   document.getElementById('cm-novo').value = '';
   document.getElementById('cm-obs').value = '';
   document.getElementById('cm-chk-all').checked = false;
-  document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="4" class="empty">Selecione um insumo para ver as lojas</td></tr>';
+  document.getElementById('cm-lojas-body').innerHTML = '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Selecione um insumo primeiro</div>';
   cmInsumoId = null; todosSaldosCm = [];
+  cmObsCount();
+  updLojaBtn();
 }
 
 // ── SALDO UPSERT ───────────────────────────────────────────────────────
