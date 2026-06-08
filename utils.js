@@ -263,7 +263,7 @@ if(typeof document !== 'undefined'){
   document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', e => {
       document.querySelectorAll('.ss-drop.open').forEach(d => { if(!d.parentNode.contains(e.target)) d.classList.remove('open'); });
-    });
+    }, true);
     // Fecha o dropdown ao rolar (já que ele flutua em posição fixa)
     // Ao rolar, o dropdown ACOMPANHA o botão (não fecha). Fecha só ao clicar fora.
     window.addEventListener('scroll', () => { document.querySelectorAll('.ss-drop.open').forEach(d => d._place && d._place()); }, true);
