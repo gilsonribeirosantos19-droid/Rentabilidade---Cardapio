@@ -180,7 +180,12 @@
         <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
           <input type="checkbox" id="fil-s-pendente" checked onchange="renderTable()" style="accent-color:#f59e0b">
           <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>
-          Pendente <span id="cnt-pendente" style="font-weight:700;color:#f59e0b">(0)</span>
+          Pendente SEFAZ <span id="cnt-pendente" style="font-weight:700;color:#f59e0b">(0)</span>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
+          <input type="checkbox" id="fil-s-processar" checked onchange="renderTable()" style="accent-color:#2563eb">
+          <span style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block"></span>
+          Para processar <span id="cnt-processar" style="font-weight:700;color:#2563eb">(0)</span>
         </label>
         <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
           <input type="checkbox" id="fil-s-erro" checked onchange="renderTable()" style="accent-color:#dc2626">
@@ -907,7 +912,7 @@ const STATUS_DOT = {
   pendente:          '#f59e0b', // amarelo — chegou, aguardando
   em_transito:       '#f59e0b', // amarelo — em trânsito
   aguard_vinculacao: '#dc2626', // vermelho — tem itens sem vínculo
-  pronta:            '#f59e0b', // amarelo — vinculada, aguardando processar
+  pronta:            '#2563eb', // azul — pronta para processar
   processada:        '#16a34a', // verde — processada
   com_erro:          '#dc2626', // vermelho — erro
   recusada:          '#475569', // cinza
@@ -919,7 +924,8 @@ function statusToChip(s) {
   if(s==='aguard_vinculacao') return 'erro';     // tem itens sem vínculo = erro
   if(s==='cancelada')         return 'cancelada';
   if(s==='recusada')          return 'cancelada';
-  return 'pendente'; // pendente, em_transito, pronta
+  if(s==='pronta')            return 'processar'; // itens vinculados, pronta para processar
+  return 'pendente'; // pendente, em_transito — esperando o XML/itens da SEFAZ
 }
 
 // ── TABELA NF-E ───────────────────────────────────────────────────
@@ -927,9 +933,11 @@ let selectedIds = new Set();
 
 function atualizarChipsCounts(rows) {
   const pend = rows.filter(n => statusToChip(n.status)==='pendente').length;
+  const proc = rows.filter(n => statusToChip(n.status)==='processar').length;
   const erro = rows.filter(n => statusToChip(n.status)==='erro').length;
   const canc = rows.filter(n => statusToChip(n.status)==='cancelada').length;
   const elP = document.getElementById('cnt-pendente'); if(elP) elP.textContent = `(${pend})`;
+  const elPr= document.getElementById('cnt-processar');if(elPr) elPr.textContent = `(${proc})`;
   const elE = document.getElementById('cnt-erro');     if(elE) elE.textContent = `(${erro})`;
   const elC = document.getElementById('cnt-cancelada');if(elC) elC.textContent = `(${canc})`;
 }
@@ -962,6 +970,7 @@ function limparFiltros() {
   const elD = document.getElementById('fil-de'); if(elD) elD.value = '';
   const elA = document.getElementById('fil-ate'); if(elA) elA.value = '';
   document.getElementById('fil-s-pendente').checked = true;
+  const _fp=document.getElementById('fil-s-processar'); if(_fp) _fp.checked = true;
   document.getElementById('fil-s-erro').checked = true;
   document.getElementById('fil-s-cancelada').checked = false;
   renderTable();
@@ -970,6 +979,7 @@ function limparFiltros() {
 function renderTable() {
   const filForn      = document.getElementById('fil-fornecedor')?.value || '';
   const showPendente = document.getElementById('fil-s-pendente')?.checked;
+  const showProcessar= document.getElementById('fil-s-processar')?.checked;
   const showErro     = document.getElementById('fil-s-erro')?.checked;
   const showCancel   = document.getElementById('fil-s-cancelada')?.checked;
 
@@ -979,6 +989,7 @@ function renderTable() {
     if(filForn && n.cnpj_emitente !== filForn) return false;
     const chip = statusToChip(n.status);
     if(chip==='pendente'  && !showPendente) return false;
+    if(chip==='processar' && !showProcessar)return false;
     if(chip==='erro'      && !showErro)     return false;
     if(chip==='cancelada' && !showCancel)   return false;
     return true;
@@ -1401,10 +1412,8 @@ async function registrarNfeNoMonitor() {
 
     fecharModal('m-nfe'); resetNfe();
     // Garante que o filtro de situação mostre a nota recém-registrada
-    const chipPend = document.getElementById('fil-s-pendente');
-    const chipProc = document.getElementById('fil-s-processada');
-    if(status==='aguard_vinculacao'||status==='pronta') { if(chipPend) chipPend.checked=true; }
-    if(status==='processada') { if(chipProc) chipProc.checked=true; }
+    if(status==='pronta') { const c=document.getElementById('fil-s-processar'); if(c) c.checked=true; }
+    if(status==='aguard_vinculacao') { const c=document.getElementById('fil-s-erro'); if(c) c.checked=true; }
     toast(pendentes.length===0
       ?`NF-e ${pi.nNF} registrada e pronta para processar!`
       :`NF-e ${pi.nNF} registrada — ${pendentes.length} item(ns) para vincular no monitor.`
