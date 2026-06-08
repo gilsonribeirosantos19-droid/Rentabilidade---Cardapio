@@ -390,31 +390,7 @@ function popularSelectInsumos(){
   if(ff){ ff.innerHTML='<option value="">Selecione o insumo...</option>'+opts; searchableSelect(ff); ff._ssSync&&ff._ssSync(); }
 }
 
-// Transforma um <select> em um seletor com CAMPO DE BUSCA (mantém o value e o evento change)
-function searchableSelect(sel){
-  if(!sel) return;
-  if(sel._ss){ return; } // já convertido — a lista é lida ao vivo do <select>
-  sel._ss=true;
-  sel.style.display='none';
-  const wrap=document.createElement('div'); wrap.className='ss-wrap';
-  const btn=document.createElement('button'); btn.type='button'; btn.className='ss-btn';
-  const drop=document.createElement('div'); drop.className='ss-drop';
-  drop.innerHTML='<input class="ss-search" placeholder="Digite para buscar..."><div class="ss-list"></div>';
-  wrap.appendChild(btn); wrap.appendChild(drop);
-  sel.parentNode.insertBefore(wrap, sel.nextSibling);
-  const search=drop.querySelector('.ss-search'), list=drop.querySelector('.ss-list');
-  const e2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  function sync(){ const o=sel.options[sel.selectedIndex]; btn.textContent=o?o.text:''; btn.classList.toggle('ss-ph', !sel.value); }
-  function render(f){ f=(f||'').toLowerCase();
-    list.innerHTML=[...sel.options].filter(o=>o.value&&o.text.toLowerCase().includes(f))
-      .map(o=>`<div class="ss-opt${o.value===sel.value?' sel':''}" data-v="${e2(o.value)}">${e2(o.text)}</div>`).join('')
-      ||'<div class="ss-empty">Nada encontrado</div>'; }
-  btn.onclick=ev=>{ ev.stopPropagation(); const open=drop.classList.toggle('open'); if(open){render('');search.value='';setTimeout(()=>search.focus(),0);} };
-  search.oninput=()=>render(search.value);
-  list.onclick=ev=>{ const o=ev.target.closest('.ss-opt'); if(!o)return; sel.value=o.dataset.v; sync(); drop.classList.remove('open'); sel.dispatchEvent(new Event('change',{bubbles:true})); };
-  document.addEventListener('click', ev=>{ if(!wrap.contains(ev.target)) drop.classList.remove('open'); });
-  sel._ssSync=sync; sync();
-}
+// searchableSelect agora é global (utils.js) — aplica busca automaticamente nos selects grandes.
 
 function renderSummary(){
   const total=todosTestes.length;

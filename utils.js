@@ -196,3 +196,60 @@ function custoVendaItem(v, ctx) {
   }
   return +(v && v.custo_unitario) || 0;
 }
+
+// ── SELETOR COM BUSCA (searchable select) ──────────────────────────
+// Converte um <select> em um seletor com CAMPO DE BUSCA, mantendo o value e o evento change.
+// Aplica-se AUTOMATICAMENTE nos selects com muitas opções (ver searchableAuto, abaixo).
+function searchableSelect(sel){
+  if(!sel || sel._ss) return;
+  sel._ss = true;
+  sel.style.display = 'none';
+  const wrap = document.createElement('div'); wrap.className = 'ss-wrap';
+  const r = sel.getBoundingClientRect(); if(r.width > 0) wrap.style.width = r.width + 'px';
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'ss-btn';
+  const drop = document.createElement('div'); drop.className = 'ss-drop';
+  drop.innerHTML = '<input class="ss-search" placeholder="Digite para buscar..."><div class="ss-list"></div>';
+  wrap.appendChild(btn); wrap.appendChild(drop);
+  sel.parentNode.insertBefore(wrap, sel.nextSibling);
+  const search = drop.querySelector('.ss-search'), list = drop.querySelector('.ss-list');
+  const e2 = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function sync(){ const o = sel.options[sel.selectedIndex]; const txt = o ? o.text : ''; if(btn.textContent !== txt) btn.textContent = txt; btn.classList.toggle('ss-ph', !sel.value); }
+  function render(f){ f = (f||'').toLowerCase();
+    list.innerHTML = [...sel.options].filter(o => o.text.toLowerCase().includes(f))
+      .map(o => `<div class="ss-opt${o.value===sel.value?' sel':''}" data-v="${e2(o.value)}">${e2(o.text)}</div>`).join('')
+      || '<div class="ss-empty">Nada encontrado</div>'; }
+  btn.onclick = ev => { ev.stopPropagation(); if(sel.disabled) return; const open = drop.classList.toggle('open'); if(open){ render(''); search.value = ''; setTimeout(() => search.focus(), 0); } };
+  search.oninput = () => render(search.value);
+  list.onclick = ev => { const o = ev.target.closest('.ss-opt'); if(!o) return; sel.value = o.dataset.v; sync(); drop.classList.remove('open'); sel.dispatchEvent(new Event('change', { bubbles: true })); };
+  sel._ssSync = sync; sync();
+}
+
+// Aplica busca automaticamente nos selects "grandes" (>= min opções). Lê as opções AO VIVO,
+// então funciona mesmo com selects preenchidos depois (reaplica via MutationObserver).
+// Para excluir um select específico: adicione o atributo data-no-search nele.
+let _ssObs = null;
+function searchableAuto(min){
+  min = min || 12;
+  if(_ssObs) _ssObs.disconnect();
+  document.querySelectorAll('select').forEach(sel => {
+    if(sel.hasAttribute('data-no-search') || sel.multiple) return;
+    if(sel._ss){ sel._ssSync && sel._ssSync(); return; }
+    if(sel.options.length >= min) searchableSelect(sel);
+  });
+  if(_ssObs){ try { _ssObs.observe(document.body, { childList:true, subtree:true }); } catch {} }
+}
+
+// Injeta o CSS do seletor + liga o auto (em qualquer página que carregue o utils.js).
+if(typeof document !== 'undefined'){
+  const _ssStyle = document.createElement('style');
+  _ssStyle.textContent = '.ss-wrap{position:relative}.ss-btn{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;color:#0f172a;text-align:left;cursor:pointer;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ss-btn:hover{border-color:#f97316}.ss-btn.ss-ph{color:#94a3b8}.ss-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:1000;margin-top:4px;overflow:hidden}.ss-drop.open{display:block}.ss-search{width:100%;border:none;border-bottom:1px solid #e2e8f0;padding:9px 12px;font-size:13px;outline:none;font-family:inherit}.ss-list{max-height:230px;overflow-y:auto}.ss-opt{padding:8px 12px;font-size:13px;cursor:pointer;color:#0f172a;border-bottom:1px solid #f5f7fa}.ss-opt:hover{background:#fff7ed}.ss-opt.sel{background:#fff7ed;color:#f97316;font-weight:600}.ss-empty{padding:10px 12px;color:#94a3b8;font-size:12px}';
+  (document.head || document.documentElement).appendChild(_ssStyle);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('click', e => {
+      document.querySelectorAll('.ss-drop.open').forEach(d => { if(!d.parentNode.contains(e.target)) d.classList.remove('open'); });
+    });
+    let t;
+    _ssObs = new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => searchableAuto(), 200); });
+    searchableAuto();
+  });
+}
