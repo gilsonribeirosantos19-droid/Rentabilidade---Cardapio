@@ -1523,6 +1523,8 @@ async function onVinInsumoChange() {
 function _embToStock(numStr, unit, stockUnit) {
   let q = parseFloat(String(numStr).replace(',','.')); if(isNaN(q)||q<=0) return 0;
   let u = String(unit).toUpperCase();
+  // Normaliza variações de litro: LT, LTS, LTR, LITRO, LITROS → L
+  if(u==='LT'||u==='LTS'||u==='LTR'||u==='LITRO'||u==='LITROS') u='L';
   // "0,900ml" quase sempre é litro mal escrito (ninguém usa decimal em ml) → trata como L
   if(u==='ML' && /[.,]/.test(numStr)) u='L';
   const s = (stockUnit||'').toUpperCase();
@@ -1539,10 +1541,10 @@ function _parseEmbFator(desc, stockUnit) {
   if(!desc) return 0;
   const D = String(desc).toUpperCase();
   // Formato "N x M unidade" (ex: 20X900ML, 20X0,900ML, 12X1,5L) → N × (M convertido)
-  let m = D.match(/(\d+(?:[.,]\d+)?)\s*[X×]\s*(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
+  let m = D.match(/(\d+(?:[.,]\d+)?)\s*[X×]\s*(\d+(?:[.,]\d+)?)\s*(KG|ML|LITROS?|LTS?|L|G|UN\w*)\b/);
   if(m){ const r = parseFloat(m[1].replace(',','.')) * _embToStock(m[2], m[3], stockUnit); if(r>0) return +r.toFixed(6); }
   // Formato "C/ M unidade" ou "M unidade" (ex: C/ 9 KG, 70 G)
-  m = D.match(/(\d+(?:[.,]\d+)?)\s*(KG|ML|L|G|UN\w*)\b/);
+  m = D.match(/(\d+(?:[.,]\d+)?)\s*(KG|ML|LITROS?|LTS?|L|G|UN\w*)\b/);
   if(m){ const r = _embToStock(m[1], m[2], stockUnit); if(r>0) return +r.toFixed(6); }
   // Embalagem só "UNIDADE"/"UN" (sem tamanho) e item em unidade → 1 (1 un = 1 un)
   if(/^(UNIDADES?|UN|UNID)\.?$/.test(D.trim()) && (stockUnit||'').toUpperCase().startsWith('UN')) return 1;
