@@ -68,29 +68,35 @@
   .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
   .b-ativo{background:#dcfce7;color:#16a34a}
   .b-inativo{background:#fee2e2;color:#e11d48}
+  .b-desenv{background:#fef3c7;color:#b45309}
   .b-cat{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+  .b-tipo{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
   .b-sim{background:#dcfce7;color:#16a34a}
   .b-nao{background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0}
-  /* MODAL */
+  /* MODAL — largo, com cabeçalho fixo (inspirado em fichas_tecnicas.html) */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
   .modal-overlay.open{display:flex}
   .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.14)}
-  .modal-header{padding:20px 24px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
-  .modal-title{font-size:16px;font-weight:700}
-  .modal-close{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:2px 6px;border-radius:6px}
-  .modal-close:hover{background:#f1f5f9;color:#0f172a}
-  .modal-body{padding:20px 24px}
-  .modal-footer{padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
-  .form-group{display:flex;flex-direction:column;gap:5px}
+  #modal-novo .modal{max-width:1080px;width:95%;max-height:94vh;padding:18px 22px}
+  .ft-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;background:#fff;z-index:5;margin:-18px -22px 16px;padding:14px 22px;border-bottom:1px solid #e2e8f0}
+  .ft-head h2{margin:0;font-size:16px;font-weight:700}
+  .ft-head-btns{display:flex;gap:10px;flex-shrink:0}
+  /* SEÇÕES do formulário */
+  .sec-head{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;margin:18px 0 12px}
+  .sec-head:first-child{margin-top:0}
+  .sec-head .sec-ico{font-size:13px;filter:grayscale(.1)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:9px}
+  .form-row.cols-3{grid-template-columns:1fr 1fr 1fr}
+  .form-row.cols-4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:9px}
   .form-group.full{grid-column:1/-1}
-  .form-label{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
-  .form-input,.form-select{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;color:#0f172a;font-family:inherit;outline:none;transition:border-color .15s;width:100%}
-  .form-input:focus,.form-select:focus{border-color:#0d9488}
-  .form-hint{font-size:11px;color:#94a3b8}
-  .form-check{display:flex;align-items:center;gap:8px}
+  .form-group label{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+  .form-group input,.form-group select{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;width:100%}
+  .form-group input:focus,.form-group select:focus{border-color:#0d9488}
+  .form-group input[readonly]{background:#f1f5f9;color:#64748b;cursor:not-allowed}
+  .form-check{display:flex;align-items:center;gap:8px;height:100%;padding-top:18px}
   .form-check input{width:16px;height:16px;cursor:pointer;accent-color:#f97316}
-  .form-check label{font-size:13px;color:#0f172a;cursor:pointer}
+  .form-check label{font-size:13px;color:#0f172a;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500}
   /* TOAST */
   .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:320px}
   .toast.show{opacity:1;transform:translateY(0)}.toast.err{border-color:#e11d48;color:#e11d48}.toast.ok{border-color:#16a34a;color:#16a34a}
@@ -131,7 +137,7 @@
       <div class="prod-toolbar">
         <div class="prod-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="busca" placeholder="Buscar produto..." oninput="filtrar()">
+          <input type="text" id="busca" placeholder="Buscar por nome ou código..." oninput="filtrar()">
         </div>
         <div style="flex:1"></div>
         <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Produto</button>
@@ -143,16 +149,18 @@
       <div class="tbl-scroll">
         <table>
           <thead><tr>
-            <th>Código Saipos</th>
+            <th>Cód.</th>
+            <th>Cód. Saipos</th>
             <th>Produto</th>
-            <th>Categoria</th>
+            <th>Grupo</th>
+            <th>Tipo</th>
             <th class="r">Preço</th>
             <th>CMV</th>
-            <th>Status</th>
+            <th>Situação</th>
             <th>Ações</th>
           </tr></thead>
           <tbody id="tbody">
-            <tr><td colspan="7" class="empty">Carregando...</td></tr>
+            <tr><td colspan="9" class="empty">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -165,39 +173,132 @@
 
 <!-- MODAL NOVO / EDITAR PRODUTO -->
 <div class="modal-overlay" id="modal-novo">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modal-title">Novo produto</span>
-      <button class="modal-close" onclick="fecharModalNovo()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Código Saipos</label>
-          <input class="form-input" id="f-codigo" type="text" placeholder="Ex: 27816895">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Categoria</label>
-          <input class="form-input" id="f-cat" type="text" placeholder="Ex: Temaki, Prato, Bebida">
-        </div>
-        <div class="form-group full">
-          <label class="form-label">Nome *</label>
-          <input class="form-input" id="f-nome" type="text" placeholder="Ex: Temaki Salmão">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Preço de venda (R$)</label>
-          <input class="form-input" id="f-preco" type="number" step="0.01" min="0" placeholder="0,00">
-        </div>
-        <div class="form-group" style="justify-content:flex-end">
-          <div class="form-check"><input type="checkbox" id="f-cmv" checked><label for="f-cmv">Participa do CMV</label></div>
-          <div class="form-check"><input type="checkbox" id="f-ativo" checked><label for="f-ativo">Ativo</label></div>
-        </div>
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="ft-head">
+      <h2 id="modal-title">Novo Produto</h2>
+      <div class="ft-head-btns">
+        <button class="btn btn-ghost" onclick="fecharModalNovo()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-salvar" onclick="salvarProduto()">Salvar</button>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="fecharModalNovo()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-salvar" onclick="salvarProduto()">Salvar</button>
+
+    <!-- SEÇÃO: IDENTIFICAÇÃO -->
+    <div class="sec-head"><span class="sec-ico">📋</span> Identificação</div>
+    <div class="form-row cols-4">
+      <div class="form-group">
+        <label>Código interno</label>
+        <input id="f-codint" type="number" readonly>
+      </div>
+      <div class="form-group">
+        <label>Código Saipos</label>
+        <input id="f-codigo" type="text" placeholder="Ex: 27816895">
+      </div>
+      <div class="form-group">
+        <label>Tipo do item</label>
+        <select id="f-tipo">
+          <option value="produto_acabado">Produto acabado</option>
+          <option value="revenda">Mercadoria p/ revenda</option>
+          <option value="combo">Combo</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Situação</label>
+        <select id="f-situacao">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+          <option value="desenvolvimento">Em desenvolvimento</option>
+        </select>
+      </div>
     </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome / Descrição *</label>
+        <input id="f-nome" type="text" placeholder="Ex: TEMAKI SALMÃO">
+      </div>
+      <div class="form-group">
+        <label>Descrição reduzida</label>
+        <input id="f-descred" type="text" placeholder="Nome curto pro PDV">
+      </div>
+    </div>
+
+    <!-- SEÇÃO: CLASSIFICAÇÃO -->
+    <div class="sec-head"><span class="sec-ico">🏷️</span> Classificação</div>
+    <div class="form-row cols-3">
+      <div class="form-group">
+        <label>Família</label>
+        <input id="f-familia" type="text" placeholder="Ex: Comida japonesa">
+      </div>
+      <div class="form-group">
+        <label>Grupo</label>
+        <input id="f-grupo" type="text" placeholder="Ex: Temakis">
+      </div>
+      <div class="form-group">
+        <label>Subgrupo</label>
+        <input id="f-subgrupo" type="text" placeholder="Ex: Especiais">
+      </div>
+    </div>
+    <div class="form-row cols-4">
+      <div class="form-group">
+        <label>Categoria</label>
+        <input id="f-cat" type="text" placeholder="Ex: Temaki, Prato, Bebida">
+      </div>
+      <div class="form-group">
+        <label>Unidade de venda</label>
+        <select id="f-unidade">
+          <option value="un">un</option>
+          <option value="kg">kg</option>
+          <option value="litro">litro</option>
+          <option value="ml">ml</option>
+          <option value="g">g</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tamanho</label>
+        <input id="f-tamanho" type="text" placeholder="Ex: Único, P, M, G">
+      </div>
+      <div class="form-group">
+        <div class="form-check"><input type="checkbox" id="f-pesavel"><label for="f-pesavel">Pesável</label></div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: COMERCIAL / CMV -->
+    <div class="sec-head"><span class="sec-ico">💰</span> Comercial / CMV</div>
+    <div class="form-row cols-3">
+      <div class="form-group">
+        <label>Preço de venda (R$)</label>
+        <input id="f-preco" type="number" step="0.01" min="0" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <div class="form-check"><input type="checkbox" id="f-cmv" checked><label for="f-cmv">Participa do CMV</label></div>
+      </div>
+      <div class="form-group">
+        <label>Tipo de baixa de estoque</label>
+        <input type="text" value="Não baixar" readonly>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: FISCAL -->
+    <div class="sec-head"><span class="sec-ico">🧾</span> Fiscal</div>
+    <div class="form-row cols-4">
+      <div class="form-group">
+        <label>NCM</label>
+        <input id="f-ncm" type="text" placeholder="Ex: 21069090">
+      </div>
+      <div class="form-group">
+        <label>CEST</label>
+        <input id="f-cest" type="text" placeholder="Ex: 1700100">
+      </div>
+      <div class="form-group">
+        <label>Origem</label>
+        <input id="f-origem" type="text" placeholder="0 - Nacional">
+      </div>
+      <div class="form-group">
+        <label>CFOP</label>
+        <input id="f-cfop" type="text" placeholder="Ex: 5102">
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -234,12 +335,15 @@ function brl(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',');}
 function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${tipo} show`;setTimeout(()=>el.classList.remove('show'),3000);}
 
+// Rótulos legíveis dos tipos de item
+const TIPO_LABEL={produto_acabado:'Produto acabado',revenda:'Mercadoria p/ revenda',combo:'Combo',outro:'Outro'};
+
 let todos=[], _editId=null;
 
 // ── CARREGAR ──────────────────────────────────────────────────────
 async function carregarProdutos(){
   const tbody=document.getElementById('tbody');
-  if(tbody) tbody.innerHTML='<tr><td colspan="7" class="empty">Carregando...</td></tr>';
+  if(tbody) tbody.innerHTML='<tr><td colspan="9" class="empty">Carregando...</td></tr>';
   try{
     const data=await api(`produtos?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
     todos=data||[];
@@ -247,7 +351,7 @@ async function carregarProdutos(){
     if(atu) atu.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     filtrar();
   }catch(e){
-    if(tbody) tbody.innerHTML=`<tr><td colspan="7" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
+    if(tbody) tbody.innerHTML=`<tr><td colspan="9" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
   }
 }
 
@@ -257,7 +361,11 @@ function filtrar(){
   let lista=todos;
   if(q){
     const nq=normalizeSearch(q);
-    lista=lista.filter(p=>normalizeSearch(p.nome||'').includes(nq)||normalizeSearch(p.codigo_pdv||'').includes(nq));
+    lista=lista.filter(p=>
+      normalizeSearch(p.nome||'').includes(nq)||
+      normalizeSearch(p.codigo_pdv||'').includes(nq)||
+      String(p.codigo_interno||'').includes(q.trim())
+    );
   }
   renderTabela(lista);
 }
@@ -265,17 +373,26 @@ function filtrar(){
 function renderTabela(lista){
   const tbody=document.getElementById('tbody');
   if(!tbody) return;
-  if(!lista.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhum produto encontrado</td></tr>';return;}
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty">Nenhum produto encontrado</td></tr>';return;}
   tbody.innerHTML=lista.map(p=>{
-    const ativo=p.ativo!==false;
     const cmv=p.participa_cmv!==false;
+    const grupo=p.grupo||p.categoria||'';
+    const tipo=TIPO_LABEL[p.tipo_item]||p.tipo_item||'—';
+    // Situação: prioriza o campo situacao; cai para ativo/inativo se vazio
+    let sit=p.situacao;
+    if(!sit) sit=(p.ativo!==false)?'ativo':'inativo';
+    let sitCls='b-inativo',sitTxt='Inativo';
+    if(sit==='ativo'){sitCls='b-ativo';sitTxt='Ativo';}
+    else if(sit==='desenvolvimento'){sitCls='b-desenv';sitTxt='Em desenv.';}
     return `<tr>
+      <td class="td-mono" style="color:#64748b">${esc(fmtCodigoInterno(p.codigo_interno))}</td>
       <td class="td-mono" style="color:#64748b">${esc(p.codigo_pdv)||'—'}</td>
       <td style="font-weight:600;color:#0f172a">${esc(p.nome)}</td>
-      <td><span class="badge b-cat">${esc(p.categoria)||'—'}</span></td>
+      <td><span class="badge b-cat">${esc(grupo)||'—'}</span></td>
+      <td><span class="badge b-tipo">${esc(tipo)}</span></td>
       <td class="r td-mono" style="color:#0f172a">${brl(p.preco_venda)}</td>
       <td><span class="badge ${cmv?'b-sim':'b-nao'}">${cmv?'Sim':'Não'}</span></td>
-      <td><span class="badge ${ativo?'b-ativo':'b-inativo'}">${ativo?'Ativo':'Inativo'}</span></td>
+      <td><span class="badge ${sitCls}">${sitTxt}</span></td>
       <td style="white-space:nowrap">
         <button class="btn-ghost" title="Editar" onclick="abrirEdicao('${p.id}')" style="border-radius:6px;padding:3px 7px;color:#64748b">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -289,20 +406,43 @@ function renderTabela(lista){
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────
-function _setForm({codigo='',nome='',cat='',preco='',cmv=true,ativo=true}){
-  document.getElementById('f-codigo').value=codigo||'';
-  document.getElementById('f-nome').value=nome||'';
-  document.getElementById('f-cat').value=cat||'';
-  document.getElementById('f-preco').value=(preco!=null&&preco!=='')?preco:'';
-  document.getElementById('f-cmv').checked=cmv!==false;
-  document.getElementById('f-ativo').checked=ativo!==false;
+function _setForm(d={}){
+  document.getElementById('f-codint').value=(d.codigo_interno!=null&&d.codigo_interno!=='')?d.codigo_interno:'';
+  document.getElementById('f-codigo').value=d.codigo_pdv||'';
+  document.getElementById('f-tipo').value=d.tipo_item||'produto_acabado';
+  document.getElementById('f-situacao').value=d.situacao||'ativo';
+  document.getElementById('f-nome').value=d.nome||'';
+  document.getElementById('f-descred').value=d.descricao_reduzida||'';
+  document.getElementById('f-familia').value=d.familia||'';
+  document.getElementById('f-grupo').value=d.grupo||'';
+  document.getElementById('f-subgrupo').value=d.subgrupo||'';
+  document.getElementById('f-cat').value=d.categoria||'';
+  document.getElementById('f-unidade').value=d.unidade_venda||'un';
+  document.getElementById('f-tamanho').value=d.tamanho||'';
+  document.getElementById('f-pesavel').checked=d.pesavel===true;
+  document.getElementById('f-preco').value=(d.preco_venda!=null&&d.preco_venda!=='')?d.preco_venda:'';
+  document.getElementById('f-cmv').checked=d.participa_cmv!==false;
+  document.getElementById('f-ncm').value=d.ncm||'';
+  document.getElementById('f-cest').value=d.cest||'';
+  document.getElementById('f-origem').value=d.origem||'';
+  document.getElementById('f-cfop').value=d.cfop||'';
+}
+
+// Próximo código interno = maior existente + 1 (começa em 1)
+function _proximoCodigoInterno(){
+  let max=0;
+  for(const p of todos){
+    const n=parseInt(p.codigo_interno,10);
+    if(!isNaN(n)&&n>max) max=n;
+  }
+  return max+1;
 }
 
 function abrirModalNovo(){
   _editId=null;
-  document.getElementById('modal-title').textContent='Novo produto';
+  document.getElementById('modal-title').textContent='Novo Produto';
   document.getElementById('btn-salvar').textContent='Salvar';
-  _setForm({});
+  _setForm({codigo_interno:_proximoCodigoInterno()});
   document.getElementById('modal-novo').classList.add('open');
   setTimeout(()=>document.getElementById('f-nome')?.focus(),50);
 }
@@ -311,9 +451,9 @@ function abrirEdicao(id){
   const p=todos.find(x=>x.id===id);
   if(!p) return;
   _editId=id;
-  document.getElementById('modal-title').textContent='Editar produto';
+  document.getElementById('modal-title').textContent='Editar Produto';
   document.getElementById('btn-salvar').textContent='Salvar';
-  _setForm({codigo:p.codigo_pdv,nome:p.nome,cat:p.categoria,preco:p.preco_venda,cmv:p.participa_cmv,ativo:p.ativo});
+  _setForm(p);
   document.getElementById('modal-novo').classList.add('open');
   setTimeout(()=>document.getElementById('f-nome')?.focus(),50);
 }
@@ -321,23 +461,38 @@ function abrirEdicao(id){
 function fecharModalNovo(){document.getElementById('modal-novo').classList.remove('open');}
 
 // ── SALVAR (novo ou edição) ───────────────────────────────────────
+function _val(id){const v=document.getElementById(id).value.trim();return v||null;}
+
 async function salvarProduto(){
   const nome=toUpperName(document.getElementById('f-nome').value.trim());
   if(!nome){toast('Informe o nome do produto.','err');return;}
-  const codigo=document.getElementById('f-codigo').value.trim();
-  const cat=document.getElementById('f-cat').value.trim();
+
+  const situacao=document.getElementById('f-situacao').value;
   const precoRaw=document.getElementById('f-preco').value;
-  const preco=precoRaw===''?null:(parseFloat(precoRaw)||0);
-  const cmv=document.getElementById('f-cmv').checked;
-  const ativo=document.getElementById('f-ativo').checked;
+  const codIntRaw=document.getElementById('f-codint').value;
 
   const payload={
-    codigo_pdv: codigo||null,
+    codigo_interno: codIntRaw===''?null:(parseInt(codIntRaw,10)||null),
+    codigo_pdv: _val('f-codigo'),
     nome,
-    categoria: cat||null,
-    preco_venda: preco,
-    participa_cmv: cmv,
-    ativo,
+    descricao_reduzida: _val('f-descred'),
+    tipo_item: document.getElementById('f-tipo').value,
+    situacao,
+    categoria: _val('f-cat'),
+    familia: _val('f-familia'),
+    grupo: _val('f-grupo'),
+    subgrupo: _val('f-subgrupo'),
+    unidade_venda: document.getElementById('f-unidade').value,
+    tamanho: _val('f-tamanho'),
+    pesavel: document.getElementById('f-pesavel').checked,
+    preco_venda: precoRaw===''?null:(parseFloat(precoRaw)||0),
+    participa_cmv: document.getElementById('f-cmv').checked,
+    tipo_baixa: 'nao_baixar',
+    ncm: _val('f-ncm'),
+    cest: _val('f-cest'),
+    origem: _val('f-origem'),
+    cfop: _val('f-cfop'),
+    ativo: situacao!=='inativo',
   };
 
   const btn=document.getElementById('btn-salvar');
@@ -348,7 +503,6 @@ async function salvarProduto(){
       toast('Produto atualizado.','ok');
     }else{
       payload.tenant_id=TENANT_ID;
-      payload.tipo_baixa='nao_baixar';
       await api('produtos',{method:'POST',body:JSON.stringify(payload)});
       toast(`${nome} cadastrado com sucesso.`,'ok');
     }
