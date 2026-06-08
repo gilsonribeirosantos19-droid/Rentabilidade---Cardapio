@@ -59,14 +59,28 @@
   .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
   .tbl-scroll{overflow-x:auto}
   table{width:100%;border-collapse:collapse;font-size:12px}
-  thead tr{background:#0f2d5c}
-  th{padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+  thead tr{background:#eef2f7}
+  th{padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-bottom:1px solid #cbd5e1;border-right:1px solid #dbe2ec}
   th.r{text-align:right}
-  tbody td{padding:3px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  th:last-child,td:last-child{border-right:none}
+  tbody td{padding:6px 10px;border-bottom:1px solid #f1f5f9;border-right:1px solid #eef2f7;vertical-align:middle;color:#0f172a;white-space:nowrap}
   tbody tr:last-child td{border-bottom:none}
   tbody tr:hover{background:#fafbfc}
   td.r{text-align:right}
   .mono{font-family:'DM Mono',monospace}
+  /* SELETOR COM BUSCA */
+  .ss-wrap{position:relative}
+  .ss-btn{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;color:#0f172a;text-align:left;cursor:pointer;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ss-btn:hover{border-color:#f97316}
+  .ss-btn.ss-ph{color:#94a3b8}
+  .ss-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:50;margin-top:4px;overflow:hidden}
+  .ss-drop.open{display:block}
+  .ss-search{width:100%;border:none;border-bottom:1px solid #e2e8f0;padding:9px 12px;font-size:13px;outline:none;font-family:inherit}
+  .ss-list{max-height:230px;overflow-y:auto}
+  .ss-opt{padding:8px 12px;font-size:13px;cursor:pointer;color:#0f172a;border-bottom:1px solid #f5f7fa}
+  .ss-opt:hover{background:#fff7ed}
+  .ss-opt.sel{background:#fff7ed;color:#f97316;font-weight:600}
+  .ss-empty{padding:10px 12px;color:#94a3b8;font-size:12px}
   /* BUTTONS */
   .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
   .btn-primary{background:#f97316;border-color:#f97316;color:#fff}
@@ -372,8 +386,34 @@ function popularSelectInsumos(){
   const opts=todosInsumos.map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'kg'})</option>`).join('');
   const fi=document.getElementById('filtro-insumo');
   const ff=document.getElementById('f-insumo');
-  if(fi)fi.innerHTML='<option value="">Todos os insumos</option>'+opts;
-  if(ff)ff.innerHTML='<option value="">Selecione o insumo...</option>'+opts;
+  if(fi){ fi.innerHTML='<option value="">Todos os insumos</option>'+opts; searchableSelect(fi); fi._ssSync&&fi._ssSync(); }
+  if(ff){ ff.innerHTML='<option value="">Selecione o insumo...</option>'+opts; searchableSelect(ff); ff._ssSync&&ff._ssSync(); }
+}
+
+// Transforma um <select> em um seletor com CAMPO DE BUSCA (mantém o value e o evento change)
+function searchableSelect(sel){
+  if(!sel) return;
+  if(sel._ss){ return; } // já convertido — a lista é lida ao vivo do <select>
+  sel._ss=true;
+  sel.style.display='none';
+  const wrap=document.createElement('div'); wrap.className='ss-wrap';
+  const btn=document.createElement('button'); btn.type='button'; btn.className='ss-btn';
+  const drop=document.createElement('div'); drop.className='ss-drop';
+  drop.innerHTML='<input class="ss-search" placeholder="Digite para buscar..."><div class="ss-list"></div>';
+  wrap.appendChild(btn); wrap.appendChild(drop);
+  sel.parentNode.insertBefore(wrap, sel.nextSibling);
+  const search=drop.querySelector('.ss-search'), list=drop.querySelector('.ss-list');
+  const e2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function sync(){ const o=sel.options[sel.selectedIndex]; btn.textContent=o?o.text:''; btn.classList.toggle('ss-ph', !sel.value); }
+  function render(f){ f=(f||'').toLowerCase();
+    list.innerHTML=[...sel.options].filter(o=>o.value&&o.text.toLowerCase().includes(f))
+      .map(o=>`<div class="ss-opt${o.value===sel.value?' sel':''}" data-v="${e2(o.value)}">${e2(o.text)}</div>`).join('')
+      ||'<div class="ss-empty">Nada encontrado</div>'; }
+  btn.onclick=ev=>{ ev.stopPropagation(); const open=drop.classList.toggle('open'); if(open){render('');search.value='';setTimeout(()=>search.focus(),0);} };
+  search.oninput=()=>render(search.value);
+  list.onclick=ev=>{ const o=ev.target.closest('.ss-opt'); if(!o)return; sel.value=o.dataset.v; sync(); drop.classList.remove('open'); sel.dispatchEvent(new Event('change',{bubbles:true})); };
+  document.addEventListener('click', ev=>{ if(!wrap.contains(ev.target)) drop.classList.remove('open'); });
+  sel._ssSync=sync; sync();
 }
 
 function renderSummary(){
@@ -517,6 +557,7 @@ function abrirModal(){
   editId=null;
   document.getElementById('modal-titulo').textContent='Novo Teste de Rendimento';
   document.getElementById('f-insumo').value='';
+  document.getElementById('f-insumo')._ssSync?.();
   document.getElementById('f-bruto').value='';
   document.getElementById('f-liquido').value='';
   document.getElementById('f-obs').value='';
@@ -530,6 +571,7 @@ function editarTeste(id){
   editId=id;
   document.getElementById('modal-titulo').textContent='Editar Teste de Rendimento';
   document.getElementById('f-insumo').value=t.insumo_id;
+  document.getElementById('f-insumo')._ssSync?.();
   document.getElementById('f-bruto').value=t.peso_bruto;
   document.getElementById('f-liquido').value=t.peso_liquido;
   document.getElementById('f-obs').value=t.observacao||'';
