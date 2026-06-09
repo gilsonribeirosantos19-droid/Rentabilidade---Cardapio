@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -338,44 +338,38 @@
     <!-- WORKSPACE TAB STRIP -->
     <div class="ws-tab-strip" id="pdv-tab-strip"></div>
 
-    <!-- HUB LANDING PAGE -->
-    <div id="tab-hub" class="tab-pane active">
+    <!-- HUB LANDING: DASHBOARD (só os 2 cards do Dashboard) -->
+    <div id="tab-dash" class="tab-pane active">
       <div class="pdv-hub-section">
-        <div class="pdv-hub-label">Visão Geral</div>
+        <div class="pdv-hub-label">Dashboard</div>
         <div class="pdv-hub-grid">
-          <div class="pdv-hub-card" onclick="switchTab('dashboard')">
-            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
-            <div class="pdv-hub-body"><div class="pdv-hub-title">Dashboard</div><div class="pdv-hub-desc">KPIs do período: faturamento, CMV, ticket médio e pedidos.</div></div>
-            <div class="pdv-hub-arrow">›</div>
-          </div>
           <div class="pdv-hub-card" onclick="switchTab('faturamento')">
             <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
             <div class="pdv-hub-body"><div class="pdv-hub-title">Faturamento</div><div class="pdv-hub-desc">Evolução diária e detalhamento de receitas no período.</div></div>
             <div class="pdv-hub-arrow">›</div>
           </div>
-        </div>
-      </div>
-      <div class="pdv-hub-section">
-        <div class="pdv-hub-label">Análises</div>
-        <div class="pdv-hub-grid">
           <div class="pdv-hub-card" onclick="switchTab('vendas')">
             <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div>
-            <div class="pdv-hub-body"><div class="pdv-hub-title">Vendas por Produto</div><div class="pdv-hub-desc">Desempenho por item: quantidade, faturamento e margem.</div></div>
-            <div class="pdv-hub-arrow">›</div>
-          </div>
-          <div class="pdv-hub-card" onclick="switchTab('relatorios')">
-            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-            <div class="pdv-hub-body"><div class="pdv-hub-title">Relatórios</div><div class="pdv-hub-desc">Curva ABC, CMV e engenharia de cardápio.</div></div>
+            <div class="pdv-hub-body"><div class="pdv-hub-title">Faturamento por Produto</div><div class="pdv-hub-desc">Desempenho por item: quantidade, faturamento e margem.</div></div>
             <div class="pdv-hub-arrow">›</div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- HUB LANDING: RELATÓRIOS (só os 2 cards de Relatórios) -->
+    <div id="tab-rel" class="tab-pane">
       <div class="pdv-hub-section">
-        <div class="pdv-hub-label">Operações</div>
+        <div class="pdv-hub-label">Relatórios</div>
         <div class="pdv-hub-grid">
-          <div class="pdv-hub-card" onclick="switchTab('importar')">
-            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-            <div class="pdv-hub-body"><div class="pdv-hub-title">Importar / API</div><div class="pdv-hub-desc">Importe vendas manualmente ou via integração de API.</div></div>
+          <div class="pdv-hub-card" onclick="switchTab('relatorios');switchRelTab('abc')">
+            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="pdv-hub-body"><div class="pdv-hub-title">Curva ABC</div><div class="pdv-hub-desc">Classifica os produtos por relevância no faturamento.</div></div>
+            <div class="pdv-hub-arrow">›</div>
+          </div>
+          <div class="pdv-hub-card" onclick="switchTab('relatorios');switchRelTab('engenharia')">
+            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
+            <div class="pdv-hub-body"><div class="pdv-hub-title">Engenharia de Cardápio</div><div class="pdv-hub-desc">Matriz de venda x margem: joias, estrelas e quebra-cabeças.</div></div>
             <div class="pdv-hub-arrow">›</div>
           </div>
         </div>
@@ -794,7 +788,6 @@
         <button class="btn btn-primary btn-sm" onclick="renderRelatorios()">Calcular</button>
         <div style="margin-left:auto;display:flex;gap:6px">
           <button class="sub-rel-btn active" id="srel-abc"      onclick="switchRelTab('abc')">Curva ABC</button>
-          <button class="sub-rel-btn"        id="srel-cmv"      onclick="switchRelTab('cmv')">CMV por Produto</button>
           <button class="sub-rel-btn"        id="srel-engenharia" onclick="switchRelTab('engenharia')">Engenharia de Cardápio</button>
         </div>
       </div>
@@ -915,85 +908,6 @@
             <span id="abc-pag-info">—</span>
             <div style="display:flex;align-items:center;gap:4px" id="abc-pag-btns"></div>
             <select class="field field-sm" id="abc-por-pag" onchange="renderPagAbc()" style="padding:3px 8px;font-size:11px;width:auto">
-              <option value="10">10 por página</option>
-              <option value="25">25 por página</option>
-              <option value="50">50 por página</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUB-PANE: CMV POR PRODUTO -->
-      <div id="srel-pane-cmv" class="srel-pane">
-
-        <!-- KPI CARDS CMV -->
-        <div class="kpi-row" style="margin-bottom:16px">
-          <div class="kpi-card">
-            <div class="kpi-icon ki-blue"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-            <div class="kpi-body"><div class="kpi-lbl">Faturamento Total</div><div class="kpi-val" id="cmv-kpi-fat">—</div><div class="kpi-sub">período selecionado</div></div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icon ki-orange"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-            <div class="kpi-body"><div class="kpi-lbl">Custo Total (CMV)</div><div class="kpi-val" id="cmv-kpi-custo">—</div><div class="kpi-sub" id="cmv-kpi-custo-pct">—</div></div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icon ki-green"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
-            <div class="kpi-body"><div class="kpi-lbl">Margem Bruta</div><div class="kpi-val" id="cmv-kpi-margem">—</div><div class="kpi-sub" id="cmv-kpi-margem-pct">—</div></div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icon ki-teal"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg></div>
-            <div class="kpi-body"><div class="kpi-lbl">Ticket Médio</div><div class="kpi-val" id="cmv-kpi-ticket">—</div><div class="kpi-sub">por pedido</div></div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-icon ki-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
-            <div class="kpi-body"><div class="kpi-lbl">Produtos Analisados</div><div class="kpi-val" id="cmv-kpi-prods">—</div><div class="kpi-sub">itens diferentes</div></div>
-          </div>
-        </div>
-
-        <!-- FILTROS -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-          <div style="position:relative">
-            <input class="field field-sm" id="cmv-busca" placeholder="Buscar produto..." oninput="filtrarCmvTab()" style="padding-left:30px;width:200px">
-            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </div>
-          <select class="field field-sm" id="cmv-filtro-cat" onchange="filtrarCmvTab()" style="width:auto">
-            <option value="">Categoria: Todas</option>
-          </select>
-          <select class="field field-sm" id="cmv-ordenar" onchange="filtrarCmvTab()" style="width:auto">
-            <option value="fat">Ordenar: Faturamento</option>
-            <option value="cmv_desc" selected>CMV (%) maior</option>
-            <option value="cmv_asc">CMV (%) menor</option>
-            <option value="margem_desc">Margem maior</option>
-            <option value="qtd">Qtd vendida</option>
-          </select>
-          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="exportCmvCSV()">↓ Exportar relatório</button>
-        </div>
-
-        <!-- TABELA -->
-        <div class="dash-card" style="overflow:hidden">
-          <div class="tbl-scroll">
-            <table class="tbl" style="font-size:12px">
-              <thead><tr>
-                <th class="c" style="width:36px">#</th>
-                <th>Produto</th>
-                <th>Categoria</th>
-                <th class="r">Qtd Vendida</th>
-                <th class="r">Faturamento</th>
-                <th class="r">Custo Total</th>
-                <th class="r">CMV (%)</th>
-                <th class="r">Margem (%)</th>
-                <th class="r">Margem (R$)</th>
-                <th class="r">Ticket Médio</th>
-                <th class="r">Participação</th>
-              </tr></thead>
-              <tbody id="cmv-body"><tr><td colspan="11" class="empty">Clique em Calcular</td></tr></tbody>
-              <tfoot id="cmv-foot"></tfoot>
-            </table>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #f1f5f9;font-size:12px;color:var(--text3)">
-            <span id="cmv-pag-info">—</span>
-            <div style="display:flex;align-items:center;gap:4px" id="cmv-pag-btns"></div>
-            <select class="field field-sm" id="cmv-por-pag" onchange="renderPagCmv()" style="padding:3px 8px;font-size:11px;width:auto">
               <option value="10">10 por página</option>
               <option value="25">25 por página</option>
               <option value="50">50 por página</option>
@@ -1376,7 +1290,9 @@ function _custoCtx(ate){ return { saldos:_saldos, vinculos:_vinculos, insumos:_i
 
 // ── TABS ───────────────────────────────────────────────────────────
 // ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
-const _tabNames = {dashboard:'Dashboard',faturamento:'Faturamento',vendas:'Vendas por Produto',relatorios:'Relatórios',importar:'Importar / API'};
+const _tabNames = {dashboard:'Dashboard',faturamento:'Faturamento',vendas:'Faturamento por Produto',relatorios:'Relatórios',importar:'Importar / API',dash:'Dashboard',rel:'Relatórios'};
+// Panes de "hub"/landing: NÃO viram aba na régua (sem ×). Comportam-se como o antigo tab-hub.
+const _HUB_PANES = ['dash','rel'];
 let _openTabs = [], _activeTab = null, _loadedTabs = {};
 
 function _renderTabStrip() {
@@ -1402,15 +1318,22 @@ function _setBreadcrumb(nome) {
     + '<span style="font-size:15px;font-weight:600;color:#0f172a">' + (_tabNames[nome]||nome) + '</span>';
 }
 
-function goHub() {
-  tabAtual = 'hub'; _activeTab = null;
+// Mostra um pane de hub/landing (dash ou rel) sem adicioná-lo à régua de abas.
+function _showHub(pane) {
+  tabAtual = pane; _activeTab = null;
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-hub').classList.add('active');
+  const el = document.getElementById('tab-'+pane);
+  if (el) el.classList.add('active');
   _setBreadcrumb(null);
   _renderTabStrip();
 }
 
+// Botão home da régua → Dashboard (landing principal).
+function goHub() { _showHub('dash'); }
+
 function openTab(nome) {
+  // Panes de hub/landing não viram aba na régua — apenas trocam o pane ativo.
+  if (_HUB_PANES.includes(nome)) { _showHub(nome); return; }
   if (!_openTabs.includes(nome)) _openTabs.push(nome);
   activateTab(nome);
 }
@@ -1442,7 +1365,7 @@ function closeTab(nome, e) {
 function switchTab(tab) { openTab(tab); }
 
 function switchRelTab(nome) {
-  ['abc','cmv','engenharia'].forEach(t => {
+  ['abc','engenharia'].forEach(t => {
     document.getElementById('srel-'+t).classList.toggle('active', t===nome);
     document.getElementById('srel-pane-'+t).classList.toggle('active', t===nome);
   });
@@ -2529,25 +2452,6 @@ async function renderRelatorios() {
     // TABELA
     renderPagAbc();
 
-    // CMV POR PRODUTO — popular dados e KPIs
-    _cmvData = prods;
-    const totalFatCmv = prods.reduce((s,p)=>s+p.fat,0);
-    const totalCustoCmv = prods.reduce((s,p)=>s+p.custo,0);
-    const totalPedCmv = _dbFats.filter(f=>f.data>=de&&f.data<=ate).length||1;
-    document.getElementById('cmv-kpi-fat').textContent    = brl(totalFatCmv);
-    document.getElementById('cmv-kpi-custo').textContent  = brl(totalCustoCmv);
-    document.getElementById('cmv-kpi-custo-pct').textContent = totalFatCmv>0?(totalCustoCmv/totalFatCmv*100).toFixed(2)+'% do faturamento':'—';
-    document.getElementById('cmv-kpi-margem').textContent = brl(totalFatCmv-totalCustoCmv);
-    document.getElementById('cmv-kpi-margem-pct').textContent = totalFatCmv>0?((1-totalCustoCmv/totalFatCmv)*100).toFixed(2)+'% do faturamento':'—';
-    document.getElementById('cmv-kpi-ticket').textContent = brl(totalFatCmv/totalPedCmv);
-    document.getElementById('cmv-kpi-prods').textContent  = prods.length;
-    // Popular select de categorias
-    const cats = [...new Set(prods.map(p=>p.cat).filter(Boolean))].sort();
-    const selCat = document.getElementById('cmv-filtro-cat');
-    if (selCat) { selCat.innerHTML='<option value="">Categoria: Todas</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join(''); }
-    _cmvPagAtual=1;
-    renderPagCmv();
-
     // ENGENHARIA DE CARDÁPIO
     const totalFatEng = prods.reduce((s,p)=>s+p.fat,0);
     const totalCustoEng = prods.reduce((s,p)=>s+p.custo,0);
@@ -2657,10 +2561,10 @@ document.querySelectorAll('.tab-btn').forEach(b=>{
 });
 
 carregar().finally(() => {
-  // Sem ?tab na URL, abre direto no Dashboard (sem hub). Com ?tab, abre a aba indicada;
-  // ?rel abre a sub-aba de Relatórios (curva ABC / CMV / engenharia).
+  // Sem ?tab na URL, abre no hub Dashboard (tab-dash). Com ?tab, abre a aba/hub indicado;
+  // ?rel abre a sub-aba de Relatórios (curva ABC / engenharia).
   const _p = new URLSearchParams(location.search);
-  const _t = _p.get('tab') || 'dashboard';
+  const _t = _p.get('tab') || 'dash';
   const _r = _p.get('rel');
   setTimeout(() => { switchTab(_t); if (_r && window.switchRelTab) switchRelTab(_r); }, 0);
 });
