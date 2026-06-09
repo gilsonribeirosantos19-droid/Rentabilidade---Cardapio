@@ -833,6 +833,9 @@ async function salvarVincFiscal() {
   if(!insId) { toast('Selecione o produto interno.', 'err'); return; }
   const emb = document.getElementById('vin-ins')._selectedEmb;
   if(!emb?.fator) { toast('Selecione a embalagem e a quantidade.', 'err'); return; }
+  // FONTE DA VERDADE: o valor que está no campo agora (corrige salvar fator auto/antigo)
+  const _fLive = parseFloat(document.getElementById('vin-emb-qty')?.value);
+  if(_fLive>0) emb.fator = _fLive;
   const codForn = (document.getElementById('vin-cod-forn')?.value || '').trim();
   const nfe     = entradasNfe.find(n => n.id === selectedNfeKey);
   const btn = document.getElementById('btn-vin-salvar');
@@ -1597,6 +1600,9 @@ async function salvarVinculoNfe() {
   if(!insId){toast('Selecione o produto interno.','err');return;}
   const emb=document.getElementById('vin-ins')._selectedEmb;
   if(!emb?.fator){toast('Selecione a embalagem.','err');return;}
+  // FONTE DA VERDADE: o valor que está no campo agora (corrige salvar fator auto/antigo)
+  const _fLive=parseFloat(document.getElementById('vin-emb-qty')?.value);
+  if(_fLive>0) emb.fator=_fLive;
   const ins=insumos.find(x=>x.id===insId);
   const und=ins?.unidade_medida||ins?.unidade_compra||'un';
   const codForn=(document.getElementById('vin-cod-forn')?.value||'').trim();
