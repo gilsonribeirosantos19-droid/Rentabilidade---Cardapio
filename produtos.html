@@ -149,7 +149,6 @@
       <div class="tbl-scroll">
         <table>
           <thead><tr>
-            <th>Cód.</th>
             <th>Cód. Saipos</th>
             <th>Produto</th>
             <th>Grupo</th>
@@ -160,7 +159,7 @@
             <th>Ações</th>
           </tr></thead>
           <tbody id="tbody">
-            <tr><td colspan="9" class="empty">Carregando...</td></tr>
+            <tr><td colspan="8" class="empty">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
@@ -184,11 +183,7 @@
 
     <!-- SEÇÃO: IDENTIFICAÇÃO -->
     <div class="sec-head"><span class="sec-ico">📋</span> Identificação</div>
-    <div class="form-row cols-4">
-      <div class="form-group">
-        <label>Código interno</label>
-        <input id="f-codint" type="number" readonly>
-      </div>
+    <div class="form-row cols-3">
       <div class="form-group">
         <label>Código Saipos</label>
         <input id="f-codigo" type="text" placeholder="Ex: 27816895">
@@ -274,7 +269,11 @@
       </div>
       <div class="form-group">
         <label>Tipo de baixa de estoque</label>
-        <input type="text" value="Não baixar" readonly>
+        <select id="f-baixa">
+          <option value="nao_baixar">Não baixar</option>
+          <option value="consumo">Consumo (baixa pela ficha na venda)</option>
+          <option value="producao">Produção (PCP)</option>
+        </select>
       </div>
     </div>
 
@@ -343,7 +342,7 @@ let todos=[], _editId=null;
 // ── CARREGAR ──────────────────────────────────────────────────────
 async function carregarProdutos(){
   const tbody=document.getElementById('tbody');
-  if(tbody) tbody.innerHTML='<tr><td colspan="9" class="empty">Carregando...</td></tr>';
+  if(tbody) tbody.innerHTML='<tr><td colspan="8" class="empty">Carregando...</td></tr>';
   try{
     const data=await api(`produtos?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
     todos=data||[];
@@ -351,7 +350,7 @@ async function carregarProdutos(){
     if(atu) atu.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     filtrar();
   }catch(e){
-    if(tbody) tbody.innerHTML=`<tr><td colspan="9" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
+    if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
   }
 }
 
@@ -363,8 +362,7 @@ function filtrar(){
     const nq=normalizeSearch(q);
     lista=lista.filter(p=>
       normalizeSearch(p.nome||'').includes(nq)||
-      normalizeSearch(p.codigo_pdv||'').includes(nq)||
-      String(p.codigo_interno||'').includes(q.trim())
+      normalizeSearch(p.codigo_pdv||'').includes(nq)
     );
   }
   renderTabela(lista);
@@ -373,7 +371,7 @@ function filtrar(){
 function renderTabela(lista){
   const tbody=document.getElementById('tbody');
   if(!tbody) return;
-  if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty">Nenhum produto encontrado</td></tr>';return;}
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum produto encontrado</td></tr>';return;}
   tbody.innerHTML=lista.map(p=>{
     const cmv=p.participa_cmv!==false;
     const grupo=p.grupo||p.categoria||'';
@@ -385,7 +383,6 @@ function renderTabela(lista){
     if(sit==='ativo'){sitCls='b-ativo';sitTxt='Ativo';}
     else if(sit==='desenvolvimento'){sitCls='b-desenv';sitTxt='Em desenv.';}
     return `<tr>
-      <td class="td-mono" style="color:#64748b">${esc(fmtCodigoInterno(p.codigo_interno))}</td>
       <td class="td-mono" style="color:#64748b">${esc(p.codigo_pdv)||'—'}</td>
       <td style="font-weight:600;color:#0f172a">${esc(p.nome)}</td>
       <td><span class="badge b-cat">${esc(grupo)||'—'}</span></td>
@@ -407,8 +404,8 @@ function renderTabela(lista){
 
 // ── MODAL ─────────────────────────────────────────────────────────
 function _setForm(d={}){
-  document.getElementById('f-codint').value=(d.codigo_interno!=null&&d.codigo_interno!=='')?d.codigo_interno:'';
   document.getElementById('f-codigo').value=d.codigo_pdv||'';
+  document.getElementById('f-baixa').value=d.tipo_baixa||'nao_baixar';
   document.getElementById('f-tipo').value=d.tipo_item||'produto_acabado';
   document.getElementById('f-situacao').value=d.situacao||'ativo';
   document.getElementById('f-nome').value=d.nome||'';
@@ -428,21 +425,11 @@ function _setForm(d={}){
   document.getElementById('f-cfop').value=d.cfop||'';
 }
 
-// Próximo código interno = maior existente + 1 (começa em 1)
-function _proximoCodigoInterno(){
-  let max=0;
-  for(const p of todos){
-    const n=parseInt(p.codigo_interno,10);
-    if(!isNaN(n)&&n>max) max=n;
-  }
-  return max+1;
-}
-
 function abrirModalNovo(){
   _editId=null;
   document.getElementById('modal-title').textContent='Novo Produto';
   document.getElementById('btn-salvar').textContent='Salvar';
-  _setForm({codigo_interno:_proximoCodigoInterno()});
+  _setForm({});
   document.getElementById('modal-novo').classList.add('open');
   setTimeout(()=>document.getElementById('f-nome')?.focus(),50);
 }
@@ -469,10 +456,8 @@ async function salvarProduto(){
 
   const situacao=document.getElementById('f-situacao').value;
   const precoRaw=document.getElementById('f-preco').value;
-  const codIntRaw=document.getElementById('f-codint').value;
 
   const payload={
-    codigo_interno: codIntRaw===''?null:(parseInt(codIntRaw,10)||null),
     codigo_pdv: _val('f-codigo'),
     nome,
     descricao_reduzida: _val('f-descred'),
@@ -487,7 +472,7 @@ async function salvarProduto(){
     pesavel: document.getElementById('f-pesavel').checked,
     preco_venda: precoRaw===''?null:(parseFloat(precoRaw)||0),
     participa_cmv: document.getElementById('f-cmv').checked,
-    tipo_baixa: 'nao_baixar',
+    tipo_baixa: document.getElementById('f-baixa').value,
     ncm: _val('f-ncm'),
     cest: _val('f-cest'),
     origem: _val('f-origem'),
