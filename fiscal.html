@@ -344,7 +344,7 @@
           </div>
           <div>
             <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Qt. na Embalagem (<span id="vin-emb-und-label">—</span>)</label>
-            <input type="number" id="vin-emb-qty" min="0.001" step="0.001" value="1" style="width:100%;height:38px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;text-align:right;outline:none;font-family:'DM Mono',monospace;background:#f8fafc" oninput="onVinEmbQtyInput()">
+            <input type="number" id="vin-emb-qty" min="0.001" step="0.001" placeholder="Informe a qtd" style="width:100%;height:38px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;text-align:right;outline:none;font-family:'DM Mono',monospace;background:#f8fafc" oninput="onVinEmbQtyInput()">
           </div>
         </div>
         <label style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#334155;cursor:pointer">
@@ -835,7 +835,8 @@ async function salvarVincFiscal() {
   if(!emb?.fator) { toast('Selecione a embalagem e a quantidade.', 'err'); return; }
   // FONTE DA VERDADE: o valor que está no campo agora (corrige salvar fator auto/antigo)
   const _fLive = parseFloat(document.getElementById('vin-emb-qty')?.value);
-  if(_fLive>0) emb.fator = _fLive;
+  if(!(_fLive>0)){ toast('Informe a Qt. na embalagem.', 'err'); return; }
+  emb.fator = _fLive;
   const codForn = (document.getElementById('vin-cod-forn')?.value || '').trim();
   const nfe     = entradasNfe.find(n => n.id === selectedNfeKey);
   const btn = document.getElementById('btn-vin-salvar');
@@ -1578,6 +1579,7 @@ function onVinEmbSelectChange(forceQty) {
     if(autoFator>0) qtyInput.value=autoFator;
     else if(preQty>0) qtyInput.value=preQty;
     else if(forceQty) qtyInput.value=forceQty;
+    else qtyInput.value='';   // sem deteccao automatica e sem vinculo → deixa VAZIO pro usuario digitar
   }
   const isGeneric=!!opt.dataset.generic;
   document.getElementById('vin-ins')._selectedEmb={embDesc:embDesc,fator:parseFloat(qtyInput.value)||1,embIdx:sel.selectedIndex,und:document.getElementById('vin-und').textContent,isGeneric};
@@ -1608,7 +1610,8 @@ async function salvarVinculoNfe() {
   if(!emb?.fator){toast('Selecione a embalagem.','err');return;}
   // FONTE DA VERDADE: o valor que está no campo agora (corrige salvar fator auto/antigo)
   const _fLive=parseFloat(document.getElementById('vin-emb-qty')?.value);
-  if(_fLive>0) emb.fator=_fLive;
+  if(!(_fLive>0)){toast('Informe a Qt. na embalagem.','err');return;}
+  emb.fator=_fLive;
   const ins=insumos.find(x=>x.id===insId);
   const und=ins?.unidade_medida||ins?.unidade_compra||'un';
   const codForn=(document.getElementById('vin-cod-forn')?.value||'').trim();
