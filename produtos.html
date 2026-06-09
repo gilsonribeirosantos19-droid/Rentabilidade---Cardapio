@@ -190,12 +190,7 @@
       </div>
       <div class="form-group">
         <label>Tipo do item</label>
-        <select id="f-tipo">
-          <option value="produto_acabado">Produto acabado</option>
-          <option value="revenda">Mercadoria p/ revenda</option>
-          <option value="combo">Combo</option>
-          <option value="outro">Outro</option>
-        </select>
+        <select id="f-tipo"><option value="">Selecione...</option></select>
       </div>
       <div class="form-group">
         <label>Situação</label>
@@ -222,22 +217,18 @@
     <div class="form-row cols-3">
       <div class="form-group">
         <label>Família</label>
-        <input id="f-familia" type="text" placeholder="Ex: Comida japonesa">
+        <select id="f-familia"><option value="">Selecione...</option></select>
       </div>
       <div class="form-group">
         <label>Grupo</label>
-        <input id="f-grupo" type="text" placeholder="Ex: Temakis">
+        <select id="f-grupo"><option value="">Selecione...</option></select>
       </div>
       <div class="form-group">
         <label>Subgrupo</label>
-        <input id="f-subgrupo" type="text" placeholder="Ex: Especiais">
+        <select id="f-subgrupo"><option value="">Selecione...</option></select>
       </div>
     </div>
-    <div class="form-row cols-4">
-      <div class="form-group">
-        <label>Categoria</label>
-        <input id="f-cat" type="text" placeholder="Ex: Temaki, Prato, Bebida">
-      </div>
+    <div class="form-row cols-3">
       <div class="form-group">
         <label>Unidade de venda</label>
         <select id="f-unidade">
@@ -406,14 +397,13 @@ function renderTabela(lista){
 function _setForm(d={}){
   document.getElementById('f-codigo').value=d.codigo_pdv||'';
   document.getElementById('f-baixa').value=d.tipo_baixa||'nao_baixar';
-  document.getElementById('f-tipo').value=d.tipo_item||'produto_acabado';
+  document.getElementById('f-tipo').value=d.tipo_item||'';
   document.getElementById('f-situacao').value=d.situacao||'ativo';
   document.getElementById('f-nome').value=d.nome||'';
   document.getElementById('f-descred').value=d.descricao_reduzida||'';
   document.getElementById('f-familia').value=d.familia||'';
   document.getElementById('f-grupo').value=d.grupo||'';
   document.getElementById('f-subgrupo').value=d.subgrupo||'';
-  document.getElementById('f-cat').value=d.categoria||'';
   document.getElementById('f-unidade').value=d.unidade_venda||'un';
   document.getElementById('f-tamanho').value=d.tamanho||'';
   document.getElementById('f-pesavel').checked=d.pesavel===true;
@@ -463,7 +453,7 @@ async function salvarProduto(){
     descricao_reduzida: _val('f-descred'),
     tipo_item: document.getElementById('f-tipo').value,
     situacao,
-    categoria: _val('f-cat'),
+    categoria: _val('f-grupo'),
     familia: _val('f-familia'),
     grupo: _val('f-grupo'),
     subgrupo: _val('f-subgrupo'),
@@ -516,7 +506,26 @@ document.getElementById('modal-novo').addEventListener('click',function(e){if(e.
 // Nome em MAIÚSCULO automático enquanto digita
 upperInput('f-nome');
 
+// Classificações (Tipo do item, Família, Grupo, Subgrupo) — mesma fonte do cadastro de Insumos
+async function carregarClassificacoes(){
+  try{
+    const list=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
+    const byTipo=(t)=>list.filter(c=>c.tipo===t);
+    const fill=(id, items)=>{
+      const el=document.getElementById(id); if(!el) return;
+      const cur=el.value;
+      el.innerHTML='<option value="">Selecione...</option>'+items.map(i=>`<option value="${esc(i.nome)}">${esc(i.nome)}</option>`).join('');
+      if(cur) el.value=cur;
+    };
+    fill('f-tipo',     byTipo('tipo_item'));
+    fill('f-familia',  byTipo('familia'));
+    fill('f-grupo',    byTipo('grupo'));
+    fill('f-subgrupo', byTipo('subgrupo'));
+  }catch{}
+}
+
 carregarProdutos();
+carregarClassificacoes();
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>lucide.createIcons();</script>
