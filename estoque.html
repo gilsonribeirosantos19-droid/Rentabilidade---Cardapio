@@ -911,16 +911,11 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Exportar CSV
           </button>
-          <div style="position:relative">
-            <button class="btn btn-ghost btn-sm" onclick="toggleColsDropdown()" id="btn-cols" style="display:inline-flex;align-items:center;gap:5px">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-              Colunas
-            </button>
-            <div id="cols-dropdown" style="display:none;position:absolute;right:0;top:38px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;z-index:100;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,.1)">
-              <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Colunas visíveis</div>
-              <div id="cols-list"></div>
-            </div>
-          </div>
+        </div>
+        <!-- Seletor de colunas: abre pelo ícone no canto do cabeçalho da tabela (flutuante, não corta) -->
+        <div id="cols-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;z-index:1000;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.14)">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Colunas visíveis</div>
+          <div id="cols-list"></div>
         </div>
       </div>
 
@@ -928,7 +923,7 @@
       <div class="tbl-wrap"><div class="tbl-scroll">
         <table class="tbl" id="mov-tbl">
           <thead><tr id="mov-thead">
-            <th data-col="descricao">Descrição</th>
+            <th data-col="descricao"><svg onclick="event.stopPropagation();toggleColsDropdown(this)" title="Mostrar/ocultar colunas" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.5" style="cursor:pointer;vertical-align:middle;margin-right:7px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Descrição</th>
             <th data-col="un">Un.</th>
             <th data-col="grupo">Grupo</th>
             <th data-col="q-anterior" class="r">Q. Anterior</th>
@@ -4188,16 +4183,23 @@ function toggleMovCol(colId, visible) {
   applyMovCols();
 }
 
-function toggleColsDropdown() {
+function toggleColsDropdown(el) {
   const d = document.getElementById('cols-dropdown');
-  if (d.style.display === 'none') { renderColsDropdown(); d.style.display = ''; }
-  else d.style.display = 'none';
+  if (d.style.display === 'none' || !d.style.display) {
+    renderColsDropdown();
+    d.style.display = '';
+    // Posiciona flutuando logo abaixo do ícone do cabeçalho (não é cortado pelo overflow da tabela)
+    if (el && el.getBoundingClientRect) {
+      const r = el.getBoundingClientRect();
+      d.style.left = Math.min(r.left, window.innerWidth - 220) + 'px';
+      d.style.top  = (r.bottom + 6) + 'px';
+    }
+  } else d.style.display = 'none';
 }
 
 document.addEventListener('click', e => {
   const dd = document.getElementById('cols-dropdown');
-  const btn = document.getElementById('btn-cols');
-  if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target)) dd.style.display = 'none';
+  if (dd && dd.style.display !== 'none' && !dd.contains(e.target)) dd.style.display = 'none';
 });
 
 function exportMovCSV() {
