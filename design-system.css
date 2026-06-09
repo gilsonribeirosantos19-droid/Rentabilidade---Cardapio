@@ -160,7 +160,7 @@ td.r, .tbl td.r { text-align: right !important; }
 td.c, .tbl td.c { text-align: center !important; }
 
 tbody tr:last-child td { border-bottom: none !important; }
-tbody tr:hover { background: #f8fafc !important; }
+tbody tr:hover { background: #e2e8f0 !important; }
 
 /* ── CARDS / PANELS: sem sombra ─────────────────────────────────── */
 .tbl-card, .tbl-wrap,
