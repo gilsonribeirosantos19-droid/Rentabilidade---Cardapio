@@ -223,8 +223,11 @@ function searchableSelect(sel){
     const rect = btn.getBoundingClientRect();
     drop.style.position = 'fixed';
     drop.style.right = 'auto';
-    drop.style.left = rect.left + 'px';
     drop.style.width = rect.width + 'px';
+    drop.style.minWidth = '220px';
+    // Se o dropdown (220px) passar da borda direita da tela, alinha pela direita do botão
+    const dw = Math.max(rect.width, 220);
+    drop.style.left = Math.min(rect.left, window.innerWidth - dw - 8) + 'px';
     drop.style.zIndex = '99999';
     const below = window.innerHeight - rect.bottom - 8, above = rect.top - 8;
     const up = below < 200 && above > below;
@@ -246,6 +249,8 @@ function searchableSelect(sel){
 let _ssObs = null;
 function searchableAuto(min){
   min = min || 12;
+  // Não reprocessa enquanto um dropdown está aberto (senão o re-render fecha/atrapalha o seletor)
+  if(document.querySelector('.ss-drop.open')) return;
   if(_ssObs) _ssObs.disconnect();
   document.querySelectorAll('select').forEach(sel => {
     if(sel.hasAttribute('data-no-search') || sel.multiple) return;
