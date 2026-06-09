@@ -696,6 +696,7 @@ async function selectNfe(nfeId) {
   try {
     currentNfeItens = await api(`nfe_itens?nfe_id=eq.${nfeId}&tenant_id=eq.${TENANT_ID}&select=*`);
   } catch { currentNfeItens = []; }
+  await _reconhecerItensPendentes(nfeId);   // re-reconhece itens cujo código ganhou vínculo depois que a nota entrou
   const pendentes = currentNfeItens.filter(i => !i.vinculacao_id).length;
   document.getElementById('tab-n-itens').textContent = currentNfeItens.length;
   document.getElementById('tab-n-erros').textContent = pendentes || 0;
@@ -705,6 +706,35 @@ async function selectNfe(nfeId) {
   renderTable();
   renderNfeItens();
   renderNfeErros();
+}
+
+// Re-reconhece itens da nota que ficaram sem vínculo (entraram antes do cadastro do vínculo).
+// Se o código do item já tem vínculo cadastrado agora, aplica e persiste; se todos casarem, marca a nota como pronta.
+async function _reconhecerItensPendentes(nfeId) {
+  const semVinc = currentNfeItens.filter(i => !i.vinculacao_id && i.codigo_item_fornecedor);
+  if(!semVinc.length) return;
+  const nfe = entradasNfe.find(n => n.id === nfeId);
+  const cnpj = (nfe?.cnpj_emitente || '').replace(/\D/g, '');
+  let fornId = null;
+  if(cnpj){ const f = (fornecedores||[]).find(x => (x.cnpj||'').replace(/\D/g,'') === cnpj); fornId = f?.id || null; }
+  let mudou = false;
+  for(const item of semVinc){
+    const cod = String(item.codigo_item_fornecedor);
+    const vinc = insumoFornVinculos.find(v => v.codigo_fornecedor===cod && (!fornId || v.fornecedor_id===fornId))
+              || insumoFornVinculos.find(v => v.codigo_fornecedor===cod);
+    if(!vinc) continue;
+    try {
+      await api(`nfe_itens?id=eq.${item.id}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ vinculacao_id: vinc.id }) });
+      item.vinculacao_id = vinc.id;
+      mudou = true;
+    } catch {}
+  }
+  if(mudou && currentNfeItens.length && currentNfeItens.every(i => i.vinculacao_id)){
+    try {
+      await api(`nfe_recebidas?id=eq.${nfeId}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ status:'pronta' }) });
+      const n = entradasNfe.find(x => x.id === nfeId); if(n) n.status = 'pronta';
+    } catch {}
+  }
 }
 
 // 2 cliques — vai direto para aba Itens
