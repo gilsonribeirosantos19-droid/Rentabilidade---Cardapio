@@ -1569,12 +1569,18 @@ function onVinEmbSelectChange(forceQty) {
   if(!opt||!opt.value){ document.getElementById('vin-conv-summary').style.display='none'; document.getElementById('vin-ins')._selectedEmb=null; return; }
   const preQty=parseFloat(opt.dataset.qty)||0;
   const qtyInput=document.getElementById('vin-emb-qty');
-  const autoFator=_parseEmbFator(opt.dataset.desc||opt.textContent, document.getElementById('vin-und').textContent);
-  if(autoFator>0) qtyInput.value=autoFator;
-  else if(preQty>0) qtyInput.value=preQty;
-  else if(forceQty) qtyInput.value=forceQty;
+  const embDesc=opt.dataset.desc||opt.textContent;
+  const prevEmb=document.getElementById('vin-ins')._selectedEmb;
+  // Só (re)aplica o fator automático quando a EMBALAGEM realmente muda (ou no setup inicial com forceQty).
+  // Senão, mantém o que o usuário digitou — antes o auto sobrescrevia o valor digitado.
+  if(!prevEmb || prevEmb.embDesc!==embDesc || forceQty){
+    const autoFator=_parseEmbFator(embDesc, document.getElementById('vin-und').textContent);
+    if(autoFator>0) qtyInput.value=autoFator;
+    else if(preQty>0) qtyInput.value=preQty;
+    else if(forceQty) qtyInput.value=forceQty;
+  }
   const isGeneric=!!opt.dataset.generic;
-  document.getElementById('vin-ins')._selectedEmb={embDesc:opt.dataset.desc||opt.textContent,fator:parseFloat(qtyInput.value)||1,embIdx:sel.selectedIndex,und:document.getElementById('vin-und').textContent,isGeneric};
+  document.getElementById('vin-ins')._selectedEmb={embDesc:embDesc,fator:parseFloat(qtyInput.value)||1,embIdx:sel.selectedIndex,und:document.getElementById('vin-und').textContent,isGeneric};
   onVinEmbQtyInput();
 }
 
