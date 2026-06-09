@@ -338,8 +338,8 @@
     <!-- WORKSPACE TAB STRIP -->
     <div class="ws-tab-strip" id="pdv-tab-strip"></div>
 
-    <!-- HUB LANDING PAGE -->
-    <div id="tab-hub" class="tab-pane active">
+    <!-- HUB LANDING: DASHBOARD (só os 2 cards do Dashboard) -->
+    <div id="tab-dash" class="tab-pane active">
       <div class="pdv-hub-section">
         <div class="pdv-hub-label">Dashboard</div>
         <div class="pdv-hub-grid">
@@ -355,6 +355,10 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- HUB LANDING: RELATÓRIOS (só os 2 cards de Relatórios) -->
+    <div id="tab-rel" class="tab-pane">
       <div class="pdv-hub-section">
         <div class="pdv-hub-label">Relatórios</div>
         <div class="pdv-hub-grid">
@@ -366,16 +370,6 @@
           <div class="pdv-hub-card" onclick="switchTab('relatorios');switchRelTab('engenharia')">
             <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>
             <div class="pdv-hub-body"><div class="pdv-hub-title">Engenharia de Cardápio</div><div class="pdv-hub-desc">Matriz de venda x margem: joias, estrelas e quebra-cabeças.</div></div>
-            <div class="pdv-hub-arrow">›</div>
-          </div>
-        </div>
-      </div>
-      <div class="pdv-hub-section">
-        <div class="pdv-hub-label">Operações</div>
-        <div class="pdv-hub-grid">
-          <div class="pdv-hub-card" onclick="switchTab('importar')">
-            <div class="pdv-hub-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-            <div class="pdv-hub-body"><div class="pdv-hub-title">Importar / API</div><div class="pdv-hub-desc">Importe vendas manualmente ou via integração de API.</div></div>
             <div class="pdv-hub-arrow">›</div>
           </div>
         </div>
@@ -1296,7 +1290,9 @@ function _custoCtx(ate){ return { saldos:_saldos, vinculos:_vinculos, insumos:_i
 
 // ── TABS ───────────────────────────────────────────────────────────
 // ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
-const _tabNames = {dashboard:'Dashboard',faturamento:'Faturamento',vendas:'Faturamento por Produto',relatorios:'Relatórios',importar:'Importar / API'};
+const _tabNames = {dashboard:'Dashboard',faturamento:'Faturamento',vendas:'Faturamento por Produto',relatorios:'Relatórios',importar:'Importar / API',dash:'Dashboard',rel:'Relatórios'};
+// Panes de "hub"/landing: NÃO viram aba na régua (sem ×). Comportam-se como o antigo tab-hub.
+const _HUB_PANES = ['dash','rel'];
 let _openTabs = [], _activeTab = null, _loadedTabs = {};
 
 function _renderTabStrip() {
@@ -1322,15 +1318,22 @@ function _setBreadcrumb(nome) {
     + '<span style="font-size:15px;font-weight:600;color:#0f172a">' + (_tabNames[nome]||nome) + '</span>';
 }
 
-function goHub() {
-  tabAtual = 'hub'; _activeTab = null;
+// Mostra um pane de hub/landing (dash ou rel) sem adicioná-lo à régua de abas.
+function _showHub(pane) {
+  tabAtual = pane; _activeTab = null;
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-hub').classList.add('active');
+  const el = document.getElementById('tab-'+pane);
+  if (el) el.classList.add('active');
   _setBreadcrumb(null);
   _renderTabStrip();
 }
 
+// Botão home da régua → Dashboard (landing principal).
+function goHub() { _showHub('dash'); }
+
 function openTab(nome) {
+  // Panes de hub/landing não viram aba na régua — apenas trocam o pane ativo.
+  if (_HUB_PANES.includes(nome)) { _showHub(nome); return; }
   if (!_openTabs.includes(nome)) _openTabs.push(nome);
   activateTab(nome);
 }
@@ -2558,10 +2561,10 @@ document.querySelectorAll('.tab-btn').forEach(b=>{
 });
 
 carregar().finally(() => {
-  // Sem ?tab na URL, abre direto no Dashboard (sem hub). Com ?tab, abre a aba indicada;
-  // ?rel abre a sub-aba de Relatórios (curva ABC / CMV / engenharia).
+  // Sem ?tab na URL, abre no hub Dashboard (tab-dash). Com ?tab, abre a aba/hub indicado;
+  // ?rel abre a sub-aba de Relatórios (curva ABC / engenharia).
   const _p = new URLSearchParams(location.search);
-  const _t = _p.get('tab') || 'dashboard';
+  const _t = _p.get('tab') || 'dash';
   const _r = _p.get('rel');
   setTimeout(() => { switchTab(_t); if (_r && window.switchRelTab) switchRelTab(_r); }, 0);
 });

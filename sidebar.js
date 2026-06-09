@@ -76,15 +76,9 @@
     {
       id: 'pdv', label: 'PDV',
       items: [
-        { id: 'pdv-dash', label: 'Dashboard', children: [
-          { href: 'pdv.html', tab: 'faturamento', label: 'Faturamento' },
-          { href: 'pdv.html', tab: 'vendas',      label: 'Faturamento por Produto' },
-        ]},
-        { id: 'pdv-rel', label: 'Relatórios', children: [
-          { href: 'pdv.html', tab: 'relatorios', rel: 'abc',        label: 'Curva ABC' },
-          { href: 'pdv.html', tab: 'relatorios', rel: 'engenharia', label: 'Engenharia de Cardápio' },
-        ]},
-        { href: 'pdv.html', tab: 'importar',    label: 'Importar / API',     icon: I.box },
+        { href: 'pdv.html', tab: 'dash',     label: 'Dashboard',      icon: I.chart },
+        { href: 'pdv.html', tab: 'rel',      label: 'Relatórios',     icon: I.trending },
+        { href: 'pdv.html', tab: 'importar', label: 'Importar / API', icon: I.box },
       ]
     },
     {
