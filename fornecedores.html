@@ -857,16 +857,19 @@ async function salvarVinculo(){
   if(!insumoId){toast('Selecione o item interno.','err');return;}
   if(!_vinFornSel){toast('Nenhum fornecedor selecionado.','err');return;}
 
-  // Bloquear item duplicado no mesmo fornecedor
+  const codigo=document.getElementById('v-codigo').value.trim();
+
+  // Bloquear só o duplicado EXATO (mesmo item + fornecedor + MESMO código).
+  // Permite vários códigos do mesmo item no mesmo fornecedor (ex: 2 tipos do mesmo produto).
   const dupeItem=vinculos.find(v=>
     v.insumo_id===insumoId &&
     v.fornecedor_id===_vinFornSel.id &&
+    (v.codigo_fornecedor||'').trim()===codigo &&
     (!_vinEditing||v.id!==_vinEditing.id)
   );
-  if(dupeItem){toast('Este item já está vinculado a este fornecedor.','err');return;}
+  if(dupeItem){toast('Este item já está vinculado a este fornecedor com este mesmo código.','err');return;}
 
-  // Bloquear código duplicado no mesmo fornecedor
-  const codigo=document.getElementById('v-codigo').value.trim();
+  // Bloquear o mesmo código apontando para OUTRO item no mesmo fornecedor
   if(codigo){
     const dupeCodigo=vinculos.find(v=>
       v.fornecedor_id===_vinFornSel.id &&
