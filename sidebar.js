@@ -46,6 +46,7 @@
       id: 'cadastros', label: 'Cadastros',
       items: [
         { href: 'insumos.html',         label: 'Insumos',         icon: I.package },
+        { href: 'produtos.html',        label: 'Produtos',        icon: I.box },
         { href: 'fichas_tecnicas.html', label: 'Fichas Técnicas', icon: I.clipboard },
         { href: 'fornecedores.html',    label: 'Fornecedores',    icon: I.truck },
       ]

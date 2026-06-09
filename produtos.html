@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="design-system.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produtos · Aiko</title>
+<style>
+  :root{--bg:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;--border:#e2e8f0;--teal:#0d9488;--amber:#f59e0b;--red:#dc2626;--text:#0f172a;--text2:#64748b;--text3:#94a3b8;--radius:10px;--radius-lg:16px;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
+  .shell{display:flex;width:100%;min-height:100vh}
+  /* SIDEBAR */
+  .sidebar{width:220px;background:#fff;border-right:1px solid #e2e8f0;padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
+  .logo-mark{font-size:16px;font-weight:800;color:#0f172a}
+  .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
+  .nav-group{padding:0 10px;margin:0 8px 4px;background:transparent;border-radius:0;box-shadow:none}
+  .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
+  .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
+  .nav-icon{width:15px;height:15px;flex-shrink:0;stroke-width:1.8}
+  .nav-bottom{margin-top:auto;padding:16px 18px;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8}
+  .nav-bottom a{color:#f97316;text-decoration:none}
+  /* MAIN */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .topbar{height:44px;border-bottom:1px solid #e2e8f0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:#fff;flex-shrink:0;position:sticky;top:0;z-index:50}
+  .topbar-title{font-size:18px;font-weight:700;color:#0f172a}
+  .topbar-right{display:flex;align-items:center;gap:10px}
+  .content{flex:1;padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+  /* FILTER BAR — global */
+  .filter-bar-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:18px;position:sticky;top:96px;z-index:30}
+  .toolbar,.prod-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  /* Search */
+  .search-wrap,.prod-search{position:relative;flex:0 0 280px}
+  .search-wrap input,.prod-search input{
+    width:100%;height:44px!important;padding:0 14px 0 40px!important;
+    border:1.5px solid #e2e8f0!important;border-radius:10px!important;
+    font-size:13px!important;font-family:inherit!important;color:#0f172a!important;
+    background:#f8fafc!important;outline:none!important;transition:all .18s!important}
+  .search-wrap input:hover,.prod-search input:hover{border-color:#cbd5e1!important}
+  .search-wrap input:focus,.prod-search input:focus{border-color:#f97316!important;background:#fff!important}
+  .search-wrap input::placeholder,.prod-search input::placeholder{color:#94a3b8}
+  .search-icon,.prod-search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8}
+  /* BUTTONS */
+  .btn{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{background:#f8fafc}
+  .btn-primary{background:#f97316;border-color:#f97316;color:#fff}
+  .btn-primary:hover{background:#ea6c00;border-color:#ea6c00}
+  .btn-ghost{background:transparent;border:none;color:#64748b;padding:5px 8px}
+  .btn-ghost:hover{background:#f1f5f9;color:#0f172a}
+  /* TABLE */
+  .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .tbl-scroll{overflow-x:auto;max-height:calc(100vh - 240px);overflow-y:auto}
+  .tbl-scroll thead th{position:sticky;top:0;z-index:5;background:#0f2d5c}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  thead tr{background:#0f2d5c}
+  th{padding:6px 10px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+  th.r,td.r{text-align:right}
+  td{padding:6px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr{transition:background .1s}
+  tbody tr:hover{background:#fafbfc}
+  .td-mono{font-family:'DM Mono',monospace;font-size:12px}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .b-ativo{background:#dcfce7;color:#16a34a}
+  .b-inativo{background:#fee2e2;color:#e11d48}
+  .b-desenv{background:#fef3c7;color:#b45309}
+  .b-cat{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+  .b-tipo{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe}
+  .b-sim{background:#dcfce7;color:#16a34a}
+  .b-nao{background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0}
+  /* MODAL — largo, com cabeçalho fixo (inspirado em fichas_tecnicas.html) */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.14)}
+  #modal-novo .modal{max-width:1080px;width:95%;max-height:94vh;padding:18px 22px}
+  .ft-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;background:#fff;z-index:5;margin:-18px -22px 16px;padding:14px 22px;border-bottom:1px solid #e2e8f0}
+  .ft-head h2{margin:0;font-size:16px;font-weight:700}
+  .ft-head-btns{display:flex;gap:10px;flex-shrink:0}
+  /* SEÇÕES do formulário */
+  .sec-head{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e2e8f0;padding-bottom:6px;margin:18px 0 12px}
+  .sec-head:first-child{margin-top:0}
+  .sec-head .sec-ico{font-size:13px;filter:grayscale(.1)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:9px}
+  .form-row.cols-3{grid-template-columns:1fr 1fr 1fr}
+  .form-row.cols-4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:9px}
+  .form-group.full{grid-column:1/-1}
+  .form-group label{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+  .form-group input,.form-group select{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;width:100%}
+  .form-group input:focus,.form-group select:focus{border-color:#0d9488}
+  .form-group input[readonly]{background:#f1f5f9;color:#64748b;cursor:not-allowed}
+  .form-check{display:flex;align-items:center;gap:8px;height:100%;padding-top:18px}
+  .form-check input{width:16px;height:16px;cursor:pointer;accent-color:#f97316}
+  .form-check label{font-size:13px;color:#0f172a;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500}
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 18px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;max-width:320px}
+  .toast.show{opacity:1;transform:translateY(0)}.toast.err{border-color:#e11d48;color:#e11d48}.toast.ok{border-color:#16a34a;color:#16a34a}
+  /* UTILS */
+  .empty{padding:32px;text-align:center;color:#94a3b8;font-size:13px}
+</style>
+<script src="utils.js"></script>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR (preenchida por sidebar.js) -->
+<nav class="sidebar"></nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div style="font-size:20px;font-weight:700;color:#0f172a;line-height:1">Produtos</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:3px">Itens de venda (cardápio) — vínculo com o PDV</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span id="prod-atualizado" style="font-size:12px;color:#94a3b8;white-space:nowrap"></span>
+      <button onclick="carregarProdutos()" title="Atualizar" style="background:none;border:none;cursor:pointer;padding:4px;color:#94a3b8;display:inline-flex;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg></button>
+      <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <button onclick="sair()" style="font-size:12px;color:#dc2626;background:#fff;border:1px solid #fca5a5;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- TOOLBAR -->
+    <div class="filter-bar-wrap">
+      <div class="prod-toolbar">
+        <div class="prod-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="busca" placeholder="Buscar por nome ou código..." oninput="filtrar()">
+        </div>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Produto</button>
+      </div>
+    </div>
+
+    <!-- TABELA -->
+    <div class="tbl-card">
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr>
+            <th>Cód. Saipos</th>
+            <th>Produto</th>
+            <th>Grupo</th>
+            <th>Tipo</th>
+            <th class="r">Preço</th>
+            <th>CMV</th>
+            <th>Situação</th>
+            <th>Ações</th>
+          </tr></thead>
+          <tbody id="tbody">
+            <tr><td colspan="8" class="empty">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  <div style="padding:16px 24px 4px;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;margin-top:16px">© 2026 Aiko Sistema</div>
+</div>
+</div>
+
+<!-- MODAL NOVO / EDITAR PRODUTO -->
+<div class="modal-overlay" id="modal-novo">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="ft-head">
+      <h2 id="modal-title">Novo Produto</h2>
+      <div class="ft-head-btns">
+        <button class="btn btn-ghost" onclick="fecharModalNovo()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-salvar" onclick="salvarProduto()">Salvar</button>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: IDENTIFICAÇÃO -->
+    <div class="sec-head"><span class="sec-ico">📋</span> Identificação</div>
+    <div class="form-row cols-3">
+      <div class="form-group">
+        <label>Código Saipos</label>
+        <input id="f-codigo" type="text" placeholder="Ex: 27816895">
+      </div>
+      <div class="form-group">
+        <label>Tipo do item</label>
+        <select id="f-tipo"><option value="">Selecione...</option></select>
+      </div>
+      <div class="form-group">
+        <label>Situação</label>
+        <select id="f-situacao">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+          <option value="desenvolvimento">Em desenvolvimento</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome / Descrição *</label>
+        <input id="f-nome" type="text" placeholder="Ex: TEMAKI SALMÃO">
+      </div>
+      <div class="form-group">
+        <label>Descrição reduzida</label>
+        <input id="f-descred" type="text" placeholder="Nome curto pro PDV">
+      </div>
+    </div>
+
+    <!-- SEÇÃO: CLASSIFICAÇÃO -->
+    <div class="sec-head"><span class="sec-ico">🏷️</span> Classificação</div>
+    <div class="form-row cols-3">
+      <div class="form-group">
+        <label>Família</label>
+        <select id="f-familia"><option value="">Selecione...</option></select>
+      </div>
+      <div class="form-group">
+        <label>Grupo</label>
+        <select id="f-grupo"><option value="">Selecione...</option></select>
+      </div>
+      <div class="form-group">
+        <label>Subgrupo</label>
+        <select id="f-subgrupo"><option value="">Selecione...</option></select>
+      </div>
+    </div>
+    <div class="form-row cols-3">
+      <div class="form-group">
+        <label>Unidade de venda</label>
+        <select id="f-unidade">
+          <option value="un">un</option>
+          <option value="kg">kg</option>
+          <option value="litro">litro</option>
+          <option value="ml">ml</option>
+          <option value="g">g</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tamanho</label>
+        <input id="f-tamanho" type="text" placeholder="Ex: Único, P, M, G">
+      </div>
+      <div class="form-group">
+        <div class="form-check"><input type="checkbox" id="f-pesavel"><label for="f-pesavel">Pesável</label></div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: COMERCIAL / CMV -->
+    <div class="sec-head"><span class="sec-ico">💰</span> Comercial / CMV</div>
+    <div class="form-row cols-3">
+      <div class="form-group">
+        <label>Preço de venda (R$)</label>
+        <input id="f-preco" type="number" step="0.01" min="0" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <div class="form-check"><input type="checkbox" id="f-cmv"><label for="f-cmv">Participa do CMV</label></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px;line-height:1.3">Produto com ficha <b>não</b> participa (o custo já está nos insumos). Marque só revenda sem ficha.</div>
+      </div>
+      <div class="form-group">
+        <label>Tipo de baixa de estoque</label>
+        <select id="f-baixa">
+          <option value="nao_baixar">Não baixar</option>
+          <option value="consumo">Consumo (baixa pela ficha na venda)</option>
+          <option value="producao">Produção (PCP)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: FISCAL -->
+    <div class="sec-head"><span class="sec-ico">🧾</span> Fiscal</div>
+    <div class="form-row cols-4">
+      <div class="form-group">
+        <label>NCM</label>
+        <input id="f-ncm" type="text" placeholder="Ex: 21069090">
+      </div>
+      <div class="form-group">
+        <label>CEST</label>
+        <input id="f-cest" type="text" placeholder="Ex: 1700100">
+      </div>
+      <div class="form-group">
+        <label>Origem</label>
+        <input id="f-origem" type="text" placeholder="0 - Nacional">
+      </div>
+      <div class="form-group">
+        <label>CFOP</label>
+        <input id="f-cfop" type="text" placeholder="Ex: 5102">
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}
+  try{
+    const u=JSON.parse(localStorage.getItem('sb_user')||'null');
+    if(u){const n=document.getElementById('sb-user-nome');if(n)n.textContent=u.nome||'—';}
+  }catch{}
+})();
+
+const SUPA_URL='https://trczpnjidqfippbfxtpe.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.9EGIFYLs9OYQO5aKUR3Ky7J_m3Hgdrys0lwmHkA-No8';
+const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
+
+async function api(path, opts={}) {
+  const method=(opts.method||'GET').toUpperCase();
+  const h={'apikey':SUPA_KEY,'Authorization':'Bearer '+(localStorage.getItem('sb_token')||SUPA_KEY)};
+  // Content-Type SOMENTE quando há body (nunca no DELETE!)
+  if(opts.body) h['Content-Type']='application/json';
+  if(opts.prefer) h['Prefer']=opts.prefer;
+  else if(method==='POST') h['Prefer']='return=representation';
+  else if(method==='PATCH') h['Prefer']='return=representation';
+  const r=await fetch(`${SUPA_URL}/rest/v1/${path}`,{method,headers:h,body:opts.body||undefined});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||e.hint||r.statusText);}
+  return r.status===204?null:r.json();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function brl(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',');}
+function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
+function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${tipo} show`;setTimeout(()=>el.classList.remove('show'),3000);}
+
+// Rótulos legíveis dos tipos de item
+const TIPO_LABEL={produto_acabado:'Produto acabado',revenda:'Mercadoria p/ revenda',combo:'Combo',outro:'Outro'};
+
+let todos=[], _editId=null;
+
+// ── CARREGAR ──────────────────────────────────────────────────────
+async function carregarProdutos(){
+  const tbody=document.getElementById('tbody');
+  if(tbody) tbody.innerHTML='<tr><td colspan="8" class="empty">Carregando...</td></tr>';
+  try{
+    const data=await api(`produtos?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
+    todos=data||[];
+    const atu=document.getElementById('prod-atualizado');
+    if(atu) atu.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    filtrar();
+  }catch(e){
+    if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+// ── FILTRO ────────────────────────────────────────────────────────
+function filtrar(){
+  const q=(document.getElementById('busca')?.value||'');
+  let lista=todos;
+  if(q){
+    const nq=normalizeSearch(q);
+    lista=lista.filter(p=>
+      normalizeSearch(p.nome||'').includes(nq)||
+      normalizeSearch(p.codigo_pdv||'').includes(nq)
+    );
+  }
+  renderTabela(lista);
+}
+
+function renderTabela(lista){
+  const tbody=document.getElementById('tbody');
+  if(!tbody) return;
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum produto encontrado</td></tr>';return;}
+  tbody.innerHTML=lista.map(p=>{
+    const cmv=p.participa_cmv===true;
+    const grupo=p.grupo||p.categoria||'';
+    const tipo=TIPO_LABEL[p.tipo_item]||p.tipo_item||'—';
+    // Situação: prioriza o campo situacao; cai para ativo/inativo se vazio
+    let sit=p.situacao;
+    if(!sit) sit=(p.ativo!==false)?'ativo':'inativo';
+    let sitCls='b-inativo',sitTxt='Inativo';
+    if(sit==='ativo'){sitCls='b-ativo';sitTxt='Ativo';}
+    else if(sit==='desenvolvimento'){sitCls='b-desenv';sitTxt='Em desenv.';}
+    return `<tr>
+      <td class="td-mono" style="color:#64748b">${esc(p.codigo_pdv)||'—'}</td>
+      <td style="font-weight:600;color:#0f172a">${esc(p.nome)}</td>
+      <td><span class="badge b-cat">${esc(grupo)||'—'}</span></td>
+      <td><span class="badge b-tipo">${esc(tipo)}</span></td>
+      <td class="r td-mono" style="color:#0f172a">${brl(p.preco_venda)}</td>
+      <td><span class="badge ${cmv?'b-sim':'b-nao'}">${cmv?'Sim':'Não'}</span></td>
+      <td><span class="badge ${sitCls}">${sitTxt}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn-ghost" title="Editar" onclick="abrirEdicao('${p.id}')" style="border-radius:6px;padding:3px 7px;color:#64748b">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-ghost" title="Excluir" onclick="excluir('${p.id}')" style="border-radius:6px;padding:3px 7px;color:#e11d48">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────
+function _setForm(d={}){
+  document.getElementById('f-codigo').value=d.codigo_pdv||'';
+  document.getElementById('f-baixa').value=d.tipo_baixa||'nao_baixar';
+  document.getElementById('f-tipo').value=d.tipo_item||'';
+  document.getElementById('f-situacao').value=d.situacao||'ativo';
+  document.getElementById('f-nome').value=d.nome||'';
+  document.getElementById('f-descred').value=d.descricao_reduzida||'';
+  document.getElementById('f-familia').value=d.familia||'';
+  document.getElementById('f-grupo').value=d.grupo||'';
+  document.getElementById('f-subgrupo').value=d.subgrupo||'';
+  document.getElementById('f-unidade').value=d.unidade_venda||'un';
+  document.getElementById('f-tamanho').value=d.tamanho||'';
+  document.getElementById('f-pesavel').checked=d.pesavel===true;
+  document.getElementById('f-preco').value=(d.preco_venda!=null&&d.preco_venda!=='')?d.preco_venda:'';
+  document.getElementById('f-cmv').checked=d.participa_cmv===true;
+  document.getElementById('f-ncm').value=d.ncm||'';
+  document.getElementById('f-cest').value=d.cest||'';
+  document.getElementById('f-origem').value=d.origem||'';
+  document.getElementById('f-cfop').value=d.cfop||'';
+}
+
+function abrirModalNovo(){
+  _editId=null;
+  document.getElementById('modal-title').textContent='Novo Produto';
+  document.getElementById('btn-salvar').textContent='Salvar';
+  _setForm({});
+  document.getElementById('modal-novo').classList.add('open');
+  setTimeout(()=>document.getElementById('f-nome')?.focus(),50);
+}
+
+function abrirEdicao(id){
+  const p=todos.find(x=>x.id===id);
+  if(!p) return;
+  _editId=id;
+  document.getElementById('modal-title').textContent='Editar Produto';
+  document.getElementById('btn-salvar').textContent='Salvar';
+  _setForm(p);
+  document.getElementById('modal-novo').classList.add('open');
+  setTimeout(()=>document.getElementById('f-nome')?.focus(),50);
+}
+
+function fecharModalNovo(){document.getElementById('modal-novo').classList.remove('open');}
+
+// ── SALVAR (novo ou edição) ───────────────────────────────────────
+function _val(id){const v=document.getElementById(id).value.trim();return v||null;}
+
+async function salvarProduto(){
+  const nome=toUpperName(document.getElementById('f-nome').value.trim());
+  if(!nome){toast('Informe o nome do produto.','err');return;}
+
+  const situacao=document.getElementById('f-situacao').value;
+  const precoRaw=document.getElementById('f-preco').value;
+
+  const payload={
+    codigo_pdv: _val('f-codigo'),
+    nome,
+    descricao_reduzida: _val('f-descred'),
+    tipo_item: document.getElementById('f-tipo').value,
+    situacao,
+    categoria: _val('f-grupo'),
+    familia: _val('f-familia'),
+    grupo: _val('f-grupo'),
+    subgrupo: _val('f-subgrupo'),
+    unidade_venda: document.getElementById('f-unidade').value,
+    tamanho: _val('f-tamanho'),
+    pesavel: document.getElementById('f-pesavel').checked,
+    preco_venda: precoRaw===''?null:(parseFloat(precoRaw)||0),
+    participa_cmv: document.getElementById('f-cmv').checked,
+    tipo_baixa: document.getElementById('f-baixa').value,
+    ncm: _val('f-ncm'),
+    cest: _val('f-cest'),
+    origem: _val('f-origem'),
+    cfop: _val('f-cfop'),
+    ativo: situacao!=='inativo',
+  };
+
+  const btn=document.getElementById('btn-salvar');
+  btn.disabled=true; btn.textContent='Salvando...';
+  try{
+    if(_editId){
+      await api(`produtos?id=eq.${_editId}`,{method:'PATCH',body:JSON.stringify(payload)});
+      toast('Produto atualizado.','ok');
+    }else{
+      payload.tenant_id=TENANT_ID;
+      await api('produtos',{method:'POST',body:JSON.stringify(payload)});
+      toast(`${nome} cadastrado com sucesso.`,'ok');
+    }
+    fecharModalNovo();
+    await carregarProdutos();
+  }catch(e){toast('Erro: '+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+
+// ── EXCLUIR ───────────────────────────────────────────────────────
+async function excluir(id){
+  const p=todos.find(x=>x.id===id);
+  if(!p) return;
+  if(!confirm(`Excluir o produto "${p.nome}"? Esta ação não pode ser desfeita.`)) return;
+  try{
+    // DELETE sem body/Content-Type (regra do projeto)
+    await api(`produtos?id=eq.${id}`,{method:'DELETE',prefer:'return=minimal'});
+    toast('Produto excluído.','ok');
+    await carregarProdutos();
+  }catch(e){toast('Erro: '+e.message,'err');}
+}
+
+// Fecha modal ao clicar fora
+document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
+
+// Nome em MAIÚSCULO automático enquanto digita
+upperInput('f-nome');
+
+// Classificações (Tipo do item, Família, Grupo, Subgrupo) — mesma fonte do cadastro de Insumos
+async function carregarClassificacoes(){
+  try{
+    const list=await api(`item_classificacoes?tenant_id=eq.${TENANT_ID}&order=nome.asc`);
+    const byTipo=(t)=>list.filter(c=>c.tipo===t);
+    const fill=(id, items)=>{
+      const el=document.getElementById(id); if(!el) return;
+      const cur=el.value;
+      el.innerHTML='<option value="">Selecione...</option>'+items.map(i=>`<option value="${esc(i.nome)}">${esc(i.nome)}</option>`).join('');
+      if(cur) el.value=cur;
+    };
+    fill('f-tipo',     byTipo('tipo_item'));
+    fill('f-familia',  byTipo('familia'));
+    fill('f-grupo',    byTipo('grupo'));
+    fill('f-subgrupo', byTipo('subgrupo'));
+  }catch{}
+}
+
+carregarProdutos();
+carregarClassificacoes();
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+<script src="sidebar.js"></script>
+</body>
+</html>

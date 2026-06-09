@@ -381,10 +381,11 @@
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Nome do prato *</label>
-        <input type="text" id="f-nome" placeholder="Ex: Temaki Salmão"></div>
-      <div class="form-group"><label>Categoria *</label>
-        <select id="f-cat"></select></div>
+      <div class="form-group"><label>Produto *</label>
+        <select id="f-produto" onchange="onFichaProdutoChange()"><option value="">Selecione o produto...</option></select>
+        <input type="hidden" id="f-nome"></div>
+      <div class="form-group"><label>Grupo</label>
+        <input id="f-cat" readonly placeholder="Vem do produto" style="background:#f8fafc;color:#475569;cursor:default"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Rendimento (porções) *</label>
@@ -473,20 +474,24 @@ function fecharModal(id){document.getElementById(id).classList.remove('open');}
 
 let todasFichas=[],fichasFilt=[],todosInsumos=[],editId=null,ingredientes=[],categoriasFicha=[];
 let fichaDetalhe=null,_pagAtual=1,catChipAtiva='';
+let _produtos=[];
 
 async function carregar(){
   const cs=document.getElementById('conn-status');
   if(cs){cs.textContent='• carregando...';cs.style.color='#94a3b8';}
   try{
-    const [fichas,insumos,cats]=await Promise.all([
+    const [fichas,insumos,cats,produtos]=await Promise.all([
       api('fichas_tecnicas?tenant_id=eq.'+TENANT_ID+'&order=nome.asc&select=*,itens_ficha(id,insumo_id,quantidade_g,ordem)'),
       api('insumos?tenant_id=eq.'+TENANT_ID+'&ativo=eq.true&order=nome.asc'),
       api('categorias?tenant_id=eq.'+TENANT_ID+'&tipo=eq.ficha&order=nome.asc&select=*'),
+      api(`produtos?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
     ]);
     todasFichas=fichas.map(f=>({...f,itens:f.itens_ficha||[]}));
     todosInsumos=insumos;
     categoriasFicha=cats;
+    _produtos=produtos||[];
     popularSelectsCat();
+    popularProdutos();
     renderCatChips();
     atualizarMetricas();
     filtrar();
@@ -503,8 +508,36 @@ function popularSelectsCat(){
   const opts=categoriasFicha.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('');
   const fc=document.getElementById('filtro-cat');
   if(fc) fc.innerHTML='<option value="">Todas categorias</option>'+opts;
-  const ff=document.getElementById('f-cat');
-  if(ff) ff.innerHTML=opts;
+  // f-cat (Grupo) agora é readonly e vem do produto — não popula mais
+}
+
+// Preenche o select de produtos do modal (mantém a primeira option de placeholder)
+function popularProdutos(){
+  const sel=document.getElementById('f-produto');
+  if(!sel)return;
+  const sel0=sel.value;
+  sel.innerHTML='<option value="">Selecione o produto...</option>'+
+    _produtos.map(p=>`<option value="${esc(p.id)}">${esc(p.nome)}</option>`).join('');
+  // Mantém a seleção atual se ainda existir
+  if(sel0&&_produtos.some(p=>p.id===sel0)) sel.value=sel0;
+}
+
+// Quando o usuário escolhe um produto: copia o nome (e preço) para os campos da ficha
+function onFichaProdutoChange(){
+  const sel=document.getElementById('f-produto');
+  const p=_produtos.find(x=>x.id===sel.value);
+  const nomeEl=document.getElementById('f-nome');
+  if(p){
+    if(nomeEl) nomeEl.value=p.nome||'';
+    const precoEl=document.getElementById('f-preco');
+    if(precoEl){ precoEl.value=(p.preco_venda!=null&&p.preco_venda!=='')?p.preco_venda:''; }
+    // Grupo vem direto do produto
+    const catEl=document.getElementById('f-cat');
+    if(catEl) catEl.value=p.grupo||p.categoria||'';
+    if(typeof atualizarCustoPreview==='function') atualizarCustoPreview();
+  }else{
+    if(nomeEl) nomeEl.value='';
+  }
 }
 
 function renderCatChips(){
@@ -816,8 +849,9 @@ function custoFicha(f){
 function abrirModalNovo(){
   editId=null;ingredientes=[];
   document.getElementById('form-titulo').textContent='Nova Ficha Técnica';
+  document.getElementById('f-produto').value='';
   document.getElementById('f-nome').value='';
-  document.getElementById('f-cat').value=categoriasFicha[0]?.nome||'';
+  document.getElementById('f-cat').value='';
   document.getElementById('f-porcoes').value='1';
   document.getElementById('f-preco').value='';
   document.getElementById('f-status').value='ativa';
@@ -841,6 +875,7 @@ function editarFicha(id){
     editId=id;
     ingredientes=(f.itens||[]).map(it=>{const ins=todosInsumos.find(i=>i.id===it.insumo_id);const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';const qtd=(um==='kg'||um==='litro')?it.quantidade_g/1000:it.quantidade_g;return{insumo_id:it.insumo_id,quantidade_g:qtd};});
     document.getElementById('form-titulo').textContent='Editar: '+f.nome;
+    document.getElementById('f-produto').value=f.produto_id||'';
     document.getElementById('f-nome').value=f.nome;
     document.getElementById('f-cat').value=f.categoria;
     document.getElementById('f-porcoes').value=f.rendimento_porcoes;
@@ -984,6 +1019,8 @@ async function salvarFicha(){
   const status=document.getElementById('f-status').value;
   const preparo=document.getElementById('f-preparo').value.trim();
   const obs=document.getElementById('f-obs').value.trim();
+  const produtoId=document.getElementById('f-produto').value;
+  if(!produtoId){toast('Selecione o produto.','err');return;}
   if(!nome){toast('Informe o nome da ficha.','err');return;}
   const ingValidos=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0);
   if(!ingValidos.length){toast('Adicione pelo menos um ingrediente.','err');return;}
@@ -996,10 +1033,10 @@ async function salvarFicha(){
     const _rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
     const rendimentoReceita=_rendVal!=null?((_rendUnid==='L'||_rendUnid==='kg')?_rendVal*1000:_rendVal):null;
     if(editId){
-      await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,modo_preparo:preparo||null,observacoes:obs||null,status,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita,atualizado_em:new Date().toISOString()})});
+      await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita,atualizado_em:new Date().toISOString()})});
       await api(`itens_ficha?ficha_id=eq.${editId}&tenant_id=eq.${TENANT_ID}`,{method:'DELETE',prefer:'return=minimal'});
     }else{
-      const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,modo_preparo:preparo||null,observacoes:obs||null,status,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita})});
+      const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita})});
       fichaId=res[0].id;
     }
     await api('itens_ficha',{method:'POST',prefer:'return=minimal',body:JSON.stringify(ingValidos.map((ing,i)=>{const _ins=todosInsumos.find(x=>x.id===ing.insumo_id);const _um=_ins?(_ins.unidade_medida||_ins.unidade_compra||'g'):'g';const _qtdG=(_um==='kg'||_um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);return{ficha_id:fichaId,insumo_id:ing.insumo_id,quantidade_g:_qtdG,ordem:i};}))});
