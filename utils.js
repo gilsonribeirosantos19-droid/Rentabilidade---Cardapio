@@ -216,7 +216,7 @@ function searchableSelect(sel){
   function sync(){ const o = sel.options[sel.selectedIndex]; const txt = o ? o.text : ''; if(btn.textContent !== txt) btn.textContent = txt; btn.classList.toggle('ss-ph', !sel.value); }
   function render(f){ f = (f||'').toLowerCase();
     list.innerHTML = [...sel.options].filter(o => o.text.toLowerCase().includes(f))
-      .map(o => `<div class="ss-opt${o.value===sel.value?' sel':''}" data-v="${e2(o.value)}">${e2(o.text)}</div>`).join('')
+      .map(o => `<div class="ss-opt${o.value && o.value===sel.value?' sel':''}" data-v="${e2(o.value)}">${e2(o.text)}</div>`).join('')
       || '<div class="ss-empty">Nada encontrado</div>'; }
   // Posiciona o dropdown como "fixed" (flutua por cima — não é cortado por tabela/modal com overflow)
   function place(){
