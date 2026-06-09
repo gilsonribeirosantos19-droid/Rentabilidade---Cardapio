@@ -384,8 +384,8 @@
       <div class="form-group"><label>Produto *</label>
         <select id="f-produto" onchange="onFichaProdutoChange()"><option value="">Selecione o produto...</option></select>
         <input type="hidden" id="f-nome"></div>
-      <div class="form-group"><label>Categoria *</label>
-        <select id="f-cat"></select></div>
+      <div class="form-group"><label>Grupo</label>
+        <input id="f-cat" readonly placeholder="Vem do produto" style="background:#f8fafc;color:#475569;cursor:default"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Rendimento (porções) *</label>
@@ -508,8 +508,7 @@ function popularSelectsCat(){
   const opts=categoriasFicha.map(c=>`<option value="${esc(c.nome)}">${esc(c.nome)}</option>`).join('');
   const fc=document.getElementById('filtro-cat');
   if(fc) fc.innerHTML='<option value="">Todas categorias</option>'+opts;
-  const ff=document.getElementById('f-cat');
-  if(ff) ff.innerHTML=opts;
+  // f-cat (Grupo) agora é readonly e vem do produto — não popula mais
 }
 
 // Preenche o select de produtos do modal (mantém a primeira option de placeholder)
@@ -532,12 +531,9 @@ function onFichaProdutoChange(){
     if(nomeEl) nomeEl.value=p.nome||'';
     const precoEl=document.getElementById('f-preco');
     if(precoEl){ precoEl.value=(p.preco_venda!=null&&p.preco_venda!=='')?p.preco_venda:''; }
-    // Se o grupo do produto casar com uma categoria de ficha, seleciona
+    // Grupo vem direto do produto
     const catEl=document.getElementById('f-cat');
-    if(catEl&&p.grupo){
-      const match=Array.from(catEl.options).find(o=>o.value===p.grupo);
-      if(match) catEl.value=p.grupo;
-    }
+    if(catEl) catEl.value=p.grupo||p.categoria||'';
     if(typeof atualizarCustoPreview==='function') atualizarCustoPreview();
   }else{
     if(nomeEl) nomeEl.value='';
@@ -855,7 +851,7 @@ function abrirModalNovo(){
   document.getElementById('form-titulo').textContent='Nova Ficha Técnica';
   document.getElementById('f-produto').value='';
   document.getElementById('f-nome').value='';
-  document.getElementById('f-cat').value=categoriasFicha[0]?.nome||'';
+  document.getElementById('f-cat').value='';
   document.getElementById('f-porcoes').value='1';
   document.getElementById('f-preco').value='';
   document.getElementById('f-status').value='ativa';
