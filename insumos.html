@@ -987,8 +987,11 @@ function menuProduto(id, btn){
 function _popularGruposProd(){
   const sel=document.getElementById('prod-grupo');
   if(!sel) return;
+  const cur=sel.value;  // preserva o filtro selecionado ao repopular (senão zera após salvar)
   const cats=[...new Set(todos.map(i=>i.categoria).filter(Boolean))].sort();
   sel.innerHTML='<option value="">Grupo ▾</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  if(cur) sel.value=cur;
+  if(sel._ssSync) sel._ssSync();  // atualiza o botão do seletor com busca
 }
 
 async function carregarClassificacoes(){
