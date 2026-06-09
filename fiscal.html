@@ -1576,18 +1576,19 @@ function onVinEmbSelectChange(forceQty) {
 }
 
 function onVinEmbQtyInput(){
+  const fator=parseFloat(document.getElementById('vin-emb-qty')?.value)||1;
+  // Atualiza SEMPRE o fator digitado (antes de qualquer return) — senão o modal de correção salva o valor antigo
+  if(document.getElementById('vin-ins')._selectedEmb) document.getElementById('vin-ins')._selectedEmb.fator=fator;
   const idx=nfeVinculandoIdx; const it=nfeItens[idx]; if(!it) return;
   const sel=document.getElementById('vin-emb-select');
   const opt=sel?.options[sel.selectedIndex];
   if(!opt?.value) return;
-  const fator=parseFloat(document.getElementById('vin-emb-qty')?.value)||1;
   const und=document.getElementById('vin-und').textContent;
   const qtdR=parseFloat((it.quantidade*fator).toFixed(6));
   const summary=document.getElementById('vin-conv-summary'); summary.style.display='';
   document.getElementById('vin-conv-nf').textContent=`${fmtQtd(it.quantidade)} ${it.unidade}`;
   document.getElementById('vin-conv-formula').textContent=`1 ${it.unidade} = ${fmtQtd(fator)} ${und}`;
   document.getElementById('vin-conv-result').textContent=`${fmtQtd(qtdR)} ${und}`;
-  if(document.getElementById('vin-ins')._selectedEmb) document.getElementById('vin-ins')._selectedEmb.fator=fator;
 }
 
 async function salvarVinculoNfe() {
