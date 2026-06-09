@@ -859,7 +859,7 @@ async function salvarVincFiscal() {
     const existing = insumoFornVinculos.find(v =>
       v.insumo_id === insId &&
       (!fornId || v.fornecedor_id === fornId) &&
-      v.embalagem_descricao === emb.embDesc
+      (codForn ? v.codigo_fornecedor === codForn : v.embalagem_descricao === emb.embDesc)
     );
     if(existing) {
       await api(`insumo_fornecedores?id=eq.${existing.id}`, {
@@ -1275,7 +1275,8 @@ function processNfeItems() {
     if(vin?.insumo_id){
       // Fator SEMPRE do cadastro (insumo_fornecedores) — fonte única; vinculos_nfe é só o de-para descrição→item.
       // (Ver ARQUITETURA.md) Se não houver cadastro p/ esse item, cai no fator antigo do vínculo (legado).
-      const ifvF = insumoFornVinculos.find(v=>v.insumo_id===vin.insumo_id&&(!fornId||v.fornecedor_id===fornId)&&+v.qtd_por_embalagem>0)
+      const ifvF = (it.codigo && insumoFornVinculos.find(v=>v.codigo_fornecedor===it.codigo&&(!fornId||v.fornecedor_id===fornId)&&+v.qtd_por_embalagem>0))
+                || insumoFornVinculos.find(v=>v.insumo_id===vin.insumo_id&&(!fornId||v.fornecedor_id===fornId)&&+v.qtd_por_embalagem>0)
                 || insumoFornVinculos.find(v=>v.insumo_id===vin.insumo_id&&+v.qtd_por_embalagem>0);
       nfeAutoLinked[idx]={
         insId: vin.insumo_id,
@@ -1620,7 +1621,7 @@ async function salvarVinculoNfe() {
   if(!fornId){toast('⚠️ Selecione o fornecedor na tela da NF-e antes de vincular.','err');return;}
   if(fornId){
     try{
-      const existing=insumoFornVinculos.find(v=>v.insumo_id===insId&&v.fornecedor_id===fornId&&v.embalagem_descricao===emb.embDesc);
+      const existing=insumoFornVinculos.find(v=>v.insumo_id===insId&&v.fornecedor_id===fornId&&(codForn?v.codigo_fornecedor===codForn:v.embalagem_descricao===emb.embDesc));
       if(existing){
         await api(`insumo_fornecedores?id=eq.${existing.id}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null,preco_unitario:(emb.fator>0?+(it.valorUnit/emb.fator).toFixed(4):(it.valorUnit||null))})});
         Object.assign(existing,{qtd_por_embalagem:emb.fator,codigo_fornecedor:codForn||null});
