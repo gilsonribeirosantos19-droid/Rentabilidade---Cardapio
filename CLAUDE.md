@@ -13,7 +13,7 @@ Deploy: Vercel (automático via GitHub push).
 |------|-------|
 | URL do app | https://rentabilidade-cardapio.vercel.app |
 | Supabase URL | https://trczpnjidqfippbfxtpe.supabase.co |
-| Supabase Key | eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g |
+| Supabase Key (anon) | Fonte única em `utils.js` → `window.SUPA_KEY`. ⚠️ NUNCA colar a chave `service_role` aqui ou em qualquer arquivo do repo — ela fica só no servidor (Edge Functions). |
 | Tenant ID | 00000000-0000-0000-0000-000000000001 |
 | GitHub | https://github.com/gilsonribeirosantos19-droid/Rentabilidade---Cardapio |
 
