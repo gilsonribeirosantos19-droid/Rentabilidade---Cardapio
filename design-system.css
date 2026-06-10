@@ -2,6 +2,7 @@
    Aiko — Design System ERP Preview
    Menos cores · Menos sombras · Menos cards · Mais dados
    ================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   /* ── Brand ── */
@@ -41,7 +42,7 @@
   --ds-input-h:       36px;
 
   /* ── Tipografia ── */
-  --ds-font:          'Segoe UI', system-ui, -apple-system, sans-serif;
+  --ds-font:          'Inter', system-ui, -apple-system, sans-serif;
   --ds-mono:          'DM Mono', monospace;
   --ds-text-xs:       11px;
   --ds-text-sm:       12px;
@@ -64,7 +65,7 @@
 /* ── BASE ────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 body {
-  font-family: var(--ds-font);
+  font-family: var(--ds-font) !important;
   font-size: 13px;
   color: var(--ds-text-1);
   background: var(--ds-bg);

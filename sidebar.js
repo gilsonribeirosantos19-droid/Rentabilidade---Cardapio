@@ -241,7 +241,7 @@
       </div>
     </div>
     <div class="nav-group" style="border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:10px;margin-bottom:4px">
-      <a class="nav-item${isDash ? ' active' : ''}" href="dashboard.html">
+      <a class="nav-item nav-dash${isDash ? ' active' : ''}" href="dashboard.html">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
       </a>
@@ -291,7 +291,7 @@
           font-size: 14px !important;
           font-weight: 500 !important;
           color: rgba(255,255,255,.75) !important;
-          font-family: 'Segoe UI', Tahoma, Geneva, sans-serif !important;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
           text-transform: none !important;
           letter-spacing: 0 !important;
         }
@@ -315,7 +315,7 @@
           text-decoration: none !important;
           font-size: 12.5px !important;
           font-weight: 400 !important;
-          font-family: 'Segoe UI', Tahoma, Geneva, sans-serif !important;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
           padding: 6px 10px !important;
           border-radius: 6px !important;
           margin: 1px 0 !important;
@@ -332,12 +332,21 @@
           font-weight: 600 !important;
         }
 
+        /* ── DASHBOARD: mesmo destaque dos títulos de grupo ── */
+        nav.sidebar .nav-item.nav-dash, .sidebar .nav-item.nav-dash {
+          font-size: 14px !important;
+          font-weight: 500 !important;
+        }
+        nav.sidebar .nav-item.nav-dash:not(.active), .sidebar .nav-item.nav-dash:not(.active) {
+          color: rgba(255,255,255,.75) !important;
+        }
+
         /* ── SUBMENU ANINHADO (ex.: Relatórios) ── */
         nav.sidebar .nav-subhead, .sidebar .nav-subhead {
           display: flex !important; align-items: center !important; justify-content: space-between !important;
           color: rgba(148,163,184,.85) !important;
           font-size: 12.5px !important;
-          font-family: 'Segoe UI', Tahoma, Geneva, sans-serif !important;
+          font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
           padding: 6px 10px !important;
           border-radius: 6px !important;
           margin: 1px 0 !important;
