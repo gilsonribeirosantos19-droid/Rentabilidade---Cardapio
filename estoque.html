@@ -406,11 +406,6 @@
             <div class="est-hub-body"><div class="est-hub-title">Saldo de Estoque</div><div class="est-hub-desc">Saldo atual, custo médio e valor financeiro por loja.</div></div>
             <div class="est-hub-arrow">›</div>
           </div>
-          <div class="est-hub-card" onclick="switchTab('historico-custo')">
-            <div class="est-hub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
-            <div class="est-hub-body"><div class="est-hub-title">Histórico de Custos</div><div class="est-hub-desc">Auditoria de variações de custo médio por insumo.</div></div>
-            <div class="est-hub-arrow">›</div>
-          </div>
         </div>
       </div>
     </div>
@@ -1111,41 +1106,6 @@
       </table></div></div>
     </div>
 
-    <!-- TAB: HISTÓRICO DE CUSTOS -->
-    <div id="tab-historico-custo" class="tab-pane">
-      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
-        Histórico de Custos <span style="font-weight:400;color:#94a3b8;font-size:13px">— auditoria de variações de custo médio</span>
-      </div>
-      <div class="toolbar" style="margin-bottom:16px">
-        <select class="field field-sm" id="hc-insumo" onchange="renderHistoricoCusto()" style="min-width:180px">
-          <option value="">Todos os insumos</option>
-        </select>
-        <select class="field field-sm" id="hc-origem" onchange="renderHistoricoCusto()">
-          <option value="">Todas as origens</option>
-          <option value="entrada_manual">Entrada Manual</option>
-          <option value="nfe">XML / NF-e</option>
-          <option value="ajuste">Ajuste</option>
-        </select>
-        <select class="field field-sm" onchange="setPeriodoRange(this.value,'hc-de','hc-ate',renderHistoricoCusto)" style="min-width:130px">
-          <option value="periodo">Período</option>
-          <option value="mes_atual" selected>Mês Atual</option>
-          <option value="mes_anterior">Mês Anterior</option>
-        </select>
-        <input type="date" class="field field-sm" id="hc-de" onchange="renderHistoricoCusto()" title="De">
-        <input type="date" class="field field-sm" id="hc-ate" onchange="renderHistoricoCusto()" title="Até">
-        <button class="btn btn-ghost btn-sm" onclick="renderHistoricoCusto()">↻ Atualizar</button>
-      </div>
-      <div class="tbl-wrap"><table class="tbl">
-        <thead><tr>
-          <th>Data</th><th>Insumo</th><th>Loja</th><th>Origem</th>
-          <th class="r">Saldo Ant.</th><th class="r">Custo Ant.</th>
-          <th class="r">Qtd. Entrada</th><th class="r">Custo Entrada</th>
-          <th class="r">Novo Custo Médio</th><th class="r">Impacto %</th>
-        </tr></thead>
-        <tbody id="hc-body"><tr><td colspan="10" class="empty">Carregando...</td></tr></tbody>
-      </table></div>
-      <div class="pag-row"><span id="hc-info">—</span></div>
-    </div>
 
     <!-- TAB: RELATÓRIOS -->
   </div><!-- /content -->
@@ -1846,57 +1806,9 @@ function _initSaldoEst(){
   renderSaldoEst();
 }
 
-// ── HISTÓRICO DE CUSTOS ───────────────────────────────────────────
-async function renderHistoricoCusto(){
-  const lojaFil=getLojaId()||'';
-  const insumoFil=document.getElementById('hc-insumo')?.value||'';
-  const origemFil=document.getElementById('hc-origem')?.value||'';
-  const de=document.getElementById('hc-de')?.value||'';
-  const ate=document.getElementById('hc-ate')?.value||'';
-  const tbody=document.getElementById('hc-body');
-  tbody.innerHTML='<tr><td colspan="10" class="empty">Carregando...</td></tr>';
-  try{
-    let q=`historico_custo?tenant_id=eq.${TENANT_ID}&order=data.desc&limit=200`;
-    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
-    if(insumoFil) q+=`&insumo_id=eq.${insumoFil}`;
-    if(origemFil) q+=`&origem=eq.${origemFil}`;
-    if(de) q+=`&data=gte.${de}T00:00:00`;
-    if(ate) q+=`&data=lte.${ate}T23:59:59`;
-    const hist=await api(q).catch(()=>[]);
-    const info=document.getElementById('hc-info');
-    if(info) info.textContent=hist.length?`${hist.length} registro(s)`:'Nenhum registro.';
-    if(!hist.length){tbody.innerHTML='<tr><td colspan="10" class="empty">Nenhum registro encontrado.</td></tr>';return;}
-    const origemLabel={entrada_manual:'Entrada Manual',nfe:'XML / NF-e',nfe_importada:'XML / NF-e',ajuste:'Ajuste',manual:'Entrada Manual'};
-    tbody.innerHTML=hist.map(h=>{
-      const ins=insumos.find(i=>i.id===h.insumo_id);
-      const loja=lojas.find(l=>l.id===h.loja_id);
-      const imp=h.impacto_pct;
-      const impColor=imp>0?'#dc2626':imp<0?'#16a34a':'#64748b';
-      const impTxt=imp!=null?`<span style="color:${impColor};font-weight:600">${imp>0?'+':''}${Number(imp).toFixed(2)}%</span>`:'—';
-      return `<tr>
-        <td class="mono" style="font-size:11px;color:#64748b">${new Date(h.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-        <td style="font-weight:600">${esc(ins?.nome||'—')}</td>
-        <td>${esc(loja?.nome||'—')}</td>
-        <td><span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:11px">${esc(origemLabel[h.origem]||h.origem||'—')}</span></td>
-        <td class="r mono">${h.saldo_anterior!=null?h.saldo_anterior.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}):'—'}</td>
-        <td class="r mono">${h.custo_medio_anterior?brl(h.custo_medio_anterior):'—'}</td>
-        <td class="r mono">${h.qtd_entrada!=null?h.qtd_entrada.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}):'—'}</td>
-        <td class="r mono">${h.custo_entrada?brl(h.custo_entrada):'—'}</td>
-        <td class="r mono" style="font-weight:700;color:#0f172a">${h.novo_custo_medio?brl(h.novo_custo_medio):'—'}</td>
-        <td class="r">${impTxt}</td>
-      </tr>`;
-    }).join('');
-  }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
-}
-
-function _initHistoricoCusto(){
-  const selIns=document.getElementById('hc-insumo');
-  if(selIns&&selIns.options.length<=1) insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;selIns.appendChild(o);});
-  renderHistoricoCusto();
-}
 
 // ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
-const _tabNames = {dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras','saldo-est':'Saldo de Estoque','historico-custo':'Histórico de Custos'};
+const _tabNames = {dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras','saldo-est':'Saldo de Estoque'};
 let _openTabs = [], _activeTab = null, _loadedTabs = {};
 
 function _renderTabStrip() {
@@ -1949,7 +1861,6 @@ function activateTab(nome) {
     if (nome==='movimentacao') renderMovimentacao();
     if (nome==='compras') renderCompras();
     if (nome==='saldo-est') _initSaldoEst();
-    if (nome==='historico-custo') _initHistoricoCusto();
   }
 }
 
