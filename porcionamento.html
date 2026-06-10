@@ -1250,8 +1250,8 @@ const COLS=[
 
 let _relTipo='', _relModelo='';
 
-function setRelTipoSel(v){_relTipo=v;_autoAdjustCols();}
-function setRelModeloSel(v){_relModelo=v;_autoAdjustCols();}
+function setRelTipoSel(v){_relTipo=v;_autoAdjustCols();filtrarRel();}
+function setRelModeloSel(v){_relModelo=v;_autoAdjustCols();filtrarRel();}
 
 function _autoAdjustCols(){
   COLS.forEach(c=>{
