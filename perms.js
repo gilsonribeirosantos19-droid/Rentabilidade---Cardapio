@@ -1,15 +1,15 @@
 // perms.js — controle de permissões por perfil (cache 5 min no localStorage)
 (function(){
   const SUPA_URL='https://trczpnjidqfippbfxtpe.supabase.co';
-  const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
-  const TENANT_ID='00000000-0000-0000-0000-000000000001';
+  const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.9EGIFYLs9OYQO5aKUR3Ky7J_m3Hgdrys0lwmHkA-No8';
+  const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
   const CACHE_KEY='aiko_perms_v1';
   const TTL=300000;
 
   async function _fetch(perfil){
     const res=await fetch(
       `${SUPA_URL}/rest/v1/permissoes?tenant_id=eq.${TENANT_ID}&perfil=eq.${encodeURIComponent(perfil)}`,
-      {headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}}
+      {headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+(localStorage.getItem('sb_token')||SUPA_KEY)}}
     );
     if(!res.ok) return null;
     const t=await res.text();
