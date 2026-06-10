@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -678,8 +678,8 @@
 /* ================================================================
    CONFIG
 ================================================================ */
-const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
-const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.9EGIFYLs9OYQO5aKUR3Ky7J_m3Hgdrys0lwmHkA-No8';
+const SUPA_URL  = window.SUPA_URL;
+const SUPA_KEY  = window.SUPA_KEY;
 // SUPA_ADMIN_KEY removida — cadastro/edição de usuário agora via Edge Function "admin-users" (a chave admin fica no servidor)
 const TENANT_ID = localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
