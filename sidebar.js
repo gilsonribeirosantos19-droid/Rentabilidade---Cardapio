@@ -269,7 +269,7 @@
       s.textContent = `
         /* ── BASE ── */
         nav.sidebar, .sidebar {
-          background: #1e293b !important;
+          background: #173B73 !important;
           border-right: 1px solid rgba(255,255,255,.07) !important;
         }
         nav.sidebar .logo, .sidebar .logo {
@@ -321,14 +321,14 @@
           margin: 1px 0 !important;
         }
         nav.sidebar .nav-item:hover, .sidebar .nav-item:hover {
-          background: rgba(255,255,255,.07) !important;
-          color: rgba(255,255,255,.9) !important;
+          background: #214C91 !important;
+          color: #ffffff !important;
         }
 
         /* ── ITEM ATIVO ── */
         nav.sidebar .nav-item.active, .sidebar .nav-item.active {
-          background: rgba(249,115,22,.15) !important;
-          color: #f97316 !important;
+          background: #f97316 !important;
+          color: #ffffff !important;
           font-weight: 600 !important;
         }
 
