@@ -72,7 +72,7 @@ body {
 }
 
 /* ── SIDEBAR: tema navy direto no CSS (evita piscar branco quando o sidebar.js demora) ── */
-nav.sidebar, .sidebar { background: #1e293b !important; }
+nav.sidebar, .sidebar { background: #0B4A8B !important; }
 .nav-group {
   background: transparent !important;
   box-shadow: none !important;
@@ -87,12 +87,12 @@ nav.sidebar, .sidebar { background: #1e293b !important; }
   border-radius: 6px !important;
 }
 .nav-item:hover {
-  background: rgba(255,255,255,.07) !important;
+  background: #1565C0 !important;
   color: #fff !important;
 }
 .nav-item.active {
-  background: rgba(249,115,22,.15) !important;
-  color: var(--ds-primary) !important;
+  background: #F97316 !important;
+  color: #ffffff !important;
   font-weight: 600 !important;
 }
 
