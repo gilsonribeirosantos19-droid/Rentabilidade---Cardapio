@@ -197,6 +197,7 @@
   .view-section-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 </style>
 <script src="utils.js"></script>
+<script src="params.js"></script>
 </head>
 <body>
 <div class="shell">
@@ -480,6 +481,7 @@ async function carregar(){
   const cs=document.getElementById('conn-status');
   if(cs){cs.textContent='• carregando...';cs.style.color='#94a3b8';}
   try{
+    if(window.Params) await Params.load().catch(()=>{});
     const [fichas,insumos,cats,produtos]=await Promise.all([
       api('fichas_tecnicas?tenant_id=eq.'+TENANT_ID+'&order=nome.asc&select=*,itens_ficha(id,insumo_id,quantidade_g,ordem)'),
       api('insumos?tenant_id=eq.'+TENANT_ID+'&ativo=eq.true&order=nome.asc'),
@@ -733,6 +735,15 @@ function switchDpTab(nome,btn){
   if(nome==='resumo'){
     const cmvColor=cmv===null?'#64748b':cmv<=30?'#16a34a':cmv<=38?'#f59e0b':'#e11d48';
     const mkColor=markup?'#16a34a':'#64748b';
+    // Margem REAL (descontando as taxas que saem da venda) — salão x delivery
+    const _P=window.Params;
+    const txDel=_P?_P.num('precificacao','taxa_delivery',27):27;
+    const txCar=_P?_P.num('precificacao','taxa_cartao',3):3;
+    const txImp=_P?_P.num('precificacao','imposto',6):6;
+    const margMin=_P?_P.num('precificacao','margem_minima',20):20;
+    const margSalao=(pv>0&&custo>0)?((pv-custo-pv*(txCar+txImp)/100)/pv*100):null;
+    const margDeliv=(pv>0&&custo>0)?((pv-custo-pv*(txDel+txImp)/100)/pv*100):null;
+    const corMarg=v=>v===null?'#64748b':(v<margMin?'#e11d48':'#16a34a');
     // Tabela de ingredientes
     let ingRows='';
     if(f.itens&&f.itens.length){
@@ -801,6 +812,14 @@ function switchDpTab(nome,btn){
         <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #f1f5f9">
           <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Markup</div>
           <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${mkColor}">${markup!==null?markup.toFixed(2)+'x':'—'}</div>
+        </div>
+        <div style="background:#fff7ed;border-radius:8px;padding:10px 12px;border:1px solid #fed7aa">
+          <div style="font-size:10px;color:#9a3412;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Margem Salão</div>
+          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${corMarg(margSalao)}">${margSalao!==null?margSalao.toFixed(1)+'%':'—'}</div>
+        </div>
+        <div style="background:#fef2f2;border-radius:8px;padding:10px 12px;border:1px solid #fecaca">
+          <div style="font-size:10px;color:#991b1b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Margem Delivery</div>
+          <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${corMarg(margDeliv)}">${margDeliv!==null?margDeliv.toFixed(1)+'%':'—'}</div>
         </div>
       </div>
       ${f.observacoes?`<div class="dp-section">Observações</div><div style="font-size:12px;color:#64748b;line-height:1.5">${esc(f.observacoes)}</div>`:''}

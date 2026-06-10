@@ -447,6 +447,25 @@
           <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('cmv')">Salvar alterações</button></div>
         </div></div>
 
+        <!-- PRECIFICAÇÃO (MARGEM REAL) -->
+        <div class="acc-card" data-search="precificacao margem real delivery ifood rappi cartao imposto taxa lucro"><div class="acc-header" onclick="toggleAcc(this)">
+          <div class="acc-icon" style="background:#fef2f2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="acc-body-text"><div class="acc-title">Precificação (Margem Real)</div><div class="acc-desc">Taxas que saem da venda — pra calcular a margem de verdade (salão × delivery).</div></div>
+          <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div><div class="acc-content">
+          <div class="param-grid">
+            <div class="param-item"><div class="param-label">Taxa de delivery (%)</div>
+              <input class="param-input" type="number" id="p-prec-delivery" min="0" max="100" step="0.1" value="27" placeholder="ex: 27"><div class="param-hint">Comissão do iFood/Rappi sobre a venda no delivery</div></div>
+            <div class="param-item"><div class="param-label">Taxa de cartão (%)</div>
+              <input class="param-input" type="number" id="p-prec-cartao" min="0" max="100" step="0.1" value="3" placeholder="ex: 3"><div class="param-hint">Taxa da maquininha (vendas no salão)</div></div>
+            <div class="param-item"><div class="param-label">Imposto sobre venda (%)</div>
+              <input class="param-input" type="number" id="p-prec-imposto" min="0" max="100" step="0.1" value="6" placeholder="ex: 6"><div class="param-hint">Simples Nacional / imposto sobre faturamento</div></div>
+            <div class="param-item"><div class="param-label">Margem mínima alvo (%)</div>
+              <input class="param-input" type="number" id="p-prec-margem-min" min="0" max="100" step="0.1" value="20" placeholder="ex: 20"><div class="param-hint">Abaixo disso, o prato acende alerta vermelho</div></div>
+          </div>
+          <div class="save-footer"><button class="btn btn-primary btn-sm" onclick="salvarParams('precificacao')">Salvar alterações</button></div>
+        </div></div>
+
         <!-- DASHBOARD -->
         <div class="acc-card" data-search="dashboard indicadores"><div class="acc-header" onclick="toggleAcc(this)">
           <div class="acc-icon" style="background:#ecfdf5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
@@ -1272,6 +1291,12 @@ const PARAM_MAP = {
     considerar_perdas:     { id: 'p-cmv-perdas',   type: 'radio' },
     considerar_ajustes:    { id: 'p-cmv-ajustes',  type: 'radio' },
     considerar_producao:   { id: 'p-cmv-producao', type: 'radio' },
+  },
+  precificacao: {
+    taxa_delivery: { id: 'p-prec-delivery',   type: 'input' },
+    taxa_cartao:   { id: 'p-prec-cartao',     type: 'input' },
+    imposto:       { id: 'p-prec-imposto',    type: 'input' },
+    margem_minima: { id: 'p-prec-margem-min', type: 'input' },
   },
   dashboard: {
     atualizacao_auto: { id: 'p-dash-auto',      type: 'radio' },
