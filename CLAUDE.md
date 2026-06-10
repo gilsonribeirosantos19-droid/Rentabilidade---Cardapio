@@ -77,39 +77,33 @@ Deploy: Vercel (automático via GitHub push).
 
 ## Padrão de Código
 
-### Função API (CRÍTICO)
-```javascript
-async function api(endpoint, opts={}) {
-  const method = (opts.method||'GET').toUpperCase();
-  const headers = {
-    'apikey': SUPA_KEY,
-    'Authorization': 'Bearer '+SUPA_KEY,
-  };
-  // Content-Type SOMENTE quando há body (nunca no DELETE!)
-  if (opts.body) headers['Content-Type']='application/json';
-  if (opts.prefer) headers['Prefer']=opts.prefer;
-  else if (method==='POST') headers['Prefer']='return=representation';
-  else if (method==='PATCH') headers['Prefer']='return=representation';
-
-  const res = await fetch(`${SUPA_URL}/rest/v1/${endpoint}`,
-    {method, headers, body: opts.body||undefined});
-
-  if (!res.ok){
-    let msg=res.statusText;
-    try{const j=await res.json();msg=j.message||j.error||msg;}catch{}
-    throw new Error(`[${res.status}] ${msg}`);
-  }
-  const ct=res.headers.get('content-type')||'';
-  if (ct.includes('application/json')){const t=await res.text();return t?JSON.parse(t):[];}
-  return [];
-}
-```
+### API, Config e Segurança (ATUALIZADO — refatoração 2026-06-10)
+- **`api()` é CENTRALIZADA** no `utils.js` (`createApi`). **NÃO redefina `api()` dentro da tela** — use a compartilhada:
+  ```javascript
+  const SUPA_URL = window.SUPA_URL;   // fonte única (utils.js)
+  const SUPA_KEY = window.SUPA_KEY;   // chave ANON (utils.js)
+  const api = createApi(SUPA_URL, SUPA_KEY);
+  ```
+- **URL/chave = FONTE ÚNICA** no `utils.js` (`window.SUPA_URL`, `window.SUPA_KEY`). Pra trocar a chave, muda **só** lá.
+- **Auth:** `createApi` autentica com o **token do login** (`localStorage.sb_token`) no `Authorization`; a `apikey` é a anon. Isso faz o **RLS valer por tenant**.
+- ⚠️ **NUNCA** usar a chave `service_role` no frontend (ela ignora o RLS = falha grave de segurança). A chave do front é **sempre a `anon`**.
+- **Operações de admin** (criar/editar usuário) → via **Edge Function `admin-users`** (a chave admin fica no servidor, nunca no navegador).
 
 ### Regras importantes
 - **DELETE nunca deve ter `Content-Type` ou `body`** — causa erro 400 no Supabase
 - **PATCH de insumos não tem coluna `atualizado_em`** — não enviar esse campo
 - Sempre usar `prefer: 'return=minimal'` no DELETE e PATCH sem necessidade de retorno
-- Sempre filtrar por `tenant_id=eq.${TENANT_ID}` nas queries
+- Sempre filtrar por `tenant_id=eq.${TENANT_ID}` nas queries (o RLS reforça por tenant)
+
+### Arquitetura — como EVITAR duplicação (OBRIGATÓRIO)
+A maior dívida técnica do projeto veio de **copiar-colar** entre telas (chave, `api()`, funções `brl`/`esc`/`hoje`…) que depois **divergiram** (cada cópia virou uma versão diferente). Para NÃO repetir:
+
+1. **Função reutilizável → vai no `utils.js`** (uma vez só). NÃO copiar a função pra dentro da tela.
+2. **Já existe no `utils.js`? Usa a de lá** (`createApi`/`api`, `esc`, `brl`, `searchableSelect`, funções de custo, etc.) — não redefine.
+3. **Config (URL/chave/tenant) só no `utils.js`** (`window.SUPA_*`). Nunca colar a chave numa tela.
+4. **Estilo global → `design-system.css`** (cores, tabelas, sidebar, inputs). Ele usa `!important` e VENCE o CSS inline da página — então, se um estilo "não muda", edite o `design-system.css`, não a tela.
+5. **Tela nova:** começar de um modelo enxuto que carrega o `utils.js` — NÃO copiar um arquivo gigante (ex: estoque.html).
+6. **Mexeu numa tela?** Aproveite e **centralize as funções duplicadas dela** no `utils.js` (limpeza incremental, baixo risco — porque você já vai testar aquela tela).
 
 ### Design System
 ```css
