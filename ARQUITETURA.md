@@ -118,6 +118,13 @@ margem = (faturamento − custo) / faturamento ≥ média_de_margem
   baixa pop. + alta margem = Abacaxi | baixa + baixa = Quebra-cabeça
 ```
 
+### 4.9 Transferência entre lojas (movimento, NÃO consumo)
+Uma saída tipo `transferencia` cria **DOIS** movimentos (transferência completa):
+- **Saída** na loja de origem (reduz saldo), com o `custo_medio` da origem.
+- **Entrada** na loja de destino (tipo `transferencia`), carregando o **MESMO** custo (média ponderada no destino).
+
+O custo **"viaja junto"** com a mercadoria. Por isso **transferência NÃO entra no CMV** nem no consumo médio — vira CMV só quando o **destino consumir** (senão contaria 2×). Implementado em `estoque.html` (`salvarSaida`).
+
 ---
 
 ## 5. ⭐ Fonte ÚNICA de custo (REGRA OFICIAL)

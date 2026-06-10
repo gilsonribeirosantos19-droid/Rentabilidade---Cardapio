@@ -1458,7 +1458,7 @@
       </div>
       <div class="fg" style="margin:0">
         <label>Tipo *</label>
-        <select id="sf-tipo">
+        <select id="sf-tipo" onchange="onSaiTipoChange()">
           <option value="consumo">Consumo (produção)</option>
           <option value="perda">Perda</option>
           <option value="vencimento">Vencimento</option>
@@ -1466,6 +1466,13 @@
           <option value="descarte">Descarte</option>
         </select>
       </div>
+    </div>
+    <div class="row2" id="sf-destino-row" style="display:none">
+      <div class="fg" style="margin:0">
+        <label>Loja de destino *</label>
+        <select id="sf-loja-destino"><option value="">Selecione...</option></select>
+      </div>
+      <div class="fg" style="margin:0"></div>
     </div>
     <div class="row2">
       <div class="fg" style="margin:0">
@@ -2850,6 +2857,22 @@ function showSaldoInfo() {
   el.textContent=`Saldo disponível: ${qtd(s.quantidade||0)} · Custo médio: ${s.custo_medio?brl(s.custo_medio):'—'}`;
 }
 
+// Mostra/esconde "Loja de destino" conforme o tipo de saída (só transferência)
+function onSaiTipoChange(){
+  const tipo=document.getElementById('sf-tipo').value;
+  const row=document.getElementById('sf-destino-row');
+  const sel=document.getElementById('sf-loja-destino');
+  if(!row||!sel) return;
+  if(tipo==='transferencia'){
+    const outras=(lojas||[]).filter(l=>l.id!==getLojaId());
+    sel.innerHTML='<option value="">Selecione...</option>'+outras.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    row.style.display='';
+    if(!outras.length) toast('Não há outra loja para transferir (cadastre uma 2ª loja em Configurações).','err');
+  } else {
+    row.style.display='none'; sel.value='';
+  }
+}
+
 async function salvarSaida() {
   const insId=document.getElementById('sf-ins').value;
   const qtd_=parseFloat(document.getElementById('sf-qtd').value)||0;
@@ -2867,19 +2890,40 @@ async function salvarSaida() {
   }
   // ─────────────────────────────────────────────────────────
 
+  const tipoSai=document.getElementById('sf-tipo').value;
+  let destinoId=null;
+  if(tipoSai==='transferencia'){
+    destinoId=document.getElementById('sf-loja-destino').value;
+    if(!destinoId){toast('Selecione a loja de destino.','err');return;}
+    if(destinoId===getLojaId()){toast('A loja de destino deve ser diferente da origem.','err');return;}
+  }
+
   const btn=document.getElementById('btn-sai');
   btn.disabled=true;btn.textContent='Salvando…';
   try {
     const dataStr=document.getElementById('sf-data').value||hoje();
+    const custoOrigem=s.custo_medio||0;
     await api('saidas_estoque',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
       tenant_id:TENANT_ID,insumo_id:insId,loja_id:getLojaId(),quantidade:qtd_,
-      tipo:document.getElementById('sf-tipo').value,
+      tipo:tipoSai,
       motivo:document.getElementById('sf-motivo').value.trim()||null,
       responsavel:document.getElementById('sf-resp').value.trim()||null,
       criado_em:dataStr+'T12:00:00.000Z',
     })});
-    await upsertSaldo(insId,Math.max(0,(s.quantidade||0)-qtd_),s.custo_medio||0);
-    toast('Saída registrada!','ok');
+    await upsertSaldo(insId,Math.max(0,(s.quantidade||0)-qtd_),custoOrigem);
+    // ── Transferência: cria a ENTRADA na loja de destino (o custo viaja junto) ──
+    if(tipoSai==='transferencia'&&destinoId){
+      const sd=saldos.find(x=>x.insumo_id===insId&&x.loja_id===destinoId)||{quantidade:0,custo_medio:0};
+      const qd=sd.quantidade||0, cmd=sd.custo_medio||0;
+      const nq=qd+qtd_;
+      const ncm=nq>0?(qd*cmd+qtd_*custoOrigem)/nq:custoOrigem;
+      await api('entradas_estoque',{method:'POST',prefer:'return=minimal',body:JSON.stringify({
+        tenant_id:TENANT_ID,insumo_id:insId,loja_id:destinoId,quantidade:qtd_,
+        custo_unitario:custoOrigem,tipo:'transferencia',criado_em:dataStr+'T12:00:00.000Z',
+      })});
+      await upsertSaldo(insId,nq,ncm,undefined,undefined,destinoId);
+    }
+    toast(tipoSai==='transferencia'?'Transferência registrada (saída + entrada no destino)!':'Saída registrada!','ok');
     fecharModal('m-saida'); await carregar();
   } catch(e){toast('Erro: '+e.message,'err');}
   finally{btn.disabled=false;btn.textContent='Registrar saída';}
@@ -3879,7 +3923,7 @@ async function calcFechamento() {
       const vEnt = entsIns.reduce((a,e) => a + ((e.quantidade||0)*(e.custo_unitario||0)), 0);
       const perdIns = saisPer.filter(x => x.insumo_id === ins.id && ['perda','vencimento','descarte'].includes(x.tipo));
       const qPerd = perdIns.reduce((a,p) => a + (p.quantidade||0), 0); const vPerd = qPerd * cmFim;
-      const consIns = saisPer.filter(x => x.insumo_id === ins.id && ['consumo','transferencia'].includes(x.tipo));
+      const consIns = saisPer.filter(x => x.insumo_id === ins.id && ['consumo'].includes(x.tipo));
       const qCons = consIns.reduce((a,c) => a + (c.quantidade||0), 0); const vCons = qCons * cmFim;
       const finIt = usaSaldo ? null : invFin.find(i => i.insumo_id === ins.id);
       const qFin = finIt?.qtd_contada ?? (s.quantidade||0); const vFin = Math.max(0,qFin) * cmFim;
@@ -4099,7 +4143,7 @@ async function renderMovimentacao() {
     const entsI = entsPer.filter(e => e.insumo_id === ins.id);
     const qEnt = entsI.reduce((a,e)=>a+(e.quantidade||0),0);
     const vEnt = entsI.reduce((a,e)=>a+((e.quantidade||0)*(e.custo_unitario||0)),0);
-    const conI = saisPer.filter(x=>x.insumo_id===ins.id&&['consumo','transferencia'].includes(x.tipo));
+    const conI = saisPer.filter(x=>x.insumo_id===ins.id&&['consumo'].includes(x.tipo));
     const qCon = conI.reduce((a,c)=>a+(c.quantidade||0),0); const vCon=qCon*cmFim;
     const perI = saisPer.filter(x=>x.insumo_id===ins.id&&['perda','vencimento','descarte'].includes(x.tipo));
     const qPerdSaida = perI.reduce((a,p)=>a+(p.quantidade||0),0);
@@ -4218,8 +4262,8 @@ function downloadCSV(filename, content) {
 }
 
 // ── SALDO UPSERT ──────────────────────────────────────────────────
-async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maximo=undefined) {
-  const lojaId = getLojaId();
+async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maximo=undefined, lojaOverride=undefined) {
+  const lojaId = lojaOverride || getLojaId();
   const payload = {
     tenant_id: TENANT_ID,
     insumo_id: insId,
@@ -4420,7 +4464,7 @@ function renderCompras() {
     const saldo = getSaldo(ins.id);
     const estoqueAtual = saldo.quantidade || 0;
     const consumoPeriodo = saidas
-      .filter(s => s.insumo_id === ins.id && ['consumo','transferencia'].includes(s.tipo) && new Date(s.criado_em) >= corte)
+      .filter(s => s.insumo_id === ins.id && ['consumo'].includes(s.tipo) && new Date(s.criado_em) >= corte)
       .reduce((acc, s) => acc + (s.quantidade || 0), 0);
     const mediaDiaria = consumoPeriodo / periodoConsulta;
     const sugestao = Math.max(0, mediaDiaria * diasCobertura - estoqueAtual);
@@ -4495,7 +4539,7 @@ function exportComprasCSV() {
     const saldo = getSaldo(ins.id);
     const estoqueAtual = saldo.quantidade || 0;
     const consumoPeriodo = saidas
-      .filter(s => s.insumo_id === ins.id && ['consumo','transferencia'].includes(s.tipo) && new Date(s.criado_em) >= corte)
+      .filter(s => s.insumo_id === ins.id && ['consumo'].includes(s.tipo) && new Date(s.criado_em) >= corte)
       .reduce((acc, s) => acc + (s.quantidade || 0), 0);
     const mediaDiaria = consumoPeriodo / periodoConsulta;
     const sugestao = Math.max(0, mediaDiaria * diasCobertura - estoqueAtual);
