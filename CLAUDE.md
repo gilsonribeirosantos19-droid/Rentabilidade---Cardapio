@@ -13,7 +13,7 @@ Deploy: Vercel (automático via GitHub push).
 |------|-------|
 | URL do app | https://rentabilidade-cardapio.vercel.app |
 | Supabase URL | https://trczpnjidqfippbfxtpe.supabase.co |
-| Supabase Key (anon) | Fonte única em `utils.js` → `window.SUPA_KEY`. ⚠️ NUNCA colar a chave `service_role` aqui ou em qualquer arquivo do repo — ela fica só no servidor (Edge Functions). |
+| Supabase Key (publishable) | Fonte única em `utils.js` → `window.SUPA_KEY` (`sb_publishable_...`). ⚠️ Legacy anon/service_role foram REVOGADAS (não usar). A secret fica só no servidor (Edge Functions, env `APP_SERVICE_KEY`). |
 | Tenant ID | 00000000-0000-0000-0000-000000000001 |
 | GitHub | https://github.com/gilsonribeirosantos19-droid/Rentabilidade---Cardapio |
 
@@ -81,12 +81,12 @@ Deploy: Vercel (automático via GitHub push).
 - **`api()` é CENTRALIZADA** no `utils.js` (`createApi`). **NÃO redefina `api()` dentro da tela** — use a compartilhada:
   ```javascript
   const SUPA_URL = window.SUPA_URL;   // fonte única (utils.js)
-  const SUPA_KEY = window.SUPA_KEY;   // chave ANON (utils.js)
+  const SUPA_KEY = window.SUPA_KEY;   // chave PUBLISHABLE (utils.js)
   const api = createApi(SUPA_URL, SUPA_KEY);
   ```
 - **URL/chave = FONTE ÚNICA** no `utils.js` (`window.SUPA_URL`, `window.SUPA_KEY`). Pra trocar a chave, muda **só** lá.
-- **Auth:** `createApi` autentica com o **token do login** (`localStorage.sb_token`) no `Authorization`; a `apikey` é a anon. Isso faz o **RLS valer por tenant**.
-- ⚠️ **NUNCA** usar a chave `service_role` no frontend (ela ignora o RLS = falha grave de segurança). A chave do front é **sempre a `anon`**.
+- **Auth:** `createApi` autentica com o **token do login** (`localStorage.sb_token`) no `Authorization`; a `apikey` é a publishable. Isso faz o **RLS valer por tenant**.
+- ⚠️ **NUNCA** usar a chave `service_role`/secret no frontend (ela ignora o RLS = falha grave de segurança). A chave do front é **sempre a `publishable`** (`sb_publishable_`). As legacy anon/service_role foram **revogadas** (2026-06-10).
 - **Operações de admin** (criar/editar usuário) → via **Edge Function `admin-users`** (a chave admin fica no servidor, nunca no navegador).
 
 ### Regras importantes
