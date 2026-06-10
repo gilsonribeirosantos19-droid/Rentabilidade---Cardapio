@@ -269,7 +269,7 @@
       s.textContent = `
         /* ── BASE ── */
         nav.sidebar, .sidebar {
-          background: #1e293b !important;
+          background: #1D4ED8 !important;
           border-right: 1px solid rgba(255,255,255,.07) !important;
         }
         nav.sidebar .logo, .sidebar .logo {
@@ -311,7 +311,7 @@
 
         /* ── ITEM (sub-item) ── */
         nav.sidebar .nav-item, .sidebar .nav-item {
-          color: rgba(148,163,184,.85) !important;
+          color: rgba(255,255,255,.85) !important;
           text-decoration: none !important;
           font-size: 12.5px !important;
           font-weight: 400 !important;
@@ -321,14 +321,14 @@
           margin: 1px 0 !important;
         }
         nav.sidebar .nav-item:hover, .sidebar .nav-item:hover {
-          background: rgba(255,255,255,.07) !important;
-          color: rgba(255,255,255,.9) !important;
+          background: rgba(255,255,255,.14) !important;
+          color: #ffffff !important;
         }
 
         /* ── ITEM ATIVO ── */
         nav.sidebar .nav-item.active, .sidebar .nav-item.active {
-          background: rgba(249,115,22,.15) !important;
-          color: #f97316 !important;
+          background: #ffffff !important;
+          color: #1D4ED8 !important;
           font-weight: 600 !important;
         }
 
