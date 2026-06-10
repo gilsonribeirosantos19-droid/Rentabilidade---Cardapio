@@ -11,12 +11,12 @@
   --ds-navy:          #1e293b;
 
   /* ── Texto ── */
-  --ds-text-1:        #1F2937;
+  --ds-text-1:        #0f172a;
   --ds-text-2:        #64748b;
   --ds-text-3:        #94a3b8;
 
   /* ── Bordas / Fundos ── */
-  --ds-border:        #E5E7EB;
+  --ds-border:        #e2e8f0;
   --ds-border-2:      #f1f5f9;
   --ds-bg:            #f8fafc;
   --ds-white:         #ffffff;
@@ -120,7 +120,7 @@ table thead tr,
 .tbl thead tr,
 .tbl-card thead tr,
 .nfe-tbl thead tr,
-.cfg-table thead tr { background: #173B73 !important; }
+.cfg-table thead tr { background: #eef2f7 !important; }
 
 /* tfoot — linha de totais clara */
 tfoot tr,
@@ -133,13 +133,13 @@ th, .tbl th {
   padding: 4px 8px !important;
   font-size: 11px !important;
   font-weight: 700 !important;
-  color: #ffffff !important;
+  color: #1e293b !important;
   text-transform: uppercase !important;
   letter-spacing: .05em !important;
   white-space: nowrap !important;
   text-align: left;
-  border-bottom: 1px solid #173B73 !important;
-  border-right: 1px solid rgba(255,255,255,.15) !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #dbe2ec !important;
 }
 th.r, .tbl th.r,
 th.c, .tbl th.c { text-align: right !important; }
