@@ -1063,7 +1063,7 @@ async function salvarFicha(){
     const rendimentoReceita=_rendVal!=null?((_rendUnid==='L'||_rendUnid==='kg')?_rendVal*1000:_rendVal):null;
     if(editId){
       await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,preco_delivery:precoDelivery,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita,atualizado_em:new Date().toISOString()})});
-      await api(`itens_ficha?ficha_id=eq.${editId}&tenant_id=eq.${TENANT_ID}`,{method:'DELETE',prefer:'return=minimal'});
+      await api(`itens_ficha?ficha_id=eq.${editId}`,{method:'DELETE',prefer:'return=minimal'});
     }else{
       const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,preco_delivery:precoDelivery,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita})});
       fichaId=res[0].id;
