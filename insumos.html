@@ -370,6 +370,7 @@
           <option value="em">Em estoque</option>
           <option value="baixo">Estoque baixo</option>
           <option value="sem">Sem estoque</option>
+          <option value="sem_custo">⚠️ Sem custo</option>
         </select>
         <button class="btn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -566,6 +567,7 @@ function filtrar(){
   if(filEstoque==='em') lista=lista.filter(i=>getStatus(i)==='ativo');
   else if(filEstoque==='baixo') lista=lista.filter(i=>getStatus(i)==='atencao');
   else if(filEstoque==='sem') lista=lista.filter(i=>getStatus(i)==='critico');
+  else if(filEstoque==='sem_custo') lista=lista.filter(i=>{const cm=getCustoMedio(i.id);return !(cm>0)&&!(parseFloat(i.preco_compra)>0);});
   _filtrado=lista;
   _pagAtual=1;
   renderPagina();
