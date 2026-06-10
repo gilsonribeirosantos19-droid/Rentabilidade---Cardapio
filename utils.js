@@ -5,7 +5,7 @@
 // FONTE ÚNICA da URL e da chave. As telas usam window.SUPA_URL / window.SUPA_KEY.
 // Pra trocar/rotacionar a chave, muda SÓ aqui.
 window.SUPA_URL = 'https://trczpnjidqfippbfxtpe.supabase.co';
-window.SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.9EGIFYLs9OYQO5aKUR3Ky7J_m3Hgdrys0lwmHkA-No8';
+window.SUPA_KEY = 'sb_publishable_GJqQ_qWVg5Y8GWaKy1qe7w_VvZiIQ3i';
 
 // ── FEEDBACK VISUAL ───────────────────────────────────────────────
 // Coloca botão em estado de loading e retorna função para restaurar

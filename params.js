@@ -2,7 +2,7 @@
 // Carrega do Supabase uma vez e mantém em cache por 5 minutos
 (function () {
   const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
-  const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.9EGIFYLs9OYQO5aKUR3Ky7J_m3Hgdrys0lwmHkA-No8';
+  const SUPA_KEY  = 'sb_publishable_GJqQ_qWVg5Y8GWaKy1qe7w_VvZiIQ3i';
   const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
   const CACHE_KEY = 'aiko_params_v1';
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
