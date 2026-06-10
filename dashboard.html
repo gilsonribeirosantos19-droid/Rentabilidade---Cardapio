@@ -569,7 +569,7 @@ function renderAlertas(){
   // CMV simples: (total saídas mês × custo médio) / valor estoque
   const now=new Date();
   const iniMes=new Date(now.getFullYear(),now.getMonth(),1).toISOString();
-  const vSaidaMes=saidas.filter(s=>s.criado_em>=iniMes&&['consumo','transferencia'].includes(s.tipo))
+  const vSaidaMes=saidas.filter(s=>s.criado_em>=iniMes&&['consumo'].includes(s.tipo))
     .reduce((s,sd)=>{const cm=getSaldo(sd.insumo_id).custo_medio||0;return s+sd.quantidade*cm;},0);
   const vEst=insumos.reduce((s,i)=>{const sd=getSaldo(i.id);return s+(sd.quantidade||0)*(sd.custo_medio||0);},0);
   const cmvPct=vEst>0?(vSaidaMes/vEst*100).toFixed(1):0;
@@ -587,7 +587,7 @@ function renderEstoqueCritico(){
   const criticos=insumos.map(ins=>{
     const s=getSaldo(ins.id);
     const est=s.quantidade||0;
-    const consumoPer=saidas.filter(x=>x.insumo_id===ins.id&&['consumo','transferencia'].includes(x.tipo)&&new Date(x.criado_em)>=iniMes).reduce((a,x)=>a+(x.quantidade||0),0);
+    const consumoPer=saidas.filter(x=>x.insumo_id===ins.id&&['consumo'].includes(x.tipo)&&new Date(x.criado_em)>=iniMes).reduce((a,x)=>a+(x.quantidade||0),0);
     const dias30=now.getDate();
     const media=consumoPer/Math.max(dias30,1);
     const cobertura=media>0?est/media:Infinity;
@@ -614,7 +614,7 @@ function renderRupturaPrevista(){
   const prev=insumos.map(ins=>{
     const s=getSaldo(ins.id);
     const est=s.quantidade||0;
-    const consumoPer=saidas.filter(x=>x.insumo_id===ins.id&&['consumo','transferencia'].includes(x.tipo)&&new Date(x.criado_em)>=iniMes).reduce((a,x)=>a+(x.quantidade||0),0);
+    const consumoPer=saidas.filter(x=>x.insumo_id===ins.id&&['consumo'].includes(x.tipo)&&new Date(x.criado_em)>=iniMes).reduce((a,x)=>a+(x.quantidade||0),0);
     const diasMes=now.getDate();
     const media=consumoPer/Math.max(diasMes,1);
     const cobertura=media>0?est/media:Infinity;

@@ -510,7 +510,7 @@ async function calcular(){
       its.forEach(it=>{teoMap[it.insumo_id]=(teoMap[it.insumo_id]||0)+(it.quantidade_g||0)/por*(v.quantidade||0);});
     });
 
-    const realConsumido=saidas.filter(s=>['consumo','transferencia','producao'].includes(s.tipo));
+    const realConsumido=saidas.filter(s=>['consumo','producao'].includes(s.tipo));
     const realMap={};
     realConsumido.forEach(s=>{realMap[s.insumo_id]=(realMap[s.insumo_id]||0)+(s.quantidade||0);});
     let totalTeo=0, totalReal=0;
