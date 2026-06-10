@@ -281,6 +281,19 @@
           </div>
         </div>
       </div>
+      <div id="sec-custos" class="rep-home-section">
+        <div class="rep-home-label">Custos</div>
+        <div class="rep-home-grid">
+          <div class="rep-home-card" onclick="openTab('historico-custo')">
+            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
+            <div class="rep-home-body">
+              <div class="rep-home-title">Histórico de Custos</div>
+              <div class="rep-home-desc">Auditoria de variações de custo médio por insumo.</div>
+            </div>
+            <div class="rep-home-arrow">›</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- RESUMO -->
@@ -649,6 +662,44 @@
       </div>
     </div>
 
+    <!-- HISTÓRICO DE CUSTOS (movido do Estoque) -->
+    <div id="pane-historico-custo" class="rel-pane">
+      <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
+        Histórico de Custos <span style="font-weight:400;color:#94a3b8;font-size:13px">— auditoria de variações de custo médio</span>
+      </div>
+      <div class="toolbar">
+        <select class="field" id="hc-insumo" onchange="renderHistoricoCusto()" style="min-width:180px">
+          <option value="">Todos os insumos</option>
+        </select>
+        <select class="field" id="hc-origem" onchange="renderHistoricoCusto()">
+          <option value="">Todas as origens</option>
+          <option value="entrada_manual">Entrada Manual</option>
+          <option value="nfe">XML / NF-e</option>
+          <option value="ajuste">Ajuste</option>
+        </select>
+        <select class="field" onchange="setPeriodoRange(this.value,'hc-de','hc-ate',renderHistoricoCusto)" style="min-width:130px">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
+        <input type="date" class="field" id="hc-de" onchange="renderHistoricoCusto()" title="De">
+        <input type="date" class="field" id="hc-ate" onchange="renderHistoricoCusto()" title="Até">
+        <button class="field" style="cursor:pointer" onclick="renderHistoricoCusto()">↻ Atualizar</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-scroll"><table class="tbl">
+          <thead><tr>
+            <th>Data</th><th>Insumo</th><th>Loja</th><th>Origem</th>
+            <th class="r">Saldo Ant.</th><th class="r">Custo Ant.</th>
+            <th class="r">Qtd. Entrada</th><th class="r">Custo Entrada</th>
+            <th class="r">Novo Custo Médio</th><th class="r">Impacto %</th>
+          </tr></thead>
+          <tbody id="hc-body"><tr><td colspan="10" class="empty">Carregando...</td></tr></tbody>
+        </table></div>
+        <div class="pag-bar"><span id="hc-info"></span></div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -715,6 +766,7 @@ const _tabSubs={
 const _tabNames = {
   resumo:'Resumo', abc:'Curva ABC', inflacao:'Inflação',
   evolucao:'Evolução Mensal', entradas:'Entradas', auditoria:'Auditoria de Conversão',
+  'historico-custo':'Histórico de Custos',
 };
 
 let _openTabs = [];   // abas abertas em ordem
@@ -785,6 +837,7 @@ function activateTab(nome) {
   if (nome==='evolucao')  renderEvolucao();
   if (nome==='entradas')  iniciarEntradas();
   if (nome==='auditoria') iniciarAuditoria();
+  if (nome==='historico-custo') _initHistoricoCusto();
 }
 
 function closeTab(nome, e) {
@@ -796,6 +849,69 @@ function closeTab(nome, e) {
 }
 
 function switchTab(nome) { openTab(nome); }
+
+// ── HISTÓRICO DE CUSTOS (movido do Estoque) ───────────────────────
+function setPeriodoRange(tipo, deId, ateId, fn) {
+  const d = new Date();
+  if (tipo === 'mes_atual') {
+    document.getElementById(deId).value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    document.getElementById(ateId).value = d.toISOString().split('T')[0];
+  } else if (tipo === 'mes_anterior') {
+    const prev = new Date(d.getFullYear(), d.getMonth()-1, 1);
+    const last = new Date(d.getFullYear(), d.getMonth(), 0);
+    document.getElementById(deId).value = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}-01`;
+    document.getElementById(ateId).value = `${last.getFullYear()}-${String(last.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;
+  }
+  if (fn) fn();
+}
+
+async function renderHistoricoCusto(){
+  const lojaId = document.getElementById('sel-loja').value;
+  const insumoFil=document.getElementById('hc-insumo')?.value||'';
+  const origemFil=document.getElementById('hc-origem')?.value||'';
+  const de=document.getElementById('hc-de')?.value||'';
+  const ate=document.getElementById('hc-ate')?.value||'';
+  const tbody=document.getElementById('hc-body');
+  tbody.innerHTML='<tr><td colspan="10" class="empty">Carregando...</td></tr>';
+  try{
+    let q=`historico_custo?tenant_id=eq.${TENANT_ID}&order=data.desc&limit=200`;
+    if(lojaId) q+=`&loja_id=eq.${lojaId}`;
+    if(insumoFil) q+=`&insumo_id=eq.${insumoFil}`;
+    if(origemFil) q+=`&origem=eq.${origemFil}`;
+    if(de) q+=`&data=gte.${de}T00:00:00`;
+    if(ate) q+=`&data=lte.${ate}T23:59:59`;
+    const hist=await api(q).catch(()=>[]);
+    const info=document.getElementById('hc-info');
+    if(info) info.textContent=hist.length?`${hist.length} registro(s)`:'Nenhum registro.';
+    if(!hist.length){tbody.innerHTML='<tr><td colspan="10" class="empty">Nenhum registro encontrado.</td></tr>';return;}
+    const origemLabel={entrada_manual:'Entrada Manual',nfe:'XML / NF-e',nfe_importada:'XML / NF-e',ajuste:'Ajuste',manual:'Entrada Manual'};
+    tbody.innerHTML=hist.map(h=>{
+      const ins=insumos.find(i=>i.id===h.insumo_id);
+      const lojaObj=lojas.find(l=>l.id===h.loja_id);
+      const imp=h.impacto_pct;
+      const impColor=imp>0?'#dc2626':imp<0?'#16a34a':'#64748b';
+      const impTxt=imp!=null?`<span style="color:${impColor};font-weight:600">${imp>0?'+':''}${Number(imp).toFixed(2)}%</span>`:'—';
+      return `<tr>
+        <td style="font-size:11px;color:#64748b;font-family:'DM Mono',monospace">${new Date(h.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+        <td style="font-weight:600">${esc(ins?.nome||'—')}</td>
+        <td>${esc(lojaObj?.nome||'—')}</td>
+        <td><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#f1f5f9;color:#475569">${esc(origemLabel[h.origem]||h.origem||'—')}</span></td>
+        <td class="r" style="font-family:'DM Mono',monospace">${h.saldo_anterior!=null?h.saldo_anterior.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}):'—'}</td>
+        <td class="r" style="font-family:'DM Mono',monospace">${h.custo_medio_anterior?brl(h.custo_medio_anterior):'—'}</td>
+        <td class="r" style="font-family:'DM Mono',monospace">${h.qtd_entrada!=null?h.qtd_entrada.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}):'—'}</td>
+        <td class="r" style="font-family:'DM Mono',monospace">${h.custo_entrada?brl(h.custo_entrada):'—'}</td>
+        <td class="r" style="font-weight:700;color:#0f172a;font-family:'DM Mono',monospace">${h.novo_custo_medio?brl(h.novo_custo_medio):'—'}</td>
+        <td class="r">${impTxt}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function _initHistoricoCusto(){
+  const selIns=document.getElementById('hc-insumo');
+  if(selIns&&selIns.options.length<=1) insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;selIns.appendChild(o);});
+  renderHistoricoCusto();
+}
 
 // ── LOAD ──────────────────────────────────────────────────────────
 async function carregar() {
