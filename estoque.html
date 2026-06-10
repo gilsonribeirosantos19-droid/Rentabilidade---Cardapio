@@ -2883,7 +2883,7 @@ async function salvarSaida() {
   // ── Validação: permitir estoque negativo ─────────────────
   await Params.load();
   if(qtd_>(s.quantidade||0)){
-    if(!Params.bool('estoque','permitir_negativo',false)){
+    if(!Params.bool('estoque','permitir_negativo',true)){
       toast(`Saldo insuficiente (${qtd(s.quantidade||0)}). Estoque negativo não permitido (Parâmetros > Estoque).`,'err');return;
     }
     if(!confirm(`Quantidade (${qtd(qtd_)}) supera o saldo (${qtd(s.quantidade||0)}). Continuar?`)) return;
@@ -2910,7 +2910,7 @@ async function salvarSaida() {
       responsavel:document.getElementById('sf-resp').value.trim()||null,
       criado_em:dataStr+'T12:00:00.000Z',
     })});
-    await upsertSaldo(insId,Math.max(0,(s.quantidade||0)-qtd_),custoOrigem);
+    await upsertSaldo(insId,(s.quantidade||0)-qtd_,custoOrigem);
     // ── Transferência: cria a ENTRADA na loja de destino (o custo viaja junto) ──
     if(tipoSai==='transferencia'&&destinoId){
       const sd=saldos.find(x=>x.insumo_id===insId&&x.loja_id===destinoId)||{quantidade:0,custo_medio:0};
