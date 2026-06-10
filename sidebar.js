@@ -269,7 +269,7 @@
       s.textContent = `
         /* ── BASE ── */
         nav.sidebar, .sidebar {
-          background: #0B4A8B !important;
+          background: #1e293b !important;
           border-right: 1px solid rgba(255,255,255,.07) !important;
         }
         nav.sidebar .logo, .sidebar .logo {
@@ -321,14 +321,14 @@
           margin: 1px 0 !important;
         }
         nav.sidebar .nav-item:hover, .sidebar .nav-item:hover {
-          background: #1565C0 !important;
-          color: #ffffff !important;
+          background: rgba(255,255,255,.07) !important;
+          color: rgba(255,255,255,.9) !important;
         }
 
         /* ── ITEM ATIVO ── */
         nav.sidebar .nav-item.active, .sidebar .nav-item.active {
-          background: #F97316 !important;
-          color: #ffffff !important;
+          background: rgba(249,115,22,.15) !important;
+          color: #f97316 !important;
           font-weight: 600 !important;
         }
 
