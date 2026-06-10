@@ -391,8 +391,14 @@
     <div class="form-row">
       <div class="form-group"><label>Rendimento (porções) *</label>
         <input type="number" id="f-porcoes" value="1" min="1" oninput="atualizarCustoPreview()"></div>
-      <div class="form-group"><label>Preço de venda (R$)</label>
+      <div class="form-group"><label>Preço de venda — salão (R$)</label>
         <input type="number" id="f-preco" placeholder="Ex: 49.90" min="0" step="0.01" oninput="atualizarCustoPreview()"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Preço de delivery (R$)</label>
+        <input type="number" id="f-preco-delivery" placeholder="Ex: 59.90 (maior, p/ cobrir o iFood)" min="0" step="0.01" oninput="atualizarCustoPreview()">
+        <small style="font-size:10px;color:#94a3b8">Deixe vazio se for igual ao salão</small></div>
+      <div class="form-group"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Status</label>
@@ -742,7 +748,8 @@ function switchDpTab(nome,btn){
     const txImp=_P?_P.num('precificacao','imposto',6):6;
     const margMin=_P?_P.num('precificacao','margem_minima',20):20;
     const margSalao=(pv>0&&custo>0)?((pv-custo-pv*(txCar+txImp)/100)/pv*100):null;
-    const margDeliv=(pv>0&&custo>0)?((pv-custo-pv*(txDel+txImp)/100)/pv*100):null;
+    const pvDeliv=(f.preco_delivery>0)?f.preco_delivery:pv;
+    const margDeliv=(pvDeliv>0&&custo>0)?((pvDeliv-custo-pvDeliv*(txDel+txImp)/100)/pvDeliv*100):null;
     const corMarg=v=>v===null?'#64748b':(v<margMin?'#e11d48':'#16a34a');
     // Tabela de ingredientes
     let ingRows='';
@@ -873,6 +880,7 @@ function abrirModalNovo(){
   document.getElementById('f-cat').value='';
   document.getElementById('f-porcoes').value='1';
   document.getElementById('f-preco').value='';
+  document.getElementById('f-preco-delivery').value='';
   document.getElementById('f-status').value='ativa';
   document.getElementById('f-preparo').value='';
   document.getElementById('f-obs').value='';
@@ -899,6 +907,7 @@ function editarFicha(id){
     document.getElementById('f-cat').value=f.categoria;
     document.getElementById('f-porcoes').value=f.rendimento_porcoes;
     document.getElementById('f-preco').value=f.preco_venda||'';
+    document.getElementById('f-preco-delivery').value=f.preco_delivery||'';
     document.getElementById('f-status').value=f.status;
     document.getElementById('f-preparo').value=f.modo_preparo||'';
     document.getElementById('f-obs').value=f.observacoes||'';
@@ -1035,6 +1044,7 @@ async function salvarFicha(){
   const cat=document.getElementById('f-cat').value;
   const porcoes=parseInt(document.getElementById('f-porcoes').value)||1;
   const preco=parseFloat(document.getElementById('f-preco').value)||null;
+  const precoDelivery=parseFloat(document.getElementById('f-preco-delivery').value)||null;
   const status=document.getElementById('f-status').value;
   const preparo=document.getElementById('f-preparo').value.trim();
   const obs=document.getElementById('f-obs').value.trim();
@@ -1052,10 +1062,10 @@ async function salvarFicha(){
     const _rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
     const rendimentoReceita=_rendVal!=null?((_rendUnid==='L'||_rendUnid==='kg')?_rendVal*1000:_rendVal):null;
     if(editId){
-      await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita,atualizado_em:new Date().toISOString()})});
+      await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,preco_delivery:precoDelivery,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita,atualizado_em:new Date().toISOString()})});
       await api(`itens_ficha?ficha_id=eq.${editId}&tenant_id=eq.${TENANT_ID}`,{method:'DELETE',prefer:'return=minimal'});
     }else{
-      const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita})});
+      const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,preco_delivery:precoDelivery,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita})});
       fichaId=res[0].id;
     }
     await api('itens_ficha',{method:'POST',prefer:'return=minimal',body:JSON.stringify(ingValidos.map((ing,i)=>{const _ins=todosInsumos.find(x=>x.id===ing.insumo_id);const _um=_ins?(_ins.unidade_medida||_ins.unidade_compra||'g'):'g';const _qtdG=(_um==='kg'||_um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);return{ficha_id:fichaId,insumo_id:ing.insumo_id,quantidade_g:_qtdG,ordem:i};}))});
