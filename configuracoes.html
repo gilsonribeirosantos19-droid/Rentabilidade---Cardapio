@@ -680,7 +680,7 @@
 ================================================================ */
 const SUPA_URL  = 'https://trczpnjidqfippbfxtpe.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzkyMTEsImV4cCI6MjA5MzM1NTIxMX0.9EGIFYLs9OYQO5aKUR3Ky7J_m3Hgdrys0lwmHkA-No8';
-const SUPA_ADMIN_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyY3pwbmppZHFmaXBwYmZ4dHBlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3OTIxMSwiZXhwIjoyMDkzMzU1MjExfQ.jzKBKgFu7qMyM-LAICYeThLcUkBnTfxe9xrr_79Je7g';
+// SUPA_ADMIN_KEY removida — cadastro/edição de usuário agora via Edge Function "admin-users" (a chave admin fica no servidor)
 const TENANT_ID = localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -1450,22 +1450,22 @@ async function salvarUsuario() {
       await api(`usuarios?id=eq.${_editUserId}`, { method:'PATCH', body:JSON.stringify(body), prefer:'return=minimal' });
       // atualizar senha no Supabase Auth se preenchida
       if (senha) {
-        const r = await fetch(`${SUPA_URL}/auth/v1/admin/users/${_editUserId}`, {
-          method:'PUT',
-          headers:{'apikey':SUPA_ADMIN_KEY,'Authorization':'Bearer '+SUPA_ADMIN_KEY,'Content-Type':'application/json'},
-          body:JSON.stringify({password:senha})
+        const r = await fetch(`${SUPA_URL}/functions/v1/admin-users`, {
+          method:'POST',
+          headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+(localStorage.getItem('sb_token')||SUPA_KEY),'Content-Type':'application/json'},
+          body:JSON.stringify({action:'update_password', userId:_editUserId, password:senha})
         });
-        if (!r.ok) { const e=await r.json(); throw new Error(e.message||'Erro ao atualizar senha'); }
+        if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error||'Erro ao atualizar senha'); }
       }
       toast('Usuário atualizado', 'ok');
     } else {
-      // criar usuário novo — primeiro no Supabase Auth
-      const authRes = await fetch(`${SUPA_URL}/auth/v1/admin/users`, {
+      // criar usuário novo — via Edge Function (a chave admin fica no servidor)
+      const authRes = await fetch(`${SUPA_URL}/functions/v1/admin-users`, {
         method:'POST',
-        headers:{'apikey':SUPA_ADMIN_KEY,'Authorization':'Bearer '+SUPA_ADMIN_KEY,'Content-Type':'application/json'},
-        body:JSON.stringify({email, password:senha, email_confirm:true})
+        headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+(localStorage.getItem('sb_token')||SUPA_KEY),'Content-Type':'application/json'},
+        body:JSON.stringify({action:'create', email, password:senha})
       });
-      if (!authRes.ok) { const e=await authRes.json(); throw new Error(e.message||'Erro ao criar conta de acesso'); }
+      if (!authRes.ok) { const e=await authRes.json().catch(()=>({})); throw new Error(e.error||'Erro ao criar conta de acesso'); }
       const authData = await authRes.json();
       const userId = authData.id;
       // depois na tabela usuarios com o mesmo UUID
