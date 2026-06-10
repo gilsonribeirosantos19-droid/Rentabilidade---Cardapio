@@ -241,7 +241,7 @@
       </div>
     </div>
     <div class="nav-group" style="border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:10px;margin-bottom:4px">
-      <a class="nav-item${isDash ? ' active' : ''}" href="dashboard.html">
+      <a class="nav-item nav-dash${isDash ? ' active' : ''}" href="dashboard.html">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
       </a>
@@ -330,6 +330,15 @@
           background: rgba(249,115,22,.15) !important;
           color: #f97316 !important;
           font-weight: 600 !important;
+        }
+
+        /* ── DASHBOARD: mesmo destaque dos títulos de grupo ── */
+        nav.sidebar .nav-item.nav-dash, .sidebar .nav-item.nav-dash {
+          font-size: 14px !important;
+          font-weight: 500 !important;
+        }
+        nav.sidebar .nav-item.nav-dash:not(.active), .sidebar .nav-item.nav-dash:not(.active) {
+          color: rgba(255,255,255,.75) !important;
         }
 
         /* ── SUBMENU ANINHADO (ex.: Relatórios) ── */
