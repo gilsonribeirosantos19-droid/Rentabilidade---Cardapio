@@ -1217,15 +1217,16 @@ const COLS=[
   // ── Comuns ──
   {id:'data',           lbl:'Data',               on:true,  m:'*'},
   {id:'produto',        lbl:'Produto',            on:true,  m:'*'},
+  {id:'tipo_col',       lbl:'Tipo',               on:true,  m:'*'},
   {id:'loja_col',       lbl:'Loja',               on:false, m:'*'},
   {id:'turno_col',      lbl:'Turno',              on:false, m:'*'},
   // ── Simples ──
   {id:'qtd_peixes_s',   lbl:'Qtd. peixes',        on:true,  m:'simples'},
   {id:'peso_bruto_s',   lbl:'Peso Entrada',       on:true,  m:'simples'},
-  {id:'p_cabeca',       lbl:'Cabeça (kg)',         on:false, m:'simples'},
-  {id:'p_pele_s',       lbl:'Pele (kg)',           on:true,  m:'simples'},
-  {id:'p_outros_s',     lbl:'Aparas (kg)',         on:true,  m:'simples'},
-  {id:'p_espinha',      lbl:'Perdas (kg)',         on:true,  m:'simples'},
+  {id:'p_cabeca',       lbl:'Cabeça (kg)',         on:false, m:'simples', t:'e'},
+  {id:'p_pele_s',       lbl:'Pele (kg)',           on:true,  m:'simples', t:'s'},
+  {id:'p_outros_s',     lbl:'Aparas (kg)',         on:true,  m:'simples', t:'s'},
+  {id:'p_espinha',      lbl:'Perdas (kg)',         on:true,  m:'simples', t:'s'},
   {id:'peso_limpo_s',   lbl:'Filé limpo (kg)',    on:true,  m:'simples'},
   // ── Degelo ──
   {id:'p_congelado',    lbl:'Peso Congelado',     on:true,  m:'degelo'},
@@ -1256,8 +1257,12 @@ function setRelModeloSel(v){_relModelo=v;_autoAdjustCols();filtrarRel();}
 
 function _autoAdjustCols(){
   COLS.forEach(c=>{
-    if(_relModelo) c.on = c.m==='*' || c.m===_relModelo;
-    else           c.on = c.m==='*';
+    let on = _relModelo ? (c.m==='*'||c.m===_relModelo) : (c.m==='*');
+    // esconde colunas exclusivas do outro tipo quando um Tipo está filtrado
+    if(on && _relTipo && c.t && c.t!==_relTipo) on=false;
+    // coluna "Tipo" só faz sentido quando mostra Entrada E Saída juntas (e em modelos com entrada/saída)
+    if(c.id==='tipo_col') on = !_relTipo && _relModelo!=='coccao' && _relModelo!=='lote';
+    c.on = on;
   });
   if(_relData.length) _renderRelTable();
   _renderColChecks();
@@ -1334,6 +1339,7 @@ function _renderRelTable(){
       data:           fmtDate(l.data),
       modelo_col:     mod?`<span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:11px">${esc(_modeloLabel[mod]||mod)}</span>`:'—',
       produto:        `<span style="font-weight:600">${esc(ins?.nome||'—')}</span>`,
+      tipo_col:       l.tipo?(l.tipo==='entrada'?`<span style="color:#1d4ed8;font-weight:600">Entrada</span>`:`<span style="color:#dc2626;font-weight:600">Saída</span>`):'—',
       loja_col:       esc(loja?.nome||'—'),
       turno_col:      esc(l.turno||'—'),
       // Simples
@@ -1374,7 +1380,7 @@ function _renderRelTable(){
   const avgF=(field)=>{const rs=_relData.filter(l=>l[field]!=null);return rs.length?rs.reduce((s,l)=>s+parseFloat(l[field]),0)/rs.length:null;};
   const lbl='<span style="color:#0f2d5c;font-size:10px;letter-spacing:.06em;text-transform:uppercase">TOTAL</span>';
   const totals={
-    data:lbl, produto:'', loja_col:'', turno_col:'',
+    data:lbl, produto:'', tipo_col:'', loja_col:'', turno_col:'',
     // Simples
     qtd_peixes_s:   sumF('qtd_consumida')||'—',
     peso_bruto_s:   kg(r3(sumF('peso_bruto'))),
