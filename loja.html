@@ -1864,34 +1864,9 @@ async function confirmarInventario() {
       method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
       body: JSON.stringify(itensBody)
     });
-    // Movimentos de AJUSTE rastreáveis para as diferenças contadas (entram no Kardex/Movimentação)
-    // Carimba com a DATA DO INVENTÁRIO (fim da contagem), não a data de hoje
-    const dataInv = (invAtual.data_final || invAtual.data_inicial)
-      ? (invAtual.data_final || invAtual.data_inicial) + 'T12:00:00.000Z'
-      : new Date().toISOString();
-    const entAj = [], saiAj = [];
-    invItensAtual.filter(it => it.insumo_id && lojaId && lancado(it)).forEach(it => {
-      const diff = parseFloat((num(it.qtd_contada) - (+it.qtd_sistema||0)).toFixed(4));
-      if (diff > 0) entAj.push({ tenant_id:TENANT_ID, insumo_id:it.insumo_id, loja_id:lojaId, quantidade:diff, custo_unitario:+it.custo_medio||0, tipo:'ajuste', observacao:'Ajuste de inventário', criado_em:dataInv });
-      else if (diff < 0) saiAj.push({ tenant_id:TENANT_ID, insumo_id:it.insumo_id, loja_id:lojaId, quantidade:Math.abs(diff), tipo:'ajuste', motivo:'Ajuste de inventário', criado_em:dataInv });
-    });
-    if (entAj.length) await api('entradas_estoque', {method:'POST', prefer:'return=minimal', body:JSON.stringify(entAj)});
-    if (saiAj.length) await api('saidas_estoque', {method:'POST', prefer:'return=minimal', body:JSON.stringify(saiAj)});
-    // Atualiza o saldo SOMENTE dos itens lançados (não zera os que não foram contados)
-    const saldoPayloads = invItensAtual
-      .filter(it => it.insumo_id && lojaId && lancado(it))
-      .map(it => ({
-        tenant_id: TENANT_ID, loja_id: lojaId, insumo_id: it.insumo_id,
-        quantidade: parseFloat(num(it.qtd_contada).toFixed(4)),
-        atualizado_em: new Date().toISOString()
-      }));
-    if (saldoPayloads.length) {
-      await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
-        method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
-        body: JSON.stringify(saldoPayloads)
-      });
-    }
-    toast('Inventário salvo e saldos atualizados!','ok');
+    // A contagem é apenas SALVA aqui. O estoque (saldo) só é ajustado quando o inventário for
+    // FECHADO (encerrarInventario, em estoque.html). Salvar NÃO aplica mais no saldo.
+    toast('Contagem salva! O estoque só será ajustado quando o inventário for fechado.','ok');
     fecharModal('m-inv');
     carregarInventarios();
   } catch(e) { toast('Erro: '+e.message,'err'); }
