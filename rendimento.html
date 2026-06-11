@@ -424,8 +424,8 @@ function renderSummary(){
     const rend=t.rendimento_pct||0;
     const perda=(t.peso_bruto||0)-(t.peso_liquido||0);
     const cmKg=custoMedioKg(t.insumo_id);
-    if(cmKg>0&&rend>0){
-      custoPerdaTotal+=perda*(cmKg/(rend/100));
+    if(cmKg>0){
+      custoPerdaTotal+=perda*cmKg; // valor da perda = peso bruto descartado × custo médio (o que foi pago)
     }
   });
   const ec=document.getElementById('k-custo-perda');if(ec)ec.textContent=fmtBRL(custoPerdaTotal);
@@ -513,7 +513,7 @@ function renderTabela(rows){
     const perdaPct=bruto>0?perdaKg/bruto*100:0;
     const cmKg=custoMedioKg(t.insumo_id);
     const custoReal=cmKg>0&&rend>0?cmKg/(rend/100):null;
-    const custoPerdaTotal=custoReal!=null?perdaKg*custoReal:null;
+    const custoPerdaTotal=cmKg>0?perdaKg*cmKg:null; // perda valorada pelo custo médio (não pelo custo do limpo)
     const data=t.criado_em?new Date(t.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
     return `<tr>
       <td style="font-weight:600;color:#334155">${nome}</td>
@@ -648,7 +648,7 @@ function exportarCSV(){
     const perdaPct=bruto>0?(perdaKg/bruto*100):0;
     const cmKg=custoMedioKg(t.insumo_id);
     const custoReal=cmKg>0&&rend>0?cmKg/(rend/100):null;
-    const custoPerdaTotal=custoReal!=null?perdaKg*custoReal:null;
+    const custoPerdaTotal=cmKg>0?perdaKg*cmKg:null; // perda valorada pelo custo médio (não pelo custo do limpo)
     const data=t.criado_em?new Date(t.criado_em).toLocaleDateString('pt-BR'):'—';
     return [
       `"${nome}"`,data,

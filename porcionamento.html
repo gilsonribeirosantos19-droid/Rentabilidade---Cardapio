@@ -1396,22 +1396,24 @@ function _renderRelTable(){
   const sumF=(field)=>_relData.reduce((s,l)=>s+(parseFloat(l[field])||0),0);
   const avgF=(field)=>{const rs=_relData.filter(l=>l[field]!=null);return rs.length?rs.reduce((s,l)=>s+parseFloat(l[field]),0)/rs.length:null;};
   const lbl='<span style="color:#0f2d5c;font-size:10px;letter-spacing:.06em;text-transform:uppercase">TOTAL</span>';
+  // Modo Entrada+Saída (_relTipo vazio): totais de FLUXO (qtd/pesos) viram '—' — somar entrada+saída contaria os mesmos peixes/pesos 2x. Filtre Entrada OU Saída pra ver o total.
+  const flowTot = v => _relTipo ? v : '—';
   const totals={
     data:lbl, produto:'', tipo_col:'', loja_col:'', turno_col:'',
     // Simples
-    qtd_peixes_s:   sumF('qtd_consumida')||'—',
-    peso_bruto_s:   kg(r3(sumF('peso_bruto'))),
-    p_cabeca:       kg(r3(sumF('perda_cabeca'))),
-    p_pele_s:       kg(r3(sumF('perda_pele'))),
-    p_espinha:      kg(r3(sumF('perda_espinha'))),
-    p_outros_s:     kg(r3(sumF('perda_outros'))),
-    peso_limpo_s:   kg(r3(sumF('peso_limpo'))),
+    qtd_peixes_s:   flowTot(sumF('qtd_consumida')||'—'),
+    peso_bruto_s:   flowTot(kg(r3(sumF('peso_bruto')))),
+    p_cabeca:       flowTot(kg(r3(sumF('perda_cabeca')))),
+    p_pele_s:       flowTot(kg(r3(sumF('perda_pele')))),
+    p_espinha:      flowTot(kg(r3(sumF('perda_espinha')))),
+    p_outros_s:     flowTot(kg(r3(sumF('perda_outros')))),
+    peso_limpo_s:   flowTot(kg(r3(sumF('peso_limpo')))),
     // Degelo
-    p_congelado:    kg(r3(sumF('peso_congelado'))),
-    p_descongelado: kg(r3(sumF('peso_descongelado'))),
-    perda_deg:      kg(r3(sumF('peso_congelado')-sumF('peso_descongelado'))),
-    peso_limpo_d:   kg(r3(sumF('peso_limpo'))),
-    perda_limp:     kg(r3(sumF('peso_descongelado')-sumF('peso_limpo'))),
+    p_congelado:    flowTot(kg(r3(sumF('peso_congelado')))),
+    p_descongelado: flowTot(kg(r3(sumF('peso_descongelado')))),
+    perda_deg:      flowTot(kg(r3(sumF('peso_congelado')-sumF('peso_descongelado')))),
+    peso_limpo_d:   flowTot(kg(r3(sumF('peso_limpo')))),
+    perda_limp:     flowTot(kg(r3(sumF('peso_descongelado')-sumF('peso_limpo')))),
     // Cocção
     peso_ini:       kg(r3(sumF('peso_inicial'))),
     peso_fin:       kg(r3(sumF('peso_final'))),
