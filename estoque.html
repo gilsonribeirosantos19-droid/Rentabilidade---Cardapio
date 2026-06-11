@@ -1902,6 +1902,15 @@ function getSaldo(insId) {
   const lojaId = getLojaId();
   return saldos.find(s=>s.insumo_id===insId&&(!lojaId||s.loja_id===lojaId))||{quantidade:0,custo_medio:0,minimo:null,maximo:null};
 }
+// Preço estimado da PRÓXIMA compra (usado só na Sugestão de Compras): último preço pago ao
+// fornecedor (insumo_fornecedores.preco_unitario, atualizado a cada entrada) → preço do cadastro.
+// Aqui NÃO se usa custo médio de propósito: é estimativa de compra, não valoração de estoque.
+function precoProxCompra(insId) {
+  const v = insumoFornVinculos.find(x=>x.insumo_id===insId && +x.preco_unitario>0);
+  if (v) return +v.preco_unitario;
+  const ins = insumos.find(i=>i.id===insId);
+  return ins && +ins.preco_compra>0 ? +ins.preco_compra : 0;
+}
 function statusOf(s) {
   const q=s.quantidade||0;
   if(q<=0) return 'zerado';
@@ -4416,7 +4425,7 @@ function renderCompras() {
       .reduce((acc, s) => acc + (s.quantidade || 0), 0);
     const mediaDiaria = consumoPeriodo / periodoConsulta;
     const sugestao = Math.max(0, mediaDiaria * diasCobertura - estoqueAtual);
-    const custoEstimado = sugestao * (ins.preco_compra || saldo.custo_medio || 0);
+    const custoEstimado = sugestao * precoProxCompra(ins.id);
     const coberturaDias = mediaDiaria > 0 ? estoqueAtual / mediaDiaria : Infinity;
     return { ins, estoqueAtual, consumoPeriodo, mediaDiaria, coberturaDias, sugestao, custoEstimado, diasCobertura };
   }).filter(r => filtro === 'todos' ? r.consumoPeriodo > 0 : r.sugestao > 0 || r.coberturaDias < diasCobertura);
@@ -4491,7 +4500,7 @@ function exportComprasCSV() {
       .reduce((acc, s) => acc + (s.quantidade || 0), 0);
     const mediaDiaria = consumoPeriodo / periodoConsulta;
     const sugestao = Math.max(0, mediaDiaria * diasCobertura - estoqueAtual);
-    const custoEstimado = sugestao * (ins.preco_compra || 0);
+    const custoEstimado = sugestao * precoProxCompra(ins.id);
     return { ins, estoqueAtual, consumoPeriodo, mediaDiaria, sugestao, custoEstimado };
   }).filter(r => r.sugestao > 0);
 

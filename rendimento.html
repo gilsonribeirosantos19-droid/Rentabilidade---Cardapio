@@ -351,7 +351,7 @@ function setPeriodoRange(tipo,deId,ateId,fn){const d=new Date();let de,ate;if(ti
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
 
-let todosInsumos=[], todosTestes=[], _filtrado=[], _pag=1, _porPag=10;
+let todosInsumos=[], todosTestes=[], _filtrado=[], _pag=1, _porPag=10, _saldos=[];
 let editId=null;
 
 (function(){
@@ -365,12 +365,14 @@ async function carregar(){
   const cs=document.getElementById('conn-status');
   if(cs){cs.textContent='• carregando...';cs.style.color='#94a3b8';}
   try{
-    const[insumos,testes]=await Promise.all([
+    const[insumos,testes,saldos]=await Promise.all([
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
       api(`testes_rendimento?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`).catch(()=>[]),
     ]);
     todosInsumos=insumos;
     todosTestes=testes;
+    _saldos=saldos;
     popularSelectInsumos();
     renderSummary();
     filtrar();
@@ -381,6 +383,9 @@ async function carregar(){
     toast('Erro: '+e.message,'err');
   }
 }
+
+// Custo por kg do insumo — fonte oficial: custo médio do saldo; fallback preço de compra (ARQUITETURA §5)
+function custoMedioKg(insId){ return custoDoInsumo(insId, null, {saldos:_saldos, insumos:todosInsumos}); }
 
 function popularSelectInsumos(){
   const opts=todosInsumos.map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'kg'})</option>`).join('');
@@ -418,8 +423,9 @@ function renderSummary(){
     const ins=todosInsumos.find(i=>i.id===t.insumo_id);
     const rend=t.rendimento_pct||0;
     const perda=(t.peso_bruto||0)-(t.peso_liquido||0);
-    if(ins&&ins.preco_compra&&rend>0){
-      custoPerdaTotal+=perda*(ins.preco_compra/(rend/100));
+    const cmKg=custoMedioKg(t.insumo_id);
+    if(cmKg>0&&rend>0){
+      custoPerdaTotal+=perda*(cmKg/(rend/100));
     }
   });
   const ec=document.getElementById('k-custo-perda');if(ec)ec.textContent=fmtBRL(custoPerdaTotal);
@@ -505,7 +511,8 @@ function renderTabela(rows){
     const liquido=t.peso_liquido||0;
     const perdaKg=bruto-liquido;
     const perdaPct=bruto>0?perdaKg/bruto*100:0;
-    const custoReal=ins&&ins.preco_compra&&rend>0?ins.preco_compra/(rend/100):null;
+    const cmKg=custoMedioKg(t.insumo_id);
+    const custoReal=cmKg>0&&rend>0?cmKg/(rend/100):null;
     const custoPerdaTotal=custoReal!=null?perdaKg*custoReal:null;
     const data=t.criado_em?new Date(t.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
     return `<tr>
@@ -571,9 +578,10 @@ function calcPreview(){
   document.getElementById('prev-perda').textContent=fmtKg(perda);
   const insId=document.getElementById('f-insumo').value;
   const ins=todosInsumos.find(i=>i.id===insId);
-  if(ins&&ins.preco_compra&&rend>0){
-    document.getElementById('prev-custo').textContent=fmtBRL(ins.preco_compra/(rend/100));
-    document.getElementById('prev-custo-atual').textContent=fmtBRL(ins.preco_compra/((ins.rendimento_pct||100)/100));
+  const cmKg=ins?custoMedioKg(ins.id):0;
+  if(cmKg>0&&rend>0){
+    document.getElementById('prev-custo').textContent=fmtBRL(cmKg/(rend/100));
+    document.getElementById('prev-custo-atual').textContent=fmtBRL(cmKg/((ins.rendimento_pct||100)/100));
   }else{
     document.getElementById('prev-custo').textContent='—';
     document.getElementById('prev-custo-atual').textContent='—';
@@ -638,7 +646,8 @@ function exportarCSV(){
     const liquido=t.peso_liquido||0;
     const perdaKg=bruto-liquido;
     const perdaPct=bruto>0?(perdaKg/bruto*100):0;
-    const custoReal=ins&&ins.preco_compra&&rend>0?ins.preco_compra/(rend/100):null;
+    const cmKg=custoMedioKg(t.insumo_id);
+    const custoReal=cmKg>0&&rend>0?cmKg/(rend/100):null;
     const custoPerdaTotal=custoReal!=null?perdaKg*custoReal:null;
     const data=t.criado_em?new Date(t.criado_em).toLocaleDateString('pt-BR'):'—';
     return [
