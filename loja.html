@@ -1865,7 +1865,10 @@ async function confirmarInventario() {
       body: JSON.stringify(itensBody)
     });
     // Movimentos de AJUSTE rastreáveis para as diferenças contadas (entram no Kardex/Movimentação)
-    const dataInv = new Date().toISOString();
+    // Carimba com a DATA DO INVENTÁRIO (fim da contagem), não a data de hoje
+    const dataInv = (invAtual.data_final || invAtual.data_inicial)
+      ? (invAtual.data_final || invAtual.data_inicial) + 'T12:00:00.000Z'
+      : new Date().toISOString();
     const entAj = [], saiAj = [];
     invItensAtual.filter(it => it.insumo_id && lojaId && lancado(it)).forEach(it => {
       const diff = parseFloat((num(it.qtd_contada) - (+it.qtd_sistema||0)).toFixed(4));

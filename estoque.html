@@ -3700,7 +3700,9 @@ async function encerrarInventario() {
     const updates = itens.map(it => {
       const inputEl = document.getElementById(`idet-${it.id}`);
       const qtdContada = inputEl ? (parseFloat(inputEl.value)||0) : (it.qtd_contada||it.qtd_sistema||0);
-      return { id: it.id, insumo_id: it.insumo_id, qtdContada, qtdSistema: it.qtd_sistema||0, custo_medio: it.custo_medio||0 };
+      // Custo médio ATUAL do item (não a "foto" da criação do inventário): inventário ajusta QUANTIDADE e PRESERVA o custo (ARQUITETURA §4.1)
+      const custoAtual = getSaldo(it.insumo_id).custo_medio || it.custo_medio || 0;
+      return { id: it.id, insumo_id: it.insumo_id, qtdContada, qtdSistema: it.qtd_sistema||0, custo_medio: custoAtual };
     });
     await api('inventario_itens?on_conflict=id', {
       method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
@@ -3708,7 +3710,10 @@ async function encerrarInventario() {
     });
     const lojaId = getLojaId();
     // Gera movimentos de AJUSTE rastreáveis para as diferenças contadas (aparecem no Kardex/Movimentação)
-    const dataInv = new Date().toISOString();
+    // Carimba com a DATA DO INVENTÁRIO (fim da contagem), não a data de hoje — uma contagem de 31/05 não pode virar movimento de hoje
+    const dataInv = (invAberto.data_final || invAberto.data_inicial)
+      ? (invAberto.data_final || invAberto.data_inicial) + 'T12:00:00.000Z'
+      : new Date().toISOString();
     const entAjuste = [], saiAjuste = [];
     updates.forEach(u => {
       const diff = parseFloat((u.qtdContada - u.qtdSistema).toFixed(4));
