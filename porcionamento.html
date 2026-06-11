@@ -548,6 +548,8 @@
             <input type="date" class="fil-date" id="rel-de">
             <span style="color:var(--text3);font-size:12px">até</span>
             <input type="date" class="fil-date" id="rel-ate">
+            <button class="btn btn-ghost btn-sm" type="button" onclick="setRelPeriodo('atual')">Mês atual</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="setRelPeriodo('anterior')">Mês anterior</button>
           </div>
         </div>
         <!-- AÇÕES -->
@@ -809,6 +811,7 @@ function switchTab(id){
   (document.getElementById('tab-'+id)||document.getElementById('tab-hub')).classList.add('active');
   _renderStrip();
   if(id==='lancamento'&&!_loaded.lancamento){renderLanc();_loaded.lancamento=true;}
+  if(id==='relatorio'&&!_loaded.relatorio){_initRelatorio();_loaded.relatorio=true;}
   if(id==='saldo-op'&&!_loaded['saldo-op']){_initSaldoOp();_loaded['saldo-op']=true;}
 }
 function closeTab(id,e){
@@ -1254,6 +1257,25 @@ let _relTipo='', _relModelo='';
 
 function setRelTipoSel(v){_relTipo=v;_autoAdjustCols();filtrarRel();}
 function setRelModeloSel(v){_relModelo=v;_autoAdjustCols();filtrarRel();}
+
+// Período rápido: 'atual' = mês corrente, 'anterior' = mês passado. Preenche as datas e filtra.
+function setRelPeriodo(qual){
+  const now=new Date();
+  let y=now.getFullYear(), m=now.getMonth(); // 0-11
+  if(qual==='anterior'){ m-=1; if(m<0){ m=11; y-=1; } }
+  const ini=new Date(y,m,1), fim=new Date(y,m+1,0); // 1º dia e último dia do mês
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  sv('rel-de',fmt(ini)); sv('rel-ate',fmt(fim));
+  filtrarRel();
+}
+
+// Estado inicial ao abrir o Relatório: Simples + Entrada e Saída juntas + mês atual, já carregando os dados.
+function _initRelatorio(){
+  sv('rel-modelo','simples'); _relModelo='simples';
+  sv('rel-tipo','');          _relTipo='';
+  _autoAdjustCols();
+  setRelPeriodo('atual');
+}
 
 function _autoAdjustCols(){
   COLS.forEach(c=>{
