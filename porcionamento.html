@@ -612,9 +612,14 @@
         <select class="fil-select" id="so-loja" onchange="renderSaldoOp()">
           <option value="">Todas as lojas</option>
         </select>
-        <input type="date" class="fil-date" id="so-de" onchange="renderSaldoOp()" title="De">
+        <select class="fil-select" id="so-periodo" style="min-width:120px" onchange="setPeriodoRange(this.value,'so-de','so-ate',renderSaldoOp)">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
+        <input type="date" class="fil-date" id="so-de" onchange="document.getElementById('so-periodo').value='periodo';renderSaldoOp()" title="De">
         <span style="color:var(--text3);font-size:12px">–</span>
-        <input type="date" class="fil-date" id="so-ate" onchange="renderSaldoOp()" title="Até">
+        <input type="date" class="fil-date" id="so-ate" onchange="document.getElementById('so-periodo').value='periodo';renderSaldoOp()" title="Até">
         <button class="btn btn-ghost btn-sm" onclick="renderSaldoOp()">↻ Atualizar</button>
         <button class="btn btn-ghost btn-sm" onclick="exportSaldoOp()" style="margin-left:auto">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -697,12 +702,8 @@ function _initSaldoOp(){
   const selLoja=document.getElementById('so-loja');
   if(selLoja&&selLoja.options.length<=1)
     _lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
-  const hoje=new Date(),de=new Date(hoje);de.setDate(de.getDate()-30);
-  const fmt=d=>d.toISOString().slice(0,10);
-  const elDe=document.getElementById('so-de'),elAte=document.getElementById('so-ate');
-  if(elDe&&!elDe.value) elDe.value=fmt(de);
-  if(elAte&&!elAte.value) elAte.value=fmt(hoje);
-  renderSaldoOp();
+  sv('so-periodo','mes_atual');
+  setPeriodoRange('mes_atual','so-de','so-ate',renderSaldoOp); // padrão do sistema (utils.js)
 }
 async function renderSaldoOp(){
   const insumoFil=document.getElementById('so-insumo')?.value||'';
