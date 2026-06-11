@@ -1906,6 +1906,9 @@ function getSaldo(insId) {
 // fornecedor (insumo_fornecedores.preco_unitario, atualizado a cada entrada) → preço do cadastro.
 // Aqui NÃO se usa custo médio de propósito: é estimativa de compra, não valoração de estoque.
 function precoProxCompra(insId) {
+  // último preço efetivamente pago: entrada (NF-e/manual) MAIS RECENTE (entradas vêm ordenadas por criado_em desc)
+  const ult = entradas.find(e => e.insumo_id===insId && e.tipo!=='ajuste' && e.tipo!=='transferencia' && +e.custo_unitario>0);
+  if (ult) return +ult.custo_unitario;
   const v = insumoFornVinculos.find(x=>x.insumo_id===insId && +x.preco_unitario>0);
   if (v) return +v.preco_unitario;
   const ins = insumos.find(i=>i.id===insId);
@@ -3302,7 +3305,8 @@ function renderInflacao() {
   // Agrupa entradas por insumo_id + mês → preço médio por unidade de estoque
   const mapa = {}; // { insumo_id: { 'yyyy-MM': [preçoUnitEstoque, ...] } }
   entradas.forEach(e => {
-    if (!e.criado_em || !e.custo_unitario || !e.fator_conversao) return;
+    if (!e.criado_em || !e.custo_unitario) return;
+    if (e.tipo === 'ajuste' || e.tipo === 'transferencia') return; // evolução de preços considera só COMPRAS reais
     const mes = e.criado_em.substring(0, 7);
     if (!meses.includes(mes)) return;
     const precoUnit = e.custo_unitario; // custo_unitario já é por-unidade de estoque — NÃO dividir de novo (dados auditados 2026-06-11: 0 entradas no formato antigo)
@@ -3694,53 +3698,52 @@ function voltarInvLista() {
 
 async function encerrarInventario() {
   if (!invAberto) return;
-  if (!confirm('Encerrar o inventário? Os saldos serão ajustados com base nas quantidades contadas.')) return;
+  if (invAberto.status && invAberto.status !== 'ativo') { toast('Este inventário já está encerrado.','err'); return; }
+  // Loja do PRÓPRIO inventário (não o dropdown do topo) — evita gravar saldo/ajuste na loja errada
+  const lojaId = invAberto.loja_id || getLojaId();
+  // Data de referência = fim da contagem. Inventário legado sem data → hoje.
+  const refDate = String(invAberto.data_final || invAberto.data_inicial || '').slice(0,10);
+  const dataInv = refDate ? refDate + 'T12:00:00.000Z' : new Date().toISOString();
+  const hojeStr = new Date().toISOString().slice(0,10);
+  const retroativo = refDate && refDate < hojeStr;
+  const msgConfirm = retroativo
+    ? `Este inventário é de ${refDate.split('-').reverse().join('/')} (data passada).\n\nO estoque vai ser reconciliado NA DATA DA CONTAGEM e tudo que entrou/saiu DEPOIS será preservado (recalculado por cima). Encerrar?`
+    : 'Encerrar o inventário? Os saldos serão ajustados com base nas quantidades contadas.';
+  if (!confirm(msgConfirm)) return;
   try {
     const itens = await api(`inventario_itens?inventario_id=eq.${invAberto.id}`);
-    const updates = itens.map(it => {
+    const r4 = x => parseFloat((x||0).toFixed(4));
+    const dt = m => (m.criado_em || '');
+    const updatesItens = [], entAjuste = [], saiAjuste = [], saldoPayloads = [];
+    itens.forEach(it => {
+      const insId = it.insumo_id;
       const inputEl = document.getElementById(`idet-${it.id}`);
-      const qtdContada = inputEl ? (parseFloat(inputEl.value)||0) : (it.qtd_contada||it.qtd_sistema||0);
-      // Custo médio ATUAL do item (não a "foto" da criação do inventário): inventário ajusta QUANTIDADE e PRESERVA o custo (ARQUITETURA §4.1)
-      const custoAtual = getSaldo(it.insumo_id).custo_medio || it.custo_medio || 0;
-      return { id: it.id, insumo_id: it.insumo_id, qtdContada, qtdSistema: it.qtd_sistema||0, custo_medio: custoAtual };
+      const qtdContada = inputEl ? (parseFloat(inputEl.value)||0) : (it.qtd_contada!=null ? it.qtd_contada : (it.qtd_sistema||0));
+      updatesItens.push({ id: it.id, qtd_contada: qtdContada });
+      // Reconstrói dos movimentos (mesma loja): posição NA DATA da contagem + o que veio DEPOIS
+      const mine = m => m.insumo_id===insId && ((m.loja_id||lojaId)===lojaId);
+      let entAte=0, entApos=0, saiAte=0, saiApos=0;
+      entradas.forEach(e=>{ if(mine(e)){ dt(e)<=dataInv ? entAte+=(+e.quantidade||0) : entApos+=(+e.quantidade||0); } });
+      saidas.forEach(s=>{ if(mine(s)){ dt(s)<=dataInv ? saiAte+=(+s.quantidade||0) : saiApos+=(+s.quantidade||0); } });
+      const posNaData = r4(entAte - saiAte);                 // o que o sistema acha que havia na data da contagem
+      const diff = r4(qtdContada - posNaData);               // ajuste a registrar, DATADO na contagem
+      const qtdHoje = r4(qtdContada + (entApos - saiApos));  // saldo de HOJE = contagem + movimentos posteriores
+      // Custo: inventário PRESERVA o custo médio atual; item novo sem custo → preço de compra do cadastro
+      const ins = insumos.find(i=>i.id===insId);
+      const sal = saldos.find(s=>s.insumo_id===insId && s.loja_id===lojaId);
+      const custo = (sal && +sal.custo_medio>0 ? +sal.custo_medio : 0) || (+ins?.preco_compra>0 ? +ins.preco_compra : 0) || (+it.custo_medio>0 ? +it.custo_medio : 0) || 0;
+      // Movimento de ajuste DATADO na contagem (rastreável no Kardex/Movimentação)
+      if (diff > 0) entAjuste.push({ tenant_id:TENANT_ID, insumo_id:insId, loja_id:lojaId, quantidade:diff, custo_unitario:custo, tipo:'ajuste', observacao:'Ajuste de inventário', criado_em:dataInv });
+      else if (diff < 0) saiAjuste.push({ tenant_id:TENANT_ID, insumo_id:insId, loja_id:lojaId, quantidade:Math.abs(diff), tipo:'ajuste', motivo:'Ajuste de inventário', criado_em:dataInv });
+      saldoPayloads.push({ tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insId, quantidade:Math.max(0,qtdHoje), custo_medio:parseFloat(Number(custo).toFixed(6)), atualizado_em:new Date().toISOString() });
     });
-    await api('inventario_itens?on_conflict=id', {
-      method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
-      body: JSON.stringify(updates.map(u => ({ id: u.id, qtd_contada: u.qtdContada })))
-    });
-    const lojaId = getLojaId();
-    // Gera movimentos de AJUSTE rastreáveis para as diferenças contadas (aparecem no Kardex/Movimentação)
-    // Carimba com a DATA DO INVENTÁRIO (fim da contagem), não a data de hoje — uma contagem de 31/05 não pode virar movimento de hoje
-    const dataInv = (invAberto.data_final || invAberto.data_inicial)
-      ? (invAberto.data_final || invAberto.data_inicial) + 'T12:00:00.000Z'
-      : new Date().toISOString();
-    const entAjuste = [], saiAjuste = [];
-    updates.forEach(u => {
-      const diff = parseFloat((u.qtdContada - u.qtdSistema).toFixed(4));
-      if (diff > 0) entAjuste.push({ tenant_id:TENANT_ID, insumo_id:u.insumo_id, loja_id:lojaId, quantidade:diff, custo_unitario:u.custo_medio||0, tipo:'ajuste', observacao:'Ajuste de inventário', criado_em:dataInv });
-      else if (diff < 0) saiAjuste.push({ tenant_id:TENANT_ID, insumo_id:u.insumo_id, loja_id:lojaId, quantidade:Math.abs(diff), tipo:'ajuste', motivo:'Ajuste de inventário', criado_em:dataInv });
-    });
+    await api('inventario_itens?on_conflict=id', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal', body: JSON.stringify(updatesItens) });
     if (entAjuste.length) await api('entradas_estoque', {method:'POST', prefer:'return=minimal', body:JSON.stringify(entAjuste)});
     if (saiAjuste.length) await api('saidas_estoque', {method:'POST', prefer:'return=minimal', body:JSON.stringify(saiAjuste)});
-    const saldoPayloads = updates.map(u => ({
-      tenant_id: TENANT_ID, loja_id: lojaId, insumo_id: u.insumo_id,
-      quantidade: parseFloat(u.qtdContada.toFixed(4)),
-      custo_medio: parseFloat(Number(u.custo_medio).toFixed(6)),
-      atualizado_em: new Date().toISOString()
-    }));
-    await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
-      method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
-      body: JSON.stringify(saldoPayloads)
-    });
-    saldoPayloads.forEach(p => {
-      const ex = saldos.find(s => s.insumo_id === p.insumo_id && s.loja_id === p.loja_id);
-      if (ex) Object.assign(ex, p); else saldos.push({...p});
-    });
-    await api(`inventarios?id=eq.${invAberto.id}`, {
-      method:'PATCH', prefer:'return=minimal',
-      body: JSON.stringify({ status:'encerrado' })
-    });
-    toast('Inventário encerrado! Saldos atualizados.','ok');
+    await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal', body: JSON.stringify(saldoPayloads) });
+    saldoPayloads.forEach(p => { const ex = saldos.find(s => s.insumo_id === p.insumo_id && s.loja_id === p.loja_id); if (ex) Object.assign(ex, p); else saldos.push({...p}); });
+    await api(`inventarios?id=eq.${invAberto.id}`, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({ status:'encerrado' }) });
+    toast(retroativo ? 'Inventário encerrado! Reconciliado na data da contagem (movimentos posteriores preservados).' : 'Inventário encerrado! Saldos atualizados.','ok');
     await carregar();
     voltarInvLista();
   } catch(e) { toast('Erro: '+e.message,'err'); }

@@ -1437,19 +1437,27 @@ function exportar(){
   _relData.forEach(l=>{
     const ins=_insumos.find(i=>i.id===l.insumo_id);
     const forn=_fornecedores.find(f=>f.id===l.fornecedor_id);
-    const isEnt=l.tipo==='entrada';
+    const loja=_lojas.find(lj=>lj.id===l.loja_id);
+    const mod=l.modelo||l.modelo_processo||'';
+    // ids batem com COLS / _renderRelTable; valores crus (sem formatação) para planilha
     const cells={
-      data:l.data,tipo:l.tipo,produto:ins?.nome||'',
-      fornecedor:forn?(forn.nome_fantasia||forn.nome||forn.razao_social):'',
-      qtd:l.qtd_peixes||'',
-      qtd_peixes_s:l.qtd_consumida||'',
-      peso_bruto:isEnt?(l.peso_bruto||''):'',cabeca:isEnt?(l.perda_cabeca||''):'',
-      liq_arm:isEnt?(l.peso_limpo||''):'',peso_ent:!isEnt?(l.peso_bruto||''):'',
-      file_limpo:!isEnt?(l.peso_limpo||''):'',pele:!isEnt?(l.pele||''):'',
-      aparas:!isEnt?(l.aparas||''):'',perdas:!isEnt?(l.perda_outros||''):'',
-      rend_op:!isEnt?(l.rendimento_pct||''):'',
-      custo_kg:isEnt?(l.novo_custo_kg||l.custo_unitario||''):(l.custo_kg_file||''),
-      responsavel:l.responsavel||'',
+      data:l.data||'', modelo_col:_modeloLabel[mod]||mod||'', produto:ins?.nome||'',
+      tipo_col:l.tipo==='entrada'?'Entrada':(l.tipo==='saida'?'Saída':''),
+      loja_col:loja?.nome||'', turno_col:l.turno||'',
+      // Simples
+      qtd_peixes_s:l.qtd_consumida||'', peso_bruto_s:l.peso_bruto||'', p_cabeca:l.perda_cabeca||'',
+      p_pele_s:l.perda_pele||'', p_outros_s:l.perda_outros||'', p_espinha:l.perda_espinha||'', peso_limpo_s:l.peso_limpo||'',
+      // Degelo
+      p_congelado:l.peso_congelado||'', p_descongelado:l.peso_descongelado||'',
+      perda_deg:r3((+l.peso_congelado||0)-(+l.peso_descongelado||0))||'', peso_limpo_d:l.peso_limpo||'',
+      perda_limp:r3((+l.peso_descongelado||0)-(+l.peso_limpo||0))||'',
+      // Cocção
+      peso_ini:l.peso_inicial||'', peso_fin:l.peso_final||'', reducao_col:r3((+l.peso_inicial||0)-(+l.peso_final||0))||'',
+      // Lote
+      qtd_prod:l.qtd_produzida||'', qtd_cons:l.qtd_consumida||'', sobra_col:l.sobra_lote||'', validade_col:l.validade||'',
+      // Comuns
+      rend_col:l.rendimento_pct!=null?l.rendimento_pct:'', custo_kg:l.custo_unitario||'', valor_total_col:l.valor_total||'',
+      responsavel:l.responsavel||'', fornecedor:forn?(forn.nome_fantasia||forn.nome||forn.razao_social||''):'',
     };
     linhas.push(visCols.map(c=>cells[c.id]??'').join('\t'));
   });
