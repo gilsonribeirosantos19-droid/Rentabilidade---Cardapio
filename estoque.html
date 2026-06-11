@@ -3699,54 +3699,30 @@ function voltarInvLista() {
 async function encerrarInventario() {
   if (!invAberto) return;
   if (invAberto.status && invAberto.status !== 'ativo') { toast('Este inventário já está encerrado.','err'); return; }
-  // Loja do PRÓPRIO inventário (não o dropdown do topo) — evita gravar saldo/ajuste na loja errada
-  const lojaId = invAberto.loja_id || getLojaId();
-  // Data de referência = fim da contagem. Inventário legado sem data → hoje.
+  // Aviso quando a contagem é de um período passado (a reconciliação preserva os movimentos posteriores)
   const refDate = String(invAberto.data_final || invAberto.data_inicial || '').slice(0,10);
-  const dataInv = refDate ? refDate + 'T12:00:00.000Z' : new Date().toISOString();
   const hojeStr = new Date().toISOString().slice(0,10);
   const retroativo = refDate && refDate < hojeStr;
   const msgConfirm = retroativo
-    ? `Este inventário é de ${refDate.split('-').reverse().join('/')} (data passada).\n\nO estoque vai ser reconciliado NA DATA DA CONTAGEM e tudo que entrou/saiu DEPOIS será preservado (recalculado por cima). Encerrar?`
+    ? `Este inventário é de ${refDate.split('-').reverse().join('/')} (data passada).\n\nO estoque vai ser reconciliado NA DATA DA CONTAGEM e tudo que entrou/saiu DEPOIS será preservado. Encerrar?`
     : 'Encerrar o inventário? Os saldos serão ajustados com base nas quantidades contadas.';
   if (!confirm(msgConfirm)) return;
   try {
+    // 1) Salva as contagens que estão na tela (idempotente)
     const itens = await api(`inventario_itens?inventario_id=eq.${invAberto.id}`);
-    const r4 = x => parseFloat((x||0).toFixed(4));
-    const dt = m => (m.criado_em || '');
-    const updatesItens = [], entAjuste = [], saiAjuste = [], saldoPayloads = [];
-    itens.forEach(it => {
-      const insId = it.insumo_id;
+    const updatesItens = itens.map(it => {
       const inputEl = document.getElementById(`idet-${it.id}`);
       const qtdContada = inputEl ? (parseFloat(inputEl.value)||0) : (it.qtd_contada!=null ? it.qtd_contada : (it.qtd_sistema||0));
-      updatesItens.push({ id: it.id, qtd_contada: qtdContada });
-      // Reconstrói dos movimentos (mesma loja): posição NA DATA da contagem + o que veio DEPOIS
-      const mine = m => m.insumo_id===insId && ((m.loja_id||lojaId)===lojaId);
-      let entAte=0, entApos=0, saiAte=0, saiApos=0;
-      entradas.forEach(e=>{ if(mine(e)){ dt(e)<=dataInv ? entAte+=(+e.quantidade||0) : entApos+=(+e.quantidade||0); } });
-      saidas.forEach(s=>{ if(mine(s)){ dt(s)<=dataInv ? saiAte+=(+s.quantidade||0) : saiApos+=(+s.quantidade||0); } });
-      const posNaData = r4(entAte - saiAte);                 // o que o sistema acha que havia na data da contagem
-      const diff = r4(qtdContada - posNaData);               // ajuste a registrar, DATADO na contagem
-      const qtdHoje = r4(qtdContada + (entApos - saiApos));  // saldo de HOJE = contagem + movimentos posteriores
-      // Custo: inventário PRESERVA o custo médio atual; item novo sem custo → preço de compra do cadastro
-      const ins = insumos.find(i=>i.id===insId);
-      const sal = saldos.find(s=>s.insumo_id===insId && s.loja_id===lojaId);
-      const custo = (sal && +sal.custo_medio>0 ? +sal.custo_medio : 0) || (+ins?.preco_compra>0 ? +ins.preco_compra : 0) || (+it.custo_medio>0 ? +it.custo_medio : 0) || 0;
-      // Movimento de ajuste DATADO na contagem (rastreável no Kardex/Movimentação)
-      if (diff > 0) entAjuste.push({ tenant_id:TENANT_ID, insumo_id:insId, loja_id:lojaId, quantidade:diff, custo_unitario:custo, tipo:'ajuste', observacao:'Ajuste de inventário', criado_em:dataInv });
-      else if (diff < 0) saiAjuste.push({ tenant_id:TENANT_ID, insumo_id:insId, loja_id:lojaId, quantidade:Math.abs(diff), tipo:'ajuste', motivo:'Ajuste de inventário', criado_em:dataInv });
-      saldoPayloads.push({ tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insId, quantidade:Math.max(0,qtdHoje), custo_medio:parseFloat(Number(custo).toFixed(6)), atualizado_em:new Date().toISOString() });
+      return { id: it.id, qtd_contada: qtdContada };
     });
     await api('inventario_itens?on_conflict=id', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal', body: JSON.stringify(updatesItens) });
-    if (entAjuste.length) await api('entradas_estoque', {method:'POST', prefer:'return=minimal', body:JSON.stringify(entAjuste)});
-    if (saiAjuste.length) await api('saidas_estoque', {method:'POST', prefer:'return=minimal', body:JSON.stringify(saiAjuste)});
-    await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal', body: JSON.stringify(saldoPayloads) });
-    saldoPayloads.forEach(p => { const ex = saldos.find(s => s.insumo_id === p.insumo_id && s.loja_id === p.loja_id); if (ex) Object.assign(ex, p); else saldos.push({...p}); });
-    await api(`inventarios?id=eq.${invAberto.id}`, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify({ status:'encerrado' }) });
+    // 2) Fecha ATOMICAMENTE no servidor (transação tudo-ou-nada): gera os ajustes datados na contagem,
+    //    recalcula o saldo preservando movimentos posteriores e marca encerrado — função encerrar_inventario (supabase/encerrar_inventario.sql)
+    await api('rpc/encerrar_inventario', { method:'POST', body: JSON.stringify({ p_inventario_id: invAberto.id }) });
     toast(retroativo ? 'Inventário encerrado! Reconciliado na data da contagem (movimentos posteriores preservados).' : 'Inventário encerrado! Saldos atualizados.','ok');
     await carregar();
     voltarInvLista();
-  } catch(e) { toast('Erro: '+e.message,'err'); }
+  } catch(e) { toast('Erro ao encerrar: '+e.message,'err'); }
 }
 
 async function reabrirInventario() {

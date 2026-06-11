@@ -1332,7 +1332,7 @@ async function filtrarRel(){
 function limparRel(){
   ['rel-modelo','rel-tipo','rel-loja','rel-insumo','rel-de','rel-ate'].forEach(id=>sv(id,''));
   _relTipo='';_relModelo='';
-  _autoAdjustCols('');
+  _autoAdjustCols();
   _relData=[];
   document.getElementById('rel-content').style.display='none';
   document.getElementById('rel-empty').style.display='';

@@ -1847,7 +1847,6 @@ function atualizarProgressoInv() {
 async function confirmarInventario() {
   if (!invAtual) return;
   lerInputsInv();
-  const lojaId = invAtual.loja_id || userProfile?.loja_id;
   const btn = document.getElementById('btn-confirmar-inv');
   btn.disabled = true; btn.textContent = 'Salvando...';
   const lancado = it => it.qtd_contada !== '' && it.qtd_contada !== null && it.qtd_contada !== undefined;
