@@ -3305,7 +3305,7 @@ function renderInflacao() {
     if (!e.criado_em || !e.custo_unitario || !e.fator_conversao) return;
     const mes = e.criado_em.substring(0, 7);
     if (!meses.includes(mes)) return;
-    const precoUnit = e.custo_unitario / (e.fator_conversao || 1);
+    const precoUnit = e.custo_unitario; // custo_unitario já é por-unidade de estoque — NÃO dividir de novo (dados auditados 2026-06-11: 0 entradas no formato antigo)
     if (!mapa[e.insumo_id]) mapa[e.insumo_id] = {};
     if (!mapa[e.insumo_id][mes]) mapa[e.insumo_id][mes] = [];
     mapa[e.insumo_id][mes].push(precoUnit);
