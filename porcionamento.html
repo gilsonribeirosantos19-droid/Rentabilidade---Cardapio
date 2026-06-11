@@ -1220,6 +1220,7 @@ const COLS=[
   {id:'loja_col',       lbl:'Loja',               on:false, m:'*'},
   {id:'turno_col',      lbl:'Turno',              on:false, m:'*'},
   // ── Simples ──
+  {id:'qtd_peixes_s',   lbl:'Qtd. peixes',        on:true,  m:'simples'},
   {id:'peso_bruto_s',   lbl:'Peso Entrada',       on:true,  m:'simples'},
   {id:'p_cabeca',       lbl:'Cabeça (kg)',         on:false, m:'simples'},
   {id:'p_pele_s',       lbl:'Pele (kg)',           on:true,  m:'simples'},
@@ -1336,6 +1337,7 @@ function _renderRelTable(){
       loja_col:       esc(loja?.nome||'—'),
       turno_col:      esc(l.turno||'—'),
       // Simples
+      qtd_peixes_s:   isS&&l.qtd_consumida!=null?`<span class="mono">${l.qtd_consumida}</span>`:'—',
       peso_bruto_s:   isS?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
       p_cabeca:       isS?`<span class="mono">${kg(l.perda_cabeca)}</span>`:'—',
       p_pele_s:       isS?`<span class="mono">${kg(l.perda_pele)}</span>`:'—',
@@ -1374,6 +1376,7 @@ function _renderRelTable(){
   const totals={
     data:lbl, produto:'', loja_col:'', turno_col:'',
     // Simples
+    qtd_peixes_s:   sumF('qtd_consumida')||'—',
     peso_bruto_s:   kg(r3(sumF('peso_bruto'))),
     p_cabeca:       kg(r3(sumF('perda_cabeca'))),
     p_pele_s:       kg(r3(sumF('perda_pele'))),
@@ -1416,6 +1419,7 @@ function exportar(){
       data:l.data,tipo:l.tipo,produto:ins?.nome||'',
       fornecedor:forn?(forn.nome_fantasia||forn.nome||forn.razao_social):'',
       qtd:l.qtd_peixes||'',
+      qtd_peixes_s:l.qtd_consumida||'',
       peso_bruto:isEnt?(l.peso_bruto||''):'',cabeca:isEnt?(l.perda_cabeca||''):'',
       liq_arm:isEnt?(l.peso_limpo||''):'',peso_ent:!isEnt?(l.peso_bruto||''):'',
       file_limpo:!isEnt?(l.peso_limpo||''):'',pele:!isEnt?(l.pele||''):'',
