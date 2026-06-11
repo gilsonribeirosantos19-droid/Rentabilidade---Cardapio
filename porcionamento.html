@@ -545,11 +545,14 @@
         <div>
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Período</div>
           <div style="display:flex;align-items:center;gap:6px">
-            <input type="date" class="fil-date" id="rel-de">
+            <select class="fil-select" id="rel-periodo" style="min-width:120px" onchange="setPeriodoRange(this.value,'rel-de','rel-ate',filtrarRel)">
+              <option value="periodo">Período</option>
+              <option value="mes_atual" selected>Mês Atual</option>
+              <option value="mes_anterior">Mês Anterior</option>
+            </select>
+            <input type="date" class="fil-date" id="rel-de" onchange="document.getElementById('rel-periodo').value='periodo';filtrarRel()">
             <span style="color:var(--text3);font-size:12px">até</span>
-            <input type="date" class="fil-date" id="rel-ate">
-            <button class="btn btn-ghost btn-sm" type="button" onclick="setRelPeriodo('atual')">Mês atual</button>
-            <button class="btn btn-ghost btn-sm" type="button" onclick="setRelPeriodo('anterior')">Mês anterior</button>
+            <input type="date" class="fil-date" id="rel-ate" onchange="document.getElementById('rel-periodo').value='periodo';filtrarRel()">
           </div>
         </div>
         <!-- AÇÕES -->
@@ -1258,23 +1261,14 @@ let _relTipo='', _relModelo='';
 function setRelTipoSel(v){_relTipo=v;_autoAdjustCols();filtrarRel();}
 function setRelModeloSel(v){_relModelo=v;_autoAdjustCols();filtrarRel();}
 
-// Período rápido: 'atual' = mês corrente, 'anterior' = mês passado. Preenche as datas e filtra.
-function setRelPeriodo(qual){
-  const now=new Date();
-  let y=now.getFullYear(), m=now.getMonth(); // 0-11
-  if(qual==='anterior'){ m-=1; if(m<0){ m=11; y-=1; } }
-  const ini=new Date(y,m,1), fim=new Date(y,m+1,0); // 1º dia e último dia do mês
-  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  sv('rel-de',fmt(ini)); sv('rel-ate',fmt(fim));
-  filtrarRel();
-}
-
 // Estado inicial ao abrir o Relatório: Simples + Entrada e Saída juntas + mês atual, já carregando os dados.
+// setPeriodoRange (utils.js) preenche as datas e chama filtrarRel.
 function _initRelatorio(){
   sv('rel-modelo','simples'); _relModelo='simples';
   sv('rel-tipo','');          _relTipo='';
+  sv('rel-periodo','mes_atual');
   _autoAdjustCols();
-  setRelPeriodo('atual');
+  setPeriodoRange('mes_atual','rel-de','rel-ate',filtrarRel);
 }
 
 function _autoAdjustCols(){
