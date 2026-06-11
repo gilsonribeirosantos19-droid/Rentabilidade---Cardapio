@@ -3594,7 +3594,8 @@ async function abrirInvDetalhe(invId) {
 
     const itens = await api(`inventario_itens?inventario_id=eq.${invId}&order=insumo_id.asc`);
     let totalDif = 0;
-    document.getElementById('inv-det-body').innerHTML = itens.map(it => {
+    // Esconde itens cujo insumo nao esta mais ativo (apareciam como ID cru); o encerrar ainda os trata com diff 0
+    document.getElementById('inv-det-body').innerHTML = itens.filter(it => insumos.find(i=>i.id===it.insumo_id)).map(it => {
       const ins = insumos.find(i=>i.id===it.insumo_id);
       const un  = ins?.unidade_medida||ins?.unidade_compra||'un';
       const sys = it.qtd_sistema||0;
