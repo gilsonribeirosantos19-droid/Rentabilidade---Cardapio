@@ -2119,6 +2119,8 @@ function renderEntradas() {
   else tbody.innerHTML=slice.map((e,i)=>{
     const ins=insumos.find(i=>i.id===e.insumo_id);
     const forn=e.fornecedor_nome||(e.fornecedor_id?fornecedores.find(f=>f.id===e.fornecedor_id)?.nome:null)||'—';
+    // Excluir entrada: só liberado (e só aparece) p/ insumo SEM nenhuma movimentação de saída
+    const podeExcluir=!saidas.some(s=>s.insumo_id===e.insumo_id);
     const val=e.validade?new Date(e.validade+'T12:00:00').toLocaleDateString('pt-BR'):'—';
     const isNfe=e.tipo==='nfe'||e.tipo==='nfe_importada';
     const tipoBadge=isNfe
@@ -2145,6 +2147,9 @@ function renderEntradas() {
           <button title="Duplicar" onclick="duplicarEntrada('${e.id}')" style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px" onmouseover="this.style.color='#10b981'" onmouseout="this.style.color='#94a3b8'">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
+          ${podeExcluir?`<button title="Excluir entrada (insumo sem saída)" onclick="excluirEntrada('${e.id}')" style="background:none;border:none;cursor:pointer;color:#cbd5e1;padding:4px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#cbd5e1'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>`:''}
         </div>
       </td>
     </tr>`;
@@ -2178,6 +2183,37 @@ function duplicarEntrada(id) {
     el('ef-custo',e.custo_unitario); el('ef-lote',e.lote||'');
     calcConv();
   },100);
+}
+
+// Exclui uma entrada — APENAS se o insumo não tiver nenhuma movimentação de saída.
+// Como não há saídas, o saldo correto é a soma das entradas restantes (média móvel ponderada).
+async function excluirEntrada(id) {
+  const e = entradas.find(x=>x.id===id);
+  if (!e) return;
+  const ins = insumos.find(i=>i.id===e.insumo_id);
+  // Regra de segurança (revalida no clique, não só na renderização)
+  if (saidas.some(s=>s.insumo_id===e.insumo_id)) {
+    toast('Não é possível excluir: esse insumo já teve movimentação de saída.','err');
+    return;
+  }
+  if (!confirm(`Excluir esta entrada de ${ins?.nome||'insumo'} (${qtd(e.quantidade)})?\nO saldo do insumo será recalculado.`)) return;
+  try {
+    await api(`entradas_estoque?id=eq.${id}`, {method:'DELETE', prefer:'return=minimal'});
+    entradas = entradas.filter(x=>x.id!==id);
+    // Recalcula o saldo do insumo+loja a partir das entradas restantes (ordem cronológica)
+    const lojaId = e.loja_id || getLojaId();
+    const ents = entradas
+      .filter(x=>x.insumo_id===e.insumo_id && (x.loja_id||getLojaId())===lojaId)
+      .sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));
+    let q=0, cm=0;
+    ents.forEach(x=>{
+      const qx=x.quantidade||0, vx=x.custo_unitario||0;
+      if (qx===0) { cm=vx; } else { const nq=q+qx; cm = nq>0 ? (q*cm+qx*vx)/nq : cm; q=nq; }
+    });
+    await upsertSaldo(e.insumo_id, parseFloat(q.toFixed(4)), parseFloat((cm||0).toFixed(6)), undefined, undefined, lojaId);
+    toast('Entrada excluída e saldo recalculado.','ok');
+    renderEntradas();
+  } catch(err) { toast('Erro: '+err.message,'err'); }
 }
 
 function fmtDataHora(s){ if(!s)return'—'; const d=new Date(s); return d.toLocaleDateString('pt-BR')+'\n'+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
