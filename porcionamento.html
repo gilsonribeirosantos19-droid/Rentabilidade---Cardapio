@@ -55,8 +55,8 @@
   .tbl-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:clip}
   .tbl-scroll{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 300px)}
   table{width:100%;border-collapse:collapse;font-size:12px}
-  thead tr{background:#0f2d5c}
-  th{padding:5px 10px;text-align:left;font-size:10px;font-weight:600;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;position:sticky;top:0;z-index:10;background:#0f2d5c}
+  thead tr{background:#eef2f7}
+  th{padding:5px 10px;text-align:left;font-size:10px;font-weight:600;color:#1e293b;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;position:sticky;top:0;z-index:10;background:#eef2f7}
   td{padding:3px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
   tr:last-child td{border-bottom:none}
   tbody tr:hover td{background:var(--bg3)}
@@ -545,9 +545,14 @@
         <div>
           <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Período</div>
           <div style="display:flex;align-items:center;gap:6px">
-            <input type="date" class="fil-date" id="rel-de">
+            <select class="fil-select" id="rel-periodo" style="min-width:120px" onchange="setPeriodoRange(this.value,'rel-de','rel-ate',filtrarRel)">
+              <option value="periodo">Período</option>
+              <option value="mes_atual" selected>Mês Atual</option>
+              <option value="mes_anterior">Mês Anterior</option>
+            </select>
+            <input type="date" class="fil-date" id="rel-de" onchange="document.getElementById('rel-periodo').value='periodo';filtrarRel()">
             <span style="color:var(--text3);font-size:12px">até</span>
-            <input type="date" class="fil-date" id="rel-ate">
+            <input type="date" class="fil-date" id="rel-ate" onchange="document.getElementById('rel-periodo').value='periodo';filtrarRel()">
           </div>
         </div>
         <!-- AÇÕES -->
@@ -607,9 +612,14 @@
         <select class="fil-select" id="so-loja" onchange="renderSaldoOp()">
           <option value="">Todas as lojas</option>
         </select>
-        <input type="date" class="fil-date" id="so-de" onchange="renderSaldoOp()" title="De">
+        <select class="fil-select" id="so-periodo" style="min-width:120px" onchange="setPeriodoRange(this.value,'so-de','so-ate',renderSaldoOp)">
+          <option value="periodo">Período</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
+        <input type="date" class="fil-date" id="so-de" onchange="document.getElementById('so-periodo').value='periodo';renderSaldoOp()" title="De">
         <span style="color:var(--text3);font-size:12px">–</span>
-        <input type="date" class="fil-date" id="so-ate" onchange="renderSaldoOp()" title="Até">
+        <input type="date" class="fil-date" id="so-ate" onchange="document.getElementById('so-periodo').value='periodo';renderSaldoOp()" title="Até">
         <button class="btn btn-ghost btn-sm" onclick="renderSaldoOp()">↻ Atualizar</button>
         <button class="btn btn-ghost btn-sm" onclick="exportSaldoOp()" style="margin-left:auto">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -692,12 +702,8 @@ function _initSaldoOp(){
   const selLoja=document.getElementById('so-loja');
   if(selLoja&&selLoja.options.length<=1)
     _lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;selLoja.appendChild(o);});
-  const hoje=new Date(),de=new Date(hoje);de.setDate(de.getDate()-30);
-  const fmt=d=>d.toISOString().slice(0,10);
-  const elDe=document.getElementById('so-de'),elAte=document.getElementById('so-ate');
-  if(elDe&&!elDe.value) elDe.value=fmt(de);
-  if(elAte&&!elAte.value) elAte.value=fmt(hoje);
-  renderSaldoOp();
+  sv('so-periodo','mes_atual');
+  setPeriodoRange('mes_atual','so-de','so-ate',renderSaldoOp); // padrão do sistema (utils.js)
 }
 async function renderSaldoOp(){
   const insumoFil=document.getElementById('so-insumo')?.value||'';
@@ -762,8 +768,8 @@ async function renderSaldoOp(){
     }).join('');
     const sF=r3(totEntKg-totSaiKg);
     tfoot.innerHTML=hasUnits
-      ?`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="5" style="text-transform:uppercase;letter-spacing:.05em">TOTAL GERAL</td><td class="r mono">${totEntUn||'—'}</td><td class="r mono">${kg(totEntKg)}</td><td class="r mono">${totSaiUn||'—'}</td><td class="r mono">${kg(totSaiKg)}</td><td class="r mono">${r3(totEntUn-totSaiUn)||'—'}</td><td class="r mono" style="color:${sF>=0?'var(--green)':'var(--red)'}">${kg(sF)}</td><td colspan="2"></td></tr>`
-      :`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="5" style="text-transform:uppercase;letter-spacing:.05em">TOTAL GERAL</td><td class="r mono">${kg(totEntKg)}</td><td class="r mono">${kg(totSaiKg)}</td><td class="r mono" style="color:${sF>=0?'var(--green)':'var(--red)'}">${kg(sF)}</td><td colspan="2"></td></tr>`;
+      ?`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="4" style="text-transform:uppercase;letter-spacing:.05em">TOTAL GERAL</td><td class="r mono">${totEntUn||'—'}</td><td class="r mono">${kg(totEntKg)}</td><td class="r mono">${totSaiUn||'—'}</td><td class="r mono">${kg(totSaiKg)}</td><td class="r mono">${r3(totEntUn-totSaiUn)||'—'}</td><td class="r mono" style="color:${sF>=0?'var(--green)':'var(--red)'}">${kg(sF)}</td><td colspan="2"></td></tr>`
+      :`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="4" style="text-transform:uppercase;letter-spacing:.05em">TOTAL GERAL</td><td class="r mono">${kg(totEntKg)}</td><td class="r mono">${kg(totSaiKg)}</td><td class="r mono" style="color:${sF>=0?'var(--green)':'var(--red)'}">${kg(sF)}</td><td colspan="2"></td></tr>`;
   }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
 }
 function exportSaldoOp(){
@@ -809,6 +815,7 @@ function switchTab(id){
   (document.getElementById('tab-'+id)||document.getElementById('tab-hub')).classList.add('active');
   _renderStrip();
   if(id==='lancamento'&&!_loaded.lancamento){renderLanc();_loaded.lancamento=true;}
+  if(id==='relatorio'&&!_loaded.relatorio){_initRelatorio();_loaded.relatorio=true;}
   if(id==='saldo-op'&&!_loaded['saldo-op']){_initSaldoOp();_loaded['saldo-op']=true;}
 }
 function closeTab(id,e){
@@ -1217,14 +1224,16 @@ const COLS=[
   // ── Comuns ──
   {id:'data',           lbl:'Data',               on:true,  m:'*'},
   {id:'produto',        lbl:'Produto',            on:true,  m:'*'},
+  {id:'tipo_col',       lbl:'Tipo',               on:true,  m:'*'},
   {id:'loja_col',       lbl:'Loja',               on:false, m:'*'},
   {id:'turno_col',      lbl:'Turno',              on:false, m:'*'},
   // ── Simples ──
+  {id:'qtd_peixes_s',   lbl:'Qtd. peixes',        on:true,  m:'simples'},
   {id:'peso_bruto_s',   lbl:'Peso Entrada',       on:true,  m:'simples'},
-  {id:'p_cabeca',       lbl:'Cabeça (kg)',         on:false, m:'simples'},
-  {id:'p_pele_s',       lbl:'Pele (kg)',           on:true,  m:'simples'},
-  {id:'p_outros_s',     lbl:'Aparas (kg)',         on:true,  m:'simples'},
-  {id:'p_espinha',      lbl:'Perdas (kg)',         on:true,  m:'simples'},
+  {id:'p_cabeca',       lbl:'Cabeça (kg)',         on:false, m:'simples', t:'entrada'},
+  {id:'p_pele_s',       lbl:'Pele (kg)',           on:true,  m:'simples', t:'saida'},
+  {id:'p_outros_s',     lbl:'Aparas (kg)',         on:true,  m:'simples', t:'saida'},
+  {id:'p_espinha',      lbl:'Perdas (kg)',         on:true,  m:'simples', t:'saida'},
   {id:'peso_limpo_s',   lbl:'Filé limpo (kg)',    on:true,  m:'simples'},
   // ── Degelo ──
   {id:'p_congelado',    lbl:'Peso Congelado',     on:true,  m:'degelo'},
@@ -1250,13 +1259,27 @@ const COLS=[
 
 let _relTipo='', _relModelo='';
 
-function setRelTipoSel(v){_relTipo=v;_autoAdjustCols();}
-function setRelModeloSel(v){_relModelo=v;_autoAdjustCols();}
+function setRelTipoSel(v){_relTipo=v;_autoAdjustCols();filtrarRel();}
+function setRelModeloSel(v){_relModelo=v;_autoAdjustCols();filtrarRel();}
+
+// Estado inicial ao abrir o Relatório: Simples + Entrada e Saída juntas + mês atual, já carregando os dados.
+// setPeriodoRange (utils.js) preenche as datas e chama filtrarRel.
+function _initRelatorio(){
+  sv('rel-modelo','simples'); _relModelo='simples';
+  sv('rel-tipo','');          _relTipo='';
+  sv('rel-periodo','mes_atual');
+  _autoAdjustCols();
+  setPeriodoRange('mes_atual','rel-de','rel-ate',filtrarRel);
+}
 
 function _autoAdjustCols(){
   COLS.forEach(c=>{
-    if(_relModelo) c.on = c.m==='*' || c.m===_relModelo;
-    else           c.on = c.m==='*';
+    let on = _relModelo ? (c.m==='*'||c.m===_relModelo) : (c.m==='*');
+    // esconde colunas exclusivas do outro tipo quando um Tipo está filtrado
+    if(on && _relTipo && c.t && c.t!==_relTipo) on=false;
+    // coluna "Tipo" só faz sentido quando mostra Entrada E Saída juntas (e em modelos com entrada/saída)
+    if(c.id==='tipo_col') on = !_relTipo && _relModelo!=='coccao' && _relModelo!=='lote';
+    c.on = on;
   });
   if(_relData.length) _renderRelTable();
   _renderColChecks();
@@ -1333,9 +1356,11 @@ function _renderRelTable(){
       data:           fmtDate(l.data),
       modelo_col:     mod?`<span class="badge" style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:11px">${esc(_modeloLabel[mod]||mod)}</span>`:'—',
       produto:        `<span style="font-weight:600">${esc(ins?.nome||'—')}</span>`,
+      tipo_col:       l.tipo?(l.tipo==='entrada'?`<span style="color:#1d4ed8;font-weight:600">Entrada</span>`:`<span style="color:#dc2626;font-weight:600">Saída</span>`):'—',
       loja_col:       esc(loja?.nome||'—'),
       turno_col:      esc(l.turno||'—'),
       // Simples
+      qtd_peixes_s:   isS&&l.qtd_consumida!=null?`<span class="mono">${l.qtd_consumida}</span>`:'—',
       peso_bruto_s:   isS?`<span class="mono">${kg(l.peso_bruto)}</span>`:'—',
       p_cabeca:       isS?`<span class="mono">${kg(l.perda_cabeca)}</span>`:'—',
       p_pele_s:       isS?`<span class="mono">${kg(l.perda_pele)}</span>`:'—',
@@ -1372,8 +1397,9 @@ function _renderRelTable(){
   const avgF=(field)=>{const rs=_relData.filter(l=>l[field]!=null);return rs.length?rs.reduce((s,l)=>s+parseFloat(l[field]),0)/rs.length:null;};
   const lbl='<span style="color:#0f2d5c;font-size:10px;letter-spacing:.06em;text-transform:uppercase">TOTAL</span>';
   const totals={
-    data:lbl, produto:'', loja_col:'', turno_col:'',
+    data:lbl, produto:'', tipo_col:'', loja_col:'', turno_col:'',
     // Simples
+    qtd_peixes_s:   sumF('qtd_consumida')||'—',
     peso_bruto_s:   kg(r3(sumF('peso_bruto'))),
     p_cabeca:       kg(r3(sumF('perda_cabeca'))),
     p_pele_s:       kg(r3(sumF('perda_pele'))),
@@ -1416,6 +1442,7 @@ function exportar(){
       data:l.data,tipo:l.tipo,produto:ins?.nome||'',
       fornecedor:forn?(forn.nome_fantasia||forn.nome||forn.razao_social):'',
       qtd:l.qtd_peixes||'',
+      qtd_peixes_s:l.qtd_consumida||'',
       peso_bruto:isEnt?(l.peso_bruto||''):'',cabeca:isEnt?(l.perda_cabeca||''):'',
       liq_arm:isEnt?(l.peso_limpo||''):'',peso_ent:!isEnt?(l.peso_bruto||''):'',
       file_limpo:!isEnt?(l.peso_limpo||''):'',pele:!isEnt?(l.pele||''):'',

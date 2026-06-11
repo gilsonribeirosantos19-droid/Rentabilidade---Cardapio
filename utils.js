@@ -119,6 +119,23 @@ function lojaFiltroHtml(lojas, allLabel) {
   return `<option value="">${allLabel}</option>` + (lojas || []).map(l => `<option value="${l.id}">${e(l.nome)}</option>`).join('');
 }
 
+// ── FILTRO DE PERÍODO RÁPIDO ───────────────────────────────────────
+// Padrão usado em todas as telas: dropdown "Período / Mês Atual / Mês Anterior".
+// Preenche os dois inputs de data (deId/ateId) e dispara o callback fn.
+function setPeriodoRange(tipo, deId, ateId, fn) {
+  const d = new Date();
+  if (tipo === 'mes_atual') {
+    document.getElementById(deId).value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    document.getElementById(ateId).value = d.toISOString().split('T')[0];
+  } else if (tipo === 'mes_anterior') {
+    const prev = new Date(d.getFullYear(), d.getMonth()-1, 1);
+    const last = new Date(d.getFullYear(), d.getMonth(), 0);
+    document.getElementById(deId).value = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}-01`;
+    document.getElementById(ateId).value = `${last.getFullYear()}-${String(last.getMonth()+1).padStart(2,'0')}-${String(last.getDate()).padStart(2,'0')}`;
+  }
+  if (fn) fn();
+}
+
 // ── CÓDIGO INTERNO ─────────────────────────────────────────────────
 // Formata o código interno do item (número sequencial guardado no banco) com 6 dígitos.
 // Mesmo código em todas as telas, estável (não muda quando se adiciona/remove item).
