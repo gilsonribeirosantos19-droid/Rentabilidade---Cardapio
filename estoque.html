@@ -4097,7 +4097,10 @@ async function renderMovimentacao() {
     const qPerdSaida = perI.reduce((a,p)=>a+(p.quantidade||0),0);
     const qPerdGerente = perdasMap[ins.id]||0;
     const qPerd = qPerdSaida + qPerdGerente; const vPerd=qPerd*cmFim;
-    const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd); const vFin=qFin*cmFim;
+    // Outras saídas (ajuste de inventário, transferência) — TÊM que entrar no Q.Final p/ bater com o Saldo de Estoque
+    const outI = saisPer.filter(x=>x.insumo_id===ins.id&&!['consumo','perda','vencimento','descarte'].includes(x.tipo));
+    const qOutras = outI.reduce((a,o)=>a+(o.quantidade||0),0);
+    const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd-qOutras); const vFin=qFin*cmFim;
     return {nome:ins.nome, un:ins.unidade_medida||ins.unidade_compra||'—', cat:ins.categoria||'—',
       qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm:cmFim};
   });
