@@ -2131,8 +2131,9 @@ function renderEntradas() {
   else tbody.innerHTML=slice.map((e,i)=>{
     const ins=insumos.find(i=>i.id===e.insumo_id);
     const forn=e.fornecedor_nome||(e.fornecedor_id?fornecedores.find(f=>f.id===e.fornecedor_id)?.nome:null)||'—';
-    // Excluir entrada: só liberado (e só aparece) p/ insumo SEM nenhuma movimentação de saída
-    const podeExcluir=!saidas.some(s=>s.insumo_id===e.insumo_id);
+    // Excluir entrada: só liberado (e só aparece) p/ insumo SEM saída NA MESMA LOJA da entrada
+    const lojaE=e.loja_id||getLojaId();
+    const podeExcluir=!saidas.some(s=>s.insumo_id===e.insumo_id && (s.loja_id||getLojaId())===lojaE);
     const val=e.validade?new Date(e.validade+'T12:00:00').toLocaleDateString('pt-BR'):'—';
     const isNfe=e.tipo==='nfe'||e.tipo==='nfe_importada';
     const tipoBadge=isNfe
@@ -2203,9 +2204,10 @@ async function excluirEntrada(id) {
   const e = entradas.find(x=>x.id===id);
   if (!e) return;
   const ins = insumos.find(i=>i.id===e.insumo_id);
-  // Regra de segurança (revalida no clique, não só na renderização)
-  if (saidas.some(s=>s.insumo_id===e.insumo_id)) {
-    toast('Não é possível excluir: esse insumo já teve movimentação de saída.','err');
+  const lojaId = e.loja_id || getLojaId();
+  // Regra de segurança (revalida no clique): sem saída do insumo NA MESMA LOJA
+  if (saidas.some(s=>s.insumo_id===e.insumo_id && (s.loja_id||getLojaId())===lojaId)) {
+    toast('Não é possível excluir: esse insumo já teve movimentação de saída nesta loja.','err');
     return;
   }
   if (!confirm(`Excluir esta entrada de ${ins?.nome||'insumo'} (${qtd(e.quantidade)})?\nO saldo do insumo será recalculado.`)) return;
@@ -2213,7 +2215,6 @@ async function excluirEntrada(id) {
     await api(`entradas_estoque?id=eq.${id}`, {method:'DELETE', prefer:'return=minimal'});
     entradas = entradas.filter(x=>x.id!==id);
     // Recalcula o saldo do insumo+loja a partir das entradas restantes (ordem cronológica)
-    const lojaId = e.loja_id || getLojaId();
     const ents = entradas
       .filter(x=>x.insumo_id===e.insumo_id && (x.loja_id||getLojaId())===lojaId)
       .sort((a,b)=>(a.criado_em||'').localeCompare(b.criado_em||''));
@@ -3656,7 +3657,7 @@ async function abrirInvDetalhe(invId) {
       const sinal = dif>0?'+':'';
       const input = isAtivo
         ? `<input type="number" class="field field-sm" id="idet-${it.id}"
-            value="${cnt.toFixed(3)}" step="0.001" min="0" style="width:90px;text-align:right"
+            value="${cnt.toFixed(3)}" data-orig="${cnt.toFixed(3)}" step="0.001" min="0" style="width:90px;text-align:right"
             oninput="calcDetDiff('${it.id}',${sys},${it.custo_medio||0})">`
         : `<span class="mono">${qtd(cnt)}</span>`;
       return `<tr id="idet-row-${it.id}">
@@ -3710,12 +3711,18 @@ async function encerrarInventario() {
   try {
     // 1) Salva as contagens que estão na tela (idempotente)
     const itens = await api(`inventario_itens?inventario_id=eq.${invAberto.id}`);
-    const updatesItens = itens.map(it => {
+    // Concorrência: só salva os itens que o DONO realmente editou na tela (valor ≠ original). Os não tocados
+    // mantêm o que está no banco (ex.: contagem que o gerente salvou depois) — evita sobrescrever (lost update).
+    const updatesItens = [];
+    itens.forEach(it => {
       const inputEl = document.getElementById(`idet-${it.id}`);
-      const qtdContada = inputEl ? (parseFloat(inputEl.value)||0) : (it.qtd_contada!=null ? it.qtd_contada : (it.qtd_sistema||0));
-      return { id: it.id, qtd_contada: qtdContada };
+      if (!inputEl) return;
+      const val = parseFloat(inputEl.value)||0;
+      const orig = parseFloat(inputEl.dataset.orig);
+      if (!isNaN(orig) && Math.abs(val - orig) < 1e-9) return; // não mexeu → não sobrescreve
+      updatesItens.push({ id: it.id, qtd_contada: val });
     });
-    await api('inventario_itens?on_conflict=id', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal', body: JSON.stringify(updatesItens) });
+    if (updatesItens.length) await api('inventario_itens?on_conflict=id', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal', body: JSON.stringify(updatesItens) });
     // 2) Fecha ATOMICAMENTE no servidor (transação tudo-ou-nada): gera os ajustes datados na contagem,
     //    recalcula o saldo preservando movimentos posteriores e marca encerrado — função encerrar_inventario (supabase/encerrar_inventario.sql)
     await api('rpc/encerrar_inventario', { method:'POST', body: JSON.stringify({ p_inventario_id: invAberto.id }) });

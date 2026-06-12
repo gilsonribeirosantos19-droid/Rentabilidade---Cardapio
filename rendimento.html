@@ -351,7 +351,7 @@ function setPeriodoRange(tipo,deId,ateId,fn){const d=new Date();let de,ate;if(ti
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
 
-let todosInsumos=[], todosTestes=[], _filtrado=[], _pag=1, _porPag=10, _saldos=[];
+let todosInsumos=[], todosTestes=[], _filtrado=[], _pag=1, _porPag=10, _saldos=[], _vinc=[];
 let editId=null;
 
 (function(){
@@ -365,14 +365,16 @@ async function carregar(){
   const cs=document.getElementById('conn-status');
   if(cs){cs.textContent='• carregando...';cs.style.color='#94a3b8';}
   try{
-    const[insumos,testes,saldos]=await Promise.all([
-      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+    const[insumos,testes,saldos,vinc]=await Promise.all([
+      api(`insumos?tenant_id=eq.${TENANT_ID}&order=nome.asc`), // sem filtro ativo: nome de insumo inativo em testes antigos
       api(`testes_rendimento?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`).catch(()=>[]),
+      api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`).catch(()=>[]), // último preço de fornecedor (fallback de custo)
     ]);
     todosInsumos=insumos;
     todosTestes=testes;
     _saldos=saldos;
+    _vinc=vinc;
     popularSelectInsumos();
     renderSummary();
     filtrar();
@@ -385,10 +387,11 @@ async function carregar(){
 }
 
 // Custo por kg do insumo — fonte oficial: custo médio do saldo; fallback preço de compra (ARQUITETURA §5)
-function custoMedioKg(insId){ return custoDoInsumo(insId, null, {saldos:_saldos, insumos:todosInsumos}); }
+function custoMedioKg(insId){ return custoDoInsumo(insId, null, {saldos:_saldos, insumos:todosInsumos, vinculos:_vinc}); }
 
 function popularSelectInsumos(){
-  const opts=todosInsumos.map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'kg'})</option>`).join('');
+  // dropdowns só com insumos ATIVOS (a lista todosInsumos inclui inativos só para resolver nome em testes antigos)
+  const opts=todosInsumos.filter(i=>i.ativo!==false).map(i=>`<option value="${i.id}">${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'kg'})</option>`).join('');
   const fi=document.getElementById('filtro-insumo');
   const ff=document.getElementById('f-insumo');
   if(fi){ fi.innerHTML='<option value="">Todos os insumos</option>'+opts; searchableSelect(fi); fi._ssSync&&fi._ssSync(); }
