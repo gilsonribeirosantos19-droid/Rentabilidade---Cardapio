@@ -46,10 +46,11 @@ begin
   v_data := (coalesce(v_inv.data_final, v_inv.data_inicial, current_date)::date + time '12:00')::timestamptz;
 
   for r in
-    select ii.insumo_id, coalesce(ii.qtd_contada, 0) as qtd_contada, i.nome, i.preco_compra
+    select ii.insumo_id, ii.qtd_contada, i.nome, i.preco_compra
     from public.inventario_itens ii
     join public.insumos i on i.id = ii.insumo_id
     where ii.inventario_id = p_inventario_id
+      and ii.qtd_contada is not null   -- só reconcilia itens CONTADOS; não contado fica intacto (não zera)
   loop
     -- posição do sistema NA DATA da contagem (movimentos até a data) e o que veio DEPOIS
     select coalesce(sum(quantidade),0) into v_entAte  from public.entradas_estoque
