@@ -199,9 +199,15 @@ function custoFichaPorcao(itens, rendimentoPorcoes, lojaId, ctx) {
   let total = 0;
   (itens || []).forEach(it => {
     const ins = insumos.find(i => i.id === it.insumo_id);
-    const rend = (ins && +ins.rendimento_pct > 0) ? ins.rendimento_pct / 100 : 1;
-    const custoKg = custoDoInsumo(it.insumo_id, lojaId, ctx);
-    total += (custoKg / rend / 1000) * (+it.quantidade_g || 0);
+    const custoBase = custoDoInsumo(it.insumo_id, lojaId, ctx);
+    const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g';
+    if (um === 'un' || um === 'pct' || um === 'cx') {
+      // insumo unitário: custo direto × quantidade (sem /1000 e sem rendimento)
+      total += custoBase * (+it.quantidade_g || 0);
+    } else {
+      const rend = (ins && +ins.rendimento_pct > 0) ? ins.rendimento_pct / 100 : 1;
+      total += (custoBase / rend / 1000) * (+it.quantidade_g || 0);
+    }
   });
   const por = +rendimentoPorcoes > 0 ? +rendimentoPorcoes : 1;
   return total / por;
