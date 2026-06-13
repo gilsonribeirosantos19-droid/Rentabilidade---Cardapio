@@ -2745,7 +2745,7 @@ async function registrarMovimentacao() {
     } else {
       await api('saidas_estoque', {method:'POST', prefer:'return=minimal',
         body: JSON.stringify({tenant_id:TENANT_ID, loja_id:lojaId, insumo_id:insumoId,
-          quantidade:qtd, tipo:'manual', motivo:obs||null, criado_em:criadoEm})});
+          quantidade:qtd, tipo:'consumo', motivo:obs||null, criado_em:criadoEm})});
       novaQtd = Math.max(0, qtdAtual - qtd);
     }
     // Atualiza saldo via upsert
