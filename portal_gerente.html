@@ -491,7 +491,17 @@ async function init(){
   const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   se('p-data-hoje',`${dias[hoje.getDay()]}, ${hoje.getDate()} ${meses[hoje.getMonth()]} ${hoje.getFullYear()}`);
-  se('p-loja-nome','Sushi Ponta Negra');
+  // nome da empresa/loja do tenant logado (dinâmico — multi-tenant; sem nome fixo de cliente)
+  try{
+    let nomeEmpresa='';
+    const _t=await api(`tenants?id=eq.${TENANT_ID}&select=nome`).catch(()=>[]);
+    if(_t&&_t[0]&&_t[0].nome) nomeEmpresa=_t[0].nome;
+    if(!nomeEmpresa){
+      const _l=await api(`lojas?tenant_id=eq.${TENANT_ID}&select=nome&limit=1`).catch(()=>[]);
+      if(_l&&_l[0]&&_l[0].nome) nomeEmpresa=_l[0].nome;
+    }
+    se('p-loja-nome', nomeEmpresa||'—');
+  }catch{ se('p-loja-nome','—'); }
 
   // Datas padrão
   const d=hoje.toISOString().slice(0,10);
