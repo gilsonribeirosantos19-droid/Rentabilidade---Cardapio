@@ -729,7 +729,8 @@ function switchDpTab(nome,btn){
   const body=document.getElementById('dp-body');
   if(!body||!fichaDetalhe)return;
   const f=fichaDetalhe;
-  const custo=custoFicha(f);
+  const custo=custoFicha(f);            // por porção (CMV/markup/margem vs preço por unidade)
+  const custoTot=custoFichaTotal(f);    // total da receita (tabela de ingredientes)
   const pv=f.preco_venda||0;
   const cmv=(custo>0&&pv>0)?(custo/pv*100):null;
   const markup=(custo>0&&pv>0)?(pv/custo):null;
@@ -758,7 +759,7 @@ function switchDpTab(nome,btn){
         const ins=todosInsumos.find(i=>i.id===it.insumo_id);
         if(!ins)return '';
         const sub=custoIngrediente(ins,it.quantidade_g);
-        const pctCusto=custo>0?(sub/custo*100):0;
+        const pctCusto=custoTot>0?(sub/custoTot*100):0;
         const um=ins.unidade_medida||ins.unidade_compra||'g';
         const qtdDisplay=(um==='kg'||um==='litro')?`${(it.quantidade_g/1000).toFixed(3)} ${um}`:`${it.quantidade_g} ${um}`;
         return `<tr>
@@ -789,7 +790,7 @@ function switchDpTab(nome,btn){
             <td style="text-align:right;padding:7px 4px;font-family:'DM Mono',monospace;font-size:12px;color:#0f172a">
               ${(()=>{const tot=f.itens?.reduce((s,it)=>s+it.quantidade_g,0)||0;return tot>=1000?(tot/1000).toFixed(3)+' kg':tot+' g';})()}
             </td>
-            <td style="text-align:right;padding:7px 4px;font-family:'DM Mono',monospace;font-size:12px">R$ ${custo.toFixed(2)}</td>
+            <td style="text-align:right;padding:7px 4px;font-family:'DM Mono',monospace;font-size:12px">R$ ${custoTot.toFixed(2)}</td>
             <td style="text-align:right;padding:7px 4px;font-family:'DM Mono',monospace;font-size:12px;color:#94a3b8">100%</td>
           </tr></tfoot>
         </table>
@@ -797,7 +798,7 @@ function switchDpTab(nome,btn){
       <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Resumo Financeiro</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #f1f5f9">
-          <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Custo</div>
+          <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Custo/un</div>
           <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a">${custo>0?fmt(custo):'—'}</div>
         </div>
         <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #f1f5f9">
@@ -863,13 +864,18 @@ function custoIngrediente(ins,qtdG){
   if(um==='un'||um==='pct'||um==='cx')return cb*qtdG;
   return cb/(ins.rendimento_pct/100)/1000*qtdG;
 }
-function custoFicha(f){
+function custoFichaTotal(f){
   if(!f.itens||!f.itens.length)return 0;
   return f.itens.reduce((acc,it)=>{
     const ins=todosInsumos.find(i=>i.id===it.insumo_id);
     if(!ins)return acc;
     return acc+custoIngrediente(ins,it.quantidade_g);
   },0);
+}
+// custo POR PORÇÃO (o preço de venda é por unidade/porção) — base de CMV/markup/margem
+function custoFicha(f){
+  const por=+f.rendimento_porcoes>0?+f.rendimento_porcoes:1;
+  return custoFichaTotal(f)/por;
 }
 
 function abrirModalNovo(){
@@ -1029,9 +1035,11 @@ function atualizarCustoPreview(){
     else{kgEl.textContent=rend>0?'Adicione ingredientes para calcular':`Informe o rendimento para ver o ${labelCusto.toLowerCase()}`;}
   }else if(kgEl)kgEl.textContent='';
   const pv=parseFloat(document.getElementById('f-preco').value)||0;
+  const porc=parseFloat(document.getElementById('f-porcoes').value)||1;
+  const custoP=total/(porc>0?porc:1); // custo por porção (preço de venda é por unidade)
   const prev=document.getElementById('precif-preview');
   if(pv>0&&total>0){
-    const cmv=total/pv*100;const markup=pv/total;const margem=pv-total;
+    const cmv=custoP/pv*100;const markup=pv/custoP;const margem=pv-custoP;
     const cor=cmv<=30?'#16a34a':cmv<=38?'#f59e0b':'#e11d48';
     prev.style.color=cor;
     prev.innerHTML=`CMV <strong>${cmv.toFixed(1)}%</strong> · Markup <strong>${markup.toFixed(2)}×</strong> · Margem <strong>${fmt(margem)}</strong>`;
