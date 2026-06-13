@@ -1144,7 +1144,8 @@ function renderInflacao() {
     const mes=e.criado_em.substring(0,7);
     if(!_infMeses.includes(mes))return;
     if(fornFil&&e.fornecedor_id!==fornFil)return;
-    const precoUnit=e.custo_unitario/(e.fator_conversao||1);
+    if(e.tipo==='ajuste'||e.tipo==='transferencia')return; // evolucao de precos so com compras reais
+    const precoUnit=e.custo_unitario; // custo_unitario ja e por-unidade de estoque — NAO dividir pelo fator
     if(!mapa[e.insumo_id])mapa[e.insumo_id]={};
     if(!mapa[e.insumo_id][mes])mapa[e.insumo_id][mes]=[];
     mapa[e.insumo_id][mes].push(precoUnit);

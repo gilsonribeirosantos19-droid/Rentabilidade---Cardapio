@@ -1989,7 +1989,7 @@ function calcConv() {
     const custoUnit = custo/fator;
     const total = custo*qtd_;
     box.style.display='';
-    box.textContent = `${qtd_()} ${unid} × ${fator} = ${qtd(qtdEst)} no estoque · Custo/un: ${brl(custoUnit)} · Total: ${brl(total)}`;
+    box.textContent = `${qtd(qtd_)} ${unid} × ${fator} = ${qtd(qtdEst)} no estoque · Custo/un: ${brl(custoUnit)} · Total: ${brl(total)}`;
   } else box.style.display='none';
 }
 

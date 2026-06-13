@@ -576,7 +576,7 @@ function atualizarMetricas(){
   const comPreco=todasFichas.filter(f=>f.preco_venda>0);
   const cmvs=comPreco.map(f=>{const c=custoFicha(f);return c>0&&f.preco_venda>0?c/f.preco_venda*100:null;}).filter(v=>v!==null);
   const cmvMedio=cmvs.length?cmvs.reduce((a,b)=>a+b,0)/cmvs.length:0;
-  const criticas=cmvs.filter(c=>c>30).length;
+  const criticas=cmvs.filter(c=>c>38).length;
   const margens=comPreco.map(f=>{const c=custoFicha(f);return c>0&&f.preco_venda>0?(f.preco_venda-c)/f.preco_venda*100:null;}).filter(v=>v!==null);
   const margemMedia=margens.length?margens.reduce((a,b)=>a+b,0)/margens.length:0;
 

@@ -2721,7 +2721,7 @@ async function registrarMovimentacao() {
           fornecedor_id:fornId, fornecedor_nome:fornNome,
           quantidade:qtdEst,
           unidade_compra: document.getElementById('mov-unid').value.trim()||null,
-          fator_conversao:fator, custo_unitario:custo,
+          fator_conversao:fator, custo_unitario:custoUnit,
           lote: document.getElementById('mov-lote').value.trim()||null,
           validade: document.getElementById('mov-val').value||null,
           tipo:'manual', observacao:obs||null, criado_em:criadoEm})});
