@@ -1,0 +1,22 @@
+# ── Backups do banco (CONTÊM DADOS DE CLIENTES — NUNCA versionar) ──
+# O repositório é público; backup com dados aqui = vazamento.
+backup_full_*.sql
+backup_*.sql
+*.dump
+*.backup
+*.sql.gz
+# Obs: schema.sql (só ESTRUTURA, sem dados) PODE ser versionado — não está bloqueado.
+
+# ── Segredos / conexão ──
+.env
+.env.*
+*.env
+connection*.txt
+*.secret
+
+# ── Lixo de SO / editor ──
+Thumbs.db
+.DS_Store
+desktop.ini
+.vscode/
+*.log
