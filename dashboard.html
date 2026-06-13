@@ -390,7 +390,7 @@ const SUPA_URL=window.SUPA_URL;
 const SUPA_KEY=window.SUPA_KEY;
 const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
 
-let lojas=[], insumos=[], saldos=[], entradas=[], saidas=[], inventarios=[], pedidos=[];
+let lojas=[], insumos=[], saldos=[], entradas=[], saidas=[], inventarios=[], pedidos=[], faturamentos=[];
 let lojaAtual=null;
 
 const api = createApi(SUPA_URL, SUPA_KEY);
@@ -427,10 +427,12 @@ async function onLojaChange(){
   // Recarrega saldos e entradas/saídas para a loja selecionada
   const lojaFiltro=lojaAtual?`&loja_id=eq.${lojaAtual.id}`:'';
   try{
-    [saldos,entradas,saidas]=await Promise.all([
+    const _iniMesDia=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-01`;
+    [saldos,entradas,saidas,faturamentos]=await Promise.all([
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}`),
       api(`entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`),
       api(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`),
+      api(`faturamento?tenant_id=eq.${TENANT_ID}${lojaFiltro}&data=gte.${_iniMesDia}`).catch(()=>[]),
     ]);
     render();
   }catch(e){toast('Erro: '+e.message,'err');}
@@ -502,11 +504,12 @@ function renderComparativoLojas(){
 
   const now=new Date();
   const iniMes=new Date(now.getFullYear(),now.getMonth(),1).toISOString();
+  const iniMesDia=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
 
   const lojasFilt=lojaAtual?lojas.filter(l=>l.id===lojaAtual.id):lojas;
   if(!lojasFilt.length){tbody.innerHTML='<tr><td colspan="6" style="padding:24px;text-align:center;color:#94a3b8">Sem lojas cadastradas</td></tr>';return;}
 
-  let tVal=0,tComp=0,tPerd=0,tInv=0;
+  let tVal=0,tComp=0,tPerd=0,tInv=0,tConsumo=0,tFat=0;
   const maxComp=Math.max(...lojasFilt.map(l=>entradas.filter(e=>e.loja_id===l.id&&e.criado_em>=iniMes).reduce((s,e)=>s+(e.custo_total||0),0)),1);
 
   tbody.innerHTML=lojasFilt.map(loja=>{
@@ -514,12 +517,15 @@ function renderComparativoLojas(){
     const valEst=insumos.reduce((s,i)=>{const sd=saldosL.find(x=>x.insumo_id===i.id)||{quantidade:0,custo_medio:0};return s+(sd.quantidade||0)*(sd.custo_medio||0);},0);
     const compMes=entradas.filter(e=>e.loja_id===loja.id&&e.criado_em>=iniMes).reduce((s,e)=>s+(e.custo_total||0),0);
     const perdMes=saidas.filter(s=>s.loja_id===loja.id&&['perda','vencimento','descarte'].includes(s.tipo)&&s.criado_em>=iniMes).reduce((s,sd)=>s+(sd.quantidade||0)*(saldosL.find(x=>x.insumo_id===sd.insumo_id)?.custo_medio||0),0);
+    // CMV real = (saídas 'consumo' do mês × custo médio) ÷ faturamento do mês (mesma definição do cmv.html / estoque.html)
+    const consumoMes=saidas.filter(s=>s.loja_id===loja.id&&s.tipo==='consumo'&&s.criado_em>=iniMes).reduce((s,sd)=>s+(sd.quantidade||0)*(saldosL.find(x=>x.insumo_id===sd.insumo_id)?.custo_medio||0),0);
+    const fatMes=faturamentos.filter(f=>f.loja_id===loja.id&&f.data>=iniMesDia).reduce((s,f)=>s+(f.valor||0),0);
     const invL=inventarios.filter(i=>i.loja_id===loja.id);
     const invAtivos=invL.filter(i=>i.status==='ativo').length;
-    const cmv=compMes>0&&valEst>0?(compMes/valEst*100).toFixed(1):'—';
+    const cmv=fatMes>0?(consumoMes/fatMes*100).toFixed(1):'—';
     const barPct=maxComp>0?Math.round(compMes/maxComp*100):0;
     const barColor=compMes>0?'#22c55e':'#e2e8f0';
-    tVal+=valEst;tComp+=compMes;tPerd+=perdMes;tInv+=invAtivos;
+    tVal+=valEst;tComp+=compMes;tPerd+=perdMes;tInv+=invAtivos;tConsumo+=consumoMes;tFat+=fatMes;
     const perdColor=perdMes>0?'color:#e11d48':'';
     const invColor=invAtivos>0?'color:#f97316':'color:#94a3b8';
     return `<tr>
@@ -540,7 +546,7 @@ function renderComparativoLojas(){
     </tr>`;
   }).join('');
 
-  const cmvTotal=tComp>0&&tVal>0?(tComp/tVal*100).toFixed(1)+'%':'—';
+  const cmvTotal=tFat>0?(tConsumo/tFat*100).toFixed(1)+'%':'—';
   tfoot.innerHTML=`<tr>
     <td style="font-weight:700">TOTAL GERAL</td>
     <td class="r mono">${brl(tVal)}</td>
@@ -566,13 +572,14 @@ function renderAlertas(){
   if(rEl) rEl.style.background=ruptura>0?'#fee2e2':'#f0fdf4';
   if(rEl) rEl.style.color=ruptura>0?'#e11d48':'#16a34a';
 
-  // CMV simples: (total saídas mês × custo médio) / valor estoque
+  // CMV real: (saídas 'consumo' do mês × custo médio) ÷ faturamento do mês (mesma definição do cmv.html / estoque.html)
   const now=new Date();
   const iniMes=new Date(now.getFullYear(),now.getMonth(),1).toISOString();
+  const iniMesDia=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
   const vSaidaMes=saidas.filter(s=>s.criado_em>=iniMes&&['consumo'].includes(s.tipo))
     .reduce((s,sd)=>{const cm=getSaldo(sd.insumo_id).custo_medio||0;return s+sd.quantidade*cm;},0);
-  const vEst=insumos.reduce((s,i)=>{const sd=getSaldo(i.id);return s+(sd.quantidade||0)*(sd.custo_medio||0);},0);
-  const cmvPct=vEst>0?(vSaidaMes/vEst*100).toFixed(1):0;
+  const fatMes=faturamentos.filter(f=>f.data>=iniMesDia).reduce((s,f)=>s+(f.valor||0),0);
+  const cmvPct=fatMes>0?(vSaidaMes/fatMes*100).toFixed(1):0;
   const cmvEl=document.getElementById('alt-cmv');
   const cmvSub=document.getElementById('alt-cmv-sub');
   if(cmvEl) cmvEl.textContent=`CMV ${cmvPct>0?cmvPct+'%':'sem dados'}`;
@@ -647,12 +654,14 @@ async function carregar(){
     const sel=document.getElementById('sel-loja');
     if(sel) sel.innerHTML=lojaFiltroHtml(lojas);
 
-    [saldos,entradas,saidas,inventarios,pedidos]=await Promise.all([
+    const _iniMesDia=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-01`;
+    [saldos,entradas,saidas,inventarios,pedidos,faturamentos]=await Promise.all([
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`),
       api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
       api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
       api(`inventarios?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`),
       api(`pedidos_compra?tenant_id=eq.${TENANT_ID}&order=criado_em.desc`).catch(()=>[]),
+      api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${_iniMesDia}`).catch(()=>[]),
     ]);
     updateTime();
     render();
