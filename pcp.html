@@ -554,7 +554,7 @@ const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-0
 
 const api = createApi(SUPA_URL, SUPA_KEY);
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// esc() centralizado no utils.js
 function brl(v){if(v==null)return'—';return'R$ '+Number(v).toFixed(2).replace('.',',');}
 function fmtN(v,dec=2){if(v==null||isNaN(v))return'—';const n=parseFloat(v);if(Number.isInteger(n))return n.toString();return n.toFixed(dec).replace(/\.?0+$/,'');}
 function hoje(){return new Date().toISOString().slice(0,10);}

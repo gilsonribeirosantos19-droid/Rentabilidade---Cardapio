@@ -194,7 +194,7 @@ let allData=[],filteredData=[],currentPage=1,pageSize=20,sortField='processada_e
 
 function toast(msg,type='ok'){const el=document.createElement('div');el.className=`toast-item toast-${type}`;el.textContent=msg;document.getElementById('toast').appendChild(el);setTimeout(()=>el.remove(),3500);}
 function brl(v){if(v==null||v==='')return'—';return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// esc() centralizado no utils.js
 function fmtDt(iso){if(!iso)return'—';const d=new Date(iso);return`<span class="mono" style="white-space:nowrap;font-size:12px">${d.toLocaleDateString('pt-BR')}</span><br><span style="font-size:10px;color:#94a3b8">${d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>`;}
 
 function setPeriodoRange(tipo,deId,ateId,fn){

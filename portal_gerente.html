@@ -390,7 +390,7 @@ const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-0
 
 const api = createApi(SUPA_URL, SUPA_KEY);
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// esc() centralizado no utils.js
 function r2(v){return Math.round(v*100)/100;}
 function n(id){return parseFloat(document.getElementById(id)?.value)||0;}
 function sv(id,v){const e=document.getElementById(id);if(e)e.value=v!=null?v:'';}

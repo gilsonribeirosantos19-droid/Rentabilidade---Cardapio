@@ -521,7 +521,7 @@ const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-0
 
 const api = createApi(SUPA_URL, SUPA_KEY);
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// esc() centralizado no utils.js
 function brl(v){if(v==null||v==='') return '—'; return 'R$ '+Number(v).toFixed(2).replace('.',',');}
 function fmtDate(d){if(!d)return'—';try{return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}catch{return d;}}
 function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}

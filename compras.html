@@ -1717,7 +1717,7 @@ async function imprimirPedido(id) {
 function fmtQtyDoc(v){const n=Number(v)||0;return n===Math.round(n)?n.toLocaleString('pt-BR'):n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3});}
 function brl(v){return v==null?'—':'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function setPeriodoRange(tipo,deId,ateId,fn){const d=new Date();let de,ate;if(tipo==='mes_atual'){de=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;ate=d.toISOString().split('T')[0];}else if(tipo==='mes_anterior'){const p=new Date(d.getFullYear(),d.getMonth()-1,1);const l=new Date(d.getFullYear(),d.getMonth(),0);de=`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;ate=`${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;}else{return;}const elD=document.getElementById(deId);if(elD)elD.value=de;const elA=document.getElementById(ateId);if(elA)elA.value=ate;if(fn)fn();}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// esc() centralizado no utils.js
 function hoje(plusDias=0){const d=new Date();d.setDate(d.getDate()+plusDias);return d.toISOString().split('T')[0];}
 function fmtData(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('pt-BR');}
 function statusBadge(s){const l={solicitado:'Aguardando',pendente:'Pendente',processado:'Processado',aprovado:'Aprovado',enviado:'Enviado',recebido:'Baixado',baixado:'Baixado',cancelado:'Cancelado'};const cls=s==='baixado'?'recebido':s;return `<span class="badge b-${cls}">${l[s]||s}</span>`;}

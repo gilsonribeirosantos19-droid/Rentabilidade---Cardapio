@@ -310,7 +310,7 @@ const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-0
 
 const api = createApi(SUPA_URL, SUPA_KEY);
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// esc() centralizado no utils.js
 function brl(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',');}
 function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast ${tipo} show`;setTimeout(()=>el.classList.remove('show'),3000);}

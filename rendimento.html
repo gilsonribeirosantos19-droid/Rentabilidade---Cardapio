@@ -346,7 +346,7 @@ const api = createApi(SUPA_URL, SUPA_KEY);
 function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
 function fmtKg(v){if(v==null||v==='')return'—';return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' kg';}
 function fmtBRL(v){if(v==null)return'—';return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// esc() centralizado no utils.js
 function setPeriodoRange(tipo,deId,ateId,fn){const d=new Date();let de,ate;if(tipo==='mes_atual'){de=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;ate=d.toISOString().split('T')[0];}else if(tipo==='mes_anterior'){const p=new Date(d.getFullYear(),d.getMonth()-1,1);const l=new Date(d.getFullYear(),d.getMonth(),0);de=`${p.getFullYear()}-${String(p.getMonth()+1).padStart(2,'0')}-01`;ate=`${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;}else{return;}const elD=document.getElementById(deId);if(elD)elD.value=de;const elA=document.getElementById(ateId);if(elA)elA.value=ate;if(fn)fn();}
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}

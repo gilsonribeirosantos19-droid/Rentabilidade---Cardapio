@@ -52,6 +52,11 @@ function upperInput(id) {
   bindUpperInput(document.getElementById(id));
 }
 
+// ── ESCAPE DE HTML ─────────────────────────────────────────────────
+// Fonte única. Escapa texto E atributos (& < > "). As telas NÃO devem
+// redefinir esc() localmente — usam esta. (Centralizado 2026-06-13.)
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
 async function _refreshToken(supaUrl, supaKey) {
   const refreshToken = localStorage.getItem('sb_refresh_token');
   if (!refreshToken) return false;

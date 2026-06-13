@@ -701,7 +701,7 @@ const SUPA_URL  = window.SUPA_URL;
 const SUPA_KEY  = window.SUPA_KEY;
 // SUPA_ADMIN_KEY removida — cadastro/edição de usuário agora via Edge Function "admin-users" (a chave admin fica no servidor)
 const TENANT_ID = localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// esc() centralizado no utils.js
 
 /* ================================================================
    API

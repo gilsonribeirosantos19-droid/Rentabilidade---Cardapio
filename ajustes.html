@@ -962,7 +962,7 @@ function renderCmLog(rows) {
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────────
-function esc(s){ const d=document.createElement('div');d.textContent=s??'';return d.innerHTML; }
+// esc() centralizado no utils.js
 function brl(v){ return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtQtd(v){ return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}); }
 function fmtDataHora(s){ if(!s)return'—'; const d=new Date(s); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }

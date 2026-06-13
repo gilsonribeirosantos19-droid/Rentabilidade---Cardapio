@@ -63,7 +63,7 @@ const SUPA_URL = window.SUPA_URL;
 const SUPA_KEY = window.SUPA_KEY;
 const TENANT_ID = localStorage.getItem('sb_tenant_id') || '00000000-0000-0000-0000-000000000001';
 const api = createApi(SUPA_URL, SUPA_KEY);
-const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// esc() centralizado no utils.js
 const num = v => (+v||0).toLocaleString('pt-BR',{maximumFractionDigits:3});
 
 async function carregar(){

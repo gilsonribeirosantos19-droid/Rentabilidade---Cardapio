@@ -321,7 +321,7 @@ function brl(v){return'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFraction
 function setPeriodoRange(tipo,deId,ateId,fn){const d=new Date();let de,ate;if(tipo==='mes_atual'){de=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;ate=d.toISOString().split('T')[0];}else if(tipo==='mes_anterior'){const p=new Date(d.getFullYear(),d.getMonth()-1,1);const l=new Date(d.getFullYear(),d.getMonth(),0);de=p.toISOString().split('T')[0].slice(0,8)+'01';ate=`${l.getFullYear()}-${String(l.getMonth()+1).padStart(2,'0')}-${String(l.getDate()).padStart(2,'0')}`;}else{return;}const elD=document.getElementById(deId);if(elD)elD.value=de;const elA=document.getElementById(ateId);if(elA)elA.value=ate;if(fn)fn();}
 function brlSigned(v){const abs=Math.abs(v);const s=v>=0?'+':'-';return s+'R$ '+abs.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fq(v){return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// esc() centralizado no utils.js
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
 function set(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
