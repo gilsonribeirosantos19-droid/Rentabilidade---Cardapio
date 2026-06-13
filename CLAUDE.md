@@ -1,7 +1,8 @@
-# Projeto: Rentabilidade Cardápio — Sushi PN
+# Projeto: Aiko — Rentabilidade & Gestão para Restaurantes
 
 ## Visão Geral
-App web de **gestão de rentabilidade e fichas técnicas** para o Sushi Ponta Negra.
+App web (produto **Aiko**) de **gestão de rentabilidade e fichas técnicas** para restaurantes.
+**Multi-tenant:** vários clientes na mesma base, isolados por `tenant_id` (RLS). A marca exibida é sempre **Aiko**, nunca o nome de um cliente.
 Stack: HTML/CSS/JS puro + Supabase (sem framework, sem servidor).
 Deploy: Vercel (automático via GitHub push).
 
@@ -114,7 +115,7 @@ A maior dívida técnica do projeto veio de **copiar-colar** entre telas (chave,
 --text1:#f0f2ff; --text2:#94a3c4; --text3:#5a6080;
 ```
 - Font: Inter + DM Mono (números/código)
-- Sidebar escura com logo "Sushi PN / rentabilidade"
+- Sidebar escura com logo "Aiko / sistema" (marca do produto — **nunca** nome de cliente; o app é multi-tenant). Definido em `sidebar.js`.
 
 ---
 
@@ -151,7 +152,7 @@ A maior dívida técnica do projeto veio de **copiar-colar** entre telas (chave,
 
 ## Observações Importantes
 
-- O projeto é **multi-tenant** mas por ora opera com um único tenant fixo
+- O projeto é **multi-tenant** e já opera com **clientes reais** (ex.: Mori Izakaya, e o tenant `00000000-...-0001` = **Ambiente de Testes**). Novos clientes entram via `PROVISIONAR_CLIENTE.md`, cada um em seu **tenant próprio e isolado**
 - Custo calculado sempre em **R$/kg** — quantidade dos ingredientes sempre em gramas
 - Fichas de **processados** (Shari, molhos, etc.) vinculam a um insumo e atualizam o preço/kg automaticamente
 - O campo `unidade_medida` dos insumos pode ser: kg, g, litro, ml, un
