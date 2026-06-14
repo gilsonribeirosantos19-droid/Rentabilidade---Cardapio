@@ -139,6 +139,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="busca" placeholder="Buscar por nome ou código..." oninput="filtrar()">
         </div>
+        <select id="filtro-grupo" onchange="filtrar()" title="Filtrar por grupo" style="min-width:170px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;cursor:pointer"><option value="">Todos os grupos</option></select>
         <div style="flex:1"></div>
         <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Produto</button>
       </div>
@@ -329,6 +330,7 @@ async function carregarProdutos(){
     todos=data||[];
     const atu=document.getElementById('prod-atualizado');
     if(atu) atu.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    popularFiltroGrupo();
     filtrar();
   }catch(e){
     if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro ao conectar: ${esc(e.message)}</td></tr>`;
@@ -338,6 +340,7 @@ async function carregarProdutos(){
 // ── FILTRO ────────────────────────────────────────────────────────
 function filtrar(){
   const q=(document.getElementById('busca')?.value||'');
+  const fg=(document.getElementById('filtro-grupo')?.value||'');
   let lista=todos;
   if(q){
     const nq=normalizeSearch(q);
@@ -346,7 +349,17 @@ function filtrar(){
       normalizeSearch(p.codigo_pdv||'').includes(nq)
     );
   }
+  if(fg) lista=lista.filter(p=>(p.grupo||p.categoria||'')===fg);
   renderTabela(lista);
+}
+
+// Popula o filtro de grupo com os grupos presentes nos produtos
+function popularFiltroGrupo(){
+  const sel=document.getElementById('filtro-grupo'); if(!sel) return;
+  const cur=sel.value;
+  const grupos=[...new Set(todos.map(p=>p.grupo||p.categoria||'').filter(Boolean))].sort();
+  sel.innerHTML='<option value="">Todos os grupos</option>'+grupos.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  if(cur) sel.value=cur;
 }
 
 function renderTabela(lista){
