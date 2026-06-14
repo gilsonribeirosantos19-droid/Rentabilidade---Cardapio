@@ -1110,8 +1110,10 @@ function filterItens() {}
 
 // ── PROCESSAR NF-E FISCAL ─────────────────────────────────────────
 async function processarNfeFiscal(nfeId, silent = false) {
-  if(!getLojaId()){ if(!silent) toast('Selecione a loja em "Recebendo em:" (no topo) antes de processar.','err'); return; }
   const nfe = entradasNfe.find(n => n.id === nfeId);
+  // Se a nota já veio roteada pelo CNPJ (tem loja_id), processa NELA (cada nota na sua loja).
+  if(nfe?.loja_id){ const _lj = lojas.find(l=>l.id===nfe.loja_id); if(_lj) lojaAtual = _lj; }
+  if(!getLojaId()){ if(!silent) toast('Selecione a loja em "Recebendo em:" (no topo) antes de processar.','err'); return; }
   if(!nfe || nfe.status !== 'pronta') { if(!silent) toast('NF-e não está pronta para processar.', 'err'); return; }
   if(!silent && !confirm(`Confirmar processamento da NF-e ${nfe.numero}?\n\nEsta ação irá atualizar o estoque e o custo médio dos insumos.`)) return;
 
