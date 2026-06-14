@@ -40,6 +40,12 @@ Só o **estoque.html** ganhou o bloqueio. Aplicar o mesmo padrão em:
 - O seletor de loja mostra **todas** as lojas do tenant pra qualquer usuário. O ideal: **gerente** só enxerga/seleciona a **própria loja** (`usuarios.loja_id`); admin vê todas. Hoje um gerente do Centro poderia ver dados da Ponta Negra.
 - Relacionado: tabela `usuarios_lojas` (many-to-many) existe — decidir se o acesso multi-loja vem dela.
 
+### ⭐ 6. Seletor de loja no Monitor NF-e (IMPORTANTE — antes do Sushi PN processar notas)
+- **fiscal.html (Monitor NF-e)** não tem seletor de loja visível. Linha **644**: `if(!lojaAtual && lojas.length) lojaAtual = lojas[0];` → ao processar NF-e, a entrada vai SEMPRE pra **1ª loja** (entrada via `getLojaId()` na linha ~1168). Multi-loja: nota de qualquer loja entra na Centro. ERRADO.
+- **Corrigir:** adicionar um **seletor de loja** no topo do Monitor NF-e (igual estoque.html), default p/ loja do usuário (`sb_user.loja_id`) senão 1ª, e **exigir loja específica antes de "Processar"** (bloquear "Todas as lojas", como na entrada manual). Assim cada nota é processada pra loja certa.
+- **entradas_processadas.html** (histórico): adicionar **filtro de loja** (só pra visualizar por loja; é consulta, não grava — o estorno já usa o loja_id da entrada). Menos crítico.
+- ⚠️ Testar exige NF-e: fazer quando houver nota (no sandbox ou no 1º recebimento do Sushi PN). NF-e é processada em parte por Edge Function (`nfe-reprocessar`, fora do Git) — conferir se o loja_id passa pelo front (fiscal.html grava a entrada no front, linha 1167-1168, então o seletor no front resolve).
+
 ### 5. Conferir agregações em "Todas as lojas" nos demais relatórios
 - Movimentação já validada (soma certo). Conferir os outros: **custo médio consolidado** (média ponderada entre lojas, não simples), Kardex, Dashboard por loja vs total, CMV.
 
