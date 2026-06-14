@@ -1246,7 +1246,7 @@ async function salvar() {
       nome, tenant_id: TENANT_ID,
       razao_social:  document.getElementById('f-loja-razao').value.trim()    || null,
       cnpj:          document.getElementById('f-loja-cnpj').value.trim()     || null,
-      endereco:      document.getElementById('f-loja-endereco').value.trim() || null,
+      endereco:      document.getElementById('f-loja-endereco').value.trim().toUpperCase() || null,
       horario_manha: document.getElementById('f-loja-hr-manha').value.trim() || null,
       horario_tarde: document.getElementById('f-loja-hr-tarde').value.trim() || null,
     };
