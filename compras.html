@@ -983,7 +983,7 @@ async function gerarPedidos() {
 
       // Quantidade = Q.Comprar; breakdown por loja na observacao do item
       const itensPay = itensForn.map(it => {
-        const breakdown = it.lojas.map(l=>l.nome+': '+l.qty.toFixed(3)).join(', ');
+        const breakdown = it.lojas.map(l=>l.nome+': '+fmtQtyDoc(l.qty)).join(', ');
         return {
           pedido_id: pedId,
           insumo_id: it.insId,
@@ -1153,9 +1153,9 @@ async function verPedido(id) {
       const ins = insumos.find(i=>i.id===it.insumo_id);
       return `<tr>
         <td style="font-weight:500">${esc(ins?.nome||it.insumo_id)}</td>
-        <td class="mono" style="font-size:12px;color:var(--text3)">${esc(ins?.codigo_interno||'—')}</td>
+        <td class="mono" style="font-size:12px;color:var(--text3)">${fmtCodigoInterno(ins?.codigo_interno)}</td>
         <td style="font-size:12px;color:var(--text3)">${esc(ins?.categoria||ins?.grupo||'—')}</td>
-        <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
+        <td class="r mono">${fmtQtyDoc(it.quantidade)}</td>
         <td>${esc(it.unidade||'un')}</td>
         <td style="font-size:11px;color:var(--text3)">${esc(it.observacao||'—')}</td>
       </tr>`;
