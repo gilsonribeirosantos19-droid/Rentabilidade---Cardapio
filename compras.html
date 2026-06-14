@@ -491,7 +491,7 @@
     <div id="mp-info" style="font-size:13px;color:var(--text2);margin-bottom:16px"></div>
     <div class="tbl-wrap"><div class="tbl-scroll">
       <table class="tbl">
-        <thead><tr><th>Insumo</th><th class="r">Qtd</th><th>Un.</th><th>Por Loja</th></tr></thead>
+        <thead><tr><th>Insumo</th><th>Código</th><th>Grupo</th><th class="r">Qtd</th><th>Un.</th><th>Por Loja</th></tr></thead>
         <tbody id="mp-body"></tbody>
       </table>
     </div></div>
@@ -1153,6 +1153,8 @@ async function verPedido(id) {
       const ins = insumos.find(i=>i.id===it.insumo_id);
       return `<tr>
         <td style="font-weight:500">${esc(ins?.nome||it.insumo_id)}</td>
+        <td class="mono" style="font-size:12px;color:var(--text3)">${esc(ins?.codigo_interno||'—')}</td>
+        <td style="font-size:12px;color:var(--text3)">${esc(ins?.categoria||ins?.grupo||'—')}</td>
         <td class="r mono">${Number(it.quantidade).toFixed(3)}</td>
         <td>${esc(it.unidade||'un')}</td>
         <td style="font-size:11px;color:var(--text3)">${esc(it.observacao||'—')}</td>
