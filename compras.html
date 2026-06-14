@@ -1521,7 +1521,7 @@ function gerarImpressaoPorLoja(porLoja, dataRef) {
       .cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
       @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
 </style></head><body>${paginas}
-    <script>window.onload=function(){window.print()}<\/script>
+    <script>window.onload=function(){window.onafterprint=function(){window.close()};window.print();}<\/script>
     
 </body></html>`;
 
@@ -1636,7 +1636,7 @@ async function imprimirFornecedor(fornId, pedIdsStr) {
       .cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
       @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
 </style></head><body>${paginas}
-    <script>window.onload=function(){window.print()}<\/script>
+    <script>window.onload=function(){window.onafterprint=function(){window.close()};window.print();}<\/script>
     
 </body></html>`;
 
@@ -1756,7 +1756,7 @@ async function imprimirPedido(id) {
         .pagina{padding:10px;max-width:100%}
       }
 </style></head><body>${paginas}
-    <script>window.onload=function(){window.print()}<\/script>
+    <script>window.onload=function(){window.onafterprint=function(){window.close()};window.print();}<\/script>
     
 </body></html>`;
 
