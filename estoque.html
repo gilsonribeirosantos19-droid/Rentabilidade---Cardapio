@@ -1606,7 +1606,7 @@ function getLojaId() { return lojaAtual?.id||null; }
 async function onLojaChange() {
   const id = document.getElementById('sel-loja').value;
   lojaAtual = lojas.find(l=>l.id===id)||null;
-  if (!lojaAtual) return;
+  // lojaAtual null = "Todas as lojas" → carregar() usa lojaFiltro vazio (consolidado). NÃO retornar aqui.
   await carregar();
 }
 
