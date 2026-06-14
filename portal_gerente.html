@@ -491,16 +491,19 @@ async function init(){
   const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   se('p-data-hoje',`${dias[hoje.getDay()]}, ${hoje.getDate()} ${meses[hoje.getMonth()]} ${hoje.getFullYear()}`);
-  // nome da empresa/loja do tenant logado (dinâmico — multi-tenant; sem nome fixo de cliente)
+  // nome da LOJA do gerente logado (dinâmico — multi-tenant; sem nome fixo de cliente)
   try{
-    let nomeEmpresa='';
-    const _t=await api(`tenants?id=eq.${TENANT_ID}&select=nome`).catch(()=>[]);
-    if(_t&&_t[0]&&_t[0].nome) nomeEmpresa=_t[0].nome;
-    if(!nomeEmpresa){
-      const _l=await api(`lojas?tenant_id=eq.${TENANT_ID}&select=nome&limit=1`).catch(()=>[]);
-      if(_l&&_l[0]&&_l[0].nome) nomeEmpresa=_l[0].nome;
+    const _u=JSON.parse(localStorage.getItem('sb_user')||'{}');
+    let nomeLoja='';
+    if(_u.loja_id){
+      const _l=await api(`lojas?id=eq.${_u.loja_id}&select=nome`).catch(()=>[]);
+      if(_l&&_l[0]&&_l[0].nome) nomeLoja=_l[0].nome;
     }
-    se('p-loja-nome', nomeEmpresa||'—');
+    if(!nomeLoja){ // fallback: usuário sem loja vinculada → 1ª loja do tenant
+      const _l=await api(`lojas?tenant_id=eq.${TENANT_ID}&select=nome&order=nome.asc&limit=1`).catch(()=>[]);
+      if(_l&&_l[0]&&_l[0].nome) nomeLoja=_l[0].nome;
+    }
+    se('p-loja-nome', nomeLoja||'—');
   }catch{ se('p-loja-nome','—'); }
 
   // Datas padrão
