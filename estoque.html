@@ -1994,6 +1994,7 @@ function calcConv() {
 }
 
 async function salvarEntrada() {
+  if(!getLojaId()){toast('Selecione uma loja específica no topo (não "Todas as lojas") para registrar a entrada.','err');return;}
   const insId = document.getElementById('ef-ins').value;
   const qtd_ = parseFloat(document.getElementById('ef-qtd').value)||0;
   const fator = parseFloat(document.getElementById('ef-fator').value)||1;
@@ -2834,6 +2835,7 @@ function onSaiTipoChange(){
 }
 
 async function salvarSaida() {
+  if(!getLojaId()){toast('Selecione uma loja específica no topo (não "Todas as lojas") para registrar a saída.','err');return;}
   const insId=document.getElementById('sf-ins').value;
   const qtd_=parseFloat(document.getElementById('sf-qtd').value)||0;
   if(!insId){toast('Selecione um insumo.','err');return;}
@@ -3201,6 +3203,7 @@ function openMM(insId) {
 }
 
 async function salvarMM() {
+  if(!getLojaId()){toast('Selecione uma loja específica no topo (não "Todas as lojas") para ajustar mínimo/máximo.','err');return;}
   const insId=document.getElementById('mm-id').value;
   const min=document.getElementById('mm-min').value!==''?parseFloat(document.getElementById('mm-min').value):null;
   const max=document.getElementById('mm-max').value!==''?parseFloat(document.getElementById('mm-max').value):null;
@@ -4215,6 +4218,7 @@ function downloadCSV(filename, content) {
 // ── SALDO UPSERT ──────────────────────────────────────────────────
 async function upsertSaldo(insId, quantidade, custoMedio, minimo=undefined, maximo=undefined, lojaOverride=undefined) {
   const lojaId = lojaOverride || getLojaId();
+  if(!lojaId){ throw new Error('Loja não selecionada — escolha uma loja específica antes de gravar o estoque.'); }
   const payload = {
     tenant_id: TENANT_ID,
     insumo_id: insId,
