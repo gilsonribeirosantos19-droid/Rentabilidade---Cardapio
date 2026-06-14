@@ -137,6 +137,8 @@
         <div class="topbar-sub">Notas fiscais recebidas</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:#64748b;font-weight:600;white-space:nowrap">Recebendo em:</span>
+        <select id="sel-loja" onchange="onLojaChangeNfe()" class="field field-sm" style="min-width:150px" title="Loja em que as notas processadas vão dar entrada no estoque"></select>
         <span id="last-sync" style="font-size:11px;color:#94a3b8"></span>
         <button class="btn" onclick="loadAll()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -555,6 +557,10 @@ function norm(s) { return (s||'').toLowerCase().trim(); }
 function brl(v) { if(v==null||v==='') return '—'; return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtQtd(n) { const v=parseFloat(n)||0; if(Number.isInteger(v)) return v.toLocaleString('pt-BR'); return v.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}); }
 function getLojaId() { return lojaAtual?.id || null; }
+function onLojaChangeNfe(){
+  const id = document.getElementById('sel-loja')?.value;
+  lojaAtual = lojas.find(l=>l.id===id) || null;
+}
 function getSaldo(insId) {
   const lojaId = getLojaId();
   return saldos.find(s=>s.insumo_id===insId&&(!lojaId||s.loja_id===lojaId))||{quantidade:0,custo_medio:0};
@@ -669,6 +675,14 @@ function populateSelects() {
   selForn.innerHTML = '<option value="">Fornecedor: Todos</option>' +
     Object.entries(fornMap).map(([cnpj, nome]) => `<option value="${cnpj}">${esc(nome)}</option>`).join('');
   selForn.value = prevForn;
+
+  // Seletor de loja — NF-e processada SEMPRE entra numa loja específica (sem "Todas as lojas")
+  const selLoja = document.getElementById('sel-loja');
+  if(selLoja && lojas.length){
+    selLoja.innerHTML = lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    if(!lojaAtual || !lojas.some(l=>l.id===lojaAtual.id)) lojaAtual = lojas[0];
+    selLoja.value = lojaAtual.id;
+  }
 }
 
 // ── MONITOR TABS ──────────────────────────────────────────────────
@@ -1078,6 +1092,7 @@ function toggleRowSel(chk, nfeId) {
 
 async function processarSelecionadas() {
   if(selectedIds.size === 0) return;
+  if(!getLojaId()){ toast('Selecione a loja em "Recebendo em:" (no topo) antes de processar.','err'); return; }
   const prontas = [...selectedIds].filter(id => entradasNfe.find(n => n.id === id)?.status === 'pronta');
   if(prontas.length === 0) { toast('Selecione apenas notas com status Pronta.', 'err'); return; }
   if(!confirm(`Processar ${prontas.length} NF-e selecionada(s)?`)) return;
@@ -1097,6 +1112,7 @@ function filterItens() {}
 
 // ── PROCESSAR NF-E FISCAL ─────────────────────────────────────────
 async function processarNfeFiscal(nfeId, silent = false) {
+  if(!getLojaId()){ if(!silent) toast('Selecione a loja em "Recebendo em:" (no topo) antes de processar.','err'); return; }
   const nfe = entradasNfe.find(n => n.id === nfeId);
   if(!nfe || nfe.status !== 'pronta') { if(!silent) toast('NF-e não está pronta para processar.', 'err'); return; }
   if(!silent && !confirm(`Confirmar processamento da NF-e ${nfe.numero}?\n\nEsta ação irá atualizar o estoque e o custo médio dos insumos.`)) return;
