@@ -1650,6 +1650,9 @@ async function carregar() {
     renderDash(); renderEntradas(); renderSaidas();
     if (tabAtual==='kardex') renderKardex();
     if (tabAtual==='relatorios') renderRelatorios();
+    if (tabAtual==='movimentacao') renderMovimentacao();
+    if (tabAtual==='compras') renderCompras();
+    if (tabAtual==='saldo-est') renderSaldoEst();
     setStatus('● '+(lojaAtual?lojaAtual.nome:'todas as lojas'), true);
   } catch(e) {
     setStatus('● erro', false);
