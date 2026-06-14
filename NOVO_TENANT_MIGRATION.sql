@@ -88,6 +88,8 @@ ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS tenant_id uuid;
 ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS insumo_id uuid;
 ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS loja_id uuid;
 ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS quantidade numeric;
+ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS quantidade_fornecedor numeric;
+ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS responsavel text;
 ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS custo_unitario numeric;
 ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS custo_total numeric;
 ALTER TABLE entradas_estoque ADD COLUMN IF NOT EXISTS fator_conversao numeric DEFAULT 1;
