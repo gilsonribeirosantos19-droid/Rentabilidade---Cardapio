@@ -307,8 +307,7 @@
           <div class="param-grid">
             <div class="param-item"><div class="param-label">Permitir estoque negativo</div>
               <div class="param-toggle"><input type="radio" name="p-est-negativo" id="p-est-neg-sim" value="sim"><label for="p-est-neg-sim">Sim</label><input type="radio" name="p-est-negativo" id="p-est-neg-nao" value="nao" checked><label for="p-est-neg-nao">Não</label></div></div>
-            <div class="param-item"><div class="param-label">Método de custo</div>
-              <select class="param-select" id="p-est-metodo-custo"><option value="medio">Custo Médio</option><option value="ultima">Última Compra</option><option value="peps">PEPS (FIFO)</option></select></div>
+            <!-- "Método de custo" removido: o sistema usa SEMPRE custo médio ponderado (não há PEPS/última) -->
             <div class="param-item"><div class="param-label">Controla validade</div>
               <div class="param-toggle"><input type="radio" name="p-est-validade" id="p-est-val-sim" value="sim"><label for="p-est-val-sim">Sim</label><input type="radio" name="p-est-validade" id="p-est-val-nao" value="nao" checked><label for="p-est-val-nao">Não</label></div></div>
             <div class="param-item"><div class="param-label">Obrigar lote</div>
@@ -1244,7 +1243,6 @@ async function confirmarDelete() {
 const PARAM_MAP = {
   estoque: {
     permitir_negativo:     { id: 'p-est-negativo',     type: 'radio' },
-    metodo_custo:          { id: 'p-est-metodo-custo', type: 'select' },
     controla_validade:     { id: 'p-est-validade',     type: 'radio' },
     obrigar_lote:          { id: 'p-est-lote',         type: 'radio' },
     atualizar_custo_auto:  { id: 'p-est-atualizar',    type: 'radio' },
@@ -1306,6 +1304,52 @@ const PARAM_MAP = {
   },
 };
 
+// ── Parâmetros ainda NÃO implementados (salvam mas não têm efeito) ────────────
+// Em vez de enganar quem configura, são marcados "Em breve" e desabilitados.
+// (Funcionam de verdade: estoque permitir_negativo/obrigar_lote; producao
+//  obrigar_responsavel/obrigar_turno/obrigar_obs_ajuste; compras exigir_aprovacao/
+//  permitir_sem_fornecedor; e TODA a Precificação.)
+const PARAM_EMBREVE = {
+  estoque:       ['controla_validade','atualizar_custo_auto','dias_alerta_validade','alerta_min_pct'],
+  pcp:           ['media_dias','considerar_dia_sem','considerar_sobra','margem_seguranca','separar_loja','separar_turno'],
+  producao:      ['permitir_edicao','permitir_sem_ficha'],
+  porcionamento: ['obrigar_lote','obrigar_fornecedor','obrigar_responsavel','rendimento_minimo','alertar_perda_alta','pct_max_perda'],
+  compras:       ['usar_forn_principal','considerar_menor_preco'],
+  ficha:         ['atualizar_custo_auto','considerar_rendimento','base_custo','arredondamento'],
+  cmv:           ['meta_pct','considerar_perdas','considerar_ajustes','considerar_producao'],
+  dashboard:     ['atualizacao_auto','intervalo','periodo_padrao','exibir_valores'],
+};
+// Módulos onde TODOS os parâmetros são "em breve" → selo também no título.
+const MODULOS_EMBREVE = ['pcp','porcionamento','ficha','cmv','dashboard'];
+
+function marcarParamsEmBreve(){
+  if(!document.getElementById('embreve-style')){
+    const st=document.createElement('style'); st.id='embreve-style';
+    st.textContent='.embreve-badge{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:10px;background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;vertical-align:middle}.param-embreve{opacity:.6}.param-embreve .param-label{color:#94a3b8}';
+    document.head.appendChild(st);
+  }
+  const badge=()=>{const b=document.createElement('span');b.className='embreve-badge';b.textContent='Em breve';return b;};
+  Object.entries(PARAM_EMBREVE).forEach(([mod,chaves])=>{
+    chaves.forEach(ch=>{
+      const def=PARAM_MAP[mod]&&PARAM_MAP[mod][ch]; if(!def) return;
+      const el=def.type==='radio'?document.querySelector(`input[name="${def.id}"]`):document.getElementById(def.id);
+      const item=el&&el.closest('.param-item');
+      if(!item||item.classList.contains('param-embreve')) return;
+      item.classList.add('param-embreve');
+      item.querySelectorAll('input,select,button,textarea').forEach(i=>i.disabled=true);
+      const lbl=item.querySelector('.param-label');
+      if(lbl&&!lbl.querySelector('.embreve-badge')) lbl.appendChild(badge());
+    });
+  });
+  MODULOS_EMBREVE.forEach(mod=>{
+    const btn=document.querySelector(`#sec-parametros button[onclick="salvarParams('${mod}')"]`);
+    const card=btn&&btn.closest('.acc-card');
+    const title=card&&card.querySelector('.acc-title');
+    if(title&&!title.querySelector('.embreve-badge')) title.appendChild(badge());
+    if(btn) btn.disabled=true;
+  });
+}
+
 function getParamVal(type, nameOrId) {
   if (type === 'radio') {
     const checked = document.querySelector(`input[name="${nameOrId}"]:checked`);
@@ -1346,6 +1390,7 @@ async function carregarParams() {
       setParamVal(cfg.type, cfg.id, p.valor);
     });
   } catch {}
+  marcarParamsEmBreve();
 }
 
 async function salvarParams(modulo) {
