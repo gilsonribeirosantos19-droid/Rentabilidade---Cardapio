@@ -606,6 +606,30 @@
         <label class="form-label">Abreviação *</label>
         <input class="form-input" id="f-abrev" type="text" placeholder="Ex: kg, g, L">
       </div>
+      <div id="fg-loja" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Razão social</label>
+          <input class="form-input" id="f-loja-razao" type="text" placeholder="Razão social da empresa">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CNPJ</label>
+          <input class="form-input" id="f-loja-cnpj" type="text" placeholder="00.000.000/0000-00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Endereço</label>
+          <input class="form-input" id="f-loja-endereco" type="text" placeholder="Rua, número, bairro, cidade-UF, CEP">
+        </div>
+        <div class="form-group" style="display:flex;gap:10px">
+          <div style="flex:1">
+            <label class="form-label">Horário recebimento — manhã</label>
+            <input class="form-input" id="f-loja-hr-manha" type="text" placeholder="Ex: 08h às 11h">
+          </div>
+          <div style="flex:1">
+            <label class="form-label">Horário recebimento — tarde</label>
+            <input class="form-input" id="f-loja-hr-tarde" type="text" placeholder="Ex: 14h às 17h">
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
@@ -1092,6 +1116,14 @@ function abrirModal(tipo) {
   document.getElementById('f-nome').value = '';
   document.getElementById('f-abrev').value = '';
   document.getElementById('fg-abrev').style.display = tipo === 'unidade' ? 'block' : 'none';
+  document.getElementById('fg-loja').style.display = tipo === 'loja' ? 'block' : 'none';
+  if (tipo === 'loja') {
+    document.getElementById('f-loja-razao').value = '';
+    document.getElementById('f-loja-cnpj').value = '';
+    document.getElementById('f-loja-endereco').value = '';
+    document.getElementById('f-loja-hr-manha').value = '';
+    document.getElementById('f-loja-hr-tarde').value = '';
+  }
   document.getElementById('btn-salvar').textContent = 'Salvar';
   document.getElementById('modal-form').classList.add('open');
   setTimeout(() => document.getElementById('f-nome').focus(), 100);
@@ -1105,6 +1137,14 @@ function abrirEditar(tipo, id) {
   document.getElementById('f-nome').value = item.nome || '';
   document.getElementById('f-abrev').value = item.abreviacao || '';
   document.getElementById('fg-abrev').style.display = tipo === 'unidade' ? 'block' : 'none';
+  document.getElementById('fg-loja').style.display = tipo === 'loja' ? 'block' : 'none';
+  if (tipo === 'loja') {
+    document.getElementById('f-loja-razao').value = item.razao_social || '';
+    document.getElementById('f-loja-cnpj').value = item.cnpj || '';
+    document.getElementById('f-loja-endereco').value = item.endereco || '';
+    document.getElementById('f-loja-hr-manha').value = item.horario_manha || '';
+    document.getElementById('f-loja-hr-tarde').value = item.horario_tarde || '';
+  }
   document.getElementById('btn-salvar').textContent = 'Salvar alterações';
   document.getElementById('modal-form').classList.add('open');
 }
@@ -1202,6 +1242,14 @@ async function salvar() {
     if (modalTipo === 'unidade') body = { nome, abreviacao: abrev, tenant_id: TENANT_ID };
     else if (modalTipo === 'cat_ficha') body = { nome, tipo: 'ficha', tenant_id: TENANT_ID };
     else if (CLSF_TIPOS.includes(modalTipo)) body = { nome, tipo: modalTipo, ativo: true, tenant_id: TENANT_ID };
+    else if (modalTipo === 'loja') body = {
+      nome, tenant_id: TENANT_ID,
+      razao_social:  document.getElementById('f-loja-razao').value.trim()    || null,
+      cnpj:          document.getElementById('f-loja-cnpj').value.trim()     || null,
+      endereco:      document.getElementById('f-loja-endereco').value.trim() || null,
+      horario_manha: document.getElementById('f-loja-hr-manha').value.trim() || null,
+      horario_tarde: document.getElementById('f-loja-hr-tarde').value.trim() || null,
+    };
     else body = { nome, tenant_id: TENANT_ID };
     if (editId) {
       await api(`${table}?id=eq.${editId}`, { method: 'PATCH', body: JSON.stringify(body), prefer: 'return=minimal' });
