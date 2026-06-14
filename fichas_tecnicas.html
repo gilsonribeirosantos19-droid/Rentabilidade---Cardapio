@@ -1098,7 +1098,13 @@ async function carregarLojas(){
     const lojas=await api(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`);
     const sel=document.getElementById('sel-loja');
     if(sel) lojas.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.nome;sel.appendChild(o);});
-    if(lojas.length===1&&sel){sel.value=lojas[0].id;await onChangeLojaFT();}
+    // Abre SEMPRE com uma loja selecionada (nunca "Todas as lojas"): a loja do usuário logado, senão a 1ª.
+    if(sel && lojas.length){
+      const u=JSON.parse(localStorage.getItem('sb_user')||'{}');
+      const lj=(u.loja_id && lojas.some(l=>l.id===u.loja_id)) ? u.loja_id : lojas[0].id;
+      sel.value=lj;
+      await onChangeLojaFT();
+    }
   }catch{}
 }
 
