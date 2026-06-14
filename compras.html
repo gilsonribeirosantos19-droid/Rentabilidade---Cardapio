@@ -1160,7 +1160,7 @@ async function verPedido(id) {
     }).join('');
 
     const acoes = document.getElementById('mp-acoes');
-    acoes.innerHTML = '';
+    acoes.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="imprimirPedido('${id}')">🖨️ Imprimir / PDF</button>`;
     if (p.status==='pendente') {
       acoes.innerHTML += `<button class="btn btn-green btn-sm" onclick="mudarStatus('${id}','enviado')">📤 Marcar como Enviado</button>`;
       acoes.innerHTML += `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="mudarStatus('${id}','cancelado')">✕ Cancelar</button>`;
