@@ -150,6 +150,34 @@ Deno.serve(async (req) => {
     // ── 2) Busca a NF-e completa com itens ──
     const nfeCompleta = await fetchNfeCompleta(chaveAcesso)
 
+    // ── 2b) Descobre a LOJA pelo CNPJ do destinatário (a filial que recebeu a nota) ──
+    // Robusto: em vez de depender do nome do campo do Focus, casa o CNPJ de cada loja
+    // do tenant dentro do JSON da nota. O CNPJ do emitente é do fornecedor (não bate com
+    // nenhuma loja), então só o destinatário (a filial) casa. Só roda se ainda não veio
+    // loja pela URL (?loja=) e se o XML completo já chegou.
+    let lojaFinal = LOJA_ID
+    if (!lojaFinal && nfeCompleta) {
+      try {
+        const { data: lojasTenant } = await supabase
+          .from('lojas')
+          .select('id,cnpj')
+          .eq('tenant_id', TENANT_ID)
+        const rawJson = JSON.stringify(nfeCompleta)
+        for (const l of lojasTenant || []) {
+          const cnpjDigits = String(l.cnpj || '').replace(/\D/g, '')
+          if (cnpjDigits.length === 14 && rawJson.includes(cnpjDigits)) { lojaFinal = l.id; break }
+        }
+        if (lojaFinal) {
+          await supabase.from('nfe_recebidas').update({ loja_id: lojaFinal }).eq('id', nfe.id)
+          console.log('Loja descoberta pelo CNPJ do destinatário:', lojaFinal)
+        } else {
+          console.log('Nenhuma loja casou pelo CNPJ do destinatário (verificar cadastro de CNPJ das lojas).')
+        }
+      } catch (e) {
+        console.error('Erro ao descobrir loja pelo destinatário:', (e as Error).message)
+      }
+    }
+
     // ── 3) Itens ficam em requisicao_nota_fiscal.itens ──
     const itensNfe = nfeCompleta?.requisicao_nota_fiscal?.itens || []
     console.log('Itens encontrados:', itensNfe.length)
