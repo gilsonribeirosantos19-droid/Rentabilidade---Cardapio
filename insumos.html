@@ -491,6 +491,25 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-duplicar">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <span class="modal-title">Duplicar item</span>
+      <button class="modal-close" onclick="fecharModalDup()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:#64748b;margin:0 0 12px">Copiando de: <b id="dup-origem"></b></p>
+      <label class="form-label">Descrição do novo item *</label>
+      <input class="form-input" id="dup-nome" type="text" placeholder="Descrição do novo item" onkeydown="if(event.key==='Enter')confirmarDuplicar()">
+      <p style="font-size:12px;color:#94a3b8;margin:10px 0 0">Todos os outros campos (tipo, grupo, unidade, CMV, NCM, preço…) são copiados automaticamente.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="fecharModalDup()">Cancelar</button>
+      <button class="btn btn-primary" id="dup-btn" onclick="confirmarDuplicar()">Duplicar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -978,17 +997,28 @@ function menuProduto(id, btn){
   setTimeout(()=>document.addEventListener('click',()=>menu.remove(),{once:true}),0);
 }
 
-// Duplicar cadastro — cria um item novo copiando TODOS os campos do original; usuário só informa a descrição
-async function duplicarItem(id){
+// Duplicar cadastro — abre o modal; SÓ duplica quando o usuário clica em "Duplicar"
+let _dupId=null;
+function duplicarItem(id){
   const ins=todos.find(x=>x.id===id);
   if(!ins) return;
-  const novaDesc=prompt(`Duplicar "${ins.nome}".\n\nDigite a descrição do NOVO item (o resto é copiado automaticamente):`, ins.nome+' (CÓPIA)');
-  if(novaDesc===null) return; // cancelou
-  const nome=toUpperName(novaDesc.trim());
+  _dupId=id;
+  document.getElementById('dup-origem').textContent=ins.nome||'';
+  document.getElementById('dup-nome').value=(ins.nome||'')+' (CÓPIA)';
+  document.getElementById('modal-duplicar').classList.add('open');
+  setTimeout(()=>{const e=document.getElementById('dup-nome');if(e){e.focus();e.select();}},80);
+}
+function fecharModalDup(){document.getElementById('modal-duplicar').classList.remove('open');_dupId=null;}
+async function confirmarDuplicar(){
+  const ins=todos.find(x=>x.id===_dupId);
+  if(!ins){fecharModalDup();return;}
+  const nome=toUpperName((document.getElementById('dup-nome').value||'').trim());
   if(!nome){toast('Informe a descrição do novo item.','err');return;}
   if(todos.some(i=>normalizeSearch(i.nome||'')===normalizeSearch(nome))){
     toast(`Já existe um item com o nome "${nome}".`,'err');return;
   }
+  const btn=document.getElementById('dup-btn');
+  if(btn){btn.disabled=true;btn.textContent='Duplicando...';}
   const copia={...ins};
   delete copia.id; delete copia.created_at; delete copia.atualizado_em; delete copia.updated_at;
   copia.tenant_id=TENANT_ID;
@@ -997,8 +1027,10 @@ async function duplicarItem(id){
   try{
     await api('insumos',{method:'POST',body:JSON.stringify(copia)});
     toast(`Item duplicado: ${nome}`,'ok');
+    fecharModalDup();
     await carregarInsumos();
   }catch(e){toast('Erro ao duplicar: '+e.message,'err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Duplicar';}}
 }
 
 function _popularGruposProd(){
@@ -1036,6 +1068,7 @@ async function carregarClassificacoes(){
 }
 
 document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
+document.getElementById('modal-duplicar')?.addEventListener('click',function(e){if(e.target===this)fecharModalDup();});
 
 // Campos de nome → automático MAIÚSCULO
 upperInput('f-nome');
