@@ -56,6 +56,21 @@ async function fetchNfeCompleta(chave: string) {
   }
 }
 
+// Extrai a data de vencimento + valor do título das duplicatas da nota completa do Focus.
+// duplicatas: 1 parcela vem como objeto; várias vêm como array. Pega a parcela de vencimento mais próximo.
+function extrairVencimento(completa: any) {
+  const req = completa?.requisicao_nota_fiscal || {}
+  let dups = req.duplicatas
+  if (!dups) return { data_vencimento: null, valor_titulo: null }
+  if (!Array.isArray(dups)) dups = [dups]
+  dups = dups.filter((d: any) => d && d.data_vencimento)
+  if (!dups.length) return { data_vencimento: null, valor_titulo: null }
+  dups.sort((a: any, b: any) => String(a.data_vencimento).localeCompare(String(b.data_vencimento)))
+  const primeira = dups[0]
+  const valor = parseFloat(req.valor_liquido_fatura || primeira.valor || '0')
+  return { data_vencimento: primeira.data_vencimento || null, valor_titulo: valor || null }
+}
+
 // ── BACKFILL: carimba loja_id nas notas antigas (loja_id null) pelo CNPJ do destinatário ──
 // Roda em lote, com orçamento de tempo (~110s) por chamada. Reinvocar até restantes=0.
 async function rodarBackfillLoja(tenant: string) {
@@ -101,6 +116,43 @@ async function rodarBackfillLoja(tenant: string) {
 
   console.log('Backfill:', { processadas, fixadas, semXml, semMatch, restantes })
   return json({ ok: true, processadas, fixadas, semXml, semMatch, restantes })
+}
+
+// ── BACKFILL VENCIMENTO: preenche data_vencimento/valor_titulo nas notas sem (busca duplicatas no Focus) ──
+async function rodarBackfillVenc(tenant: string) {
+  const json = (obj: unknown, status = 200) =>
+    new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } })
+  const _uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!_uuid.test(tenant)) return json({ error: 'backfill_venc: informe "tenant" (uuid) no corpo' }, 400)
+
+  const { data: notas } = await supabase
+    .from('nfe_recebidas')
+    .select('id,chave_acesso')
+    .eq('tenant_id', tenant)
+    .is('data_vencimento', null)
+    .limit(300)
+
+  const inicio = Date.now()
+  let processadas = 0, fixadas = 0, semXml = 0, semVenc = 0
+  for (const n of notas || []) {
+    if (Date.now() - inicio > 110000) break
+    processadas++
+    const completa = await fetchNfeCompleta(n.chave_acesso)
+    if (!completa) { semXml++; continue }
+    const venc = extrairVencimento(completa)
+    if (!venc.data_vencimento) { semVenc++; continue }   // nota à vista / sem duplicata = sem vencimento (normal)
+    await supabase.from('nfe_recebidas')
+      .update({ data_vencimento: venc.data_vencimento, valor_titulo: venc.valor_titulo })
+      .eq('id', n.id)
+    fixadas++
+  }
+  const { count: restantes } = await supabase
+    .from('nfe_recebidas')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenant)
+    .is('data_vencimento', null)
+  console.log('BackfillVenc:', { processadas, fixadas, semXml, semVenc, restantes })
+  return json({ ok: true, processadas, fixadas, semXml, semVenc, restantes })
 }
 
 // ── PULL: busca no Focus as notas recebidas de cada filial e importa as que faltam no banco ──
@@ -212,6 +264,11 @@ Deno.serve(async (req) => {
     // Modo PULL (manual): { "pull": true, "tenant": "<uuid>" } → busca no Focus e importa as notas que faltam
     if (body.pull === true) {
       return await rodarPullFocus(body.tenant || TENANT_ID)
+    }
+
+    // Modo BACKFILL VENCIMENTO (manual): { "backfill_venc": true, "tenant": "<uuid>" } → preenche data de vencimento das notas antigas
+    if (body.backfill_venc === true) {
+      return await rodarBackfillVenc(body.tenant || TENANT_ID)
     }
 
     // Modo AMOSTRA (diagnóstico): { "amostra": true, "tenant": "<uuid>" } → devolve UMA nota completa do Focus
@@ -329,6 +386,17 @@ Deno.serve(async (req) => {
         }
       } catch (e) {
         console.error('Erro ao descobrir loja pelo destinatário:', (e as Error).message)
+      }
+    }
+
+    // ── 2c) Data de vencimento + valor do título (duplicatas da nota) ──
+    if (nfeCompleta) {
+      const venc = extrairVencimento(nfeCompleta)
+      if (venc.data_vencimento) {
+        await supabase.from('nfe_recebidas')
+          .update({ data_vencimento: venc.data_vencimento, valor_titulo: venc.valor_titulo })
+          .eq('id', nfe.id)
+        console.log('Vencimento gravado:', venc.data_vencimento, '| valor titulo:', venc.valor_titulo)
       }
     }
 
