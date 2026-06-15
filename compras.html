@@ -120,14 +120,14 @@
   /* CONSOLIDADO */
   .loja-pill{display:inline-block;font-size:11px;color:var(--text3);margin-top:2px;line-height:1.6}
   .forn-select{width:100%;min-width:160px;background:var(--bg3);border:1px solid var(--border2);
-    color:var(--text1);padding:5px 8px;border-radius:6px;font-size:12px;outline:none;font-family:inherit}
+    color:var(--text1);padding:3px 8px;border-radius:6px;font-size:12px;outline:none;font-family:inherit}
   .forn-select:focus{border-color:var(--teal)}
   .forn-select.sem-forn{color:var(--text3)}
   .cons-row{cursor:pointer}
   .cons-row.sel td{background:#fef2f2}
   .qtd-comprar{width:90px;text-align:right;font-family:'DM Mono',monospace;font-weight:700;
     background:#fff;border:1px solid var(--border2);color:var(--text1);
-    padding:4px 8px;border-radius:6px;font-size:13px;outline:none}
+    padding:3px 8px;border-radius:6px;font-size:13px;outline:none}
   .qtd-comprar:focus{border-color:var(--teal)}
   .lojas-panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);
     margin-top:16px;overflow:hidden}
@@ -721,12 +721,9 @@ function renderSolTabela() {
       <td style="text-align:center;font-weight:500">${s._itemCount||'—'}</td>
       <td style="color:var(--text3);font-size:12px">${esc(s.observacao||'—')}</td>
       <td><span class="badge ${badgeMap[s.status]||'b-solicitado'}">${labelMap[s.status]||s.status}</span></td>
-      <td style="display:flex;align-items:center;gap:6px">
-        <button onclick="verSolicitacao('${s.id}')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#2563eb;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          Ver itens
-        </button>
-        <button onclick="abrirMenuSol(event,'${s.id}')" style="padding:4px 6px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#64748b;font-size:16px;line-height:1;cursor:pointer" title="Mais opções">⋮</button>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="verSolicitacao('${s.id}')">Ver itens</button>
+        <button class="btn btn-ghost btn-sm" onclick="abrirMenuSol(event,'${s.id}')" title="Mais opções">⋮</button>
       </td>
     </tr>`;
   }).join('');
