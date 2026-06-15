@@ -56,6 +56,53 @@ async function fetchNfeCompleta(chave: string) {
   }
 }
 
+// ── BACKFILL: carimba loja_id nas notas antigas (loja_id null) pelo CNPJ do destinatário ──
+// Roda em lote, com orçamento de tempo (~110s) por chamada. Reinvocar até restantes=0.
+async function rodarBackfillLoja(tenant: string) {
+  const json = (obj: unknown, status = 200) =>
+    new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } })
+
+  const _uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!_uuid.test(tenant)) return json({ error: 'backfill: informe "tenant" (uuid) no corpo' }, 400)
+
+  const { data: lojas } = await supabase.from('lojas').select('id,nome,cnpj').eq('tenant_id', tenant)
+  const lojasCnpj = (lojas || [])
+    .map((l: any) => ({ id: l.id, nome: l.nome, cnpj: String(l.cnpj || '').replace(/\D/g, '') }))
+    .filter((l: any) => l.cnpj.length === 14)
+  if (!lojasCnpj.length) return json({ error: 'backfill: nenhuma loja com CNPJ cadastrado (preencha o CNPJ das lojas)' }, 400)
+
+  const { data: notas } = await supabase
+    .from('nfe_recebidas')
+    .select('id,chave_acesso')
+    .eq('tenant_id', tenant)
+    .is('loja_id', null)
+    .limit(300)
+
+  const inicio = Date.now()
+  let processadas = 0, fixadas = 0, semXml = 0, semMatch = 0
+  for (const n of notas || []) {
+    if (Date.now() - inicio > 110000) break  // orçamento de tempo
+    processadas++
+    await manifestarCiencia(n.chave_acesso)
+    const completa = await fetchNfeCompleta(n.chave_acesso)
+    if (!completa) { semXml++; continue }
+    const raw = JSON.stringify(completa)
+    const loja = lojasCnpj.find((l: any) => raw.includes(l.cnpj))
+    if (!loja) { semMatch++; continue }
+    await supabase.from('nfe_recebidas').update({ loja_id: loja.id }).eq('id', n.id)
+    fixadas++
+  }
+
+  const { count: restantes } = await supabase
+    .from('nfe_recebidas')
+    .select('id', { count: 'exact', head: true })
+    .eq('tenant_id', tenant)
+    .is('loja_id', null)
+
+  console.log('Backfill:', { processadas, fixadas, semXml, semMatch, restantes })
+  return json({ ok: true, processadas, fixadas, semXml, semMatch, restantes })
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('OK', { status: 200 })
 
@@ -72,6 +119,11 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json()
     console.log('Webhook recebido:', JSON.stringify(body).substring(0, 500))
+
+    // Modo BACKFILL (manual): { "backfill": true, "tenant": "<uuid>" } → carimba loja nas notas antigas
+    if (body.backfill === true) {
+      return await rodarBackfillLoja(body.tenant || TENANT_ID)
+    }
 
     const cnpjEmitente = (body.documento_emitente || '').replace(/\D/g, '')
     const nomeEmitente = body.nome_emitente || ''
