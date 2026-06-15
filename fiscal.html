@@ -157,6 +157,10 @@
         <select class="field field-sm" id="fil-fornecedor" onchange="renderTable()" style="min-width:150px">
           <option value="">Todos</option>
         </select>
+        <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Loja:</span>
+        <select class="field field-sm" id="fil-loja" onchange="renderTable()" style="min-width:150px">
+          <option value="">Todas</option>
+        </select>
         <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Período:</span>
         <div id="fil-periodo-datas" style="display:none;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
           <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
@@ -228,6 +232,7 @@
               <th style="width:36px;text-align:center"><input type="checkbox" id="chk-all" onchange="toggleSelectAll(this)" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer"></th>
               <th class="c">Sit.</th>
               <th>Fornecedor / Razão Social</th>
+              <th>Loja</th>
               <th>DANFE</th>
               <th class="c">Série</th>
               <th>D. Emissão</th>
@@ -681,6 +686,13 @@ function populateSelects() {
     if(!lojaAtual || !lojas.some(l=>l.id===lojaAtual.id)) lojaAtual = lojas[0];
     selLoja.value = lojaAtual.id;
   }
+  // Filtro de loja da LISTA (separado do "Recebendo em"): tem opção "Todas"
+  const filLojaSel = document.getElementById('fil-loja');
+  if(filLojaSel && lojas.length){
+    const _prev = filLojaSel.value;
+    filLojaSel.innerHTML = '<option value="">Todas</option>' + lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    filLojaSel.value = _prev;
+  }
 }
 
 // ── MONITOR TABS ──────────────────────────────────────────────────
@@ -1024,6 +1036,7 @@ function limparFiltros() {
 
 function renderTable() {
   const filForn      = document.getElementById('fil-fornecedor')?.value || '';
+  const filLoja      = document.getElementById('fil-loja')?.value || '';
   const showPendente = document.getElementById('fil-s-pendente')?.checked;
   const showProcessar= document.getElementById('fil-s-processar')?.checked;
   const showErro     = document.getElementById('fil-s-erro')?.checked;
@@ -1033,6 +1046,7 @@ function renderTable() {
   const rows = entradasNfe.filter(n => {
     if(n.status === 'processada') return false;
     if(filForn && n.cnpj_emitente !== filForn) return false;
+    if(filLoja && n.loja_id !== filLoja) return false;
     const chip = statusToChip(n.status);
     if(chip==='pendente'  && !showPendente) return false;
     if(chip==='processar' && !showProcessar)return false;
@@ -1049,7 +1063,7 @@ function renderTable() {
 
   const tbody = document.getElementById('tbody-nfe');
   if(!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="11" class="empty">Nenhuma NF-e encontrada no período.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" class="empty">Nenhuma NF-e encontrada no período.</td></tr>`;
     return;
   }
 
@@ -1069,6 +1083,7 @@ function renderTable() {
       </td>
       <td class="c">${sitIndicator}</td>
       <td><div style="font-weight:500">${esc(n.nome_emitente||'—')}</div></td>
+      <td style="font-size:12px;color:#475569">${esc(lojas.find(l=>l.id===n.loja_id)?.nome||'—')}</td>
       <td>
         <span style="color:#2563eb;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="event.stopPropagation();openNfeItens('${nfeKey}')">${esc(n.numero||'—')}</span>
       </td>
