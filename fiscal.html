@@ -1809,11 +1809,8 @@ async function confirmarNfe() {
 // ── INIT ──────────────────────────────────────────────────────────
 (function init() {
   // Padrão: todos os períodos (sem filtro de data)
-  // Carrega loja do localStorage
-  try {
-    const u = JSON.parse(localStorage.getItem('sb_user')||'{}');
-    if(u.loja_id) lojaAtual = {id: u.loja_id};
-  } catch {}
+  // Monitor abre em "Todas as lojas" (lojaAtual null) p/ a lista bater com os contadores;
+  // tenant de 1 loja (ex: Mori) auto-seleciona no loadAll. O usuário filtra por loja se quiser.
   loadAll();
 })();
 </script>
