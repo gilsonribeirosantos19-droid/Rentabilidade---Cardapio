@@ -1091,6 +1091,9 @@
         <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
           <option value="">Todas as categorias</option>
         </select>
+        <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()">
+          <option value="">Todos os tipos</option>
+        </select>
         <input class="field field-sm" id="se-busca" placeholder="Pesquisar item..." oninput="clearTimeout(window._seBuscaT);window._seBuscaT=setTimeout(renderSaldoEst,250)" style="min-width:160px">
         <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente CMV</label>
         <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
@@ -1098,11 +1101,11 @@
       </div>
       <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 250px);overflow-y:auto"><table class="tbl">
         <thead style="position:sticky;top:0;z-index:5"><tr>
-          <th>Insumo</th><th>Categoria</th><th>Un.</th><th>Loja</th>
+          <th>Insumo</th><th>Categoria</th><th>Tipo do Item</th><th>Un.</th><th>Loja</th>
           <th class="r" id="se-th-saldo">Saldo Atual</th><th class="r">Custo Médio</th><th class="r">Valor em Estoque</th><th class="c">Status</th>
         </tr></thead>
         <tfoot id="se-tfoot"></tfoot>
-        <tbody id="se-body"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
+        <tbody id="se-body"><tr><td colspan="9" class="empty">Carregando...</td></tr></tbody>
       </table></div></div>
     </div>
 
@@ -1717,13 +1720,14 @@ function onSeTipoDataChange() {
 async function renderSaldoEst(){
   const lojaFil = getLojaId()||'';
   const catFil  = document.getElementById('se-cat')?.value||'';
+  const tipoFil = document.getElementById('se-tipo')?.value||'';
   const cmvF    = document.getElementById('se-cmv')?.checked;
   const buscaF  = (document.getElementById('se-busca')?.value||'').trim();
   const tipoData= document.getElementById('se-tipo-data')?.value||'atual';
   const dataBase= document.getElementById('se-data')?.value||'';
   const tbody   = document.getElementById('se-body');
   const tfoot   = document.getElementById('se-tfoot');
-  tbody.innerHTML = '<tr><td colspan="8" class="empty">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="empty">Carregando...</td></tr>';
 
   const thSaldo = document.getElementById('se-th-saldo');
   if (thSaldo) thSaldo.textContent = tipoData === 'atual' ? 'Saldo Atual' :
@@ -1738,7 +1742,7 @@ async function renderSaldoEst(){
       const saldos = await api(q).catch(()=>[]);
       saldosCalc = saldos.map(s => ({ insumo_id:s.insumo_id, loja_id:s.loja_id, quantidade:s.quantidade||0, custo_medio:s.custo_medio||0 }));
     } else {
-      if (!dataBase) { tbody.innerHTML='<tr><td colspan="8" class="empty">Selecione uma data base.</td></tr>'; tfoot.innerHTML=''; return; }
+      if (!dataBase) { tbody.innerHTML='<tr><td colspan="9" class="empty">Selecione uma data base.</td></tr>'; tfoot.innerHTML=''; return; }
       const dtLim = dataBase + 'T23:59:59';
       const entsAteDt = entradas.filter(e => { const dt=e.criado_em||e.created_at||''; return dt<=dtLim&&(!lojaFil||e.loja_id===lojaFil); });
       const saisAteDt = saidas.filter(s  => { const dt=s.criado_em||s.created_at||''; return dt<=dtLim&&(!lojaFil||s.loja_id===lojaFil); });
@@ -1762,13 +1766,14 @@ async function renderSaldoEst(){
       saldosCalc = Object.values(map);
     }
 
-    if (!saldosCalc.length) { tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum saldo encontrado.</td></tr>'; tfoot.innerHTML=''; return; }
+    if (!saldosCalc.length) { tbody.innerHTML='<tr><td colspan="9" class="empty">Nenhum saldo encontrado.</td></tr>'; tfoot.innerHTML=''; return; }
 
     let rows = saldosCalc.map(s => {
       const ins  = insumos.find(i=>i.id===s.insumo_id);
       const loja = lojas.find(l=>l.id===s.loja_id);
       if (!ins) return null;
       if (catFil && (ins.categoria||'')!==catFil) return null;
+      if (tipoFil && (ins.tipo_item||'')!==tipoFil) return null;
       if (cmvF && ins.participa_cmv==='nao') return null;
       if (buscaF && !normalizeSearch(ins.nome).includes(normalizeSearch(buscaF))) return null;
       const valor = (s.quantidade||0)*(s.custo_medio||0);
@@ -1778,6 +1783,7 @@ async function renderSaldoEst(){
       return {ins,loja,s,valor,row:`<tr>
         <td style="font-weight:600">${esc(ins.nome)}</td>
         <td>${esc(ins.categoria||'—')}</td>
+        <td>${esc(ins.tipo_item||'—')}</td>
         <td>${esc(ins.unidade_medida||ins.unidade_compra||'—')}</td>
         <td>${esc(loja?.nome||'—')}</td>
         <td class="r mono">${(s.quantidade||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})}</td>
@@ -1793,11 +1799,11 @@ async function renderSaldoEst(){
     const se = document.getElementById('se-valor-total');
     if (se) se.innerHTML = `Valor total em estoque: <span style="color:#16a34a">${brl(totalValor)}</span>`;
     tfoot.innerHTML = `<tr style="background:#f8fafc;font-weight:700">
-      <td colspan="4" style="font-size:11px;color:#0f172a;text-transform:uppercase;letter-spacing:.05em">TOTAL</td>
+      <td colspan="5" style="font-size:11px;color:#0f172a;text-transform:uppercase;letter-spacing:.05em">TOTAL</td>
       <td class="r mono">—</td><td class="r mono">—</td>
       <td class="r mono" style="color:#16a34a">${brl(totalValor)}</td>
       <td></td></tr>`;
-  } catch(e) { tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
+  } catch(e) { tbody.innerHTML=`<tr><td colspan="9" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
 }
 
 function _initSaldoEst(){
@@ -1805,6 +1811,11 @@ function _initSaldoEst(){
   if(selCat&&selCat.options.length<=1){
     const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort();
     cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCat.appendChild(o);});
+  }
+  const selTipo=document.getElementById('se-tipo');
+  if(selTipo&&selTipo.options.length<=1){
+    const tipos=[...new Set(insumos.map(i=>i.tipo_item).filter(Boolean))].sort();
+    tipos.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;selTipo.appendChild(o);});
   }
   renderSaldoEst();
 }
