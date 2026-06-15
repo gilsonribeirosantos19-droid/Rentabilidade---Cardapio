@@ -103,6 +103,90 @@ async function rodarBackfillLoja(tenant: string) {
   return json({ ok: true, processadas, fixadas, semXml, semMatch, restantes })
 }
 
+// ── PULL: busca no Focus as notas recebidas de cada filial e importa as que faltam no banco ──
+// Diagnóstico embutido: devolve amostra da resposta do Focus (lista e completa) pra ajustar se preciso.
+async function rodarPullFocus(tenant: string) {
+  const json = (obj: unknown, status = 200) =>
+    new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } })
+  const _uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!_uuid.test(tenant)) return json({ error: 'pull: informe "tenant" (uuid) no corpo' }, 400)
+
+  const { data: lojas } = await supabase.from('lojas').select('id,nome,cnpj').eq('tenant_id', tenant)
+  const lojasCnpj = (lojas || [])
+    .map((l: any) => ({ id: l.id, nome: l.nome, cnpj: String(l.cnpj || '').replace(/\D/g, '') }))
+    .filter((l: any) => l.cnpj.length === 14)
+  if (!lojasCnpj.length) return json({ error: 'pull: nenhuma loja com CNPJ cadastrado' }, 400)
+
+  const inicio = Date.now()
+  const diag: any[] = []
+  let amostraLista: any = null, amostraCompleta: any = null
+  let encontradas = 0, novas = 0, importadas = 0, erros = 0
+
+  for (const loja of lojasCnpj) {
+    if (Date.now() - inicio > 115000) { diag.push({ loja: loja.nome, status: 'pulado-tempo' }); continue }
+    let res: Response
+    try {
+      res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas?cnpj=${loja.cnpj}`, { headers: { 'Authorization': FOCUS_AUTH } })
+    } catch (e) { diag.push({ loja: loja.nome, fetchErro: String(e) }); continue }
+    const txt = await res.text()
+    if (!amostraLista) amostraLista = { loja: loja.nome, http: res.status, body: txt.substring(0, 700) }
+    if (!res.ok) { diag.push({ loja: loja.nome, http: res.status }); continue }
+    let lista: any
+    try { lista = JSON.parse(txt) } catch { diag.push({ loja: loja.nome, jsonErro: true }); continue }
+    const arr = Array.isArray(lista) ? lista : (lista?.nfes || lista?.notas || lista?.data || lista?.documentos || [])
+    diag.push({ loja: loja.nome, noFocus: Array.isArray(arr) ? arr.length : '??' })
+    if (!Array.isArray(arr)) continue
+
+    for (const it of arr) {
+      if (Date.now() - inicio > 115000) break
+      const chave = String(it.chave_nfe || it.chave || it.chave_acesso || it.chave_acesso_nfe || '')
+      if (chave.length !== 44) continue
+      encontradas++
+      const { count } = await supabase.from('nfe_recebidas').select('id', { count: 'exact', head: true }).eq('chave_acesso', chave)
+      if (count && count > 0) continue
+      novas++
+      try {
+        await manifestarCiencia(chave)
+        const completa = await fetchNfeCompleta(chave)
+        if (!amostraCompleta && completa) amostraCompleta = JSON.stringify(completa).substring(0, 700)
+        const raw = completa ? JSON.stringify(completa) : ''
+        const lojaMatch = lojasCnpj.find((l: any) => raw.includes(l.cnpj))
+        const req: any = completa?.requisicao_nota_fiscal || {}
+        const itensNfe: any[] = req.itens || []
+        const numero = chave.substring(25, 34).replace(/^0+/, '') || '0'
+        const serie  = chave.substring(22, 25)
+        const cnpjEmit = chave.substring(6, 20)
+        const { data: nova, error: insErr } = await supabase.from('nfe_recebidas').insert({
+          tenant_id: tenant, loja_id: lojaMatch?.id || null, numero, serie, chave_acesso: chave,
+          cnpj_emitente: cnpjEmit, nome_emitente: String(req.nome_emitente || it.nome_emitente || ''),
+          data_emissao: req.data_emissao || it.data_emissao || new Date().toISOString(),
+          valor_total: parseFloat(req.valor_total || it.valor_total || '0'),
+          status: itensNfe.length > 0 ? 'aguard_vinculacao' : 'em_transito', fonte: 'pull',
+        }).select('id').single()
+        if (insErr) { erros++; continue }
+        if (itensNfe.length > 0 && nova) {
+          const { data: vinc } = await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor').eq('tenant_id', tenant)
+          const batch = itensNfe.map((item: any) => ({
+            nfe_id: nova.id, tenant_id: tenant,
+            descricao_nfe: String(item.descricao || '').toUpperCase(),
+            codigo_item_fornecedor: String(item.codigo_produto || ''),
+            quantidade: parseFloat(item.quantidade_comercial || '0'),
+            unidade_nfe: String(item.unidade_comercial || 'UN').toUpperCase(),
+            valor_unitario: parseFloat(item.valor_unitario_comercial || '0'),
+            valor_total: parseFloat(item.valor_bruto || '0'),
+            vinculacao_id: (vinc || []).find((v: any) => v.codigo_fornecedor === String(item.codigo_produto || ''))?.id || null,
+          }))
+          await supabase.from('nfe_itens').insert(batch)
+        }
+        importadas++
+      } catch (e) { erros++; console.error('pull item erro:', (e as Error).message) }
+    }
+  }
+
+  console.log('Pull:', { encontradas, novas, importadas, erros })
+  return json({ ok: true, encontradas, novas, importadas, erros, amostraLista, amostraCompleta, diag })
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('OK', { status: 200 })
 
@@ -123,6 +207,11 @@ Deno.serve(async (req) => {
     // Modo BACKFILL (manual): { "backfill": true, "tenant": "<uuid>" } → carimba loja nas notas antigas
     if (body.backfill === true) {
       return await rodarBackfillLoja(body.tenant || TENANT_ID)
+    }
+
+    // Modo PULL (manual): { "pull": true, "tenant": "<uuid>" } → busca no Focus e importa as notas que faltam
+    if (body.pull === true) {
+      return await rodarPullFocus(body.tenant || TENANT_ID)
     }
 
     const cnpjEmitente = (body.documento_emitente || '').replace(/\D/g, '')
