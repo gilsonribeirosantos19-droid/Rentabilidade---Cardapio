@@ -294,6 +294,30 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-dup-prod">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:460px">
+    <div class="ft-head">
+      <h2>Duplicar Produto</h2>
+      <div class="ft-head-btns">
+        <button class="btn btn-ghost" onclick="fecharModalDupProd()">Cancelar</button>
+        <button class="btn btn-primary" id="dup-prod-btn" onclick="confirmarDuplicarProduto()">Duplicar</button>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#64748b;margin:4px 0 14px">Copiando de: <b id="dup-prod-origem"></b></p>
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>Código Saipos (PDV)</label>
+        <input id="dup-prod-codigo" type="text" placeholder="Código do PDV">
+      </div>
+      <div class="form-group">
+        <label>Descrição do novo produto *</label>
+        <input id="dup-prod-nome" type="text" placeholder="Descrição" onkeydown="if(event.key==='Enter')confirmarDuplicarProduto()">
+      </div>
+    </div>
+    <p style="font-size:12px;color:#94a3b8;margin:8px 0 0">Os demais campos (tipo, grupo, unidade, preço, CMV, NCM/CEST/CFOP…) são copiados automaticamente.</p>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -387,6 +411,9 @@ function renderTabela(lista){
       <td style="white-space:nowrap">
         <button class="btn-ghost" title="Editar" onclick="abrirEdicao('${p.id}')" style="border-radius:6px;padding:3px 7px;color:#64748b">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn-ghost" title="Duplicar" onclick="duplicarProduto('${p.id}')" style="border-radius:6px;padding:3px 7px;color:#64748b">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
         <button class="btn-ghost" title="Excluir" onclick="excluir('${p.id}')" style="border-radius:6px;padding:3px 7px;color:#e11d48">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -503,8 +530,44 @@ async function excluir(id){
   }catch(e){toast('Erro: '+e.message,'err');}
 }
 
+// ── DUPLICAR PRODUTO ──────────────────────────────────────────────
+// Copia TODOS os campos; usuário informa Código PDV (editável) + descrição. Só duplica ao clicar Duplicar.
+let _dupProdId=null;
+function duplicarProduto(id){
+  const p=todos.find(x=>x.id===id);
+  if(!p) return;
+  _dupProdId=id;
+  document.getElementById('dup-prod-origem').textContent=p.nome||'';
+  document.getElementById('dup-prod-codigo').value='';
+  document.getElementById('dup-prod-nome').value=(p.nome||'')+' (CÓPIA)';
+  document.getElementById('modal-dup-prod').classList.add('open');
+  setTimeout(()=>{const e=document.getElementById('dup-prod-nome');if(e){e.focus();e.select();}},80);
+}
+function fecharModalDupProd(){document.getElementById('modal-dup-prod').classList.remove('open');_dupProdId=null;}
+async function confirmarDuplicarProduto(){
+  const p=todos.find(x=>x.id===_dupProdId);
+  if(!p){fecharModalDupProd();return;}
+  const nome=toUpperName((document.getElementById('dup-prod-nome').value||'').trim());
+  if(!nome){toast('Informe a descrição do novo produto.','err');return;}
+  const btn=document.getElementById('dup-prod-btn');
+  if(btn){btn.disabled=true;btn.textContent='Duplicando...';}
+  const copia={...p};
+  delete copia.id; delete copia.created_at; delete copia.atualizado_em; delete copia.updated_at;
+  copia.tenant_id=TENANT_ID;
+  copia.nome=nome;
+  copia.codigo_pdv=(document.getElementById('dup-prod-codigo').value||'').trim()||null;
+  try{
+    await api('produtos',{method:'POST',body:JSON.stringify(copia)});
+    toast(`Produto duplicado: ${nome}`,'ok');
+    fecharModalDupProd();
+    await carregarProdutos();
+  }catch(e){toast('Erro ao duplicar: '+e.message,'err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Duplicar';}}
+}
+
 // Fecha modal ao clicar fora
 document.getElementById('modal-novo').addEventListener('click',function(e){if(e.target===this)fecharModalNovo();});
+document.getElementById('modal-dup-prod')?.addEventListener('click',function(e){if(e.target===this)fecharModalDupProd();});
 
 // Nome em MAIÚSCULO automático enquanto digita
 upperInput('f-nome');
