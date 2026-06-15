@@ -214,6 +214,19 @@ Deno.serve(async (req) => {
       return await rodarPullFocus(body.tenant || TENANT_ID)
     }
 
+    // Modo AMOSTRA (diagnóstico): { "amostra": true, "tenant": "<uuid>" } → devolve UMA nota completa do Focus
+    // (pra descobrir onde estão os campos, ex: data de vencimento / duplicatas)
+    if (body.amostra === true) {
+      const _t = body.tenant || TENANT_ID
+      const { data: _ns } = await supabase.from('nfe_recebidas')
+        .select('chave_acesso').eq('tenant_id', _t).order('created_at', { ascending: false }).limit(8)
+      for (const _n of _ns || []) {
+        const _c = await fetchNfeCompleta(_n.chave_acesso)
+        if (_c) return new Response(JSON.stringify({ ok: true, chave: _n.chave_acesso, completa: _c }), { headers: { 'Content-Type': 'application/json' } })
+      }
+      return new Response(JSON.stringify({ ok: false, msg: 'nenhuma nota completa disponível' }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
     const cnpjEmitente = (body.documento_emitente || '').replace(/\D/g, '')
     const nomeEmitente = body.nome_emitente || ''
     const chaveAcesso  = body.chave_nfe || ''
