@@ -155,6 +155,81 @@ async function rodarBackfillVenc(tenant: string) {
   return json({ ok: true, processadas, fixadas, semXml, semVenc, restantes })
 }
 
+// ── REPROCESSAR: completa as notas presas em 'em_transito' (manifesta + busca XML + grava itens) ──
+// Substitui a função externa "smart-action" (que dependia de chave revogada). Pública, sem chave.
+// Body: { "reprocessar": true } (todos os tenants) ou { "reprocessar": true, "tenant": "<uuid>" }.
+async function rodarReprocessar(tenant?: string) {
+  const json = (obj: unknown, status = 200) =>
+    new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } })
+  const _uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+  let q = supabase.from('nfe_recebidas').select('id,chave_acesso,tenant_id,loja_id').eq('status', 'em_transito')
+  if (tenant && _uuid.test(tenant)) q = q.eq('tenant_id', tenant)
+  const { data: notas } = await q.limit(300)
+
+  const lojasCache: Record<string, any[]> = {}
+  const vincCache: Record<string, any[]> = {}
+  const inicio = Date.now()
+  let processadas = 0, completadas = 0, semXml = 0, erros = 0
+
+  for (const n of notas || []) {
+    if (Date.now() - inicio > 110000) break
+    processadas++
+    try {
+      await manifestarCiencia(n.chave_acesso)
+      const completa = await fetchNfeCompleta(n.chave_acesso)
+      const itensNfe: any[] = completa?.requisicao_nota_fiscal?.itens || []
+      if (!itensNfe.length) { semXml++; continue }   // XML da SEFAZ ainda não disponível
+
+      // cache por tenant (evita query por nota)
+      if (!lojasCache[n.tenant_id]) lojasCache[n.tenant_id] = (await supabase.from('lojas').select('id,cnpj').eq('tenant_id', n.tenant_id)).data || []
+      if (!vincCache[n.tenant_id]) vincCache[n.tenant_id] = (await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor').eq('tenant_id', n.tenant_id)).data || []
+
+      // descobre loja (se ainda null) pelo CNPJ do destinatário + vencimento
+      const upd: any = {}
+      if (!n.loja_id) {
+        const raw = JSON.stringify(completa)
+        const l = lojasCache[n.tenant_id].find((x: any) => { const c = String(x.cnpj || '').replace(/\D/g, ''); return c.length === 14 && raw.includes(c) })
+        if (l) upd.loja_id = l.id
+      }
+      const venc = extrairVencimento(completa)
+      if (venc.data_vencimento) { upd.data_vencimento = venc.data_vencimento; upd.valor_titulo = venc.valor_titulo }
+      if (Object.keys(upd).length) await supabase.from('nfe_recebidas').update(upd).eq('id', n.id)
+
+      // grava itens (mesma lógica do fluxo normal; índice único protege duplicata)
+      const batch = itensNfe.map((item: any) => {
+        const codigo = String(item.codigo_produto || '')
+        const vinc = vincCache[n.tenant_id].find((v: any) => v.codigo_fornecedor === codigo)
+        return {
+          nfe_id: n.id, tenant_id: n.tenant_id,
+          descricao_nfe: String(item.descricao || '').toUpperCase(),
+          codigo_item_fornecedor: codigo,
+          quantidade: parseFloat(item.quantidade_comercial || '0'),
+          unidade_nfe: String(item.unidade_comercial || 'UN').toUpperCase(),
+          valor_unitario: parseFloat(item.valor_unitario_comercial || '0'),
+          valor_total: parseFloat(item.valor_bruto || '0'),
+          vinculacao_id: vinc?.id || null,
+        }
+      })
+      const { error: itensErr } = await supabase.from('nfe_itens').insert(batch)
+      if (itensErr && itensErr.code === '23505') {
+        await supabase.from('nfe_recebidas').update({ status: 'aguard_vinculacao' }).eq('id', n.id)
+        completadas++; continue
+      }
+      if (itensErr) { console.error('reprocessar itens erro:', JSON.stringify(itensErr)); erros++; continue }
+      const semVinc = batch.filter((i: any) => !i.vinculacao_id).length
+      await supabase.from('nfe_recebidas').update({ status: semVinc === 0 ? 'pronta' : 'aguard_vinculacao' }).eq('id', n.id)
+      completadas++
+    } catch (e) { console.error('reprocessar nota erro:', (e as Error).message); erros++ }
+  }
+
+  let rq = supabase.from('nfe_recebidas').select('id', { count: 'exact', head: true }).eq('status', 'em_transito')
+  if (tenant && _uuid.test(tenant)) rq = rq.eq('tenant_id', tenant)
+  const { count: restantes } = await rq
+  console.log('Reprocessar:', { processadas, completadas, semXml, erros, restantes })
+  return json({ ok: true, processadas, completadas, semXml, erros, restantes })
+}
+
 // ── PULL: busca no Focus as notas recebidas de cada filial e importa as que faltam no banco ──
 // Diagnóstico embutido: devolve amostra da resposta do Focus (lista e completa) pra ajustar se preciso.
 async function rodarPullFocus(tenant: string) {
@@ -269,6 +344,12 @@ Deno.serve(async (req) => {
     // Modo BACKFILL VENCIMENTO (manual): { "backfill_venc": true, "tenant": "<uuid>" } → preenche data de vencimento das notas antigas
     if (body.backfill_venc === true) {
       return await rodarBackfillVenc(body.tenant || TENANT_ID)
+    }
+
+    // Modo REPROCESSAR: { "reprocessar": true } → completa notas presas em 'em_transito' (substitui o cron/smart-action).
+    // tenant é OPCIONAL aqui (sem tenant = todos os tenants); o cron chama assim, sem chave.
+    if (body.reprocessar === true) {
+      return await rodarReprocessar(body.tenant)
     }
 
     // Modo AMOSTRA (diagnóstico): { "amostra": true, "tenant": "<uuid>" } → devolve UMA nota completa do Focus
