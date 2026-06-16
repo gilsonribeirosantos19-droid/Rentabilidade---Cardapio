@@ -428,6 +428,14 @@ Deno.serve(async (req) => {
 
       // Grava os itens E CONFERE se deu certo (antes não conferia → erro silencioso)
       const { error: itensErr } = await supabase.from('nfe_itens').insert(itensBatch)
+      if (itensErr && itensErr.code === '23505') {
+        // 23505 = violação de unicidade → o índice ux_nfe_itens_dedup BLOQUEOU uma duplicata.
+        // Outra execução (webhook/reprocessador) já gravou estes itens. NÃO é erro — está tudo certo.
+        console.log('Itens já existiam (duplicata bloqueada pelo índice único). OK, nada a fazer.')
+        return new Response(JSON.stringify({ ok: true, nfe_id: nfe.id, msg: 'itens ja existiam (dup bloqueada)' }), {
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
       if (itensErr) {
         console.error('ERRO ao inserir nfe_itens:', JSON.stringify(itensErr))
         console.error('Item de exemplo que tentou inserir:', JSON.stringify(itensBatch[0]))
