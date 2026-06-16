@@ -382,19 +382,19 @@
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Produto *</label>
-        <select id="f-produto" onchange="onFichaProdutoChange()"><option value="">Selecione o produto...</option></select>
+      <div class="form-group"><label>Produto / Insumo *</label>
+        <select id="f-produto" onchange="onFichaProdutoChange()"><option value="">Selecione produto ou insumo...</option></select>
         <input type="hidden" id="f-nome"></div>
       <div class="form-group"><label>Grupo</label>
-        <input id="f-cat" readonly placeholder="Vem do produto" style="background:#f8fafc;color:#475569;cursor:default"></div>
+        <input id="f-cat" readonly placeholder="Vem do produto/insumo" style="background:#f8fafc;color:#475569;cursor:default"></div>
     </div>
-    <div class="form-row">
+    <div class="form-row" id="row-venda1">
       <div class="form-group"><label>Rendimento (porções) *</label>
         <input type="number" id="f-porcoes" value="1" min="1" oninput="atualizarCustoPreview()"></div>
       <div class="form-group"><label>Preço de venda — salão (R$)</label>
         <input type="number" id="f-preco" placeholder="Ex: 49.90" min="0" step="0.01" oninput="atualizarCustoPreview()"></div>
     </div>
-    <div class="form-row">
+    <div class="form-row" id="row-venda2">
       <div class="form-group"><label>Preço de delivery (R$)</label>
         <input type="number" id="f-preco-delivery" placeholder="Ex: 59.90 (maior, p/ cobrir o iFood)" min="0" step="0.01" oninput="atualizarCustoPreview()">
         <small style="font-size:10px;color:#94a3b8">Deixe vazio se for igual ao salão</small></div>
@@ -411,9 +411,9 @@
       </div>
     </div>
     <div style="border-top:1px solid #e2e8f0;padding-top:14px;margin-bottom:14px">
-      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Vincular a insumo existente</div>
+      <div id="sec-vinc-header" style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Vincular a insumo existente</div>
       <div class="form-row" style="margin-bottom:0">
-        <div class="form-group" style="margin-bottom:0">
+        <div class="form-group" id="grp-insvinc" style="margin-bottom:0">
           <label>Insumo que receberá o custo</label>
           <select id="f-insumo-vinculado" onchange="toggleRendimento()"><option value="">— Não vincular —</option></select>
         </div>
@@ -519,33 +519,58 @@ function popularSelectsCat(){
   // f-cat (Grupo) agora é readonly e vem do produto — não popula mais
 }
 
-// Preenche o select de produtos do modal (mantém a primeira option de placeholder)
+// Preenche o select com PRODUTOS (venda) + INSUMOS (processados), agrupados.
+// Produtos usam value=<id> (compat); insumos usam value="ins:<id>".
 function popularProdutos(){
   const sel=document.getElementById('f-produto');
   if(!sel)return;
   const sel0=sel.value;
-  sel.innerHTML='<option value="">Selecione o produto...</option>'+
-    _produtos.map(p=>`<option value="${esc(p.id)}">${esc(p.nome)}</option>`).join('');
-  // Mantém a seleção atual se ainda existir
-  if(sel0&&_produtos.some(p=>p.id===sel0)) sel.value=sel0;
+  const prodOpts=_produtos.map(p=>`<option value="${esc(p.id)}">${esc(p.nome)}</option>`).join('');
+  const insOpts=todosInsumos.map(i=>`<option value="ins:${esc(i.id)}">${esc(i.nome)} (${esc(i.unidade_medida||i.unidade_compra||'un')})</option>`).join('');
+  sel.innerHTML='<option value="">Selecione produto ou insumo...</option>'
+    +(prodOpts?`<optgroup label="Produtos (venda)">${prodOpts}</optgroup>`:'')
+    +(insOpts?`<optgroup label="Insumos (processados / produção interna)">${insOpts}</optgroup>`:'');
+  if(sel0) sel.value=sel0;
 }
 
-// Quando o usuário escolhe um produto: copia o nome (e preço) para os campos da ficha
+// Mostra/esconde campos conforme o item: produto=venda (preço) | insumo=processado (custo/kg)
+function setModoProcessado(on){
+  const show=(id,vis)=>{const e=document.getElementById(id);if(e)e.style.display=vis?'':'none';};
+  show('row-venda1', !on);   // porções + preço de venda (só venda)
+  show('row-venda2', !on);   // preço de delivery (só venda)
+  show('grp-insvinc', !on);  // seletor de insumo vinculado (no processado é automático)
+  const h=document.getElementById('sec-vinc-header');
+  if(h) h.textContent = on ? 'Produção interna — rendimento da receita' : 'Vincular a insumo existente';
+}
+
+// Ao escolher: se for INSUMO (ins:<id>) → ficha de processado; se for PRODUTO → ficha de venda.
 function onFichaProdutoChange(){
   const sel=document.getElementById('f-produto');
-  const p=_produtos.find(x=>x.id===sel.value);
+  const val=sel.value;
   const nomeEl=document.getElementById('f-nome');
-  if(p){
-    if(nomeEl) nomeEl.value=p.nome||'';
-    const precoEl=document.getElementById('f-preco');
-    if(precoEl){ precoEl.value=(p.preco_venda!=null&&p.preco_venda!=='')?p.preco_venda:''; }
-    // Grupo vem direto do produto
-    const catEl=document.getElementById('f-cat');
-    if(catEl) catEl.value=p.grupo||p.categoria||'';
-    if(typeof atualizarCustoPreview==='function') atualizarCustoPreview();
+  const catEl=document.getElementById('f-cat');
+  const ehInsumo=val.startsWith('ins:');
+  setModoProcessado(ehInsumo);
+  if(ehInsumo){
+    const ins=todosInsumos.find(i=>i.id===val.slice(4));
+    if(ins){
+      if(nomeEl) nomeEl.value=ins.nome||'';
+      if(catEl) catEl.value=ins.categoria||'Processado';
+      preencherSelectInsumos(ins.id);  // vincula automático o insumo (dispara custo/kg ao salvar)
+      toggleRendimento();               // habilita o rendimento da receita
+    }
   }else{
-    if(nomeEl) nomeEl.value='';
+    const p=_produtos.find(x=>x.id===val);
+    if(p){
+      if(nomeEl) nomeEl.value=p.nome||'';
+      const precoEl=document.getElementById('f-preco');
+      if(precoEl) precoEl.value=(p.preco_venda!=null&&p.preco_venda!=='')?p.preco_venda:'';
+      if(catEl) catEl.value=p.grupo||p.categoria||'';
+      preencherSelectInsumos('');       // sem vínculo no modo venda
+      toggleRendimento();
+    }else if(nomeEl){ nomeEl.value=''; }
   }
+  if(typeof atualizarCustoPreview==='function') atualizarCustoPreview();
 }
 
 function renderCatChips(){
@@ -881,6 +906,7 @@ function custoFicha(f){
 function abrirModalNovo(){
   editId=null;ingredientes=[];
   document.getElementById('form-titulo').textContent='Nova Ficha Técnica';
+  setModoProcessado(false);
   document.getElementById('f-produto').value='';
   document.getElementById('f-nome').value='';
   document.getElementById('f-cat').value='';
@@ -908,7 +934,14 @@ function editarFicha(id){
     editId=id;
     ingredientes=(f.itens||[]).map(it=>{const ins=todosInsumos.find(i=>i.id===it.insumo_id);const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';const qtd=(um==='kg'||um==='litro')?it.quantidade_g/1000:it.quantidade_g;return{insumo_id:it.insumo_id,quantidade_g:qtd};});
     document.getElementById('form-titulo').textContent='Editar: '+f.nome;
-    document.getElementById('f-produto').value=f.produto_id||'';
+    // Processado = sem produto, com insumo vinculado → seletor aponta pro insumo (ins:<id>)
+    if(f.produto_id){
+      document.getElementById('f-produto').value=f.produto_id; setModoProcessado(false);
+    }else if(f.insumo_vinculado_id){
+      document.getElementById('f-produto').value='ins:'+f.insumo_vinculado_id; setModoProcessado(true);
+    }else{
+      document.getElementById('f-produto').value=''; setModoProcessado(false);
+    }
     document.getElementById('f-nome').value=f.nome;
     document.getElementById('f-cat').value=f.categoria;
     document.getElementById('f-porcoes').value=f.rendimento_porcoes;
@@ -1056,8 +1089,10 @@ async function salvarFicha(){
   const status=document.getElementById('f-status').value;
   const preparo=document.getElementById('f-preparo').value.trim();
   const obs=document.getElementById('f-obs').value.trim();
-  const produtoId=document.getElementById('f-produto').value;
-  if(!produtoId){toast('Selecione o produto.','err');return;}
+  const rawSel=document.getElementById('f-produto').value;
+  if(!rawSel){toast('Selecione um produto ou insumo.','err');return;}
+  const ehProcessado=rawSel.startsWith('ins:');
+  const produtoId=ehProcessado?null:rawSel;  // processado não tem produto de venda
   if(!nome){toast('Informe o nome da ficha.','err');return;}
   const ingValidos=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0);
   if(!ingValidos.length){toast('Adicione pelo menos um ingrediente.','err');return;}
