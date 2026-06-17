@@ -4033,8 +4033,8 @@ function _renderMovPage() {
     <td data-col="v-consumo" class="r mono">${brl(r.vCon)}</td>
     <td data-col="q-perdas" class="r mono">${qtd(r.qPerd)}</td>
     <td data-col="v-perdas" class="r mono">${brl(r.vPerd)}</td>
-    <td data-col="q-final" class="r mono">${qtd(r.qFin)}</td>
-    <td data-col="v-final" class="r mono">${brl(r.vFin)}</td>
+    <td data-col="q-final" class="r mono"${r.qFin<0?' style="color:#e11d48;font-weight:700"':''}>${qtd(r.qFin)}</td>
+    <td data-col="v-final" class="r mono"${r.vFin<0?' style="color:#e11d48"':''}>${brl(r.vFin)}</td>
     <td data-col="c-medio" class="r mono">${brl(r.cm)}</td>
   </tr>`).join('');
 
@@ -4050,8 +4050,8 @@ function _renderMovPage() {
     <td data-col="v-consumo" class="r mono" style="font-weight:700">${brl(t.vCon)}</td>
     <td data-col="q-perdas" class="r mono" style="font-weight:700">${qtd(t.qPerd)}</td>
     <td data-col="v-perdas" class="r mono" style="font-weight:700">${brl(t.vPerd)}</td>
-    <td data-col="q-final" class="r mono" style="font-weight:700">${qtd(t.qFin)}</td>
-    <td data-col="v-final" class="r mono" style="font-weight:700">${brl(t.vFin)}</td>
+    <td data-col="q-final" class="r mono" style="font-weight:700${t.qFin<0?';color:#e11d48':''}">${qtd(t.qFin)}</td>
+    <td data-col="v-final" class="r mono" style="font-weight:700${t.vFin<0?';color:#e11d48':''}">${brl(t.vFin)}</td>
     <td data-col="c-medio" class="r mono" style="font-weight:700">${brl(t.cmGeral)}</td>
   </tr>` : '';
 
@@ -4117,7 +4117,9 @@ async function renderMovimentacao() {
     // Outras saídas (ajuste de inventário, transferência) — TÊM que entrar no Q.Final p/ bater com o Saldo de Estoque
     const outI = saisPer.filter(x=>x.insumo_id===ins.id&&!['consumo','perda','vencimento','descarte'].includes(x.tipo));
     const qOutras = outI.reduce((a,o)=>a+(o.quantidade||0),0);
-    const qFin=Math.max(0,qAnt+qEnt-qCon-qPerd-qOutras); const vFin=qFin*cmFim;
+    // Sem trava em 0: saldo final negativo é proposital, sinaliza inconsistência
+    // (consumo/perda lançado a mais do que entrou) — alerta de entrada faltando.
+    const qFin=qAnt+qEnt-qCon-qPerd-qOutras; const vFin=qFin*cmFim;
     return {nome:ins.nome, un:ins.unidade_medida||ins.unidade_compra||'—', cat:ins.categoria||'—',
       qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm:cmFim};
   });
