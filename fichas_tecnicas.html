@@ -952,9 +952,11 @@ function editarFicha(id){
     document.getElementById('f-obs').value=f.observacoes||'';
     ftTab('prep');
     preencherSelectInsumos(f.insumo_vinculado_id||'');
-    document.getElementById('f-rendimento').value=f.rendimento_receita_g||'';
+    const _uRend=f.insumo_vinculado_id?unidRendDoInsumo(f.insumo_vinculado_id):'g';
+    const _divRend=(_uRend==='kg'||_uRend==='L')?1000:1;
+    document.getElementById('f-rendimento').value=f.rendimento_receita_g?(f.rendimento_receita_g/_divRend):'';
     document.getElementById('f-rendimento').disabled=!f.insumo_vinculado_id;
-    document.getElementById('f-rendimento-unidade').value='g';
+    document.getElementById('f-rendimento-unidade').value=_uRend;
     document.getElementById('f-rendimento-unidade').disabled=!f.insumo_vinculado_id;
     document.getElementById('custo-kg-preview').textContent='';
     document.getElementById('ing-list').innerHTML='';
@@ -1027,6 +1029,18 @@ function preencherSelectInsumos(selectedId){
   sel.innerHTML='<option value="">— Não vincular —</option>'+todosInsumos.map(i=>`<option value="${i.id}"${i.id===validId?' selected':''}>${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
 }
 
+// A unidade do <select> de rendimento espelha a unidade do insumo vinculado
+// (kg/litro/ml/g) — evita o "trap" de digitar 12 em gramas quando a receita rende 12 kg.
+function unidRendDoInsumo(insId){
+  const id=insId||document.getElementById('f-insumo-vinculado')?.value;
+  const ins=id?todosInsumos.find(i=>i.id===id):null;
+  const um=((ins&&(ins.unidade_medida||ins.unidade_compra))||'').toLowerCase();
+  if(um==='kg')return 'kg';
+  if(um==='litro'||um==='l')return 'L';
+  if(um==='ml')return 'ml';
+  return 'g';
+}
+
 function toggleRendimento(){
   const sel=document.getElementById('f-insumo-vinculado');
   const rend=document.getElementById('f-rendimento');
@@ -1034,7 +1048,7 @@ function toggleRendimento(){
   const vinculado=sel&&sel.value;
   if(rend)rend.disabled=!vinculado;
   if(!vinculado&&rend)rend.value='';
-  if(rendUnidade){rendUnidade.disabled=!vinculado;if(!vinculado)rendUnidade.value='g';}
+  if(rendUnidade){rendUnidade.disabled=!vinculado;rendUnidade.value=vinculado?unidRendDoInsumo():'g';}
   atualizarCustoPreview();
 }
 
@@ -1064,7 +1078,7 @@ function atualizarCustoPreview(){
     const insVinc=insVincId?todosInsumos.find(i=>i.id===insVincId):null;
     const umVinc=insVinc?(insVinc.unidade_medida||insVinc.unidade_compra||'kg'):'kg';
     const labelCusto=umVinc==='litro'?'Custo/litro':umVinc==='ml'?'Custo/ml':'Custo/kg';
-    if(rend>0&&total>0){const custoKg=total/rend*1000;kgEl.innerHTML=`${labelCusto}: <strong style="color:#0d9488;font-family:'DM Mono',monospace">${fmt(custoKg)}</strong>`;}
+    if(rend>0&&total>0){const custoKg=total/rend*1000;kgEl.innerHTML=`${labelCusto}: <strong style="color:#00d4aa;font-family:'DM Mono',monospace">${fmt(custoKg)}</strong>`;}
     else{kgEl.textContent=rend>0?'Adicione ingredientes para calcular':`Informe o rendimento para ver o ${labelCusto.toLowerCase()}`;}
   }else if(kgEl)kgEl.textContent='';
   const pv=parseFloat(document.getElementById('f-preco').value)||0;
