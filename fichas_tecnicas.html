@@ -470,7 +470,17 @@ function fmt(v){return'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits
 function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3000);}
-function abrirModal(id){const o=document.getElementById(id);o.classList.add('open');const m=o.querySelector('.modal');if(m)m.scrollTop=0;}
+function abrirModal(id){
+  const o=document.getElementById(id);o.classList.add('open');
+  const m=o.querySelector('.modal');
+  if(!m)return;
+  // O seletor de produto rouba o foco ao abrir e o navegador rola o modal,
+  // escondendo os labels do topo sob o cabecalho fixo. Forca o topo de volta
+  // (agora e depois do foco automatico acontecer).
+  m.scrollTop=0;
+  requestAnimationFrame(()=>{m.scrollTop=0;});
+  setTimeout(()=>{m.scrollTop=0;},60);
+}
 function fecharModal(id){document.getElementById(id).classList.remove('open');}
 
 let todasFichas=[],fichasFilt=[],todosInsumos=[],editId=null,ingredientes=[],categoriasFicha=[];
