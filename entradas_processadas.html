@@ -52,6 +52,8 @@
   .tbl th.r,.tbl td.r{text-align:right}
   .tbl th.c,.tbl td.c{text-align:center}
   .tbl td{padding:9px 14px;border-bottom:1px solid var(--border2);vertical-align:middle}
+  /* Só a coluna Fornecedor pode quebrar linha (vence o nowrap !important do design-system) */
+  .tbl td.fornec-cell, .tbl td.fornec-cell div{white-space:normal !important;word-break:break-word}
   .tbl tbody tr:last-child td{border-bottom:none}
   .tbl tbody tr:hover{background:var(--bg3)}
   .mono{font-family:'DM Mono',monospace}
@@ -268,7 +270,7 @@ function renderTable(){
     <td class="c mono" style="color:#94a3b8">${n.serie||'1'}</td>
     <td>${fmtDt(n.data_emissao)}</td>
     <td>${fmtDt(n.processada_em)}</td>
-    <td>
+    <td class="fornec-cell">
       <div style="font-weight:600">${esc(n.nome_emitente||'—')}</div>
       <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${n.cnpj_emitente||''}</div>
     </td>
