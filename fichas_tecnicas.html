@@ -137,7 +137,9 @@
   .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
   .overlay.open{display:flex}
   .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:18px 22px;box-shadow:0 8px 32px rgba(0,0,0,.14);scroll-padding-top:100px}
-  #modal-form .modal{max-width:1100px;width:95%;max-height:94vh}
+  #modal-form .modal{max-width:1100px;width:95%;max-height:94vh;display:flex;flex-direction:column;padding:0;overflow:hidden}
+  #modal-form .ft-head{position:static;margin:0;flex-shrink:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+  #modal-form .modal-body{overflow-y:auto;padding:14px 22px 18px}
   .ft-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;background:#fff;z-index:5;margin:-18px -22px 12px;padding:12px 22px;border-bottom:1px solid #e2e8f0}
   .ft-head h2{margin:0}
   .ft-head-btns{display:flex;gap:10px;flex-shrink:0}
@@ -381,6 +383,7 @@
         <button class="btn btn-primary" id="btn-salvar" onclick="salvarFicha()">Salvar</button>
       </div>
     </div>
+    <div class="modal-body">
     <div class="form-row">
       <div class="form-group"><label>Produto / Insumo *</label>
         <select id="f-produto" onchange="onFichaProdutoChange()"><option value="">Selecione produto ou insumo...</option></select>
@@ -447,6 +450,7 @@
       <textarea id="f-preparo" placeholder="Descreva o processo..." rows="3"></textarea>
       <textarea id="f-obs" placeholder="Alérgenos, variações, notas..." rows="3" style="display:none"></textarea>
     </div>
+    </div>
   </div>
 </div>
 
@@ -472,14 +476,8 @@ let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3000);}
 function abrirModal(id){
   const o=document.getElementById(id);o.classList.add('open');
-  const m=o.querySelector('.modal');
-  if(!m)return;
-  // O seletor de produto rouba o foco ao abrir e o navegador rola o modal,
-  // escondendo os labels do topo sob o cabecalho fixo. Forca o topo de volta
-  // (agora e depois do foco automatico acontecer).
-  m.scrollTop=0;
-  requestAnimationFrame(()=>{m.scrollTop=0;});
-  setTimeout(()=>{m.scrollTop=0;},60);
+  const sc=o.querySelector('.modal-body')||o.querySelector('.modal');
+  if(sc)sc.scrollTop=0;
 }
 function fecharModal(id){document.getElementById(id).classList.remove('open');}
 
