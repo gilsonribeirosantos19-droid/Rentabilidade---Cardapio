@@ -395,20 +395,14 @@
         <input type="number" id="f-preco" placeholder="Ex: 49.90" min="0" step="0.01" oninput="atualizarCustoPreview()"></div>
     </div>
     <div class="form-row" id="row-venda2">
-      <div class="form-group"><label>Preço de delivery (R$)</label>
+      <div class="form-group" id="grp-delivery"><label>Preço de delivery (R$)</label>
         <input type="number" id="f-preco-delivery" placeholder="Ex: 59.90 (maior, p/ cobrir o iFood)" min="0" step="0.01" oninput="atualizarCustoPreview()">
         <small style="font-size:10px;color:#94a3b8">Deixe vazio se for igual ao salão</small></div>
-      <div class="form-group"></div>
-    </div>
-    <div class="form-row">
       <div class="form-group"><label>Status</label>
         <select id="f-status">
           <option value="ativa">Ativa</option><option value="rascunho">Rascunho</option>
           <option value="arquivada">Arquivada</option>
         </select></div>
-      <div class="form-group"><label>Preview precificação</label>
-        <div id="precif-preview" style="padding:9px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;color:#94a3b8;font-family:'DM Mono',monospace">Informe o preço de venda</div>
-      </div>
     </div>
     <div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-bottom:10px">
       <div id="sec-vinc-header" style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Vincular a insumo existente</div>
@@ -476,7 +470,7 @@ function fmt(v){return'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits
 function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
 let toastTimer;
 function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3000);}
-function abrirModal(id){document.getElementById(id).classList.add('open');}
+function abrirModal(id){const o=document.getElementById(id);o.classList.add('open');const m=o.querySelector('.modal');if(m)m.scrollTop=0;}
 function fecharModal(id){document.getElementById(id).classList.remove('open');}
 
 let todasFichas=[],fichasFilt=[],todosInsumos=[],editId=null,ingredientes=[],categoriasFicha=[];
@@ -537,7 +531,7 @@ function popularProdutos(){
 function setModoProcessado(on){
   const show=(id,vis)=>{const e=document.getElementById(id);if(e)e.style.display=vis?'':'none';};
   show('row-venda1', !on);   // porções + preço de venda (só venda)
-  show('row-venda2', !on);   // preço de delivery (só venda)
+  show('grp-delivery', !on); // preço de delivery (só venda); Status fica sempre visível
   show('grp-insvinc', !on);  // seletor de insumo vinculado (no processado é automático)
   const h=document.getElementById('sec-vinc-header');
   if(h) h.textContent = on ? 'Produção interna — rendimento da receita' : 'Vincular a insumo existente';
@@ -1085,13 +1079,15 @@ function atualizarCustoPreview(){
   const porc=parseFloat(document.getElementById('f-porcoes').value)||1;
   const custoP=total/(porc>0?porc:1); // custo por porção (preço de venda é por unidade)
   const prev=document.getElementById('precif-preview');
-  if(pv>0&&total>0){
-    const cmv=custoP/pv*100;const markup=pv/custoP;const margem=pv-custoP;
-    const cor=cmv<=30?'#16a34a':cmv<=38?'#f59e0b':'#e11d48';
-    prev.style.color=cor;
-    prev.innerHTML=`CMV <strong>${cmv.toFixed(1)}%</strong> · Markup <strong>${markup.toFixed(2)}×</strong> · Margem <strong>${fmt(margem)}</strong>`;
-  }else if(pv>0){prev.style.color='#94a3b8';prev.textContent='Adicione ingredientes para calcular';}
-  else{prev.style.color='#94a3b8';prev.textContent='Informe o preço de venda';}
+  if(prev){
+    if(pv>0&&total>0){
+      const cmv=custoP/pv*100;const markup=pv/custoP;const margem=pv-custoP;
+      const cor=cmv<=30?'#16a34a':cmv<=38?'#f59e0b':'#e11d48';
+      prev.style.color=cor;
+      prev.innerHTML=`CMV <strong>${cmv.toFixed(1)}%</strong> · Markup <strong>${markup.toFixed(2)}×</strong> · Margem <strong>${fmt(margem)}</strong>`;
+    }else if(pv>0){prev.style.color='#94a3b8';prev.textContent='Adicione ingredientes para calcular';}
+    else{prev.style.color='#94a3b8';prev.textContent='Informe o preço de venda';}
+  }
 }
 
 async function salvarFicha(){
