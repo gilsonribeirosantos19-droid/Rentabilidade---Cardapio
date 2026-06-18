@@ -899,8 +899,12 @@ function custoFichaTotal(f){
     return acc+custoIngrediente(ins,it.quantidade_g);
   },0);
 }
-// custo POR PORÇÃO (o preço de venda é por unidade/porção) — base de CMV/markup/margem
+// custo POR PORÇÃO (o preço de venda é por unidade/porção) — base de CMV/markup/margem.
+// Processado (vinculado a insumo): custo POR unidade produzida (kg/litro) = total / rendimento da receita.
 function custoFicha(f){
+  if(f.insumo_vinculado_id && +f.rendimento_receita_g>0){
+    return custoFichaTotal(f)/(+f.rendimento_receita_g/1000);
+  }
   const por=+f.rendimento_porcoes>0?+f.rendimento_porcoes:1;
   return custoFichaTotal(f)/por;
 }
@@ -1123,10 +1127,10 @@ async function salvarFicha(){
     const _rendUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
     const rendimentoReceita=_rendVal!=null?((_rendUnid==='L'||_rendUnid==='kg')?_rendVal*1000:_rendVal):null;
     if(editId){
-      await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,preco_delivery:precoDelivery,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita,atualizado_em:new Date().toISOString()})});
+      await api(`fichas_tecnicas?id=eq.${editId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:(ehProcessado?null:preco),preco_delivery:(ehProcessado?null:precoDelivery),modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita,atualizado_em:new Date().toISOString()})});
       await api(`itens_ficha?ficha_id=eq.${editId}`,{method:'DELETE',prefer:'return=minimal'});
     }else{
-      const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:preco,preco_delivery:precoDelivery,modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita})});
+      const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:(ehProcessado?null:preco),preco_delivery:(ehProcessado?null:precoDelivery),modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita})});
       fichaId=res[0].id;
     }
     await api('itens_ficha',{method:'POST',prefer:'return=minimal',body:JSON.stringify(ingValidos.map((ing,i)=>{const _ins=todosInsumos.find(x=>x.id===ing.insumo_id);const _um=_ins?(_ins.unidade_medida||_ins.unidade_compra||'g'):'g';const _qtdG=(_um==='kg'||_um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);return{ficha_id:fichaId,insumo_id:ing.insumo_id,quantidade_g:_qtdG,ordem:i};}))});
