@@ -251,63 +251,81 @@ async function rodarPullFocus(tenant: string) {
 
   for (const loja of lojasCnpj) {
     if (Date.now() - inicio > 115000) { diag.push({ loja: loja.nome, status: 'pulado-tempo' }); continue }
-    let res: Response
-    try {
-      res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas?cnpj=${loja.cnpj}`, { headers: { 'Authorization': FOCUS_AUTH } })
-    } catch (e) { diag.push({ loja: loja.nome, fetchErro: String(e) }); continue }
-    const txt = await res.text()
-    if (!amostraLista) amostraLista = { loja: loja.nome, http: res.status, body: txt.substring(0, 700) }
-    if (!res.ok) { diag.push({ loja: loja.nome, http: res.status }); continue }
-    let lista: any
-    try { lista = JSON.parse(txt) } catch { diag.push({ loja: loja.nome, jsonErro: true }); continue }
-    const arr = Array.isArray(lista) ? lista : (lista?.nfes || lista?.notas || lista?.data || lista?.documentos || [])
-    diag.push({ loja: loja.nome, noFocus: Array.isArray(arr) ? arr.length : '??' })
-    if (!Array.isArray(arr)) continue
-
-    for (const it of arr) {
-      if (Date.now() - inicio > 115000) break
-      const chave = String(it.chave_nfe || it.chave || it.chave_acesso || it.chave_acesso_nfe || '')
-      if (chave.length !== 44) continue
-      encontradas++
-      const { count } = await supabase.from('nfe_recebidas').select('id', { count: 'exact', head: true }).eq('chave_acesso', chave)
-      if (count && count > 0) continue
-      novas++
+    // PAGINAÇÃO: o Focus retorna no máx 100 notas por página; pra pegar as próximas
+    // passa-se ?versao=<X-Max-Version> (header) até cobrir o X-Total-Count.
+    let versao = '', totalFocus = 0, paginas = 0, noFocusLoja = 0, guard = 0
+    paginar: while (guard < 100) {
+      guard++
+      if (Date.now() - inicio > 110000) { diag.push({ loja: loja.nome, status: 'parou-tempo', paginas }); break }
+      let res: Response
       try {
-        await manifestarCiencia(chave)
-        const completa = await fetchNfeCompleta(chave)
-        if (!amostraCompleta && completa) amostraCompleta = JSON.stringify(completa).substring(0, 700)
-        const raw = completa ? JSON.stringify(completa) : ''
-        const lojaMatch = lojasCnpj.find((l: any) => raw.includes(l.cnpj))
-        const req: any = completa?.requisicao_nota_fiscal || {}
-        const itensNfe: any[] = req.itens || []
-        const numero = chave.substring(25, 34).replace(/^0+/, '') || '0'
-        const serie  = chave.substring(22, 25)
-        const cnpjEmit = chave.substring(6, 20)
-        const { data: nova, error: insErr } = await supabase.from('nfe_recebidas').insert({
-          tenant_id: tenant, loja_id: lojaMatch?.id || null, numero, serie, chave_acesso: chave,
-          cnpj_emitente: cnpjEmit, nome_emitente: String(req.nome_emitente || it.nome_emitente || ''),
-          data_emissao: req.data_emissao || it.data_emissao || new Date().toISOString(),
-          valor_total: parseFloat(req.valor_total || it.valor_total || '0'),
-          status: itensNfe.length > 0 ? 'aguard_vinculacao' : 'em_transito', fonte: 'pull',
-        }).select('id').single()
-        if (insErr) { erros++; continue }
-        if (itensNfe.length > 0 && nova) {
-          const { data: vinc } = await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor').eq('tenant_id', tenant)
-          const batch = itensNfe.map((item: any) => ({
-            nfe_id: nova.id, tenant_id: tenant,
-            descricao_nfe: String(item.descricao || '').toUpperCase(),
-            codigo_item_fornecedor: String(item.codigo_produto || ''),
-            quantidade: parseFloat(item.quantidade_comercial || '0'),
-            unidade_nfe: String(item.unidade_comercial || 'UN').toUpperCase(),
-            valor_unitario: parseFloat(item.valor_unitario_comercial || '0'),
-            valor_total: parseFloat(item.valor_bruto || '0'),
-            vinculacao_id: (vinc || []).find((v: any) => v.codigo_fornecedor === String(item.codigo_produto || ''))?.id || null,
-          }))
-          await supabase.from('nfe_itens').insert(batch)
-        }
-        importadas++
-      } catch (e) { erros++; console.error('pull item erro:', (e as Error).message) }
+        res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas?cnpj=${loja.cnpj}${versao ? `&versao=${versao}` : ''}`, { headers: { 'Authorization': FOCUS_AUTH } })
+      } catch (e) { diag.push({ loja: loja.nome, fetchErro: String(e) }); break }
+      const txt = await res.text()
+      if (!amostraLista) amostraLista = { loja: loja.nome, http: res.status, body: txt.substring(0, 700) }
+      if (!res.ok) { diag.push({ loja: loja.nome, http: res.status }); break }
+      let lista: any
+      try { lista = JSON.parse(txt) } catch { diag.push({ loja: loja.nome, jsonErro: true }); break }
+      const arr = Array.isArray(lista) ? lista : (lista?.nfes || lista?.notas || lista?.data || lista?.documentos || [])
+      if (!Array.isArray(arr) || arr.length === 0) break
+      paginas++; noFocusLoja += arr.length
+      const tc = parseInt(res.headers.get('x-total-count') || '0'); if (tc) totalFocus = tc
+
+      for (const it of arr) {
+        if (Date.now() - inicio > 110000) break paginar
+        const chave = String(it.chave_nfe || it.chave || it.chave_acesso || it.chave_acesso_nfe || '')
+        if (chave.length !== 44) continue
+        encontradas++
+        const { count } = await supabase.from('nfe_recebidas').select('id', { count: 'exact', head: true }).eq('chave_acesso', chave)
+        if (count && count > 0) continue
+        novas++
+        try {
+          await manifestarCiencia(chave)
+          const completa = await fetchNfeCompleta(chave)
+          if (!amostraCompleta && completa) amostraCompleta = JSON.stringify(completa).substring(0, 700)
+          const raw = completa ? JSON.stringify(completa) : ''
+          const lojaMatch = lojasCnpj.find((l: any) => raw.includes(l.cnpj))
+          const req: any = completa?.requisicao_nota_fiscal || {}
+          const itensNfe: any[] = req.itens || []
+          const numero = chave.substring(25, 34).replace(/^0+/, '') || '0'
+          const serie  = chave.substring(22, 25)
+          const cnpjEmit = chave.substring(6, 20)
+          const { data: nova, error: insErr } = await supabase.from('nfe_recebidas').insert({
+            tenant_id: tenant, loja_id: lojaMatch?.id || null, numero, serie, chave_acesso: chave,
+            cnpj_emitente: cnpjEmit, nome_emitente: String(req.nome_emitente || it.nome_emitente || ''),
+            data_emissao: req.data_emissao || it.data_emissao || new Date().toISOString(),
+            valor_total: parseFloat(req.valor_total || it.valor_total || '0'),
+            status: itensNfe.length > 0 ? 'aguard_vinculacao' : 'em_transito', fonte: 'pull',
+          }).select('id').single()
+          if (insErr) { erros++; continue }
+          if (itensNfe.length > 0 && nova) {
+            const { data: vinc } = await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor').eq('tenant_id', tenant)
+            const batch = itensNfe.map((item: any) => ({
+              nfe_id: nova.id, tenant_id: tenant,
+              descricao_nfe: String(item.descricao || '').toUpperCase(),
+              codigo_item_fornecedor: String(item.codigo_produto || ''),
+              quantidade: parseFloat(item.quantidade_comercial || '0'),
+              unidade_nfe: String(item.unidade_comercial || 'UN').toUpperCase(),
+              valor_unitario: parseFloat(item.valor_unitario_comercial || '0'),
+              valor_total: parseFloat(item.valor_bruto || '0'),
+              vinculacao_id: (vinc || []).find((v: any) => v.codigo_fornecedor === String(item.codigo_produto || ''))?.id || null,
+            }))
+            await supabase.from('nfe_itens').insert(batch)
+          }
+          importadas++
+        } catch (e) { erros++; console.error('pull item erro:', (e as Error).message) }
+      }
+
+      // próxima página: usa X-Max-Version (ou o maior "versao" do lote como fallback)
+      const hdrMax = res.headers.get('x-max-version')
+      const arrMax = arr.reduce((m: number, n: any) => Math.max(m, +n.versao || 0), 0)
+      const nextV = (hdrMax && hdrMax !== '0') ? hdrMax : (arrMax > 0 ? String(arrMax) : '')
+      if (!nextV || nextV === versao) break            // sem avanço → fim
+      versao = nextV
+      if (arr.length < 100) break                      // lote incompleto = última página
+      if (totalFocus && noFocusLoja >= totalFocus) break
     }
+    diag.push({ loja: loja.nome, noFocus: noFocusLoja, totalFocus, paginas })
   }
 
   console.log('Pull:', { encontradas, novas, importadas, erros })
