@@ -417,7 +417,7 @@
         <div class="form-group" style="margin-bottom:0">
           <label>Rendimento da receita *</label>
           <div style="display:flex;gap:8px;align-items:center">
-            <input type="number" id="f-rendimento" placeholder="Ex: 800" min="1" step="0.1" oninput="atualizarCustoPreview()" disabled style="flex:1">
+            <input type="number" id="f-rendimento" placeholder="Ex: 800" min="0.001" step="any" oninput="atualizarCustoPreview()" disabled style="flex:1">
             <select id="f-rendimento-unidade" onchange="atualizarCustoPreview()" disabled style="width:72px">
               <option value="kg">kg</option><option value="g">g</option><option value="L">litro</option><option value="ml">ml</option>
             </select>
