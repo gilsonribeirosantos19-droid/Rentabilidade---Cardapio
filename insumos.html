@@ -321,6 +321,10 @@
             <option value="atencao">Estoque baixo</option>
             <option value="critico">Crítico</option>
           </select>
+          <button type="button" onclick="event.stopPropagation();toggleProdColsDropdown(this)" title="Mostrar/ocultar colunas" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#475569;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Colunas
+          </button>
         </div>
       </div>
       <div class="tbl-card">
@@ -332,7 +336,7 @@
         <div class="tbl-scroll">
           <table>
             <thead><tr>
-              <th data-col="codigo"><svg onclick="event.stopPropagation();toggleProdColsDropdown(this)" title="Mostrar/ocultar colunas" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="cursor:pointer;vertical-align:-2px;margin-right:7px;opacity:.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Código Interno</th>
+              <th data-col="codigo">Código Interno</th>
               <th data-col="descricao">Descrição</th>
               <th data-col="tipo">Tipo do Item</th>
               <th data-col="familia">Família</th>
