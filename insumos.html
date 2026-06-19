@@ -324,25 +324,30 @@
         </div>
       </div>
       <div class="tbl-card">
+        <!-- Seletor de colunas (flutuante, não corta) -->
+        <div id="prod-cols-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;z-index:1000;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.14)">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Colunas visíveis</div>
+          <div id="prod-cols-list"></div>
+        </div>
         <div class="tbl-scroll">
           <table>
             <thead><tr>
-              <th>Código Interno</th>
-              <th>Descrição</th>
-              <th>Tipo do Item</th>
-              <th>Família</th>
-              <th>Grupo</th>
-              <th>Subgrupo</th>
-              <th>Unidade</th>
-              <th>Embalagem Padrão</th>
-              <th class="r">Qtd. Emb.</th>
-              <th>Código de Barras</th>
-              <th>Status</th>
-              <th class="c">Calcula CMV</th>
-              <th>Ações</th>
+              <th data-col="codigo"><svg onclick="event.stopPropagation();toggleProdColsDropdown(this)" title="Mostrar/ocultar colunas" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="cursor:pointer;vertical-align:-2px;margin-right:7px;opacity:.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Código Interno</th>
+              <th data-col="descricao">Descrição</th>
+              <th data-col="tipo">Tipo do Item</th>
+              <th data-col="familia">Família</th>
+              <th data-col="grupo">Grupo</th>
+              <th data-col="subgrupo">Subgrupo</th>
+              <th data-col="unidade">Unidade</th>
+              <th data-col="embalagem">Embalagem Padrão</th>
+              <th data-col="qtd-emb" class="r">Qtd. Emb.</th>
+              <th data-col="codbarras">Código de Barras</th>
+              <th data-col="status">Status</th>
+              <th data-col="calcula-cmv" class="c">Calcula CMV</th>
+              <th data-col="acoes">Ações</th>
             </tr></thead>
             <tbody id="prod-tbody">
-              <tr><td colspan="12" class="empty">Carregando...</td></tr>
+              <tr><td colspan="13" class="empty">Carregando...</td></tr>
             </tbody>
           </table>
         </div>
@@ -936,6 +941,61 @@ function filtrarProdutos(){
   renderProdutos();
 }
 
+// ── Mostrar/ocultar colunas da tabela Produtos/Itens ──────────────
+const PROD_COLS = [
+  {id:'codigo',      label:'Código Interno', def:true},
+  {id:'descricao',   label:'Descrição', fixed:true},
+  {id:'tipo',        label:'Tipo do Item', def:true},
+  {id:'familia',     label:'Família', def:true},
+  {id:'grupo',       label:'Grupo', def:true},
+  {id:'subgrupo',    label:'Subgrupo', def:true},
+  {id:'unidade',     label:'Unidade', def:true},
+  {id:'embalagem',   label:'Embalagem Padrão', def:true},
+  {id:'qtd-emb',     label:'Qtd. Emb.', def:true},
+  {id:'codbarras',   label:'Código de Barras', def:true},
+  {id:'status',      label:'Status', def:true},
+  {id:'calcula-cmv', label:'Calcula CMV', def:true},
+  {id:'acoes',       label:'Ações', def:true},
+];
+function loadProdColsState(){ try { return JSON.parse(localStorage.getItem('prod_cols')||'null'); } catch { return null; } }
+function applyProdCols(){
+  const saved = loadProdColsState();
+  PROD_COLS.forEach(col => {
+    const vis = col.fixed ? true : (saved ? (saved[col.id] !== false) : col.def);
+    document.querySelectorAll(`[data-col="${col.id}"]`).forEach(el => { el.style.display = vis ? '' : 'none'; });
+  });
+}
+function renderProdColsDropdown(){
+  const saved = loadProdColsState();
+  const list = document.getElementById('prod-cols-list');
+  if(!list) return;
+  list.innerHTML = PROD_COLS.map(col => {
+    const vis = col.fixed ? true : (saved ? (saved[col.id] !== false) : col.def);
+    return `<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;cursor:${col.fixed?'default':'pointer'}">
+      <input type="checkbox" ${vis?'checked':''} ${col.fixed?'disabled':''} onchange="toggleProdCol('${col.id}',this.checked)" style="accent-color:#f97316;width:15px;height:15px;cursor:${col.fixed?'default':'pointer'}">
+      ${col.label}</label>`;
+  }).join('');
+}
+function toggleProdCol(colId, vis){
+  const saved = loadProdColsState() || {};
+  saved[colId] = vis;
+  localStorage.setItem('prod_cols', JSON.stringify(saved));
+  applyProdCols();
+}
+function toggleProdColsDropdown(el){
+  const d = document.getElementById('prod-cols-dropdown');
+  if(!d) return;
+  if(d.style.display === 'none' || !d.style.display){
+    renderProdColsDropdown();
+    d.style.display = '';
+    if(el && el.getBoundingClientRect){ const r = el.getBoundingClientRect(); d.style.left = Math.min(r.left, window.innerWidth-220)+'px'; d.style.top = (r.bottom+6)+'px'; }
+  } else d.style.display = 'none';
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('prod-cols-dropdown');
+  if(dd && dd.style.display !== 'none' && !dd.contains(e.target)) dd.style.display = 'none';
+});
+
 // Caixinha "Calcula CMV" — fundo branco, visto laranja quando sim (somente leitura)
 function cmvBox(yes){
   return yes
@@ -947,30 +1007,31 @@ function renderProdutos(){
   const tbody=document.getElementById('prod-tbody');
   if(!tbody) return;
   if(!_prodFiltrado.length){
-    tbody.innerHTML='<tr><td colspan="13" class="empty">Nenhum item encontrado</td></tr>';return;
+    tbody.innerHTML='<tr><td colspan="13" class="empty">Nenhum item encontrado</td></tr>';applyProdCols();return;
   }
   tbody.innerHTML=_prodFiltrado.map((ins)=>{
     const realIdx=todos.indexOf(ins);
     const codigo=fmtCodigoInterno(ins.codigo_interno);
     const st=getStatus(ins);
     return `<tr onclick="editarItemCadastro('${ins.id}')" style="cursor:pointer">
-      <td class="td-mono" style="color:#64748b;font-size:11px">${esc(codigo)}</td>
-      <td style="font-weight:600;color:#0f172a">${esc(ins.nome)}</td>
-      <td style="color:#64748b">${esc(ins.tipo_item||'—')}</td>
-      <td style="color:#64748b">${esc(ins.familia||'—')}</td>
-      <td>${_catBadge(ins.categoria)}</td>
-      <td style="color:#64748b">${esc(ins.subgrupo||'—')}</td>
-      <td style="color:#64748b">${esc(ins.unidade_medida||'—')}</td>
-      <td style="color:#64748b">${esc(ins.unidade_compra||'—')}</td>
-      <td class="r td-mono" style="color:#64748b">—</td>
-      <td style="color:#64748b">—</td>
-      <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
-      <td class="c">${cmvBox(ins.participa_cmv!=='nao')}</td>
-      <td>
+      <td data-col="codigo" class="td-mono" style="color:#64748b;font-size:11px">${esc(codigo)}</td>
+      <td data-col="descricao" style="font-weight:600;color:#0f172a">${esc(ins.nome)}</td>
+      <td data-col="tipo" style="color:#64748b">${esc(ins.tipo_item||'—')}</td>
+      <td data-col="familia" style="color:#64748b">${esc(ins.familia||'—')}</td>
+      <td data-col="grupo">${_catBadge(ins.categoria)}</td>
+      <td data-col="subgrupo" style="color:#64748b">${esc(ins.subgrupo||'—')}</td>
+      <td data-col="unidade" style="color:#64748b">${esc(ins.unidade_medida||'—')}</td>
+      <td data-col="embalagem" style="color:#64748b">${esc(ins.unidade_compra||'—')}</td>
+      <td data-col="qtd-emb" class="r td-mono" style="color:#64748b">—</td>
+      <td data-col="codbarras" style="color:#64748b">—</td>
+      <td data-col="status"><span class="badge b-cat">${_stTxt[st]||st}</span></td>
+      <td data-col="calcula-cmv" class="c">${cmvBox(ins.participa_cmv!=='nao')}</td>
+      <td data-col="acoes">
         <button class="btn-ghost" onclick="event.stopPropagation();menuProduto('${ins.id}',this)" style="border-radius:6px;padding:1px 6px;font-size:14px;line-height:1;color:#94a3b8">⋮</button>
       </td>
     </tr>`;
   }).join('');
+  applyProdCols();
 }
 
 function menuProduto(id, btn){
