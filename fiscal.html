@@ -711,14 +711,16 @@ async function selectNfe(nfeId) {
   try {
     currentNfeItens = await api(`nfe_itens?nfe_id=eq.${nfeId}&tenant_id=eq.${TENANT_ID}&select=*`);
   } catch { currentNfeItens = []; }
-  await _reconhecerItensPendentes(nfeId);   // re-reconhece itens cujo código ganhou vínculo depois que a nota entrou
+  const statusMudou = await _reconhecerItensPendentes(nfeId);   // re-reconhece itens cujo código ganhou vínculo depois que a nota entrou
   const pendentes = currentNfeItens.filter(i => !i.vinculacao_id).length;
   document.getElementById('tab-n-itens').textContent = currentNfeItens.length;
   document.getElementById('tab-n-erros').textContent = pendentes || 0;
   // Armazena na nota para exibir na coluna Itens da tabela
   const nfeObj = entradasNfe.find(x => x.id === nfeId);
   if(nfeObj) { nfeObj._itens_total = currentNfeItens.length; nfeObj._itens_pendentes = pendentes; }
-  renderTable();
+  // Só re-renderiza a tabela inteira se a nota mudou de status (auto-vinculou e virou pronta).
+  // No clique comum a seleção já aparece via CSS (#nfe-sel-style) — evita travar com muitas notas.
+  if(statusMudou) renderTable();
   renderNfeItens();
   renderNfeErros();
 }
@@ -727,7 +729,7 @@ async function selectNfe(nfeId) {
 // Se o código do item já tem vínculo cadastrado agora, aplica e persiste; se todos casarem, marca a nota como pronta.
 async function _reconhecerItensPendentes(nfeId) {
   const semVinc = currentNfeItens.filter(i => !i.vinculacao_id && i.codigo_item_fornecedor);
-  if(!semVinc.length) return;
+  if(!semVinc.length) return false;
   const nfe = entradasNfe.find(n => n.id === nfeId);
   const cnpj = (nfe?.cnpj_emitente || '').replace(/\D/g, '');
   let fornId = null;
@@ -748,8 +750,10 @@ async function _reconhecerItensPendentes(nfeId) {
     try {
       await api(`nfe_recebidas?id=eq.${nfeId}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ status:'pronta' }) });
       const n = entradasNfe.find(x => x.id === nfeId); if(n) n.status = 'pronta';
+      return true;   // status mudou -> a tabela precisa atualizar o indicador
     } catch {}
   }
+  return false;
 }
 
 // 2 cliques — vai direto para aba Itens
