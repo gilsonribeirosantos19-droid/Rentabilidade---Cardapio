@@ -338,6 +338,7 @@
               <th class="r">Qtd. Emb.</th>
               <th>Código de Barras</th>
               <th>Status</th>
+              <th class="c">Calcula CMV</th>
               <th>Ações</th>
             </tr></thead>
             <tbody id="prod-tbody">
@@ -939,7 +940,7 @@ function renderProdutos(){
   const tbody=document.getElementById('prod-tbody');
   if(!tbody) return;
   if(!_prodFiltrado.length){
-    tbody.innerHTML='<tr><td colspan="12" class="empty">Nenhum item encontrado</td></tr>';return;
+    tbody.innerHTML='<tr><td colspan="13" class="empty">Nenhum item encontrado</td></tr>';return;
   }
   tbody.innerHTML=_prodFiltrado.map((ins)=>{
     const realIdx=todos.indexOf(ins);
@@ -957,6 +958,7 @@ function renderProdutos(){
       <td class="r td-mono" style="color:#64748b">—</td>
       <td style="color:#64748b">—</td>
       <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
+      <td class="c"><input type="checkbox" disabled ${ins.participa_cmv!=='nao'?'checked':''} style="accent-color:#16a34a;cursor:default" title="${ins.participa_cmv!=='nao'?'Calcula CMV':'Não calcula CMV'}"></td>
       <td>
         <button class="btn-ghost" onclick="event.stopPropagation();menuProduto('${ins.id}',this)" style="border-radius:6px;padding:1px 6px;font-size:14px;line-height:1;color:#94a3b8">⋮</button>
       </td>

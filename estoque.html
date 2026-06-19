@@ -928,8 +928,9 @@
             <th data-col="q-final" class="r">Q. Final</th>
             <th data-col="v-final" class="r">V. Final</th>
             <th data-col="c-medio" class="r">C. Médio</th>
+            <th data-col="calcula-cmv" class="c">Calcula CMV</th>
           </tr></thead>
-          <tbody id="mov-body"><tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr></tbody>
+          <tbody id="mov-body"><tr><td colspan="15" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr></tbody>
           <tfoot id="mov-foot"></tfoot>
         </table>
       </div></div>
@@ -1102,10 +1103,10 @@
       <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 250px);overflow-y:auto"><table class="tbl">
         <thead style="position:sticky;top:0;z-index:5"><tr>
           <th>Insumo</th><th>Categoria</th><th>Tipo do Item</th><th>Un.</th><th>Loja</th>
-          <th class="r" id="se-th-saldo">Saldo Atual</th><th class="r">Custo Médio</th><th class="r">Valor em Estoque</th><th class="c">Status</th>
+          <th class="r" id="se-th-saldo">Saldo Atual</th><th class="r">Custo Médio</th><th class="r">Valor em Estoque</th><th class="c">Status</th><th class="c">Calcula CMV</th>
         </tr></thead>
         <tfoot id="se-tfoot"></tfoot>
-        <tbody id="se-body"><tr><td colspan="9" class="empty">Carregando...</td></tr></tbody>
+        <tbody id="se-body"><tr><td colspan="10" class="empty">Carregando...</td></tr></tbody>
       </table></div></div>
     </div>
 
@@ -1766,7 +1767,7 @@ async function renderSaldoEst(){
       saldosCalc = Object.values(map);
     }
 
-    if (!saldosCalc.length) { tbody.innerHTML='<tr><td colspan="9" class="empty">Nenhum saldo encontrado.</td></tr>'; tfoot.innerHTML=''; return; }
+    if (!saldosCalc.length) { tbody.innerHTML='<tr><td colspan="10" class="empty">Nenhum saldo encontrado.</td></tr>'; tfoot.innerHTML=''; return; }
 
     let rows = saldosCalc.map(s => {
       const ins  = insumos.find(i=>i.id===s.insumo_id);
@@ -1790,6 +1791,7 @@ async function renderSaldoEst(){
         <td class="r mono">${s.custo_medio?brl(s.custo_medio):'—'}</td>
         <td class="r mono" style="font-weight:600">${valor>0?brl(valor):'—'}</td>
         <td class="c">${status}</td>
+        <td class="c"><input type="checkbox" disabled ${ins.participa_cmv!=='nao'?'checked':''} style="accent-color:#16a34a;cursor:default" title="${ins.participa_cmv!=='nao'?'Calcula CMV':'Não calcula CMV'}"></td>
       </tr>`};
     }).filter(Boolean);
 
@@ -1802,8 +1804,8 @@ async function renderSaldoEst(){
       <td colspan="5" style="font-size:11px;color:#0f172a;text-transform:uppercase;letter-spacing:.05em">TOTAL</td>
       <td class="r mono">—</td><td class="r mono">—</td>
       <td class="r mono" style="color:#16a34a">${brl(totalValor)}</td>
-      <td></td></tr>`;
-  } catch(e) { tbody.innerHTML=`<tr><td colspan="9" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
+      <td></td><td></td></tr>`;
+  } catch(e) { tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
 }
 
 function _initSaldoEst(){
@@ -3995,7 +3997,7 @@ function limparMovFiltros() {
   filtrarMovIns();
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="15" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr>';
   if (tfoot) tfoot.innerHTML = '';
   const pi = document.getElementById('mov-pag-info'); if (pi) pi.textContent = '—';
   const pb = document.getElementById('mov-pag-btns'); if (pb) pb.innerHTML = '';
@@ -4017,7 +4019,7 @@ function _renderMovPage() {
   if (btnsEl) btnsEl.innerHTML = '';
 
   if (!page.length) {
-    tbody.innerHTML = '<tr><td colspan="14" class="empty"><b>Nenhum dado encontrado</b></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="empty"><b>Nenhum dado encontrado</b></td></tr>';
     tfoot.innerHTML = ''; return;
   }
 
@@ -4036,6 +4038,7 @@ function _renderMovPage() {
     <td data-col="q-final" class="r mono"${r.qFin<0?' style="color:#e11d48;font-weight:700"':''}>${qtd(r.qFin)}</td>
     <td data-col="v-final" class="r mono"${r.vFin<0?' style="color:#e11d48"':''}>${brl(r.vFin)}</td>
     <td data-col="c-medio" class="r mono">${brl(r.cm)}</td>
+    <td data-col="calcula-cmv" class="c"><input type="checkbox" disabled ${r.cmv!=='nao'?'checked':''} style="accent-color:#16a34a;cursor:default" title="${r.cmv!=='nao'?'Calcula CMV':'Não calcula CMV'}"></td>
   </tr>`).join('');
 
   const t = _movTotais;
@@ -4053,6 +4056,7 @@ function _renderMovPage() {
     <td data-col="q-final" class="r mono" style="font-weight:700${t.qFin<0?';color:#e11d48':''}">${qtd(t.qFin)}</td>
     <td data-col="v-final" class="r mono" style="font-weight:700${t.vFin<0?';color:#e11d48':''}">${brl(t.vFin)}</td>
     <td data-col="c-medio" class="r mono" style="font-weight:700">${brl(t.cmGeral)}</td>
+    <td data-col="calcula-cmv"></td>
   </tr>` : '';
 
   applyMovCols();
@@ -4067,7 +4071,7 @@ async function renderMovimentacao() {
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
   if (!de || !ate) {
-    tbody.innerHTML = '<tr><td colspan="14" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr>';
     return;
   }
   let invIni = [];
@@ -4121,7 +4125,7 @@ async function renderMovimentacao() {
     // (consumo/perda lançado a mais do que entrou) — alerta de entrada faltando.
     const qFin=qAnt+qEnt-qCon-qPerd-qOutras; const vFin=qFin*cmFim;
     return {nome:ins.nome, un:ins.unidade_medida||ins.unidade_compra||'—', cat:ins.categoria||'—',
-      qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm:cmFim};
+      qAnt,vAnt,qEnt,vEnt,qCon,vCon,qPerd,vPerd,qFin,vFin,cm:cmFim,cmv:ins.participa_cmv};
   });
   // Filtro "Somente com saldo/movimento" (marcado por padrão): esconde itens totalmente
   // zerados (sem saldo e sem nenhuma movimentação no período)
@@ -4158,6 +4162,7 @@ const MOV_COLS = [
   {id:'q-final',   label:'Q.Final',   def:true},
   {id:'v-final',   label:'V.Final',   def:false},
   {id:'c-medio',   label:'C.Médio',   def:true},
+  {id:'calcula-cmv', label:'Calcula CMV', def:true},
 ];
 
 function loadMovColsState() {
