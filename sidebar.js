@@ -229,9 +229,10 @@
     <div class="logo">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:36px;height:36px;background:#f97316;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(249,115,22,.35)">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="1,21 8,6 13,13 17,8 23,21"/>
-            <line x1="1" y1="21" x2="23" y2="21"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="7,3.3 17,3.3 22,12 17,20.7 7,20.7 2,12"/>
+            <polyline points="8.5,16.5 12,7.5 15.5,16.5"/>
+            <line x1="10" y1="13" x2="14" y2="13"/>
           </svg>
         </div>
         <div>
