@@ -936,6 +936,13 @@ function filtrarProdutos(){
   renderProdutos();
 }
 
+// Caixinha "Calcula CMV" — fundo branco, visto laranja quando sim (somente leitura)
+function cmvBox(yes){
+  return yes
+    ? '<span title="Calcula CMV" style="display:inline-flex;width:16px;height:16px;border:1.5px solid #cbd5e1;border-radius:4px;background:#fff;align-items:center;justify-content:center;color:#f97316;font-weight:800;font-size:11px;line-height:1">&#10003;</span>'
+    : '<span title="Não calcula CMV" style="display:inline-block;width:16px;height:16px;border:1.5px solid #cbd5e1;border-radius:4px;background:#fff"></span>';
+}
+
 function renderProdutos(){
   const tbody=document.getElementById('prod-tbody');
   if(!tbody) return;
@@ -958,7 +965,7 @@ function renderProdutos(){
       <td class="r td-mono" style="color:#64748b">—</td>
       <td style="color:#64748b">—</td>
       <td><span class="badge b-cat">${_stTxt[st]||st}</span></td>
-      <td class="c"><input type="checkbox" disabled ${ins.participa_cmv!=='nao'?'checked':''} style="accent-color:#16a34a;cursor:default" title="${ins.participa_cmv!=='nao'?'Calcula CMV':'Não calcula CMV'}"></td>
+      <td class="c">${cmvBox(ins.participa_cmv!=='nao')}</td>
       <td>
         <button class="btn-ghost" onclick="event.stopPropagation();menuProduto('${ins.id}',this)" style="border-radius:6px;padding:1px 6px;font-size:14px;line-height:1;color:#94a3b8">⋮</button>
       </td>

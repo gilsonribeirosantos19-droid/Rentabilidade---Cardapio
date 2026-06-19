@@ -1718,6 +1718,13 @@ function onSeTipoDataChange() {
   renderSaldoEst();
 }
 
+// Caixinha "Calcula CMV" — fundo branco, visto laranja quando sim (somente leitura)
+function cmvBox(yes){
+  return yes
+    ? '<span title="Calcula CMV" style="display:inline-flex;width:16px;height:16px;border:1.5px solid #cbd5e1;border-radius:4px;background:#fff;align-items:center;justify-content:center;color:#f97316;font-weight:800;font-size:11px;line-height:1">&#10003;</span>'
+    : '<span title="Não calcula CMV" style="display:inline-block;width:16px;height:16px;border:1.5px solid #cbd5e1;border-radius:4px;background:#fff"></span>';
+}
+
 async function renderSaldoEst(){
   const lojaFil = getLojaId()||'';
   const catFil  = document.getElementById('se-cat')?.value||'';
@@ -1791,7 +1798,7 @@ async function renderSaldoEst(){
         <td class="r mono">${s.custo_medio?brl(s.custo_medio):'—'}</td>
         <td class="r mono" style="font-weight:600">${valor>0?brl(valor):'—'}</td>
         <td class="c">${status}</td>
-        <td class="c"><input type="checkbox" disabled ${ins.participa_cmv!=='nao'?'checked':''} style="accent-color:#16a34a;cursor:default" title="${ins.participa_cmv!=='nao'?'Calcula CMV':'Não calcula CMV'}"></td>
+        <td class="c">${cmvBox(ins.participa_cmv!=='nao')}</td>
       </tr>`};
     }).filter(Boolean);
 
@@ -4038,7 +4045,7 @@ function _renderMovPage() {
     <td data-col="q-final" class="r mono"${r.qFin<0?' style="color:#e11d48;font-weight:700"':''}>${qtd(r.qFin)}</td>
     <td data-col="v-final" class="r mono"${r.vFin<0?' style="color:#e11d48"':''}>${brl(r.vFin)}</td>
     <td data-col="c-medio" class="r mono">${brl(r.cm)}</td>
-    <td data-col="calcula-cmv" class="c"><input type="checkbox" disabled ${r.cmv!=='nao'?'checked':''} style="accent-color:#16a34a;cursor:default" title="${r.cmv!=='nao'?'Calcula CMV':'Não calcula CMV'}"></td>
+    <td data-col="calcula-cmv" class="c">${cmvBox(r.cmv!=='nao')}</td>
   </tr>`).join('');
 
   const t = _movTotais;
