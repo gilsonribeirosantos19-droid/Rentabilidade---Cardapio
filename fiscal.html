@@ -87,6 +87,7 @@
   .toast-item{padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:toastIn .2s ease}
   .toast-ok{background:#16a34a}.toast-err{background:#dc2626}.toast-info{background:#2563eb}
   @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes nfeSpin{to{transform:rotate(360deg)}}
 
   /* ── NF-e MODAL (exato do estoque) ── */
   .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
@@ -1106,10 +1107,17 @@ async function processarSelecionadas() {
   const prontas = [...selectedIds].filter(id => entradasNfe.find(n => n.id === id)?.status === 'pronta');
   if(prontas.length === 0) { toast('Selecione apenas notas com status Pronta.', 'err'); return; }
   if(!confirm(`Processar ${prontas.length} NF-e selecionada(s)?`)) return;
+  // Feedback visual: botão mostra "Processando... (x/N)" enquanto roda (não fica estático).
+  const _btn = document.getElementById('btn-processar-sel');
+  const _orig = _btn ? _btn.innerHTML : '';
+  const _setProc = (n) => { if(_btn){ _btn.disabled = true; _btn.style.cursor='wait'; _btn.style.background='#fb923c'; _btn.style.color='#fff'; _btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:nfeSpin .7s linear infinite"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> Processando... (${n}/${prontas.length})`; } };
   let ok = 0;
+  _setProc(0);
   for(const nfeId of prontas) {
     try { await processarNfeFiscal(nfeId, true); ok++; } catch {}
+    _setProc(ok);
   }
+  if(_btn) _btn.innerHTML = _orig;   // restaura o conteúdo original (com o contador cnt-sel)
   selectedIds.clear();
   atualizarBtnProcessar();
   const chkAll = document.getElementById('chk-all'); if(chkAll) chkAll.checked = false;
