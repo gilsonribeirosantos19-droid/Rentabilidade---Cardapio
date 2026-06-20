@@ -605,18 +605,15 @@
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Insumo</div>
-          <select id="aud-ins" class="field" style="width:160px"><option value="">Todos</option></select>
-        </div>
-        <div style="flex:1;min-width:200px">
-          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Pesquisar</div>
-          <input type="text" id="aud-busca" class="field" placeholder="Descrição, fornecedor, nº DANFE, código..." style="width:100%" oninput="_audPag=1;_renderAudPage()">
+          <select id="aud-ins" class="field" style="width:260px"><option value="">Todos</option></select>
         </div>
         <div>
-          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Mostrar</div>
-          <select id="aud-filtro" class="field" style="min-width:200px">
-            <option value="todos">Todos os lançamentos</option>
-            <option value="suspeitos">Apenas suspeitos / erros</option>
-          </select>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Fornecedor</div>
+          <select id="aud-forn" class="field" style="width:230px" onchange="_audPag=1;_renderAudPage()"><option value="">Todos</option></select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Pesquisar</div>
+          <input type="text" id="aud-busca" class="field" placeholder="Descrição, nº DANFE, código..." style="width:200px" oninput="_audPag=1;_renderAudPage()">
         </div>
         <button onclick="renderAuditoria()" style="height:38px;padding:0 20px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:background .15s" onmouseover="this.style.background='#ea6c00'" onmouseout="this.style.background='#f97316'">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1674,7 +1671,6 @@ async function renderAuditoria() {
   const ini    = document.getElementById('aud-ini').value;
   const fim    = document.getElementById('aud-fim').value;
   const insId  = document.getElementById('aud-ins').value;
-  const filtro = document.getElementById('aud-filtro').value;
   const lojaId = document.getElementById('sel-loja').value;
   const lojaFiltro = lojaId ? `&loja_id=eq.${lojaId}` : '';
   const tbody  = document.getElementById('aud-body');
@@ -1723,7 +1719,14 @@ async function renderAuditoria() {
       return { e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro, nrDanfe, valorNota, codItem, codForn, unidMed, _busca };
     });
 
-    if (filtro === 'suspeitos') _audRows = _audRows.filter(r => r.suspeito || r.erro);
+    // Popula o filtro de fornecedor com os nomes distintos (preserva seleção)
+    const fornSel = document.getElementById('aud-forn');
+    if (fornSel) {
+      const atual = fornSel.value;
+      const nomes = [...new Set(_audRows.map(r => r.e.fornecedor_nome).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      fornSel.innerHTML = '<option value="">Todos</option>' + nomes.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      fornSel.value = nomes.includes(atual) ? atual : '';
+    }
 
     _audStatusFiltro = '';
     const sfEl = document.getElementById('aud-status-fil');
@@ -1747,6 +1750,8 @@ function _renderAudPage() {
       return true;
     });
   }
+  const fornFil = document.getElementById('aud-forn')?.value || '';
+  if (fornFil) visivel = visivel.filter(r => r.e.fornecedor_nome === fornFil);
   const buscaEl = document.getElementById('aud-busca');
   const termo = (buscaEl?.value || '').trim().toLowerCase();
   if (termo) visivel = visivel.filter(r => r._busca.includes(termo));
