@@ -113,6 +113,30 @@ function createApi(supaUrl, supaKey) {
   };
 }
 
+// ── PREFERÊNCIAS DO USUÁRIO (por usuário, no banco: usuarios.preferencias) ──
+// Guarda config de colunas por relatório: preferencias.colunas[reportKey] = {colId:bool}.
+// Leitura: do cache sb_user (carregado no login). Gravação: RPC salvar_preferencia
+// (security definer — usuário só grava a PRÓPRIA preferência). Ver supabase/preferencias_usuario.sql.
+function getUserPrefs() {
+  try { return (JSON.parse(localStorage.getItem('sb_user') || '{}').preferencias) || {}; } catch { return {}; }
+}
+function getColPref(reportKey) {
+  const p = getUserPrefs();
+  return (p.colunas && p.colunas[reportKey]) || null;
+}
+async function saveColPref(reportKey, colsMap) {
+  const prefs = getUserPrefs();
+  prefs.colunas = prefs.colunas || {};
+  prefs.colunas[reportKey] = colsMap;
+  const _api = createApi(window.SUPA_URL, window.SUPA_KEY);
+  await _api('rpc/salvar_preferencia', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ p_prefs: prefs }) });
+  // atualiza o cache local pra refletir na hora (sem precisar relogar)
+  try { const u = JSON.parse(localStorage.getItem('sb_user') || '{}'); u.preferencias = prefs; localStorage.setItem('sb_user', JSON.stringify(u)); } catch {}
+  return true;
+}
+window.getColPref = getColPref;
+window.saveColPref = saveColPref;
+
 // ── FILTRO DE LOJA ─────────────────────────────────────────────────
 // Monta as <option> do filtro de loja mantendo o padrão visual em todas as telas.
 // Com apenas 1 loja, mostra o NOME dela direto (value="" = sem filtro, seguro —

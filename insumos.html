@@ -957,30 +957,42 @@ const PROD_COLS = [
   {id:'calcula-cmv', label:'Calcula CMV', def:true},
   {id:'acoes',       label:'Ações', def:true},
 ];
-function loadProdColsState(){ try { return JSON.parse(localStorage.getItem('prod_cols')||'null'); } catch { return null; } }
+let _prodColsState = null;  // {colId:bool} — config em memória durante a sessão
+function _prodColsDefaults(){ const o={}; PROD_COLS.forEach(c=>{ if(!c.fixed) o[c.id]=c.def; }); return o; }
+function loadProdColsState(){
+  if(!_prodColsState){
+    const saved = (typeof getColPref==='function') ? getColPref('insumos_produtos') : null;
+    _prodColsState = Object.assign(_prodColsDefaults(), saved||{});
+  }
+  return _prodColsState;
+}
 function applyProdCols(){
-  const saved = loadProdColsState();
+  const st = loadProdColsState();
   PROD_COLS.forEach(col => {
-    const vis = col.fixed ? true : (saved ? (saved[col.id] !== false) : col.def);
+    const vis = col.fixed ? true : (st[col.id] !== false);
     document.querySelectorAll(`[data-col="${col.id}"]`).forEach(el => { el.style.display = vis ? '' : 'none'; });
   });
 }
 function renderProdColsDropdown(){
-  const saved = loadProdColsState();
+  const st = loadProdColsState();
   const list = document.getElementById('prod-cols-list');
   if(!list) return;
   list.innerHTML = PROD_COLS.map(col => {
-    const vis = col.fixed ? true : (saved ? (saved[col.id] !== false) : col.def);
+    const vis = col.fixed ? true : (st[col.id] !== false);
     return `<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;cursor:${col.fixed?'default':'pointer'}">
       <input type="checkbox" ${vis?'checked':''} ${col.fixed?'disabled':''} onchange="toggleProdCol('${col.id}',this.checked)" style="accent-color:#f97316;width:15px;height:15px;cursor:${col.fixed?'default':'pointer'}">
       ${col.label}</label>`;
-  }).join('');
+  }).join('')
+  + `<button type="button" onclick="salvarProdColsPref()" style="margin-top:10px;width:100%;padding:7px;border:none;border-radius:7px;background:#f97316;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">Salvar preferência</button>`;
 }
 function toggleProdCol(colId, vis){
-  const saved = loadProdColsState() || {};
-  saved[colId] = vis;
-  localStorage.setItem('prod_cols', JSON.stringify(saved));
+  const st = loadProdColsState();
+  st[colId] = vis;
   applyProdCols();
+}
+async function salvarProdColsPref(){
+  try { await saveColPref('insumos_produtos', loadProdColsState()); toast('Preferência de colunas salva!','ok'); }
+  catch(e){ toast('Erro ao salvar preferência: '+(e.message||e),'err'); }
 }
 function toggleProdColsDropdown(el){
   const d = document.getElementById('prod-cols-dropdown');
