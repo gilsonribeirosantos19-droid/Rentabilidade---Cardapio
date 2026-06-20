@@ -496,7 +496,7 @@ function renderCentralOp(){
   set('cop-inv', invAbertos);
 }
 
-function renderComparativoLojas(){
+async function renderComparativoLojas(){
   const tbody=document.getElementById('loja-body');
   const tfoot=document.getElementById('loja-foot');
   const info=document.getElementById('loja-info');
@@ -504,28 +504,34 @@ function renderComparativoLojas(){
 
   const now=new Date();
   const iniMes=new Date(now.getFullYear(),now.getMonth(),1).toISOString();
-  const iniMesDia=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
 
   const lojasFilt=lojaAtual?lojas.filter(l=>l.id===lojaAtual.id):lojas;
-  if(!lojasFilt.length){tbody.innerHTML='<tr><td colspan="6" style="padding:24px;text-align:center;color:#94a3b8">Sem lojas cadastradas</td></tr>';return;}
+  if(!lojasFilt.length){tbody.innerHTML='<tr><td colspan="6" style="padding:24px;text-align:center;color:#94a3b8">Sem lojas cadastradas</td></tr>';if(tfoot)tfoot.innerHTML='';return;}
 
-  let tVal=0,tComp=0,tPerd=0,tInv=0,tConsumo=0,tFat=0;
-  const maxComp=Math.max(...lojasFilt.map(l=>entradas.filter(e=>e.loja_id===l.id&&e.criado_em>=iniMes).reduce((s,e)=>s+(e.custo_total||0),0)),1);
+  // Totais por loja SOMADOS NO SERVIDOR — não estoura o limite de 1000 linhas
+  // do PostgREST, então fica correto e rápido com qualquer volume de entradas.
+  const agg={};
+  try {
+    const rows=await api('rpc/comparativo_lojas',{method:'POST',body:JSON.stringify({p_tenant:TENANT_ID,p_inicio:iniMes})});
+    (rows||[]).forEach(r=>{agg[r.loja_id]=r;});
+  } catch(e){ tbody.innerHTML=`<tr><td colspan="6" style="padding:24px;text-align:center;color:#e11d48">Erro ao carregar comparativo: ${esc(e.message)}</td></tr>`; if(tfoot)tfoot.innerHTML=''; return; }
+
+  let tVal=0,tComp=0,tPerd=0,tInv=0,tInvTot=0,tConsumo=0,tFat=0;
+  const maxComp=Math.max(...lojasFilt.map(l=>+(agg[l.id]?.compras_mes)||0),1);
 
   tbody.innerHTML=lojasFilt.map(loja=>{
-    const saldosL=saldos.filter(s=>s.loja_id===loja.id);
-    const valEst=insumos.reduce((s,i)=>{const sd=saldosL.find(x=>x.insumo_id===i.id)||{quantidade:0,custo_medio:0};return s+(sd.quantidade||0)*(sd.custo_medio||0);},0);
-    const compMes=entradas.filter(e=>e.loja_id===loja.id&&e.criado_em>=iniMes).reduce((s,e)=>s+(e.custo_total||0),0);
-    const perdMes=saidas.filter(s=>s.loja_id===loja.id&&['perda','vencimento','descarte'].includes(s.tipo)&&s.criado_em>=iniMes).reduce((s,sd)=>s+(sd.quantidade||0)*(saldosL.find(x=>x.insumo_id===sd.insumo_id)?.custo_medio||0),0);
-    // CMV real = (saídas 'consumo' do mês × custo médio) ÷ faturamento do mês (mesma definição do cmv.html / estoque.html)
-    const consumoMes=saidas.filter(s=>s.loja_id===loja.id&&s.tipo==='consumo'&&s.criado_em>=iniMes).reduce((s,sd)=>s+(sd.quantidade||0)*(saldosL.find(x=>x.insumo_id===sd.insumo_id)?.custo_medio||0),0);
-    const fatMes=faturamentos.filter(f=>f.loja_id===loja.id&&f.data>=iniMesDia).reduce((s,f)=>s+(f.valor||0),0);
-    const invL=inventarios.filter(i=>i.loja_id===loja.id);
-    const invAtivos=invL.filter(i=>i.status==='ativo').length;
+    const a=agg[loja.id]||{};
+    const valEst=+a.valor_estoque||0;
+    const compMes=+a.compras_mes||0;
+    const perdMes=+a.perdas_mes||0;
+    const consumoMes=+a.consumo_mes||0;
+    const fatMes=+a.fat_mes||0;
+    const invAtivos=+a.inv_ativos||0;
+    const invTot=+a.inv_total||0;
     const cmv=fatMes>0?(consumoMes/fatMes*100).toFixed(1):'—';
     const barPct=maxComp>0?Math.round(compMes/maxComp*100):0;
     const barColor=compMes>0?'#22c55e':'#e2e8f0';
-    tVal+=valEst;tComp+=compMes;tPerd+=perdMes;tInv+=invAtivos;tConsumo+=consumoMes;tFat+=fatMes;
+    tVal+=valEst;tComp+=compMes;tPerd+=perdMes;tInv+=invAtivos;tInvTot+=invTot;tConsumo+=consumoMes;tFat+=fatMes;
     const perdColor=perdMes>0?'color:#e11d48':'';
     const invColor=invAtivos>0?'color:#f97316':'color:#94a3b8';
     return `<tr>
@@ -542,18 +548,18 @@ function renderComparativoLojas(){
       </td>
       <td class="r mono" style="${perdColor}">${perdMes>0?brl(perdMes):'R$ 0,00'}</td>
       <td class="r mono">${cmv!=='—'?cmv+'%':'—'}</td>
-      <td class="r" style="${invColor};font-weight:600">${invAtivos} / ${invL.length}</td>
+      <td class="r" style="${invColor};font-weight:600">${invAtivos} / ${invTot}</td>
     </tr>`;
   }).join('');
 
   const cmvTotal=tFat>0?(tConsumo/tFat*100).toFixed(1)+'%':'—';
-  tfoot.innerHTML=`<tr>
+  if(tfoot) tfoot.innerHTML=`<tr>
     <td style="font-weight:700">TOTAL GERAL</td>
     <td class="r mono">${brl(tVal)}</td>
     <td class="mono" style="font-size:12px">${brl(tComp)}</td>
     <td class="r mono">${tPerd>0?brl(tPerd):'R$ 0,00'}</td>
     <td class="r mono">${cmvTotal}</td>
-    <td class="r">${tInv} / ${inventarios.length}</td>
+    <td class="r">${tInv} / ${tInvTot}</td>
   </tr>`;
   if(info) info.textContent=`Exibindo ${lojasFilt.length === lojas.length ? 'todos os registros' : lojasFilt.length+' loja(s)'}`;
 }
