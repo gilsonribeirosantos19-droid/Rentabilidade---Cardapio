@@ -605,7 +605,11 @@
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Insumo</div>
-          <select id="aud-ins" class="field" style="min-width:180px"><option value="">Todos</option></select>
+          <select id="aud-ins" class="field" style="width:160px"><option value="">Todos</option></select>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Pesquisar</div>
+          <input type="text" id="aud-busca" class="field" placeholder="Descrição, fornecedor, nº DANFE, código..." style="width:100%" oninput="_audPag=1;_renderAudPage()">
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Mostrar</div>
@@ -629,22 +633,24 @@
         <div class="tbl-scroll">
           <table class="tbl">
             <thead><tr>
-              <th style="white-space:nowrap">DATA</th>
-              <th>INSUMO</th>
+              <th style="white-space:nowrap">DATA EMISSÃO</th>
+              <th>DESCRIÇÃO DO ITEM</th>
+              <th>CÓD. ITEM</th>
+              <th>CÓD. FORNECEDOR</th>
               <th>LOJA</th>
               <th>FORNECEDOR</th>
+              <th>NR DANFE</th>
+              <th class="r">VALOR DANF</th>
               <th class="r">QTD FORNECEDOR</th>
-              <th>EMBALAGEM</th>
+              <th>UNIDADE MEDIDA</th>
               <th class="r">FATOR</th>
               <th class="r">QTD ESTOQUE</th>
               <th class="r">ESPERADO</th>
               <th class="r">DIFERENÇA</th>
-              <th>RESPONSÁVEL</th>
               <th>STATUS</th>
-              <th>AÇÕES</th>
             </tr></thead>
             <tbody id="aud-body">
-              <tr><td colspan="13" class="empty">Selecione o período e clique em Consultar.</td></tr>
+              <tr><td colspan="15" class="empty">Selecione o período e clique em Consultar.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1672,7 +1678,7 @@ async function renderAuditoria() {
   const lojaId = document.getElementById('sel-loja').value;
   const lojaFiltro = lojaId ? `&loja_id=eq.${lojaId}` : '';
   const tbody  = document.getElementById('aud-body');
-  tbody.innerHTML = '<tr><td colspan="13" class="empty">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="15" class="empty">Carregando...</td></tr>';
 
   try {
     let q = `entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`;
@@ -1680,8 +1686,23 @@ async function renderAuditoria() {
     if (fim) q += `&criado_em=lte.${fim}T23:59:59`;
     if (insId) q += `&insumo_id=eq.${insId}`;
 
-    const ents = await apiAll(q);
-    const lojasData = await api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]);
+    const [ents, lojasData, notas, vincs] = await Promise.all([
+      apiAll(q),
+      api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
+      apiAll(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&select=numero,serie,valor_total`).catch(()=>[]),
+      apiAll(`vinculos_nfe?tenant_id=eq.${TENANT_ID}&select=insumo_id,codigo_nfe`).catch(()=>[]),
+    ]);
+
+    // Mapa do valor total da nota por número/série (e por número só, como fallback)
+    const notaMap = {};
+    notas.forEach(n => {
+      if (n.numero == null) return;
+      notaMap[`${n.numero}/${n.serie}`] = Number(n.valor_total)||0;
+      if (notaMap[`${n.numero}`] == null) notaMap[`${n.numero}`] = Number(n.valor_total)||0;
+    });
+    // Mapa do código do fornecedor (código na NF-e) por insumo
+    const codFornMap = {};
+    vincs.forEach(v => { if (v.insumo_id && v.codigo_nfe && !codFornMap[v.insumo_id]) codFornMap[v.insumo_id] = v.codigo_nfe; });
 
     _audRows = ents.map(e => {
       const ins      = insumos.find(i => i.id === e.insumo_id);
@@ -1693,7 +1714,13 @@ async function renderAuditoria() {
       const dif      = parseFloat((qtdEst - esperado).toFixed(4));
       const suspeito = fator === 1 && e.unidade_compra && e.unidade_compra.toLowerCase() !== (ins?.unidade_medida||'').toLowerCase();
       const erro     = Math.abs(dif) > 0.001;
-      return { e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro };
+      const nrDanfe  = e.nfe_numero || '';
+      const valorNota = notaMap[nrDanfe] != null ? notaMap[nrDanfe] : notaMap[`${nrDanfe.split('/')[0]}`];
+      const codItem  = fmtCodigoInterno(ins?.codigo_interno);
+      const codForn  = codFornMap[e.insumo_id] || '';
+      const unidMed  = ins?.unidade_medida || '';
+      const _busca   = [ins?.nome, e.fornecedor_nome, nrDanfe, codItem, codForn].join(' ').toLowerCase();
+      return { e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro, nrDanfe, valorNota, codItem, codForn, unidMed, _busca };
     });
 
     if (filtro === 'suspeitos') _audRows = _audRows.filter(r => r.suspeito || r.erro);
@@ -1704,7 +1731,7 @@ async function renderAuditoria() {
     _audPag = 1;
     _renderAudPage();
   } catch(err) {
-    document.getElementById('aud-body').innerHTML = `<tr><td colspan="13" class="empty">Erro: ${esc(err.message)}</td></tr>`;
+    document.getElementById('aud-body').innerHTML = `<tr><td colspan="15" class="empty">Erro: ${esc(err.message)}</td></tr>`;
   }
 }
 
@@ -1713,15 +1740,18 @@ function _renderAudPage() {
   if (!tbody) return;
   let visivel = _audRows;
   if (_audStatusFiltro) {
-    visivel = _audRows.filter(r => {
+    visivel = visivel.filter(r => {
       if (_audStatusFiltro === 'Erro') return r.erro;
       if (_audStatusFiltro === 'Suspeito') return r.suspeito && !r.erro;
       if (_audStatusFiltro === 'OK') return !r.suspeito && !r.erro;
       return true;
     });
   }
+  const buscaEl = document.getElementById('aud-busca');
+  const termo = (buscaEl?.value || '').trim().toLowerCase();
+  if (termo) visivel = visivel.filter(r => r._busca.includes(termo));
   if (!visivel.length) {
-    tbody.innerHTML = '<tr><td colspan="13" class="empty">Nenhum lançamento encontrado.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="empty">Nenhum lançamento encontrado.</td></tr>';
     document.getElementById('aud-pag-info').textContent = '';
     document.getElementById('aud-pag-btns').innerHTML = '';
     return;
@@ -1730,22 +1760,24 @@ function _renderAudPage() {
   const slice = visivel.slice(start, start+_audPorPag);
   const fmt3  = v => Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
 
-  tbody.innerHTML = slice.map(({e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro}) => {
+  tbody.innerHTML = slice.map(({e, ins, loja, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro, nrDanfe, valorNota, codItem, codForn, unidMed}) => {
     const dataHora = e.criado_em ? new Date(e.criado_em).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
     return `<tr>
       <td class="mono" style="font-size:11px;color:#334155;white-space:nowrap">${dataHora}</td>
       <td style="font-weight:600;color:#334155">${esc(ins?.nome||'—')}</td>
+      <td class="mono" style="font-size:12px;color:#64748b">${esc(codItem||'—')}</td>
+      <td class="mono" style="font-size:12px;color:#64748b">${esc(codForn||'—')}</td>
       <td style="font-size:12px;color:#64748b">${esc(loja?.nome||'—')}</td>
       <td style="font-size:12px;color:#334155">${esc(e.fornecedor_nome||'—')}</td>
+      <td class="mono" style="font-size:12px;color:#334155">${esc(nrDanfe||'—')}</td>
+      <td class="r mono" style="color:#334155">${valorNota!=null?brl(valorNota):'—'}</td>
       <td class="r mono" style="color:#334155">${fmt3(qtdForn)}</td>
-      <td style="font-size:12px;color:#64748b">${esc(e.unidade_compra||'—')}</td>
+      <td style="font-size:12px;color:#64748b">${esc(unidMed||'—')}</td>
       <td class="r mono" style="color:#334155">${Number(fator).toLocaleString('pt-BR',{maximumFractionDigits:3})}</td>
       <td class="r mono" style="color:#334155">${fmt3(qtdEst)}</td>
       <td class="r mono" style="color:#64748b">${fmt3(esperado)}</td>
       <td class="r">${_audFmtDif(dif, esperado)}</td>
-      <td style="font-size:12px;color:#64748b">${esc(e.responsavel||'—')}</td>
       <td>${_audStatusLabel(suspeito, erro)}</td>
-      <td><button style="width:28px;height:28px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;line-height:1" title="Mais opções">⋮</button></td>
     </tr>`;
   }).join('');
 
