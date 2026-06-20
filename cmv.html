@@ -422,7 +422,7 @@ function renderTabela(){
     const psign=r.dPct>=0?'+':'';
     const isign=r.imp>=0?'+':'';
     // coluna % mostra percentual + valor sobreposto
-    const pctHtml=`<div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;${cl}">${psign}${r.dPct.toFixed(1)}%</div>
+    const pctHtml=`<div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#0f172a">${psign}${r.dPct.toFixed(1)}%</div>
       <div style="font-size:10px;color:#94a3b8;font-family:'DM Mono',monospace">${r.cReal>0?brl(r.cReal).replace('R$ ',''):''}</div>`;
     return `<tr>
       <td style="font-weight:600">${esc(r.i.nome)}</td>
@@ -432,8 +432,8 @@ function renderTabela(){
       <td class="r mono">${fq(r.qReal)}</td>
       <td class="r mono">${brl(r.cReal)}</td>
       <td class="c">${pctHtml}</td>
-      <td class="r mono" style="font-weight:600;${cl}">${sign}${fq(r.dQtd)}</td>
-      <td class="r mono" style="font-weight:600;${cl}">${isign}${brl(Math.abs(r.imp))}</td>
+      <td class="r mono" style="font-weight:600;color:#0f172a">${sign}${fq(r.dQtd)}</td>
+      <td class="r mono" style="font-weight:600;color:#0f172a">${isign}${brl(Math.abs(r.imp))}</td>
       <td><span class="status-dot"><span class="dot" style="background:${c.dot}"></span><span style="color:${c.color};font-size:11px;font-weight:600">${c.txt}</span></span></td>
       <td style="color:#64748b;font-size:12px">${getCausa(r.dPct)}</td>
       <td class="c">
