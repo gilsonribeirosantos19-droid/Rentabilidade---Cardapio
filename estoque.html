@@ -4172,14 +4172,20 @@ const MOV_COLS = [
   {id:'calcula-cmv', label:'Calcula CMV', def:true},
 ];
 
+let _movColsState = null;  // {colId:bool} — config em memória durante a sessão
+function _movColsDefaults(){ const o={}; MOV_COLS.forEach(c=>{ if(!c.fixed) o[c.id]=c.def; }); return o; }
 function loadMovColsState() {
-  try { return JSON.parse(localStorage.getItem('mov_cols')||'null'); } catch { return null; }
+  if(!_movColsState){
+    const saved = (typeof getColPref==='function') ? getColPref('estoque_movimentacao') : null;
+    _movColsState = Object.assign(_movColsDefaults(), saved||{});
+  }
+  return _movColsState;
 }
 
 function applyMovCols() {
-  const saved = loadMovColsState();
+  const st = loadMovColsState();
   MOV_COLS.forEach(col => {
-    const visible = col.fixed ? true : (saved ? (saved[col.id] !== false) : col.def);
+    const visible = col.fixed ? true : (st[col.id] !== false);
     document.querySelectorAll(`[data-col="${col.id}"]`).forEach(el => {
       el.style.display = visible ? '' : 'none';
     });
@@ -4187,22 +4193,28 @@ function applyMovCols() {
 }
 
 function renderColsDropdown() {
-  const saved = loadMovColsState();
+  const st = loadMovColsState();
   const list = document.getElementById('cols-list');
+  if(!list) return;
   list.innerHTML = MOV_COLS.map(col => {
-    const visible = col.fixed ? true : (saved ? (saved[col.id] !== false) : col.def);
+    const visible = col.fixed ? true : (st[col.id] !== false);
     return `<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;cursor:${col.fixed?'default':'pointer'}">
       <input type="checkbox" ${visible?'checked':''} ${col.fixed?'disabled':''} onchange="toggleMovCol('${col.id}',this.checked)" style="accent-color:#f97316;width:15px;height:15px;cursor:${col.fixed?'default':'pointer'}">
       ${col.label}
     </label>`;
-  }).join('');
+  }).join('')
+  + `<button type="button" onclick="salvarMovColsPref()" style="margin-top:10px;width:100%;padding:7px;border:none;border-radius:7px;background:#f97316;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">Salvar preferência</button>`;
 }
 
 function toggleMovCol(colId, visible) {
-  const saved = loadMovColsState() || {};
-  saved[colId] = visible;
-  localStorage.setItem('mov_cols', JSON.stringify(saved));
+  const st = loadMovColsState();
+  st[colId] = visible;
   applyMovCols();
+}
+
+async function salvarMovColsPref(){
+  try { await saveColPref('estoque_movimentacao', loadMovColsState()); toast('Preferência de colunas salva!','ok'); }
+  catch(e){ toast('Erro ao salvar preferência: '+(e.message||e),'err'); }
 }
 
 function toggleColsDropdown(el) {
