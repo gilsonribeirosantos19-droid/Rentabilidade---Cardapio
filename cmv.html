@@ -56,8 +56,12 @@
   .kpi-sub{font-size:11px;color:#94a3b8}
   /* TABLE */
   .tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);margin-bottom:12px}
-  .tbl-scroll{overflow-x:auto}
+  .tbl-scroll{overflow:auto;max-height:calc(100vh - 300px)}
   table{width:100%;border-collapse:collapse;font-size:12px}
+  /* Cabeçalho fixo (gruda no topo da tabela ao rolar) */
+  thead{position:sticky;top:0;z-index:3}
+  .th-main th{position:sticky;top:0}
+  .th-sub th{position:sticky;top:23px}
   .th-main{background:#0f2d5c}
   .th-main th{padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08)}
   .th-main th:last-child{border-right:none}
