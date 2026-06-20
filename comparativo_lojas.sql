@@ -39,9 +39,7 @@ as $$
               left join saldo_estoque sl on sl.tenant_id = p_tenant and sl.insumo_id = sa.insumo_id and sl.loja_id = l.id
               where sa.tenant_id = p_tenant and sa.loja_id = l.id
                 and sa.tipo = 'consumo' and sa.criado_em >= p_inicio), 0),
-    coalesce((select sum(f.valor)
-              from faturamentos f
-              where f.tenant_id = p_tenant and f.loja_id = l.id and f.data >= p_inicio::date), 0),
+    0::numeric,  -- fat_mes: tabela 'faturamentos' ainda nao existe (sem PDV/vendas) -> CMV fica "—"
     coalesce((select count(*) from inventarios i where i.tenant_id = p_tenant and i.loja_id = l.id and i.status = 'ativo'), 0)::int,
     coalesce((select count(*) from inventarios i where i.tenant_id = p_tenant and i.loja_id = l.id), 0)::int
   from lojas l
