@@ -113,6 +113,26 @@ function createApi(supaUrl, supaKey) {
   };
 }
 
+// ── BUSCA PAGINADA (pega TODAS as linhas) ──────────────────────────
+// O PostgREST devolve no máximo ~1000 linhas por requisição. Esta função
+// pagina (limit/offset) até trazer tudo — use em telas que SOMAM/LISTAM
+// tabelas grandes (entradas, saídas, saldos…) pra não subcontar.
+async function apiAll(endpoint, pageSize) {
+  pageSize = pageSize || 1000;
+  const _api = createApi(window.SUPA_URL, window.SUPA_KEY);
+  const sep = endpoint.includes('?') ? '&' : '?';
+  let all = [], offset = 0;
+  for (let guard = 0; guard < 500; guard++) {
+    const page = await _api(`${endpoint}${sep}limit=${pageSize}&offset=${offset}`);
+    if (!Array.isArray(page) || page.length === 0) break;
+    all = all.concat(page);
+    if (page.length < pageSize) break;
+    offset += pageSize;
+  }
+  return all;
+}
+window.apiAll = apiAll;
+
 // ── PREFERÊNCIAS DO USUÁRIO (por usuário, no banco: usuarios.preferencias) ──
 // Guarda config de colunas por relatório: preferencias.colunas[reportKey] = {colId:bool}.
 // Leitura: do cache sb_user (carregado no login). Gravação: RPC salvar_preferencia

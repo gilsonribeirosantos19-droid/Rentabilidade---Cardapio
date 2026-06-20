@@ -1630,15 +1630,17 @@ async function carregar() {
 
     const lojaFiltro = lojaAtual ? `&loja_id=eq.${lojaAtual.id}` : '';
 
+    // apiAll = pagina até trazer TUDO (sem o corte de 1000 linhas do PostgREST),
+    // pra Movimentação/Saldo/Kardex não subcontarem com muitos registros.
     [insumos, saldos, entradas, saidas, vinculos, fornecedores] = await Promise.all([
-      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
-      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}`),
-      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`),
-      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`),
-      api(`vinculos_nfe?tenant_id=eq.${TENANT_ID}`),
-      api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
+      apiAll(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      apiAll(`saldo_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}`),
+      apiAll(`entradas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`),
+      apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&order=criado_em.desc`),
+      apiAll(`vinculos_nfe?tenant_id=eq.${TENANT_ID}`),
+      apiAll(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
     ]);
-    insumoFornVinculos = await api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
+    insumoFornVinculos = await apiAll(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
     // Carrega grupos de compra para o filtro de movimentação
     if (!gruposCompra.length) {
       gruposCompra = await api(`grupos_compra?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`).catch(()=>[]);
