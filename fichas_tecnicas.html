@@ -491,7 +491,7 @@ async function carregar(){
   try{
     if(window.Params) await Params.load().catch(()=>{});
     const [fichas,insumos,cats,produtos]=await Promise.all([
-      api('fichas_tecnicas?tenant_id=eq.'+TENANT_ID+'&order=nome.asc&select=*,itens_ficha(id,insumo_id,quantidade_g,ordem)'),
+      api('fichas_tecnicas?tenant_id=eq.'+TENANT_ID+'&order=nome.asc&select=*,itens_ficha(id,insumo_id,produto_id,quantidade_g,ordem)'),
       api('insumos?tenant_id=eq.'+TENANT_ID+'&ativo=eq.true&order=nome.asc'),
       api('categorias?tenant_id=eq.'+TENANT_ID+'&tipo=eq.ficha&order=nome.asc&select=*'),
       api(`produtos?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]),
@@ -891,13 +891,23 @@ function custoIngrediente(ins,qtdG){
   if(um==='un'||um==='pct'||um==='cx')return cb*qtdG;
   return cb/(ins.rendimento_pct/100)/1000*qtdG;
 }
-function custoFichaTotal(f){
+// Custo de 1 unidade de um produto acabado = custo total da ficha dele (recursivo, anti-ciclo)
+function custoDoProduto(produtoId,_seen){
+  _seen=_seen||new Set();
+  if(_seen.has('p:'+produtoId))return 0;
+  _seen.add('p:'+produtoId);
+  const f=todasFichas.find(x=>x.produto_id===produtoId);
+  return f?custoFichaTotal(f,_seen):0;
+}
+// Custo de um item da ficha: insumo OU produto componente (combinado)
+function custoItemFicha(it,_seen){
+  if(it.produto_id)return custoDoProduto(it.produto_id,_seen)*(parseFloat(it.quantidade_g)||0);
+  const ins=todosInsumos.find(i=>i.id===it.insumo_id);
+  return ins?custoIngrediente(ins,it.quantidade_g):0;
+}
+function custoFichaTotal(f,_seen){
   if(!f.itens||!f.itens.length)return 0;
-  return f.itens.reduce((acc,it)=>{
-    const ins=todosInsumos.find(i=>i.id===it.insumo_id);
-    if(!ins)return acc;
-    return acc+custoIngrediente(ins,it.quantidade_g);
-  },0);
+  return f.itens.reduce((acc,it)=>acc+custoItemFicha(it,_seen),0);
 }
 // custo POR PORÇÃO (o preço de venda é por unidade/porção) — base de CMV/markup/margem.
 // Processado (vinculado a insumo): custo POR unidade produzida (kg/litro) = total / rendimento da receita.
@@ -938,7 +948,7 @@ function editarFicha(id){
   try{
     const f=todasFichas.find(x=>x.id===id);if(!f)return;
     editId=id;
-    ingredientes=(f.itens||[]).map(it=>{const ins=todosInsumos.find(i=>i.id===it.insumo_id);const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';const qtd=(um==='kg'||um==='litro')?it.quantidade_g/1000:it.quantidade_g;return{insumo_id:it.insumo_id,quantidade_g:qtd};});
+    ingredientes=(f.itens||[]).map(it=>{if(it.produto_id)return{produto_id:it.produto_id,insumo_id:'',quantidade_g:it.quantidade_g};const ins=todosInsumos.find(i=>i.id===it.insumo_id);const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'g';const qtd=(um==='kg'||um==='litro')?it.quantidade_g/1000:it.quantidade_g;return{insumo_id:it.insumo_id,produto_id:'',quantidade_g:qtd};});
     document.getElementById('form-titulo').textContent='Editar: '+f.nome;
     // Processado = sem produto, com insumo vinculado → seletor aponta pro insumo (ins:<id>)
     if(f.produto_id){
@@ -972,12 +982,15 @@ function editarFicha(id){
 }
 
 function addIngRow(idx=null){
-  if(idx===null){ingredientes.push({insumo_id:'',quantidade_g:''});idx=ingredientes.length-1;}
+  if(idx===null){ingredientes.push({insumo_id:'',produto_id:'',quantidade_g:''});idx=ingredientes.length-1;}
   const ing=ingredientes[idx];
-  const opts=todosInsumos.map(i=>`<option value="${i.id}"${i.id===ing.insumo_id?' selected':''}>${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
+  const insOpts=todosInsumos.map(i=>`<option value="ins:${i.id}"${i.id===ing.insumo_id?' selected':''}>${esc(i.nome)} (${i.unidade_medida||i.unidade_compra||'un'})</option>`).join('');
+  const idsComFicha=new Set(todasFichas.filter(f=>f.produto_id&&f.id!==editId).map(f=>f.produto_id));
+  const prodOpts=_produtos.filter(p=>idsComFicha.has(p.id)).map(p=>`<option value="prod:${p.id}"${p.id===ing.produto_id?' selected':''}>${esc(p.nome)}</option>`).join('');
+  const opts=`<optgroup label="Insumos">${insOpts}</optgroup>`+(prodOpts?`<optgroup label="Produtos acabados">${prodOpts}</optgroup>`:'');
   const tr=document.createElement('tr');
   tr.innerHTML=`
-    <td><select class="ing-sel" onchange="ingChange(${idx},'insumo_id',this.value)"><option value="">Selecione o insumo...</option>${opts}</select></td>
+    <td><select class="ing-sel" onchange="ingChangeRef(${idx},this.value)"><option value="">Selecione insumo ou produto...</option>${opts}</select></td>
     <td class="c" id="ing-um-${idx}" style="color:#64748b">—</td>
     <td class="r"><input class="ing-qtd" type="number" id="ing-qtd-${idx}" min="0" step="0.001" value="${ing.quantidade_g||''}" oninput="ingChange(${idx},'quantidade_g',this.value)"></td>
     <td class="r" id="ing-aprov-${idx}" style="color:#64748b">—</td>
@@ -991,8 +1004,17 @@ function addIngRow(idx=null){
 // Preenche as colunas calculadas de uma linha (UM, % aprov., custo unit., custo total)
 function _updIngRow(idx){
   const ing=ingredientes[idx]; if(!ing) return;
-  const ins=todosInsumos.find(i=>i.id===ing.insumo_id);
   const setT=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  // Produto acabado componente (combinado): custo = custo da ficha do produto × qtd (un)
+  if(ing.produto_id){
+    const qElp=document.getElementById(`ing-qtd-${idx}`); if(qElp) qElp.placeholder='un';
+    const cu=custoDoProduto(ing.produto_id); const q=parseFloat(ing.quantidade_g)||0;
+    setT(`ing-um-${idx}`,'un'); setT(`ing-aprov-${idx}`,'—');
+    setT(`ing-cunit-${idx}`, cu>0?fmt(cu):'—');
+    setT(`ing-ctot-${idx}`, q>0?fmt(cu*q):'—');
+    return;
+  }
+  const ins=todosInsumos.find(i=>i.id===ing.insumo_id);
   const um=ins?(ins.unidade_medida||ins.unidade_compra||'g'):'—';
   setT(`ing-um-${idx}`, ins?um:'—');
   setT(`ing-aprov-${idx}`, ins?((+ins.rendimento_pct||100)+'%'):'—');
@@ -1008,6 +1030,16 @@ function _updIngRow(idx){
 function ingChange(idx,field,val){
   if(!ingredientes[idx])return;
   ingredientes[idx][field]=field==='quantidade_g'?(parseFloat(val)||''):val;
+  _updIngRow(idx);
+  atualizarCustoPreview();
+}
+
+// Seletor do ingrediente: "ins:<id>" (insumo) ou "prod:<id>" (produto acabado componente)
+function ingChangeRef(idx,val){
+  if(!ingredientes[idx])return;
+  if(val.startsWith('prod:')){ ingredientes[idx].produto_id=val.slice(5); ingredientes[idx].insumo_id=''; }
+  else if(val.startsWith('ins:')){ ingredientes[idx].insumo_id=val.slice(4); ingredientes[idx].produto_id=''; }
+  else { ingredientes[idx].insumo_id=''; ingredientes[idx].produto_id=''; }
   _updIngRow(idx);
   atualizarCustoPreview();
 }
@@ -1060,7 +1092,9 @@ function toggleRendimento(){
 
 function atualizarCustoPreview(){
   const total=ingredientes.reduce((acc,ing)=>{
-    if(!ing.insumo_id||!ing.quantidade_g)return acc;
+    if(!ing.quantidade_g)return acc;
+    if(ing.produto_id)return acc+custoDoProduto(ing.produto_id)*(parseFloat(ing.quantidade_g)||0);
+    if(!ing.insumo_id)return acc;
     const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;
     const um=ins.unidade_medida||ins.unidade_compra||'g';
     const qtdG=(um==='kg'||um==='litro')?ing.quantidade_g*1000:ing.quantidade_g;
@@ -1116,7 +1150,7 @@ async function salvarFicha(){
   const ehProcessado=rawSel.startsWith('ins:');
   const produtoId=ehProcessado?null:rawSel;  // processado não tem produto de venda
   if(!nome){toast('Informe o nome da ficha.','err');return;}
-  const ingValidos=ingredientes.filter(i=>i.insumo_id&&i.quantidade_g>0);
+  const ingValidos=ingredientes.filter(i=>(i.insumo_id||i.produto_id)&&i.quantidade_g>0);
   if(!ingValidos.length){toast('Adicione pelo menos um ingrediente.','err');return;}
   const btn=document.getElementById('btn-salvar');
   btn.disabled=true;btn.textContent='Salvando...';
@@ -1133,13 +1167,17 @@ async function salvarFicha(){
       const res=await api('fichas_tecnicas',{method:'POST',body:JSON.stringify({tenant_id:TENANT_ID,nome,categoria:cat,rendimento_porcoes:porcoes,preco_venda:(ehProcessado?null:preco),preco_delivery:(ehProcessado?null:precoDelivery),modo_preparo:preparo||null,observacoes:obs||null,status,produto_id:produtoId,insumo_vinculado_id:insumoVinculadoId,rendimento_receita_g:rendimentoReceita})});
       fichaId=res[0].id;
     }
-    await api('itens_ficha',{method:'POST',prefer:'return=minimal',body:JSON.stringify(ingValidos.map((ing,i)=>{const _ins=todosInsumos.find(x=>x.id===ing.insumo_id);const _um=_ins?(_ins.unidade_medida||_ins.unidade_compra||'g'):'g';const _qtdG=(_um==='kg'||_um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);return{ficha_id:fichaId,insumo_id:ing.insumo_id,quantidade_g:_qtdG,ordem:i};}))});
+    await api('itens_ficha',{method:'POST',prefer:'return=minimal',body:JSON.stringify(ingValidos.map((ing,i)=>{
+      if(ing.produto_id){ return {ficha_id:fichaId,produto_id:ing.produto_id,insumo_id:null,quantidade_g:parseFloat(ing.quantidade_g),ordem:i}; }
+      const _ins=todosInsumos.find(x=>x.id===ing.insumo_id);const _um=_ins?(_ins.unidade_medida||_ins.unidade_compra||'g'):'g';const _qtdG=(_um==='kg'||_um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);
+      return{ficha_id:fichaId,insumo_id:ing.insumo_id,quantidade_g:_qtdG,ordem:i};
+    }))});
     if(insumoVinculadoId){
       const _rVal=parseFloat(document.getElementById('f-rendimento').value)||0;
       const _rUnid=(document.getElementById('f-rendimento-unidade')||{value:'g'}).value;
       const rendimento=(_rUnid==='L'||_rUnid==='kg')?_rVal*1000:_rVal;
       if(!rendimento){toast('Informe o rendimento da receita.','err');btn.disabled=false;btn.textContent='Salvar';return;}
-      const custoTotal=ingValidos.reduce((acc,ing)=>{const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;const um=ins.unidade_medida||ins.unidade_compra||'g';const qtdG=(um==='kg'||um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);return acc+custoIngrediente(ins,qtdG);},0);
+      const custoTotal=ingValidos.reduce((acc,ing)=>{if(ing.produto_id)return acc+custoDoProduto(ing.produto_id)*(parseFloat(ing.quantidade_g)||0);const ins=todosInsumos.find(i=>i.id===ing.insumo_id);if(!ins)return acc;const um=ins.unidade_medida||ins.unidade_compra||'g';const qtdG=(um==='kg'||um==='litro')?parseFloat(ing.quantidade_g)*1000:parseFloat(ing.quantidade_g);return acc+custoIngrediente(ins,qtdG);},0);
       const custoKg=custoTotal/rendimento*1000;
       await api(`insumos?id=eq.${insumoVinculadoId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({preco_compra:parseFloat(custoKg.toFixed(4))})});
       const insNome=todosInsumos.find(i=>i.id===insumoVinculadoId)?.nome||'insumo';
