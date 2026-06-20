@@ -325,9 +325,10 @@
       </div>
       <div class="tbl-card">
         <!-- Seletor de colunas (flutuante, não corta) -->
-        <div id="prod-cols-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;z-index:1000;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.14)">
-          <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Colunas visíveis</div>
-          <div id="prod-cols-list"></div>
+        <div id="prod-cols-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;z-index:1000;min-width:210px;max-height:calc(100vh - 40px);flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.14)">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;flex-shrink:0">Colunas visíveis</div>
+          <div id="prod-cols-list" style="overflow-y:auto;flex:1;min-height:0"></div>
+          <button type="button" onclick="salvarProdColsPref()" style="margin-top:10px;flex-shrink:0;width:100%;padding:8px;border:none;border-radius:7px;background:#f97316;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">Salvar preferência</button>
         </div>
         <div class="tbl-scroll">
           <table>
@@ -982,8 +983,7 @@ function renderProdColsDropdown(){
     return `<label style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;cursor:${col.fixed?'default':'pointer'}">
       <input type="checkbox" ${vis?'checked':''} ${col.fixed?'disabled':''} onchange="toggleProdCol('${col.id}',this.checked)" style="accent-color:#f97316;width:15px;height:15px;cursor:${col.fixed?'default':'pointer'}">
       ${col.label}</label>`;
-  }).join('')
-  + `<button type="button" onclick="salvarProdColsPref()" style="margin-top:10px;width:100%;padding:7px;border:none;border-radius:7px;background:#f97316;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">Salvar preferência</button>`;
+  }).join('');
 }
 function toggleProdCol(colId, vis){
   const st = loadProdColsState();
@@ -999,8 +999,15 @@ function toggleProdColsDropdown(el){
   if(!d) return;
   if(d.style.display === 'none' || !d.style.display){
     renderProdColsDropdown();
-    d.style.display = '';
-    if(el && el.getBoundingClientRect){ const r = el.getBoundingClientRect(); d.style.left = Math.min(r.left, window.innerWidth-220)+'px'; d.style.top = (r.bottom+6)+'px'; }
+    d.style.display = 'flex';
+    if(el && el.getBoundingClientRect){
+      const r = el.getBoundingClientRect();
+      d.style.left = Math.min(r.left, window.innerWidth-230)+'px';
+      d.style.top = (r.bottom+6)+'px';
+      // se passar da parte de baixo da tela, sobe pra caber (mantém o botão Salvar visível)
+      const dr = d.getBoundingClientRect();
+      if(dr.bottom > window.innerHeight - 10) d.style.top = Math.max(10, window.innerHeight - 10 - dr.height) + 'px';
+    }
   } else d.style.display = 'none';
 }
 document.addEventListener('click', e => {
