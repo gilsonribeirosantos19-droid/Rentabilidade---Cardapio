@@ -836,7 +836,7 @@ function activateTab(nome) {
   if (nome==='inflacao')  renderInflacao();
   if (nome==='evolucao')  renderEvolucao();
   if (nome==='entradas')  iniciarEntradas();
-  if (nome==='auditoria') iniciarAuditoria();
+  if (nome==='auditoria') { iniciarAuditoria(); renderAuditoria(); }
   if (nome==='historico-custo') _initHistoricoCusto();
 }
 
@@ -1680,7 +1680,7 @@ async function renderAuditoria() {
     if (fim) q += `&criado_em=lte.${fim}T23:59:59`;
     if (insId) q += `&insumo_id=eq.${insId}`;
 
-    const ents = await api(q);
+    const ents = await apiAll(q);
     const lojasData = await api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`).catch(()=>[]);
 
     _audRows = ents.map(e => {
