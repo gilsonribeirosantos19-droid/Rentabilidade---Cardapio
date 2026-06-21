@@ -200,6 +200,10 @@
           Cancelada <span id="cnt-cancelada" style="font-weight:700;color:#94a3b8">(0)</span>
         </label>
         <input type="hidden" id="fil-s-processada">
+        <div id="box-data-manual" style="display:none;margin-left:auto;align-items:center;gap:6px">
+          <span style="font-size:12px;color:#64748b;font-weight:600">Data de entrada:</span>
+          <input type="date" id="proc-data-manual" class="field field-sm" title="Data em que a entrada vai afetar o estoque (modo manual)">
+        </div>
         <button id="btn-processar-sel" onclick="processarSelecionadas()" disabled style="margin-left:auto;display:inline-flex;padding:7px 16px;border:none;border-radius:8px;background:#e2e8f0;color:#94a3b8;font-size:12px;font-weight:700;cursor:not-allowed;font-family:inherit;gap:6px;align-items:center;transition:all .15s">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           Processar selecionadas (<span id="cnt-sel">0</span>)
@@ -527,6 +531,7 @@
 <div id="toast"></div>
 
 <script src="utils.js"></script>
+<script src="params.js"></script>
 <script src="sidebar.js"></script>
 <script>
 'use strict';
@@ -558,6 +563,15 @@ function norm(s) { return (s||'').toLowerCase().trim(); }
 function brl(v) { if(v==null||v==='') return '—'; return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtQtd(n) { const v=parseFloat(n)||0; if(Number.isInteger(v)) return v.toLocaleString('pt-BR'); return v.toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3}); }
 function getLojaId() { return lojaAtual?.id || null; }
+
+// Mostra/esconde o campo "Data de entrada" conforme o parâmetro estoque.data_movimentacao
+function _aplicarModoDataMov(){
+  const modo = window.Params ? Params.str('estoque','data_movimentacao','emissao') : 'emissao';
+  const box = document.getElementById('box-data-manual');
+  if(box) box.style.display = (modo==='manual') ? 'inline-flex' : 'none';
+  const inp = document.getElementById('proc-data-manual');
+  if(inp && !inp.value) inp.value = hoje();
+}
 function onLojaChangeNfe(){
   const id = document.getElementById('sel-loja')?.value;
   lojaAtual = lojas.find(l=>l.id===id) || null;
@@ -622,6 +636,7 @@ function fmtDateShort(iso) {
 // ── CARREGAR DADOS ────────────────────────────────────────────────
 async function atualizarLista(){ await loadAll(); toast('Lista atualizada.','ok'); }
 async function loadAll() {
+  if(window.Params) { await Params.load().catch(()=>{}); _aplicarModoDataMov(); }
   const de  = document.getElementById('fil-de')?.value;
   const ate = document.getElementById('fil-ate')?.value;
   const periodo = document.getElementById('fil-periodo')?.value || 'todos';
@@ -1156,8 +1171,14 @@ async function processarNfeFiscal(nfeId, silent = false) {
     if(fMatch) { fornId = fMatch.id; fornNome = fMatch.nome; }
   }
 
-  // data LOCAL do Brasil (a emissao de madrugada vem como 03:00 UTC do dia seguinte; split pegava o dia errado)
-  const dataStr = nfe.data_emissao ? new Date(nfe.data_emissao).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}) : hoje();
+  // data da movimentação de estoque conforme o parâmetro estoque.data_movimentacao
+  // emissao = data LOCAL do Brasil da nota (a emissao de madrugada vem como 03:00 UTC do dia seguinte; split pegava o dia errado)
+  const _emissaoLocal = nfe.data_emissao ? new Date(nfe.data_emissao).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}) : hoje();
+  const _modoData = window.Params ? Params.str('estoque','data_movimentacao','emissao') : 'emissao';
+  let dataStr;
+  if(_modoData==='processamento')   dataStr = hoje();
+  else if(_modoData==='manual')     dataStr = (document.getElementById('proc-data-manual')?.value) || _emissaoLocal;
+  else                              dataStr = _emissaoLocal;
   let ok = 0;
 
   for(const item of currentNfeItens) {

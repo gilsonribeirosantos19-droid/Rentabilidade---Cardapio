@@ -307,6 +307,13 @@
           <div class="param-grid">
             <div class="param-item"><div class="param-label">Permitir estoque negativo</div>
               <div class="param-toggle"><input type="radio" name="p-est-negativo" id="p-est-neg-sim" value="sim"><label for="p-est-neg-sim">Sim</label><input type="radio" name="p-est-negativo" id="p-est-neg-nao" value="nao" checked><label for="p-est-neg-nao">Não</label></div></div>
+            <div class="param-item"><div class="param-label">Data de movimentação do estoque (entrada de NF-e)</div>
+              <select class="param-select" id="p-est-data-mov">
+                <option value="emissao">Data de emissão da nota</option>
+                <option value="processamento">Data de processamento (lançamento)</option>
+                <option value="manual">Manual (informar ao processar)</option>
+              </select>
+              <div class="param-hint">Em que data a entrada afeta o estoque/CMV. Emissão = quando a nota foi emitida (≈ recebimento); Processamento = quando você lança a nota; Manual = você informa a data ao processar.</div></div>
             <!-- "Método de custo" removido: o sistema usa SEMPRE custo médio ponderado (não há PEPS/última) -->
             <div class="param-item"><div class="param-label">Controla validade</div>
               <div class="param-toggle"><input type="radio" name="p-est-validade" id="p-est-val-sim" value="sim"><label for="p-est-val-sim">Sim</label><input type="radio" name="p-est-validade" id="p-est-val-nao" value="nao" checked><label for="p-est-val-nao">Não</label></div></div>
@@ -1291,6 +1298,7 @@ async function confirmarDelete() {
 const PARAM_MAP = {
   estoque: {
     permitir_negativo:     { id: 'p-est-negativo',     type: 'radio' },
+    data_movimentacao:     { id: 'p-est-data-mov',     type: 'select' },
     controla_validade:     { id: 'p-est-validade',     type: 'radio' },
     obrigar_lote:          { id: 'p-est-lote',         type: 'radio' },
     atualizar_custo_auto:  { id: 'p-est-atualizar',    type: 'radio' },
