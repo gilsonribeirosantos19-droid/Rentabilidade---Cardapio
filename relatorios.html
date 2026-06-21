@@ -535,6 +535,10 @@
             <button id="ci-modo-val" class="ci-seg" onclick="_ciSetModo('valor')">Valor (R$)</button>
           </div>
         </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="flbl" style="margin:0">Unidade de medida</span>
+          <select id="ev-unidade" class="field" style="width:120px;display:block" onchange="renderEvolucao()"><option value="">Todas</option></select>
+        </div>
         <div id="ci-cmp-banner" class="ci-banner" style="display:none;flex:1"></div>
       </div>
       <!-- Sub-abas -->
@@ -1392,7 +1396,7 @@ async function init() {
 // ── CONSUMO DE INSUMOS (antiga Evolução Mensal) ───────────────────
 let _evRows=[], _evPag=1, _evPorPag=10, _evMeses=[], _evModo='qtd', _evCompara='nenhuma', _ciVincForn=[], _ciFiltrosOk=false;
 let _ciResumoData=[], _ciChart={labels:[],qtd:[],valor:[]}, _ciChartModo='qtd';
-let _ciTipoVis='ano', _ciPeriodo={de:'2026-01',ate:'2026-12',cmp:null};
+let _ciTipoVis='ano', _ciPeriodo={de:'2026-01',ate:'2026-12',cmp:null}, _ciTopConsumo=5, _ciTopFin=5;
 
 // período selecionado conforme o tipo de visualização (Ano × Período personalizado)
 function _ciGetPeriodo(){
@@ -1484,6 +1488,12 @@ async function _ciPopularFiltros(){
     const cats=[...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
     selG.innerHTML='<option value="">Todos</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   }
+  // Unidade de medida (distintas)
+  const selU=document.getElementById('ev-unidade');
+  if(selU&&selU.options.length<=1){
+    const uns=[...new Set(insumos.map(i=>(i.unidade_medida||'').toLowerCase()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    selU.innerHTML='<option value="">Todas</option>'+uns.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join('');
+  }
   // Fornecedor + vínculos insumo↔fornecedor
   if(!_ciFiltrosOk){
     _ciFiltrosOk=true;
@@ -1550,36 +1560,31 @@ async function renderEvolucao(){
 
   try{
     const {de,ate}=_ciGetPeriodo();
-    const prevP=_ciCompPeriodo(de,ate,'anterior');       // período anterior (sempre — p/ o Resumo)
-    const anoP =_ciCompPeriodo(de,ate,'ano_anterior');
-    _ciPeriodo={de,ate,cmp:_ciCompPeriodo(de,ate,_evCompara)};
+    const cmpP=_ciCompPeriodo(de,ate,_evCompara);   // null se "nenhuma"
+    _ciPeriodo={de,ate,cmp:cmpP};
     _ciRenderBanner();
-    const [saisAll, saisPrev, saisAno]=await Promise.all([
+    const [saisAll, saisCmp]=await Promise.all([
       apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${de}-01&criado_em=lte.${ate}-31T23:59:59`),
-      apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${prevP.de}-01&criado_em=lte.${prevP.ate}-31T23:59:59`),
-      _evCompara==='ano_anterior' ? apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${anoP.de}-01&criado_em=lte.${anoP.ate}-31T23:59:59`) : Promise.resolve(null)
+      cmpP ? apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${cmpP.de}-01&criado_em=lte.${cmpP.ate}-31T23:59:59`) : Promise.resolve(null)
     ]);
-    // comparação da TABELA conforme o filtro escolhido
-    const saisCmp = _evCompara==='nenhuma' ? null : (_evCompara==='anterior' ? saisPrev : saisAno);
 
+    const unid=(document.getElementById('ev-unidade')?.value||'').toLowerCase();
     const insForn = fornId ? new Set(_ciVincForn.filter(v=>v.fornecedor_id===fornId).map(v=>v.insumo_id)) : null;
     let insFilt=insumos.filter(i=>i.ativo!==false);
     if(grupo)insFilt=insFilt.filter(i=>(i.categoria||'')===grupo);
+    if(unid)insFilt=insFilt.filter(i=>(i.unidade_medida||'').toLowerCase()===unid);
     if(insForn)insFilt=insFilt.filter(i=>insForn.has(i.id));
     if(busca)insFilt=insFilt.filter(i=>i.nome.toLowerCase().includes(busca));
 
     const val=s=> _evModo==='valor' ? (Number(s.quantidade)||0)*_ciCusto(s.insumo_id) : (Number(s.quantidade)||0);
 
-    // dados do RESUMO (sempre com qtd + valor + média anterior, independente do toggle)
+    // dados do RESUMO (qtd + valor, independente do toggle)
     _ciResumoData=insFilt.map(ins=>{
       const cust=_ciCusto(ins.id);
       const porMesQtd=_evMeses.map(m=> saisAll.filter(s=>s.insumo_id===ins.id&&(s.criado_em||'').startsWith(m.key)).reduce((a,s)=>a+(Number(s.quantidade)||0),0));
       const totalQtd=porMesQtd.reduce((a,v)=>a+v,0);
-      const prevQtd=saisPrev.filter(s=>s.insumo_id===ins.id).reduce((a,s)=>a+(Number(s.quantidade)||0),0);
-      const nM=_evMeses.length||1;
-      return {ins,un:(ins.unidade_medida||'—').toLowerCase(),porMesQtd,totalQtd,cust,
-              totalValor:totalQtd*cust, mediaQtd:totalQtd/nM, mediaPrev:prevQtd/nM};
-    }).filter(r=>r.totalQtd!==0 || r.mediaPrev!==0);
+      return {ins,un:(ins.unidade_medida||'—').toLowerCase(),porMesQtd,totalQtd,cust,totalValor:totalQtd*cust};
+    }).filter(r=>r.totalQtd!==0);
 
     _evRows=insFilt.map(ins=>{
       const porMes=_evMeses.map(m=>
@@ -1667,62 +1672,53 @@ function _renderEvPage(){
 
 function _ciPct(v,tot){ return tot>0?(v/tot*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':'–'; }
 
-// Card "Mais consumidos" por unidade de medida
-function _ciCardConsumo(unidade, arr, totalGrp){
-  const u=esc((unidade||'—').toUpperCase());
-  const rows=arr.map((r,i)=>`<tr>
+// opções do seletor Top N (5/10/20/Todos)
+function _ciTopOpts(sel){ return [5,10,20,0].map(n=>`<option value="${n}"${n===sel?' selected':''}>${n===0?'Todos':'Top '+n}</option>`).join(''); }
+function _ciSetTop(which,val){ const n=+val; if(which==='consumo')_ciTopConsumo=n; else _ciTopFin=n; _ciRenderResumo(); }
+
+// Card "Mais consumidos" (1 card, respeita unidade + Top N)
+function _ciCardConsumo(arr, totalGrp, unidLabel){
+  const lim=_ciTopConsumo===0?arr.length:_ciTopConsumo;
+  const rows=arr.slice(0,lim).map((r,i)=>`<tr>
     <td style="color:#94a3b8;font-size:12px">${i+1}.</td>
     <td style="color:#334155;font-size:13px">${esc(r.ins.nome)}</td>
-    <td class="r mono" style="color:#0f172a;font-size:13px">${fmtQtd(r.totalQtd)}</td>
+    <td class="r mono" style="color:#0f172a;font-size:13px">${fmtQtd(r.totalQtd)} <span style="color:#94a3b8;font-size:11px">${esc(r.ins.unidade_medida||'')}</span></td>
     <td class="r mono" style="color:#64748b;font-size:12px">${_ciPct(r.totalQtd,totalGrp)}</td>
-  </tr>`).join('');
+  </tr>`).join('') || `<tr><td colspan="4" style="color:#94a3b8;font-size:12px;padding:8px 6px">Sem dados</td></tr>`;
   return `<div class="ci-card">
-    <div style="font-weight:700;color:#0f172a;margin-bottom:8px">Mais consumidos <span style="color:#94a3b8;font-weight:500;font-size:12px">(${esc(unidade||'—')})</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+      <div style="font-weight:700;color:#0f172a">Mais consumidos</div>
+      <select class="field" style="width:108px;height:30px;padding:0 8px;font-size:12px" onchange="_ciSetTop('consumo',this.value)">${_ciTopOpts(_ciTopConsumo)}</select>
+    </div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Unidade: ${esc(unidLabel)}</div>
     <table style="width:100%;border-collapse:collapse;text-align:left">
-      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r" style="white-space:nowrap">CONSUMO</th><th class="r" style="white-space:nowrap">% TOTAL</th></tr></thead>
+      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r" style="white-space:nowrap">CONSUMO</th><th class="r" style="white-space:nowrap">% DO TOTAL</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     <div style="text-align:center;margin-top:8px"><span class="ci-vertodos" onclick="_ciSubtab('consumo')">Ver todos</span></div>
   </div>`;
 }
 
-// Card "Maior impacto financeiro (R$)"
-function _ciCardFin(arr, totalValor){
-  const rows=arr.map((r,i)=>`<tr>
+// Card "Maior impacto financeiro (R$)" (1 card, respeita unidade + Top N)
+function _ciCardFin(arr, totalValor, unidLabel){
+  const lim=_ciTopFin===0?arr.length:_ciTopFin;
+  const rows=arr.slice(0,lim).map((r,i)=>`<tr>
     <td style="color:#94a3b8;font-size:12px">${i+1}.</td>
     <td style="color:#334155;font-size:13px">${esc(r.ins.nome)}</td>
     <td class="r mono" style="color:#0f172a;font-size:13px">${brl(r.totalValor)}</td>
     <td class="r mono" style="color:#64748b;font-size:12px">${_ciPct(r.totalValor,totalValor)}</td>
-  </tr>`).join('');
+  </tr>`).join('') || `<tr><td colspan="4" style="color:#94a3b8;font-size:12px;padding:8px 6px">Sem dados</td></tr>`;
   return `<div class="ci-card">
-    <div style="font-weight:700;color:#0f172a;margin-bottom:8px">Maior impacto financeiro <span style="color:#94a3b8;font-weight:500;font-size:12px">(R$)</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+      <div style="font-weight:700;color:#0f172a">Maior impacto financeiro <span style="color:#94a3b8;font-weight:500;font-size:12px">(R$)</span></div>
+      <select class="field" style="width:108px;height:30px;padding:0 8px;font-size:12px" onchange="_ciSetTop('fin',this.value)">${_ciTopOpts(_ciTopFin)}</select>
+    </div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Unidade: ${esc(unidLabel)}</div>
     <table style="width:100%;border-collapse:collapse;text-align:left">
-      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r" style="white-space:nowrap">VALOR</th><th class="r" style="white-space:nowrap">% TOTAL</th></tr></thead>
+      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r" style="white-space:nowrap">VALOR CONSUMIDO</th><th class="r" style="white-space:nowrap">% DO TOTAL</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     <div style="text-align:center;margin-top:8px"><span class="ci-vertodos" onclick="_ciSubtab('consumo')">Ver todos</span></div>
-  </div>`;
-}
-
-// Card "Maiores crescimentos / reduções" (média atual × média anterior)
-function _ciCardVar(titulo, arr, cor){
-  const rows=arr.length?arr.map((t,i)=>{
-    const sign=t.varia>0?'+':'';
-    return `<tr>
-      <td style="color:#94a3b8;font-size:12px">${i+1}.</td>
-      <td style="color:#334155;font-size:13px">${esc(t.ins.nome)}</td>
-      <td class="r mono" style="color:#334155;font-size:12px">${fmtQtd(t.mediaQtd)} ${esc(t.un)}</td>
-      <td class="r mono" style="color:#64748b;font-size:12px">${fmtQtd(t.mediaPrev)} ${esc(t.un)}</td>
-      <td class="r mono" style="color:${cor};font-size:12px">${sign}${fmtQtd(t.varia)} ${esc(t.un)}</td>
-      <td class="r mono" style="color:${cor};font-size:12px">${sign}${(t.variaPct||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</td>
-    </tr>`;
-  }).join('') : `<tr><td colspan="6" style="color:#94a3b8;font-size:12px;padding:8px 6px">Sem dados</td></tr>`;
-  return `<div class="ci-card">
-    <div style="font-weight:700;color:#0f172a;margin-bottom:8px">${titulo} <span style="color:#94a3b8;font-weight:500;font-size:12px">(média atual × média anterior)</span></div>
-    <table style="width:100%;border-collapse:collapse;text-align:left">
-      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r">MÉDIA ATUAL</th><th class="r">MÉDIA ANTERIOR</th><th class="r">VARIAÇÃO</th><th class="r">VARIAÇÃO (%)</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
   </div>`;
 }
 
@@ -1758,28 +1754,15 @@ function _ciRenderResumo(){
   const data=_ciResumoData||[];
   if(!data.length){ box.innerHTML='<div class="empty">Nenhuma saída encontrada no período.</div>'; return; }
 
-  // Mais consumidos por unidade de medida
-  const byUn={};
-  data.forEach(r=>{ const u=r.un||'—'; (byUn[u]=byUn[u]||[]).push(r); });
-  const unidades=Object.keys(byUn).sort((a,b)=> byUn[b].reduce((s,r)=>s+r.totalQtd,0)-byUn[a].reduce((s,r)=>s+r.totalQtd,0));
-  const cardsConsumo=unidades.map(u=>{
-    const arr=[...byUn[u]].sort((a,b)=>b.totalQtd-a.totalQtd);
-    const totalGrp=arr.reduce((s,r)=>s+r.totalQtd,0);
-    return _ciCardConsumo(u, arr.slice(0,10), totalGrp);
-  }).join('');
+  const unidSel=document.getElementById('ev-unidade')?.value||'';
+  const unidLabel=unidSel?unidSel:'Todas';
 
-  // Impacto financeiro
+  // Mais consumidos (1 card)
+  const consumoArr=[...data].sort((a,b)=>b.totalQtd-a.totalQtd);
+  const totalQtdGeral=data.reduce((s,r)=>s+r.totalQtd,0);
+  // Impacto financeiro (1 card)
+  const finArr=[...data].sort((a,b)=>b.totalValor-a.totalValor);
   const totalValor=data.reduce((s,r)=>s+r.totalValor,0);
-  const cardFin=_ciCardFin([...data].sort((a,b)=>b.totalValor-a.totalValor).slice(0,10), totalValor);
-
-  // Crescimentos / reduções (média atual × média anterior)
-  const variacoes=data.map(r=>{
-    const varia=r.mediaQtd-r.mediaPrev;
-    const variaPct=r.mediaPrev>0?(varia/r.mediaPrev*100):(r.mediaQtd>0?100:0);
-    return {ins:r.ins,un:r.un,mediaQtd:r.mediaQtd,mediaPrev:r.mediaPrev,varia,variaPct};
-  });
-  const cresc=variacoes.filter(t=>t.varia>0).sort((a,b)=>b.variaPct-a.variaPct).slice(0,10);
-  const reduc=variacoes.filter(t=>t.varia<0).sort((a,b)=>a.variaPct-b.variaPct).slice(0,10);
 
   // Dados do gráfico (total por mês)
   _ciChart={
@@ -1789,18 +1772,18 @@ function _ciRenderResumo(){
   };
 
   box.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;align-items:start">
-      ${cardsConsumo}${cardFin}
-      ${_ciCardVar('Maiores crescimentos',cresc,'#16a34a')}
-      ${_ciCardVar('Maiores reduções',reduc,'#e11d48')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px;margin-bottom:14px;align-items:start">
+      ${_ciCardConsumo(consumoArr, totalQtdGeral, unidLabel)}
+      ${_ciCardFin(finArr, totalValor, unidLabel)}
       <div class="ci-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
           <div style="font-weight:700;color:#0f172a">Evolução do consumo <span style="color:#94a3b8;font-weight:500;font-size:12px">(total do período)</span></div>
           <div style="display:flex;gap:4px">
             <button id="ci-chart-qtd" class="ci-chip active" onclick="_ciDrawChart('qtd')">Quantidade</button>
             <button id="ci-chart-val" class="ci-chip" onclick="_ciDrawChart('valor')">Valor (R$)</button>
           </div>
         </div>
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Unidade: ${esc(unidLabel)}</div>
         <div id="ci-chart"></div>
       </div>
     </div>
