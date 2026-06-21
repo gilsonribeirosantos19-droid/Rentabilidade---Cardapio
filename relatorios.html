@@ -130,11 +130,11 @@
   .ci-card td.r,.ci-card th.r{white-space:nowrap}
   .ci-card th:first-child,.ci-card td:first-child{width:22px}
   .ci-chip{background:#f1f5f9;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;font-family:inherit;color:#64748b;cursor:pointer}
-  .ci-chip.active{background:#3b82f6;color:#fff}
+  .ci-chip.active{background:#f97316;color:#fff}
   .ci-seg{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;font-family:inherit;color:#64748b;cursor:pointer}
-  .ci-seg.active{background:#3b82f6;border-color:#3b82f6;color:#fff}
-  .ci-banner{background:#eff6ff;border:1px solid #dbeafe;border-radius:8px;padding:9px 14px;font-size:13px;color:#1e40af}
-  .ci-vertodos{color:#3b82f6;font-size:12px;cursor:pointer;font-weight:600}
+  .ci-seg.active{background:#f97316;border-color:#f97316;color:#fff}
+  .ci-banner{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px 14px;font-size:13px;color:#9a3412}
+  .ci-vertodos{color:#f97316;font-size:12px;cursor:pointer;font-weight:600}
   .skeleton{animation:pulse 1.5s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.35}50%{opacity:.7}}
   .toast{position:fixed;bottom:24px;right:24px;background:var(--text1);color:#fff;border-radius:var(--radius);
@@ -1748,8 +1748,8 @@ function _ciDrawChart(modo){
   let grid='';
   for(let g=0;g<=2;g++){ const gv=max*g/2, gy=y(gv); grid+=`<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W-padR}" y2="${gy.toFixed(1)}" stroke="#eef2f7"/><text x="${padL-8}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-size="10" fill="#94a3b8">${fmtY(gv)}</text>`; }
   const xlabels=labels.map((l,i)=> (n<=12||i%2===0)?`<text x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10" fill="#94a3b8">${esc(l)}</text>`:'').join('');
-  const dots=data.map((v,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3" fill="#fff" stroke="#3b82f6" stroke-width="2"/>`).join('');
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${grid}<polygon points="${area}" fill="rgba(59,130,246,.10)"/><polyline points="${line}" fill="none" stroke="#3b82f6" stroke-width="2"/>${dots}${xlabels}</svg>`;
+  const dots=data.map((v,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3" fill="#fff" stroke="#f97316" stroke-width="2"/>`).join('');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${grid}<polygon points="${area}" fill="rgba(249,115,22,.10)"/><polyline points="${line}" fill="none" stroke="#f97316" stroke-width="2"/>${dots}${xlabels}</svg>`;
 }
 
 function _ciRenderResumo(){
