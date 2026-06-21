@@ -131,6 +131,9 @@
   .ci-card th:first-child,.ci-card td:first-child{width:22px}
   .ci-chip{background:#f1f5f9;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;font-family:inherit;color:#64748b;cursor:pointer}
   .ci-chip.active{background:#3b82f6;color:#fff}
+  .ci-seg{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;font-family:inherit;color:#64748b;cursor:pointer}
+  .ci-seg.active{background:#3b82f6;border-color:#3b82f6;color:#fff}
+  .ci-banner{background:#eff6ff;border:1px solid #dbeafe;border-radius:8px;padding:9px 14px;font-size:13px;color:#1e40af}
   .ci-vertodos{color:#3b82f6;font-size:12px;cursor:pointer;font-weight:600}
   .skeleton{animation:pulse 1.5s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.35}50%{opacity:.7}}
@@ -470,52 +473,69 @@
 
     <!-- CONSUMO DE INSUMOS (antiga Evolução Mensal) -->
     <div id="pane-evolucao" class="rel-pane">
-      <!-- Filtros -->
-      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+      <!-- Filtros linha 1 -->
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:10px;flex-wrap:wrap">
         <div>
-          <div class="flbl">Período</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <input type="month" id="ev-de" value="2026-01" onchange="renderEvolucao()" class="field" style="width:150px;display:block">
-            <span style="color:#94a3b8">—</span>
-            <input type="month" id="ev-ate" value="2026-12" onchange="renderEvolucao()" class="field" style="width:150px;display:block">
+          <div class="flbl">Tipo de visualização</div>
+          <div style="display:flex;gap:4px">
+            <button id="ci-tv-ano" class="ci-seg active" onclick="_ciSetTipoVis('ano')">Ano</button>
+            <button id="ci-tv-custom" class="ci-seg" onclick="_ciSetTipoVis('custom')">Período personalizado</button>
           </div>
         </div>
-        <div style="width:210px">
+        <div id="ci-box-ano">
+          <div class="flbl">Ano</div>
+          <select id="ev-ano" class="field" style="width:130px;display:block" onchange="renderEvolucao()"></select>
+        </div>
+        <div id="ci-box-custom" style="display:none">
+          <div class="flbl">Período</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="month" id="ev-de" value="2026-01" onchange="renderEvolucao()" class="field" style="width:140px;display:block">
+            <span style="color:#94a3b8">—</span>
+            <input type="month" id="ev-ate" value="2026-12" onchange="renderEvolucao()" class="field" style="width:140px;display:block">
+          </div>
+        </div>
+        <div style="width:230px">
           <div class="flbl">Comparar com</div>
           <select id="ev-comparar" class="field" style="width:100%;display:block" onchange="renderEvolucao()">
             <option value="nenhuma">Nenhuma comparação</option>
             <option value="anterior">Período anterior</option>
-            <option value="ano_anterior">Mesmo período do ano anterior</option>
+            <option value="ano_anterior" selected>Mesmo período do ano anterior</option>
           </select>
         </div>
-        <div style="width:180px">
-          <div class="flbl">Grupo de insumos</div>
-          <select id="ev-grupo" class="field" style="width:100%;display:block" onchange="renderEvolucao()"><option value="">Todos</option></select>
-        </div>
-        <div style="width:200px">
-          <div class="flbl">Fornecedor</div>
-          <select id="ev-forn" class="field" style="width:100%;display:block" onchange="renderEvolucao()"><option value="">Todos</option></select>
-        </div>
-        <div style="width:210px">
+        <div style="width:230px">
           <div class="flbl">Insumo</div>
-          <select id="ev-insumo" class="field" style="width:100%;display:block" onchange="renderEvolucao()"><option value="">Todos os insumos</option></select>
+          <input type="text" id="ev-busca" class="field" placeholder="Buscar insumo..." oninput="_evPag=1;renderEvolucao()" style="width:100%;display:block">
         </div>
-        <div style="width:160px">
-          <div class="flbl">Visualizar</div>
-          <select id="ev-modo" class="field" style="width:100%;display:block" onchange="renderEvolucao()">
-            <option value="qtd">Quantidade</option>
-            <option value="valor">Valor (R$)</option>
-          </select>
-        </div>
+        <button class="tab-btn" onclick="_ciToggleMaisFiltros()" style="display:inline-flex;align-items:center;gap:5px;height:38px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Mais filtros
+        </button>
         <button class="tab-btn" onclick="exportarEvolucao()" style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;height:38px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar CSV
         </button>
       </div>
-      <!-- Busca -->
-      <div style="position:relative;width:280px;margin-bottom:12px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="ev-busca" placeholder="Filtrar insumo..." oninput="renderEvolucao()" class="field" style="width:100%;padding-left:32px">
+      <!-- Mais filtros (oculto por padrão) -->
+      <div id="ci-mais-filtros" style="display:none;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="width:220px">
+          <div class="flbl">Grupo de insumos</div>
+          <select id="ev-grupo" class="field" style="width:100%;display:block" onchange="renderEvolucao()"><option value="">Todos</option></select>
+        </div>
+        <div style="width:240px">
+          <div class="flbl">Fornecedor</div>
+          <select id="ev-forn" class="field" style="width:100%;display:block" onchange="renderEvolucao()"><option value="">Todos</option></select>
+        </div>
+      </div>
+      <!-- Filtros linha 2: Visualizar + banner de comparação -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="flbl" style="margin:0">Visualizar</span>
+          <div style="display:flex;gap:4px">
+            <button id="ci-modo-qtd" class="ci-seg active" onclick="_ciSetModo('qtd')">Quantidade</button>
+            <button id="ci-modo-val" class="ci-seg" onclick="_ciSetModo('valor')">Valor (R$)</button>
+          </div>
+        </div>
+        <div id="ci-cmp-banner" class="ci-banner" style="display:none;flex:1"></div>
       </div>
       <!-- Sub-abas -->
       <div style="display:flex;gap:4px;border-bottom:1px solid #e2e8f0;margin-bottom:14px">
@@ -1372,10 +1392,52 @@ async function init() {
 // ── CONSUMO DE INSUMOS (antiga Evolução Mensal) ───────────────────
 let _evRows=[], _evPag=1, _evPorPag=10, _evMeses=[], _evModo='qtd', _evCompara='nenhuma', _ciVincForn=[], _ciFiltrosOk=false;
 let _ciResumoData=[], _ciChart={labels:[],qtd:[],valor:[]}, _ciChartModo='qtd';
+let _ciTipoVis='ano', _ciPeriodo={de:'2026-01',ate:'2026-12',cmp:null};
+
+// período selecionado conforme o tipo de visualização (Ano × Período personalizado)
+function _ciGetPeriodo(){
+  if(_ciTipoVis==='ano'){
+    const y=document.getElementById('ev-ano')?.value || String(new Date().getFullYear());
+    return {de:`${y}-01`, ate:`${y}-12`};
+  }
+  return {
+    de:document.getElementById('ev-de')?.value||'2026-01',
+    ate:document.getElementById('ev-ate')?.value||'2026-12'
+  };
+}
+
+function _ciSetTipoVis(t){
+  _ciTipoVis=t;
+  document.getElementById('ci-tv-ano').classList.toggle('active', t==='ano');
+  document.getElementById('ci-tv-custom').classList.toggle('active', t==='custom');
+  document.getElementById('ci-box-ano').style.display    = t==='ano'?'':'none';
+  document.getElementById('ci-box-custom').style.display = t==='custom'?'':'none';
+  renderEvolucao();
+}
+
+function _ciSetModo(m){
+  _evModo=m;
+  document.getElementById('ci-modo-qtd').classList.toggle('active', m==='qtd');
+  document.getElementById('ci-modo-val').classList.toggle('active', m==='valor');
+  renderEvolucao();
+}
+
+function _ciToggleMaisFiltros(){
+  const el=document.getElementById('ci-mais-filtros');
+  if(el)el.style.display = el.style.display==='none' ? 'flex' : 'none';
+}
+
+function _ciPopularAnos(){
+  const sel=document.getElementById('ev-ano');
+  if(sel&&!sel.options.length){
+    const atual=new Date().getFullYear();
+    for(let y=atual;y>=atual-4;y--){const o=document.createElement('option');o.value=y;o.textContent=y;sel.appendChild(o);}
+    sel.value=String(atual);
+  }
+}
 
 function _evGetMeses(){
-  const de=document.getElementById('ev-de')?.value||'2026-01';
-  const ate=document.getElementById('ev-ate')?.value||'2026-12';
+  const {de,ate}=_ciGetPeriodo();
   const meses=[];
   const LABELS=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
   let cur=de;
@@ -1415,11 +1477,7 @@ function _ciCompPeriodo(de,ate,modo){
 }
 
 async function _ciPopularFiltros(){
-  // Insumo
-  const selI=document.getElementById('ev-insumo');
-  if(selI&&selI.options.length<=1){
-    insumos.forEach(i=>{const o=document.createElement('option');o.value=i.id;o.textContent=i.nome;selI.appendChild(o);});
-  }
+  _ciPopularAnos();
   // Grupo (categorias distintas)
   const selG=document.getElementById('ev-grupo');
   if(selG&&selG.options.length<=1){
@@ -1448,16 +1506,37 @@ function _ciSubtab(which){
   document.getElementById('ci-subtab-resumo').classList.toggle('active', which==='resumo');
 }
 
+function _ciLabelMes(ym){
+  const L=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const [y,m]=ym.split('-').map(Number);
+  return `${L[m-1]}/${y}`;
+}
+// rótulos curtos das colunas TOTAL (com o ano quando dá)
+function _ciTotalLabels(){
+  const p=_ciPeriodo;
+  const ay=p.de.split('-')[0], ay2=p.ate.split('-')[0];
+  const atual = (ay===ay2) ? `TOTAL ${ay}` : 'TOTAL';
+  let cmp='TOTAL ANTERIOR';
+  if(p.cmp){ const cy=p.cmp.de.split('-')[0], cy2=p.cmp.ate.split('-')[0]; cmp = (cy===cy2) ? `TOTAL ${cy}` : 'TOTAL ANTERIOR'; }
+  return {atual,cmp};
+}
+function _ciRenderBanner(){
+  const el=document.getElementById('ci-cmp-banner');
+  if(!el)return;
+  const p=_ciPeriodo;
+  if(!p.cmp){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='';
+  el.innerHTML=`<span style="opacity:.7">Comparando</span> <b>${_ciLabelMes(p.de)} a ${_ciLabelMes(p.ate)}</b> <span style="opacity:.7">com</span> <b>${_ciLabelMes(p.cmp.de)} a ${_ciLabelMes(p.cmp.ate)}</b>.`;
+}
+
 // formata um valor de célula conforme o modo
 function _ciFmt(v){ return _evModo==='valor' ? (v?brl(v):'–') : (v>0?fmtQtd(v):'–'); }
 
 async function renderEvolucao(){
   await _ciPopularFiltros();
   const busca=(document.getElementById('ev-busca')?.value||'').toLowerCase();
-  const insId=document.getElementById('ev-insumo')?.value||'';
   const grupo=document.getElementById('ev-grupo')?.value||'';
   const fornId=document.getElementById('ev-forn')?.value||'';
-  _evModo=document.getElementById('ev-modo')?.value||'qtd';
   _evCompara=document.getElementById('ev-comparar')?.value||'nenhuma';
   const lojaId=document.getElementById('sel-loja')?.value||'';
   const lojaFiltro=lojaId?`&loja_id=eq.${lojaId}`:'';
@@ -1470,10 +1549,11 @@ async function renderEvolucao(){
   tbody.innerHTML=`<tr><td colspan="${ncols}" class="empty">Calculando...</td></tr>`;
 
   try{
-    const de=document.getElementById('ev-de')?.value||'2026-01';
-    const ate=document.getElementById('ev-ate')?.value||'2026-12';
+    const {de,ate}=_ciGetPeriodo();
     const prevP=_ciCompPeriodo(de,ate,'anterior');       // período anterior (sempre — p/ o Resumo)
     const anoP =_ciCompPeriodo(de,ate,'ano_anterior');
+    _ciPeriodo={de,ate,cmp:_ciCompPeriodo(de,ate,_evCompara)};
+    _ciRenderBanner();
     const [saisAll, saisPrev, saisAno]=await Promise.all([
       apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${de}-01&criado_em=lte.${ate}-31T23:59:59`),
       apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${prevP.de}-01&criado_em=lte.${prevP.ate}-31T23:59:59`),
@@ -1484,7 +1564,6 @@ async function renderEvolucao(){
 
     const insForn = fornId ? new Set(_ciVincForn.filter(v=>v.fornecedor_id===fornId).map(v=>v.insumo_id)) : null;
     let insFilt=insumos.filter(i=>i.ativo!==false);
-    if(insId)insFilt=insFilt.filter(i=>i.id===insId);
     if(grupo)insFilt=insFilt.filter(i=>(i.categoria||'')===grupo);
     if(insForn)insFilt=insFilt.filter(i=>insForn.has(i.id));
     if(busca)insFilt=insFilt.filter(i=>i.nome.toLowerCase().includes(busca));
@@ -1534,9 +1613,10 @@ function _ciRenderThead(){
   if(!thead)return;
   let h=`<th style="min-width:160px;font-size:11px">INSUMO</th><th class="r" style="font-size:11px">UN</th>`;
   h+=_evMeses.map(m=>`<th class="r" style="font-size:11px">${m.label}</th>`).join('');
-  h+=`<th class="r" style="font-size:11px">MÉDIA MENSAL</th><th class="r" style="font-size:11px">TOTAL</th>`;
+  const lbl=_ciTotalLabels();
+  h+=`<th class="r" style="font-size:11px">MÉDIA MENSAL</th><th class="r" style="font-size:11px">${lbl.atual}</th>`;
   if(_evCompara!=='nenhuma'){
-    h+=`<th class="r" style="font-size:11px">TOTAL COMPARADO</th><th class="r" style="font-size:11px">DIFERENÇA</th><th class="r" style="font-size:11px">DIF. %</th>`;
+    h+=`<th class="r" style="font-size:11px">${lbl.cmp}</th><th class="r" style="font-size:11px">DIFERENÇA</th><th class="r" style="font-size:11px">DIF. %</th>`;
   }
   thead.innerHTML=h;
 }
