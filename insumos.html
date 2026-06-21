@@ -857,15 +857,26 @@ function editarItemCadastro(id){
   _cadEditId = id;
   const idx = todos.indexOf(ins);
   const setVal=(elId,v)=>{const e=document.getElementById(elId);if(e)e.value=v!=null?v:'';};
+  // igual ao setVal, mas se o valor não estiver entre as <option> do select, injeta a opção
+  // (evita campo em branco ao editar item cujo grupo/unidade não está na lista padrão)
+  const setSelVal=(elId,v)=>{
+    const e=document.getElementById(elId); if(!e) return;
+    v=(v!=null&&v!=='')?String(v):'';
+    if(v && !Array.from(e.options).some(o=>o.value===v)){
+      const o=document.createElement('option'); o.value=v; o.textContent=v; e.appendChild(o);
+    }
+    e.value=v;
+    if(e._ssSync) e._ssSync();   // atualiza o seletor com busca, se houver
+  };
   setVal('cad-codigo', fmtCodigoInterno(ins.codigo_interno));
   setVal('cad-nome', ins.nome||'');
   setVal('cad-ativo', ins.ativo===false?'false':'true');
-  setVal('cad-tipo', ins.tipo_item||'');
-  setVal('cad-familia', ins.familia||'');
-  setVal('cad-grupo', ins.categoria||'');
-  setVal('cad-subgrupo', ins.subgrupo||'');
+  setSelVal('cad-tipo', ins.tipo_item||'');
+  setSelVal('cad-familia', ins.familia||'');
+  setSelVal('cad-grupo', ins.categoria||'');
+  setSelVal('cad-subgrupo', ins.subgrupo||'');
   setVal('cad-cmv', ins.participa_cmv==='nao'?'nao':'sim');
-  setVal('cad-und-med', ins.unidade_medida||'');
+  setSelVal('cad-und-med', ins.unidade_medida||'');
   setVal('cad-tipo-baixa', ins.tipo_baixa||'consumo');
   setVal('cad-deposito', ins.deposito||'');
   setVal('cad-ncm', ins.ncm||'');
