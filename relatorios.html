@@ -126,7 +126,7 @@
   .ci-card th{padding:4px 6px;font-weight:600;border-bottom:1px solid #eef2f7}
   .ci-card td{padding:5px 6px;font-size:12px}
   .ci-card table{width:100%}
-  .ci-card td:nth-child(2),.ci-card th:nth-child(2){max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ci-card td:nth-child(2),.ci-card th:nth-child(2){max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ci-card td.r,.ci-card th.r{white-space:nowrap}
   .ci-card th:first-child,.ci-card td:first-child{width:22px}
   .ci-chip{background:#f1f5f9;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;font-family:inherit;color:#64748b;cursor:pointer}
@@ -1709,7 +1709,7 @@ function _ciRenderResumo(){
   };
 
   box.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:14px;margin-bottom:14px">
       ${cardsConsumo}${cardFin}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:14px">
