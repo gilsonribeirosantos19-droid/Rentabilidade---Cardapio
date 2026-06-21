@@ -1709,10 +1709,8 @@ function _ciRenderResumo(){
   };
 
   box.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:14px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;align-items:start">
       ${cardsConsumo}${cardFin}
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:14px">
       ${_ciCardVar('Maiores crescimentos',cresc,'#16a34a')}
       ${_ciCardVar('Maiores reduções',reduc,'#e11d48')}
       <div class="ci-card">
