@@ -1396,7 +1396,7 @@ async function init() {
 // ── CONSUMO DE INSUMOS (antiga Evolução Mensal) ───────────────────
 let _evRows=[], _evPag=1, _evPorPag=10, _evMeses=[], _evModo='qtd', _evCompara='nenhuma', _ciVincForn=[], _ciFiltrosOk=false;
 let _ciResumoData=[], _ciChart={labels:[],qtd:[],valor:[]}, _ciChartModo='qtd';
-let _ciTipoVis='ano', _ciPeriodo={de:'2026-01',ate:'2026-12',cmp:null}, _ciTopConsumo=5, _ciTopFin=5;
+let _ciTipoVis='ano', _ciPeriodo={de:'2026-01',ate:'2026-12',cmp:null}, _ciTop=5;
 
 // período selecionado conforme o tipo de visualização (Ano × Período personalizado)
 function _ciGetPeriodo(){
@@ -1674,11 +1674,11 @@ function _ciPct(v,tot){ return tot>0?(v/tot*100).toLocaleString('pt-BR',{minimum
 
 // opções do seletor Top N (5/10/20/Todos)
 function _ciTopOpts(sel){ return [5,10,20,0].map(n=>`<option value="${n}"${n===sel?' selected':''}>${n===0?'Todos':'Top '+n}</option>`).join(''); }
-function _ciSetTop(which,val){ const n=+val; if(which==='consumo')_ciTopConsumo=n; else _ciTopFin=n; _ciRenderResumo(); }
+function _ciSetTop(val){ _ciTop=+val; _ciRenderResumo(); }
 
 // Card "Mais consumidos" (1 card, respeita unidade + Top N)
 function _ciCardConsumo(arr, totalGrp, unidLabel){
-  const lim=_ciTopConsumo===0?arr.length:_ciTopConsumo;
+  const lim=_ciTop===0?arr.length:_ciTop;
   const rows=arr.slice(0,lim).map((r,i)=>`<tr>
     <td style="color:#94a3b8;font-size:12px">${i+1}.</td>
     <td style="color:#334155;font-size:13px">${esc(r.ins.nome)}</td>
@@ -1688,7 +1688,7 @@ function _ciCardConsumo(arr, totalGrp, unidLabel){
   return `<div class="ci-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
       <div style="font-weight:700;color:#0f172a">Mais consumidos</div>
-      <select class="field" style="width:108px;height:30px;padding:0 8px;font-size:12px" onchange="_ciSetTop('consumo',this.value)">${_ciTopOpts(_ciTopConsumo)}</select>
+      <select class="field" style="width:108px;height:30px;padding:0 8px;font-size:12px" onchange="_ciSetTop(this.value)">${_ciTopOpts(_ciTop)}</select>
     </div>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Unidade: ${esc(unidLabel)}</div>
     <table style="width:100%;border-collapse:collapse;text-align:left">
@@ -1701,7 +1701,7 @@ function _ciCardConsumo(arr, totalGrp, unidLabel){
 
 // Card "Maior impacto financeiro (R$)" (1 card, respeita unidade + Top N)
 function _ciCardFin(arr, totalValor, unidLabel){
-  const lim=_ciTopFin===0?arr.length:_ciTopFin;
+  const lim=_ciTop===0?arr.length:_ciTop;
   const rows=arr.slice(0,lim).map((r,i)=>`<tr>
     <td style="color:#94a3b8;font-size:12px">${i+1}.</td>
     <td style="color:#334155;font-size:13px">${esc(r.ins.nome)}</td>
@@ -1711,7 +1711,7 @@ function _ciCardFin(arr, totalValor, unidLabel){
   return `<div class="ci-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
       <div style="font-weight:700;color:#0f172a">Maior impacto financeiro <span style="color:#94a3b8;font-weight:500;font-size:12px">(R$)</span></div>
-      <select class="field" style="width:108px;height:30px;padding:0 8px;font-size:12px" onchange="_ciSetTop('fin',this.value)">${_ciTopOpts(_ciTopFin)}</select>
+      <select class="field" style="width:108px;height:30px;padding:0 8px;font-size:12px" onchange="_ciSetTop(this.value)">${_ciTopOpts(_ciTop)}</select>
     </div>
     <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Unidade: ${esc(unidLabel)}</div>
     <table style="width:100%;border-collapse:collapse;text-align:left">
@@ -1734,7 +1734,7 @@ function _ciDrawChart(modo){
   const data=_ciChartModo==='valor'?_ciChart.valor:_ciChart.qtd;
   const labels=_ciChart.labels;
   if(!data.length){ el.innerHTML='<div class="empty">Sem dados</div>'; return; }
-  const W=760,H=240,padL=58,padR=16,padT=14,padB=28;
+  const W=1200,H=360,padL=70,padR=20,padT=18,padB=34;
   const max=Math.max(...data,1), n=data.length;
   const x=i=> n<=1?padL:(padL+(W-padL-padR)*i/(n-1));
   const y=v=> padT+(H-padT-padB)*(1-v/max);
@@ -1775,17 +1775,17 @@ function _ciRenderResumo(){
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px;margin-bottom:14px;align-items:start">
       ${_ciCardConsumo(consumoArr, totalQtdGeral, unidLabel)}
       ${_ciCardFin(finArr, totalValor, unidLabel)}
-      <div class="ci-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
-          <div style="font-weight:700;color:#0f172a">Evolução do consumo <span style="color:#94a3b8;font-weight:500;font-size:12px">(total do período)</span></div>
-          <div style="display:flex;gap:4px">
-            <button id="ci-chart-qtd" class="ci-chip active" onclick="_ciDrawChart('qtd')">Quantidade</button>
-            <button id="ci-chart-val" class="ci-chip" onclick="_ciDrawChart('valor')">Valor (R$)</button>
-          </div>
+    </div>
+    <div class="ci-card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+        <div style="font-weight:700;color:#0f172a">Evolução do consumo <span style="color:#94a3b8;font-weight:500;font-size:12px">(total do período)</span></div>
+        <div style="display:flex;gap:4px">
+          <button id="ci-chart-qtd" class="ci-chip active" onclick="_ciDrawChart('qtd')">Quantidade</button>
+          <button id="ci-chart-val" class="ci-chip" onclick="_ciDrawChart('valor')">Valor (R$)</button>
         </div>
-        <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Unidade: ${esc(unidLabel)}</div>
-        <div id="ci-chart"></div>
       </div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:8px">Unidade: ${esc(unidLabel)}</div>
+      <div id="ci-chart"></div>
     </div>
     <div style="color:#94a3b8;font-size:12px;margin-top:6px">Os dados apresentados consideram apenas as saídas de estoque (consumo efetivo). Entradas de notas fiscais não são consideradas.</div>`;
   _ciDrawChart(_ciChartModo);
