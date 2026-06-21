@@ -1156,7 +1156,8 @@ async function processarNfeFiscal(nfeId, silent = false) {
     if(fMatch) { fornId = fMatch.id; fornNome = fMatch.nome; }
   }
 
-  const dataStr = nfe.data_emissao?.split('T')[0] || hoje();
+  // data LOCAL do Brasil (a emissao de madrugada vem como 03:00 UTC do dia seguinte; split pegava o dia errado)
+  const dataStr = nfe.data_emissao ? new Date(nfe.data_emissao).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}) : hoje();
   let ok = 0;
 
   for(const item of currentNfeItens) {
