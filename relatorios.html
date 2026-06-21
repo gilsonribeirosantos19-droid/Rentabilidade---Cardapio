@@ -1595,7 +1595,7 @@ function _ciCardConsumo(unidade, arr, totalGrp){
   return `<div class="ci-card">
     <div style="font-weight:700;color:#0f172a;margin-bottom:8px">Mais consumidos <span style="color:#94a3b8;font-weight:500;font-size:12px">(${esc(unidade||'—')})</span></div>
     <table style="width:100%;border-collapse:collapse;text-align:left">
-      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r">CONSUMO (${u})</th><th class="r">% DO TOTAL</th></tr></thead>
+      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r" style="white-space:nowrap">CONSUMO</th><th class="r" style="white-space:nowrap">% TOTAL</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     <div style="text-align:center;margin-top:8px"><span class="ci-vertodos" onclick="_ciSubtab('consumo')">Ver todos</span></div>
@@ -1613,7 +1613,7 @@ function _ciCardFin(arr, totalValor){
   return `<div class="ci-card">
     <div style="font-weight:700;color:#0f172a;margin-bottom:8px">Maior impacto financeiro <span style="color:#94a3b8;font-weight:500;font-size:12px">(R$)</span></div>
     <table style="width:100%;border-collapse:collapse;text-align:left">
-      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r">VALOR CONSUMIDO</th><th class="r">% DO TOTAL</th></tr></thead>
+      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r" style="white-space:nowrap">VALOR</th><th class="r" style="white-space:nowrap">% TOTAL</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     <div style="text-align:center;margin-top:8px"><span class="ci-vertodos" onclick="_ciSubtab('consumo')">Ver todos</span></div>
@@ -1681,12 +1681,12 @@ function _ciRenderResumo(){
   const cardsConsumo=unidades.map(u=>{
     const arr=[...byUn[u]].sort((a,b)=>b.totalQtd-a.totalQtd);
     const totalGrp=arr.reduce((s,r)=>s+r.totalQtd,0);
-    return _ciCardConsumo(u, arr.slice(0,5), totalGrp);
+    return _ciCardConsumo(u, arr.slice(0,10), totalGrp);
   }).join('');
 
   // Impacto financeiro
   const totalValor=data.reduce((s,r)=>s+r.totalValor,0);
-  const cardFin=_ciCardFin([...data].sort((a,b)=>b.totalValor-a.totalValor).slice(0,5), totalValor);
+  const cardFin=_ciCardFin([...data].sort((a,b)=>b.totalValor-a.totalValor).slice(0,10), totalValor);
 
   // Crescimentos / reduções (média atual × média anterior)
   const variacoes=data.map(r=>{
@@ -1694,8 +1694,8 @@ function _ciRenderResumo(){
     const variaPct=r.mediaPrev>0?(varia/r.mediaPrev*100):(r.mediaQtd>0?100:0);
     return {ins:r.ins,un:r.un,mediaQtd:r.mediaQtd,mediaPrev:r.mediaPrev,varia,variaPct};
   });
-  const cresc=variacoes.filter(t=>t.varia>0).sort((a,b)=>b.variaPct-a.variaPct).slice(0,5);
-  const reduc=variacoes.filter(t=>t.varia<0).sort((a,b)=>a.variaPct-b.variaPct).slice(0,5);
+  const cresc=variacoes.filter(t=>t.varia>0).sort((a,b)=>b.variaPct-a.variaPct).slice(0,10);
+  const reduc=variacoes.filter(t=>t.varia<0).sort((a,b)=>a.variaPct-b.variaPct).slice(0,10);
 
   // Dados do gráfico (total por mês)
   _ciChart={
