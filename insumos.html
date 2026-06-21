@@ -591,7 +591,9 @@ function filtrar(){
   let lista=todos;
   if(q) lista=lista.filter(i=>normalizeSearch(i.nome).includes(normalizeSearch(q))||normalizeSearch(i.categoria||'').includes(normalizeSearch(q)));
   if(filCat) lista=lista.filter(i=>(i.categoria||'')===filCat);
-  if(filStatus) lista=lista.filter(i=>getStatus(i)===filStatus);
+  // Status: 'false' = só inativos; 'true' ou vazio (padrão) = só ativos
+  if(filStatus==='false') lista=lista.filter(i=>i.ativo===false);
+  else lista=lista.filter(i=>i.ativo!==false);
   if(filEstoque==='em') lista=lista.filter(i=>getStatus(i)==='ativo');
   else if(filEstoque==='baixo') lista=lista.filter(i=>getStatus(i)==='atencao');
   else if(filEstoque==='sem') lista=lista.filter(i=>getStatus(i)==='critico');
@@ -799,10 +801,10 @@ async function carregarInsumos(){
   if(tbody) tbody.innerHTML='<tr><td colspan="7" class="empty">Carregando...</td></tr>';
   try{
     const [data, saldosData]=await Promise.all([
-      api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      api(`insumos?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}`).catch(()=>[]),
     ]);
-    todos=data.filter(i=>i.ativo!==false);
+    todos=data||[];   // carrega TODOS (ativos e inativos); o filtro de Status decide o que mostrar
     _saldos=saldosData;
     // popular categorias no filtro
     const selCat=document.getElementById('fil-cat');
@@ -947,7 +949,9 @@ function filtrarProdutos(){
   if(filFam)    lista=lista.filter(i=>(i.familia||'')==filFam);
   if(filGrupo)  lista=lista.filter(i=>(i.categoria||'')==filGrupo);
   if(filSub)    lista=lista.filter(i=>(i.subgrupo||'')==filSub);
-  if(filStatus!==''&&filStatus!=null) lista=lista.filter(i=>String(i.ativo!==false)===filStatus);
+  // Status: 'false' = só inativos; 'true' ou vazio (padrão) = só ativos
+  if(filStatus==='false') lista=lista.filter(i=>i.ativo===false);
+  else lista=lista.filter(i=>i.ativo!==false);
   if(filEstq)   lista=lista.filter(i=>getStatus(i)===filEstq);
   _prodFiltrado=lista;
   renderProdutos();
