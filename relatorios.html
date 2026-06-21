@@ -123,6 +123,11 @@
   .ci-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px}
   .ci-kpi-val{font-size:22px;font-weight:800;color:#0f172a;font-family:'DM Mono',monospace}
   .ci-kpi-lbl{font-size:12px;color:#64748b;margin-top:2px}
+  .ci-card th{padding:4px 6px;font-weight:600;border-bottom:1px solid #eef2f7}
+  .ci-card td{padding:5px 6px}
+  .ci-chip{background:#f1f5f9;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;font-family:inherit;color:#64748b;cursor:pointer}
+  .ci-chip.active{background:#3b82f6;color:#fff}
+  .ci-vertodos{color:#3b82f6;font-size:12px;cursor:pointer;font-weight:600}
   .skeleton{animation:pulse 1.5s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:.35}50%{opacity:.7}}
   .toast{position:fixed;bottom:24px;right:24px;background:var(--text1);color:#fff;border-radius:var(--radius);
@@ -1362,6 +1367,7 @@ async function init() {
 
 // ── CONSUMO DE INSUMOS (antiga Evolução Mensal) ───────────────────
 let _evRows=[], _evPag=1, _evPorPag=10, _evMeses=[], _evModo='qtd', _evCompara='nenhuma', _ciVincForn=[], _ciFiltrosOk=false;
+let _ciResumoData=[], _ciChart={labels:[],qtd:[],valor:[]}, _ciChartModo='qtd';
 
 function _evGetMeses(){
   const de=document.getElementById('ev-de')?.value||'2026-01';
@@ -1462,11 +1468,15 @@ async function renderEvolucao(){
   try{
     const de=document.getElementById('ev-de')?.value||'2026-01';
     const ate=document.getElementById('ev-ate')?.value||'2026-12';
-    const cmp=_ciCompPeriodo(de,ate,_evCompara);
-    const [saisAll, saisCmp]=await Promise.all([
+    const prevP=_ciCompPeriodo(de,ate,'anterior');       // período anterior (sempre — p/ o Resumo)
+    const anoP =_ciCompPeriodo(de,ate,'ano_anterior');
+    const [saisAll, saisPrev, saisAno]=await Promise.all([
       apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${de}-01&criado_em=lte.${ate}-31T23:59:59`),
-      cmp ? apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${cmp.de}-01&criado_em=lte.${cmp.ate}-31T23:59:59`) : Promise.resolve(null)
+      apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${prevP.de}-01&criado_em=lte.${prevP.ate}-31T23:59:59`),
+      _evCompara==='ano_anterior' ? apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}${lojaFiltro}&criado_em=gte.${anoP.de}-01&criado_em=lte.${anoP.ate}-31T23:59:59`) : Promise.resolve(null)
     ]);
+    // comparação da TABELA conforme o filtro escolhido
+    const saisCmp = _evCompara==='nenhuma' ? null : (_evCompara==='anterior' ? saisPrev : saisAno);
 
     const insForn = fornId ? new Set(_ciVincForn.filter(v=>v.fornecedor_id===fornId).map(v=>v.insumo_id)) : null;
     let insFilt=insumos.filter(i=>i.ativo!==false);
@@ -1476,6 +1486,17 @@ async function renderEvolucao(){
     if(busca)insFilt=insFilt.filter(i=>i.nome.toLowerCase().includes(busca));
 
     const val=s=> _evModo==='valor' ? (Number(s.quantidade)||0)*_ciCusto(s.insumo_id) : (Number(s.quantidade)||0);
+
+    // dados do RESUMO (sempre com qtd + valor + média anterior, independente do toggle)
+    _ciResumoData=insFilt.map(ins=>{
+      const cust=_ciCusto(ins.id);
+      const porMesQtd=_evMeses.map(m=> saisAll.filter(s=>s.insumo_id===ins.id&&(s.criado_em||'').startsWith(m.key)).reduce((a,s)=>a+(Number(s.quantidade)||0),0));
+      const totalQtd=porMesQtd.reduce((a,v)=>a+v,0);
+      const prevQtd=saisPrev.filter(s=>s.insumo_id===ins.id).reduce((a,s)=>a+(Number(s.quantidade)||0),0);
+      const nM=_evMeses.length||1;
+      return {ins,un:(ins.unidade_medida||'—').toLowerCase(),porMesQtd,totalQtd,cust,
+              totalValor:totalQtd*cust, mediaQtd:totalQtd/nM, mediaPrev:prevQtd/nM};
+    }).filter(r=>r.totalQtd!==0 || r.mediaPrev!==0);
 
     _evRows=insFilt.map(ins=>{
       const porMes=_evMeses.map(m=>
@@ -1560,52 +1581,149 @@ function _renderEvPage(){
   btns.innerHTML=h;
 }
 
+function _ciPct(v,tot){ return tot>0?(v/tot*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':'–'; }
+
+// Card "Mais consumidos" por unidade de medida
+function _ciCardConsumo(unidade, arr, totalGrp){
+  const u=esc((unidade||'—').toUpperCase());
+  const rows=arr.map((r,i)=>`<tr>
+    <td style="color:#94a3b8;font-size:12px">${i+1}.</td>
+    <td style="color:#334155;font-size:13px">${esc(r.ins.nome)}</td>
+    <td class="r mono" style="color:#0f172a;font-size:13px">${fmtQtd(r.totalQtd)}</td>
+    <td class="r mono" style="color:#64748b;font-size:12px">${_ciPct(r.totalQtd,totalGrp)}</td>
+  </tr>`).join('');
+  return `<div class="ci-card">
+    <div style="font-weight:700;color:#0f172a;margin-bottom:8px">Mais consumidos <span style="color:#94a3b8;font-weight:500;font-size:12px">(${esc(unidade||'—')})</span></div>
+    <table style="width:100%;border-collapse:collapse;text-align:left">
+      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r">CONSUMO (${u})</th><th class="r">% DO TOTAL</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="text-align:center;margin-top:8px"><span class="ci-vertodos" onclick="_ciSubtab('consumo')">Ver todos</span></div>
+  </div>`;
+}
+
+// Card "Maior impacto financeiro (R$)"
+function _ciCardFin(arr, totalValor){
+  const rows=arr.map((r,i)=>`<tr>
+    <td style="color:#94a3b8;font-size:12px">${i+1}.</td>
+    <td style="color:#334155;font-size:13px">${esc(r.ins.nome)}</td>
+    <td class="r mono" style="color:#0f172a;font-size:13px">${brl(r.totalValor)}</td>
+    <td class="r mono" style="color:#64748b;font-size:12px">${_ciPct(r.totalValor,totalValor)}</td>
+  </tr>`).join('');
+  return `<div class="ci-card">
+    <div style="font-weight:700;color:#0f172a;margin-bottom:8px">Maior impacto financeiro <span style="color:#94a3b8;font-weight:500;font-size:12px">(R$)</span></div>
+    <table style="width:100%;border-collapse:collapse;text-align:left">
+      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r">VALOR CONSUMIDO</th><th class="r">% DO TOTAL</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="text-align:center;margin-top:8px"><span class="ci-vertodos" onclick="_ciSubtab('consumo')">Ver todos</span></div>
+  </div>`;
+}
+
+// Card "Maiores crescimentos / reduções" (média atual × média anterior)
+function _ciCardVar(titulo, arr, cor){
+  const rows=arr.length?arr.map((t,i)=>{
+    const sign=t.varia>0?'+':'';
+    return `<tr>
+      <td style="color:#94a3b8;font-size:12px">${i+1}.</td>
+      <td style="color:#334155;font-size:13px">${esc(t.ins.nome)}</td>
+      <td class="r mono" style="color:#334155;font-size:12px">${fmtQtd(t.mediaQtd)} ${esc(t.un)}</td>
+      <td class="r mono" style="color:#64748b;font-size:12px">${fmtQtd(t.mediaPrev)} ${esc(t.un)}</td>
+      <td class="r mono" style="color:${cor};font-size:12px">${sign}${fmtQtd(t.varia)} ${esc(t.un)}</td>
+      <td class="r mono" style="color:${cor};font-size:12px">${sign}${(t.variaPct||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}%</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" style="color:#94a3b8;font-size:12px;padding:8px 6px">Sem dados</td></tr>`;
+  return `<div class="ci-card">
+    <div style="font-weight:700;color:#0f172a;margin-bottom:8px">${titulo} <span style="color:#94a3b8;font-weight:500;font-size:12px">(média atual × média anterior)</span></div>
+    <table style="width:100%;border-collapse:collapse;text-align:left">
+      <thead><tr style="color:#94a3b8;font-size:10px"><th>#</th><th>INSUMO</th><th class="r">MÉDIA ATUAL</th><th class="r">MÉDIA ANTERIOR</th><th class="r">VARIAÇÃO</th><th class="r">VARIAÇÃO (%)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function _ciKfmt(v){ v=Number(v)||0; const a=Math.abs(v); if(a>=1e6)return (v/1e6).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mi'; if(a>=1e3)return (v/1e3).toLocaleString('pt-BR',{maximumFractionDigits:0})+' mil'; return v.toLocaleString('pt-BR',{maximumFractionDigits:0}); }
+
+function _ciDrawChart(modo){
+  _ciChartModo=modo||_ciChartModo;
+  const bq=document.getElementById('ci-chart-qtd'), bv=document.getElementById('ci-chart-val');
+  if(bq)bq.classList.toggle('active',_ciChartModo==='qtd');
+  if(bv)bv.classList.toggle('active',_ciChartModo==='valor');
+  const el=document.getElementById('ci-chart');
+  if(!el)return;
+  const data=_ciChartModo==='valor'?_ciChart.valor:_ciChart.qtd;
+  const labels=_ciChart.labels;
+  if(!data.length){ el.innerHTML='<div class="empty">Sem dados</div>'; return; }
+  const W=760,H=240,padL=58,padR=16,padT=14,padB=28;
+  const max=Math.max(...data,1), n=data.length;
+  const x=i=> n<=1?padL:(padL+(W-padL-padR)*i/(n-1));
+  const y=v=> padT+(H-padT-padB)*(1-v/max);
+  const line=data.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const area=`${padL.toFixed(1)},${y(0).toFixed(1)} ${line} ${x(n-1).toFixed(1)},${y(0).toFixed(1)}`;
+  const fmtY=v=>_ciChartModo==='valor'?('R$ '+_ciKfmt(v)):_ciKfmt(v);
+  let grid='';
+  for(let g=0;g<=2;g++){ const gv=max*g/2, gy=y(gv); grid+=`<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W-padR}" y2="${gy.toFixed(1)}" stroke="#eef2f7"/><text x="${padL-8}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-size="10" fill="#94a3b8">${fmtY(gv)}</text>`; }
+  const xlabels=labels.map((l,i)=> (n<=12||i%2===0)?`<text x="${x(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10" fill="#94a3b8">${esc(l)}</text>`:'').join('');
+  const dots=data.map((v,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3" fill="#fff" stroke="#3b82f6" stroke-width="2"/>`).join('');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${grid}<polygon points="${area}" fill="rgba(59,130,246,.10)"/><polyline points="${line}" fill="none" stroke="#3b82f6" stroke-width="2"/>${dots}${xlabels}</svg>`;
+}
+
 function _ciRenderResumo(){
   const box=document.getElementById('ci-resumo-body');
   if(!box)return;
-  const rows=_evRows;
-  if(!rows.length){ box.innerHTML='<div class="empty">Nenhuma saída encontrada no período.</div>'; return; }
-  const un=_evModo==='valor'?'R$':'qtd';
-  const totalGeral=rows.reduce((a,r)=>a+r.total,0);
-  const mediaGeral=_evMeses.length?totalGeral/_evMeses.length:0;
-  const top=[...rows].sort((a,b)=>b.total-a.total).slice(0,10);
-  // tendência: usa a comparação se houver; senão, último mês vs primeiro mês
-  const trend=rows.map(r=>{
-    let d;
-    if(_evCompara!=='nenhuma') d=r.dif||0;
-    else { const n=r.porMes; d=(n[n.length-1]||0)-(n[0]||0); }
-    return {ins:r.ins,d};
+  const data=_ciResumoData||[];
+  if(!data.length){ box.innerHTML='<div class="empty">Nenhuma saída encontrada no período.</div>'; return; }
+
+  // Mais consumidos por unidade de medida
+  const byUn={};
+  data.forEach(r=>{ const u=r.un||'—'; (byUn[u]=byUn[u]||[]).push(r); });
+  const unidades=Object.keys(byUn).sort((a,b)=> byUn[b].reduce((s,r)=>s+r.totalQtd,0)-byUn[a].reduce((s,r)=>s+r.totalQtd,0));
+  const cardsConsumo=unidades.map(u=>{
+    const arr=[...byUn[u]].sort((a,b)=>b.totalQtd-a.totalQtd);
+    const totalGrp=arr.reduce((s,r)=>s+r.totalQtd,0);
+    return _ciCardConsumo(u, arr.slice(0,5), totalGrp);
+  }).join('');
+
+  // Impacto financeiro
+  const totalValor=data.reduce((s,r)=>s+r.totalValor,0);
+  const cardFin=_ciCardFin([...data].sort((a,b)=>b.totalValor-a.totalValor).slice(0,5), totalValor);
+
+  // Crescimentos / reduções (média atual × média anterior)
+  const variacoes=data.map(r=>{
+    const varia=r.mediaQtd-r.mediaPrev;
+    const variaPct=r.mediaPrev>0?(varia/r.mediaPrev*100):(r.mediaQtd>0?100:0);
+    return {ins:r.ins,un:r.un,mediaQtd:r.mediaQtd,mediaPrev:r.mediaPrev,varia,variaPct};
   });
-  const cresc=[...trend].filter(t=>t.d>0).sort((a,b)=>b.d-a.d).slice(0,5);
-  const reduc=[...trend].filter(t=>t.d<0).sort((a,b)=>a.d-b.d).slice(0,5);
+  const cresc=variacoes.filter(t=>t.varia>0).sort((a,b)=>b.variaPct-a.variaPct).slice(0,5);
+  const reduc=variacoes.filter(t=>t.varia<0).sort((a,b)=>a.variaPct-b.variaPct).slice(0,5);
 
-  const lista=(arr,cor,sign)=> arr.length
-    ? arr.map(t=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #f1f5f9">
-        <span style="color:#334155;font-size:13px">${esc(t.ins.nome)}</span>
-        <span class="mono" style="color:${cor};font-size:13px;font-weight:600;white-space:nowrap">${sign||''}${_evModo==='valor'?brl(Math.abs(t.d)):fmtQtd(Math.abs(t.d))}</span>
-      </div>`).join('')
-    : '<div style="color:#94a3b8;font-size:13px;padding:6px 0">Sem dados</div>';
-
-  const topLista=top.map((r,i)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #f1f5f9">
-      <span style="color:#334155;font-size:13px">${i+1}. ${esc(r.ins.nome)}</span>
-      <span class="mono" style="color:#0f172a;font-size:13px;font-weight:600;white-space:nowrap">${_evModo==='valor'?brl(r.total):fmtQtd(r.total)+' '+esc(r.ins.unidade_medida||'')}</span>
-    </div>`).join('');
-
-  const cmpNote=_evCompara==='nenhuma'
-    ? '<span style="color:#94a3b8;font-size:11px">(último mês × primeiro mês)</span>'
-    : '<span style="color:#94a3b8;font-size:11px">(vs período comparado)</span>';
+  // Dados do gráfico (total por mês)
+  _ciChart={
+    labels:_evMeses.map(m=>m.label),
+    qtd:_evMeses.map((m,i)=>data.reduce((s,r)=>s+(r.porMesQtd[i]||0),0)),
+    valor:_evMeses.map((m,i)=>data.reduce((s,r)=>s+(r.porMesQtd[i]||0)*r.cust,0)),
+  };
 
   box.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px">
-      <div class="ci-card"><div class="ci-kpi-val">${_evModo==='valor'?brl(totalGeral):fmtQtd(totalGeral)}</div><div class="ci-kpi-lbl">Total consumido no período</div></div>
-      <div class="ci-card"><div class="ci-kpi-val">${_evModo==='valor'?brl(mediaGeral):fmtQtd(mediaGeral)}</div><div class="ci-kpi-lbl">Média mensal geral (${_evMeses.length} ${_evMeses.length===1?'mês':'meses'})</div></div>
-      <div class="ci-card"><div class="ci-kpi-val">${rows.length}</div><div class="ci-kpi-lbl">Insumos com consumo no período</div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:14px">
+      ${cardsConsumo}${cardFin}
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
-      <div class="ci-card"><div style="font-weight:700;color:#0f172a;margin-bottom:8px">Mais consumidos</div>${topLista}</div>
-      <div class="ci-card"><div style="font-weight:700;color:#0f172a;margin-bottom:8px">Maiores crescimentos ${cmpNote}</div>${lista(cresc,'#16a34a','+')}</div>
-      <div class="ci-card"><div style="font-weight:700;color:#0f172a;margin-bottom:8px">Maiores reduções ${cmpNote}</div>${lista(reduc,'#e11d48','-')}</div>
-    </div>`;
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:14px">
+      ${_ciCardVar('Maiores crescimentos',cresc,'#16a34a')}
+      ${_ciCardVar('Maiores reduções',reduc,'#e11d48')}
+      <div class="ci-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-weight:700;color:#0f172a">Evolução do consumo <span style="color:#94a3b8;font-weight:500;font-size:12px">(total do período)</span></div>
+          <div style="display:flex;gap:4px">
+            <button id="ci-chart-qtd" class="ci-chip active" onclick="_ciDrawChart('qtd')">Quantidade</button>
+            <button id="ci-chart-val" class="ci-chip" onclick="_ciDrawChart('valor')">Valor (R$)</button>
+          </div>
+        </div>
+        <div id="ci-chart"></div>
+      </div>
+    </div>
+    <div style="color:#94a3b8;font-size:12px;margin-top:6px">Os dados apresentados consideram apenas as saídas de estoque (consumo efetivo). Entradas de notas fiscais não são consideradas.</div>`;
+  _ciDrawChart(_ciChartModo);
 }
 
 function exportarEvolucao(){
