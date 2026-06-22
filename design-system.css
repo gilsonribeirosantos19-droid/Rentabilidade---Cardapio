@@ -263,6 +263,25 @@ input[type="date"]:focus, select:focus {
   color: #fff !important;
 }
 
+/* ── BARRA DE FILTROS PADRÃO: rótulos + alinhamento + interruptores ──
+   Use: <div class="ds-filterbar"> com <div class="ds-field"><label>..</label> input </div>
+   e a área de botões em <div class="ds-actions">. Toggles viram <label class="ds-switch">. */
+.ds-filterbar { display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; }
+.ds-filterbar .ds-field { display:flex; flex-direction:column; gap:6px; }
+.ds-filterbar .ds-field > label {
+  font-size:10.5px; font-weight:600; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--ds-text-3); margin:0;
+}
+.ds-filterbar .ds-field.ds-grow { flex:1; min-width:180px; }
+.ds-filterbar .ds-actions { display:flex; align-items:center; gap:8px; margin-left:auto; }
+
+.ds-switch { display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ds-text-2); cursor:pointer; user-select:none; white-space:nowrap; }
+.ds-switch input { display:none; }
+.ds-switch > .ds-track { width:34px; height:19px; border-radius:99px; background:#cbd5e1; position:relative; transition:background .15s; flex:none; }
+.ds-switch > .ds-track::after { content:''; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%; background:#fff; transition:transform .15s; box-shadow:0 1px 2px rgba(0,0,0,.2); }
+.ds-switch input:checked + .ds-track { background:var(--ds-primary); }
+.ds-switch input:checked + .ds-track::after { transform:translateX(15px); }
+
 /* ── BADGES: neutros, sem excesso de cor ─────────────────────────── */
 .badge {
   display: inline-flex !important;

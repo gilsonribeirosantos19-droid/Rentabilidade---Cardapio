@@ -882,22 +882,45 @@
 
       <!-- TÍTULO + FILTROS -->
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">Movimentação de Estoque no Período</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        <select class="field field-sm" onchange="setPeriodoRange(this.value,'mov-de','mov-ate')" style="min-width:130px">
-          <option value="periodo">Período</option>
-          <option value="mes_atual">Mês Atual</option>
-          <option value="mes_anterior">Mês Anterior</option>
-        </select>
-        <input class="field field-sm" type="date" id="mov-de" style="width:140px">
-        <input class="field field-sm" type="date" id="mov-ate" style="width:140px">
-        <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
-        <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
-        <input class="field field-sm" id="mov-busca" placeholder="Pesquisar item..." oninput="aplicarFiltroBuscaMov()" style="min-width:160px">
-        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente com saldo/movimento</label>
-        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mov-cmv" onchange="renderMovimentacao()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente CMV</label>
-        <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
-        <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
-        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <div class="ds-filterbar" style="margin-bottom:16px">
+        <div class="ds-field">
+          <label>Período</label>
+          <select class="field field-sm" onchange="setPeriodoRange(this.value,'mov-de','mov-ate')" style="min-width:130px">
+            <option value="periodo">Personalizado</option>
+            <option value="mes_atual">Mês Atual</option>
+            <option value="mes_anterior">Mês Anterior</option>
+          </select>
+        </div>
+        <div class="ds-field">
+          <label>De</label>
+          <input class="field field-sm" type="date" id="mov-de" style="width:150px">
+        </div>
+        <div class="ds-field">
+          <label>Até</label>
+          <input class="field field-sm" type="date" id="mov-ate" style="width:150px">
+        </div>
+        <div class="ds-field">
+          <label>Grupo</label>
+          <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
+        </div>
+        <div class="ds-field">
+          <label>Insumo</label>
+          <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
+        </div>
+        <div class="ds-field ds-grow">
+          <label>Buscar</label>
+          <input class="field field-sm" id="mov-busca" placeholder="Pesquisar item..." oninput="aplicarFiltroBuscaMov()" style="min-width:160px">
+        </div>
+        <div class="ds-field">
+          <label>Mostrar</label>
+          <div style="display:flex;gap:16px;align-items:center;height:var(--ds-input-h,36px)">
+            <label class="ds-switch"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()"><span class="ds-track"></span>Somente com saldo</label>
+            <label class="ds-switch"><input type="checkbox" id="mov-cmv" onchange="renderMovimentacao()"><span class="ds-track"></span>Somente CMV</label>
+          </div>
+        </div>
+        <div class="ds-actions">
+          <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
+          <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
           <button class="btn btn-ghost btn-sm" onclick="exportMovCSV()" style="display:inline-flex;align-items:center;gap:5px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Exportar CSV
