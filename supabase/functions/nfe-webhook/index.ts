@@ -310,7 +310,12 @@ async function rodarPullFocus(tenant: string) {
               valor_total: parseFloat(item.valor_bruto || '0'),
               vinculacao_id: (vinc || []).find((v: any) => v.codigo_fornecedor === String(item.codigo_produto || ''))?.id || null,
             }))
-            await supabase.from('nfe_itens').insert(batch)
+            const { error: itErr } = await supabase.from('nfe_itens').insert(batch)
+            // Se os itens não foram gravados (e não foi duplicata), não deixa a nota presa em
+            // 'aguard_vinculacao' sem item: volta para 'em_transito' (Pendente, reprocessável).
+            if (itErr && itErr.code !== '23505') {
+              await supabase.from('nfe_recebidas').update({ status: 'em_transito' }).eq('id', nova.id)
+            }
           }
           importadas++
         } catch (e) { erros++; console.error('pull item erro:', (e as Error).message) }
@@ -525,17 +530,10 @@ Deno.serve(async (req) => {
         }
       })
 
-      // Grava os itens E CONFERE se deu certo (antes não conferia → erro silencioso)
+      // Grava os itens. 23505 = índice único ux_nfe_itens_dedup bloqueou duplicata
+      // (outra execução já gravou) → NÃO é erro; segue para a reconciliação abaixo.
       const { error: itensErr } = await supabase.from('nfe_itens').insert(itensBatch)
-      if (itensErr && itensErr.code === '23505') {
-        // 23505 = violação de unicidade → o índice ux_nfe_itens_dedup BLOQUEOU uma duplicata.
-        // Outra execução (webhook/reprocessador) já gravou estes itens. NÃO é erro — está tudo certo.
-        console.log('Itens já existiam (duplicata bloqueada pelo índice único). OK, nada a fazer.')
-        return new Response(JSON.stringify({ ok: true, nfe_id: nfe.id, msg: 'itens ja existiam (dup bloqueada)' }), {
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      if (itensErr) {
+      if (itensErr && itensErr.code !== '23505') {
         console.error('ERRO ao inserir nfe_itens:', JSON.stringify(itensErr))
         console.error('Item de exemplo que tentou inserir:', JSON.stringify(itensBatch[0]))
         // Marca como erro de verdade (não finge que vinculou) para não perder o rastro
@@ -544,17 +542,25 @@ Deno.serve(async (req) => {
           status: 200, headers: { 'Content-Type': 'application/json' }
         })
       }
-
-      const semVinc    = itensBatch.filter((i: any) => !i.vinculacao_id).length
-      const novoStatus = semVinc === 0 ? 'pronta' : 'aguard_vinculacao'
-      await supabase.from('nfe_recebidas').update({ status: novoStatus }).eq('id', nfe.id)
-      console.log('Status atualizado:', novoStatus, '- itens sem vínculo:', semVinc)
     } else {
-      // XML completo ainda não disponível: mantém em_transito.
-      // O Focus dispara o webhook de novo quando o XML ficar pronto.
+      // XML completo ainda não disponível (só o resumo). O Focus dispara o webhook de novo quando ficar pronto.
       console.log('Itens ainda indisponíveis (resumo). Aguardando próximo disparo do webhook.')
-      await supabase.from('nfe_recebidas').update({ status: 'em_transito' }).eq('id', nfe.id)
     }
+
+    // ── Reconcilia o status com a quantidade REAL de itens gravados ──
+    // Blinda contra o estado quebrado "aguardando vínculo / com erro" SEM nenhum item:
+    // sem item persistido = ainda esperando o XML (em_transito), nunca vermelho. Vale para
+    // qualquer caminho (inserção ok, duplicata bloqueada, ou resumo sem itens).
+    const { count: itensReais } = await supabase
+      .from('nfe_itens').select('id', { count: 'exact', head: true }).eq('nfe_id', nfe.id)
+    let statusFinal = 'em_transito'
+    if (itensReais && itensReais > 0) {
+      const { data: itensDb } = await supabase.from('nfe_itens').select('vinculacao_id').eq('nfe_id', nfe.id)
+      const semVinc = (itensDb || []).filter((i: any) => !i.vinculacao_id).length
+      statusFinal = semVinc === 0 ? 'pronta' : 'aguard_vinculacao'
+    }
+    await supabase.from('nfe_recebidas').update({ status: statusFinal }).eq('id', nfe.id)
+    console.log('Status reconciliado:', statusFinal, '| itens reais:', itensReais)
 
     return new Response(JSON.stringify({ ok: true, nfe_id: nfe.id }), {
       headers: { 'Content-Type': 'application/json' }
