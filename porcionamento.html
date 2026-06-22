@@ -342,6 +342,9 @@
             <div class="form-group"><label class="form-label">Valor total da compra (R$)</label>
               <input class="form-input mono" id="fse-valor-compra" type="number" step="0.01" min="0" placeholder="0,00" oninput="calcSimplesEnt()">
             </div>
+            <div class="form-group"><label class="form-label">Nº de caixas</label>
+              <input class="form-input mono" id="fse-caixas" type="number" step="1" min="0" placeholder="0">
+            </div>
           </div>
           <div class="form-card-title" style="color:#dc2626;margin-top:4px">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -403,6 +406,9 @@
               <input class="form-input mono" id="fss-perdas" type="number" step="0.001" placeholder="automático" readonly>
               <div style="font-size:11px;color:var(--text3);margin-top:3px">= Entrada – Aproveitável</div>
             </div>
+            <div class="form-group"><label class="form-label">Sobra do dia (kg)</label>
+              <input class="form-input mono" id="fss-sobra" type="number" step="0.001" min="0" placeholder="0,000">
+            </div>
           </div>
           <div class="calc-box">
             <div class="calc-item"><div class="calc-lbl">Total Aprov.</div><div class="calc-val c-green" id="ssv-aprov">—</div></div>
@@ -453,6 +459,7 @@
             <div class="form-group"><label class="form-label">Perda Degelo (kg)</label><input class="form-input mono" id="fd-p-degelo" type="number" step="0.001" placeholder="auto" readonly></div>
             <div class="form-group"><label class="form-label">Peso Limpo (kg)</label><input class="form-input mono" id="fd-limpo" type="number" step="0.001" min="0" placeholder="0,000" oninput="calcDegelo()"></div>
             <div class="form-group"><label class="form-label">Perda Limpeza (kg)</label><input class="form-input mono" id="fd-p-limpeza" type="number" step="0.001" placeholder="auto" readonly></div>
+            <div class="form-group"><label class="form-label">Sobra do dia (kg)</label><input class="form-input mono" id="fd-sobra" type="number" step="0.001" min="0" placeholder="0,000"></div>
           </div>
           <div class="calc-box">
             <div class="calc-item"><div class="calc-lbl">Peso Final</div><div class="calc-val" id="dv-limpo">—</div></div>
@@ -712,65 +719,106 @@ async function renderSaldoOp(){
   const ate=document.getElementById('so-ate')?.value||'';
   const tbody=document.getElementById('so-body');
   const tfoot=document.getElementById('so-tfoot');
-  tbody.innerHTML='<tr><td colspan="10" class="empty">Carregando...</td></tr>';
+  const thead=document.getElementById('so-thead');
+  // Controle DIÁRIO é por PRODUTO + LOJA (1 "planilha"). Exige os dois selecionados.
+  if(!insumoFil || !lojaFil){
+    if(thead) thead.innerHTML='';
+    if(tfoot) tfoot.innerHTML='';
+    tbody.innerHTML='<tr><td colspan="13" class="empty">Selecione um <strong>produto</strong> e uma <strong>loja</strong> para ver o controle diário.</td></tr>';
+    return;
+  }
+  tbody.innerHTML='<tr><td colspan="13" class="empty">Carregando...</td></tr>';
   try{
-    let q=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&modelo_processo=in.(degelo,simples)&order=data.asc,created_at.asc&limit=1000`;
-    if(insumoFil) q+=`&insumo_id=eq.${insumoFil}`;
-    if(lojaFil) q+=`&loja_id=eq.${lojaFil}`;
-    if(de) q+=`&data=gte.${de}`;
-    if(ate) q+=`&data=lte.${ate}`;
+    // TODOS os lançamentos do produto+loja (sem filtro de data) — precisa pra calcular o saldo inicial do período
+    const q=`porcao_lancamentos?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${insumoFil}&loja_id=eq.${lojaFil}&modelo_processo=in.(degelo,simples)&order=data.asc,created_at.asc&limit=2000`;
     _soData=await api(q).catch(()=>[]);
-    // detecta se o conjunto tem unidades (modelo simples)
-    const hasUnits=_soData.some(l=>(l.modelo||l.modelo_processo||'')==='simples');
-    const colspan=hasUnits?13:10;
-    // atualiza cabeçalho dinamicamente
-    const thead=document.getElementById('so-thead');
-    if(thead) thead.innerHTML=hasUnits
-      ?`<tr><th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th class="r">Ent. (un)</th><th class="r">Entrada (kg)</th><th class="r">Saída (un)</th><th class="r">Saída (kg)</th><th class="r">Saldo (un)</th><th class="r">Saldo (kg)</th><th>Responsável</th><th>Observação</th></tr>`
-      :`<tr><th>Data / Hora</th><th>Tipo</th><th>Produto</th><th>Loja</th><th class="r">Entrada (kg)</th><th class="r">Saída (kg)</th><th class="r">Saldo (kg)</th><th>Responsável</th><th>Observação</th></tr>`;
-    if(!_soData.length){tbody.innerHTML=`<tr><td colspan="${colspan}" class="empty">Nenhum registro encontrado.</td></tr>`;tfoot.innerHTML='';return;}
-    let saldoKg=0,saldoUn=0,totEntKg=0,totSaiKg=0,totEntUn=0,totSaiUn=0;
-    tbody.innerHTML=_soData.map(l=>{
-      const ins=_insumos.find(i=>i.id===l.insumo_id);
-      const loja=_lojas.find(lj=>lj.id===l.loja_id);
-      const isEnt=l.tipo==='entrada';
-      const mod=l.modelo||l.modelo_processo||'';
-      const entKg=isEnt?(l.peso_bruto||0):0;
-      const saiKg=!isEnt?(mod==='degelo'?(l.peso_congelado||0):(l.peso_bruto||0)):0;
-      const entUn=isEnt?(l.qtd_consumida||0):0;
-      const saiUn=!isEnt?(l.qtd_consumida||0):0;
-      saldoKg=r3(saldoKg+entKg-saiKg);saldoUn=r3(saldoUn+entUn-saiUn);
-      totEntKg=r3(totEntKg+entKg);totSaiKg=r3(totSaiKg+saiKg);
-      totEntUn=r3(totEntUn+entUn);totSaiUn=r3(totSaiUn+saiUn);
-      const tipoLabel=isEnt?`<span style="color:var(--blue);font-weight:600">Entrada</span>`:`<span style="color:var(--red);font-weight:600">Saída</span>`;
-      const dataStr=l.data?new Date(l.data).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
-      if(hasUnits) return `<tr>
-        <td class="mono" style="font-size:11px;color:var(--text2)">${dataStr}</td>
-        <td>${tipoLabel}</td><td style="font-weight:600">${esc(ins?.nome||'—')}</td>
-        <td>${esc(loja?.nome||'—')}</td>
-        <td class="r mono">${entUn>0?entUn:'—'}</td>
-        <td class="r mono">${entKg>0?kg(entKg):'—'}</td>
-        <td class="r mono">${saiUn>0?saiUn:'—'}</td>
-        <td class="r mono">${saiKg>0?kg(saiKg):'—'}</td>
-        <td class="r mono">${saldoUn!==0?saldoUn:'—'}</td>
-        <td class="r mono" style="font-weight:700;color:${saldoKg>=0?'var(--green)':'var(--red)'}">${kg(saldoKg)}</td>
-        <td>${esc(l.responsavel||'—')}</td><td style="font-size:11px;color:var(--text2)">${esc(l.observacoes||'—')}</td>
-      </tr>`;
-      return `<tr>
-        <td class="mono" style="font-size:11px;color:var(--text2)">${dataStr}</td>
-        <td>${tipoLabel}</td><td style="font-weight:600">${esc(ins?.nome||'—')}</td>
-        <td>${esc(loja?.nome||'—')}</td>
-        <td class="r mono">${entKg>0?kg(entKg):'—'}</td>
-        <td class="r mono">${saiKg>0?kg(saiKg):'—'}</td>
-        <td class="r mono" style="font-weight:700;color:${saldoKg>=0?'var(--green)':'var(--red)'}">${kg(saldoKg)}</td>
-        <td>${esc(l.responsavel||'—')}</td><td style="font-size:11px;color:var(--text2)">${esc(l.observacoes||'—')}</td>
-      </tr>`;
-    }).join('');
-    const sF=r3(totEntKg-totSaiKg);
-    tfoot.innerHTML=hasUnits
-      ?`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="4" style="text-transform:uppercase;letter-spacing:.05em">TOTAL GERAL</td><td class="r mono">${totEntUn||'—'}</td><td class="r mono">${kg(totEntKg)}</td><td class="r mono">${totSaiUn||'—'}</td><td class="r mono">${kg(totSaiKg)}</td><td class="r mono">${r3(totEntUn-totSaiUn)||'—'}</td><td class="r mono" style="color:${sF>=0?'var(--green)':'var(--red)'}">${kg(sF)}</td><td colspan="2"></td></tr>`
-      :`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="4" style="text-transform:uppercase;letter-spacing:.05em">TOTAL GERAL</td><td class="r mono">${kg(totEntKg)}</td><td class="r mono">${kg(totSaiKg)}</td><td class="r mono" style="color:${sF>=0?'var(--green)':'var(--red)'}">${kg(sF)}</td><td colspan="2"></td></tr>`;
-  }catch(e){tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+    const m0=_soData.find(l=>(l.modelo||l.modelo_processo));
+    const isDeg=((m0?.modelo||m0?.modelo_processo)||'simples')==='degelo';
+    const sum=(arr,fn)=>arr.reduce((s,l)=>s+(parseFloat(fn(l))||0),0);
+    // delta do estoque por lançamento (salmão = peixes; camarão = kg)
+    const delta=l=>{const isE=l.tipo==='entrada';return isDeg?(isE?(+l.peso_bruto||0):-(+l.peso_congelado||0)):(isE?(+l.qtd_consumida||0):-(+l.qtd_consumida||0));};
+    // saldo inicial do período = soma dos deltas ANTES de `de`
+    let saldo=_soData.filter(l=>de&&l.data<de).reduce((s,l)=>s+delta(l),0);
+    saldo=isDeg?r3(saldo):Math.round(saldo);
+    // agrupa por dia (dentro do período)
+    const porDia={};
+    _soData.filter(l=>(!de||l.data>=de)&&(!ate||l.data<=ate)).forEach(l=>{(porDia[l.data]=porDia[l.data]||[]).push(l);});
+    // monta todos os dias de `de` a `ate`
+    const dias=[];
+    if(de&&ate){let d=new Date(de+'T00:00'),fim=new Date(ate+'T00:00');let g=0;while(d<=fim&&g<400){dias.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);g++;}}
+    // cabeçalho conforme o modelo
+    if(thead) thead.innerHTML=isDeg
+      ?`<tr><th class="r">Dia</th><th class="r">Est. Inicial</th><th class="r">Entrada</th><th class="r">Usado</th><th class="r">Sobra</th><th class="r">Est. Final</th><th class="r">Congelado</th><th class="r">Descongelado</th><th class="r">Descascado</th><th class="r">% Perda</th></tr>`
+      :`<tr><th class="r">Dia</th><th class="r">Est. Inicial</th><th class="r">Entrada</th><th class="r">Usado</th><th class="r">Est. Final</th><th class="r">Nº Cxs</th><th class="r">Peso Ent.</th><th class="r">Sem Cabeça</th><th class="r">Raspa</th><th class="r">Limpo</th><th class="r">Pele</th><th class="r">Cabeça</th><th class="r">Sobra</th></tr>`;
+    const colspan=isDeg?10:13;
+    if(!dias.length){tbody.innerHTML=`<tr><td colspan="${colspan}" class="empty">Defina o período (De / Até).</td></tr>`;tfoot.innerHTML='';return;}
+    const fdia=ds=>new Date(ds+'T00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    const kg0=v=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});  // mostra 0,000
+    const pct2=v=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const eVal=v=>isDeg?kg0(v):Math.round(v);          // valor de estoque (kg ou peixes)
+    const mvk=v=>v>0?kg(v):'—';                        // movimento em kg
+    let rows='';
+    dias.forEach(ds=>{
+      const movs=porDia[ds]||[];
+      const ents=movs.filter(l=>l.tipo==='entrada');
+      const sais=movs.filter(l=>l.tipo!=='entrada');
+      const estIni=saldo;
+      if(isDeg){
+        const entKg=r3(sum(ents,l=>l.peso_bruto));
+        const usado=r3(sum(sais,l=>l.peso_congelado));
+        const sobra=r3(sum(sais,l=>l.sobra));
+        saldo=r3(estIni+entKg-usado);
+        const cong=r3(sum(sais,l=>l.peso_congelado));
+        const desc=r3(sum(sais,l=>l.peso_descongelado));
+        const desca=r3(sum(sais,l=>l.peso_limpo));
+        const base=cong, fin=desca||desc;
+        const perda=base>0?r2(-(base-fin)/base*100):0;
+        rows+=`<tr>
+          <td class="r mono">${fdia(ds)}</td>
+          <td class="r mono">${eVal(estIni)}</td>
+          <td class="r mono" style="color:var(--blue)">${mvk(entKg)}</td>
+          <td class="r mono" style="color:var(--red)">${mvk(usado)}</td>
+          <td class="r mono">${mvk(sobra)}</td>
+          <td class="r mono" style="font-weight:700;color:${saldo>=0?'var(--green)':'var(--red)'}">${kg0(saldo)}</td>
+          <td class="r mono">${mvk(cong)}</td>
+          <td class="r mono">${mvk(desc)}</td>
+          <td class="r mono">${mvk(desca)}</td>
+          <td class="r mono" style="color:${perda<0?'var(--red)':'var(--text2)'}">${perda?pct2(perda)+'%':'—'}</td>
+        </tr>`;
+      }else{
+        const entPx=Math.round(sum(ents,l=>l.qtd_consumida));
+        const usadoPx=Math.round(sum(sais,l=>l.qtd_consumida));
+        saldo=Math.round(estIni+entPx-usadoPx);
+        const cxs=Math.round(sum(ents,l=>l.caixas));
+        const pesoEnt=r3(sum(ents,l=>l.peso_bruto));
+        const cabeca=r3(sum(ents,l=>l.perda_cabeca));
+        const semCab=r3(sum(sais,l=>l.peso_bruto));
+        const raspa=r3(sum(sais,l=>l.perda_outros));
+        const limpo=r3(sum(sais,l=>l.peso_limpo));
+        const pele=r3(sum(sais,l=>l.perda_pele));
+        const sobra=r3(sum(sais,l=>l.sobra));
+        rows+=`<tr>
+          <td class="r mono">${fdia(ds)}</td>
+          <td class="r mono">${estIni}</td>
+          <td class="r mono" style="color:var(--blue)">${entPx>0?entPx:'—'}</td>
+          <td class="r mono" style="color:var(--red)">${usadoPx>0?usadoPx:'—'}</td>
+          <td class="r mono" style="font-weight:700;color:${saldo>=0?'var(--green)':'var(--red)'}">${saldo}</td>
+          <td class="r mono">${cxs>0?cxs:'—'}</td>
+          <td class="r mono">${mvk(pesoEnt)}</td>
+          <td class="r mono">${mvk(semCab)}</td>
+          <td class="r mono">${mvk(raspa)}</td>
+          <td class="r mono">${mvk(limpo)}</td>
+          <td class="r mono">${mvk(pele)}</td>
+          <td class="r mono">${mvk(cabeca)}</td>
+          <td class="r mono">${mvk(sobra)}</td>
+        </tr>`;
+      }
+    });
+    tbody.innerHTML=rows;
+    tfoot.innerHTML=isDeg
+      ?`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="5" class="r" style="text-transform:uppercase;letter-spacing:.05em">Saldo final</td><td class="r mono" style="color:${saldo>=0?'var(--green)':'var(--red)'}">${kg0(saldo)}</td><td colspan="4"></td></tr>`
+      :`<tr style="background:#f8fafc;font-weight:700;font-size:12px"><td colspan="4" class="r" style="text-transform:uppercase;letter-spacing:.05em">Saldo final</td><td class="r mono" style="color:${saldo>=0?'var(--green)':'var(--red)'}">${saldo}</td><td colspan="8"></td></tr>`;
+  }catch(e){tbody.innerHTML=`<tr><td colspan="13" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
 }
 function exportSaldoOp(){
   if(!_soData.length){toast('Nenhum dado para exportar.','err');return;}
@@ -952,10 +1000,10 @@ function editarLanc(id){
 }
 function _resetForm(){
   ['f-insumo','f-modelo','f-data','f-loja','f-turno','f-lote','f-fornecedor','f-responsavel','f-obs',
-   'fse-qtd-peixes','fse-custo','fse-peso-bruto','fse-valor-compra','fse-cabeca','fse-peso-liq',
-   'fss-qtd-peixes','fss-custo','fss-peso-entrada','fss-file','fss-pele','fss-aparas','fss-perdas',
+   'fse-qtd-peixes','fse-custo','fse-peso-bruto','fse-valor-compra','fse-caixas','fse-cabeca','fse-peso-liq',
+   'fss-qtd-peixes','fss-custo','fss-peso-entrada','fss-file','fss-pele','fss-aparas','fss-perdas','fss-sobra',
    'fde-qtd-kg','fde-valor',
-   'fd-custo','fd-congelado','fd-descongelado','fd-p-degelo','fd-limpo','fd-p-limpeza',
+   'fd-custo','fd-congelado','fd-descongelado','fd-p-degelo','fd-limpo','fd-p-limpeza','fd-sobra',
    'fc-inicial','fc-final','fc-reducao','fc-custo',
    'fl-produzida','fl-consumida','fl-sobra','fl-validade','fl-custo']
   .forEach(id=>sv(id,''));
@@ -987,12 +1035,13 @@ function _populateForm(l){
     if(tipo==='entrada'){
       sv('fse-qtd-peixes',l.qtd_consumida||'');sv('fse-custo',l.custo_unitario||'');
       sv('fse-peso-bruto',l.peso_bruto||'');sv('fse-valor-compra',l.valor_total||'');
+      sv('fse-caixas',l.caixas||'');
       sv('fse-cabeca',l.perda_cabeca||'');sv('fse-peso-liq',l.peso_limpo||'');
       calcSimplesEnt();
     }else{
       sv('fss-qtd-peixes',l.qtd_consumida||'');sv('fss-custo',l.custo_unitario||'');
       sv('fss-peso-entrada',l.peso_bruto||'');sv('fss-file',l.peso_limpo||'');
-      sv('fss-pele',l.perda_pele||'');sv('fss-aparas',l.perda_outros||'');
+      sv('fss-pele',l.perda_pele||'');sv('fss-aparas',l.perda_outros||'');sv('fss-sobra',l.sobra||'');
       calcSimplesSai();
     }
   }else if(mod==='degelo'){
@@ -1002,7 +1051,7 @@ function _populateForm(l){
       sv('fde-qtd-kg',l.peso_bruto||'');sv('fde-valor',l.valor_total||'');
     }else{
       sv('fd-custo',l.custo_unitario||'');sv('fd-congelado',l.peso_congelado||'');
-      sv('fd-descongelado',l.peso_descongelado||'');sv('fd-limpo',l.peso_limpo||'');calcDegelo();
+      sv('fd-descongelado',l.peso_descongelado||'');sv('fd-limpo',l.peso_limpo||'');sv('fd-sobra',l.sobra||'');calcDegelo();
     }
   }else if(mod==='coccao'){
     sv('fc-inicial',l.peso_inicial||'');sv('fc-final',l.peso_final||'');
@@ -1148,7 +1197,7 @@ async function salvarLanc(){
       const liq=n('fse-peso-liq'),custo=n('fse-custo'),valorCompra=n('fse-valor-compra');
       Object.assign(payload,{tipo:'entrada',peso_bruto:bruto,perda_cabeca:n('fse-cabeca')||null,
         peso_limpo:liq||null,custo_unitario:custo||null,valor_total:valorCompra||null,
-        qtd_consumida:n('fse-qtd-peixes')||null,
+        qtd_consumida:n('fse-qtd-peixes')||null,caixas:n('fse-caixas')||null,
         rendimento_pct:bruto>0?r2(liq/bruto*100):null,
         perda_pele:null,perda_espinha:null,perda_outros:null});
     }else{
@@ -1157,7 +1206,7 @@ async function salvarLanc(){
       const aprov=r3(file+pele+aparas);const custo=n('fss-custo');
       Object.assign(payload,{tipo:'saida',peso_bruto:entrada,peso_limpo:file||null,
         perda_pele:pele||null,perda_outros:aparas||null,perda_espinha:perdas||null,
-        custo_unitario:custo||null,qtd_consumida:n('fss-qtd-peixes')||null,
+        custo_unitario:custo||null,qtd_consumida:n('fss-qtd-peixes')||null,sobra:n('fss-sobra')||null,
         rendimento_pct:entrada>0?r2(aprov/entrada*100):null,
         valor_total:null,perda_cabeca:null});
     }
@@ -1170,7 +1219,7 @@ async function salvarLanc(){
       const cong=n('fd-congelado');if(!cong){toast('Informe o peso congelado.','err');return;}
       const limpo=n('fd-limpo'),custo=n('fd-custo');
       Object.assign(payload,{tipo:'saida',peso_congelado:cong,peso_descongelado:n('fd-descongelado')||null,
-        peso_limpo:limpo||null,rendimento_pct:cong>0?r2(limpo/cong*100):null,
+        peso_limpo:limpo||null,sobra:n('fd-sobra')||null,rendimento_pct:cong>0?r2(limpo/cong*100):null,
         custo_unitario:custo||null,valor_total:custo?r2(cong*custo):null});
     }
   }else if(modelo==='coccao'){
