@@ -299,7 +299,11 @@ async function rodarPullFocus(tenant: string) {
           }).select('id').single()
           if (insErr) { erros++; continue }
           if (itensNfe.length > 0 && nova) {
-            const { data: vinc } = await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor').eq('tenant_id', tenant)
+            const { data: vinc } = await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor,fornecedor_id').eq('tenant_id', tenant)
+            // Fornecedor da nota (CNPJ do emitente). SÓ auto-vincula se o vínculo for DESSE fornecedor
+            // (código sozinho colide entre fornecedores — códigos genéricos 2000000000xxx).
+            const { data: fpull } = await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', tenant)
+            const fornNotaId = (fpull || []).find((f: any) => String(f.cnpj || '').replace(/\D/g, '') === cnpjEmit)?.id || null
             const batch = itensNfe.map((item: any) => ({
               nfe_id: nova.id, tenant_id: tenant,
               descricao_nfe: String(item.descricao || '').toUpperCase(),
@@ -308,7 +312,7 @@ async function rodarPullFocus(tenant: string) {
               unidade_nfe: String(item.unidade_comercial || 'UN').toUpperCase(),
               valor_unitario: parseFloat(item.valor_unitario_comercial || '0'),
               valor_total: parseFloat(item.valor_bruto || '0'),
-              vinculacao_id: (vinc || []).find((v: any) => v.codigo_fornecedor === String(item.codigo_produto || ''))?.id || null,
+              vinculacao_id: fornNotaId ? ((vinc || []).find((v: any) => v.codigo_fornecedor === String(item.codigo_produto || '') && v.fornecedor_id === fornNotaId)?.id || null) : null,
             }))
             const { error: itErr } = await supabase.from('nfe_itens').insert(batch)
             // Se os itens não foram gravados (e não foi duplicata), não deixa a nota presa em
@@ -511,12 +515,21 @@ Deno.serve(async (req) => {
     if (itensNfe.length > 0) {
       const { data: vincExist } = await supabase
         .from('insumo_fornecedores')
-        .select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem')
+        .select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id')
         .eq('tenant_id', TENANT_ID)
+
+      // Fornecedor da nota pelo CNPJ do emitente. SÓ auto-vincula se o vínculo for DESSE fornecedor:
+      // casar só pelo código amarra errado (códigos genéricos 2000000000xxx colidem entre fornecedores).
+      const cnpjEmitDigits = (cnpjEmitente || '').replace(/\D/g, '')
+      let fornNotaId: string | null = null
+      if (cnpjEmitDigits) {
+        const { data: fdata } = await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', TENANT_ID)
+        fornNotaId = (fdata || []).find((f: any) => String(f.cnpj || '').replace(/\D/g, '') === cnpjEmitDigits)?.id || null
+      }
 
       const itensBatch = itensNfe.map((item: any) => {
         const codigo = String(item.codigo_produto || '')
-        const vinc   = vincExist?.find(v => v.codigo_fornecedor === codigo)
+        const vinc   = fornNotaId ? vincExist?.find((v: any) => v.codigo_fornecedor === codigo && v.fornecedor_id === fornNotaId) : null
         return {
           nfe_id:                 nfe!.id,
           tenant_id:              TENANT_ID,

@@ -750,15 +750,19 @@ async function _reconhecerItensPendentes(nfeId) {
     const cnpj = (nfe?.cnpj_emitente || '').replace(/\D/g, '');
     let fornId = null;
     if(cnpj){ const f = (fornecedores||[]).find(x => (x.cnpj||'').replace(/\D/g,'') === cnpj); fornId = f?.id || null; }
-    for(const item of semVinc){
-      const cod = String(item.codigo_item_fornecedor);
-      const vinc = insumoFornVinculos.find(v => v.codigo_fornecedor===cod && (!fornId || v.fornecedor_id===fornId))
-                || insumoFornVinculos.find(v => v.codigo_fornecedor===cod);
-      if(!vinc) continue;
-      try {
-        await api(`nfe_itens?id=eq.${item.id}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ vinculacao_id: vinc.id }) });
-        item.vinculacao_id = vinc.id;
-      } catch {}
+    // Só auto-vincula se o FORNECEDOR da nota está cadastrado e o vínculo é DELE.
+    // Casar só pelo código é perigoso: códigos genéricos (ex.: 2000000000xxx) colidem entre
+    // fornecedores e amarram o item no insumo errado (saco de lixo virando carne moída).
+    if(fornId){
+      for(const item of semVinc){
+        const cod = String(item.codigo_item_fornecedor);
+        const vinc = insumoFornVinculos.find(v => v.codigo_fornecedor===cod && v.fornecedor_id===fornId);
+        if(!vinc) continue;
+        try {
+          await api(`nfe_itens?id=eq.${item.id}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ vinculacao_id: vinc.id }) });
+          item.vinculacao_id = vinc.id;
+        } catch {}
+      }
     }
   }
   // Nota marcada como erro (aguard_vinculacao) mas SEM itens importados não é erro:
