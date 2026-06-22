@@ -204,10 +204,16 @@
           <span style="font-size:12px;color:#64748b;font-weight:600">Data de entrada:</span>
           <input type="date" id="proc-data-manual" class="field field-sm" title="Data em que a entrada vai afetar o estoque (modo manual)">
         </div>
-        <button id="btn-processar-sel" onclick="processarSelecionadas()" disabled style="margin-left:auto;display:inline-flex;padding:7px 16px;border:none;border-radius:8px;background:#e2e8f0;color:#94a3b8;font-size:12px;font-weight:700;cursor:not-allowed;font-family:inherit;gap:6px;align-items:center;transition:all .15s">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          Processar selecionadas (<span id="cnt-sel">0</span>)
-        </button>
+        <div style="margin-left:auto;display:inline-flex;gap:10px;align-items:center">
+          <button id="btn-excluir-sel" onclick="excluirSelecionadas()" disabled style="display:inline-flex;padding:7px 16px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;color:#94a3b8;font-size:12px;font-weight:700;cursor:not-allowed;font-family:inherit;gap:6px;align-items:center;transition:all .15s">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            Excluir (<span id="cnt-sel-del">0</span>)
+          </button>
+          <button id="btn-processar-sel" onclick="processarSelecionadas()" disabled style="display:inline-flex;padding:7px 16px;border:none;border-radius:8px;background:#e2e8f0;color:#94a3b8;font-size:12px;font-weight:700;cursor:not-allowed;font-family:inherit;gap:6px;align-items:center;transition:all .15s">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Processar selecionadas (<span id="cnt-sel">0</span>)
+          </button>
+        </div>
       </div>
 
       <!-- ABAS -->
@@ -1044,6 +1050,16 @@ function atualizarBtnProcessar() {
   btn.style.background = n > 0 ? '#f97316' : '#e2e8f0';
   btn.style.color = n > 0 ? '#fff' : '#94a3b8';
   btn.style.cursor = n > 0 ? 'pointer' : 'not-allowed';
+  // Botão Excluir (mesma seleção)
+  const btnDel = document.getElementById('btn-excluir-sel');
+  const cntDel = document.getElementById('cnt-sel-del');
+  if(btnDel && cntDel){
+    cntDel.textContent = n;
+    btnDel.disabled = n === 0;
+    btnDel.style.borderColor = n > 0 ? '#fca5a5' : '#e2e8f0';
+    btnDel.style.color = n > 0 ? '#dc2626' : '#94a3b8';
+    btnDel.style.cursor = n > 0 ? 'pointer' : 'not-allowed';
+  }
 }
 
 function toggleSelectAll(chk) {
@@ -1159,6 +1175,42 @@ async function processarSelecionadas() {
   atualizarBtnProcessar();
   const chkAll = document.getElementById('chk-all'); if(chkAll) chkAll.checked = false;
   toast(`${ok} NF-e processada(s) com sucesso!`, 'ok');
+  await loadAll();
+}
+
+// Exclui do Monitor as notas selecionadas (e seus itens). Só remove notas NÃO processadas
+// (as processadas nem aparecem aqui); não mexe em estoque. É uma limpeza do Monitor.
+async function excluirSelecionadas() {
+  if(selectedIds.size === 0) return;
+  const ids = [...selectedIds];
+  // Trava de segurança: nunca excluir nota já processada (gerou entrada/estoque) — estornar antes.
+  const processadas = ids.filter(id => entradasNfe.find(n => n.id === id)?.status === 'processada');
+  if(processadas.length){ toast('Há nota(s) já processada(s) na seleção. Estorne antes de excluir.', 'err'); return; }
+  if(!confirm(`Excluir ${ids.length} nota(s) do Monitor?\n\nRemove o registro da nota e seus itens. NÃO afeta o estoque (essas notas ainda não foram processadas).\n\nEsta ação não pode ser desfeita.`)) return;
+
+  const _btn = document.getElementById('btn-excluir-sel');
+  const _orig = _btn ? _btn.innerHTML : '';
+  if(_btn){ _btn.disabled = true; _btn.style.cursor = 'wait'; _btn.innerHTML = 'Excluindo...'; }
+
+  // Apaga em lotes (URL curta): primeiro os itens (FK), depois as notas.
+  const chunk = (arr, n) => { const o = []; for(let i = 0; i < arr.length; i += n) o.push(arr.slice(i, i + n)); return o; };
+  let ok = 0;
+  try {
+    for(const grp of chunk(ids, 50)) {
+      const lista = grp.join(',');
+      await api(`nfe_itens?tenant_id=eq.${TENANT_ID}&nfe_id=in.(${lista})`, { method:'DELETE', prefer:'return=minimal' });
+      await api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&id=in.(${lista})`, { method:'DELETE', prefer:'return=minimal' });
+      ok += grp.length;
+    }
+    toast(`${ok} nota(s) excluída(s).`, 'ok');
+  } catch(e) {
+    toast('Erro ao excluir: ' + (e?.message || e), 'err');
+  }
+
+  selectedIds.clear();
+  const chkAll = document.getElementById('chk-all'); if(chkAll) chkAll.checked = false;
+  if(_btn) _btn.innerHTML = _orig;
+  atualizarBtnProcessar();
   await loadAll();
 }
 
