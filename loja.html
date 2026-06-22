@@ -544,6 +544,7 @@
       <div class="est-tabs">
         <button class="est-tab active" data-tab="relatorio" onclick="switchEstoqueTab('relatorio')">Relatório</button>
         <button class="est-tab" data-tab="movimentacao" onclick="switchEstoqueTab('movimentacao')">Movimentação</button>
+        <button class="est-tab" data-tab="historico" onclick="switchEstoqueTab('historico')">Histórico</button>
       </div>
 
       <!-- Relatório -->
@@ -693,6 +694,42 @@
         <!-- Movimentações do dia -->
         <div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:14px">Movimentações do dia</div>
         <div id="mov-historico"><div class="empty">Selecione uma data.</div></div>
+      </div>
+
+      <!-- Histórico de movimentações -->
+      <div id="est-historico" class="est-pane">
+        <div class="filter-bar-wrap" style="margin-bottom:14px">
+          <div class="toolbar" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
+            <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Data inicial</label>
+              <input type="date" id="hist-de" class="fil-select" onchange="carregarHistEstoque()"></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Data final</label>
+              <input type="date" id="hist-ate" class="fil-select" onchange="carregarHistEstoque()"></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Grupo</label>
+              <select id="hist-grupo" class="fil-select" onchange="renderHistEstoque()" style="min-width:140px"><option value="">Todos</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Tipo</label>
+              <select id="hist-tipo" class="fil-select" onchange="renderHistEstoque()" style="min-width:120px"><option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ajuste">Ajuste</option></select></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Insumo</label>
+              <input type="text" id="hist-busca" class="fil-select" placeholder="Digite para buscar" oninput="renderHistEstoque()" style="min-width:160px"></div>
+            <div style="display:flex;flex-direction:column;gap:3px"><label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Responsável</label>
+              <select id="hist-resp" class="fil-select" onchange="renderHistEstoque()" style="min-width:140px"><option value="">Todos</option></select></div>
+            <button class="btn btn-ghost btn-sm" onclick="limparHistFiltros()">▽ Limpar filtros</button>
+          </div>
+        </div>
+        <div class="tbl-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0">
+            <div style="font-size:16px;font-weight:700;color:#0f172a">Histórico de movimentações</div>
+            <button class="btn btn-ghost btn-sm" onclick="exportarHistEstoque()">↓ Exportar CSV</button>
+          </div>
+          <div class="tbl-scroll" style="margin-top:10px">
+            <table class="tbl">
+              <thead><tr>
+                <th>Data / Hora</th><th>Tipo</th><th>Insumo</th><th>Grupo</th>
+                <th class="r">Quantidade</th><th>Unidade</th><th>Responsável</th><th>Observação</th>
+              </tr></thead>
+              <tbody id="hist-body"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2473,6 +2510,122 @@ function switchEstoqueTab(tab) {
   document.querySelectorAll('.est-tab').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   if (tab==='relatorio') carregarRelatorio();
   if (tab==='movimentacao') { popularInsumosMov(); carregarMovimentacoes(); }
+  if (tab==='historico') iniciarHistEstoque();
+}
+
+// ── HISTÓRICO DE MOVIMENTAÇÕES (entradas + saídas + ajustes) ──────────
+let _histMovs = [];
+function _grupoNome(insId){ const g=(grupos||[]).find(g=>(gruposItens[g.id]||[]).includes(insId)); return g?g.nome:'—'; }
+
+function iniciarHistEstoque(){
+  const de=document.getElementById('hist-de'), ate=document.getElementById('hist-ate');
+  if(de && !de.value) de.value = primeiroDiaMes();
+  if(ate && !ate.value) ate.value = hoje();
+  // popula o filtro de Grupo (1x)
+  const selG=document.getElementById('hist-grupo');
+  if(selG && selG.options.length<=1) (grupos||[]).forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.nome;selG.appendChild(o);});
+  carregarHistEstoque();
+}
+
+async function carregarHistEstoque(){
+  const lojaId = userProfile?.loja_id;
+  const de = document.getElementById('hist-de')?.value;
+  const ate = document.getElementById('hist-ate')?.value;
+  const tbody = document.getElementById('hist-body');
+  tbody.innerHTML = '<tr><td colspan="8" class="empty">Carregando...</td></tr>';
+  try{
+    const [entradas, saidas] = await Promise.all([
+      api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${de}T00:00:00&criado_em=lte.${ate}T23:59:59&order=criado_em.desc`).catch(()=>[]),
+      api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}&criado_em=gte.${de}T00:00:00&criado_em=lte.${ate}T23:59:59&order=criado_em.desc`).catch(()=>[]),
+    ]);
+    _histMovs = [
+      ...entradas.map(e=>({...e,_lado:'entrada'})),
+      ...saidas.map(s=>({...s,_lado:'saida'})),
+    ].sort((a,b)=>(b.criado_em||b.created_at||'').localeCompare(a.criado_em||a.created_at||''));
+    // popula o filtro de Responsável com os nomes que aparecem
+    const selR=document.getElementById('hist-resp');
+    if(selR){ const atual=selR.value;
+      const nomes=[...new Set(_histMovs.map(m=>m.responsavel).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      selR.innerHTML='<option value="">Todos</option>'+nomes.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      selR.value=nomes.includes(atual)?atual:'';
+    }
+    renderHistEstoque();
+  }catch(e){ tbody.innerHTML=`<tr><td colspan="8" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
+}
+
+function _histTipo(m){ return m.tipo==='ajuste' ? 'ajuste' : m._lado; } // entrada | saida | ajuste
+
+function renderHistEstoque(){
+  const tbody = document.getElementById('hist-body');
+  if(!tbody) return;
+  const grpFil = document.getElementById('hist-grupo')?.value||'';
+  const tipoFil = document.getElementById('hist-tipo')?.value||'';
+  const busca = (document.getElementById('hist-busca')?.value||'').toLowerCase().trim();
+  const respFil = document.getElementById('hist-resp')?.value||'';
+  let lista = _histMovs;
+  if(grpFil){ const ids=gruposItens[grpFil]||[]; lista=lista.filter(m=>ids.includes(m.insumo_id)); }
+  if(tipoFil) lista=lista.filter(m=>_histTipo(m)===tipoFil);
+  if(respFil) lista=lista.filter(m=>(m.responsavel||'')===respFil);
+  if(busca) lista=lista.filter(m=>{const ins=insumos.find(i=>i.id===m.insumo_id);return (ins?.nome||'').toLowerCase().includes(busca);});
+  if(!lista.length){ tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhuma movimentação no período/filtros.</td></tr>'; return; }
+  tbody.innerHTML = lista.map(m=>{
+    const ins=insumos.find(i=>i.id===m.insumo_id);
+    const un=ins?.unidade_medida||ins?.unidade_compra||'un';
+    const dt=m.criado_em||m.created_at;
+    const dataStr=dt?new Date(dt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    const tp=_histTipo(m);
+    const badge = tp==='entrada' ? '<span style="padding:3px 10px;border-radius:20px;background:#dcfce7;color:#16a34a;font-size:11px;font-weight:700">Entrada</span>'
+      : tp==='saida' ? '<span style="padding:3px 10px;border-radius:20px;background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700">Saída</span>'
+      : '<span style="padding:3px 10px;border-radius:20px;background:#dbeafe;color:#2563eb;font-size:11px;font-weight:700">Ajuste</span>';
+    const pos = m._lado==='entrada';
+    const cor = pos?'#16a34a':'#dc2626';
+    const sinal = pos?'+':'-';
+    return `<tr>
+      <td class="mono" style="font-size:12px;color:#64748b;white-space:nowrap">${dataStr}</td>
+      <td>${badge}</td>
+      <td style="font-weight:600;color:#0f172a">${esc(ins?.nome||'?')}</td>
+      <td style="font-size:12px;color:#64748b">${esc(_grupoNome(m.insumo_id))}</td>
+      <td class="r mono" style="color:${cor};font-weight:700">${sinal}${fmtQtd(m.quantidade)}</td>
+      <td style="font-size:12px;color:#64748b">${esc(un)}</td>
+      <td style="font-size:12px;color:#475569">${esc(m.responsavel||'—')}</td>
+      <td style="font-size:12px;color:#64748b">${esc(m.observacao||'—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function limparHistFiltros(){
+  document.getElementById('hist-grupo').value='';
+  document.getElementById('hist-tipo').value='';
+  document.getElementById('hist-busca').value='';
+  document.getElementById('hist-resp').value='';
+  renderHistEstoque();
+}
+
+function exportarHistEstoque(){
+  const grpFil=document.getElementById('hist-grupo')?.value||'';
+  const tipoFil=document.getElementById('hist-tipo')?.value||'';
+  const busca=(document.getElementById('hist-busca')?.value||'').toLowerCase().trim();
+  const respFil=document.getElementById('hist-resp')?.value||'';
+  let lista=_histMovs;
+  if(grpFil){const ids=gruposItens[grpFil]||[];lista=lista.filter(m=>ids.includes(m.insumo_id));}
+  if(tipoFil) lista=lista.filter(m=>_histTipo(m)===tipoFil);
+  if(respFil) lista=lista.filter(m=>(m.responsavel||'')===respFil);
+  if(busca) lista=lista.filter(m=>{const ins=insumos.find(i=>i.id===m.insumo_id);return (ins?.nome||'').toLowerCase().includes(busca);});
+  if(!lista.length){ toast('Sem dados para exportar.','err'); return; }
+  const head=['Data/Hora','Tipo','Insumo','Grupo','Quantidade','Unidade','Responsavel','Observacao'];
+  const rows=lista.map(m=>{
+    const ins=insumos.find(i=>i.id===m.insumo_id);
+    const dt=m.criado_em||m.created_at;
+    const dataStr=dt?new Date(dt).toLocaleString('pt-BR'):'';
+    const tp=_histTipo(m), sinal=m._lado==='entrada'?'':'-';
+    return [dataStr, tp, `"${ins?.nome||''}"`, `"${_grupoNome(m.insumo_id)}"`, sinal+(m.quantidade||0), (ins?.unidade_medida||ins?.unidade_compra||''), `"${m.responsavel||''}"`, `"${(m.observacao||'').replace(/"/g,'')}"`].join(';');
+  });
+  const csv='﻿'+head.join(';')+'\n'+rows.join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='historico_movimentacoes_'+hoje()+'.csv';
+  a.click();
+  toast('CSV exportado.','ok');
 }
 
 function getInsumosFiltrados(catId) {
