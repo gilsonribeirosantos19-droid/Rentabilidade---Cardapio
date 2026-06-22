@@ -559,6 +559,10 @@
             <select id="rel-cat-sel" class="fil-select" onchange="carregarRelatorio()" style="min-width:140px">
               <option value="">Todas as categorias</option>
             </select>
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="rel-cmv-fil" onchange="carregarRelatorio()" style="accent-color:var(--teal);width:15px;height:15px;cursor:pointer">
+              Só participa CMV
+            </label>
             <button class="btn btn-primary btn-sm" onclick="carregarRelatorio()">↻ Atualizar</button>
             <span id="rel-count" style="font-size:12px;color:var(--text3);margin-left:4px"></span>
             <button class="btn btn-ghost btn-sm" onclick="exportarEstoqueRel()" style="margin-left:auto">↓ Exportar</button>
@@ -2733,6 +2737,7 @@ async function carregarRelatorio() {
     const fmtMov=dt=>{if(!dt)return null;const d=new Date(dt);const hoje_=new Date();const ontem=new Date(hoje_);ontem.setDate(ontem.getDate()-1);const dStr=d.toLocaleDateString('pt-BR');const hStr=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(d.toDateString()===hoje_.toDateString())return`Hoje, ${hStr}`;if(d.toDateString()===ontem.toDateString())return`Ontem, ${hStr}`;return`${dStr}, ${hStr}`;};
     let lista = insumos.filter(i=>i.ativo!==false);
     if(catFil) lista=lista.filter(i=>(i.categoria||'')=== catFil);
+    if(document.getElementById('rel-cmv-fil')?.checked) lista=lista.filter(i=>i.participa_cmv!=='nao');
     _relRows = lista.map(ins => {
       const ent = entradas.filter(e=>e.insumo_id===ins.id).reduce((a,e)=>a+Number(e.quantidade||0),0);
       const sai = saidas.filter(x=>x.insumo_id===ins.id).reduce((a,x)=>a+Number(x.quantidade||0),0);
