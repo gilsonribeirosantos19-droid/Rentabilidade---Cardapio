@@ -169,6 +169,7 @@ async function rodarReprocessar(tenant?: string) {
 
   const lojasCache: Record<string, any[]> = {}
   const vincCache: Record<string, any[]> = {}
+  const fornCache: Record<string, any[]> = {}
   const inicio = Date.now()
   let processadas = 0, completadas = 0, semXml = 0, erros = 0
 
@@ -183,7 +184,11 @@ async function rodarReprocessar(tenant?: string) {
 
       // cache por tenant (evita query por nota)
       if (!lojasCache[n.tenant_id]) lojasCache[n.tenant_id] = (await supabase.from('lojas').select('id,cnpj').eq('tenant_id', n.tenant_id)).data || []
-      if (!vincCache[n.tenant_id]) vincCache[n.tenant_id] = (await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor').eq('tenant_id', n.tenant_id)).data || []
+      if (!vincCache[n.tenant_id]) vincCache[n.tenant_id] = (await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor,fornecedor_id').eq('tenant_id', n.tenant_id)).data || []
+      if (!fornCache[n.tenant_id]) fornCache[n.tenant_id] = (await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', n.tenant_id)).data || []
+      // fornecedor da nota pelo CNPJ do emitente (posições 6-20 da chave) — auto-vincula só se for DELE
+      const _cnpjEmit = String(n.chave_acesso||'').substring(6,20)
+      const _fornNotaId = fornCache[n.tenant_id].find((f:any)=>String(f.cnpj||'').replace(/\D/g,'')===_cnpjEmit)?.id || null
 
       // descobre loja (se ainda null) pelo CNPJ do destinatário + vencimento
       const upd: any = {}
@@ -199,7 +204,7 @@ async function rodarReprocessar(tenant?: string) {
       // grava itens (mesma lógica do fluxo normal; índice único protege duplicata)
       const batch = itensNfe.map((item: any) => {
         const codigo = String(item.codigo_produto || '')
-        const vinc = vincCache[n.tenant_id].find((v: any) => v.codigo_fornecedor === codigo)
+        const vinc = _fornNotaId ? vincCache[n.tenant_id].find((v: any) => v.codigo_fornecedor === codigo && v.fornecedor_id === _fornNotaId) : null
         return {
           nfe_id: n.id, tenant_id: n.tenant_id,
           descricao_nfe: String(item.descricao || '').toUpperCase(),
