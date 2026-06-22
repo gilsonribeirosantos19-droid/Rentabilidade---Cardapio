@@ -93,7 +93,7 @@
   .form-input,.form-select,.form-textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);outline:none;background:#fff;transition:border-color .15s;width:100%}
   .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
   .form-input[readonly]{background:var(--bg3);color:var(--text2);cursor:default}
-  .form-textarea{resize:vertical;min-height:60px}
+  .form-textarea{resize:vertical;min-height:60px;max-height:240px}
   .form-hint{font-size:11px;color:var(--text3)}
   .col-full{grid-column:1/-1}
 
@@ -496,7 +496,7 @@
       </div>
 
       <!-- BOTÕES -->
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px;position:relative;z-index:5">
         <button class="btn btn-ghost" onclick="showLista()">Cancelar</button>
         <button class="btn btn-primary" id="btn-salvar" onclick="salvarLanc()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
