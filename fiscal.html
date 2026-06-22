@@ -761,6 +761,15 @@ async function _reconhecerItensPendentes(nfeId) {
       } catch {}
     }
   }
+  // Nota marcada como erro (aguard_vinculacao) mas SEM itens importados não é erro:
+  // está esperando os itens da SEFAZ → volta p/ 'em_transito' (sai do vermelho, fica pendente/reprocessável).
+  if(nfe && nfe.status === 'aguard_vinculacao' && currentNfeItens.length === 0){
+    try {
+      await api(`nfe_recebidas?id=eq.${nfeId}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ status:'em_transito' }) });
+      nfe.status = 'em_transito';
+      return true;
+    } catch {}
+  }
   // Se a nota está 'aguard_vinculacao' mas TODOS os itens já têm vínculo, corrige p/ 'pronta'.
   // (Auto-cura notas que ficaram presas em vermelho mesmo já estando 100% vinculadas.)
   if(nfe && nfe.status === 'aguard_vinculacao' && currentNfeItens.length && currentNfeItens.every(i => i.vinculacao_id)){
