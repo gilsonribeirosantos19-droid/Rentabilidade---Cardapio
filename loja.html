@@ -1608,6 +1608,10 @@ function switchTab(tab) {
   if (tab==='pcp') iniciarPcp();
   if (tab==='porcionamento') iniciarPorcionamento();
   if (tab==='solicitacao') carregarSaldosSol();
+  // A barra do carrinho (Solicitação de Compra) só pode aparecer na própria seção —
+  // some nas outras telas (antes ficava vazando pra Perdas, Estoque, etc.).
+  if (tab==='solicitacao') updateSolSummary();
+  else document.getElementById('sol-bottom')?.classList.remove('show');
   window.scrollTo(0,0);
 }
 
