@@ -558,6 +558,7 @@
             <input type="date" id="rel-data-ini" class="fil-select" onchange="carregarRelatorio()" title="De">
             <span style="color:var(--text3);font-size:12px">–</span>
             <input type="date" id="rel-data-fim" class="fil-select" onchange="carregarRelatorio()" title="Até">
+            <input type="text" id="rel-busca" class="fil-select" placeholder="Buscar insumo..." oninput="_relPag=1;_relRenderPag()" style="min-width:170px">
             <select id="rel-cat-sel" class="fil-select" onchange="carregarRelatorio()" style="min-width:140px">
               <option value="">Todas as categorias</option>
             </select>
@@ -2679,11 +2680,14 @@ function _relRenderPag(){
   const tbody=document.getElementById('est-rel-body');
   const info=document.getElementById('rel-pag-info');
   const btns=document.getElementById('rel-pag-btns');
-  if(!_relRows.length){tbody.innerHTML='<tr><td colspan="9" class="empty">Nenhum item encontrado.</td></tr>';if(info)info.textContent='';if(btns)btns.innerHTML='';return;}
-  const total=_relRows.length;
+  // busca por nome do insumo (client-side, não reconsulta o banco)
+  const _b=(document.getElementById('rel-busca')?.value||'').toLowerCase().trim();
+  const lista=_b?_relRows.filter(r=>(r.ins.nome||'').toLowerCase().includes(_b)):_relRows;
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="9" class="empty">Nenhum item encontrado.</td></tr>';if(info)info.textContent='';if(btns)btns.innerHTML='';return;}
+  const total=lista.length;
   const totalPags=Math.ceil(total/_relPorPag);
   _relPag=Math.min(_relPag,totalPags);
-  const slice=_relRows.slice((_relPag-1)*_relPorPag,_relPag*_relPorPag);
+  const slice=lista.slice((_relPag-1)*_relPorPag,_relPag*_relPorPag);
   const fQ=v=>v!=null?Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:3}):'—';
   const fBrl=v=>v>0?`R$ ${Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`:'—';
   tbody.innerHTML=slice.map(({ins,ent,sai,saldo,minimo,maximo,custo_medio,ultima_mov})=>`<tr>
