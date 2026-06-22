@@ -6,17 +6,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal do Gerente · Aiko</title>
 <style>
-  
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   :root{
     --bg1:#f8fafc;--bg2:#ffffff;--bg3:#f1f5f9;
     --border2:#e2e8f0;
-    --teal:#0d9488;--teal2:#0f766e;--teal-dim:rgba(13,148,136,.12);
+    /* acento = laranja da marca (alinhado ao sistema principal) */
+    --teal:#f97316;--teal2:#ea6c00;--teal-dim:rgba(249,115,22,.12);
     --amber:#f59e0b;--red:#dc2626;--blue:#3b82f6;--green:#16a34a;
     --text1:#0f172a;--text2:#64748b;--text3:#94a3b8;
     --radius:10px;--radius-lg:16px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI', system-ui, -apple-system, sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
+  body{font-family:'Inter', system-ui, -apple-system, sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
   .shell{display:flex;width:100%;min-height:100vh}
   /* ── SIDEBAR — padrão do sistema ── */
   .sidebar{width:220px;min-height:100vh;background:#1e293b;border-right:1px solid rgba(255,255,255,.07);
@@ -27,10 +28,10 @@
   .logo-loja{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px;font-weight:400}
   /* grupos — label como menu principal */
   .nav-group{padding:8px 12px 4px;margin:0;background:transparent;border-radius:0;box-shadow:none}
-  .nav-label{font-size:14px;font-weight:500;color:rgba(255,255,255,.75);letter-spacing:0;text-transform:none;padding:6px 8px 4px;margin-bottom:2px;font-family:'Segoe UI',system-ui,sans-serif}
+  .nav-label{font-size:14px;font-weight:500;color:rgba(255,255,255,.75);letter-spacing:0;text-transform:none;padding:6px 8px 4px;margin-bottom:2px;font-family:'Inter',system-ui,sans-serif}
   /* sub-itens com linha vertical */
   .nav-group > .nav-item{margin-left:14px;padding-left:12px;border-left:1px solid rgba(255,255,255,.1)}
-  .nav-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;color:rgba(148,163,184,.85);font-size:12.5px;font-weight:400;text-decoration:none;transition:all .15s;cursor:pointer;border:none;background:none;font-family:'Segoe UI',system-ui,sans-serif;width:100%;margin:1px 0}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;color:rgba(148,163,184,.85);font-size:12.5px;font-weight:400;text-decoration:none;transition:all .15s;cursor:pointer;border:none;background:none;font-family:'Inter',system-ui,sans-serif;width:100%;margin:1px 0}
   .nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
   .nav-item.active{background:rgba(249,115,22,.15);color:#f97316;font-weight:600}
   .nav-icon{width:14px;height:14px;flex-shrink:0;stroke-width:1.8;opacity:.6}
@@ -310,7 +311,8 @@
   .pcp-tab-close:hover{background:rgba(0,0,0,.1);color:var(--text1)}
   /* ── PCP ── */
   .filter-bar-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;margin-bottom:18px}
-  .fil-select{height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:10px;font-size:13px;font-family:inherit;color:var(--text1);font-weight:500;background:var(--bg3);outline:none;cursor:pointer;min-width:130px}
+  .fil-select{height:38px;padding:0 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text1);font-weight:500;background:#fff;outline:none;cursor:pointer;min-width:130px}
+  .fil-select:focus{border-color:var(--teal)}
   .fil-select:focus{border-color:var(--teal)}
   .filter-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
   .tbl-card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:8px}
