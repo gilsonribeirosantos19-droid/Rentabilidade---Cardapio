@@ -1106,23 +1106,44 @@
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">
         Saldo de Estoque <span style="font-weight:400;color:#94a3b8;font-size:13px">— posição financeira por loja</span>
       </div>
-      <div class="toolbar" style="margin-bottom:16px">
-        <select class="field field-sm" id="se-tipo-data" onchange="onSeTipoDataChange()" style="min-width:150px">
-          <option value="atual">Posição Atual</option>
-          <option value="mes_anterior">Fim Mês Anterior</option>
-          <option value="especifica">Data Específica</option>
-        </select>
-        <input type="date" id="se-data" class="field field-sm" onchange="renderSaldoEst()" style="display:none">
-        <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
-          <option value="">Todas as categorias</option>
-        </select>
-        <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()">
-          <option value="">Todos os tipos</option>
-        </select>
-        <input class="field field-sm" id="se-busca" placeholder="Pesquisar item..." oninput="clearTimeout(window._seBuscaT);window._seBuscaT=setTimeout(renderSaldoEst,250)" style="min-width:160px">
-        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#475569;cursor:pointer;white-space:nowrap"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">Somente CMV</label>
-        <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
-        <span id="se-valor-total" style="margin-left:auto;font-size:13px;font-weight:700;color:#0f172a"></span>
+      <div class="ds-filterbar" style="margin-bottom:16px">
+        <div class="ds-field">
+          <label>Posição</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="field field-sm" id="se-tipo-data" onchange="onSeTipoDataChange()" style="min-width:150px">
+              <option value="atual">Posição Atual</option>
+              <option value="mes_anterior">Fim Mês Anterior</option>
+              <option value="especifica">Data Específica</option>
+            </select>
+            <input type="date" id="se-data" class="field field-sm" onchange="renderSaldoEst()" style="display:none">
+          </div>
+        </div>
+        <div class="ds-field">
+          <label>Categoria</label>
+          <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
+            <option value="">Todas as categorias</option>
+          </select>
+        </div>
+        <div class="ds-field">
+          <label>Tipo</label>
+          <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()">
+            <option value="">Todos os tipos</option>
+          </select>
+        </div>
+        <div class="ds-field ds-grow">
+          <label>Buscar</label>
+          <input class="field field-sm" id="se-busca" placeholder="Pesquisar item..." oninput="clearTimeout(window._seBuscaT);window._seBuscaT=setTimeout(renderSaldoEst,250)" style="min-width:160px">
+        </div>
+        <div class="ds-field">
+          <label>Mostrar</label>
+          <div style="display:flex;align-items:center;height:var(--ds-input-h,36px)">
+            <label class="ds-switch"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()"><span class="ds-track"></span>Somente CMV</label>
+          </div>
+        </div>
+        <div class="ds-actions">
+          <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
+          <span id="se-valor-total" style="font-size:13px;font-weight:700;color:#0f172a"></span>
+        </div>
       </div>
       <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 250px);overflow-y:auto"><table class="tbl">
         <thead style="position:sticky;top:0;z-index:5"><tr>
