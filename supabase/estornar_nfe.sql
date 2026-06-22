@@ -25,6 +25,7 @@ as $$
 declare
   v_nfe      public.nfe_recebidas%rowtype;
   v_ref      text;
+  v_chave    text;
   v_tenant   uuid;
   r          record;
   v_tot      numeric;
@@ -39,18 +40,27 @@ begin
   v_tenant := v_nfe.tenant_id;
   -- mesmo formato gravado no processamento: numero/serie (ex: 838919/38)
   v_ref := v_nfe.numero::text || '/' || v_nfe.serie::text;
+  v_chave := v_nfe.chave_acesso;
+
+  -- Identifica as entradas DESTA nota pela CHAVE (única). Notas antigas (sem chave
+  -- gravada na entrada) caem no fallback por numero/serie. numero/serie sozinho NÃO
+  -- é único entre fornecedores — por isso a chave é preferida.
 
   -- 1) captura os pares (insumo, loja) afetados ANTES de apagar
   drop table if exists _estorno_pares;
   create temp table _estorno_pares on commit drop as
     select distinct insumo_id, loja_id
     from public.entradas_estoque
-    where tenant_id = v_tenant and nfe_numero = v_ref;
+    where tenant_id = v_tenant
+      and ( (v_chave is not null and chave_acesso = v_chave)
+            or (chave_acesso is null and nfe_numero = v_ref) );
   select count(*) into v_pares from _estorno_pares;
 
   -- 2) apaga as entradas desta nota
   delete from public.entradas_estoque
-   where tenant_id = v_tenant and nfe_numero = v_ref;
+   where tenant_id = v_tenant
+     and ( (v_chave is not null and chave_acesso = v_chave)
+           or (chave_acesso is null and nfe_numero = v_ref) );
   get diagnostics v_apagadas = row_count;
 
   -- 3) recalcula saldo + custo médio de cada par (reconstrói com o que sobrou)

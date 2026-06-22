@@ -1181,8 +1181,13 @@ async function processarNfeFiscal(nfeId, silent = false) {
 
   // Trava anti-duplicação: se a nota JÁ gerou entradas, não processa de novo (evita estoque dobrado
   // e custo médio distorcido por duplo-clique/reprocesso). Pra refazer, estornar primeiro.
+  // Identifica pela CHAVE (única); só cai no número/série (não-único entre fornecedores) se faltar chave.
   const _ref = `${nfe.numero}/${nfe.serie}`;
-  const _jaEntrou = await api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&tipo=eq.nfe&nfe_numero=eq.${encodeURIComponent(_ref)}&limit=1`).catch(()=>[]);
+  const _chave = nfe.chave_acesso || '';
+  const _qDup = _chave
+    ? `entradas_estoque?tenant_id=eq.${TENANT_ID}&tipo=eq.nfe&chave_acesso=eq.${_chave}&limit=1`
+    : `entradas_estoque?tenant_id=eq.${TENANT_ID}&tipo=eq.nfe&nfe_numero=eq.${encodeURIComponent(_ref)}&limit=1`;
+  const _jaEntrou = await api(_qDup).catch(()=>[]);
   if(_jaEntrou && _jaEntrou.length){
     await api(`nfe_recebidas?id=eq.${nfeId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({status:'processada'})}).catch(()=>{});
     if(!silent){ toast('Esta nota já foi processada (já tem entradas no estoque). Para refazer, estorne primeiro.','err'); await loadAll(); }
@@ -1223,6 +1228,7 @@ async function processarNfeFiscal(nfeId, silent = false) {
         custo_unitario:  custoUnit,
         tipo:            'nfe',
         nfe_numero:      `${nfe.numero}/${nfe.serie}`,
+        chave_acesso:    nfe.chave_acesso || null,
         observacao:      `NF-e ${nfe.numero}/${nfe.serie}`,
         criado_em:       dataStr + 'T12:00:00.000Z',
       }, custoUnit);
