@@ -1159,8 +1159,12 @@ function filterItens() {}
 // ── PROCESSAR NF-E FISCAL ─────────────────────────────────────────
 async function processarNfeFiscal(nfeId, silent = false) {
   const nfe = entradasNfe.find(n => n.id === nfeId);
-  // Se a nota já veio roteada pelo CNPJ (tem loja_id), processa NELA (cada nota na sua loja).
-  if(nfe?.loja_id){ const _lj = lojas.find(l=>l.id===nfe.loja_id); if(_lj) lojaAtual = _lj; }
+  // Loja de destino: a da nota (roteada por CNPJ); se a nota NÃO tem loja, a selecionada no topo.
+  // (Lê o dropdown direto p/ não herdar a loja da nota anterior no lote.)
+  const _lojaDrop = document.getElementById('sel-loja')?.value || null;
+  if(nfe?.loja_id){ lojaAtual = lojas.find(l=>l.id===nfe.loja_id) || lojaAtual; }
+  else if(_lojaDrop){ lojaAtual = lojas.find(l=>l.id===_lojaDrop) || lojaAtual; }
+  else { lojaAtual = null; }
   if(!getLojaId()){ if(!silent) toast('Esta nota não tem loja. Selecione uma loja no seletor "Loja:" (no topo) antes de processar.','err'); return; }
   if(!nfe || nfe.status !== 'pronta') { if(!silent) toast('NF-e não está pronta para processar.', 'err'); return; }
   if(!silent && !confirm(`Confirmar processamento da NF-e ${nfe.numero}?\n\nEsta ação irá atualizar o estoque e o custo médio dos insumos.`)) return;
@@ -1175,12 +1179,21 @@ async function processarNfeFiscal(nfeId, silent = false) {
   const pendentes = currentNfeItens.filter(i => !i.vinculacao_id);
   if(pendentes.length > 0) { toast(`Ainda há ${pendentes.length} item(ns) sem vínculo.`, 'err'); return; }
 
-  // Busca o fornecedor pelo CNPJ
+  // Trava anti-duplicação: se a nota JÁ gerou entradas, não processa de novo (evita estoque dobrado
+  // e custo médio distorcido por duplo-clique/reprocesso). Pra refazer, estornar primeiro.
+  const _ref = `${nfe.numero}/${nfe.serie}`;
+  const _jaEntrou = await api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&tipo=eq.nfe&nfe_numero=eq.${encodeURIComponent(_ref)}&limit=1`).catch(()=>[]);
+  if(_jaEntrou && _jaEntrou.length){
+    await api(`nfe_recebidas?id=eq.${nfeId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({status:'processada'})}).catch(()=>{});
+    if(!silent){ toast('Esta nota já foi processada (já tem entradas no estoque). Para refazer, estorne primeiro.','err'); await loadAll(); }
+    return;
+  }
+
+  // Fornecedor pelo CNPJ — usa a lista já carregada (não rebusca a cada nota no lote)
   let fornId = null, fornNome = nfe.nome_emitente || null;
   const cnpjLimpo = (nfe.cnpj_emitente||'').replace(/\D/g,'');
   if(cnpjLimpo) {
-    const fList = await api(`fornecedores?tenant_id=eq.${TENANT_ID}&select=id,nome,cnpj`).catch(()=>[]);
-    const fMatch = fList.find(f => (f.cnpj||'').replace(/\D/g,'') === cnpjLimpo);
+    const fMatch = (fornecedores||[]).find(f => (f.cnpj||'').replace(/\D/g,'') === cnpjLimpo);
     if(fMatch) { fornId = fMatch.id; fornNome = fMatch.nome; }
   }
 
@@ -1217,6 +1230,15 @@ async function processarNfeFiscal(nfeId, silent = false) {
     } catch(e) { console.warn('Erro ao registrar item:', item.descricao_nfe, e.message); }
   }
 
+  // Se ALGUM item falhou, reverte tudo (estorno atômico) e NÃO marca processada.
+  // Evita entrada parcial silenciosa (estoque faltando sem aviso).
+  if(ok < currentNfeItens.length){
+    await api('rpc/estornar_nfe',{method:'POST',body:JSON.stringify({p_nfe_id:nfeId})}).catch(()=>{});
+    if(!silent){ toast(`Falha em ${currentNfeItens.length-ok} item(ns). A nota foi revertida — tente processar de novo.`,'err'); await loadAll(); }
+    else throw new Error('processamento parcial revertido');
+    return;
+  }
+
   // Atualiza status da NF-e para processada
   await api(`nfe_recebidas?id=eq.${nfeId}`, {
     method:'PATCH', prefer:'return=minimal',
@@ -1240,7 +1262,9 @@ async function registrarEntrada(insId, dados, custoUnitEstoque) {
   const s=getSaldo(insId);
   const qA=s.quantidade||0, cmA=s.custo_medio||0;
   const qN=qA+dados.quantidade;
-  const cmN=qN>0?(qA*cmA+dados.quantidade*custoUnitEstoque)/qN:custoUnitEstoque;
+  // Média ponderada só vale com saldo anterior POSITIVO. Se o saldo estava zerado/negativo,
+  // o custo médio passa a ser o custo desta entrada (senão a fórmula gera custo absurdo/negativo).
+  const cmN=(qA>0&&qN>0)?(qA*cmA+dados.quantidade*custoUnitEstoque)/qN:custoUnitEstoque;
   await upsertSaldo(insId, qN, parseFloat(cmN.toFixed(6)));
   try {
     const impacto=cmA>0?parseFloat(((cmN-cmA)/cmA*100).toFixed(4)):null;
