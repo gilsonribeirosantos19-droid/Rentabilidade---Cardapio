@@ -774,6 +774,15 @@ async function _reconhecerItensPendentes(nfeId) {
       return true;
     } catch {}
   }
+  // Nota marcada 'pronta' (azul) mas com ALGUM item sem vínculo (ex.: vínculo errado foi removido):
+  // volta p/ 'aguard_vinculacao' (vermelho), pois ainda falta vincular — não pode processar assim.
+  if(nfe && nfe.status === 'pronta' && currentNfeItens.length && currentNfeItens.some(i => !i.vinculacao_id)){
+    try {
+      await api(`nfe_recebidas?id=eq.${nfeId}`, { method:'PATCH', prefer:'return=minimal', body:JSON.stringify({ status:'aguard_vinculacao' }) });
+      nfe.status = 'aguard_vinculacao';
+      return true;
+    } catch {}
+  }
   // Se a nota está 'aguard_vinculacao' mas TODOS os itens já têm vínculo, corrige p/ 'pronta'.
   // (Auto-cura notas que ficaram presas em vermelho mesmo já estando 100% vinculadas.)
   if(nfe && nfe.status === 'aguard_vinculacao' && currentNfeItens.length && currentNfeItens.every(i => i.vinculacao_id)){
