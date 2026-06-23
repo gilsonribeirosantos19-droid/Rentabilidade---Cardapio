@@ -299,47 +299,28 @@
     <!-- PANE 2: PRODUTOS / ITENS -->
     <div class="mod-pane" id="pane-produtos" style="display:block;padding-top:16px">
       <div class="filter-bar-wrap">
-        <div class="prod-toolbar ds-filterbar">
-          <div class="ds-field">
-            <label>Buscar</label>
-            <div class="prod-search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" id="prod-busca" placeholder="Buscar item..." oninput="filtrarProdutos()">
-            </div>
+        <div class="prod-toolbar">
+          <div class="prod-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="prod-busca" placeholder="Buscar item..." oninput="filtrarProdutos()">
           </div>
-          <div class="ds-field">
-            <label>Tipo do item</label>
-            <select class="prod-filter" id="prod-tipo" onchange="filtrarProdutos()"><option value="">Todos</option></select>
-          </div>
-          <div class="ds-field">
-            <label>Família</label>
-            <select class="prod-filter" id="prod-familia" onchange="filtrarProdutos()"><option value="">Todas</option></select>
-          </div>
-          <div class="ds-field">
-            <label>Grupo</label>
-            <select class="prod-filter" id="prod-grupo" onchange="filtrarProdutos()"><option value="">Todos</option></select>
-          </div>
-          <div class="ds-field">
-            <label>Subgrupo</label>
-            <select class="prod-filter" id="prod-subgrupo" onchange="filtrarProdutos()"><option value="">Todos</option></select>
-          </div>
-          <div class="ds-field">
-            <label>Status</label>
-            <select class="prod-filter" id="prod-status" onchange="filtrarProdutos()">
-              <option value="">Todos</option>
-              <option value="true">Ativo</option>
-              <option value="false">Inativo</option>
-            </select>
-          </div>
-          <div class="ds-field">
-            <label>Situação de estoque</label>
-            <select class="prod-filter" id="prod-estq" onchange="filtrarProdutos()">
-              <option value="">Todas</option>
-              <option value="ativo">Em estoque</option>
-              <option value="atencao">Estoque baixo</option>
-              <option value="critico">Crítico</option>
-            </select>
-          </div>
+          <select class="prod-filter" id="prod-tipo" onchange="filtrarProdutos()">
+            <option value="">Tipo do item ▾</option>
+          </select>
+          <select class="prod-filter" id="prod-familia" onchange="filtrarProdutos()"><option value="">Família ▾</option></select>
+          <select class="prod-filter" id="prod-grupo" onchange="filtrarProdutos()"><option value="">Grupo ▾</option></select>
+          <select class="prod-filter" id="prod-subgrupo" onchange="filtrarProdutos()"><option value="">Subgrupo ▾</option></select>
+          <select class="prod-filter" id="prod-status" onchange="filtrarProdutos()">
+            <option value="">Status ▾</option>
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+          <select class="prod-filter" id="prod-estq" onchange="filtrarProdutos()">
+            <option value="">Situação de estoque ▾</option>
+            <option value="ativo">Em estoque</option>
+            <option value="atencao">Estoque baixo</option>
+            <option value="critico">Crítico</option>
+          </select>
         </div>
       </div>
       <div class="tbl-card">
@@ -1163,7 +1144,7 @@ function _popularGruposProd(){
   if(!sel) return;
   const cur=sel.value;  // preserva o filtro selecionado ao repopular (senão zera após salvar)
   const cats=[...new Set(todos.map(i=>i.categoria).filter(Boolean))].sort();
-  sel.innerHTML='<option value="">Todos</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  sel.innerHTML='<option value="">Grupo ▾</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   if(cur) sel.value=cur;
   if(sel._ssSync) sel._ssSync();  // atualiza o botão do seletor com busca
 }
@@ -1186,9 +1167,9 @@ async function carregarClassificacoes(){
     fill('cad-familia',  byTipo('familia'),   'Selecione...');
     fill('cad-grupo',    byTipo('grupo'),     'Selecione...');
     fill('cad-subgrupo', byTipo('subgrupo'),  'Selecione...');
-    fill('prod-tipo',    byTipo('tipo_item'), 'Todos');
-    fill('prod-familia', byTipo('familia'),   'Todas');
-    fill('prod-subgrupo',byTipo('subgrupo'),  'Todos');
+    fill('prod-tipo',    byTipo('tipo_item'), 'Tipo do item ▾');
+    fill('prod-familia', byTipo('familia'),   'Família ▾');
+    fill('prod-subgrupo',byTipo('subgrupo'),  'Subgrupo ▾');
   }catch{}
 }
 
