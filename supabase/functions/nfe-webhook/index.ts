@@ -399,6 +399,15 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: false, msg: 'nenhuma nota completa disponível' }), { headers: { 'Content-Type': 'application/json' } })
     }
 
+    // Modo COMPLETA: { "completa": true, "chave": "<44 dígitos>" } → devolve o JSON completo da nota
+    // (requisicao_nota_fiscal + itens) p/ gerar o "DANFE padrão Aiko" com todos os campos.
+    if (body.completa === true && body.chave) {
+      const ch = String(body.chave).replace(/\D/g, '')
+      const c = await fetchNfeCompleta(ch)
+      if (c) return new Response(JSON.stringify({ ok: true, nota: c }), { headers: { 'Content-Type': 'application/json', ...CORS } })
+      return new Response(JSON.stringify({ ok: false, msg: 'nota completa indisponível no Focus' }), { status: 200, headers: { 'Content-Type': 'application/json', ...CORS } })
+    }
+
     // Modo DANFE: { "danfe": true, "chave": "<44 dígitos>" } → devolve a URL do PDF do DANFE.
     // O Focus responde 302 com a URL pré-assinada no header Location; repassamos pro navegador abrir/imprimir.
     if (body.danfe === true && body.chave) {
