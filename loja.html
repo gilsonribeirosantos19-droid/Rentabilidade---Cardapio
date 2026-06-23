@@ -315,6 +315,18 @@
   .fil-select:focus{border-color:var(--teal)}
   .fil-select::placeholder{color:#94a3b8}
   .fil-select:focus{border-color:var(--teal)}
+  /* Barra de filtros padrão (igual ao sistema principal) */
+  .ds-filterbar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+  .ds-filterbar .ds-field{display:flex;flex-direction:column;gap:6px}
+  .ds-filterbar .ds-field>label{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;margin:0}
+  .ds-filterbar .ds-field.ds-grow{flex:1;min-width:180px}
+  .ds-filterbar .ds-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .ds-switch{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text2);cursor:pointer;user-select:none;white-space:nowrap}
+  .ds-switch input{display:none}
+  .ds-switch>.ds-track{width:34px;height:19px;border-radius:99px;background:#cbd5e1;position:relative;transition:background .15s;flex:none}
+  .ds-switch>.ds-track::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .ds-switch input:checked+.ds-track{background:var(--teal)}
+  .ds-switch input:checked+.ds-track::after{transform:translateX(15px)}
   .filter-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
   .tbl-card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:8px}
   .tbl-scroll{overflow-x:auto}
@@ -555,21 +567,36 @@
         <div class="page-title" style="margin-bottom:4px">Relatório de Estoque</div>
         <div class="page-sub" style="margin-bottom:16px">Acompanhe o saldo atual e a movimentação dos insumos.</div>
         <div class="filter-bar-wrap" style="margin-bottom:14px">
-          <div class="toolbar" style="flex-wrap:wrap;gap:8px">
-            <input type="date" id="rel-data-ini" class="fil-select" onchange="carregarRelatorio()" title="De">
-            <span style="color:var(--text3);font-size:12px">–</span>
-            <input type="date" id="rel-data-fim" class="fil-select" onchange="carregarRelatorio()" title="Até">
-            <input type="text" id="rel-busca" class="fil-select" placeholder="Buscar insumo..." oninput="_relPag=1;_relRenderPag()" style="min-width:170px">
-            <select id="rel-cat-sel" class="fil-select" onchange="carregarRelatorio()" style="min-width:140px">
-              <option value="">Todas as categorias</option>
-            </select>
-            <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap">
-              <input type="checkbox" id="rel-cmv-fil" onchange="carregarRelatorio()" style="accent-color:var(--teal);width:15px;height:15px;cursor:pointer">
-              Só participa CMV
-            </label>
-            <button class="btn btn-primary btn-sm" onclick="carregarRelatorio()">↻ Atualizar</button>
-            <span id="rel-count" style="font-size:12px;color:var(--text3);margin-left:4px"></span>
-            <button class="btn btn-ghost btn-sm" onclick="exportarEstoqueRel()" style="margin-left:auto">↓ Exportar</button>
+          <div class="toolbar ds-filterbar" style="gap:12px;align-items:flex-end">
+            <div class="ds-field">
+              <label>De</label>
+              <input type="date" id="rel-data-ini" class="fil-select" onchange="carregarRelatorio()" title="De">
+            </div>
+            <div class="ds-field">
+              <label>Até</label>
+              <input type="date" id="rel-data-fim" class="fil-select" onchange="carregarRelatorio()" title="Até">
+            </div>
+            <div class="ds-field ds-grow">
+              <label>Buscar</label>
+              <input type="text" id="rel-busca" class="fil-select" placeholder="Buscar insumo..." oninput="_relPag=1;_relRenderPag()" style="min-width:170px;width:100%">
+            </div>
+            <div class="ds-field">
+              <label>Categoria</label>
+              <select id="rel-cat-sel" class="fil-select" onchange="carregarRelatorio()" style="min-width:140px">
+                <option value="">Todas as categorias</option>
+              </select>
+            </div>
+            <div class="ds-field">
+              <label>Mostrar</label>
+              <div style="display:flex;align-items:center;height:38px">
+                <label class="ds-switch"><input type="checkbox" id="rel-cmv-fil" onchange="carregarRelatorio()"><span class="ds-track"></span>Só participa CMV</label>
+              </div>
+            </div>
+            <div class="ds-actions">
+              <button class="btn btn-primary btn-sm" onclick="carregarRelatorio()">↻ Atualizar</button>
+              <span id="rel-count" style="font-size:12px;color:var(--text3)"></span>
+              <button class="btn btn-ghost btn-sm" onclick="exportarEstoqueRel()">↓ Exportar</button>
+            </div>
           </div>
         </div>
         <div class="tbl-card">
