@@ -154,27 +154,35 @@
     <div class="content">
 
       <!-- FILTROS: linha 1 -->
-      <div class="filter-bar-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-        <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Fornecedor:</span>
-        <select class="field field-sm" id="fil-fornecedor" onchange="renderTable()" style="min-width:150px">
-          <option value="">Todos</option>
-        </select>
-        <span style="font-size:12px;color:#64748b;font-weight:500;white-space:nowrap">Período:</span>
-        <div id="fil-periodo-datas" style="display:none;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-          <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
-          <span style="color:#94a3b8">até</span>
-          <input type="date" id="fil-ate" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
+      <div class="ds-filterbar filter-bar-wrap" style="margin-bottom:6px">
+        <div class="ds-field">
+          <label>Fornecedor</label>
+          <select class="field field-sm" id="fil-fornecedor" onchange="renderTable()" style="min-width:150px">
+            <option value="">Todos</option>
+          </select>
         </div>
-        <select class="field field-sm" id="fil-periodo" onchange="document.getElementById('fil-periodo-datas').style.display=this.value==='periodo'?'flex':'none';setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:120px">
-          <option value="todos" selected>Todos</option>
-          <option value="mes_atual">Mês Atual</option>
-          <option value="mes_anterior">Mês Anterior</option>
-          <option value="periodo">Período</option>
-        </select>
-        <button class="btn btn-ghost" onclick="limparFiltros()" style="margin-left:auto;gap:5px;font-size:12px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          Limpar filtros
-        </button>
+        <div class="ds-field">
+          <label>Período</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="field field-sm" id="fil-periodo" onchange="document.getElementById('fil-periodo-datas').style.display=this.value==='periodo'?'flex':'none';setPeriodoRange(this.value,'fil-de','fil-ate',loadAll)" style="min-width:120px">
+              <option value="todos" selected>Todos</option>
+              <option value="mes_atual">Mês Atual</option>
+              <option value="mes_anterior">Mês Anterior</option>
+              <option value="periodo">Período</option>
+            </select>
+            <div id="fil-periodo-datas" style="display:none;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
+              <input type="date" id="fil-de" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
+              <span style="color:#94a3b8">até</span>
+              <input type="date" id="fil-ate" class="field field-sm" onchange="loadAll()" style="border:none;padding:0;background:transparent;width:110px">
+            </div>
+          </div>
+        </div>
+        <div class="ds-actions">
+          <button class="btn btn-ghost btn-sm" onclick="limparFiltros()" style="gap:5px;font-size:12px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Limpar filtros
+          </button>
+        </div>
       </div>
 
       <!-- FILTROS: linha 2 — chips de situação + processar selecionadas -->
