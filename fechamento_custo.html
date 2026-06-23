@@ -61,10 +61,16 @@
           <label>Loja</label>
           <select id="f-loja" class="field field-sm" onchange="render()" style="min-width:170px"><option value="">Todas as lojas</option></select>
         </div>
+        <div class="ds-field">
+          <label>Ação</label>
+          <select id="f-acao" class="field field-sm" style="min-width:130px">
+            <option value="fechar">Fechar</option>
+            <option value="abrir">Abrir (reabrir)</option>
+          </select>
+        </div>
         <div class="ds-actions">
           <button class="btn btn-primary btn-sm" onclick="calcular()">Calcular</button>
-          <button class="btn btn-ghost btn-sm" id="btn-fechar" onclick="fecharSelecionadas()" disabled>Fechar selecionadas (<span id="cnt-sel">0</span>)</button>
-          <button class="btn btn-ghost btn-sm" id="btn-reabrir" onclick="reabrirSelecionadas()" disabled>Reabrir</button>
+          <button class="btn btn-ghost btn-sm" id="btn-aplicar" onclick="aplicarAcao()" disabled>Aplicar (<span id="cnt-sel">0</span>)</button>
           <button class="btn btn-ghost btn-sm" onclick="exportCSV()">↓ Exportar</button>
         </div>
       </div>
@@ -256,11 +262,13 @@ function toggleAll(chk){ visibleRows().forEach(r=>{ if(chk.checked)selected.add(
 function atualizarBtns(){
   const n=selected.size;
   document.getElementById('cnt-sel').textContent=n;
-  const bf=document.getElementById('btn-fechar'), br=document.getElementById('btn-reabrir');
-  // só pode fechar lojas ABERTAS; só pode reabrir FECHADAS
-  const sel=[...selected].map(id=> rowsData.find(r=>r.loja.id===id)).filter(Boolean);
-  const temAberta=sel.some(r=>r.situacao==='aberto'), temFechada=sel.some(r=>r.situacao==='fechado');
-  bf.disabled=!(n&&temAberta); br.disabled=!(n&&temFechada);
+  const ba=document.getElementById('btn-aplicar');
+  if(ba) ba.disabled = n===0;
+}
+function aplicarAcao(){
+  if(!selected.size){ toast('Selecione ao menos uma loja.','err'); return; }
+  const acao=document.getElementById('f-acao').value;
+  if(acao==='abrir') reabrirSelecionadas(); else fecharSelecionadas();
 }
 
 async function fecharSelecionadas(){
