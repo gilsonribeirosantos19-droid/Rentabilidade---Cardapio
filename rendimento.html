@@ -52,7 +52,7 @@
   .field{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:#0f172a;outline:none}
   .field:focus{border-color:#f97316}
   .filter-row .ss-wrap{min-width:160px}
-  .date-range{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px}
+  .date-range{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:0 10px;height:36px;box-sizing:border-box}
   .date-range input[type=date]{border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;cursor:pointer}
   .date-clear{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0;line-height:1;display:inline-flex;align-items:center}
   .date-clear:hover{color:#e11d48}
@@ -253,7 +253,7 @@
           <button class="date-clear" onclick="limparDatas()" title="Limpar datas">✕</button>
         </div>
       </div>
-      <div class="ds-actions">
+      <div class="ds-actions" style="margin-left:0">
         <button class="btn btn-ghost" onclick="carregar()" style="display:inline-flex;align-items:center;gap:5px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg>
           Atualizar
