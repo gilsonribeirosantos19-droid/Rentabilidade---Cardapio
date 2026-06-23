@@ -202,30 +202,46 @@
     <!-- LISTA -->
     <div id="lanc-list">
       <div class="filter-bar-wrap">
-        <div class="toolbar">
-          <div class="search-wrap">
-            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input class="form-input" id="lanc-busca" placeholder="Buscar produto..." oninput="renderLanc()" style="height:38px">
+        <div class="toolbar ds-filterbar" style="gap:12px;align-items:flex-end">
+          <div class="ds-field">
+            <label>Buscar</label>
+            <div class="search-wrap">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input class="form-input" id="lanc-busca" placeholder="Buscar produto..." oninput="renderLanc()" style="height:38px">
+            </div>
           </div>
-          <select class="fil-select" id="lanc-f-modelo" onchange="renderLanc()">
-            <option value="">Todos os modelos</option>
-            <option value="simples">Simples</option>
-            <option value="degelo">Degelo + Limpeza</option>
-            <option value="coccao">Cocção / Redução</option>
-            <option value="lote">Produção em Lote</option>
-          </select>
-          <select class="fil-select" id="lanc-f-tipo" onchange="renderLanc()">
-            <option value="">Entrada + Saída</option>
-            <option value="entrada">↓ Entrada</option>
-            <option value="saida">↑ Saída</option>
-          </select>
-          <input type="date" class="fil-date" id="lanc-f-de" onchange="renderLanc()" title="De">
-          <span style="color:var(--text3);font-size:12px">–</span>
-          <input type="date" class="fil-date" id="lanc-f-ate" onchange="renderLanc()" title="Até">
-          <button class="btn btn-primary ml" onclick="novoLancamento()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Novo Lançamento
-          </button>
+          <div class="ds-field">
+            <label>Modelo</label>
+            <select class="fil-select" id="lanc-f-modelo" onchange="renderLanc()">
+              <option value="">Todos os modelos</option>
+              <option value="simples">Simples</option>
+              <option value="degelo">Degelo + Limpeza</option>
+              <option value="coccao">Cocção / Redução</option>
+              <option value="lote">Produção em Lote</option>
+            </select>
+          </div>
+          <div class="ds-field">
+            <label>Tipo</label>
+            <select class="fil-select" id="lanc-f-tipo" onchange="renderLanc()">
+              <option value="">Entrada + Saída</option>
+              <option value="entrada">↓ Entrada</option>
+              <option value="saida">↑ Saída</option>
+            </select>
+          </div>
+          <div class="ds-field">
+            <label>De</label>
+            <input type="date" class="fil-date" id="lanc-f-de" onchange="renderLanc()" title="De">
+          </div>
+          <div class="ds-field">
+            <label>Até</label>
+            <input type="date" class="fil-date" id="lanc-f-ate" onchange="renderLanc()" title="Até">
+          </div>
+          <div class="ds-actions">
+            <button class="btn btn-primary" onclick="novoLancamento()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo Lançamento
+            </button>
+          </div>
         </div>
       </div>
       <div class="tbl-card"><div class="tbl-scroll">
