@@ -51,6 +51,7 @@
   .filter-row{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);flex-wrap:wrap}
   .field{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:#0f172a;outline:none}
   .field:focus{border-color:#f97316}
+  .filter-row .ss-wrap{min-width:160px}
   .date-range{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px}
   .date-range input[type=date]{border:none;outline:none;font-size:13px;font-family:inherit;color:#0f172a;background:transparent;cursor:pointer}
   .date-clear{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:14px;padding:0;line-height:1;display:inline-flex;align-items:center}
@@ -227,31 +228,42 @@
     </div>
 
     <!-- FILTER ROW -->
-    <div class="filter-row">
-      <select class="field" id="filtro-insumo" style="min-width:160px" onchange="filtrar()">
-        <option value="">Todos os insumos</option>
-      </select>
-      <select style="padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',filtrar)">
-        <option value="periodo">Período</option>
-        <option value="mes_atual" selected>Mês Atual</option>
-        <option value="mes_anterior">Mês Anterior</option>
-      </select>
-      <div class="date-range">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <input type="date" id="fil-de" onchange="filtrar()">
-        <span style="color:#94a3b8">—</span>
-        <input type="date" id="fil-ate" onchange="filtrar()">
-        <button class="date-clear" onclick="limparDatas()" title="Limpar datas">✕</button>
+    <div class="filter-row ds-filterbar" style="gap:12px;align-items:flex-end">
+      <div class="ds-field">
+        <label>Insumo</label>
+        <select class="field" id="filtro-insumo" style="min-width:160px" onchange="filtrar()">
+          <option value="">Todos os insumos</option>
+        </select>
       </div>
-      <button class="btn btn-ghost" onclick="carregar()" style="display:inline-flex;align-items:center;gap:5px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg>
-        Atualizar
-      </button>
-      <span id="count-label" style="margin-left:auto;font-size:12px;color:#94a3b8;font-weight:600"></span>
-      <button class="btn btn-ghost" onclick="exportarCSV()" style="display:inline-flex;align-items:center;gap:5px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exportar CSV
-      </button>
+      <div class="ds-field">
+        <label>Período</label>
+        <select style="padding:7px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#fff;min-width:130px;cursor:pointer" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',filtrar)">
+          <option value="periodo">Personalizado</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
+      </div>
+      <div class="ds-field">
+        <label>Datas</label>
+        <div class="date-range">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input type="date" id="fil-de" onchange="filtrar()">
+          <span style="color:#94a3b8">—</span>
+          <input type="date" id="fil-ate" onchange="filtrar()">
+          <button class="date-clear" onclick="limparDatas()" title="Limpar datas">✕</button>
+        </div>
+      </div>
+      <div class="ds-actions">
+        <button class="btn btn-ghost" onclick="carregar()" style="display:inline-flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.03-4.6"/></svg>
+          Atualizar
+        </button>
+        <span id="count-label" style="font-size:12px;color:#94a3b8;font-weight:600"></span>
+        <button class="btn btn-ghost" onclick="exportarCSV()" style="display:inline-flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar CSV
+        </button>
+      </div>
     </div>
 
     <!-- TABLE -->
