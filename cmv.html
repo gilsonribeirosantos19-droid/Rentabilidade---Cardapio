@@ -40,7 +40,7 @@
   .tog input{opacity:0;width:0;height:0}
   .tog-sl{position:absolute;inset:0;background:#cbd5e1;border-radius:10px;transition:.3s}
   .tog-sl:before{position:absolute;content:'';height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-  .tog input:checked+.tog-sl{background:#22c55e}
+  .tog input:checked+.tog-sl{background:#f97316}
   .tog input:checked+.tog-sl:before{transform:translateX(18px)}
   /* BUTTONS */
   .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -146,26 +146,43 @@
   <div class="content">
 
     <!-- FILTER ROW -->
-    <div class="filter-card">
-      <select class="field" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',calcular)" style="min-width:130px">
-        <option value="periodo">Período</option>
-        <option value="mes_atual" selected>Mês Atual</option>
-        <option value="mes_anterior">Mês Anterior</option>
-      </select>
-      <input type="date" id="fil-de" class="field" style="width:130px">
-      <span style="color:#94a3b8;font-size:16px">—</span>
-      <input type="date" id="fil-ate" class="field" style="width:130px">
-      <select class="field" id="fil-loja" style="min-width:130px"><option value="">Todas as lojas</option></select>
-      <select class="field" id="fil-grupo" style="min-width:130px"><option value="">Todos os grupos</option></select>
-      <div class="tog-wrap">
-        <label class="tog"><input type="checkbox" id="tog-div" onchange="renderTabela()"><span class="tog-sl"></span></label>
-        <span style="font-size:13px;font-weight:500;color:#0f172a;white-space:nowrap">Apenas divergências</span>
+    <div class="filter-card ds-filterbar" style="gap:12px;align-items:flex-end">
+      <div class="ds-field">
+        <label>Período</label>
+        <select class="field" onchange="setPeriodoRange(this.value,'fil-de','fil-ate',calcular)" style="min-width:130px">
+          <option value="periodo">Personalizado</option>
+          <option value="mes_atual" selected>Mês Atual</option>
+          <option value="mes_anterior">Mês Anterior</option>
+        </select>
       </div>
-      <button class="btn btn-ghost" style="display:inline-flex;align-items:center;gap:5px">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        Filtros avançados
-      </button>
-      <div style="margin-left:auto;display:flex;gap:8px">
+      <div class="ds-field">
+        <label>De</label>
+        <input type="date" id="fil-de" class="field" style="width:130px">
+      </div>
+      <div class="ds-field">
+        <label>Até</label>
+        <input type="date" id="fil-ate" class="field" style="width:130px">
+      </div>
+      <div class="ds-field">
+        <label>Loja</label>
+        <select class="field" id="fil-loja" style="min-width:130px"><option value="">Todas as lojas</option></select>
+      </div>
+      <div class="ds-field">
+        <label>Grupo</label>
+        <select class="field" id="fil-grupo" style="min-width:130px"><option value="">Todos os grupos</option></select>
+      </div>
+      <div class="ds-field">
+        <label>Mostrar</label>
+        <div class="tog-wrap" style="height:var(--ds-input-h,36px)">
+          <label class="tog"><input type="checkbox" id="tog-div" onchange="renderTabela()"><span class="tog-sl"></span></label>
+          <span style="font-size:13px;font-weight:500;color:#0f172a;white-space:nowrap">Apenas divergências</span>
+        </div>
+      </div>
+      <div class="ds-actions">
+        <button class="btn btn-ghost" style="display:inline-flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtros avançados
+        </button>
         <button class="btn btn-primary" onclick="calcular()">Calcular</button>
         <button class="btn btn-ghost" onclick="exportCSV()" style="display:inline-flex;align-items:center;gap:5px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
