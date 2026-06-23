@@ -436,7 +436,7 @@ function _abrirDanfeAiko(nota){
     .toolbar{max-width:1000px;margin:0 auto 12px;display:flex;gap:10px;align-items:center;color:#fff}
     .toolbar .h{font-size:14px;font-weight:700;flex:1}
     .btn{background:#f97316;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-    .danfe{max-width:1000px;margin:0 auto;background:#fff;padding:10px 10px 92px;font-size:10px;line-height:1.35;color:#000;position:relative;min-height:100%}
+    .danfe{max-width:1000px;margin:0 auto;background:#fff;padding:10px;font-size:10px;line-height:1.35;color:#000}
     .bx{border:1px solid #000}.row{display:flex}
     .cell{border:1px solid #000;padding:3px 7px;flex:1;min-width:0}
     .lbl{font-size:7.5px;color:#333;text-transform:uppercase;display:block;margin-bottom:1px}
@@ -459,9 +459,9 @@ function _abrirDanfeAiko(nota){
     .prodtbl th,.prodtbl td{font-size:7.6px;padding:2px 3px;white-space:nowrap}
     .prodtbl th{font-size:6.8px}
     .prodtbl .pdesc{min-width:240px;white-space:normal;text-align:left}
-    .dados-add{position:absolute;left:10px;right:10px;bottom:8px}
+    .dados-add{margin-top:8px}
     @page{size:A4;margin:8mm}
-    @media print{html,body{height:auto}body{background:#fff;padding:0}.toolbar{display:none}.danfe{max-width:100%;min-height:273mm;padding:0 0 92px}}
+    @media print{html,body{height:auto}body{background:#fff;padding:0}.toolbar{display:none}.danfe{max-width:100%;padding:0 0 86px}.dados-add{position:fixed;left:0;right:0;bottom:0;background:#fff;margin:0}}
   `;
 
   const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>DANFE ${E(req.numero)} - ${E(req.nome_emitente)}</title><style>${css}</style></head><body>
