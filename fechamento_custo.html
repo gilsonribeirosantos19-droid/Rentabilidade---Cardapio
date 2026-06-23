@@ -104,6 +104,34 @@
     </div>
   </div>
 </div>
+<!-- MODAL: Fechamento do Custo por Item (drill-down) -->
+<div id="det-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:2000;align-items:flex-start;justify-content:center;padding:36px 20px" onclick="if(event.target===this)closeDetalhe()">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:1140px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:16px;font-weight:800" id="det-titulo">Fechamento do Custo por Item</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px" id="det-sub">—</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeDetalhe()">✕ Fechar</button>
+    </div>
+    <div style="padding:12px 20px 6px">
+      <input id="det-busca" class="field field-sm" placeholder="Pesquisar item..." oninput="renderDetalhe()" style="width:100%;max-width:320px">
+    </div>
+    <div style="overflow:auto;flex:1;padding:0 20px 20px">
+      <table class="fc-table">
+        <thead><tr>
+          <th class="l">Item</th><th class="c">Un.</th>
+          <th>Estoque Inicial</th><th>(+) Compras</th><th>(+) Ent. Transf.</th>
+          <th>(−) Saí. Transf.</th><th>(−) Consumo</th><th>(−) Perdas</th>
+          <th>(=) Estoque Final</th><th>CMV</th>
+        </tr></thead>
+        <tbody id="det-body"></tbody>
+        <tfoot id="det-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -185,7 +213,9 @@ async function calcular(){
       items.forEach(it=>{ (itensByInv[it.inventario_id]=itensByInv[it.inventario_id]||[]).push(it); });
     }catch(e){ console.error(e); }
   }
-  const invVal=inv=> inv && itensByInv[inv.id] ? itensByInv[inv.id].reduce((a,it)=> a+(it.qtd_contada||0)*(it.custo_medio||0),0) : 0;
+  // SÓ itens que PARTICIPAM do CMV (é "Fechamento de Custo")
+  const cmvSet=new Set(insumos.filter(i=> i.participa_cmv!=='nao').map(i=>i.id));
+  const insMap={}; insumos.forEach(i=> insMap[i.id]=i);
 
   // custo médio por insumo no fim do mês (1x por insumo — igual ao CMV do estoque)
   const cmFim={};
@@ -193,28 +223,33 @@ async function calcular(){
 
   const entMes=entradas.filter(e=>{const d=dataOf(e);return d>=de&&d<=ate;});
   const saiMes=saidas.filter(s=>{const d=dataOf(s);return d>=de&&d<=ate;});
-  const valSai=arr=> arr.reduce((a,s)=> a+(s.quantidade||0)*(cmFim[s.insumo_id]||0),0);
+
+  // composição POR ITEM de uma loja (já filtrando participa_cmv) — usada na tabela e no drill-down
+  function compoLoja(l){
+    const {ini,fin}=invMap[l.id];
+    const byIns={};
+    const ens=id=> byIns[id]||(byIns[id]={ei:0,compras:0,entT:0,consumo:0,perdas:0,saiT:0,ef:0});
+    const addInv=(inv,campo)=>{ (inv&&itensByInv[inv.id]||[]).forEach(it=>{ if(cmvSet.has(it.insumo_id)) ens(it.insumo_id)[campo]+=(it.qtd_contada||0)*(it.custo_medio||0); }); };
+    addInv(ini,'ei'); addInv(fin,'ef');
+    entMes.filter(e=> e.loja_id===l.id && cmvSet.has(e.insumo_id)).forEach(e=>{ const o=ens(e.insumo_id), v=(e.quantidade||0)*(e.custo_unitario||0); if(e.tipo==='transferencia')o.entT+=v; else o.compras+=v; });
+    saiMes.filter(s=> s.loja_id===l.id && cmvSet.has(s.insumo_id)).forEach(s=>{ const o=ens(s.insumo_id), v=(s.quantidade||0)*(cmFim[s.insumo_id]||0); if(s.tipo==='consumo')o.consumo+=v; else if(s.tipo==='transferencia')o.saiT+=v; else if(['perda','vencimento','descarte'].includes(s.tipo))o.perdas+=v; });
+    const itens=Object.keys(byIns).map(id=>{ const o=byIns[id], ins=insMap[id]; return { id, nome:ins?ins.nome:'—', un:ins?(ins.unidade_medida||''):'', ...o, cmv:o.ei+o.compras+o.entT+o.perdas-o.ef }; })
+      .filter(o=> o.ei||o.compras||o.entT||o.consumo||o.perdas||o.saiT||o.ef)
+      .sort((a,b)=> b.cmv-a.cmv);
+    const ag=itens.reduce((a,o)=>{['ei','compras','entT','consumo','perdas','saiT','ef'].forEach(k=>a[k]+=o[k]);return a;},{ei:0,compras:0,entT:0,consumo:0,perdas:0,saiT:0,ef:0});
+    return { itens, estoque_inicial:ag.ei, compras:ag.compras, entradas_transferencia:ag.entT, saidas_transferencia:ag.saiT, consumo:ag.consumo, perdas:ag.perdas, estoque_final:ag.ef, cmv:ag.ei+ag.compras+ag.entT+ag.perdas-ag.ef };
+  }
 
   rowsData=lojas.map(l=>{
+    const c=compoLoja(l);
     const fech=fechamentos.find(f=> f.loja_id===l.id && f.competencia===comp && f.situacao==='fechado');
     if(fech){
-      return { loja:l, situacao:'fechado',
+      return { loja:l, situacao:'fechado', itens:c.itens, faturamento:+fech.faturamento||0,
         estoque_inicial:+fech.estoque_inicial||0, compras:+fech.compras||0, entradas_transferencia:+fech.entradas_transferencia||0,
         saidas_transferencia:+fech.saidas_transferencia||0, consumo:+fech.consumo||0, perdas:+fech.perdas||0,
-        estoque_final:+fech.estoque_final||0, cmv:+fech.cmv||0, faturamento:+fech.faturamento||0 };
+        estoque_final:+fech.estoque_final||0, cmv:+fech.cmv||0 };
     }
-    const {ini,fin}=invMap[l.id];
-    const EI=invVal(ini), EF=invVal(fin);
-    const eL=entMes.filter(e=> e.loja_id===l.id);
-    const sL=saiMes.filter(s=> s.loja_id===l.id);
-    const compras=eL.filter(e=> ['nfe','nfe_importada','manual'].includes(e.tipo)).reduce((a,e)=> a+(e.quantidade||0)*(e.custo_unitario||0),0);
-    const entTransf=eL.filter(e=> e.tipo==='transferencia').reduce((a,e)=> a+(e.quantidade||0)*(e.custo_unitario||0),0);
-    const consumo=valSai(sL.filter(s=> s.tipo==='consumo'));
-    const perdas=valSai(sL.filter(s=> ['perda','vencimento','descarte'].includes(s.tipo)));
-    const saiTransf=valSai(sL.filter(s=> s.tipo==='transferencia'));
-    const cmv=EI+compras+entTransf+perdas-EF;   // espelha vIni+vEnt+vPerd-vFin do CMV existente
-    return { loja:l, situacao:'aberto', estoque_inicial:EI, compras, entradas_transferencia:entTransf,
-             saidas_transferencia:saiTransf, consumo, perdas, estoque_final:EF, cmv, faturamento:0 };
+    return { loja:l, situacao:'aberto', faturamento:0, ...c };
   });
   render();
 }
@@ -232,9 +267,9 @@ function render(){
   body.innerHTML=rows.map(r=>{
     const fechado=r.situacao==='fechado';
     const pct=r.faturamento>0?(r.cmv/r.faturamento*100):null;
-    return `<tr>
-      <td class="c"><input type="checkbox" data-loja="${r.loja.id}" ${selected.has(r.loja.id)?'checked':''} onchange="toggleRow(this,'${r.loja.id}')" style="accent-color:#f97316;cursor:pointer"></td>
-      <td class="l" style="font-weight:600">${esc(r.loja.nome)}</td>
+    return `<tr onclick="openDetalhe('${r.loja.id}')" style="cursor:pointer" title="Clique para ver item a item">
+      <td class="c" onclick="event.stopPropagation()"><input type="checkbox" data-loja="${r.loja.id}" ${selected.has(r.loja.id)?'checked':''} onchange="toggleRow(this,'${r.loja.id}')" style="accent-color:#f97316;cursor:pointer"></td>
+      <td class="l" style="font-weight:600">${esc(r.loja.nome)} <span style="color:#94a3b8;font-size:11px">›</span></td>
       <td class="c"><span class="badge-sit ${fechado?'sit-fechado':'sit-aberto'}">${fechado?'FECHADO':'ABERTO'}</span></td>
       <td>${brl(r.estoque_inicial)}</td>
       <td>${brl(r.compras)}</td>
@@ -313,6 +348,39 @@ function exportCSV(){
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fechamento_custo_${_compAtual}.csv`; a.click();
 }
+
+// ── DRILL-DOWN: Fechamento do Custo por Item ──
+let _detLoja=null;
+function openDetalhe(lojaId){
+  _detLoja=rowsData.find(r=> r.loja.id===lojaId);
+  if(!_detLoja) return;
+  document.getElementById('det-titulo').textContent=`Fechamento do Custo por Item — ${_detLoja.loja.nome}`;
+  document.getElementById('det-sub').textContent=`${_compAtual} · ${(_detLoja.itens||[]).length} itens (somente os que participam do CMV)`;
+  document.getElementById('det-busca').value='';
+  document.getElementById('det-modal').style.display='flex';
+  renderDetalhe();
+}
+function closeDetalhe(){ document.getElementById('det-modal').style.display='none'; _detLoja=null; }
+function renderDetalhe(){
+  if(!_detLoja) return;
+  const q=(document.getElementById('det-busca').value||'').toLowerCase();
+  const itens=(_detLoja.itens||[]).filter(o=> !q || (o.nome||'').toLowerCase().includes(q));
+  const body=document.getElementById('det-body');
+  body.innerHTML=itens.length?itens.map(o=>`<tr>
+    <td class="l" style="font-weight:500">${esc(o.nome)}</td><td class="c neg">${esc(o.un||'')}</td>
+    <td>${brl(o.ei)}</td><td>${brl(o.compras)}</td><td>${brl(o.entT)}</td>
+    <td class="neg">${brl(o.saiT)}</td><td class="neg">${brl(o.consumo)}</td><td class="neg">${brl(o.perdas)}</td>
+    <td style="font-weight:600">${brl(o.ef)}</td>
+    <td style="font-weight:700"><span class="${o.cmv>0?'cmv-pos':'neg'}">${brl(o.cmv)}</span></td>
+  </tr>`).join(''):`<tr><td colspan="10" class="c neg" style="padding:20px">Nenhum item.</td></tr>`;
+  const t=itens.reduce((a,o)=>{['ei','compras','entT','saiT','consumo','perdas','ef','cmv'].forEach(k=>a[k]=(a[k]||0)+o[k]);return a;},{});
+  document.getElementById('det-foot').innerHTML=itens.length?`<tr>
+    <td class="l">TOTAL (${itens.length})</td><td></td>
+    <td>${brl(t.ei)}</td><td>${brl(t.compras)}</td><td>${brl(t.entT)}</td>
+    <td>${brl(t.saiT)}</td><td>${brl(t.consumo)}</td><td>${brl(t.perdas)}</td>
+    <td>${brl(t.ef)}</td><td>${brl(t.cmv)}</td></tr>`:'';
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDetalhe(); });
 
 document.addEventListener('DOMContentLoaded', carregar);
 </script>
