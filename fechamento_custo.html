@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="design-system.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fechamento de Custo Mensal · Aiko</title>
+<style>
+  :root{--bg:#f8fafc;--border:#e2e8f0;--text:#0f172a;--text2:#64748b;--text3:#94a3b8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
+  .shell{display:flex;width:100%;min-height:100vh}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;background:#fff;border-bottom:1px solid var(--border)}
+  .topbar-title{font-size:18px;font-weight:800;color:var(--text)}
+  .topbar-sub{font-size:12px;color:var(--text3);margin-top:2px}
+  .content{padding:20px 24px;flex:1}
+  /* tabela */
+  .fc-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+  .fc-table th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;text-align:right;padding:10px 10px;border-bottom:2px solid var(--border);white-space:nowrap;background:#f8fafc}
+  .fc-table th.l{text-align:left}
+  .fc-table th.c{text-align:center}
+  .fc-table td{padding:9px 10px;border-bottom:1px solid #eef2f7;text-align:right;font-family:'DM Mono',monospace;white-space:nowrap}
+  .fc-table td.l{text-align:left;font-family:inherit}
+  .fc-table td.c{text-align:center}
+  .fc-table tbody tr:hover{background:#fafbfc}
+  .fc-table tfoot td{font-weight:800;border-top:2px solid var(--border);background:#f8fafc}
+  .badge-sit{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px}
+  .sit-aberto{background:#eff6ff;color:#2563eb}
+  .sit-fechado{background:#f0fdf4;color:#16a34a}
+  .cmv-pos{color:#dc2626}
+  .neg{color:#94a3b8}
+</style>
+<script src="utils.js"></script>
+</head>
+<body>
+<div class="shell">
+  <nav class="sidebar"></nav>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Fechamento de Custo Mensal</div>
+        <div class="topbar-sub">Composição do custo por loja, a partir do inventário e das movimentações do mês.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="sb-user-nome" style="font-size:13px;font-weight:600;color:#0f172a">—</span>
+        <button class="btn btn-ghost btn-sm" onclick="sair()">Sair</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- FILTROS -->
+      <div class="ds-filterbar" style="gap:12px;align-items:flex-end;margin-bottom:16px">
+        <div class="ds-field">
+          <label>Mês/Ano</label>
+          <input type="month" id="f-comp" class="field field-sm" onchange="calcular()">
+        </div>
+        <div class="ds-field">
+          <label>Loja</label>
+          <select id="f-loja" class="field field-sm" onchange="render()" style="min-width:170px"><option value="">Todas as lojas</option></select>
+        </div>
+        <div class="ds-actions">
+          <button class="btn btn-primary btn-sm" onclick="calcular()">Calcular</button>
+          <button class="btn btn-ghost btn-sm" id="btn-fechar" onclick="fecharSelecionadas()" disabled>Fechar selecionadas (<span id="cnt-sel">0</span>)</button>
+          <button class="btn btn-ghost btn-sm" id="btn-reabrir" onclick="reabrirSelecionadas()" disabled>Reabrir</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV()">↓ Exportar</button>
+        </div>
+      </div>
+
+      <!-- TABELA -->
+      <div class="tbl-card"><div class="tbl-scroll">
+        <table class="fc-table">
+          <thead><tr>
+            <th class="c" style="width:34px"><input type="checkbox" id="chk-all" onchange="toggleAll(this)" style="accent-color:#f97316;cursor:pointer"></th>
+            <th class="l">Loja</th>
+            <th class="c">Situação</th>
+            <th>Estoque Inicial</th>
+            <th>(+) Compras</th>
+            <th>(+) Ent. Transf.</th>
+            <th>(−) Saí. Transf.</th>
+            <th>(−) Consumo</th>
+            <th>(−) Perdas</th>
+            <th>(=) Estoque Final</th>
+            <th>CMV (R$)</th>
+            <th>CMV (%)</th>
+          </tr></thead>
+          <tbody id="fc-body"><tr><td colspan="12" class="c neg" style="padding:24px">Escolha o mês e clique em Calcular.</td></tr></tbody>
+          <tfoot id="fc-foot"></tfoot>
+        </table>
+      </div></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">
+        <b>CMV</b> = Estoque Inicial + Compras + Entradas Transf. + Perdas − Estoque Final (mesma fórmula do CMV por inventário do sistema).
+        Estoque Inicial/Final vêm das <b>contagens de inventário encerradas</b> (início = fim do mês anterior; final = fim do mês escolhido).
+        Ao <b>Fechar</b>, os valores do mês ficam congelados e a loja vira <b>FECHADO</b>.
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){ if(!localStorage.getItem('sb_token')){window.location.href='login.html';return;}
+  try{const u=JSON.parse(localStorage.getItem('sb_user')||'null');if(u){const n=document.getElementById('sb-user-nome');if(n)n.textContent=u.nome||'—';}}catch{} })();
+
+const SUPA_URL=window.SUPA_URL, SUPA_KEY=window.SUPA_KEY;
+const TENANT_ID=localStorage.getItem('sb_tenant_id')||'00000000-0000-0000-0000-000000000001';
+const api = createApi(SUPA_URL, SUPA_KEY);
+
+function sair(){localStorage.removeItem('sb_token');localStorage.removeItem('sb_user');localStorage.removeItem('sb_user_id');window.location.href='login.html';}
+function brl(v){return'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+let toastTimer;
+function toast(msg,tipo='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+tipo+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500);}
+
+let lojas=[], insumos=[], entradas=[], saidas=[], saldos=[], inventarios=[], fechamentos=[];
+let rowsData=[];                 // resultado calculado por loja
+const selected = new Set();      // loja_id selecionadas
+let _compAtual='';
+
+const dataOf = m => (m.criado_em||m.created_at||'').slice(0,10);
+
+function monthBounds(comp){
+  const [y,m]=comp.split('-').map(Number);
+  const last=new Date(y,m,0).getDate();
+  const de=`${y}-${String(m).padStart(2,'0')}-01`;
+  const ate=`${y}-${String(m).padStart(2,'0')}-${String(last).padStart(2,'0')}`;
+  const prevEnd=new Date(y,m-1,0);
+  const prevEndStr=`${prevEnd.getFullYear()}-${String(prevEnd.getMonth()+1).padStart(2,'0')}-${String(prevEnd.getDate()).padStart(2,'0')}`;
+  return {de,ate,prevEndStr};
+}
+
+async function carregar(){
+  try{
+    [lojas,insumos,entradas,saidas,saldos,inventarios,fechamentos] = await Promise.all([
+      apiAll(`lojas?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc`),
+      apiAll(`insumos?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
+      apiAll(`entradas_estoque?tenant_id=eq.${TENANT_ID}`),
+      apiAll(`saidas_estoque?tenant_id=eq.${TENANT_ID}`),
+      apiAll(`saldo_estoque?tenant_id=eq.${TENANT_ID}`),
+      apiAll(`inventarios?tenant_id=eq.${TENANT_ID}&order=data_final.desc`),
+      apiAll(`fechamento_custo?tenant_id=eq.${TENANT_ID}`).catch(()=>[]),
+    ]);
+    // popular select de loja
+    const sel=document.getElementById('f-loja');
+    sel.innerHTML='<option value="">Todas as lojas</option>'+lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
+    // mês atual por padrão
+    const d=new Date();
+    document.getElementById('f-comp').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    calcular();
+  }catch(e){ console.error(e); toast('Erro ao carregar dados','err'); }
+}
+
+async function calcular(){
+  const comp=document.getElementById('f-comp').value;
+  if(!comp){ toast('Escolha o mês','err'); return; }
+  _compAtual=comp;
+  selected.clear();
+  const {de,ate,prevEndStr}=monthBounds(comp);
+
+  // inventários encerrados
+  const enc=inventarios.filter(i=> i.status==='encerrado'||i.status==='fechado');
+  const pick=(lojaId,maxDate,minDate)=> enc
+    .filter(i=> i.loja_id===lojaId && i.data_final && i.data_final<=maxDate && (!minDate||i.data_final>=minDate))
+    .sort((a,b)=> (b.data_final||'').localeCompare(a.data_final||''))[0] || null;
+
+  const invMap={}; const needIds=new Set();
+  lojas.forEach(l=>{
+    const fin = pick(l.id,ate,de) || pick(l.id,ate);   // contagem do mês; senão a última até o fim do mês
+    const ini = pick(l.id,prevEndStr);                 // última contagem até o fim do mês anterior
+    invMap[l.id]={ini,fin};
+    if(ini)needIds.add(ini.id); if(fin)needIds.add(fin.id);
+  });
+
+  let itensByInv={};
+  if(needIds.size){
+    try{
+      const items=await apiAll(`inventario_itens?inventario_id=in.(${[...needIds].join(',')})`);
+      items.forEach(it=>{ (itensByInv[it.inventario_id]=itensByInv[it.inventario_id]||[]).push(it); });
+    }catch(e){ console.error(e); }
+  }
+  const invVal=inv=> inv && itensByInv[inv.id] ? itensByInv[inv.id].reduce((a,it)=> a+(it.qtd_contada||0)*(it.custo_medio||0),0) : 0;
+
+  // custo médio por insumo no fim do mês (1x por insumo — igual ao CMV do estoque)
+  const cmFim={};
+  insumos.forEach(ins=>{ try{ cmFim[ins.id]=custoDoInsumo(ins.id,null,{entradas,saidas,insumos,saldos,dataLimite:ate}); }catch{ cmFim[ins.id]=0; } });
+
+  const entMes=entradas.filter(e=>{const d=dataOf(e);return d>=de&&d<=ate;});
+  const saiMes=saidas.filter(s=>{const d=dataOf(s);return d>=de&&d<=ate;});
+  const valSai=arr=> arr.reduce((a,s)=> a+(s.quantidade||0)*(cmFim[s.insumo_id]||0),0);
+
+  rowsData=lojas.map(l=>{
+    const fech=fechamentos.find(f=> f.loja_id===l.id && f.competencia===comp && f.situacao==='fechado');
+    if(fech){
+      return { loja:l, situacao:'fechado',
+        estoque_inicial:+fech.estoque_inicial||0, compras:+fech.compras||0, entradas_transferencia:+fech.entradas_transferencia||0,
+        saidas_transferencia:+fech.saidas_transferencia||0, consumo:+fech.consumo||0, perdas:+fech.perdas||0,
+        estoque_final:+fech.estoque_final||0, cmv:+fech.cmv||0, faturamento:+fech.faturamento||0 };
+    }
+    const {ini,fin}=invMap[l.id];
+    const EI=invVal(ini), EF=invVal(fin);
+    const eL=entMes.filter(e=> e.loja_id===l.id);
+    const sL=saiMes.filter(s=> s.loja_id===l.id);
+    const compras=eL.filter(e=> ['nfe','nfe_importada','manual'].includes(e.tipo)).reduce((a,e)=> a+(e.quantidade||0)*(e.custo_unitario||0),0);
+    const entTransf=eL.filter(e=> e.tipo==='transferencia').reduce((a,e)=> a+(e.quantidade||0)*(e.custo_unitario||0),0);
+    const consumo=valSai(sL.filter(s=> s.tipo==='consumo'));
+    const perdas=valSai(sL.filter(s=> ['perda','vencimento','descarte'].includes(s.tipo)));
+    const saiTransf=valSai(sL.filter(s=> s.tipo==='transferencia'));
+    const cmv=EI+compras+entTransf+perdas-EF;   // espelha vIni+vEnt+vPerd-vFin do CMV existente
+    return { loja:l, situacao:'aberto', estoque_inicial:EI, compras, entradas_transferencia:entTransf,
+             saidas_transferencia:saiTransf, consumo, perdas, estoque_final:EF, cmv, faturamento:0 };
+  });
+  render();
+}
+
+function visibleRows(){
+  const lj=document.getElementById('f-loja').value;
+  return rowsData.filter(r=> !lj || r.loja.id===lj);
+}
+
+function render(){
+  const rows=visibleRows();
+  const body=document.getElementById('fc-body');
+  if(!rows.length){ body.innerHTML=`<tr><td colspan="12" class="c neg" style="padding:24px">Nenhuma loja.</td></tr>`; document.getElementById('fc-foot').innerHTML=''; atualizarBtns(); return; }
+  const cmvCell=v=>`<span class="${v>0?'cmv-pos':'neg'}">${brl(v)}</span>`;
+  body.innerHTML=rows.map(r=>{
+    const fechado=r.situacao==='fechado';
+    const pct=r.faturamento>0?(r.cmv/r.faturamento*100):null;
+    return `<tr>
+      <td class="c"><input type="checkbox" data-loja="${r.loja.id}" ${selected.has(r.loja.id)?'checked':''} onchange="toggleRow(this,'${r.loja.id}')" style="accent-color:#f97316;cursor:pointer"></td>
+      <td class="l" style="font-weight:600">${esc(r.loja.nome)}</td>
+      <td class="c"><span class="badge-sit ${fechado?'sit-fechado':'sit-aberto'}">${fechado?'FECHADO':'ABERTO'}</span></td>
+      <td>${brl(r.estoque_inicial)}</td>
+      <td>${brl(r.compras)}</td>
+      <td>${brl(r.entradas_transferencia)}</td>
+      <td class="neg">${brl(r.saidas_transferencia)}</td>
+      <td class="neg">${brl(r.consumo)}</td>
+      <td class="neg">${brl(r.perdas)}</td>
+      <td style="font-weight:700">${brl(r.estoque_final)}</td>
+      <td style="font-weight:700">${cmvCell(r.cmv)}</td>
+      <td>${pct===null?'<span class="neg">—</span>':pct.toFixed(1)+'%'}</td>
+    </tr>`;
+  }).join('');
+  // totais
+  const t=rows.reduce((a,r)=>{['estoque_inicial','compras','entradas_transferencia','saidas_transferencia','consumo','perdas','estoque_final','cmv'].forEach(k=>a[k]=(a[k]||0)+r[k]);return a;},{});
+  document.getElementById('fc-foot').innerHTML=`<tr>
+    <td></td><td class="l">TOTAL (${rows.length} loja${rows.length>1?'s':''})</td><td></td>
+    <td>${brl(t.estoque_inicial)}</td><td>${brl(t.compras)}</td><td>${brl(t.entradas_transferencia)}</td>
+    <td>${brl(t.saidas_transferencia)}</td><td>${brl(t.consumo)}</td><td>${brl(t.perdas)}</td>
+    <td>${brl(t.estoque_final)}</td><td>${cmvCell(t.cmv)}</td><td></td></tr>`;
+  atualizarBtns();
+}
+
+function toggleRow(chk,lojaId){ if(chk.checked)selected.add(lojaId); else selected.delete(lojaId); atualizarBtns(); }
+function toggleAll(chk){ visibleRows().forEach(r=>{ if(chk.checked)selected.add(r.loja.id); else selected.delete(r.loja.id); }); render(); }
+function atualizarBtns(){
+  const n=selected.size;
+  document.getElementById('cnt-sel').textContent=n;
+  const bf=document.getElementById('btn-fechar'), br=document.getElementById('btn-reabrir');
+  // só pode fechar lojas ABERTAS; só pode reabrir FECHADAS
+  const sel=[...selected].map(id=> rowsData.find(r=>r.loja.id===id)).filter(Boolean);
+  const temAberta=sel.some(r=>r.situacao==='aberto'), temFechada=sel.some(r=>r.situacao==='fechado');
+  bf.disabled=!(n&&temAberta); br.disabled=!(n&&temFechada);
+}
+
+async function fecharSelecionadas(){
+  const sel=[...selected].map(id=> rowsData.find(r=>r.loja.id===id)).filter(r=> r&&r.situacao==='aberto');
+  if(!sel.length){ toast('Selecione lojas ABERTAS para fechar.','err'); return; }
+  if(!confirm(`Fechar ${sel.length} loja(s) no mês ${_compAtual}?\n\nOs valores serão congelados e a loja ficará FECHADA.`)) return;
+  const uid=localStorage.getItem('sb_user_id')||'';
+  const payload=sel.map(r=>({ tenant_id:TENANT_ID, loja_id:r.loja.id, competencia:_compAtual, situacao:'fechado',
+    estoque_inicial:r.estoque_inicial, compras:r.compras, entradas_transferencia:r.entradas_transferencia,
+    saidas_transferencia:r.saidas_transferencia, consumo:r.consumo, perdas:r.perdas, estoque_final:r.estoque_final,
+    cmv:r.cmv, faturamento:r.faturamento||0, fechado_por:uid }));
+  try{
+    await api(`fechamento_custo?on_conflict=tenant_id,loja_id,competencia`,{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:JSON.stringify(payload)});
+    toast(`${sel.length} loja(s) fechada(s).`,'ok');
+    fechamentos=await apiAll(`fechamento_custo?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
+    selected.clear(); const ca=document.getElementById('chk-all'); if(ca)ca.checked=false;
+    calcular();
+  }catch(e){ console.error(e); toast('Erro ao fechar: '+(e?.message||e),'err'); }
+}
+
+async function reabrirSelecionadas(){
+  const sel=[...selected].map(id=> rowsData.find(r=>r.loja.id===id)).filter(r=> r&&r.situacao==='fechado');
+  if(!sel.length){ toast('Selecione lojas FECHADAS para reabrir.','err'); return; }
+  if(!confirm(`Reabrir ${sel.length} loja(s) no mês ${_compAtual}?\n\nOs valores deixam de ficar congelados e voltam a ser recalculados.`)) return;
+  try{
+    const ids=sel.map(r=>r.loja.id).join(',');
+    await api(`fechamento_custo?tenant_id=eq.${TENANT_ID}&competencia=eq.${_compAtual}&loja_id=in.(${ids})`,{method:'DELETE',prefer:'return=minimal'});
+    toast(`${sel.length} loja(s) reaberta(s).`,'ok');
+    fechamentos=await apiAll(`fechamento_custo?tenant_id=eq.${TENANT_ID}`).catch(()=>[]);
+    selected.clear(); const ca=document.getElementById('chk-all'); if(ca)ca.checked=false;
+    calcular();
+  }catch(e){ console.error(e); toast('Erro ao reabrir: '+(e?.message||e),'err'); }
+}
+
+function exportCSV(){
+  const rows=visibleRows();
+  if(!rows.length){ toast('Nada para exportar','err'); return; }
+  const head=['Loja','Situacao','Estoque Inicial','Compras','Ent. Transf.','Sai. Transf.','Consumo','Perdas','Estoque Final','CMV','Faturamento'];
+  const lines=rows.map(r=>[r.loja.nome,r.situacao,r.estoque_inicial,r.compras,r.entradas_transferencia,r.saidas_transferencia,r.consumo,r.perdas,r.estoque_final,r.cmv,r.faturamento||0]
+    .map(v=>typeof v==='number'?String(v).replace('.',','):`"${v}"`).join(';'));
+  const csv=[head.join(';'),...lines].join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`fechamento_custo_${_compAtual}.csv`; a.click();
+}
+
+document.addEventListener('DOMContentLoaded', carregar);
+</script>
+<script src="sidebar.js"></script>
+</body>
+</html>
