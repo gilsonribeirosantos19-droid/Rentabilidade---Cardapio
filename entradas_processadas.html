@@ -418,6 +418,10 @@ function _abrirDanfeAiko(nota){
   const tipo = String(req.tipo_documento)==='0' ? '0 - ENTRADA' : '1 - SAÍDA';
   const endE = [req.logradouro_emitente, req.numero_emitente, req.complemento_emitente, req.bairro_emitente].filter(Boolean).join(', ');
   const endD = [req.logradouro_destinatario, req.numero_destinatario, req.complemento_destinatario].filter(Boolean).join(', ');
+  const pr = nota.protocolo_nota_fiscal;
+  const protTxt = (pr && typeof pr==='object')
+    ? `${pr.numero_protocolo||''}${pr.data_recebimento?' - '+dt(pr.data_recebimento)+' '+String(pr.data_recebimento).slice(11,19):''}`.trim()
+    : (pr||'—');
 
   const linhas = its.map(it => {
     const cst = String(it.icms_origem||'') + String(it.icms_situacao_tributaria||'');
@@ -486,7 +490,7 @@ function _abrirDanfeAiko(nota){
       </div>
       <div class="row">
         <div class="cell" style="flex:2"><span class="lbl">Natureza da operação</span><span class="val">${E(req.natureza_operacao)}</span></div>
-        <div class="cell" style="flex:1.6"><span class="lbl">Protocolo de autorização de uso</span><span class="val">${E(nota.protocolo_nota_fiscal||'—')}</span></div>
+        <div class="cell" style="flex:1.6"><span class="lbl">Protocolo de autorização de uso</span><span class="val">${E(protTxt)}</span></div>
       </div>
       <div class="row">
         <div class="cell"><span class="lbl">Inscrição Estadual</span><span class="val">${E(req.inscricao_estadual_emitente||'—')}</span></div>
