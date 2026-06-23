@@ -347,7 +347,9 @@ async function rodarPullFocus(tenant: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method !== 'POST') return new Response('OK', { status: 200 })
+  const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type, apikey', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
+  if (req.method !== 'POST') return new Response('OK', { status: 200, headers: CORS })
 
   // Multi-empresa: o tenant vem na URL (?tenant=uuid). Sem param = Mori (compat. com o webhook atual).
   const _uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -395,6 +397,22 @@ Deno.serve(async (req) => {
         if (_c) return new Response(JSON.stringify({ ok: true, chave: _n.chave_acesso, completa: _c }), { headers: { 'Content-Type': 'application/json' } })
       }
       return new Response(JSON.stringify({ ok: false, msg: 'nenhuma nota completa disponível' }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    // Modo DANFE: { "danfe": true, "chave": "<44 dígitos>" } → devolve a URL do PDF do DANFE.
+    // O Focus responde 302 com a URL pré-assinada no header Location; repassamos pro navegador abrir/imprimir.
+    if (body.danfe === true && body.chave) {
+      const ch = String(body.chave).replace(/\D/g, '')
+      try {
+        const res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas/${ch}.pdf`, {
+          method: 'GET', headers: { 'Authorization': FOCUS_AUTH }, redirect: 'manual',
+        })
+        const loc = res.headers.get('location')
+        if (loc) return new Response(JSON.stringify({ ok: true, url: loc }), { headers: { 'Content-Type': 'application/json', ...CORS } })
+        return new Response(JSON.stringify({ ok: false, status: res.status, msg: 'DANFE indisponível (sem Location)' }), { status: 200, headers: { 'Content-Type': 'application/json', ...CORS } })
+      } catch (e) {
+        return new Response(JSON.stringify({ ok: false, msg: String(e) }), { status: 500, headers: { 'Content-Type': 'application/json', ...CORS } })
+      }
     }
 
     const cnpjEmitente = (body.documento_emitente || '').replace(/\D/g, '')
