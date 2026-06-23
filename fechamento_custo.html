@@ -54,8 +54,17 @@
       <!-- FILTROS -->
       <div class="ds-filterbar" style="gap:12px;align-items:flex-end;margin-bottom:16px">
         <div class="ds-field">
-          <label>Mês/Ano</label>
-          <input type="month" id="f-comp" class="field field-sm" onchange="calcular()">
+          <label>Mês</label>
+          <select id="f-mes" class="field field-sm" onchange="calcular()" style="min-width:130px">
+            <option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option>
+            <option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option>
+            <option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="ds-field">
+          <label>Ano</label>
+          <select id="f-ano" class="field field-sm" onchange="calcular()" style="min-width:90px"></select>
         </div>
         <div class="ds-field">
           <label>Loja</label>
@@ -178,15 +187,20 @@ async function carregar(){
     // popular select de loja
     const sel=document.getElementById('f-loja');
     sel.innerHTML='<option value="">Todas as lojas</option>'+lojas.map(l=>`<option value="${l.id}">${esc(l.nome)}</option>`).join('');
-    // mês atual por padrão
-    const d=new Date();
-    document.getElementById('f-comp').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    // mês/ano atual por padrão
+    const d=new Date(); const yNow=d.getFullYear();
+    const anoSel=document.getElementById('f-ano');
+    let opts=''; for(let y=yNow+1;y>=yNow-3;y--) opts+=`<option value="${y}">${y}</option>`;
+    anoSel.innerHTML=opts; anoSel.value=String(yNow);
+    document.getElementById('f-mes').value=String(d.getMonth()+1).padStart(2,'0');
     calcular();
   }catch(e){ console.error(e); toast('Erro ao carregar dados','err'); }
 }
 
+function getComp(){ const m=document.getElementById('f-mes')?.value, a=document.getElementById('f-ano')?.value; return (m&&a)?`${a}-${m}`:''; }
+
 async function calcular(){
-  const comp=document.getElementById('f-comp').value;
+  const comp=getComp();
   if(!comp){ toast('Escolha o mês','err'); return; }
   _compAtual=comp;
   selected.clear();
