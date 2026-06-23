@@ -339,7 +339,7 @@ async function verDetalhes(nfeId){
     </tr>`).join('') : `<tr><td colspan="5" class="empty">Sem itens registrados.</td></tr>`;
   const lbl='font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em';
   const html=`<div class="det-bd" onclick="if(event.target===this)this.remove()" style="position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px">
-    <div onclick="event.stopPropagation()" style="background:#fff;border-radius:14px;width:96vw;max-width:840px;max-height:90vh;overflow:auto;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+    <div onclick="event.stopPropagation()" style="background:#fff;border-radius:14px;width:96vw;max-width:1040px;max-height:90vh;overflow:auto;box-shadow:0 8px 40px rgba(0,0,0,.25)">
       <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff">
         <div style="font-size:15px;font-weight:700;color:#0f172a">NF-e ${esc(n.numero||'—')} / ${esc(n.serie||'1')}</div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -358,7 +358,7 @@ async function verDetalhes(nfeId){
       <div style="padding:0 20px 20px">
         <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Itens da nota (${itens.length})</div>
         <div class="tbl-card"><div class="tbl-scroll"><table class="tbl">
-          <thead><tr><th>Descrição</th><th>Código</th><th class="r">Qtd.</th><th class="r">V. Unit.</th><th class="r">V. Total</th></tr></thead>
+          <thead><tr><th style="min-width:320px">Descrição</th><th style="width:140px;white-space:nowrap">Código</th><th class="r" style="width:120px;white-space:nowrap">Qtd.</th><th class="r" style="width:110px;white-space:nowrap">V. Unit.</th><th class="r" style="width:120px;white-space:nowrap">V. Total</th></tr></thead>
           <tbody>${linhas}</tbody>
         </table></div></div>
       </div>
