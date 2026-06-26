@@ -13,15 +13,15 @@
   body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg1);color:var(--text1);min-height:100vh;display:flex}
   .shell{display:flex;width:100%;min-height:100vh}
   /* SIDEBAR — idêntico ao estoque.html */
-  .sidebar{width:220px;min-height:100vh;background:#ffffff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
-  .logo{padding:0 18px 20px;border-bottom:1px solid #e2e8f0;margin-bottom:16px}
-  .logo-mark{font-size:15px;font-weight:700;color:#0f172a}
+  .sidebar{width:220px;min-height:100vh;background:#1e293b;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:hidden}
+  .logo{padding:0 18px 20px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px}
+  .logo-mark{font-size:15px;font-weight:700;color:#ffffff}
   .logo-sub{font-size:11px;color:#f97316;font-family:'DM Mono',monospace;margin-top:1px}
   .nav-group{padding:0 10px;margin:0 8px 4px;background:transparent;border-radius:0;box-shadow:none}
-  .nav-label{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
-  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#0f2d5c;font-size:13px;text-decoration:none;transition:all .15s}
-  .nav-item:hover{background:rgba(249,115,22,.07);color:#f97316}
-  .nav-item.active{background:rgba(249,115,22,.12);color:#f97316;font-weight:600}
+  .nav-label{font-size:10px;font-weight:600;color:#64748b;letter-spacing:.08em;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;color:#cbd5e1;font-size:13px;text-decoration:none;transition:all .15s}
+  .nav-item:hover{background:rgba(255,255,255,.06);color:#ffffff}
+  .nav-item.active{background:#f97316;color:#ffffff;font-weight:600}
   /* MAIN */
   .main{flex:1;display:flex;flex-direction:column;min-width:0}
   .topbar{border-bottom:1px solid #e2e8f0;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;position:sticky;top:0;z-index:60}
@@ -32,6 +32,9 @@
   .field{background:#f8fafc;border:1.5px solid #e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;font-size:13px;outline:none;font-family:inherit;transition:all .18s}
   .field:focus{border-color:#f97316;background:#fff}
   .field-sm{padding:6px 10px;font-size:12px}
+  /* Chips de situação: filtro ligado fica nítido; desligado, apagado */
+  .sit-chip{transition:opacity .15s,background .15s,border-color .15s}
+  .sit-chip:has(input:not(:checked)){opacity:.45;background:#f8fafc !important}
   /* TABS */
   .tabs{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:0;flex-wrap:wrap}
   .tab-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:inherit;white-space:nowrap}
@@ -187,22 +190,22 @@
 
       <!-- FILTROS: linha 2 — chips de situação + processar selecionadas -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
+        <label class="sit-chip" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
           <input type="checkbox" id="fil-s-pendente" checked onchange="renderTable()" style="accent-color:#f59e0b">
           <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block"></span>
           Pendente SEFAZ <span id="cnt-pendente" style="font-weight:700;color:#f59e0b">(0)</span>
         </label>
-        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
+        <label class="sit-chip" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
           <input type="checkbox" id="fil-s-processar" checked onchange="renderTable()" style="accent-color:#2563eb">
           <span style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block"></span>
           Para processar <span id="cnt-processar" style="font-weight:700;color:#2563eb">(0)</span>
         </label>
-        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
+        <label class="sit-chip" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
           <input type="checkbox" id="fil-s-erro" checked onchange="renderTable()" style="accent-color:#dc2626">
           <span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block"></span>
           Com Erro <span id="cnt-erro" style="font-weight:700;color:#dc2626">(0)</span>
         </label>
-        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
+        <label class="sit-chip" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;user-select:none;padding:5px 12px;border-radius:99px;border:1.5px solid #e2e8f0;background:#fff">
           <input type="checkbox" id="fil-s-cancelada" onchange="renderTable()" style="accent-color:#94a3b8">
           <span style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block"></span>
           Cancelada <span id="cnt-cancelada" style="font-weight:700;color:#94a3b8">(0)</span>
