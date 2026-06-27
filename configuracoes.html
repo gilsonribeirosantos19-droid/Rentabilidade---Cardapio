@@ -1208,7 +1208,7 @@ function toggleMgcItem(insId, checked) {
 }
 
 async function salvarGrupoCompra() {
-  const nome = toUpperName(document.getElementById('mgc-nome').value.trim());
+  const nome = titleName(document.getElementById('mgc-nome').value.trim());
   if (!nome) { toast('Informe o nome do grupo', 'err'); return; }
   const btn = document.getElementById('mgc-btn');
   btn.disabled = true; btn.textContent = 'Salvando...';
@@ -1236,8 +1236,10 @@ async function salvarGrupoCompra() {
 function fecharModalGrupoCompra() { document.getElementById('modal-grupo-compra').classList.remove('open'); }
 
 async function salvar() {
-  const nome  = toUpperName(document.getElementById('f-nome').value.trim());
-  const abrev = document.getElementById('f-abrev').value.trim();
+  const _rawNome = document.getElementById('f-nome').value.trim();
+  // unidade = minúsculo (kg, ml...); grupo/subgrupo/família/tipo/loja = Title Case
+  const nome  = modalTipo === 'unidade' ? _rawNome.toLowerCase() : titleName(_rawNome);
+  const abrev = document.getElementById('f-abrev').value.trim().toLowerCase();
   if (!nome) { toast('Informe o nome', 'err'); return; }
   if (modalTipo === 'unidade' && !abrev) { toast('Informe a abreviação', 'err'); return; }
   const btn = document.getElementById('btn-salvar');
@@ -1626,9 +1628,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const u = JSON.parse(localStorage.getItem('sb_user') || 'null');
     if (u) document.getElementById('sb-user-nome').textContent = u.nome || u.email || '—';
   } catch {}
-  // Campos de nome → automático MAIÚSCULO
-  upperInput('f-nome');
-  upperInput('mgc-nome');
+  // Grupo de compra = Title Case ao vivo; f-nome formata ao salvar (varia por tipo: unidade=minúsculo, resto=Title Case)
+  titleInput('mgc-nome');
   initSection();
 });
 </script>
