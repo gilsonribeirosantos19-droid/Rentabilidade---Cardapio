@@ -1113,7 +1113,7 @@ function renderTable() {
   const rows = entradasNfe.filter(n => {
     if(n.status === 'processada') return false;
     if(filForn && n.cnpj_emitente !== filForn) return false;
-    if(filLoja && n.loja_id !== filLoja) return false;
+    if(filLoja && n.loja_id && n.loja_id !== filLoja) return false; // notas SEM loja aparecem em qualquer filtro (precisam de atenção; ao processar vão p/ a loja do topo)
     const chip = statusToChip(n.status);
     if(chip==='pendente'  && !showPendente) return false;
     if(chip==='processar' && !showProcessar)return false;
