@@ -1600,9 +1600,20 @@ async function registrarNfeNoMonitor() {
     if(!nfeRec && pi.chaveAcesso) {
       const existing=await api(`nfe_recebidas?chave_acesso=eq.${pi.chaveAcesso}&tenant_id=eq.${TENANT_ID}&select=id,status`).catch(()=>[]);
       if(existing[0]) {
-        fecharModal('m-nfe'); resetNfe();
-        toast(`NF-e ${pi.nNF} já estava registrada no monitor.`,'info',4000);
-        await loadAll(); return;
+        // Se a nota existente JÁ TEM itens, é duplicata de verdade → avisa e para.
+        const itensExist=await api(`nfe_itens?nfe_id=eq.${existing[0].id}&select=id&limit=1`).catch(()=>[]);
+        if(itensExist.length){
+          fecharModal('m-nfe'); resetNfe();
+          toast(`NF-e ${pi.nNF} já estava registrada no monitor.`,'info',4000);
+          await loadAll(); return;
+        }
+        // Existe só o RESUMO (0 itens, ex.: veio do webhook como 'em_transito') →
+        // importa os itens do XML NELA (reaproveita o id e atualiza os dados).
+        nfeRec={id:existing[0].id};
+        await api(`nfe_recebidas?id=eq.${existing[0].id}`,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify({ status, numero:pi.nNF||'0', serie:pi.serie||'1',
+            nome_emitente:pi.emitNome||'', valor_total:pi.vNF||0,
+            data_emissao:pi.dhEmi||(dataStr+'T12:00:00'), fonte:'upload' })});
       }
     }
     if(!nfeRec) throw new Error('Não foi possível registrar a NF-e.');
