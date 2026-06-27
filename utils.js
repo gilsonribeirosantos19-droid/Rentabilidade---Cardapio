@@ -52,6 +52,31 @@ function upperInput(id) {
   bindUpperInput(document.getElementById(id));
 }
 
+// ── TITLE CASE (PT-BR): "salsa crespa" / "SALSA CRESPA" → "Salsa Crespa" ──
+// Primeira letra de cada palavra em maiúscula; conectores (de/da/do/e...) ficam
+// minúsculos, menos quando são a 1ª palavra. Use em NOMES DE ITEM (não em fornecedor).
+const _TITLE_CONNECTORS = new Set(['de','da','do','das','dos','e','com','sem','para','por','a','o','as','os','à','às','ao','aos','em','no','na','nos','nas']);
+function titleName(str) {
+  let first = true;
+  return (str || '').toLowerCase().replace(/\S+/g, (w) => {
+    if (!first && _TITLE_CONNECTORS.has(w)) return w;
+    first = false;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  });
+}
+// Aplica Title Case ao vivo enquanto digita (preserva a posição do cursor)
+function bindTitleInput(el) {
+  if (!el) return;
+  el.addEventListener('input', function () {
+    const pos = this.selectionStart;
+    this.value = titleName(this.value);
+    try { this.setSelectionRange(pos, pos); } catch {}
+  });
+}
+function titleInput(id) {
+  bindTitleInput(document.getElementById(id));
+}
+
 // ── ESCAPE DE HTML ─────────────────────────────────────────────────
 // Fonte única. Escapa texto E atributos (& < > "). As telas NÃO devem
 // redefinir esc() localmente — usam esta. (Centralizado 2026-06-13.)

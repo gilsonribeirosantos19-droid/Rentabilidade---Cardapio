@@ -760,7 +760,7 @@ function calcular(){
 }
 
 async function salvarNovo(){
-  const nome=toUpperName(document.getElementById('f-nome').value.trim());
+  const nome=titleName(document.getElementById('f-nome').value.trim());
   const cat=document.getElementById('f-cat').value;
   const und=document.getElementById('f-und').value;
   const preco=parseFloat(document.getElementById('f-preco').value);
@@ -889,7 +889,7 @@ function editarItemCadastro(id){
 }
 
 async function salvarCadastro(){
-  const nome=toUpperName(document.getElementById('cad-nome').value.trim());
+  const nome=titleName(document.getElementById('cad-nome').value.trim());
   if(!nome){toast('Informe a descrição do item.','err');return;}
   const btn=document.querySelector('#pane-cadastro .btn-primary');
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
@@ -1121,7 +1121,7 @@ function fecharModalDup(){document.getElementById('modal-duplicar').classList.re
 async function confirmarDuplicar(){
   const ins=todos.find(x=>x.id===_dupId);
   if(!ins){fecharModalDup();return;}
-  const nome=toUpperName((document.getElementById('dup-nome').value||'').trim());
+  const nome=titleName((document.getElementById('dup-nome').value||'').trim());
   if(!nome){toast('Informe a descrição do novo item.','err');return;}
   if(todos.some(i=>normalizeSearch(i.nome||'')===normalizeSearch(nome))){
     toast(`Já existe um item com o nome "${nome}".`,'err');return;
@@ -1180,8 +1180,8 @@ document.getElementById('modal-novo').addEventListener('click',function(e){if(e.
 document.getElementById('modal-duplicar')?.addEventListener('click',function(e){if(e.target===this)fecharModalDup();});
 
 // Campos de nome → automático MAIÚSCULO
-upperInput('f-nome');
-upperInput('cad-nome');
+titleInput('f-nome');
+titleInput('cad-nome');
 
 (async()=>{await carregarLojas();await Promise.all([carregarOpcoes(),carregarClassificacoes()]);await carregarInsumos();switchModulo('produtos');})();
 </script>
