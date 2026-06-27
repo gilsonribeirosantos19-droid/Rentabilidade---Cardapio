@@ -147,6 +147,10 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           Atualizar
         </button>
+        <button class="btn" id="btn-recuperar" onclick="recuperarTravadas()" title="Busca de novo o XML das notas presas em 'em_transito' (resumo sem itens) e completa as que a Focus já tiver">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Recuperar travadas
+        </button>
         <button class="btn btn-primary" onclick="openNFe()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Entrada por NF-e XML
@@ -653,6 +657,30 @@ function fmtDateShort(iso) {
 
 // ── CARREGAR DADOS ────────────────────────────────────────────────
 async function atualizarLista(){ await loadAll(); toast('Lista atualizada.','ok'); }
+
+// Recupera notas presas em 'em_transito' (resumo sem itens): chama o modo 'reprocessar'
+// do webhook, que re-manifesta ciência + busca o XML completo e grava os itens.
+async function recuperarTravadas(){
+  const btn = document.getElementById('btn-recuperar');
+  const orig = btn ? btn.innerHTML : '';
+  if(btn){ btn.disabled = true; btn.innerHTML = 'Recuperando...'; }
+  toast('Buscando o XML das notas travadas na Focus... (pode levar até 1 min)','ok');
+  try{
+    const res = await fetch(`${SUPA_URL}/functions/v1/nfe-webhook`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'apikey': window.SUPA_KEY, 'Authorization':'Bearer '+(localStorage.getItem('sb_token')||window.SUPA_KEY) },
+      body: JSON.stringify({ reprocessar:true, tenant: TENANT_ID })
+    });
+    const d = await res.json();
+    if(d && d.ok){
+      toast(`Recuperadas: ${d.completadas||0} • ainda sem XML na Focus: ${d.semXml||0} • restantes: ${d.restantes||0}`, 'ok');
+      await loadAll();
+    } else {
+      toast('Falha ao recuperar: '+((d&&(d.error||d.msg))||'resposta inesperada'), 'err');
+    }
+  }catch(e){ toast('Erro: '+e.message, 'err'); }
+  finally{ if(btn){ btn.disabled = false; btn.innerHTML = orig; } }
+}
 async function loadAll() {
   if(window.Params) { await Params.load().catch(()=>{}); _aplicarModoDataMov(); }
   const de  = document.getElementById('fil-de')?.value;
