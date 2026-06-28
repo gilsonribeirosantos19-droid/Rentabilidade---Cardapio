@@ -903,7 +903,7 @@
           </div>
           <div class="ds-field">
             <label>Grupo</label>
-            <select class="field field-sm" id="mov-cat" style="width:210px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
+            <select class="field field-sm" id="mov-cat" style="width:230px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
           </div>
           <div class="ds-field">
             <label>Buscar insumo</label>
@@ -962,8 +962,9 @@
         /* campos mais definidos (borda + texto) e labels menos apagadas */
         #tab-movimentacao .ds-filterbar .field, #tab-movimentacao .ds-filterbar input.field, #tab-movimentacao .ds-filterbar select.field{border:1px solid #cbd5e1 !important;color:#0f172a !important}
         #tab-movimentacao .ds-filterbar .ds-field > label{color:#64748b !important;font-weight:600 !important}
-        #tab-movimentacao #mov-cat{color:#0f172a !important;font-weight:500}
-        #tab-movimentacao .ds-filterbar{gap:18px !important}
+        #tab-movimentacao #mov-cat{color:#0f172a !important;font-weight:600}
+        #tab-movimentacao #mov-cat option{color:#0f172a}
+        #tab-movimentacao .ds-filterbar{gap:26px !important}
       </style>
       <div class="mov-mf-overlay" id="mov-mf-ov" onclick="fecharMaisFiltros()"></div>
       <aside class="mov-mf-drawer" id="mov-mf-dw">
