@@ -882,49 +882,52 @@
 
       <!-- TÍTULO + FILTROS -->
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">Movimentação de Estoque no Período</div>
-      <div class="ds-filterbar" style="margin-bottom:16px">
-        <div class="ds-field">
-          <label>Período</label>
-          <select class="field field-sm" onchange="setPeriodoRange(this.value,'mov-de','mov-ate')" style="min-width:130px">
-            <option value="periodo">Personalizado</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
-        </div>
-        <div class="ds-field">
-          <label>De</label>
-          <input class="field field-sm" type="date" id="mov-de" style="width:150px">
-        </div>
-        <div class="ds-field">
-          <label>Até</label>
-          <input class="field field-sm" type="date" id="mov-ate" style="width:150px">
-        </div>
-        <div class="ds-field">
-          <label>Grupo</label>
-          <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
-        </div>
-        <div class="ds-field ds-grow">
-          <label>Buscar insumo</label>
-          <input class="field field-sm" id="mov-busca" placeholder="Digite o nome do insumo..." oninput="aplicarFiltroBuscaMov()" style="min-width:180px">
-        </div>
-        <div class="ds-field">
-          <label>&nbsp;</label>
-          <div style="display:flex;gap:20px;align-items:center;height:var(--ds-input-h,36px)">
-            <label class="mov-chk"><input type="checkbox" id="mov-com-saldo" checked onchange="syncMovSaldo('bar');renderMovimentacao()"> Somente com saldo</label>
-            <label class="mov-chk"><input type="checkbox" id="mov-cmv" onchange="syncMovCmv('bar');renderMovimentacao()"> Somente CMV</label>
+      <div style="margin-bottom:16px">
+        <!-- LINHA 1: filtros + Mais filtros -->
+        <div class="ds-filterbar" style="margin-bottom:12px">
+          <div class="ds-field">
+            <label>Período</label>
+            <select class="field field-sm" onchange="setPeriodoRange(this.value,'mov-de','mov-ate')" style="min-width:130px">
+              <option value="periodo">Personalizado</option>
+              <option value="mes_atual">Mês Atual</option>
+              <option value="mes_anterior">Mês Anterior</option>
+            </select>
+          </div>
+          <div class="ds-field">
+            <label>De</label>
+            <input class="field field-sm" type="date" id="mov-de" style="width:150px">
+          </div>
+          <div class="ds-field">
+            <label>Até</label>
+            <input class="field field-sm" type="date" id="mov-ate" style="width:150px">
+          </div>
+          <div class="ds-field">
+            <label>Grupo</label>
+            <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
+          </div>
+          <div class="ds-field ds-grow">
+            <label>Buscar insumo</label>
+            <input class="field field-sm" id="mov-busca" placeholder="Digite o nome do insumo..." oninput="aplicarFiltroBuscaMov()" style="min-width:180px">
+          </div>
+          <div class="ds-actions">
+            <button class="btn btn-ghost btn-sm" id="mov-mf-btn" onclick="abrirMaisFiltros()" style="display:inline-flex;align-items:center;gap:6px;position:relative">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              Mais filtros <span id="mov-mf-dot" style="display:none;width:7px;height:7px;border-radius:50%;background:#f97316"></span>
+            </button>
           </div>
         </div>
-        <div class="ds-actions">
-          <button class="btn btn-ghost btn-sm" id="mov-mf-btn" onclick="abrirMaisFiltros()" style="display:inline-flex;align-items:center;gap:6px;position:relative">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Mais filtros <span id="mov-mf-dot" style="display:none;width:7px;height:7px;border-radius:50%;background:#f97316"></span>
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
-          <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
-          <button class="btn btn-ghost btn-sm" onclick="exportMovCSV()" style="display:inline-flex;align-items:center;gap:5px">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Exportar CSV
-          </button>
+        <!-- LINHA 2: checkboxes (esquerda) + ações (direita) -->
+        <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+          <label class="mov-chk"><input type="checkbox" id="mov-com-saldo" checked onchange="syncMovSaldo('bar');renderMovimentacao()"> Somente com saldo</label>
+          <label class="mov-chk"><input type="checkbox" id="mov-cmv" onchange="syncMovCmv('bar');renderMovimentacao()"> Somente CMV</label>
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="renderMovimentacao()">Filtrar</button>
+            <button class="btn btn-ghost btn-sm" onclick="limparMovFiltros()">Limpar</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportMovCSV()" style="display:inline-flex;align-items:center;gap:5px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar CSV
+            </button>
+          </div>
         </div>
         <!-- Seletor de colunas: abre pelo ícone no canto do cabeçalho da tabela (flutuante, não corta) -->
         <div id="cols-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px;z-index:1000;min-width:210px;max-height:calc(100vh - 40px);flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.14)">
