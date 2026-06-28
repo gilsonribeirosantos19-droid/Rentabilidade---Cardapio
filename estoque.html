@@ -1216,7 +1216,7 @@
       </style>
       <div class="se-mf-overlay" id="se-mf-ov" onclick="fecharSeMaisFiltros()"></div>
       <aside class="se-mf-drawer" id="se-mf-dw">
-        <div class="se-mf-h"><b>Mais filtros</b><span id="se-mf-debug" style="font-size:10px;color:#94a3b8;font-family:monospace"></span><button onclick="fecharSeMaisFiltros()" title="Fechar">✕</button></div>
+        <div class="se-mf-h"><b>Mais filtros</b><button onclick="fecharSeMaisFiltros()" title="Fechar">✕</button></div>
         <div class="se-mf-b">
           <div><label class="mf-lbl">Tipo do item</label>
             <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()"><option value="">Todos os tipos</option></select>
@@ -1975,10 +1975,12 @@ async function renderSaldoEst(){
 // ── MAIS FILTROS (gaveta) — Saldo de Estoque ───────────────────────────
 let _seFornMap = null;
 async function abrirSeMaisFiltros(){
+  // move a gaveta pro <body> (fora da aba) — evita que o overlay/contexto de empilhamento cubra os campos
+  const ov=document.getElementById('se-mf-ov'), dw=document.getElementById('se-mf-dw');
+  if(ov && ov.parentElement!==document.body) document.body.appendChild(ov);
+  if(dw && dw.parentElement!==document.body) document.body.appendChild(dw);
   await popularSeMaisFiltros(); syncSeGrupo('bar');
-  document.getElementById('se-mf-ov').classList.add('open'); document.getElementById('se-mf-dw').classList.add('open');
-  setTimeout(()=>{ try{ const e=document.getElementById('se-mf-grupo'); const r=e.getBoundingClientRect(); const t=document.elementFromPoint(r.left+r.width/2, r.top+r.height/2); const cs=getComputedStyle(e);
-    const dbg=document.getElementById('se-mf-debug'); if(dbg) dbg.textContent=`PONTO:<${t?t.tagName:'?'} ${t?('#'+t.id):''} ${t?t.className:''}> app=${cs.appearance} bd=${cs.borderColor}`; }catch(err){} }, 450);
+  ov.classList.add('open'); dw.classList.add('open');
 }
 function fecharSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.remove('open'); document.getElementById('se-mf-dw').classList.remove('open'); }
 async function popularSeMaisFiltros(){
@@ -1996,10 +1998,6 @@ async function popularSeMaisFiltros(){
   fill('se-mf-grupo',    insumos.map(i=>i.categoria));
   fill('se-mf-subgrupo', insumos.map(i=>i.subgrupo));
   fill('se-mf-und',      insumos.map(i=>i.unidade_medida||i.unidade_compra));
-  // MEDIDOR TEMPORÁRIO — quantos valores distintos existem de cada campo
-  try { const dbg=document.getElementById('se-mf-debug'); if(dbg){
-    const st=(id)=>{const e=document.getElementById(id); if(!e) return '?'; const cs=getComputedStyle(e); return `dis=${e.disabled} pe=${cs.pointerEvents} bg=${cs.backgroundColor} op=${e.options.length}`;};
-    dbg.textContent=`TIPO[${st('se-tipo')}] GRUPO[${st('se-mf-grupo')}]`; } } catch(e){}
   // Fornecedor: vínculo item↔fornecedor (carrega 1x, só marca pronto se veio algo)
   const selF = document.getElementById('se-mf-forn');
   if (selF && !selF.dataset.done) {
@@ -4298,9 +4296,12 @@ function _renderMovPage() {
 // ── MAIS FILTROS (gaveta lateral) ──────────────────────────────────────
 let _movFornMap = null; // insumo_id -> Set(fornecedor_id), carregado lazy
 async function abrirMaisFiltros(){
+  const ov=document.getElementById('mov-mf-ov'), dw=document.getElementById('mov-mf-dw');
+  if(ov && ov.parentElement!==document.body) document.body.appendChild(ov);
+  if(dw && dw.parentElement!==document.body) document.body.appendChild(dw);
   await popularMaisFiltros();
-  document.getElementById('mov-mf-ov').classList.add('open');
-  document.getElementById('mov-mf-dw').classList.add('open');
+  ov.classList.add('open');
+  dw.classList.add('open');
 }
 function fecharMaisFiltros(){
   document.getElementById('mov-mf-ov').classList.remove('open');
