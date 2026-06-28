@@ -673,10 +673,10 @@ async function salvarForn(){
     } else {
       payload.tenant_id=TENANT_ID;
       // Código sequencial de 4 dígitos, gerado automático (próximo livre, considera ativos e inativos)
-      let _cod='0001';
+      let _cod='1001';
       try{
         const mx=await api(`fornecedores?tenant_id=eq.${TENANT_ID}&codigo=not.is.null&select=codigo&order=codigo.desc&limit=1`);
-        _cod=String((parseInt(mx?.[0]?.codigo)||0)+1).padStart(4,'0');
+        _cod=String(Math.max(parseInt(mx?.[0]?.codigo)||0, 1000)+1);  // começa em 1001
       }catch{}
       payload.codigo=_cod;
       await api('fornecedores',{method:'POST',body:JSON.stringify(payload)});
