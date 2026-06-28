@@ -880,6 +880,14 @@
     <!-- TAB: MOVIMENTAÇÃO -->
     <div id="tab-movimentacao" class="tab-pane">
 
+      <!-- Visual "denso e vivo" — escopo SÓ na tabela da Movimentação (reverte fácil) -->
+      <style>
+        #mov-tbl thead th{background:#f1f5f9 !important;color:#475569 !important;font-weight:600 !important;font-size:12px !important;text-transform:none !important;letter-spacing:0 !important;border-bottom:1px solid #d6dce6 !important;padding:8px 10px !important}
+        #mov-tbl tbody td{background:#fff !important;height:36px !important;padding:6px 10px !important;border-bottom:1px solid #eef1f5 !important}
+        #mov-tbl tbody tr:nth-child(even) td{background:#fafbfc !important}
+        #mov-tbl tbody tr:hover td{background:#eef4ff !important}
+      </style>
+
       <!-- TÍTULO + FILTROS -->
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">Movimentação de Estoque no Período</div>
       <div class="ds-filterbar" style="margin-bottom:16px">
