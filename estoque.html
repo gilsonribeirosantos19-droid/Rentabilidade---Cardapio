@@ -2055,8 +2055,6 @@ async function popularSeMaisFiltros(){
       }
     } catch(e){}
   }
-  // widget próprio (abre p/ baixo + busca por digitação) nos filtros grandes
-  ['se-mf-grupo','se-mf-subgrupo','se-mf-forn'].forEach(id=>{const e=document.getElementById(id); if(e) mkSS(e);});
 }
 function syncSeGrupo(from){
   const bar=document.getElementById('se-cat'), dw=document.getElementById('se-mf-grupo');
@@ -4387,8 +4385,6 @@ async function popularMaisFiltros(){
   fill('mov-mf-grupo', insumos.map(i=>i.categoria));
   // a barra (mov-cat) também é a Categoria — garante que está populada
   fill('mov-cat', insumos.map(i=>i.categoria));
-  // widget próprio nos grandes da gaveta (mov-cat fica nativo)
-  ['mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn'].forEach(id=>{const e=document.getElementById(id); if(e) mkSS(e);});
   }
   // reflete o estado atual da barra na gaveta (todo open)
   syncMovGrupo('bar'); syncMovSaldo('bar'); syncMovCmv('bar');
