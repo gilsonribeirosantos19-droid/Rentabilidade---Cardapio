@@ -402,22 +402,6 @@
               <input type="number" id="cm-novo" min="0.01" step="0.01" placeholder="0,00" oninput="renderizarLojasCheckbox()">
             </div>
           </div>
-          <div class="adj-grid2" style="margin-top:14px">
-            <div class="fg" style="margin:0">
-              <label>Motivo *</label>
-              <select id="cm-motivo">
-                <option value="nota_errada">Nota fiscal com valor errado</option>
-                <option value="correcao_manual">Correção manual</option>
-                <option value="outro">Outro</option>
-              </select>
-            </div>
-            <div class="fg" style="margin:0">
-              <label>Observação <span style="text-transform:none;font-weight:400;color:var(--text3)">(opcional)</span></label>
-              <textarea id="cm-obs" rows="2" maxlength="300" oninput="cmObsCount()" placeholder="Descreva o motivo com mais detalhes..."></textarea>
-              <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px"><span id="cm-obs-count">0</span>/300</div>
-            </div>
-          </div>
-
           <!-- Grade de lojas (estilo Everest) -->
           <div style="margin-top:18px">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px">
@@ -946,8 +930,8 @@ async function salvarAjusteCusto() {
   if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
 
   try {
-    const motivo = document.getElementById('cm-motivo').value;
-    const obs = document.getElementById('cm-obs').value.trim() || null;
+    const motivo = document.getElementById('cm-motivo')?.value || null;
+    const obs = document.getElementById('cm-obs')?.value.trim() || null;
     const dataAjuste = document.getElementById('cm-data').value || new Date().toISOString().split('T')[0];
     const agora = dataAjuste + 'T12:00:00.000Z';
 
@@ -985,12 +969,10 @@ async function salvarAjusteCusto() {
 function limparCmForm() {
   document.getElementById('cm-insumo').value = '';
   document.getElementById('cm-novo').value = '';
-  document.getElementById('cm-obs').value = '';
   const _busca = document.getElementById('cm-busca'); if (_busca) _busca.value = '';
   const _all = document.getElementById('cm-chk-all'); if (_all) _all.checked = false;
   cmInsumoId = null; todosSaldosCm = []; cmSel.clear();
   document.getElementById('cm-lojas-body').innerHTML = '<tr><td colspan="5" class="cm-grid-empty">Selecione um insumo primeiro</td></tr>';
-  cmObsCount();
   updCmCount();
 }
 
