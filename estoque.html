@@ -1977,6 +1977,8 @@ let _seFornMap = null;
 async function abrirSeMaisFiltros(){
   await popularSeMaisFiltros(); syncSeGrupo('bar');
   document.getElementById('se-mf-ov').classList.add('open'); document.getElementById('se-mf-dw').classList.add('open');
+  setTimeout(()=>{ try{ const e=document.getElementById('se-mf-grupo'); const r=e.getBoundingClientRect(); const t=document.elementFromPoint(r.left+r.width/2, r.top+r.height/2); const cs=getComputedStyle(e);
+    const dbg=document.getElementById('se-mf-debug'); if(dbg) dbg.textContent=`PONTO:<${t?t.tagName:'?'} ${t?('#'+t.id):''} ${t?t.className:''}> app=${cs.appearance} bd=${cs.borderColor}`; }catch(err){} }, 450);
 }
 function fecharSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.remove('open'); document.getElementById('se-mf-dw').classList.remove('open'); }
 async function popularSeMaisFiltros(){
