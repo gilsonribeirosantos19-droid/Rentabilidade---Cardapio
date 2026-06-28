@@ -1213,11 +1213,20 @@
         .se-mf-f .btn{flex:1;justify-content:center}
         .se-mf-chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;margin-top:2px}
         .se-mf-chk input{width:16px;height:16px;accent-color:#f97316}
-        /* botao do "select com busca" com cara de campo nativo (branco + setinha), em ambas as gavetas */
-        .se-mf-drawer .ss-wrap, .mov-mf-drawer .ss-wrap{width:100%}
-        .se-mf-drawer .ss-btn, .mov-mf-drawer .ss-btn{background:#fff !important;border:1px solid #cbd5e1 !important;height:38px;padding:0 30px 0 12px !important;display:flex;align-items:center;position:relative;border-radius:8px}
-        .se-mf-drawer .ss-btn.ss-ph, .mov-mf-drawer .ss-btn.ss-ph{color:#475569 !important}
-        .se-mf-drawer .ss-btn::after, .mov-mf-drawer .ss-btn::after{content:'';position:absolute;right:13px;top:42%;width:7px;height:7px;border-right:2px solid #64748b;border-bottom:2px solid #64748b;transform:rotate(45deg);pointer-events:none}
+        /* dropdown com busca proprio (.mss) — branco, setinha, abre p/ baixo, busca por digitacao */
+        .mss{position:relative;width:100%}
+        .mss-b{width:100%;height:38px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:0 30px 0 12px;text-align:left;font-size:13px;color:#0f172a;cursor:pointer;font-family:inherit;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center}
+        .mss-b:hover{border-color:#f97316}
+        .mss-b.ph{color:#94a3b8}
+        .mss-b::after{content:'';position:absolute;right:13px;top:42%;width:7px;height:7px;border-right:2px solid #64748b;border-bottom:2px solid #64748b;transform:rotate(45deg)}
+        .mss-p{display:none;position:fixed;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.16);z-index:100000;overflow:hidden;min-width:200px}
+        .mss.open .mss-p{display:block}
+        .mss-q{width:100%;border:none;border-bottom:1px solid #eef1f5;padding:9px 12px;font-size:13px;outline:none;font-family:inherit}
+        .mss-l{overflow-y:auto}
+        .mss-o{padding:8px 12px;font-size:13px;cursor:pointer;color:#0f172a}
+        .mss-o:hover{background:#fff7ed}
+        .mss-o.on{background:#fff7ed;color:#f97316;font-weight:600}
+        .mss-n{padding:10px 12px;color:#94a3b8;font-size:12px}
       </style>
       <div class="se-mf-overlay" id="se-mf-ov" onclick="fecharSeMaisFiltros()"></div>
       <aside class="se-mf-drawer" id="se-mf-dw">
@@ -1985,14 +1994,38 @@ async function abrirSeMaisFiltros(){
   if(ov && ov.parentElement!==document.body) document.body.appendChild(ov);
   if(dw && dw.parentElement!==document.body) document.body.appendChild(dw);
   await popularSeMaisFiltros(); syncSeGrupo('bar');
-  const _g=document.getElementById('se-mf-grupo'); if(_g && _g._ssSync) _g._ssSync();
+  const _g=document.getElementById('se-mf-grupo'); if(_g && _g._mssLab) _g._mssLab();
   ov.classList.add('open'); dw.classList.add('open');
 }
 function fecharSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.remove('open'); document.getElementById('se-mf-dw').classList.remove('open'); }
+// ── DROPDOWN COM BUSCA (auto-contido, NÃO usa o searchableSelect/observer do utils.js) ──
+function mkSS(sel){
+  if(!sel || sel._mss) return; sel._mss=true; sel.style.display='none';
+  const w=document.createElement('div'); w.className='mss';
+  const b=document.createElement('button'); b.type='button'; b.className='mss-b';
+  const p=document.createElement('div'); p.className='mss-p'; p.innerHTML='<input class="mss-q" placeholder="Digite para buscar..."><div class="mss-l"></div>';
+  w.appendChild(b); w.appendChild(p); sel.parentNode.insertBefore(w, sel.nextSibling);
+  const q=p.querySelector('.mss-q'), l=p.querySelector('.mss-l');
+  const e2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const lab=()=>{ const o=sel.options[sel.selectedIndex]; b.textContent=o?o.text:''; b.classList.toggle('ph', !sel.value); };
+  const place=()=>{ const r=b.getBoundingClientRect(); p.style.left=r.left+'px'; p.style.width=r.width+'px';
+    const below=window.innerHeight-r.bottom-8;
+    if(below<240){ p.style.top='auto'; p.style.bottom=(window.innerHeight-r.top+4)+'px'; l.style.maxHeight=Math.max(140,Math.min(260,r.top-60))+'px'; }
+    else { p.style.bottom='auto'; p.style.top=(r.bottom+4)+'px'; l.style.maxHeight=Math.max(140,Math.min(260,below-50))+'px'; } };
+  const draw=f=>{ f=(f||'').toLowerCase(); l.innerHTML=[...sel.options].filter(o=>o.text.toLowerCase().includes(f)).map(o=>`<div class="mss-o${o.value&&o.value===sel.value?' on':''}" data-v="${e2(o.value)}">${e2(o.text)}</div>`).join('')||'<div class="mss-n">Nada encontrado</div>'; };
+  b.onclick=ev=>{ ev.stopPropagation(); const open=w.classList.toggle('open'); if(open){ place(); draw(''); q.value=''; setTimeout(()=>q.focus(),0); } };
+  q.oninput=()=>draw(q.value);
+  l.onclick=ev=>{ const o=ev.target.closest('.mss-o'); if(!o) return; sel.value=o.dataset.v; lab(); w.classList.remove('open'); sel.dispatchEvent(new Event('change',{bubbles:true})); };
+  sel._mssLab=lab; lab();
+}
+if(!window._mssDoc){ window._mssDoc=true; document.addEventListener('click', e=>{ document.querySelectorAll('.mss.open').forEach(w=>{ if(!w.contains(e.target)) w.classList.remove('open'); }); }); }
+
 let _seMfFilled = false;
 async function popularSeMaisFiltros(){
-  if(_seMfFilled) return;   // carrega UMA vez só (como as outras telas) — evita o re-scan em loop que travava
+  if(_seMfFilled) return;   // carrega UMA vez só
   _seMfFilled = true;
+  // o app (searchableAuto) NÃO toca nesses — uso meu widget próprio
+  ['se-tipo','se-mf-familia','se-mf-grupo','se-mf-subgrupo','se-mf-forn','se-mf-und'].forEach(id=>{const e=document.getElementById(id); if(e) e.setAttribute('data-no-search','');});
   const fill = (id, vals) => {
     const sel = document.getElementById(id); if(!sel) return;
     const ph = sel.querySelector('option[value=""]')?.outerHTML || '<option value="">Todos</option>';
@@ -2022,6 +2055,8 @@ async function popularSeMaisFiltros(){
       }
     } catch(e){}
   }
+  // widget próprio (abre p/ baixo + busca por digitação) nos filtros grandes
+  ['se-mf-grupo','se-mf-subgrupo','se-mf-forn'].forEach(id=>{const e=document.getElementById(id); if(e) mkSS(e);});
 }
 function syncSeGrupo(from){
   const bar=document.getElementById('se-cat'), dw=document.getElementById('se-mf-grupo');
@@ -4327,6 +4362,7 @@ async function popularMaisFiltros(){
   };
   if(!_movMfFilled){
   _movMfFilled = true;
+  ['mov-mf-tipo','mov-mf-familia','mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn','mov-mf-und','mov-cat'].forEach(id=>{const e=document.getElementById(id); if(e) e.setAttribute('data-no-search','');});
   fill('mov-mf-tipo',     insumos.map(i=>i.tipo_item));
   fill('mov-mf-familia',  insumos.map(i=>i.familia));
   fill('mov-mf-subgrupo', insumos.map(i=>i.subgrupo));
@@ -4351,10 +4387,12 @@ async function popularMaisFiltros(){
   fill('mov-mf-grupo', insumos.map(i=>i.categoria));
   // a barra (mov-cat) também é a Categoria — garante que está populada
   fill('mov-cat', insumos.map(i=>i.categoria));
+  // widget próprio nos grandes da gaveta (mov-cat fica nativo)
+  ['mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn'].forEach(id=>{const e=document.getElementById(id); if(e) mkSS(e);});
   }
   // reflete o estado atual da barra na gaveta (todo open)
   syncMovGrupo('bar'); syncMovSaldo('bar'); syncMovCmv('bar');
-  const _g=document.getElementById('mov-mf-grupo'); if(_g && _g._ssSync) _g._ssSync();
+  const _g=document.getElementById('mov-mf-grupo'); if(_g && _g._mssLab) _g._mssLab();
 }
 function _movMfDot(){
   const ativos = ['mov-mf-tipo','mov-mf-familia','mov-mf-subgrupo','mov-mf-forn','mov-mf-und']
