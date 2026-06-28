@@ -1180,7 +1180,7 @@
         </div>
         <div class="ds-field">
           <label>Categoria</label>
-          <select class="field field-sm" id="se-cat" onchange="renderSaldoEst()">
+          <select class="field field-sm" id="se-cat" onchange="syncSeGrupo('bar');renderSaldoEst()">
             <option value="">Todas as categorias</option>
           </select>
         </div>
@@ -1221,6 +1221,22 @@
           <div><label class="mf-lbl">Tipo do item</label>
             <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()"><option value="">Todos os tipos</option></select>
           </div>
+          <div><label class="mf-lbl">Família</label>
+            <select class="field field-sm" id="se-mf-familia" onchange="renderSaldoEst()"><option value="">Todas</option></select>
+          </div>
+          <div><label class="mf-lbl">Grupo</label>
+            <select class="field field-sm" id="se-mf-grupo" onchange="syncSeGrupo('drawer');renderSaldoEst()"><option value="">Todos os grupos</option></select>
+          </div>
+          <div><label class="mf-lbl">Subgrupo</label>
+            <select class="field field-sm" id="se-mf-subgrupo" onchange="renderSaldoEst()"><option value="">Todos</option></select>
+          </div>
+          <div><label class="mf-lbl">Fornecedor</label>
+            <select class="field field-sm" id="se-mf-forn" onchange="renderSaldoEst()"><option value="">Todos</option></select>
+          </div>
+          <div><label class="mf-lbl">Unidade</label>
+            <select class="field field-sm" id="se-mf-und" onchange="renderSaldoEst()"><option value="">Todas</option></select>
+          </div>
+          <div style="height:1px;background:#eef1f5"></div>
           <div><label class="mf-lbl">Mostrar</label>
             <label class="se-mf-chk"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()"> Somente itens que calculam CMV</label>
           </div>
@@ -1863,6 +1879,10 @@ async function renderSaldoEst(){
   const tipoFil = document.getElementById('se-tipo')?.value||'';
   const cmvF    = document.getElementById('se-cmv')?.checked;
   const buscaF  = (document.getElementById('se-busca')?.value||'').trim();
+  const famFil  = document.getElementById('se-mf-familia')?.value||'';
+  const subFil  = document.getElementById('se-mf-subgrupo')?.value||'';
+  const undFil  = document.getElementById('se-mf-und')?.value||'';
+  const fornFil = document.getElementById('se-mf-forn')?.value||'';
   const tipoData= document.getElementById('se-tipo-data')?.value||'atual';
   const dataBase= document.getElementById('se-data')?.value||'';
   const tbody   = document.getElementById('se-body');
@@ -1916,6 +1936,10 @@ async function renderSaldoEst(){
       if (tipoFil && (ins.tipo_item||'')!==tipoFil) return null;
       if (cmvF && ins.participa_cmv==='nao') return null;
       if (buscaF && !normalizeSearch(ins.nome).includes(normalizeSearch(buscaF))) return null;
+      if (famFil && (ins.familia||'')!==famFil) return null;
+      if (subFil && (ins.subgrupo||'')!==subFil) return null;
+      if (undFil && ((ins.unidade_medida||ins.unidade_compra||''))!==undFil) return null;
+      if (fornFil && !(_seFornMap && _seFornMap[ins.id] && _seFornMap[ins.id].has(fornFil))) return null;
       const valor = (s.quantidade||0)*(s.custo_medio||0);
       const status = (ins.minimo>0&&s.quantidade<ins.minimo)?'<span class="badge" style="background:#fee2e2;color:#dc2626">Abaixo mín.</span>':
                      (s.quantidade===0?'<span class="badge" style="background:#f1f5f9;color:#64748b">Zerado</span>':
@@ -1949,11 +1973,56 @@ async function renderSaldoEst(){
 }
 
 // ── MAIS FILTROS (gaveta) — Saldo de Estoque ───────────────────────────
-function abrirSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.add('open'); document.getElementById('se-mf-dw').classList.add('open'); }
+let _seFornMap = null;
+async function abrirSeMaisFiltros(){
+  await popularSeMaisFiltros(); syncSeGrupo('bar');
+  document.getElementById('se-mf-ov').classList.add('open'); document.getElementById('se-mf-dw').classList.add('open');
+}
 function fecharSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.remove('open'); document.getElementById('se-mf-dw').classList.remove('open'); }
-function _seMfDot(){ const a=(document.getElementById('se-tipo')?.value||'')||(document.getElementById('se-cmv')?.checked); const d=document.getElementById('se-mf-dot'); if(d) d.style.display=a?'inline-block':'none'; }
-function aplicarSeMaisFiltros(){ _seMfDot(); fecharSeMaisFiltros(); renderSaldoEst(); }
-function limparSeMaisFiltros(){ const t=document.getElementById('se-tipo'); if(t) t.value=''; const c=document.getElementById('se-cmv'); if(c) c.checked=false; _seMfDot(); renderSaldoEst(); }
+async function popularSeMaisFiltros(){
+  const fill = (id, vals) => {
+    const sel = document.getElementById(id); if(!sel || sel.dataset.done) return;
+    const opts = [...new Set(vals.filter(Boolean).map(v=>(''+v).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
+    sel.insertAdjacentHTML('beforeend', opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join(''));
+    sel.dataset.done='1';
+  };
+  fill('se-mf-familia',  insumos.map(i=>i.familia));
+  fill('se-mf-subgrupo', insumos.map(i=>i.subgrupo));
+  fill('se-mf-und',      insumos.map(i=>i.unidade_medida||i.unidade_compra));
+  // Grupo: copia as opções da Categoria da barra (mesmos valores p/ sincronizar)
+  const selG=document.getElementById('se-mf-grupo'), selCat=document.getElementById('se-cat');
+  if(selG && selCat && !selG.dataset.done){ selG.innerHTML = selCat.innerHTML; selG.dataset.done='1'; }
+  // Fornecedor: vínculo item↔fornecedor (carrega 1x)
+  const selF = document.getElementById('se-mf-forn');
+  if (selF && !selF.dataset.done) {
+    try {
+      const [vinc, forns] = await Promise.all([
+        api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=insumo_id,fornecedor_id`).catch(()=>[]),
+        api(`fornecedores?tenant_id=eq.${TENANT_ID}&select=id,nome&order=nome.asc`).catch(()=>[]),
+      ]);
+      _seFornMap = {};
+      vinc.forEach(v => { (_seFornMap[v.insumo_id] = _seFornMap[v.insumo_id] || new Set()).add(v.fornecedor_id); });
+      selF.insertAdjacentHTML('beforeend', forns.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join(''));
+      selF.dataset.done='1';
+    } catch(e){}
+  }
+}
+function syncSeGrupo(from){
+  const bar=document.getElementById('se-cat'), dw=document.getElementById('se-mf-grupo');
+  if(!bar||!dw) return;
+  if(from==='bar') dw.value=bar.value; else bar.value=dw.value;
+}
+function _seMfDot(){
+  const ids=['se-tipo','se-mf-familia','se-mf-subgrupo','se-mf-und','se-mf-forn'];
+  const a = ids.some(id=>document.getElementById(id)?.value) || document.getElementById('se-cmv')?.checked;
+  const d=document.getElementById('se-mf-dot'); if(d) d.style.display=a?'inline-block':'none';
+}
+function aplicarSeMaisFiltros(){ syncSeGrupo('drawer'); _seMfDot(); fecharSeMaisFiltros(); renderSaldoEst(); }
+function limparSeMaisFiltros(){
+  ['se-tipo','se-mf-familia','se-mf-grupo','se-mf-subgrupo','se-mf-forn','se-mf-und'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const c=document.getElementById('se-cmv'); if(c) c.checked=false;
+  syncSeGrupo('drawer'); _seMfDot(); renderSaldoEst();
+}
 
 function _initSaldoEst(){
   const selCat=document.getElementById('se-cat');
