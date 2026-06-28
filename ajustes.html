@@ -95,6 +95,11 @@
   .cm-grid .c-num{text-align:right;font-family:'DM Mono',monospace;color:#334155;white-space:nowrap}
   .cm-grid input[type=checkbox]{width:16px !important;height:16px !important;accent-color:#f97316;cursor:pointer;vertical-align:middle;margin:0}
   .cm-grid-empty{padding:16px !important;text-align:center;color:var(--text3);height:auto !important}
+  .cm-grid .gnova{width:120px;height:30px;border:1px solid #cbd5e1;border-radius:5px;padding:0 8px;font-size:13px;font-family:'DM Mono',monospace;text-align:right;background:#fff;color:#0f172a}
+  .cm-grid .gnova:focus{outline:none;border-color:#f97316}
+  .cm-grid .gnova:disabled{background:#f1f5f9;color:#cbd5e1;cursor:not-allowed}
+  .up{color:#16a34a;font-weight:600}
+  .down{color:#dc2626;font-weight:600}
 
   /* LAYOUT DOIS COLUNAS */
   .split{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
@@ -290,56 +295,67 @@
 
       <!-- TAB: AJUSTE DE ESTOQUE -->
       <div id="tab-estoque" class="tab-pane">
-        <div class="card" style="margin-bottom:16px">
+        <!-- Toolbar de ícones (estilo Everest) -->
+        <div style="display:flex;align-items:center;gap:5px;max-width:940px;padding:7px 9px;margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-bottom-width:2px;border-radius:8px">
+          <button id="btn-ae" onclick="salvarAjusteEstoque()" title="Salvar ajuste" style="width:38px;height:38px;border:none;background:#f97316;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#fff;transition:background .12s" onmouseover="this.style.background='#ea6c00'" onmouseout="this.style.background='#f97316'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          </button>
+          <button onclick="limparAeForm()" title="Limpar / novo" style="width:38px;height:38px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#334155;transition:background .12s" onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background='#fff'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </button>
+          <button onclick="goHub()" title="Voltar" style="width:38px;height:38px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#334155;transition:background .12s" onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background='#fff'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          </button>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;max-width:940px">
           <div class="sec-head"><span class="sec-ic">▣</span> Informações do Ajuste</div>
           <div class="adj-grid">
-            <div class="fg" style="margin:0">
-              <label>Loja *</label>
-              <select id="ae-loja" onchange="onAeLojaChange()"><option value="">Selecione a loja...</option></select>
-            </div>
             <div class="fg" style="margin:0">
               <label>Insumo *</label>
               <select id="ae-insumo" onchange="onAeInsumoChange()"><option value="">Selecione um insumo...</option></select>
             </div>
             <div class="fg" style="margin:0">
-              <label>Quantidade *</label>
-              <input type="number" id="ae-qtd" min="0.001" step="0.001" placeholder="0,000" oninput="calcPreview()">
+              <label>Data do Ajuste *</label>
+              <input type="date" id="ae-data">
             </div>
             <div class="fg" style="margin:0">
               <label>Unidade</label>
               <input type="text" id="ae-un" readonly style="background:var(--bg3);color:var(--text3)">
             </div>
-          </div>
-
-          <div class="tipo-wrap" style="margin-top:14px;max-width:440px">
-            <button class="tipo-btn pos" id="ae-btn-pos" onclick="selecionarTipo('pos')">＋ Acréscimo</button>
-            <button class="tipo-btn neg" id="ae-btn-neg" onclick="selecionarTipo('neg')">－ Redução</button>
-          </div>
-
-          <div id="ae-saldo-preview" class="saldo-preview" style="margin-top:14px"></div>
-          <div id="ae-novo-saldo" class="infobox"></div>
-
-          <div class="adj-grid2" style="margin-top:14px">
             <div class="fg" style="margin:0">
               <label>Motivo *</label>
               <select id="ae-motivo">
-                <option value="nota_errada">Nota fiscal errada</option>
                 <option value="contagem">Correção de contagem</option>
+                <option value="nota_errada">Nota fiscal errada</option>
                 <option value="perda">Perda / Quebra</option>
                 <option value="furto">Furto / Extravio</option>
                 <option value="outro">Outro</option>
               </select>
             </div>
-            <div class="fg" style="margin:0">
-              <label>Observação <span style="text-transform:none;font-weight:400;color:var(--text3)">(opcional)</span></label>
-              <textarea id="ae-obs" rows="2" maxlength="300" oninput="aeObsCount()" placeholder="Descreva o motivo com mais detalhes..."></textarea>
-              <div style="text-align:right;font-size:11px;color:var(--text3);margin-top:3px"><span id="ae-obs-count">0</span>/300</div>
-            </div>
           </div>
 
-          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
-            <button class="btn btn-ghost" onclick="limparAeForm()">＋ Novo</button>
-            <button class="btn btn-primary" onclick="salvarAjusteEstoque()" id="btn-ae">Salvar Ajuste</button>
+          <!-- Grade de lojas (estilo Everest) -->
+          <div style="margin-top:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8">Lojas — marque e informe a nova quantidade</div>
+              <div style="font-size:12px;color:var(--text2)"><span id="ae-sel-count">0</span> loja(s) selecionada(s)</div>
+            </div>
+            <input id="ae-busca" class="cm-grid-search" placeholder="Digite um texto para pesquisar..." oninput="renderAeGrid()">
+            <div class="cm-grid-wrap">
+              <table class="cm-grid">
+                <thead><tr>
+                  <th class="c-sel"><input type="checkbox" id="ae-chk-all" onchange="toggleTodasAeLojas(this.checked)"></th>
+                  <th>Loja</th>
+                  <th>Un.</th>
+                  <th class="c-num">Saldo Atual</th>
+                  <th class="c-num">Nova Quantidade</th>
+                  <th class="c-num">Diferença</th>
+                  <th>Situação</th>
+                </tr></thead>
+                <tbody id="ae-lojas-body"><tr><td colspan="7" class="cm-grid-empty">Selecione um insumo primeiro</td></tr></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -577,8 +593,6 @@ function popularLojas() {
     lojas.map(l => `<option value="${l.id}">${esc(l.nome)}</option>`).join('');
   const selTop = document.getElementById('sel-loja');
   if (selTop) selTop.innerHTML = opts.replace('Selecione a loja...','Todas as lojas');
-  const selAe = document.getElementById('ae-loja');
-  if (selAe) selAe.innerHTML = opts;
   const rcBody = document.getElementById('rc-lojas-body');
   if (rcBody) {
     rcBody.innerHTML = lojas.map(l => `<label class="cm-loja-opt"><input type="checkbox" class="rc-loja-chk" value="${l.id}" onchange="updRcLojaBtn()"><span>${esc(l.nome)}</span></label>`).join('');
@@ -598,9 +612,7 @@ function updRcLojaBtn(){
   else btn.textContent=sel.length+' lojas selecionadas';
 }
 
-function onAeLojaChange() {
-  lojaId = document.getElementById('ae-loja').value || null;
-  saldos = [];
+function onAeLojaChange() { // compat: o seletor de loja virou grade
   onAeInsumoChange();
 }
 
@@ -757,100 +769,134 @@ function _renderTabStrip() {
     _openTabs.map(t => `<button class="ws-tab${_activeTab===t?' active':''}" onclick="switchTab('${t}')">${_tabNames[t]||t}<span class="ws-tab-close" onclick="event.stopPropagation();closeTab('${t}')">✕</span></button>`).join('');
 }
 
-// ── AJUSTE DE ESTOQUE ──────────────────────────────────────────────────
+// ── AJUSTE DE ESTOQUE (grade de lojas, estilo Everest) ─────────────────
+let todosSaldosAe = []; // saldos de todas as lojas para o insumo selecionado
+let aeSel = new Set();   // ids das lojas marcadas
+let aeNova = {};         // loja_id -> nova quantidade digitada
+let _aeFoco = null;      // mantém o foco no campo editado após repintar
+
 async function onAeInsumoChange() {
   aeInsumoId = document.getElementById('ae-insumo').value || null;
-  aetipoSel = null;
-  document.getElementById('ae-btn-pos').classList.remove('sel');
-  document.getElementById('ae-btn-neg').classList.remove('sel');
-  document.getElementById('ae-qtd').value = '';
-  document.getElementById('ae-novo-saldo').classList.remove('show');
-
-  const prev = document.getElementById('ae-saldo-preview');
-  if (!aeInsumoId || !lojaId) { prev.classList.remove('show'); document.getElementById('ae-un').value=''; return; }
-
-  if (!saldos.length) saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`).catch(()=>[]);
-
+  aeSel.clear(); aeNova = {};
+  const body = document.getElementById('ae-lojas-body');
   const ins = insumos.find(i => i.id === aeInsumoId);
-  const s = getSaldo(aeInsumoId);
-  document.getElementById('ae-un').value = ins?.unidade_medida || ins?.unidade_compra || 'un';
-  prev.textContent = `Saldo atual: ${fmtQtd(s.quantidade)}  ·  Custo médio: ${s.custo_medio ? brl(s.custo_medio) : '—'}`;
-  prev.classList.add('show');
+  document.getElementById('ae-un').value = ins ? (ins.unidade_medida || ins.unidade_compra || 'un') : '';
+  if (!aeInsumoId) {
+    body.innerHTML = '<tr><td colspan="7" class="cm-grid-empty">Selecione um insumo primeiro</td></tr>';
+    updAeCount();
+    return;
+  }
+  body.innerHTML = '<tr><td colspan="7" class="cm-grid-empty">Carregando...</td></tr>';
+  try {
+    const [lojasAtual, saldosInsumo] = await Promise.all([
+      api(`lojas?tenant_id=eq.${TENANT_ID}&order=nome.asc`),
+      api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&insumo_id=eq.${aeInsumoId}`),
+    ]);
+    if (lojasAtual.length) lojas = lojasAtual;
+    todosSaldosAe = saldosInsumo;
+    renderAeGrid();
+  } catch(e) {
+    body.innerHTML = `<tr><td colspan="7" class="cm-grid-empty" style="color:#dc2626">Erro: ${esc(e.message)}</td></tr>`;
+  }
 }
 
-function selecionarTipo(tipo) {
-  aetipoSel = tipo;
-  document.getElementById('ae-btn-pos').classList.toggle('sel', tipo==='pos');
-  document.getElementById('ae-btn-neg').classList.toggle('sel', tipo==='neg');
-  calcPreview();
+// Grade: Sel | Loja | Un. | Saldo Atual | Nova Quantidade | Diferença | Situação
+function renderAeGrid() {
+  const body = document.getElementById('ae-lojas-body'); if (!body) return;
+  if (!aeInsumoId) { body.innerHTML = '<tr><td colspan="7" class="cm-grid-empty">Selecione um insumo primeiro</td></tr>'; updAeCount(); return; }
+  if (!lojas.length) { body.innerHTML = '<tr><td colspan="7" class="cm-grid-empty">Nenhuma loja cadastrada.</td></tr>'; updAeCount(); return; }
+  const ins = insumos.find(i => i.id === aeInsumoId);
+  const un = ins ? (ins.unidade_medida || ins.unidade_compra || 'un') : '';
+  const q = (document.getElementById('ae-busca')?.value || '').toLowerCase();
+  const vis = lojas.filter(l => (l.nome || '').toLowerCase().includes(q));
+  if (!vis.length) { body.innerHTML = '<tr><td colspan="7" class="cm-grid-empty">Nenhuma loja encontrada.</td></tr>'; updAeCount(); return; }
+  body.innerHTML = vis.map(l => {
+    const s = todosSaldosAe.find(x => x.loja_id === l.id) || { quantidade: 0, custo_medio: 0 };
+    const atual = +s.quantidade || 0;
+    const on = aeSel.has(l.id);
+    const nv = aeNova[l.id];
+    const tem = nv !== undefined && nv !== '' && !isNaN(parseFloat(nv));
+    let dif = '—', sit = '<span style="color:#94a3b8">—</span>';
+    if (on && tem) {
+      const d = parseFloat(nv) - atual;
+      dif = d === 0 ? '0,000' : `<span class="${d>0?'up':'down'}">${d>0?'+':''}${fmtQtd(d)}</span>`;
+      sit = d === 0 ? '<span style="color:#94a3b8">sem mudança</span>' : '<span style="color:#16a34a">● Será ajustada</span>';
+    } else if (on) {
+      sit = '<span style="color:#f59e0b">aguardando quantidade</span>';
+    }
+    return `<tr class="${on ? 'sel' : ''}">
+      <td class="c-sel"><input type="checkbox" class="ae-loja-chk" ${on ? 'checked' : ''} onchange="toggleAeLoja('${l.id}',this.checked)"></td>
+      <td>${esc(l.nome)}</td>
+      <td>${esc(un)}</td>
+      <td class="c-num">${fmtQtd(atual)}</td>
+      <td class="c-num"><input class="gnova" type="number" step="0.001" value="${nv ?? ''}" ${on ? '' : 'disabled'} oninput="setAeNova('${l.id}',this.value)" placeholder="${on ? '—' : ''}"></td>
+      <td class="c-num">${dif}</td>
+      <td>${sit}</td>
+    </tr>`;
+  }).join('');
+  const all = document.getElementById('ae-chk-all'); if (all) all.checked = (lojas.length > 0 && aeSel.size === lojas.length);
+  updAeCount();
+  if (_aeFoco) {
+    const i = vis.findIndex(l => l.id === _aeFoco);
+    const inp = document.querySelectorAll('#ae-lojas-body tr')[i]?.querySelector('.gnova');
+    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    _aeFoco = null;
+  }
 }
 
-function calcPreview() {
-  if (!aeInsumoId || !aetipoSel) return;
-  const qtd = parseFloat(document.getElementById('ae-qtd').value);
-  if (!qtd || qtd <= 0) { document.getElementById('ae-novo-saldo').classList.remove('show'); return; }
-  const s = getSaldo(aeInsumoId);
-  const novoSaldo = aetipoSel === 'pos' ? (s.quantidade||0) + qtd : Math.max(0,(s.quantidade||0) - qtd);
-  const el = document.getElementById('ae-novo-saldo');
-  el.textContent = `Novo saldo após ajuste: ${fmtQtd(novoSaldo)}`;
-  el.classList.add('show');
-}
+function toggleAeLoja(id, on) { on ? aeSel.add(id) : aeSel.delete(id); if (!on) delete aeNova[id]; renderAeGrid(); }
+function toggleTodasAeLojas(checked) { aeSel.clear(); if (checked) lojas.forEach(l => aeSel.add(l.id)); else aeNova = {}; renderAeGrid(); }
+function setAeNova(id, v) { aeNova[id] = v; _aeFoco = id; renderAeGrid(); }
+function updAeCount() { const e = document.getElementById('ae-sel-count'); if (e) e.textContent = aeSel.size; }
 
 async function salvarAjusteEstoque() {
-  if (!lojaId) { toast('Selecione uma loja primeiro.','err'); return; }
   if (!aeInsumoId) { toast('Selecione um insumo.','err'); return; }
-  if (!aetipoSel) { toast('Selecione o tipo: entrada ou saída.','err'); return; }
-  const qtd = parseFloat(document.getElementById('ae-qtd').value);
-  if (!qtd || qtd <= 0) { toast('Informe a quantidade.','err'); return; }
-
-  // ── Validação: obrigar observação em ajuste ──────────────
-  await Params.load();
-  if(Params.bool('producao','obrigar_obs_ajuste')&&!(document.getElementById('ae-obs')?.value||'').trim()){
-    toast('Observação é obrigatória em ajustes (Parâmetros > Produção).','err');return;}
-  // ─────────────────────────────────────────────────────────
+  // lojas marcadas COM nova quantidade válida e diferença != 0
+  const itens = [];
+  for (const lId of aeSel) {
+    const nv = aeNova[lId];
+    if (nv === undefined || nv === '' || isNaN(parseFloat(nv)) || parseFloat(nv) < 0) continue;
+    const s = todosSaldosAe.find(x => x.loja_id === lId) || { quantidade: 0, custo_medio: 0 };
+    const atual = +s.quantidade || 0;
+    const nova = parseFloat(nv);
+    const dif = +(nova - atual).toFixed(4);
+    if (dif === 0) continue;
+    itens.push({ lId, nova, dif, custo: +s.custo_medio || 0 });
+  }
+  if (!itens.length) { toast('Marque uma loja e informe uma nova quantidade diferente do saldo atual.','err'); return; }
 
   const btn = document.getElementById('btn-ae');
-  btn.disabled = true; btn.textContent = 'Salvando…';
-
+  if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
   try {
-    const motivo = document.getElementById('ae-motivo').value;
-    const obs = document.getElementById('ae-obs').value.trim() || null;
-    const agora = new Date().toISOString();
-    const s = getSaldo(aeInsumoId);
-
-    if (aetipoSel === 'pos') {
-      await api('entradas_estoque', { method:'POST', prefer:'return=minimal',
-        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:aeInsumoId, loja_id:lojaId,
-          quantidade:qtd, tipo:'ajuste', motivo, observacao:obs, criado_em:agora }) });
-      await upsertSaldo(aeInsumoId, (s.quantidade||0)+qtd, s.custo_medio||0);
-    } else {
-      const novaQtd = Math.max(0,(s.quantidade||0)-qtd);
-      await api('saidas_estoque', { method:'POST', prefer:'return=minimal',
-        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:aeInsumoId, loja_id:lojaId,
-          quantidade:qtd, tipo:'ajuste', motivo, observacao:obs, criado_em:agora }) });
-      await upsertSaldo(aeInsumoId, novaQtd, s.custo_medio||0);
+    const motivo = document.getElementById('ae-motivo')?.value || null;
+    const dataAjuste = document.getElementById('ae-data')?.value || new Date().toISOString().split('T')[0];
+    const agora = dataAjuste + 'T12:00:00.000Z';
+    for (const it of itens) {
+      const tabela = it.dif > 0 ? 'entradas_estoque' : 'saidas_estoque';
+      await api(tabela, { method:'POST', prefer:'return=minimal',
+        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:aeInsumoId, loja_id:it.lId,
+          quantidade: Math.abs(it.dif), tipo:'ajuste', motivo, observacao:'Ajuste de estoque', criado_em:agora }) });
+      // saldo = nova quantidade (preserva o custo médio da loja)
+      await api('saldo_estoque?on_conflict=insumo_id,loja_id', { method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+        body: JSON.stringify({ tenant_id:TENANT_ID, insumo_id:aeInsumoId, loja_id:it.lId,
+          quantidade: parseFloat(it.nova.toFixed(4)), custo_medio: parseFloat(it.custo.toFixed(6)), atualizado_em: agora }) });
     }
-
-    toast('Ajuste de estoque salvo!', 'ok');
+    toast(`Estoque ajustado em ${itens.length} loja(s)!`, 'ok');
     limparAeForm();
     await carregarLogs();
   } catch(e) { toast('Erro: '+e.message,'err'); }
-  finally { btn.disabled=false; btn.textContent='Confirmar ajuste'; }
+  finally { if (btn) { btn.disabled = false; btn.style.opacity = '1'; } }
 }
 
 function limparAeForm() {
   document.getElementById('ae-insumo').value = '';
-  document.getElementById('ae-qtd').value = '';
-  document.getElementById('ae-obs').value = '';
   document.getElementById('ae-un').value = '';
-  document.getElementById('ae-saldo-preview').classList.remove('show');
-  document.getElementById('ae-novo-saldo').classList.remove('show');
-  document.getElementById('ae-btn-pos').classList.remove('sel');
-  document.getElementById('ae-btn-neg').classList.remove('sel');
-  aeInsumoId = null; aetipoSel = null;
-  aeObsCount();
+  const _b = document.getElementById('ae-busca'); if (_b) _b.value = '';
+  const _all = document.getElementById('ae-chk-all'); if (_all) _all.checked = false;
+  aeInsumoId = null; todosSaldosAe = []; aeSel.clear(); aeNova = {};
+  document.getElementById('ae-lojas-body').innerHTML = '<tr><td colspan="7" class="cm-grid-empty">Selecione um insumo primeiro</td></tr>';
+  updAeCount();
 }
-function aeObsCount() { const el = document.getElementById('ae-obs-count'); if (el) el.textContent = (document.getElementById('ae-obs').value || '').length; }
 
 // ── AJUSTE DE CUSTO MÉDIO ──────────────────────────────────────────────
 let todosSaldosCm = []; // saldos de todas as lojas para o insumo selecionado
