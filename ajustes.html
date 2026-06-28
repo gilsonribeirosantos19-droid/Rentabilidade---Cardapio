@@ -453,8 +453,14 @@
             <label style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#0f172a;cursor:pointer;text-transform:none;letter-spacing:0;margin:0"><input type="checkbox" id="rc-ficha" onchange="syncRc()" style="width:16px;height:16px;accent-color:#f97316"> Recalcular Custo da Ficha Técnica</label>
           </div>
 
-          <div class="fg" style="max-width:320px;margin-bottom:0"><label>Loja</label>
-            <select id="rc-loja"><option value="">Selecione a loja...</option></select></div>
+          <div class="fg" style="max-width:340px;margin-bottom:0"><label>Loja</label>
+            <div style="position:relative">
+              <button type="button" id="rc-loja-btn" class="cm-loja-btn" onclick="toggleRcLojaDrop(event)">Selecione as lojas...</button>
+              <div id="rc-loja-drop" class="cm-loja-drop">
+                <label class="cm-loja-opt"><input type="checkbox" id="rc-chk-all" onchange="toggleTodasRcLojas(this.checked)"> <b>Todas as lojas</b></label>
+                <div id="rc-lojas-body"></div>
+              </div>
+            </div></div>
 
           <!-- Bloco Custo Médio → insumos -->
           <div id="rc-blk-cm" style="border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-top:14px;transition:opacity .15s">
@@ -552,8 +558,23 @@ function popularLojas() {
   if (selTop) selTop.innerHTML = opts.replace('Selecione a loja...','Todas as lojas');
   const selAe = document.getElementById('ae-loja');
   if (selAe) selAe.innerHTML = opts;
-  const selRc = document.getElementById('rc-loja');
-  if (selRc) { selRc.innerHTML = opts; if (lojas.length === 1) selRc.value = lojas[0].id; }
+  const rcBody = document.getElementById('rc-lojas-body');
+  if (rcBody) {
+    rcBody.innerHTML = lojas.map(l => `<label class="cm-loja-opt"><input type="checkbox" class="rc-loja-chk" value="${l.id}" onchange="updRcLojaBtn()"><span>${esc(l.nome)}</span></label>`).join('');
+    if (lojas.length === 1) { const c = rcBody.querySelector('.rc-loja-chk'); if (c) c.checked = true; updRcLojaBtn(); }
+  }
+}
+
+function toggleRcLojaDrop(e){ if(e) e.stopPropagation(); document.getElementById('rc-loja-drop').classList.toggle('open'); }
+function toggleTodasRcLojas(checked){ document.querySelectorAll('.rc-loja-chk').forEach(c=>c.checked=checked); updRcLojaBtn(); }
+function updRcLojaBtn(){
+  const sel=[...document.querySelectorAll('.rc-loja-chk:checked')];
+  const btn=document.getElementById('rc-loja-btn'); if(!btn) return;
+  const all=document.getElementById('rc-chk-all'); if(all) all.checked=(lojas.length>0 && sel.length===lojas.length);
+  if(!sel.length) btn.textContent='Selecione as lojas...';
+  else if(sel.length===1){ const l=lojas.find(x=>x.id===sel[0].value); btn.textContent=l?l.nome:'1 loja'; }
+  else if(sel.length===lojas.length) btn.textContent='Todas as lojas';
+  else btn.textContent=sel.length+' lojas selecionadas';
 }
 
 function onAeLojaChange() {
@@ -585,8 +606,8 @@ function getSaldo(insId) {
 
 // ── RECALCULAR CUSTOS ──────────────────────────────────────────────────
 async function recalcularCustos() {
-  const lId = document.getElementById('rc-loja').value;
-  if (!lId) { toast('Selecione a loja.','err'); return; }
+  const lojaIds = [...document.querySelectorAll('.rc-loja-chk:checked')].map(c=>c.value).filter(Boolean);
+  if (!lojaIds.length) { toast('Selecione ao menos uma loja.','err'); return; }
   const doCM = document.getElementById('rc-cm').checked;
   const doFicha = document.getElementById('rc-ficha').checked;
   if (!doCM && !doFicha) { toast('Marque o que recalcular.','err'); return; }
@@ -595,36 +616,38 @@ async function recalcularCustos() {
   const btn = document.getElementById('btn-rc');
   if(btn){ btn.disabled = true; btn.style.opacity = '.6'; }
   const res = document.getElementById('rc-result'); res.classList.remove('show'); res.textContent = '';
-  let msg = '';
+  let totCM = 0, totFicha = 0;
   try {
-    if (doCM) {
-      const [ents, sais] = await Promise.all([
-        api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,custo_unitario,criado_em`).catch(()=>[]),
-        api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,criado_em`).catch(()=>[]),
-      ]);
-      const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map(e=>e.insumo_id), ...sais.map(s=>s.insumo_id)])];
-      const agora = new Date().toISOString();
-      const payloads = insIds.filter(Boolean).map(insId => {
-        const r = custoMedioNaData(insId, null, { entradas: ents, saidas: sais });
-        return { tenant_id: TENANT_ID, insumo_id: insId, loja_id: lId,
-          quantidade: parseFloat((r.quantidade||0).toFixed(4)),
-          custo_medio: parseFloat((r.custo||0).toFixed(6)),
-          atualizado_em: agora };
-      });
-      for (let i = 0; i < payloads.length; i += 200) {
-        await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
-          method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
-          body: JSON.stringify(payloads.slice(i, i+200)) });
+    for (const lId of lojaIds) {
+      if (doCM) {
+        const [ents, sais] = await Promise.all([
+          api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,custo_unitario,criado_em`).catch(()=>[]),
+          api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,criado_em`).catch(()=>[]),
+        ]);
+        const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map(e=>e.insumo_id), ...sais.map(s=>s.insumo_id)])];
+        const agora = new Date().toISOString();
+        const payloads = insIds.filter(Boolean).map(insId => {
+          const r = custoMedioNaData(insId, null, { entradas: ents, saidas: sais });
+          return { tenant_id: TENANT_ID, insumo_id: insId, loja_id: lId,
+            quantidade: parseFloat((r.quantidade||0).toFixed(4)),
+            custo_medio: parseFloat((r.custo||0).toFixed(6)),
+            atualizado_em: agora };
+        });
+        for (let i = 0; i < payloads.length; i += 200) {
+          await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
+            method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+            body: JSON.stringify(payloads.slice(i, i+200)) });
+        }
+        totCM += payloads.length;
       }
-      msg += `✓ Custo médio recalculado: ${payloads.length} item(ns).\n`;
+      if (doFicha) { totFicha += await recalcularFichas(lId, alvoFicha); }
     }
-    if (doFicha) {
-      const n = await recalcularFichas(lId, alvoFicha);
-      msg += `✓ Fichas de processado recalculadas: ${n}.`;
-    }
+    let msg = '';
+    if (doCM)    msg += `✓ Custo médio recalculado: ${totCM} item(ns) em ${lojaIds.length} loja(s).\n`;
+    if (doFicha) msg += `✓ Fichas de processado recalculadas: ${totFicha}.`;
     res.textContent = msg.trim(); res.classList.add('show');
     toast('Recálculo concluído!','ok');
-    if (lId === lojaId) { try { saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}`); } catch{} }
+    if (lojaIds.includes(lojaId)) { try { saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`); } catch{} }
   } catch(e) { toast('Erro: '+e.message,'err'); }
   finally { if(btn){ btn.disabled = false; btn.style.opacity = '1'; } }
 }
@@ -639,7 +662,10 @@ function syncRc(){
 
 function limparRecalcular(){
   const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
-  sv('rc-loja',''); sv('rc-insumo',''); sv('rc-ficha-alvo','');
+  document.querySelectorAll('.rc-loja-chk').forEach(c=>c.checked=false);
+  const _all=document.getElementById('rc-chk-all'); if(_all) _all.checked=false;
+  updRcLojaBtn();
+  sv('rc-insumo',''); sv('rc-ficha-alvo','');
   const cm=document.getElementById('rc-cm'); if(cm) cm.checked=true;
   const fi=document.getElementById('rc-ficha'); if(fi) fi.checked=false;
   const r=document.getElementById('rc-result'); if(r){ r.textContent=''; r.classList.remove('show'); }
@@ -859,6 +885,8 @@ function cmObsCount() { const el = document.getElementById('cm-obs-count'); if (
 document.addEventListener('click', e => {
   const d = document.getElementById('cm-loja-drop'), b = document.getElementById('cm-loja-btn');
   if (d && b && !d.contains(e.target) && !b.contains(e.target)) d.classList.remove('open');
+  const rd = document.getElementById('rc-loja-drop'), rb = document.getElementById('rc-loja-btn');
+  if (rd && rb && !rd.contains(e.target) && !rb.contains(e.target)) rd.classList.remove('open');
 });
 
 async function salvarAjusteCusto() {
