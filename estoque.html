@@ -1216,7 +1216,7 @@
       </style>
       <div class="se-mf-overlay" id="se-mf-ov" onclick="fecharSeMaisFiltros()"></div>
       <aside class="se-mf-drawer" id="se-mf-dw">
-        <div class="se-mf-h"><b>Mais filtros</b><button onclick="fecharSeMaisFiltros()" title="Fechar">✕</button></div>
+        <div class="se-mf-h"><b>Mais filtros</b><span id="se-mf-debug" style="font-size:10px;color:#94a3b8;font-family:monospace"></span><button onclick="fecharSeMaisFiltros()" title="Fechar">✕</button></div>
         <div class="se-mf-b">
           <div><label class="mf-lbl">Tipo do item</label>
             <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()"><option value="">Todos os tipos</option></select>
@@ -1994,6 +1994,9 @@ async function popularSeMaisFiltros(){
   fill('se-mf-grupo',    insumos.map(i=>i.categoria));
   fill('se-mf-subgrupo', insumos.map(i=>i.subgrupo));
   fill('se-mf-und',      insumos.map(i=>i.unidade_medida||i.unidade_compra));
+  // MEDIDOR TEMPORÁRIO — quantos valores distintos existem de cada campo
+  try { const dbg=document.getElementById('se-mf-debug'); if(dbg){ const c=(f)=>new Set(insumos.map(f).filter(Boolean)).size;
+    dbg.textContent=`itens:${insumos.length} tipo:${c(i=>i.tipo_item)} fam:${c(i=>i.familia)} grupo:${c(i=>i.categoria)} sub:${c(i=>i.subgrupo)} un:${c(i=>i.unidade_medida)} vinc:${(insumoFornVinculos||[]).length}`; } } catch(e){}
   // Fornecedor: vínculo item↔fornecedor (carrega 1x, só marca pronto se veio algo)
   const selF = document.getElementById('se-mf-forn');
   if (selF && !selF.dataset.done) {
