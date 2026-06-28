@@ -1213,6 +1213,11 @@
         .se-mf-f .btn{flex:1;justify-content:center}
         .se-mf-chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;margin-top:2px}
         .se-mf-chk input{width:16px;height:16px;accent-color:#f97316}
+        /* botao do "select com busca" com cara de campo nativo (branco + setinha), em ambas as gavetas */
+        .se-mf-drawer .ss-wrap, .mov-mf-drawer .ss-wrap{width:100%}
+        .se-mf-drawer .ss-btn, .mov-mf-drawer .ss-btn{background:#fff !important;border:1px solid #cbd5e1 !important;height:38px;padding:0 30px 0 12px !important;display:flex;align-items:center;position:relative;border-radius:8px}
+        .se-mf-drawer .ss-btn.ss-ph, .mov-mf-drawer .ss-btn.ss-ph{color:#475569 !important}
+        .se-mf-drawer .ss-btn::after, .mov-mf-drawer .ss-btn::after{content:'';position:absolute;right:13px;top:42%;width:7px;height:7px;border-right:2px solid #64748b;border-bottom:2px solid #64748b;transform:rotate(45deg);pointer-events:none}
       </style>
       <div class="se-mf-overlay" id="se-mf-ov" onclick="fecharSeMaisFiltros()"></div>
       <aside class="se-mf-drawer" id="se-mf-dw">
@@ -1993,8 +1998,6 @@ async function popularSeMaisFiltros(){
     sel.innerHTML = ph + opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
     if(cur) sel.value = cur;
   };
-  // impede o auto "select com busca" (quebra com populate dinâmico) — deixa os filtros como select nativo
-  ['se-tipo','se-mf-familia','se-mf-grupo','se-mf-subgrupo','se-mf-forn','se-mf-und'].forEach(id=>{const e=document.getElementById(id); if(e) e.setAttribute('data-no-search','');});
   fill('se-tipo',        insumos.map(i=>i.tipo_item));
   fill('se-mf-familia',  insumos.map(i=>i.familia));
   fill('se-mf-grupo',    insumos.map(i=>i.categoria));
@@ -2016,6 +2019,8 @@ async function popularSeMaisFiltros(){
       }
     } catch(e){}
   }
+  // ativa o "select com busca" (abre pra baixo + digitar pra achar) nos filtros grandes da gaveta
+  ['se-mf-grupo','se-mf-subgrupo','se-mf-forn'].forEach(id=>{const e=document.getElementById(id); if(e && typeof searchableSelect==='function'){ searchableSelect(e); if(e._ssSync) e._ssSync(); }});
 }
 function syncSeGrupo(from){
   const bar=document.getElementById('se-cat'), dw=document.getElementById('se-mf-grupo');
@@ -4318,8 +4323,6 @@ async function popularMaisFiltros(){
     sel.innerHTML = ph + opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
     if(cur) sel.value = cur;
   };
-  // impede o auto "select com busca" (quebra com populate dinâmico) — deixa os filtros como select nativo
-  ['mov-mf-tipo','mov-mf-familia','mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn','mov-mf-und','mov-cat'].forEach(id=>{const e=document.getElementById(id); if(e) e.setAttribute('data-no-search','');});
   fill('mov-mf-tipo',     insumos.map(i=>i.tipo_item));
   fill('mov-mf-familia',  insumos.map(i=>i.familia));
   fill('mov-mf-subgrupo', insumos.map(i=>i.subgrupo));
@@ -4346,6 +4349,8 @@ async function popularMaisFiltros(){
   fill('mov-cat', insumos.map(i=>i.categoria));
   // reflete o estado atual da barra na gaveta
   syncMovGrupo('bar'); syncMovSaldo('bar'); syncMovCmv('bar');
+  // ativa o "select com busca" (abre pra baixo + digitar) nos filtros grandes da gaveta
+  ['mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn'].forEach(id=>{const e=document.getElementById(id); if(e && typeof searchableSelect==='function'){ searchableSelect(e); if(e._ssSync) e._ssSync(); }});
 }
 function _movMfDot(){
   const ativos = ['mov-mf-tipo','mov-mf-familia','mov-mf-subgrupo','mov-mf-forn','mov-mf-und']
