@@ -1995,8 +1995,8 @@ async function popularSeMaisFiltros(){
   fill('se-mf-subgrupo', insumos.map(i=>i.subgrupo));
   fill('se-mf-und',      insumos.map(i=>i.unidade_medida||i.unidade_compra));
   // MEDIDOR TEMPORÁRIO — quantos valores distintos existem de cada campo
-  try { const dbg=document.getElementById('se-mf-debug'); if(dbg){ const c=(f)=>new Set(insumos.map(f).filter(Boolean)).size;
-    dbg.textContent=`itens:${insumos.length} tipo:${c(i=>i.tipo_item)} fam:${c(i=>i.familia)} grupo:${c(i=>i.categoria)} sub:${c(i=>i.subgrupo)} un:${c(i=>i.unidade_medida)} vinc:${(insumoFornVinculos||[]).length}`; } } catch(e){}
+  try { const dbg=document.getElementById('se-mf-debug'); if(dbg){ const c=(f)=>new Set(insumos.map(f).filter(Boolean)).size; const o=(id)=>{const e=document.getElementById(id);return e?e.options.length:'NULO';};
+    dbg.textContent=`(dado/opcoes) tipo ${c(i=>i.tipo_item)}/${o('se-tipo')} | fam ${c(i=>i.familia)}/${o('se-mf-familia')} | grupo ${c(i=>i.categoria)}/${o('se-mf-grupo')} | sub ${c(i=>i.subgrupo)}/${o('se-mf-subgrupo')} | un ${c(i=>i.unidade_medida)}/${o('se-mf-und')}`; } } catch(e){}
   // Fornecedor: vínculo item↔fornecedor (carrega 1x, só marca pronto se veio algo)
   const selF = document.getElementById('se-mf-forn');
   if (selF && !selF.dataset.done) {
