@@ -880,13 +880,6 @@
     <!-- TAB: MOVIMENTAÇÃO -->
     <div id="tab-movimentacao" class="tab-pane">
 
-      <!-- Filtros "densos e vivos" — escopo SÓ nesta tela (labels legíveis + checkboxes laranja) -->
-      <style>
-        #tab-movimentacao .ds-filterbar .ds-field > label{text-transform:none !important;letter-spacing:0 !important;font-size:11px !important;color:#64748b !important;font-weight:600 !important}
-        #tab-movimentacao .mov-chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#334155;cursor:pointer;white-space:nowrap}
-        #tab-movimentacao .mov-chk input{width:16px;height:16px;accent-color:#f97316;cursor:pointer;margin:0}
-      </style>
-
       <!-- TÍTULO + FILTROS -->
       <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px">Movimentação de Estoque no Período</div>
       <div class="ds-filterbar" style="margin-bottom:16px">
@@ -921,8 +914,8 @@
         <div class="ds-field">
           <label>Mostrar</label>
           <div style="display:flex;gap:16px;align-items:center;height:var(--ds-input-h,36px)">
-            <label class="mov-chk"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()"> Somente com saldo</label>
-            <label class="mov-chk"><input type="checkbox" id="mov-cmv" onchange="renderMovimentacao()"> Somente CMV</label>
+            <label class="ds-switch"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()"><span class="ds-track"></span>Somente com saldo</label>
+            <label class="ds-switch"><input type="checkbox" id="mov-cmv" onchange="renderMovimentacao()"><span class="ds-track"></span>Somente CMV</label>
           </div>
         </div>
         <div class="ds-actions">
