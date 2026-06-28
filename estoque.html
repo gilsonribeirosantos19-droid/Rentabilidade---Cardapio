@@ -1996,9 +1996,8 @@ async function popularSeMaisFiltros(){
   fill('se-mf-und',      insumos.map(i=>i.unidade_medida||i.unidade_compra));
   // MEDIDOR TEMPORÁRIO — quantos valores distintos existem de cada campo
   try { const dbg=document.getElementById('se-mf-debug'); if(dbg){
-    const dump=(id)=>{const e=document.getElementById(id); if(!e) return 'NULO'; let s=e.options.length+'op:'; for(let i=1;i<Math.min(4,e.options.length);i++) s+=' ['+(e.options[i].text||'VAZIO')+']'; return s;};
-    dbg.textContent=`GRUPO ${dump('se-mf-grupo')} || SUB ${dump('se-mf-subgrupo')}`;
-    const amostra = insumos.find(i=>i.categoria); if(amostra){ dbg.textContent += ` || amostra.categoria="${amostra.categoria}"`; } } } catch(e){}
+    const st=(id)=>{const e=document.getElementById(id); if(!e) return '?'; const cs=getComputedStyle(e); return `dis=${e.disabled} pe=${cs.pointerEvents} bg=${cs.backgroundColor} op=${e.options.length}`;};
+    dbg.textContent=`TIPO[${st('se-tipo')}] GRUPO[${st('se-mf-grupo')}]`; } } catch(e){}
   // Fornecedor: vínculo item↔fornecedor (carrega 1x, só marca pronto se veio algo)
   const selF = document.getElementById('se-mf-forn');
   if (selF && !selF.dataset.done) {
