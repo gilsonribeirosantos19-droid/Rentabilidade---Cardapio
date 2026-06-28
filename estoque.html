@@ -1184,27 +1184,52 @@
             <option value="">Todas as categorias</option>
           </select>
         </div>
-        <div class="ds-field">
-          <label>Tipo</label>
-          <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()">
-            <option value="">Todos os tipos</option>
-          </select>
-        </div>
         <div class="ds-field ds-grow">
           <label>Buscar</label>
           <input class="field field-sm" id="se-busca" placeholder="Pesquisar item..." oninput="clearTimeout(window._seBuscaT);window._seBuscaT=setTimeout(renderSaldoEst,250)" style="min-width:160px">
         </div>
-        <div class="ds-field">
-          <label>Mostrar</label>
-          <div style="display:flex;align-items:center;height:var(--ds-input-h,36px)">
-            <label class="ds-switch"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()"><span class="ds-track"></span>Somente CMV</label>
-          </div>
-        </div>
         <div class="ds-actions">
+          <button class="btn btn-ghost btn-sm" id="se-mf-btn" onclick="abrirSeMaisFiltros()" style="display:inline-flex;align-items:center;gap:6px;position:relative">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Mais filtros <span id="se-mf-dot" style="display:none;width:7px;height:7px;border-radius:50%;background:#f97316"></span>
+          </button>
           <button class="btn btn-ghost btn-sm" onclick="renderSaldoEst()">↻ Atualizar</button>
-          <span id="se-valor-total" style="font-size:13px;font-weight:700;color:#0f172a"></span>
         </div>
       </div>
+
+      <!-- GAVETA: filtros avançados (Saldo de Estoque) -->
+      <style>
+        .se-mf-overlay{position:fixed;inset:0;background:rgba(15,23,42,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:1200}
+        .se-mf-overlay.open{opacity:1;pointer-events:auto}
+        .se-mf-drawer{position:fixed;top:0;right:0;height:100vh;width:340px;max-width:90vw;background:#fff;box-shadow:-8px 0 30px rgba(15,23,42,.18);transform:translateX(100%);transition:transform .22s ease;z-index:1201;display:flex;flex-direction:column}
+        .se-mf-drawer.open{transform:translateX(0)}
+        .se-mf-h{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #eef1f5}
+        .se-mf-h b{font-size:17px;font-weight:700;color:#0f172a}
+        .se-mf-h button{width:30px;height:30px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;color:#64748b;font-size:14px;font-family:inherit}
+        .se-mf-b{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:15px}
+        .se-mf-b label.mf-lbl{font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;display:block}
+        .se-mf-b select{width:100% !important}
+        .se-mf-f{display:flex;gap:10px;padding:16px 20px;border-top:1px solid #eef1f5}
+        .se-mf-f .btn{flex:1;justify-content:center}
+        .se-mf-chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;margin-top:2px}
+        .se-mf-chk input{width:16px;height:16px;accent-color:#f97316}
+      </style>
+      <div class="se-mf-overlay" id="se-mf-ov" onclick="fecharSeMaisFiltros()"></div>
+      <aside class="se-mf-drawer" id="se-mf-dw">
+        <div class="se-mf-h"><b>Mais filtros</b><button onclick="fecharSeMaisFiltros()" title="Fechar">✕</button></div>
+        <div class="se-mf-b">
+          <div><label class="mf-lbl">Tipo do item</label>
+            <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()"><option value="">Todos os tipos</option></select>
+          </div>
+          <div><label class="mf-lbl">Mostrar</label>
+            <label class="se-mf-chk"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()"> Somente itens que calculam CMV</label>
+          </div>
+        </div>
+        <div class="se-mf-f">
+          <button class="btn btn-ghost btn-sm" onclick="limparSeMaisFiltros()">Limpar filtros</button>
+          <button class="btn btn-primary btn-sm" onclick="aplicarSeMaisFiltros()">Aplicar filtros</button>
+        </div>
+      </aside>
       <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 250px);overflow-y:auto"><table class="tbl">
         <thead style="position:sticky;top:0;z-index:5"><tr>
           <th>Insumo</th><th>Categoria</th><th>Tipo do Item</th><th>Un.</th><th>Loja</th>
@@ -1919,8 +1944,16 @@ async function renderSaldoEst(){
       <td class="r mono">—</td><td class="r mono">—</td>
       <td class="r mono" style="color:#16a34a">${brl(totalValor)}</td>
       <td></td><td></td></tr>`;
+    if(typeof _seMfDot==='function') _seMfDot();
   } catch(e) { tbody.innerHTML=`<tr><td colspan="10" class="empty">Erro: ${esc(e.message)}</td></tr>`; }
 }
+
+// ── MAIS FILTROS (gaveta) — Saldo de Estoque ───────────────────────────
+function abrirSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.add('open'); document.getElementById('se-mf-dw').classList.add('open'); }
+function fecharSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.remove('open'); document.getElementById('se-mf-dw').classList.remove('open'); }
+function _seMfDot(){ const a=(document.getElementById('se-tipo')?.value||'')||(document.getElementById('se-cmv')?.checked); const d=document.getElementById('se-mf-dot'); if(d) d.style.display=a?'inline-block':'none'; }
+function aplicarSeMaisFiltros(){ _seMfDot(); fecharSeMaisFiltros(); renderSaldoEst(); }
+function limparSeMaisFiltros(){ const t=document.getElementById('se-tipo'); if(t) t.value=''; const c=document.getElementById('se-cmv'); if(c) c.checked=false; _seMfDot(); renderSaldoEst(); }
 
 function _initSaldoEst(){
   const selCat=document.getElementById('se-cat');
