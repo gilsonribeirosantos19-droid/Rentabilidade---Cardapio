@@ -903,7 +903,7 @@
           </div>
           <div class="ds-field">
             <label>Grupo</label>
-            <select class="field field-sm" id="mov-cat" data-no-search style="width:230px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
+            <select class="field field-sm" id="mov-cat" style="width:230px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
           </div>
           <div class="ds-field">
             <label>Buscar insumo</label>
@@ -1180,7 +1180,7 @@
         </div>
         <div class="ds-field">
           <label>Categoria</label>
-          <select class="field field-sm" id="se-cat" data-no-search onchange="syncSeGrupo('bar');renderSaldoEst()">
+          <select class="field field-sm" id="se-cat" onchange="syncSeGrupo('bar');renderSaldoEst()">
             <option value="">Todas as categorias</option>
           </select>
         </div>
@@ -4360,7 +4360,7 @@ async function popularMaisFiltros(){
   };
   if(!_movMfFilled){
   _movMfFilled = true;
-  ['mov-mf-tipo','mov-mf-familia','mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn','mov-mf-und','mov-cat'].forEach(id=>{const e=document.getElementById(id); if(e) e.setAttribute('data-no-search','');});
+  ['mov-mf-tipo','mov-mf-familia','mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn','mov-mf-und'].forEach(id=>{const e=document.getElementById(id); if(e) e.setAttribute('data-no-search','');});
   fill('mov-mf-tipo',     insumos.map(i=>i.tipo_item));
   fill('mov-mf-familia',  insumos.map(i=>i.familia));
   fill('mov-mf-subgrupo', insumos.map(i=>i.subgrupo));
