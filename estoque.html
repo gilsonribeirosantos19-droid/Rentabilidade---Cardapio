@@ -1985,11 +1985,14 @@ async function abrirSeMaisFiltros(){
   if(ov && ov.parentElement!==document.body) document.body.appendChild(ov);
   if(dw && dw.parentElement!==document.body) document.body.appendChild(dw);
   await popularSeMaisFiltros(); syncSeGrupo('bar');
+  const _g=document.getElementById('se-mf-grupo'); if(_g && _g._ssSync) _g._ssSync();
   ov.classList.add('open'); dw.classList.add('open');
 }
 function fecharSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.remove('open'); document.getElementById('se-mf-dw').classList.remove('open'); }
+let _seMfFilled = false;
 async function popularSeMaisFiltros(){
-  // robusto: reconstrói as opções a cada abertura (nunca fica preso vazio por timing)
+  if(_seMfFilled) return;   // carrega UMA vez só (como as outras telas) — evita o re-scan em loop que travava
+  _seMfFilled = true;
   const fill = (id, vals) => {
     const sel = document.getElementById(id); if(!sel) return;
     const ph = sel.querySelector('option[value=""]')?.outerHTML || '<option value="">Todos</option>';
@@ -1998,7 +2001,6 @@ async function popularSeMaisFiltros(){
     sel.innerHTML = ph + opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
     if(cur) sel.value = cur;
   };
-  ['se-tipo','se-mf-familia','se-mf-grupo','se-mf-subgrupo','se-mf-forn','se-mf-und'].forEach(id=>{const e=document.getElementById(id); if(e) e.setAttribute('data-no-search','');});
   fill('se-tipo',        insumos.map(i=>i.tipo_item));
   fill('se-mf-familia',  insumos.map(i=>i.familia));
   fill('se-mf-grupo',    insumos.map(i=>i.categoria));
@@ -4313,6 +4315,7 @@ function fecharMaisFiltros(){
   document.getElementById('mov-mf-ov').classList.remove('open');
   document.getElementById('mov-mf-dw').classList.remove('open');
 }
+let _movMfFilled = false;
 async function popularMaisFiltros(){
   const fill = (id, vals) => {
     const sel = document.getElementById(id); if(!sel) return;
@@ -4322,7 +4325,8 @@ async function popularMaisFiltros(){
     sel.innerHTML = ph + opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
     if(cur) sel.value = cur;
   };
-  ['mov-mf-tipo','mov-mf-familia','mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn','mov-mf-und','mov-cat'].forEach(id=>{const e=document.getElementById(id); if(e) e.setAttribute('data-no-search','');});
+  if(!_movMfFilled){
+  _movMfFilled = true;
   fill('mov-mf-tipo',     insumos.map(i=>i.tipo_item));
   fill('mov-mf-familia',  insumos.map(i=>i.familia));
   fill('mov-mf-subgrupo', insumos.map(i=>i.subgrupo));
@@ -4347,8 +4351,10 @@ async function popularMaisFiltros(){
   fill('mov-mf-grupo', insumos.map(i=>i.categoria));
   // a barra (mov-cat) também é a Categoria — garante que está populada
   fill('mov-cat', insumos.map(i=>i.categoria));
-  // reflete o estado atual da barra na gaveta
+  }
+  // reflete o estado atual da barra na gaveta (todo open)
   syncMovGrupo('bar'); syncMovSaldo('bar'); syncMovCmv('bar');
+  const _g=document.getElementById('mov-mf-grupo'); if(_g && _g._ssSync) _g._ssSync();
 }
 function _movMfDot(){
   const ativos = ['mov-mf-tipo','mov-mf-familia','mov-mf-subgrupo','mov-mf-forn','mov-mf-und']
