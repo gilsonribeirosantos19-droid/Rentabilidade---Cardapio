@@ -1216,7 +1216,7 @@
       </style>
       <div class="se-mf-overlay" id="se-mf-ov" onclick="fecharSeMaisFiltros()"></div>
       <aside class="se-mf-drawer" id="se-mf-dw">
-        <div class="se-mf-h"><b>Mais filtros</b><button onclick="fecharSeMaisFiltros()" title="Fechar">✕</button></div>
+        <div class="se-mf-h"><b>Mais filtros</b><span id="se-mf-debug" style="font-size:10px;color:#94a3b8;font-family:monospace"></span><button onclick="fecharSeMaisFiltros()" title="Fechar">✕</button></div>
         <div class="se-mf-b">
           <div><label class="mf-lbl">Tipo do item</label>
             <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()"><option value="">Todos os tipos</option></select>
@@ -1875,7 +1875,7 @@ function cmvBox(yes){
 
 async function renderSaldoEst(){
   const lojaFil = getLojaId()||'';
-  const catFil  = document.getElementById('se-cat')?.value||'';
+  const catFil  = document.getElementById('se-cat')?.value || document.getElementById('se-mf-grupo')?.value || '';
   const tipoFil = document.getElementById('se-tipo')?.value||'';
   const cmvF    = document.getElementById('se-cmv')?.checked;
   const buscaF  = (document.getElementById('se-busca')?.value||'').trim();
@@ -1980,19 +1980,24 @@ async function abrirSeMaisFiltros(){
 }
 function fecharSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.remove('open'); document.getElementById('se-mf-dw').classList.remove('open'); }
 async function popularSeMaisFiltros(){
+  // robusto: reconstrói as opções a cada abertura (nunca fica preso vazio por timing)
   const fill = (id, vals) => {
-    const sel = document.getElementById(id); if(!sel || sel.dataset.done) return;
+    const sel = document.getElementById(id); if(!sel) return;
+    const ph = sel.querySelector('option[value=""]')?.outerHTML || '<option value="">Todos</option>';
+    const cur = sel.value;
     const opts = [...new Set(vals.filter(Boolean).map(v=>(''+v).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
-    sel.insertAdjacentHTML('beforeend', opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join(''));
-    sel.dataset.done='1';
+    sel.innerHTML = ph + opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    if(cur) sel.value = cur;
   };
+  fill('se-tipo',        insumos.map(i=>i.tipo_item));
   fill('se-mf-familia',  insumos.map(i=>i.familia));
+  fill('se-mf-grupo',    insumos.map(i=>i.categoria));
   fill('se-mf-subgrupo', insumos.map(i=>i.subgrupo));
   fill('se-mf-und',      insumos.map(i=>i.unidade_medida||i.unidade_compra));
-  // Grupo: copia as opções da Categoria da barra (mesmos valores p/ sincronizar)
-  const selG=document.getElementById('se-mf-grupo'), selCat=document.getElementById('se-cat');
-  if(selG && selCat && !selG.dataset.done){ selG.innerHTML = selCat.innerHTML; selG.dataset.done='1'; }
-  // Fornecedor: vínculo item↔fornecedor (carrega 1x)
+  // MEDIDOR TEMPORÁRIO — quantos valores distintos existem de cada campo
+  try { const dbg=document.getElementById('se-mf-debug'); if(dbg){ const c=(f)=>new Set(insumos.map(f).filter(Boolean)).size;
+    dbg.textContent=`itens:${insumos.length} tipo:${c(i=>i.tipo_item)} fam:${c(i=>i.familia)} grupo:${c(i=>i.categoria)} sub:${c(i=>i.subgrupo)} un:${c(i=>i.unidade_medida)} vinc:${(insumoFornVinculos||[]).length}`; } } catch(e){}
+  // Fornecedor: vínculo item↔fornecedor (carrega 1x, só marca pronto se veio algo)
   const selF = document.getElementById('se-mf-forn');
   if (selF && !selF.dataset.done) {
     try {
@@ -2002,8 +2007,10 @@ async function popularSeMaisFiltros(){
       ]);
       _seFornMap = {};
       vinc.forEach(v => { (_seFornMap[v.insumo_id] = _seFornMap[v.insumo_id] || new Set()).add(v.fornecedor_id); });
-      selF.insertAdjacentHTML('beforeend', forns.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join(''));
-      selF.dataset.done='1';
+      if (forns.length) {
+        selF.insertAdjacentHTML('beforeend', forns.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join(''));
+        selF.dataset.done='1';
+      }
     } catch(e){}
   }
 }
@@ -4298,10 +4305,12 @@ function fecharMaisFiltros(){
 }
 async function popularMaisFiltros(){
   const fill = (id, vals) => {
-    const sel = document.getElementById(id); if(!sel || sel.dataset.done) return;
+    const sel = document.getElementById(id); if(!sel) return;
+    const ph = sel.querySelector('option[value=""]')?.outerHTML || '<option value="">Todos</option>';
+    const cur = sel.value;
     const opts = [...new Set(vals.filter(Boolean).map(v=>(''+v).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
-    sel.insertAdjacentHTML('beforeend', opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join(''));
-    sel.dataset.done = '1';
+    sel.innerHTML = ph + opts.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    if(cur) sel.value = cur;
   };
   fill('mov-mf-tipo',     insumos.map(i=>i.tipo_item));
   fill('mov-mf-familia',  insumos.map(i=>i.familia));
@@ -4317,17 +4326,16 @@ async function popularMaisFiltros(){
       ]);
       _movFornMap = {};
       vinc.forEach(v => { (_movFornMap[v.insumo_id] = _movFornMap[v.insumo_id] || new Set()).add(v.fornecedor_id); });
-      selF.insertAdjacentHTML('beforeend', forns.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join(''));
-      selF.dataset.done = '1';
+      if (forns.length) {
+        selF.insertAdjacentHTML('beforeend', forns.map(f=>`<option value="${f.id}">${esc(f.nome)}</option>`).join(''));
+        selF.dataset.done = '1';
+      }
     } catch(e){}
   }
-  // Grupo: mesmas opções da barra
-  const selG = document.getElementById('mov-mf-grupo');
-  if (selG && !selG.dataset.done) {
-    const cats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort((a,b)=>(''+a).localeCompare(b,'pt'));
-    selG.insertAdjacentHTML('beforeend', cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join(''));
-    selG.dataset.done = '1';
-  }
+  // Grupo: mesmas opções da Categoria (robusto)
+  fill('mov-mf-grupo', insumos.map(i=>i.categoria));
+  // a barra (mov-cat) também é a Categoria — garante que está populada
+  fill('mov-cat', insumos.map(i=>i.categoria));
   // reflete o estado atual da barra na gaveta
   syncMovGrupo('bar'); syncMovSaldo('bar'); syncMovCmv('bar');
 }
