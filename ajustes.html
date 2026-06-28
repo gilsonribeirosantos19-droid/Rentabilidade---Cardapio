@@ -433,6 +433,22 @@
 
       <!-- RECALCULAR -->
       <div id="tab-recalcular" class="tab-pane">
+        <!-- Toolbar de ações (topo, estilo ERP moderno) -->
+        <div style="display:flex;align-items:center;gap:8px;max-width:560px;padding:10px 12px;margin-bottom:14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04)">
+          <button class="btn btn-primary" id="btn-rc" onclick="recalcularCustos()" style="display:inline-flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Recalcular
+          </button>
+          <button class="btn" onclick="limparRecalcular()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;color:#475569">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Limpar
+          </button>
+          <div style="flex:1"></div>
+          <button class="btn" onclick="goHub()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;color:#475569">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Voltar
+          </button>
+        </div>
         <div class="card" style="max-width:560px">
           <div class="card-title">Recalcular Custos</div>
           <div class="card-sub">Reconstrói o custo médio (e a quantidade) a partir de TODOS os movimentos — deixa o saldo igual ao Kardex. Use depois de corrigir notas, ajustes ou conversões.</div>
@@ -449,7 +465,6 @@
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer"><input type="checkbox" id="rc-ficha" style="width:15px;height:15px;accent-color:#f97316"> Custo das fichas de processado</label>
           </div>
           <div id="rc-result" class="saldo-preview" style="white-space:pre-line"></div>
-          <button class="btn btn-primary" style="width:100%" onclick="recalcularCustos()" id="btn-rc">Recalcular</button>
         </div>
       </div>
 
@@ -603,6 +618,14 @@ async function recalcularCustos() {
     if (lId === lojaId) { try { saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}`); } catch{} }
   } catch(e) { toast('Erro: '+e.message,'err'); }
   finally { btn.disabled = false; btn.textContent = 'Recalcular'; }
+}
+
+function limparRecalcular(){
+  const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  sv('rc-loja',''); sv('rc-insumo','');
+  const cm=document.getElementById('rc-cm'); if(cm) cm.checked=true;
+  const fi=document.getElementById('rc-ficha'); if(fi) fi.checked=false;
+  const r=document.getElementById('rc-result'); if(r){ r.textContent=''; r.classList.remove('show'); }
 }
 
 async function recalcularFichas(lId, alvoIns) {
