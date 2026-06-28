@@ -176,6 +176,12 @@
   .rep-home-card:hover{border-color:#f97316}
   .rep-home-icon{width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .rep-home-icon svg{width:20px;height:20px;stroke:#64748b;stroke-width:1.8;fill:none}
+  /* Ícones coloridos por card (padrão Aiko, igual ao hub do Estoque) */
+  .rep-home-icon.c-orange{background:#fff7ed}.rep-home-icon.c-orange svg{stroke:#f97316}
+  .rep-home-icon.c-blue{background:#eff6ff}.rep-home-icon.c-blue svg{stroke:#2563eb}
+  .rep-home-icon.c-green{background:#f0fdf4}.rep-home-icon.c-green svg{stroke:#16a34a}
+  .rep-home-icon.c-red{background:#fef2f2}.rep-home-icon.c-red svg{stroke:#dc2626}
+  .rep-home-icon.c-purple{background:#faf5ff}.rep-home-icon.c-purple svg{stroke:#9333ea}
   .rep-home-body{flex:1}
   .rep-home-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:3px}
   .rep-home-desc{font-size:12px;color:#64748b;line-height:1.4}
@@ -257,7 +263,7 @@
         <div class="rep-home-label">Geral</div>
         <div class="rep-home-grid">
           <div class="rep-home-card" onclick="openTab('evolucao')">
-            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="rep-home-icon c-blue"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Consumo de Insumos</div>
               <div class="rep-home-desc">Consumo mês a mês por insumo, com comparação de períodos — apoio à negociação e compras.</div>
@@ -270,7 +276,7 @@
         <div class="rep-home-label">Análises</div>
         <div class="rep-home-grid">
           <div class="rep-home-card" onclick="openTab('abc')">
-            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div class="rep-home-icon c-orange"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Curva ABC</div>
               <div class="rep-home-desc">Classificação dos insumos por importância de consumo e valor.</div>
@@ -278,7 +284,7 @@
             <div class="rep-home-arrow">›</div>
           </div>
           <div class="rep-home-card" onclick="openTab('inflacao')">
-            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="rep-home-icon c-red"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Inflação</div>
               <div class="rep-home-desc">Acompanhe a variação de preços dos insumos ao longo do tempo.</div>
@@ -291,7 +297,7 @@
         <div class="rep-home-label">Auditoria</div>
         <div class="rep-home-grid">
           <div class="rep-home-card" onclick="openTab('auditoria')">
-            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="rep-home-icon c-green"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Auditoria de Conversão</div>
               <div class="rep-home-desc">Audite as conversões e fatores aplicados nas entradas de insumos.</div>
@@ -304,7 +310,7 @@
         <div class="rep-home-label">Custos</div>
         <div class="rep-home-grid">
           <div class="rep-home-card" onclick="openTab('historico-custo')">
-            <div class="rep-home-icon"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
+            <div class="rep-home-icon c-purple"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
             <div class="rep-home-body">
               <div class="rep-home-title">Histórico de Custos</div>
               <div class="rep-home-desc">Auditoria de variações de custo médio por insumo.</div>
