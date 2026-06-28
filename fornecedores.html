@@ -595,7 +595,7 @@ function renderFornTabela(lista){
     const stTxt=f.status==='inativo'?'Inativo':'Ativo';
     const cidUF=[(f.cidade||''),(f.estado||'')].filter(Boolean).join(' / ')||'—';
     return `<tr onclick="abrirModalForn('${f.id}')">
-      <td class="td-mono" style="font-weight:700;color:#2563eb;font-size:12px">${esc(f.codigo||'—')}</td>
+      <td class="td-mono" style="font-weight:600;color:#0f172a;font-size:12px">${esc(f.codigo||'—')}</td>
       <td>
         <div style="font-weight:600;color:#0f172a">${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</div>
         ${f.razao_social&&(f.nome_fantasia||f.nome)?`<div style="font-size:11px;color:#94a3b8;margin-top:1px">${esc(f.razao_social)}</div>`:''}
@@ -712,7 +712,7 @@ function renderListaForn() {
     const qtd = vinculos.filter(v => v.fornecedor_id === f.id).length;
     const contato = [f.contato, f.whatsapp].filter(Boolean).join(' / ') || '—';
     return `<tr style="cursor:pointer" onclick="abrirDetalheForn('${f.id}')">
-      <td style="font-weight:600;color:#0f172a"><span class="td-mono" style="color:#2563eb;font-weight:700;font-size:11px;margin-right:8px">${esc(f.codigo||'—')}</span>${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</td>
+      <td style="font-weight:600;color:#0f172a"><span class="td-mono" style="color:#0f172a;font-weight:600;font-size:11px;margin-right:8px">${esc(f.codigo||'—')}</span>${esc(f.nome_fantasia||f.nome||f.razao_social||'—')}</td>
       <td class="td-mono" style="font-size:12px;color:#64748b">${esc(f.cnpj||'—')}</td>
       <td style="color:#64748b;font-size:12px">${esc(contato)}</td>
       <td style="color:#64748b;font-size:12px">${esc(f.cidade||'—')}</td>

@@ -250,6 +250,7 @@
             <thead><tr>
               <th style="width:36px;text-align:center"><input type="checkbox" id="chk-all" onchange="toggleSelectAll(this)" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer"></th>
               <th class="c">Sit.</th>
+              <th class="r" style="width:64px">Código</th>
               <th>Fornecedor / Razão Social</th>
               <th>Loja</th>
               <th>DANFE</th>
@@ -668,7 +669,7 @@ async function loadAll() {
     const [nfeData, insData, fornData, vincData, ifvData, saldoData, lojaData] = await Promise.all([
       api(`nfe_recebidas?tenant_id=eq.${TENANT_ID}&order=data_emissao.desc${dateFilter}&select=*`),
       api(`insumos?tenant_id=eq.${TENANT_ID}&ativo=eq.true&order=nome.asc&select=id,nome,unidade_medida,unidade_compra,codigo_interno`),
-      api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=id,nome,nome_fantasia,cnpj`).catch(()=>[]),
+      api(`fornecedores?tenant_id=eq.${TENANT_ID}&order=nome.asc&select=id,nome,nome_fantasia,cnpj,codigo`).catch(()=>[]),
       api(`vinculos_nfe?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
       api(`insumo_fornecedores?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
       api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&select=*`).catch(()=>[]),
@@ -1130,9 +1131,13 @@ function renderTable() {
 
   const tbody = document.getElementById('tbody-nfe');
   if(!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="12" class="empty">Nenhuma NF-e encontrada no período.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13" class="empty">Nenhuma NF-e encontrada no período.</td></tr>`;
     return;
   }
+
+  // Mapa CNPJ → código do fornecedor (pra mostrar a coluna Código)
+  const _fornCod = {};
+  (fornecedores||[]).forEach(f => { const c=(f.cnpj||'').replace(/\D/g,''); if(c) _fornCod[c]=f.codigo; });
 
   tbody.innerHTML = rows.map(n => {
     const nfeKey   = n.id;
@@ -1149,6 +1154,7 @@ function renderTable() {
           onchange="toggleRowSel(this,'${nfeKey}')" style="accent-color:#f97316;width:14px;height:14px;cursor:pointer">
       </td>
       <td class="c">${sitIndicator}</td>
+      <td class="r" style="font-family:'DM Mono',monospace;color:#0f172a;font-weight:600;font-size:12px">${esc(_fornCod[(n.cnpj_emitente||'').replace(/\D/g,'')]||'—')}</td>
       <td><div style="font-weight:500">${esc(n.nome_emitente||'—')}</div></td>
       <td style="font-size:12px;color:#475569">${esc(lojas.find(l=>l.id===n.loja_id)?.nome||'—')}</td>
       <td>
