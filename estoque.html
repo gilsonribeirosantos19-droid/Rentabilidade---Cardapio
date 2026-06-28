@@ -903,11 +903,11 @@
           </div>
           <div class="ds-field">
             <label>Grupo</label>
-            <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
+            <select class="field field-sm" id="mov-cat" style="width:210px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
           </div>
-          <div class="ds-field ds-grow">
+          <div class="ds-field">
             <label>Buscar insumo</label>
-            <input class="field field-sm" id="mov-busca" placeholder="Digite o nome do insumo..." oninput="aplicarFiltroBuscaMov()" style="min-width:180px">
+            <input class="field field-sm" id="mov-busca" placeholder="Digite o nome do insumo..." oninput="aplicarFiltroBuscaMov()" style="width:280px">
           </div>
           <div class="ds-actions">
             <button class="btn btn-ghost btn-sm" id="mov-mf-btn" onclick="abrirMaisFiltros()" style="display:inline-flex;align-items:center;gap:6px;position:relative">
@@ -962,6 +962,8 @@
         /* campos mais definidos (borda + texto) e labels menos apagadas */
         #tab-movimentacao .ds-filterbar .field, #tab-movimentacao .ds-filterbar input.field, #tab-movimentacao .ds-filterbar select.field{border:1px solid #cbd5e1 !important;color:#0f172a !important}
         #tab-movimentacao .ds-filterbar .ds-field > label{color:#64748b !important;font-weight:600 !important}
+        #tab-movimentacao #mov-cat{color:#0f172a !important;font-weight:500}
+        #tab-movimentacao .ds-filterbar{gap:18px !important}
       </style>
       <div class="mov-mf-overlay" id="mov-mf-ov" onclick="fecharMaisFiltros()"></div>
       <aside class="mov-mf-drawer" id="mov-mf-dw">
