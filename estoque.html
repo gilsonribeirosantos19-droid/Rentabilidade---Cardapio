@@ -939,18 +939,11 @@
 
       <!-- GAVETA: filtros avançados (Mais filtros) -->
       <style>
-        .mov-mf-overlay{position:fixed;inset:0;background:rgba(15,23,42,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:1200}
-        .mov-mf-overlay.open{opacity:1;pointer-events:auto}
-        .mov-mf-drawer{position:fixed;top:0;right:0;height:100vh;width:340px;max-width:90vw;background:#fff;box-shadow:-8px 0 30px rgba(15,23,42,.18);transform:translateX(100%);transition:transform .22s ease;z-index:1201;display:flex;flex-direction:column}
-        .mov-mf-drawer.open{transform:translateX(0)}
-        .mov-mf-h{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #eef1f5}
-        .mov-mf-h b{font-size:17px;font-weight:700;color:#0f172a}
-        .mov-mf-h button{width:30px;height:30px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;color:#64748b;font-size:14px;font-family:inherit}
-        .mov-mf-b{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:15px}
-        .mov-mf-b label.mf-lbl{font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;display:block}
-        .mov-mf-b select{width:100% !important}
-        .mov-mf-f{display:flex;gap:10px;padding:16px 20px;border-top:1px solid #eef1f5}
-        .mov-mf-f .btn{flex:1;justify-content:center}
+        .mov-adv{overflow:hidden;max-height:0;opacity:0;transition:max-height .25s ease, opacity .2s;background:#fff;border:1px solid #e7ebf0;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);margin-top:-6px}
+        .mov-adv.open{max-height:480px;opacity:1;padding:16px 18px;margin-bottom:16px}
+        .mov-adv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+        .mov-adv .mf-lbl{font-size:11px;font-weight:600;color:#64748b;margin-bottom:5px;display:block}
+        .mov-adv-foot{display:flex;align-items:center;gap:24px;margin-top:14px;flex-wrap:wrap;padding-top:12px;border-top:1px solid #eef1f5}
         .mov-mf-sep{height:1px;background:#eef1f5;margin:2px 0}
         .mov-mf-rad{display:flex;flex-direction:column;gap:9px;margin-top:2px}
         .mov-mf-rad label{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:#334155;cursor:pointer}
@@ -966,33 +959,28 @@
         #tab-movimentacao #mov-cat option{color:#0f172a}
         #tab-movimentacao .ds-filterbar{gap:26px !important}
       </style>
-      <div class="mov-mf-overlay" id="mov-mf-ov" onclick="fecharMaisFiltros()"></div>
-      <aside class="mov-mf-drawer" id="mov-mf-dw">
-        <div class="mov-mf-h"><b>Mais filtros</b><button onclick="fecharMaisFiltros()" title="Fechar">✕</button></div>
-        <div class="mov-mf-b">
+      <div class="mov-adv" id="mov-adv">
+        <div class="mov-adv-grid">
           <div><label class="mf-lbl">Tipo do item</label><select class="field field-sm" id="mov-mf-tipo"><option value="">Todos</option></select></div>
           <div><label class="mf-lbl">Família</label><select class="field field-sm" id="mov-mf-familia"><option value="">Todas</option></select></div>
           <div><label class="mf-lbl">Grupo</label><select class="field field-sm" id="mov-mf-grupo" onchange="syncMovGrupo('drawer')"><option value="">Todos os grupos</option></select></div>
           <div><label class="mf-lbl">Subgrupo</label><select class="field field-sm" id="mov-mf-subgrupo"><option value="">Todos</option></select></div>
           <div><label class="mf-lbl">Fornecedor</label><select class="field field-sm" id="mov-mf-forn"><option value="">Todos</option></select></div>
           <div><label class="mf-lbl">Unidade</label><select class="field field-sm" id="mov-mf-und"><option value="">Todas</option></select></div>
-          <div class="mov-mf-sep"></div>
-          <div><label class="mf-lbl">Calcula CMV</label>
-            <div class="mov-mf-rad">
-              <label><input type="radio" name="mov-mf-cmv" value="todos" checked onchange="syncMovCmv('drawer')"> Todos</label>
-              <label><input type="radio" name="mov-mf-cmv" value="sim" onchange="syncMovCmv('drawer')"> Sim</label>
-              <label><input type="radio" name="mov-mf-cmv" value="nao" onchange="syncMovCmv('drawer')"> Não</label>
-            </div>
+        </div>
+        <div class="mov-adv-foot">
+          <div style="display:inline-flex;align-items:center;gap:12px"><span class="mf-lbl" style="margin:0">Calcula CMV:</span>
+            <label class="mov-mf-chk" style="margin:0"><input type="radio" name="mov-mf-cmv" value="todos" checked onchange="syncMovCmv('drawer')"> Todos</label>
+            <label class="mov-mf-chk" style="margin:0"><input type="radio" name="mov-mf-cmv" value="sim" onchange="syncMovCmv('drawer')"> Sim</label>
+            <label class="mov-mf-chk" style="margin:0"><input type="radio" name="mov-mf-cmv" value="nao" onchange="syncMovCmv('drawer')"> Não</label>
           </div>
-          <div><label class="mf-lbl">Com estoque</label>
-            <label class="mov-mf-chk"><input type="checkbox" id="mov-mf-saldo" checked onchange="syncMovSaldo('drawer')"> Apenas com saldo</label>
+          <label class="mov-mf-chk" style="margin:0"><input type="checkbox" id="mov-mf-saldo" checked onchange="syncMovSaldo('drawer')"> Apenas com saldo</label>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="limparMaisFiltros()">Limpar filtros</button>
+            <button class="btn btn-primary btn-sm" onclick="aplicarMaisFiltros()">Aplicar filtros</button>
           </div>
         </div>
-        <div class="mov-mf-f">
-          <button class="btn btn-ghost btn-sm" onclick="limparMaisFiltros()">Limpar filtros</button>
-          <button class="btn btn-primary btn-sm" onclick="aplicarMaisFiltros()">Aplicar filtros</button>
-        </div>
-      </aside>
+      </div>
 
       <!-- TABELA -->
       <div class="tbl-wrap"><div class="tbl-scroll">
@@ -1199,19 +1187,12 @@
 
       <!-- GAVETA: filtros avançados (Saldo de Estoque) -->
       <style>
-        .se-mf-overlay{position:fixed;inset:0;background:rgba(15,23,42,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:1200}
-        .se-mf-overlay.open{opacity:1;pointer-events:auto}
-        .se-mf-drawer{position:fixed;top:0;right:0;height:100vh;width:340px;max-width:90vw;background:#fff;box-shadow:-8px 0 30px rgba(15,23,42,.18);transform:translateX(100%);transition:transform .22s ease;z-index:1201;display:flex;flex-direction:column}
-        .se-mf-drawer.open{transform:translateX(0)}
-        .se-mf-h{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #eef1f5}
-        .se-mf-h b{font-size:17px;font-weight:700;color:#0f172a}
-        .se-mf-h button{width:30px;height:30px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;color:#64748b;font-size:14px;font-family:inherit}
-        .se-mf-b{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:15px}
-        .se-mf-b label.mf-lbl{font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;display:block}
-        .se-mf-b select{width:100% !important}
-        .se-mf-f{display:flex;gap:10px;padding:16px 20px;border-top:1px solid #eef1f5}
-        .se-mf-f .btn{flex:1;justify-content:center}
-        .se-mf-chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;margin-top:2px}
+        .se-adv{overflow:hidden;max-height:0;opacity:0;transition:max-height .25s ease, opacity .2s;background:#fff;border:1px solid #e7ebf0;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);margin-top:-6px}
+        .se-adv.open{max-height:440px;opacity:1;padding:16px 18px;margin-bottom:16px}
+        .se-adv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+        .se-adv .mf-lbl{font-size:11px;font-weight:600;color:#64748b;margin-bottom:5px;display:block}
+        .se-adv-foot{display:flex;align-items:center;gap:22px;margin-top:14px;flex-wrap:wrap;padding-top:12px;border-top:1px solid #eef1f5}
+        .se-mf-chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer}
         .se-mf-chk input{width:16px;height:16px;accent-color:#f97316}
         /* dropdown com busca proprio (.mss) — branco, setinha, abre p/ baixo, busca por digitacao */
         .mss{position:relative;width:100%}
@@ -1228,38 +1209,23 @@
         .mss-o.on{background:#fff7ed;color:#f97316;font-weight:600}
         .mss-n{padding:10px 12px;color:#94a3b8;font-size:12px}
       </style>
-      <div class="se-mf-overlay" id="se-mf-ov" onclick="fecharSeMaisFiltros()"></div>
-      <aside class="se-mf-drawer" id="se-mf-dw">
-        <div class="se-mf-h"><b>Mais filtros</b><button onclick="fecharSeMaisFiltros()" title="Fechar">✕</button></div>
-        <div class="se-mf-b">
-          <div><label class="mf-lbl">Tipo do item</label>
-            <select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()"><option value="">Todos os tipos</option></select>
-          </div>
-          <div><label class="mf-lbl">Família</label>
-            <select class="field field-sm" id="se-mf-familia" onchange="renderSaldoEst()"><option value="">Todas</option></select>
-          </div>
-          <div><label class="mf-lbl">Grupo</label>
-            <select class="field field-sm" id="se-mf-grupo" onchange="syncSeGrupo('drawer');renderSaldoEst()"><option value="">Todos os grupos</option></select>
-          </div>
-          <div><label class="mf-lbl">Subgrupo</label>
-            <select class="field field-sm" id="se-mf-subgrupo" onchange="renderSaldoEst()"><option value="">Todos</option></select>
-          </div>
-          <div><label class="mf-lbl">Fornecedor</label>
-            <select class="field field-sm" id="se-mf-forn" onchange="renderSaldoEst()"><option value="">Todos</option></select>
-          </div>
-          <div><label class="mf-lbl">Unidade</label>
-            <select class="field field-sm" id="se-mf-und" onchange="renderSaldoEst()"><option value="">Todas</option></select>
-          </div>
-          <div style="height:1px;background:#eef1f5"></div>
-          <div><label class="mf-lbl">Mostrar</label>
-            <label class="se-mf-chk"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()"> Somente itens que calculam CMV</label>
+      <div class="se-adv" id="se-adv">
+        <div class="se-adv-grid">
+          <div><label class="mf-lbl">Tipo do item</label><select class="field field-sm" id="se-tipo" onchange="renderSaldoEst()"><option value="">Todos os tipos</option></select></div>
+          <div><label class="mf-lbl">Família</label><select class="field field-sm" id="se-mf-familia" onchange="renderSaldoEst()"><option value="">Todas</option></select></div>
+          <div><label class="mf-lbl">Grupo</label><select class="field field-sm" id="se-mf-grupo" onchange="syncSeGrupo('drawer');renderSaldoEst()"><option value="">Todos os grupos</option></select></div>
+          <div><label class="mf-lbl">Subgrupo</label><select class="field field-sm" id="se-mf-subgrupo" onchange="renderSaldoEst()"><option value="">Todos</option></select></div>
+          <div><label class="mf-lbl">Fornecedor</label><select class="field field-sm" id="se-mf-forn" onchange="renderSaldoEst()"><option value="">Todos</option></select></div>
+          <div><label class="mf-lbl">Unidade</label><select class="field field-sm" id="se-mf-und" onchange="renderSaldoEst()"><option value="">Todas</option></select></div>
+        </div>
+        <div class="se-adv-foot">
+          <label class="se-mf-chk"><input type="checkbox" id="se-cmv" onchange="renderSaldoEst()"> Somente itens que calculam CMV</label>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="limparSeMaisFiltros()">Limpar filtros</button>
+            <button class="btn btn-primary btn-sm" onclick="aplicarSeMaisFiltros()">Aplicar filtros</button>
           </div>
         </div>
-        <div class="se-mf-f">
-          <button class="btn btn-ghost btn-sm" onclick="limparSeMaisFiltros()">Limpar filtros</button>
-          <button class="btn btn-primary btn-sm" onclick="aplicarSeMaisFiltros()">Aplicar filtros</button>
-        </div>
-      </aside>
+      </div>
       <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 250px);overflow-y:auto"><table class="tbl">
         <thead style="position:sticky;top:0;z-index:5"><tr>
           <th>Insumo</th><th>Categoria</th><th>Tipo do Item</th><th>Un.</th><th>Loja</th>
@@ -1989,15 +1955,16 @@ async function renderSaldoEst(){
 // ── MAIS FILTROS (gaveta) — Saldo de Estoque ───────────────────────────
 let _seFornMap = null;
 async function abrirSeMaisFiltros(){
-  // move a gaveta pro <body> (fora da aba) — evita que o overlay/contexto de empilhamento cubra os campos
-  const ov=document.getElementById('se-mf-ov'), dw=document.getElementById('se-mf-dw');
-  if(ov && ov.parentElement!==document.body) document.body.appendChild(ov);
-  if(dw && dw.parentElement!==document.body) document.body.appendChild(dw);
-  await popularSeMaisFiltros(); syncSeGrupo('bar');
-  const _g=document.getElementById('se-mf-grupo'); if(_g && _g._mssLab) _g._mssLab();
-  ov.classList.add('open'); dw.classList.add('open');
+  const panel = document.getElementById('se-adv');
+  const opening = !panel.classList.contains('open');
+  if(opening){
+    await popularSeMaisFiltros(); syncSeGrupo('bar');
+    const _g=document.getElementById('se-mf-grupo'); if(_g && _g._mssLab) _g._mssLab();
+  }
+  panel.classList.toggle('open');
+  document.getElementById('se-mf-btn')?.classList.toggle('open', panel.classList.contains('open'));
 }
-function fecharSeMaisFiltros(){ document.getElementById('se-mf-ov').classList.remove('open'); document.getElementById('se-mf-dw').classList.remove('open'); }
+function fecharSeMaisFiltros(){ const p=document.getElementById('se-adv'); if(p) p.classList.remove('open'); document.getElementById('se-mf-btn')?.classList.remove('open'); }
 // ── DROPDOWN COM BUSCA (auto-contido, NÃO usa o searchableSelect/observer do utils.js) ──
 function mkSS(sel){
   if(!sel || sel._mss) return; sel._mss=true; sel.style.display='none';
@@ -2055,6 +2022,8 @@ async function popularSeMaisFiltros(){
       }
     } catch(e){}
   }
+  // todos os filtros viram "select com busca" (abre p/ baixo + digitar) — inline, sem gaveta = sem conflito
+  ['se-tipo','se-mf-familia','se-mf-grupo','se-mf-subgrupo','se-mf-forn','se-mf-und'].forEach(id=>{const e=document.getElementById(id); if(e) mkSS(e);});
 }
 function syncSeGrupo(from){
   const bar=document.getElementById('se-cat'), dw=document.getElementById('se-mf-grupo');
@@ -4337,17 +4306,13 @@ function _renderMovPage() {
 // ── MAIS FILTROS (gaveta lateral) ──────────────────────────────────────
 let _movFornMap = null; // insumo_id -> Set(fornecedor_id), carregado lazy
 async function abrirMaisFiltros(){
-  const ov=document.getElementById('mov-mf-ov'), dw=document.getElementById('mov-mf-dw');
-  if(ov && ov.parentElement!==document.body) document.body.appendChild(ov);
-  if(dw && dw.parentElement!==document.body) document.body.appendChild(dw);
-  await popularMaisFiltros();
-  ov.classList.add('open');
-  dw.classList.add('open');
+  const panel = document.getElementById('mov-adv');
+  const opening = !panel.classList.contains('open');
+  if(opening){ await popularMaisFiltros(); const _g=document.getElementById('mov-mf-grupo'); if(_g && _g._mssLab) _g._mssLab(); }
+  panel.classList.toggle('open');
+  document.getElementById('mov-mf-btn')?.classList.toggle('open', panel.classList.contains('open'));
 }
-function fecharMaisFiltros(){
-  document.getElementById('mov-mf-ov').classList.remove('open');
-  document.getElementById('mov-mf-dw').classList.remove('open');
-}
+function fecharMaisFiltros(){ const p=document.getElementById('mov-adv'); if(p) p.classList.remove('open'); document.getElementById('mov-mf-btn')?.classList.remove('open'); }
 let _movMfFilled = false;
 async function popularMaisFiltros(){
   const fill = (id, vals) => {
@@ -4385,6 +4350,8 @@ async function popularMaisFiltros(){
   fill('mov-mf-grupo', insumos.map(i=>i.categoria));
   // a barra (mov-cat) também é a Categoria — garante que está populada
   fill('mov-cat', insumos.map(i=>i.categoria));
+  // filtros viram "select com busca" (inline = sem conflito de gaveta)
+  ['mov-mf-tipo','mov-mf-familia','mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn','mov-mf-und'].forEach(id=>{const e=document.getElementById(id); if(e) mkSS(e);});
   }
   // reflete o estado atual da barra na gaveta (todo open)
   syncMovGrupo('bar'); syncMovSaldo('bar'); syncMovCmv('bar');
