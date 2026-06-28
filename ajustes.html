@@ -77,9 +77,10 @@
   .cm-loja-btn:hover{border-color:#f97316}
   .cm-loja-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:30;max-height:240px;overflow-y:auto;margin-top:4px}
   .cm-loja-drop.open{display:block}
-  .cm-loja-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #f1f5f9;color:var(--text1)}
-  .cm-loja-opt:hover{background:var(--bg3)}
-  .cm-loja-opt input{width:auto;cursor:pointer;accent-color:#f97316}
+  .cm-loja-drop .cm-loja-opt{display:flex !important;align-items:center;gap:8px;padding:9px 12px;font-size:13px !important;cursor:pointer;border-bottom:1px solid #f1f5f9;color:#334155 !important;text-transform:none !important;letter-spacing:0 !important;font-weight:500 !important;margin:0 !important;text-align:left}
+  .cm-loja-drop .cm-loja-opt:hover{background:#f8fafc}
+  .cm-loja-drop .cm-loja-opt input{width:16px !important;height:16px !important;cursor:pointer;accent-color:#f97316;margin:0 !important;flex:none}
+  .cm-loja-drop .cm-loja-opt b{font-weight:600;color:#0f172a}
 
   /* LAYOUT DOIS COLUNAS */
   .split{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
@@ -433,23 +434,50 @@
 
       <!-- RECALCULAR -->
       <div id="tab-recalcular" class="tab-pane">
-        <div class="card" style="max-width:560px">
-          <div class="card-title">Recalcular Custos</div>
-          <div class="card-sub">Reconstrói o custo médio (e a quantidade) a partir de TODOS os movimentos — deixa o saldo igual ao Kardex. Use depois de corrigir notas, ajustes ou conversões.</div>
-          <div class="row2">
-            <div class="fg" style="margin-bottom:0"><label>Loja</label>
-              <select id="rc-loja"><option value="">Selecione a loja...</option></select></div>
-            <div class="fg" style="margin-bottom:0"><label>Item</label>
-              <select id="rc-insumo"><option value="">Todos os itens</option></select></div>
+        <!-- Toolbar de ícones (estilo Everest) -->
+        <div style="display:flex;align-items:center;gap:5px;max-width:680px;padding:7px 9px;margin-bottom:14px;background:#f8fafc;border:1px solid #e2e8f0;border-bottom-width:2px;border-radius:8px">
+          <button id="btn-rc" onclick="recalcularCustos()" title="Recalcular (executar)" style="width:38px;height:38px;border:none;background:#f97316;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#fff;transition:background .12s" onmouseover="this.style.background='#ea6c00'" onmouseout="this.style.background='#f97316'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+          <button onclick="limparRecalcular()" title="Limpar" style="width:38px;height:38px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#334155;transition:background .12s" onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background='#fff'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </button>
+          <button onclick="goHub()" title="Voltar" style="width:38px;height:38px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#334155;transition:background .12s" onmouseover="this.style.background='#eef2f7'" onmouseout="this.style.background='#fff'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          </button>
+        </div>
+
+        <div class="card" style="max-width:680px">
+          <!-- 2 modos: cada checkbox habilita o seu seletor -->
+          <div style="display:flex;align-items:center;gap:32px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap">
+            <label style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#0f172a;cursor:pointer;text-transform:none;letter-spacing:0;margin:0"><input type="checkbox" id="rc-cm" checked onchange="syncRc()" style="width:16px;height:16px;accent-color:#f97316"> Recalcular Custo Médio</label>
+            <label style="display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#0f172a;cursor:pointer;text-transform:none;letter-spacing:0;margin:0"><input type="checkbox" id="rc-ficha" onchange="syncRc()" style="width:16px;height:16px;accent-color:#f97316"> Recalcular Custo da Ficha Técnica</label>
           </div>
-          <div style="margin-bottom:14px"></div>
-          <div class="fg">
-            <label style="margin-bottom:8px">O que recalcular</label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="rc-cm" checked style="width:15px;height:15px;accent-color:#f97316"> Custo médio (saldo = Kardex)</label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer"><input type="checkbox" id="rc-ficha" style="width:15px;height:15px;accent-color:#f97316"> Custo das fichas de processado</label>
+
+          <div class="fg" style="max-width:340px;margin-bottom:0"><label>Loja</label>
+            <div style="position:relative">
+              <button type="button" id="rc-loja-btn" class="cm-loja-btn" onclick="toggleRcLojaDrop(event)">Selecione as lojas...</button>
+              <div id="rc-loja-drop" class="cm-loja-drop">
+                <label class="cm-loja-opt"><input type="checkbox" id="rc-chk-all" onchange="toggleTodasRcLojas(this.checked)"> <b>Todas as lojas</b></label>
+                <div id="rc-lojas-body"></div>
+              </div>
+            </div></div>
+
+          <!-- Bloco Custo Médio → insumos -->
+          <div id="rc-blk-cm" style="border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-top:14px;transition:opacity .15s">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;flex-shrink:0"></span>Custo Médio — quais insumos</div>
+            <div class="fg" style="margin-bottom:0"><label>Insumo</label>
+              <select id="rc-insumo"><option value="">Todos os insumos</option></select></div>
           </div>
-          <div id="rc-result" class="saldo-preview" style="white-space:pre-line"></div>
-          <button class="btn btn-primary" style="width:100%" onclick="recalcularCustos()" id="btn-rc">Recalcular</button>
+
+          <!-- Bloco Ficha Técnica → fichas (começa desabilitado) -->
+          <div id="rc-blk-ft" style="border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;margin-top:12px;opacity:.45;pointer-events:none;background:#f8fafc;transition:opacity .15s">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:50%;background:#f97316;flex-shrink:0"></span>Ficha Técnica — quais fichas</div>
+            <div class="fg" style="margin-bottom:0"><label>Ficha Técnica</label>
+              <select id="rc-ficha-alvo"><option value="">Todas as fichas</option></select></div>
+          </div>
+
+          <div id="rc-result" class="saldo-preview" style="white-space:pre-line;margin-top:14px"></div>
         </div>
       </div>
 
@@ -500,6 +528,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     ]);
     popularLojas();
     popularInsumos();
+    popularFichasRc();
+    syncRc();
     const hoje = new Date();
     const ini = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0];
     const fim = hoje.toISOString().split('T')[0];
@@ -529,8 +559,23 @@ function popularLojas() {
   if (selTop) selTop.innerHTML = opts.replace('Selecione a loja...','Todas as lojas');
   const selAe = document.getElementById('ae-loja');
   if (selAe) selAe.innerHTML = opts;
-  const selRc = document.getElementById('rc-loja');
-  if (selRc) { selRc.innerHTML = opts; if (lojas.length === 1) selRc.value = lojas[0].id; }
+  const rcBody = document.getElementById('rc-lojas-body');
+  if (rcBody) {
+    rcBody.innerHTML = lojas.map(l => `<label class="cm-loja-opt"><input type="checkbox" class="rc-loja-chk" value="${l.id}" onchange="updRcLojaBtn()"><span>${esc(l.nome)}</span></label>`).join('');
+    if (lojas.length === 1) { const c = rcBody.querySelector('.rc-loja-chk'); if (c) c.checked = true; updRcLojaBtn(); }
+  }
+}
+
+function toggleRcLojaDrop(e){ if(e) e.stopPropagation(); document.getElementById('rc-loja-drop').classList.toggle('open'); }
+function toggleTodasRcLojas(checked){ document.querySelectorAll('.rc-loja-chk').forEach(c=>c.checked=checked); updRcLojaBtn(); }
+function updRcLojaBtn(){
+  const sel=[...document.querySelectorAll('.rc-loja-chk:checked')];
+  const btn=document.getElementById('rc-loja-btn'); if(!btn) return;
+  const all=document.getElementById('rc-chk-all'); if(all) all.checked=(lojas.length>0 && sel.length===lojas.length);
+  if(!sel.length) btn.textContent='Selecione as lojas...';
+  else if(sel.length===1){ const l=lojas.find(x=>x.id===sel[0].value); btn.textContent=l?l.nome:'1 loja'; }
+  else if(sel.length===lojas.length) btn.textContent='Todas as lojas';
+  else btn.textContent=sel.length+' lojas selecionadas';
 }
 
 function onAeLojaChange() {
@@ -562,47 +607,81 @@ function getSaldo(insId) {
 
 // ── RECALCULAR CUSTOS ──────────────────────────────────────────────────
 async function recalcularCustos() {
-  const lId = document.getElementById('rc-loja').value;
-  if (!lId) { toast('Selecione a loja.','err'); return; }
+  const lojaIds = [...document.querySelectorAll('.rc-loja-chk:checked')].map(c=>c.value).filter(Boolean);
+  if (!lojaIds.length) { toast('Selecione ao menos uma loja.','err'); return; }
   const doCM = document.getElementById('rc-cm').checked;
   const doFicha = document.getElementById('rc-ficha').checked;
   if (!doCM && !doFicha) { toast('Marque o que recalcular.','err'); return; }
-  const alvoIns = document.getElementById('rc-insumo').value || null;
+  const alvoIns = document.getElementById('rc-insumo').value || null;       // p/ Custo Médio
+  const alvoFicha = document.getElementById('rc-ficha-alvo')?.value || null; // p/ Ficha Técnica
   const btn = document.getElementById('btn-rc');
-  btn.disabled = true; btn.textContent = 'Recalculando...';
+  if(btn){ btn.disabled = true; btn.style.opacity = '.6'; }
   const res = document.getElementById('rc-result'); res.classList.remove('show'); res.textContent = '';
-  let msg = '';
+  let totCM = 0, totFicha = 0;
   try {
-    if (doCM) {
-      const [ents, sais] = await Promise.all([
-        api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,custo_unitario,criado_em`).catch(()=>[]),
-        api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,criado_em`).catch(()=>[]),
-      ]);
-      const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map(e=>e.insumo_id), ...sais.map(s=>s.insumo_id)])];
-      const agora = new Date().toISOString();
-      const payloads = insIds.filter(Boolean).map(insId => {
-        const r = custoMedioNaData(insId, null, { entradas: ents, saidas: sais });
-        return { tenant_id: TENANT_ID, insumo_id: insId, loja_id: lId,
-          quantidade: parseFloat((r.quantidade||0).toFixed(4)),
-          custo_medio: parseFloat((r.custo||0).toFixed(6)),
-          atualizado_em: agora };
-      });
-      for (let i = 0; i < payloads.length; i += 200) {
-        await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
-          method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
-          body: JSON.stringify(payloads.slice(i, i+200)) });
+    for (const lId of lojaIds) {
+      if (doCM) {
+        const [ents, sais] = await Promise.all([
+          api(`entradas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,custo_unitario,criado_em`).catch(()=>[]),
+          api(`saidas_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}&select=insumo_id,quantidade,criado_em`).catch(()=>[]),
+        ]);
+        const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map(e=>e.insumo_id), ...sais.map(s=>s.insumo_id)])];
+        const agora = new Date().toISOString();
+        const payloads = insIds.filter(Boolean).map(insId => {
+          const r = custoMedioNaData(insId, null, { entradas: ents, saidas: sais });
+          return { tenant_id: TENANT_ID, insumo_id: insId, loja_id: lId,
+            quantidade: parseFloat((r.quantidade||0).toFixed(4)),
+            custo_medio: parseFloat((r.custo||0).toFixed(6)),
+            atualizado_em: agora };
+        });
+        for (let i = 0; i < payloads.length; i += 200) {
+          await api('saldo_estoque?on_conflict=tenant_id,insumo_id,loja_id', {
+            method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+            body: JSON.stringify(payloads.slice(i, i+200)) });
+        }
+        totCM += payloads.length;
       }
-      msg += `✓ Custo médio recalculado: ${payloads.length} item(ns).\n`;
+      if (doFicha) { totFicha += await recalcularFichas(lId, alvoFicha); }
     }
-    if (doFicha) {
-      const n = await recalcularFichas(lId, alvoIns);
-      msg += `✓ Fichas de processado recalculadas: ${n}.`;
-    }
+    let msg = '';
+    if (doCM)    msg += `✓ Custo médio recalculado: ${totCM} item(ns) em ${lojaIds.length} loja(s).\n`;
+    if (doFicha) msg += `✓ Fichas de processado recalculadas: ${totFicha}.`;
     res.textContent = msg.trim(); res.classList.add('show');
     toast('Recálculo concluído!','ok');
-    if (lId === lojaId) { try { saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lId}`); } catch{} }
+    if (lojaIds.includes(lojaId)) { try { saldos = await api(`saldo_estoque?tenant_id=eq.${TENANT_ID}&loja_id=eq.${lojaId}`); } catch{} }
   } catch(e) { toast('Erro: '+e.message,'err'); }
-  finally { btn.disabled = false; btn.textContent = 'Recalcular'; }
+  finally { if(btn){ btn.disabled = false; btn.style.opacity = '1'; } }
+}
+
+function syncRc(){
+  const cm = document.getElementById('rc-cm')?.checked;
+  const ft = document.getElementById('rc-ficha')?.checked;
+  const set = (id, on) => { const b = document.getElementById(id); if(!b) return;
+    b.style.opacity = on ? '1' : '.45'; b.style.pointerEvents = on ? 'auto' : 'none'; b.style.background = on ? '#fff' : '#f8fafc'; };
+  set('rc-blk-cm', cm); set('rc-blk-ft', ft);
+}
+
+function limparRecalcular(){
+  const sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+  document.querySelectorAll('.rc-loja-chk').forEach(c=>c.checked=false);
+  const _all=document.getElementById('rc-chk-all'); if(_all) _all.checked=false;
+  updRcLojaBtn();
+  sv('rc-insumo',''); sv('rc-ficha-alvo','');
+  const cm=document.getElementById('rc-cm'); if(cm) cm.checked=true;
+  const fi=document.getElementById('rc-ficha'); if(fi) fi.checked=false;
+  const r=document.getElementById('rc-result'); if(r){ r.textContent=''; r.classList.remove('show'); }
+  syncRc();
+}
+
+// Carrega as fichas de PROCESSADO (vinculadas a insumo) p/ o seletor do modo "Ficha Técnica".
+// value = insumo_vinculado_id (que é o que recalcularFichas filtra).
+async function popularFichasRc(){
+  const sel = document.getElementById('rc-ficha-alvo'); if(!sel) return;
+  try{
+    const fichas = await api(`fichas_tecnicas?tenant_id=eq.${TENANT_ID}&insumo_vinculado_id=not.is.null&select=nome,insumo_vinculado_id&order=nome.asc`).catch(()=>[]);
+    sel.innerHTML = '<option value="">Todas as fichas</option>' +
+      (fichas||[]).map(f=>`<option value="${f.insumo_vinculado_id}">${esc(f.nome||'—')}</option>`).join('');
+  }catch{}
 }
 
 async function recalcularFichas(lId, alvoIns) {
@@ -807,6 +886,8 @@ function cmObsCount() { const el = document.getElementById('cm-obs-count'); if (
 document.addEventListener('click', e => {
   const d = document.getElementById('cm-loja-drop'), b = document.getElementById('cm-loja-btn');
   if (d && b && !d.contains(e.target) && !b.contains(e.target)) d.classList.remove('open');
+  const rd = document.getElementById('rc-loja-drop'), rb = document.getElementById('rc-loja-btn');
+  if (rd && rb && !rd.contains(e.target) && !rb.contains(e.target)) rd.classList.remove('open');
 });
 
 async function salvarAjusteCusto() {
