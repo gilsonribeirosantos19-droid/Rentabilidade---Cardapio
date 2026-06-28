@@ -901,21 +901,17 @@
         </div>
         <div class="ds-field">
           <label>Grupo</label>
-          <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="filtrarMovIns()"><option value="">Todos os grupos</option></select>
-        </div>
-        <div class="ds-field">
-          <label>Insumo</label>
-          <select class="field field-sm" id="mov-ins" style="min-width:180px"><option value="">Todos os insumos</option></select>
+          <select class="field field-sm" id="mov-cat" style="min-width:160px" onchange="syncMovGrupo('bar')"><option value="">Todos os grupos</option></select>
         </div>
         <div class="ds-field ds-grow">
-          <label>Buscar</label>
-          <input class="field field-sm" id="mov-busca" placeholder="Pesquisar item..." oninput="aplicarFiltroBuscaMov()" style="min-width:160px">
+          <label>Buscar insumo</label>
+          <input class="field field-sm" id="mov-busca" placeholder="Digite o nome do insumo..." oninput="aplicarFiltroBuscaMov()" style="min-width:180px">
         </div>
         <div class="ds-field">
-          <label>Mostrar</label>
-          <div style="display:flex;gap:16px;align-items:center;height:var(--ds-input-h,36px)">
-            <label class="ds-switch"><input type="checkbox" id="mov-com-saldo" checked onchange="renderMovimentacao()"><span class="ds-track"></span>Somente com saldo</label>
-            <label class="ds-switch"><input type="checkbox" id="mov-cmv" onchange="renderMovimentacao()"><span class="ds-track"></span>Somente CMV</label>
+          <label>&nbsp;</label>
+          <div style="display:flex;gap:20px;align-items:center;height:var(--ds-input-h,36px)">
+            <label class="mov-chk"><input type="checkbox" id="mov-com-saldo" checked onchange="syncMovSaldo('bar');renderMovimentacao()"> Somente com saldo</label>
+            <label class="mov-chk"><input type="checkbox" id="mov-cmv" onchange="syncMovCmv('bar');renderMovimentacao()"> Somente CMV</label>
           </div>
         </div>
         <div class="ds-actions">
@@ -952,6 +948,14 @@
         .mov-mf-b select{width:100% !important}
         .mov-mf-f{display:flex;gap:10px;padding:16px 20px;border-top:1px solid #eef1f5}
         .mov-mf-f .btn{flex:1;justify-content:center}
+        .mov-mf-sep{height:1px;background:#eef1f5;margin:2px 0}
+        .mov-mf-rad{display:flex;flex-direction:column;gap:9px;margin-top:2px}
+        .mov-mf-rad label{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:#334155;cursor:pointer}
+        .mov-mf-rad input{width:16px;height:16px;accent-color:#f97316}
+        .mov-mf-chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;margin-top:2px}
+        .mov-mf-chk input{width:16px;height:16px;accent-color:#f97316}
+        #tab-movimentacao .mov-chk{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;white-space:nowrap}
+        #tab-movimentacao .mov-chk input{width:16px;height:16px;accent-color:#f97316;margin:0}
       </style>
       <div class="mov-mf-overlay" id="mov-mf-ov" onclick="fecharMaisFiltros()"></div>
       <aside class="mov-mf-drawer" id="mov-mf-dw">
@@ -959,9 +963,21 @@
         <div class="mov-mf-b">
           <div><label class="mf-lbl">Tipo do item</label><select class="field field-sm" id="mov-mf-tipo"><option value="">Todos</option></select></div>
           <div><label class="mf-lbl">Família</label><select class="field field-sm" id="mov-mf-familia"><option value="">Todas</option></select></div>
+          <div><label class="mf-lbl">Grupo</label><select class="field field-sm" id="mov-mf-grupo" onchange="syncMovGrupo('drawer')"><option value="">Todos os grupos</option></select></div>
           <div><label class="mf-lbl">Subgrupo</label><select class="field field-sm" id="mov-mf-subgrupo"><option value="">Todos</option></select></div>
           <div><label class="mf-lbl">Fornecedor</label><select class="field field-sm" id="mov-mf-forn"><option value="">Todos</option></select></div>
           <div><label class="mf-lbl">Unidade</label><select class="field field-sm" id="mov-mf-und"><option value="">Todas</option></select></div>
+          <div class="mov-mf-sep"></div>
+          <div><label class="mf-lbl">Calcula CMV</label>
+            <div class="mov-mf-rad">
+              <label><input type="radio" name="mov-mf-cmv" value="todos" checked onchange="syncMovCmv('drawer')"> Todos</label>
+              <label><input type="radio" name="mov-mf-cmv" value="sim" onchange="syncMovCmv('drawer')"> Sim</label>
+              <label><input type="radio" name="mov-mf-cmv" value="nao" onchange="syncMovCmv('drawer')"> Não</label>
+            </div>
+          </div>
+          <div><label class="mf-lbl">Com estoque</label>
+            <label class="mov-mf-chk"><input type="checkbox" id="mov-mf-saldo" checked onchange="syncMovSaldo('drawer')"> Apenas com saldo</label>
+          </div>
         </div>
         <div class="mov-mf-f">
           <button class="btn btn-ghost btn-sm" onclick="limparMaisFiltros()">Limpar filtros</button>
@@ -1769,7 +1785,7 @@ function popularSelects() {
   const entIns = document.getElementById('ent-f-ins'); if (entIns) entIns.innerHTML = todos;
   const saiIns = document.getElementById('sai-f-ins'); if (saiIns) saiIns.innerHTML = todos;
   document.getElementById('kx-ins').innerHTML = '<option value="">Selecione um insumo…</option>'+insOpts;
-  document.getElementById('mov-ins').innerHTML = todos;
+  const _movIns = document.getElementById('mov-ins'); if (_movIns) _movIns.innerHTML = todos;
   // grupos de compra — Movimentação e Entradas
   const grpOpts = '<option value="">Grupo: Todos</option>'+
     gruposCompra.map(g=>`<option value="${g.id}">${esc(g.nome)}</option>`).join('');
@@ -4084,6 +4100,13 @@ function limparMovFiltros() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   filtrarMovIns();
+  // reseta também os filtros avançados (gaveta) + checkboxes da barra
+  ['mov-mf-tipo','mov-mf-familia','mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn','mov-mf-und'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const _rT=document.querySelector('input[name=mov-mf-cmv][value=todos]'); if(_rT)_rT.checked=true;
+  const _cs=document.getElementById('mov-com-saldo'); if(_cs)_cs.checked=true;
+  const _cm=document.getElementById('mov-cmv'); if(_cm)_cm.checked=false;
+  const _ms=document.getElementById('mov-mf-saldo'); if(_ms)_ms.checked=true;
+  if(typeof _movMfDot==='function') _movMfDot();
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
   if (tbody) tbody.innerHTML = '<tr><td colspan="15" class="empty"><b>Selecione o período e clique em Filtrar</b></td></tr>';
@@ -4187,24 +4210,52 @@ async function popularMaisFiltros(){
       selF.dataset.done = '1';
     } catch(e){}
   }
+  // Grupo: mesmas opções da barra
+  const selG = document.getElementById('mov-mf-grupo');
+  if (selG && !selG.dataset.done) {
+    const cats = [...new Set(insumos.map(i=>i.categoria).filter(Boolean))].sort((a,b)=>(''+a).localeCompare(b,'pt'));
+    selG.insertAdjacentHTML('beforeend', cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join(''));
+    selG.dataset.done = '1';
+  }
+  // reflete o estado atual da barra na gaveta
+  syncMovGrupo('bar'); syncMovSaldo('bar'); syncMovCmv('bar');
 }
 function _movMfDot(){
   const ativos = ['mov-mf-tipo','mov-mf-familia','mov-mf-subgrupo','mov-mf-forn','mov-mf-und']
     .some(id => (document.getElementById(id)?.value || ''));
   const dot = document.getElementById('mov-mf-dot'); if(dot) dot.style.display = ativos ? 'inline-block' : 'none';
 }
-function aplicarMaisFiltros(){ _movMfDot(); fecharMaisFiltros(); renderMovimentacao(); }
+function aplicarMaisFiltros(){ syncMovGrupo('drawer'); syncMovSaldo('drawer'); syncMovCmv('drawer'); _movMfDot(); fecharMaisFiltros(); renderMovimentacao(); }
 function limparMaisFiltros(){
-  ['mov-mf-tipo','mov-mf-familia','mov-mf-subgrupo','mov-mf-forn','mov-mf-und'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  ['mov-mf-tipo','mov-mf-familia','mov-mf-grupo','mov-mf-subgrupo','mov-mf-forn','mov-mf-und'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  const _r=document.querySelector('input[name=mov-mf-cmv][value=todos]'); if(_r) _r.checked=true;
+  const _s=document.getElementById('mov-mf-saldo'); if(_s) _s.checked=true;
+  syncMovGrupo('drawer'); syncMovSaldo('drawer'); syncMovCmv('drawer');
   _movMfDot(); renderMovimentacao();
+}
+// Sincroniza os filtros que aparecem na barra E na gaveta
+function syncMovGrupo(from){
+  const bar=document.getElementById('mov-cat'), dw=document.getElementById('mov-mf-grupo');
+  if(!bar||!dw) return;
+  if(from==='bar') dw.value=bar.value; else bar.value=dw.value;
+}
+function syncMovSaldo(from){
+  const bar=document.getElementById('mov-com-saldo'), dw=document.getElementById('mov-mf-saldo');
+  if(!bar||!dw) return;
+  if(from==='bar') dw.checked=bar.checked; else bar.checked=dw.checked;
+}
+function syncMovCmv(from){
+  const bar=document.getElementById('mov-cmv');
+  if(from==='bar'){ const v=(bar&&bar.checked)?'sim':'todos'; const r=document.querySelector(`input[name=mov-mf-cmv][value=${v}]`); if(r) r.checked=true; }
+  else { const v=document.querySelector('input[name=mov-mf-cmv]:checked')?.value||'todos'; if(bar) bar.checked=(v==='sim'); }
 }
 
 async function renderMovimentacao() {
   const de = document.getElementById('mov-de').value;
   const ate = document.getElementById('mov-ate').value;
   const catF = document.getElementById('mov-cat').value;
-  const insF = document.getElementById('mov-ins').value;
-  const cmvF = document.getElementById('mov-cmv')?.checked;
+  const insF = document.getElementById('mov-ins')?.value || '';
+  const cmvMode = document.querySelector('input[name=mov-mf-cmv]:checked')?.value || 'todos';
   const tbody = document.getElementById('mov-body');
   const tfoot = document.getElementById('mov-foot');
   if (!de || !ate) {
@@ -4238,7 +4289,8 @@ async function renderMovimentacao() {
   let insFilt = insumos;
   if (catF) insFilt = insFilt.filter(i => (i.categoria||'') === catF);
   if (insF) insFilt = insFilt.filter(i => i.id === insF);
-  if (cmvF) insFilt = insFilt.filter(i => i.participa_cmv !== 'nao');
+  if (cmvMode==='sim') insFilt = insFilt.filter(i => i.participa_cmv !== 'nao');
+  else if (cmvMode==='nao') insFilt = insFilt.filter(i => i.participa_cmv === 'nao');
   // Filtros avançados (gaveta "Mais filtros")
   const fTipo = document.getElementById('mov-mf-tipo')?.value || '';
   const fFam  = document.getElementById('mov-mf-familia')?.value || '';
