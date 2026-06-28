@@ -77,9 +77,10 @@
   .cm-loja-btn:hover{border-color:#f97316}
   .cm-loja-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:30;max-height:240px;overflow-y:auto;margin-top:4px}
   .cm-loja-drop.open{display:block}
-  .cm-loja-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid #f1f5f9;color:var(--text1)}
-  .cm-loja-opt:hover{background:var(--bg3)}
-  .cm-loja-opt input{width:auto;cursor:pointer;accent-color:#f97316}
+  .cm-loja-drop .cm-loja-opt{display:flex !important;align-items:center;gap:8px;padding:9px 12px;font-size:13px !important;cursor:pointer;border-bottom:1px solid #f1f5f9;color:#334155 !important;text-transform:none !important;letter-spacing:0 !important;font-weight:500 !important;margin:0 !important;text-align:left}
+  .cm-loja-drop .cm-loja-opt:hover{background:#f8fafc}
+  .cm-loja-drop .cm-loja-opt input{width:16px !important;height:16px !important;cursor:pointer;accent-color:#f97316;margin:0 !important;flex:none}
+  .cm-loja-drop .cm-loja-opt b{font-weight:600;color:#0f172a}
 
   /* LAYOUT DOIS COLUNAS */
   .split{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
