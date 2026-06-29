@@ -75,3 +75,22 @@
 .fic-screen .fm-ta:focus { outline: none; border-color: #f97316; }
 .fic-screen .ed-btn { border: 1px solid #e2e8f0; background: #fff; border-radius: 7px; padding: 4px 10px; font-size: 12px; font-family: inherit; color: #475569; cursor: pointer; margin-right: 6px; }
 .fic-screen .ed-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+/* ingredientes — estilo moderno (grid) */
+.fic-screen .ing2 { border: 1px solid #e7ebf0; border-radius: 12px; background: #fff; box-shadow: 0 1px 2px rgba(15,23,42,.03); }
+.fic-screen .ing2-head, .fic-screen .ing2-row { display: grid; grid-template-columns: 1fr 56px 104px 78px 112px 124px 38px; align-items: center; gap: 12px; padding: 0 16px; }
+.fic-screen .ing2-head { height: 42px; background: #f8fafc; border-bottom: 1px solid #eef1f5; border-radius: 12px 12px 0 0; }
+.fic-screen .ing2-head > div { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; }
+.fic-screen .ing2-row { min-height: 58px; border-bottom: 1px solid #f3f5f8; padding-top: 10px; padding-bottom: 10px; }
+.fic-screen .ing2-row:last-child { border-bottom: none; }
+.fic-screen .ing2 .r { text-align: right; }
+.fic-screen .ing2-head .r, .fic-screen .ing2-row .r { justify-self: end; }
+.fic-screen .ing2 .um { color: #64748b; font-size: 13px; }
+.fic-screen .ing2 .muted { color: #94a3b8; font-size: 13px; }
+.fic-screen .ing2 .mono { font-family: 'DM Mono', monospace; }
+.fic-screen .ing2 .bold { font-weight: 700; color: #0f172a; }
+.fic-screen .ing2-qtd { width: 100%; height: 38px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; text-align: right; color: #0f172a; background: #fff; }
+.fic-screen .ing2-qtd:focus { outline: none; border-color: #f97316; }
+.fic-screen .ing2-del { border: none; background: none; color: #cbd5e1; cursor: pointer; font-size: 15px; padding: 4px; }
+.fic-screen .ing2-del:hover { color: #e11d48; }
+.fic-screen .ing2-empty { padding: 26px; text-align: center; color: #94a3b8; font-size: 13px; }

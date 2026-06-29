@@ -162,29 +162,29 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
             <div style={{ flex: 1 }} />
             <button className="fm-add" onClick={() => setItens((a) => [...a, { insumo_id: '', qtd: '' }])}>+ Adicionar</button>
           </div>
-          <table className="ing-tbl">
-            <thead><tr><th>Insumo</th><th>UM</th><th className="r">Qtd</th><th className="r">% Aprov.</th><th className="r">Custo unit.</th><th className="r">Custo total</th><th /></tr></thead>
-            <tbody>
-              {itens.length === 0 ? <tr><td colSpan={7} style={{ padding: 14, textAlign: 'center', color: '#94a3b8' }}>Adicione ingredientes</td></tr>
-                : itens.map((r, idx) => {
-                  const ins = insMap[r.insumo_id]; const um = umOf(ins)
-                  const qtdG = isW(um) ? (Number(r.qtd) || 0) * 1000 : (Number(r.qtd) || 0)
-                  const ct = ins ? custoIng(ins, qtdG) : 0
-                  const cu = ins ? custoIng(ins, isW(um) ? 1000 : 1) : 0
-                  return (
-                    <tr key={idx}>
-                      <td style={{ minWidth: 230 }}><SearchSelect value={ins?.nome || ''} options={insNames} placeholder="Selecione insumo ou produto..." onChange={(nm) => { const id = insByName.get(nm) || ''; setItens((a) => a.map((x, i) => i === idx ? { ...x, insumo_id: id } : x)) }} /></td>
-                      <td style={{ color: '#64748b' }}>{ins ? um : '—'}</td>
-                      <td className="r"><input className="fm-i" style={{ width: 84, height: 34, textAlign: 'right' }} type="number" step="any" value={r.qtd} onChange={(e) => setItens((a) => a.map((x, i) => i === idx ? { ...x, qtd: e.target.value } : x))} /></td>
-                      <td className="r" style={{ color: '#64748b' }}>{ins ? (ins.rendimento_pct || 100) + '%' : '—'}</td>
-                      <td className="r" style={{ color: '#64748b', fontFamily: 'DM Mono, monospace' }}>{ins ? brl(cu) : '—'}</td>
-                      <td className="r" style={{ fontFamily: 'DM Mono, monospace', fontWeight: 600 }}>{ins ? brl(ct) : '—'}</td>
-                      <td><button className="fm-x" onClick={() => setItens((a) => a.filter((_, i) => i !== idx))}>✕</button></td>
-                    </tr>
-                  )
-                })}
-            </tbody>
-          </table>
+          <div className="ing2">
+            <div className="ing2-head">
+              <div>Insumo</div><div>UM</div><div className="r">Qtd</div><div className="r">% Aprov.</div><div className="r">Custo unit.</div><div className="r">Custo total</div><div />
+            </div>
+            {itens.length === 0 ? <div className="ing2-empty">Nenhum ingrediente — clique em "+ Adicionar".</div>
+              : itens.map((r, idx) => {
+                const ins = insMap[r.insumo_id]; const um = umOf(ins)
+                const qtdG = isW(um) ? (Number(r.qtd) || 0) * 1000 : (Number(r.qtd) || 0)
+                const ct = ins ? custoIng(ins, qtdG) : 0
+                const cu = ins ? custoIng(ins, isW(um) ? 1000 : 1) : 0
+                return (
+                  <div className="ing2-row" key={idx}>
+                    <SearchSelect value={ins?.nome || ''} options={insNames} placeholder="Selecione o insumo..." onChange={(nm) => { const id = insByName.get(nm) || ''; setItens((a) => a.map((x, i) => i === idx ? { ...x, insumo_id: id } : x)) }} />
+                    <div className="um">{ins ? um : '—'}</div>
+                    <div className="r"><input className="ing2-qtd" type="number" step="any" value={r.qtd} onChange={(e) => setItens((a) => a.map((x, i) => i === idx ? { ...x, qtd: e.target.value } : x))} /></div>
+                    <div className="r muted">{ins ? (ins.rendimento_pct || 100) + '%' : '—'}</div>
+                    <div className="r muted mono">{ins ? brl(cu) : '—'}</div>
+                    <div className="r bold mono">{ins ? brl(ct) : '—'}</div>
+                    <div className="r"><button className="ing2-del" onClick={() => setItens((a) => a.filter((_, i) => i !== idx))}>✕</button></div>
+                  </div>
+                )
+              })}
+          </div>
 
           <div style={{ display: 'flex', gap: 12, marginTop: 16, marginBottom: 18 }}>
             <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #eef1f5', borderRadius: 10, padding: '12px 16px' }}>

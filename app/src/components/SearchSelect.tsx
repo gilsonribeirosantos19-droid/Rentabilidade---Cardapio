@@ -16,25 +16,38 @@ export function SearchSelect({
 }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    if (!open) return
+    const onDown = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    const onScroll = () => setOpen(false)
+    document.addEventListener('mousedown', onDown)
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onScroll)
+    return () => { document.removeEventListener('mousedown', onDown); window.removeEventListener('scroll', onScroll, true); window.removeEventListener('resize', onScroll) }
+  }, [open])
+
+  function toggle() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 4, left: r.left, width: r.width })
     }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
+    setQ('')
+    setOpen((o) => !o)
+  }
 
   const filtered = options.filter((o) => norm(o).includes(norm(q)))
 
   return (
     <div className="ass" ref={ref}>
-      <button type="button" className={'ass-btn' + (value ? '' : ' ph')} onClick={() => { setOpen((o) => !o); setQ('') }}>
+      <button ref={btnRef} type="button" className={'ass-btn' + (value ? '' : ' ph')} onClick={toggle}>
         {value || placeholder}
       </button>
-      {open && (
-        <div className="ass-pop">
+      {open && pos && (
+        <div className="ass-pop" style={{ top: pos.top, left: pos.left, minWidth: Math.max(pos.width, 200) }}>
           <input className="ass-q" autoFocus placeholder="Digite para buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="ass-list">
             <div className="ass-opt" onClick={() => { onChange(''); setOpen(false) }}>{placeholder}</div>
