@@ -19,7 +19,7 @@ const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as str
 export function Fornecedores() {
   const { tenantId } = useAuth()
   const qc = useQueryClient()
-  const [tab, setTab] = useState<'fornecedores' | 'vinculos' | 'custos'>('fornecedores')
+  const [tab, setTab] = useState<'fornecedores' | 'vinculos'>('fornecedores')
   const [busca, setBusca] = useState('')
   const [fCidade, setFCidade] = useState('')
   const [fStatus, setFStatus] = useState('')
@@ -94,7 +94,6 @@ export function Fornecedores() {
       <div className="mod-tabs">
         <button className={'mod-tab' + (tab === 'fornecedores' ? ' active' : '')} onClick={() => setTab('fornecedores')}>Cadastro de Fornecedor</button>
         <button className={'mod-tab' + (tab === 'vinculos' ? ' active' : '')} onClick={() => setTab('vinculos')}>Item × Fornecedor</button>
-        <button className={'mod-tab' + (tab === 'custos' ? ' active' : '')} onClick={() => setTab('custos')}>Base de Custos</button>
       </div>
       {tab !== 'fornecedores' ? (
         <div style={{ background: '#fff', border: '1px solid #e7ebf0', borderRadius: 12 }}><div className="empty">🚧 Esta aba será migrada em breve.</div></div>
