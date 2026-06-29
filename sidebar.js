@@ -84,7 +84,17 @@
       { label:'Importar / API',         href:'pdv.html?tab=importar' },
     ]},
     { id:'producao', label:'Produção', icon:I.chef, sections:[
-      { label:'Produção', href:'pcp.html' },
+      { group:'Operação', items:[
+        { label:'Produção do Dia',     href:'pcp.html?tab=producao-dia' },
+        { label:'Produção Programada', href:'pcp.html?tab=programada' },
+        { label:'Sobras e Perdas',     href:'pcp.html?tab=sobras' },
+      ]},
+      { group:'Inteligência', items:[
+        { label:'Dashboard PCP',     href:'pcp.html?tab=dashboard' },
+        { label:'Produção Sugerida', href:'pcp.html?tab=sugerida' },
+        { label:'Consumo Médio',     href:'pcp.html?tab=consumo' },
+      ]},
+      { label:'Relatórios', href:'pcp.html?tab=relatorios' },
       { group:'Porcionamento', items:[
         { label:'Lançamentos',           href:'porcionamento.html?tab=lancamento' },
         { label:'Relatório Consolidado', href:'porcionamento.html?tab=relatorio' },
