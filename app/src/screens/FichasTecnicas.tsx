@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { FichaModal } from './FichaModal'
 import './fichas.css'
 
 type Item = { id?: string; insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number; ordem?: number }
@@ -10,7 +11,8 @@ type Ficha = {
   status?: string; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; produto_id?: string | null
   itens_ficha?: Item[]
 }
-type Insumo = { id: string; nome?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
+type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
+type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string }
 type Saldo = { insumo_id: string; custo_medio?: number }
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -24,6 +26,7 @@ export function FichasTecnicas() {
   const [fStatus, setFStatus] = useState('')
   const [fCmv, setFCmv] = useState('')
   const [ver, setVer] = useState<Ficha | null>(null)
+  const [editing, setEditing] = useState<Ficha | 'new' | null>(null)
 
   const { data: fichas = [], isLoading } = useQuery({
     queryKey: ['fichas', tenantId], enabled: !!tenantId,
@@ -38,8 +41,15 @@ export function FichasTecnicas() {
   const { data: insumos = [] } = useQuery({
     queryKey: ['insumos-min', tenantId], enabled: !!tenantId,
     queryFn: async () => {
-      const { data } = await supabase.from('insumos').select('id,nome,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId)
+      const { data } = await supabase.from('insumos').select('id,nome,categoria,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome')
       return (data ?? []) as Insumo[]
+    },
+  })
+  const { data: produtos = [] } = useQuery({
+    queryKey: ['produtos-min', tenantId], enabled: !!tenantId,
+    queryFn: async () => {
+      const { data } = await supabase.from('produtos').select('id,nome,grupo,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome')
+      return (data ?? []) as ProdutoMin[]
     },
   })
   const { data: saldos = [] } = useQuery({
@@ -145,7 +155,7 @@ export function FichasTecnicas() {
           </select>
         </div>
         <button className="fic-mais"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg> Mais filtros</button>
-        <button className="fic-nova" onClick={() => alert('Cadastro/edição de fichas — em breve nesta etapa da migração.')}>+ Nova ficha</button>
+        <button className="fic-nova" onClick={() => setEditing('new')}>+ Nova ficha</button>
       </div>
 
       <div className="tbl-card"><div className="tbl-scroll">
@@ -170,7 +180,10 @@ export function FichasTecnicas() {
                     <td className="r"><b className={cmvCls(cmv)}>{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</b></td>
                     <td className="r"><b style={{ color: margem !== null && margem > 0 ? '#16a34a' : '#e11d48' }}>{margem !== null ? margem.toFixed(1) + '%' : '—'}</b></td>
                     <td><span className="st-pill" style={{ background: st.bg, color: st.c }}>{st.t}</span></td>
-                    <td><button className="ver-btn" onClick={(e) => { e.stopPropagation(); setVer(f) }}>👁 Ver</button></td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <button className="ed-btn" onClick={(e) => { e.stopPropagation(); setEditing(f) }}>✎ Editar</button>
+                      <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setVer(f) }}>👁 Ver</button>
+                    </td>
                   </tr>
                 )
               })}
@@ -181,6 +194,7 @@ export function FichasTecnicas() {
       <div className="fic-foot">{filtrada.length} fichas</div>
 
       {ver && <VerFicha ficha={ver} m={metricas(ver)} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} cmvCls={cmvCls} onClose={() => setVer(null)} />}
+      {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={produtos} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
     </div>
   )
 }

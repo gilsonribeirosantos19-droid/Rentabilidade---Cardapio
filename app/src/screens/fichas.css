@@ -50,3 +50,16 @@
 .fic-screen .ing-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
 .fic-screen .ing-tbl tr:last-child td { border-bottom: none; }
 .fic-screen .cmv-ok { color: #16a34a; } .fic-screen .cmv-warn { color: #f59e0b; } .fic-screen .cmv-bad { color: #e11d48; }
+
+/* modal de edição de ficha */
+.fic-screen .fm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.fic-screen .fm-g { display: flex; flex-direction: column; }
+.fic-screen .fm-l { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+.fic-screen .fm-i { height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.fic-screen .fm-i:focus { outline: none; border-color: #f97316; }
+.fic-screen .fm-b { height: 38px; padding: 0 16px; border-radius: 9px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; border: 1px solid #e2e8f0; background: #fff; color: #475569; }
+.fic-screen .fm-b.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.fic-screen .fm-b:disabled { opacity: .6; }
+.fic-screen .fm-x { border: none; background: none; color: #e11d48; cursor: pointer; font-size: 14px; padding: 4px 8px; }
+.fic-screen .ed-btn { border: 1px solid #e2e8f0; background: #fff; border-radius: 7px; padding: 4px 10px; font-size: 12px; font-family: inherit; color: #475569; cursor: pointer; margin-right: 6px; }
+.fic-screen .ed-btn:hover { border-color: #2563eb; color: #2563eb; }
