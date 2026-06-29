@@ -48,7 +48,7 @@ export function FichasTecnicas() {
   const { data: produtos = [] } = useQuery({
     queryKey: ['produtos-min', tenantId], enabled: !!tenantId,
     queryFn: async () => {
-      const { data } = await supabase.from('produtos').select('id,nome,grupo,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome')
+      const { data } = await supabase.from('produtos').select('id,nome,grupo,categoria').eq('tenant_id', tenantId).order('nome')
       return (data ?? []) as ProdutoMin[]
     },
   })
