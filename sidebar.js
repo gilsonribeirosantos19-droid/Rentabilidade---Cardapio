@@ -48,7 +48,6 @@
         { label:'Inflação',  href:'relatorios.html?nome=inflacao' },
         { label:'Resumo',    href:'relatorios.html?nome=resumo' },
       ]},
-      { label:'Fechamento', href:'estoque.html?tab=fechamento' },
       { label:'Ajustes',    href:'ajustes.html' },
     ]},
     { id:'compras', label:'Compras', icon:I.cart, sections:[
