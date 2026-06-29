@@ -181,7 +181,7 @@ function FornModal({ inicial, saving, onClose, onSave }: { inicial: Form; saving
           </div>
           <div className="form-section">
             <div className="form-section-title">Localização</div>
-            <div className="form-grid">
+            <div className="form-grid-3">
               <div className="form-group span2"><label className="form-label">Cidade</label><input className="form-input" value={form.cidade || ''} onChange={(e) => set('cidade', e.target.value)} placeholder="Ex: Manaus" /></div>
               <div className="form-group"><label className="form-label">Estado (UF)</label><input className="form-input" maxLength={2} value={form.estado || ''} onChange={(e) => set('estado', e.target.value.toUpperCase())} placeholder="AM" /></div>
             </div>

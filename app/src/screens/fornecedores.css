@@ -40,7 +40,8 @@
 .forn-screen .form-section { margin-bottom: 22px; }
 .forn-screen .form-section:last-child { margin-bottom: 0; }
 .forn-screen .form-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
-.forn-screen .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.forn-screen .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.forn-screen .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .forn-screen .span2 { grid-column: span 2; }
 .forn-screen .full { grid-column: 1 / -1; }
 .forn-screen .form-group { display: flex; flex-direction: column; }
