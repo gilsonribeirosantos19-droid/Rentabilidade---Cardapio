@@ -23,7 +23,7 @@ export function SearchSelect({
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
-    const onScroll = () => setOpen(false)
+    const onScroll = (e: Event) => { if (ref.current && ref.current.contains(e.target as Node)) return; setOpen(false) }
     document.addEventListener('mousedown', onDown)
     window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', onScroll)
