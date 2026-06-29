@@ -52,14 +52,26 @@
 .fic-screen .cmv-ok { color: #16a34a; } .fic-screen .cmv-warn { color: #f59e0b; } .fic-screen .cmv-bad { color: #e11d48; }
 
 /* modal de edição de ficha */
-.fic-screen .fm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.fic-screen .fm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin-bottom: 14px; }
 .fic-screen .fm-g { display: flex; flex-direction: column; }
 .fic-screen .fm-l { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
 .fic-screen .fm-i { height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
 .fic-screen .fm-i:focus { outline: none; border-color: #f97316; }
-.fic-screen .fm-b { height: 38px; padding: 0 16px; border-radius: 9px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; border: 1px solid #e2e8f0; background: #fff; color: #475569; }
-.fic-screen .fm-b.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
-.fic-screen .fm-b:disabled { opacity: .6; }
+.fic-screen .fm-i:disabled, .fic-screen .fm-i.ro { background: #f8fafc; color: #94a3b8; cursor: default; }
+.fic-screen .fm-hint { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+.fic-screen .fm-cancel { border: none; background: none; font-size: 14px; font-family: inherit; color: #475569; cursor: pointer; font-weight: 500; }
+.fic-screen .fm-save { height: 38px; padding: 0 22px; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; border: none; background: #f97316; color: #fff; }
+.fic-screen .fm-save:hover { background: #ea6a0a; }
+.fic-screen .fm-save:disabled { opacity: .6; }
+.fic-screen .fm-add { border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; font-family: inherit; color: #475569; cursor: pointer; }
+.fic-screen .fm-add:hover { border-color: #f97316; color: #f97316; }
 .fic-screen .fm-x { border: none; background: none; color: #e11d48; cursor: pointer; font-size: 14px; padding: 4px 8px; }
+.fic-screen .fm-divider { border-top: 1px solid #e2e8f0; margin: 18px 0 12px; }
+.fic-screen .fm-sec-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; font-weight: 600; }
+.fic-screen .fm-tabs { display: flex; gap: 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 12px; }
+.fic-screen .fm-tab { background: none; border: none; font-family: inherit; font-size: 13px; font-weight: 600; color: #94a3b8; padding: 8px 2px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; text-transform: uppercase; letter-spacing: .03em; }
+.fic-screen .fm-tab.on { color: #f97316; border-bottom-color: #f97316; }
+.fic-screen .fm-ta { width: 100%; min-height: 90px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 10px 12px; font-size: 13px; font-family: inherit; color: #0f172a; resize: vertical; }
+.fic-screen .fm-ta:focus { outline: none; border-color: #f97316; }
 .fic-screen .ed-btn { border: 1px solid #e2e8f0; background: #fff; border-radius: 7px; padding: 4px 10px; font-size: 12px; font-family: inherit; color: #475569; cursor: pointer; margin-right: 6px; }
 .fic-screen .ed-btn:hover { border-color: #2563eb; color: #2563eb; }

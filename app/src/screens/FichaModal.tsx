@@ -9,7 +9,8 @@ type ItemRow = { insumo_id: string; qtd: string }
 type FichaIn = {
   id?: string; nome?: string; categoria?: string; produto_id?: string | null; insumo_vinculado_id?: string | null
   rendimento_porcoes?: number; preco_venda?: number | null; preco_delivery?: number | null; status?: string
-  rendimento_receita_g?: number | null; itens_ficha?: { insumo_id?: string | null; quantidade_g?: number }[]
+  rendimento_receita_g?: number | null; modo_preparo?: string | null; observacoes?: string | null
+  itens_ficha?: { insumo_id?: string | null; quantidade_g?: number }[]
 }
 
 const umOf = (i?: Ins) => (i ? i.unidade_medida || i.unidade_compra || 'g' : 'g')
@@ -30,14 +31,18 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
   const [nome, setNome] = useState(ficha?.nome || '')
   const [categoria, setCategoria] = useState(ficha?.categoria || '')
   const [subj, setSubj] = useState<{ kind: 'produto' | 'insumo'; id: string } | null>(
-    ficha?.produto_id ? { kind: 'produto', id: ficha.produto_id } : ficha?.insumo_vinculado_id ? { kind: 'insumo', id: ficha.insumo_vinculado_id } : null
+    ficha?.produto_id ? { kind: 'produto', id: ficha.produto_id } : null
   )
   const [porcoes, setPorcoes] = useState(String(ficha?.rendimento_porcoes || 1))
   const [preco, setPreco] = useState(ficha?.preco_venda != null ? String(ficha.preco_venda) : '')
   const [precoDel, setPrecoDel] = useState(ficha?.preco_delivery != null ? String(ficha.preco_delivery) : '')
   const [status, setStatus] = useState(ficha?.status || 'ativa')
+  const [vincId, setVincId] = useState(ficha?.insumo_vinculado_id || '')
   const [rendVal, setRendVal] = useState(ficha?.rendimento_receita_g ? String(ficha.rendimento_receita_g / 1000) : '')
   const [rendUnid, setRendUnid] = useState('kg')
+  const [preparo, setPreparo] = useState(ficha?.modo_preparo || '')
+  const [obs, setObs] = useState(ficha?.observacoes || '')
+  const [aba, setAba] = useState<'preparo' | 'obs'>('preparo')
   const [erro, setErro] = useState('')
   const [itens, setItens] = useState<ItemRow[]>(() =>
     (ficha?.itens_ficha || []).filter((it) => it.insumo_id).map((it) => {
@@ -50,21 +55,22 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
 
   const pickMap = useMemo(() => {
     const m = new Map<string, { kind: 'produto' | 'insumo'; id: string; nome: string; categoria: string }>()
-    produtos.forEach((p) => m.set('🍽 ' + (p.nome || ''), { kind: 'produto', id: p.id, nome: p.nome || '', categoria: p.grupo || p.categoria || '' }))
-    insumos.forEach((i) => m.set('⚙ ' + (i.nome || '') + ' (insumo)', { kind: 'insumo', id: i.id, nome: i.nome || '', categoria: i.categoria || '' }))
+    produtos.forEach((p) => m.set((p.nome || ''), { kind: 'produto', id: p.id, nome: p.nome || '', categoria: p.grupo || p.categoria || '' }))
+    insumos.forEach((i) => m.set((i.nome || '') + ' (insumo)', { kind: 'insumo', id: i.id, nome: i.nome || '', categoria: i.categoria || '' }))
     return m
   }, [produtos, insumos])
   const pickLabel = useMemo(() => {
     if (!subj) return ''
     for (const [label, v] of pickMap) if (v.kind === subj.kind && v.id === subj.id) return label
-    return ''
-  }, [subj, pickMap])
+    return ficha?.nome || ''
+  }, [subj, pickMap, ficha])
   const insByName = useMemo(() => { const m = new Map<string, string>(); insumos.forEach((i) => m.set(i.nome || '', i.id)); return m }, [insumos])
   const insNames = useMemo(() => insumos.map((i) => i.nome || ''), [insumos])
+  const vincName = vincId ? insMap[vincId]?.nome || '' : ''
 
   const onPick = (label: string) => {
     const v = pickMap.get(label)
-    if (!v) { setSubj(null); return }
+    if (!v) { setSubj(null); setNome(''); return }
     setSubj({ kind: v.kind, id: v.id }); setNome(v.nome); setCategoria(v.categoria)
   }
 
@@ -74,8 +80,8 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
     return a + custoIng(ins, qtdG)
   }, 0)
   const por = Number(porcoes) > 0 ? Number(porcoes) : 1
-  const rendReceitaG = ehProc && rendVal ? (rendUnid === 'kg' || rendUnid === 'L' ? Number(rendVal) * 1000 : Number(rendVal)) : null
-  const custoUnit = ehProc && rendReceitaG ? total / (rendReceitaG / 1000) : total / por
+  const rendReceitaG = vincId && rendVal ? (rendUnid === 'kg' || rendUnid === 'L' ? Number(rendVal) * 1000 : Number(rendVal)) : null
+  const custoUnit = vincId && rendReceitaG ? total / (rendReceitaG / 1000) : total / por
 
   const save = useMutation({
     mutationFn: async () => {
@@ -85,7 +91,8 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
         preco_venda: ehProc ? null : preco === '' ? null : Number(preco),
         preco_delivery: ehProc ? null : precoDel === '' ? null : Number(precoDel),
         status, produto_id: ehProc ? null : subj?.id || null,
-        insumo_vinculado_id: ehProc ? subj?.id || null : null, rendimento_receita_g: rendReceitaG,
+        insumo_vinculado_id: vincId || null, rendimento_receita_g: rendReceitaG,
+        modo_preparo: preparo.trim() || null, observacoes: obs.trim() || null,
       }
       let fid = ficha?.id
       if (fid) {
@@ -102,10 +109,10 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
         return { ficha_id: fid, insumo_id: r.insumo_id, quantidade_g: qtdG, ordem: i }
       })
       if (rows.length) { const r3 = await supabase.from('itens_ficha').insert(rows); if (r3.error) throw r3.error }
-      if (ehProc && rendReceitaG && rendReceitaG > 0 && subj) {
+      if (vincId && rendReceitaG && rendReceitaG > 0) {
         const tot = rows.reduce((a, r) => { const ins = insMap[r.insumo_id]; return a + (ins ? custoIng(ins, r.quantidade_g) : 0) }, 0)
         const custoKg = tot / (rendReceitaG / 1000)
-        await supabase.from('insumos').update({ preco_compra: Number(custoKg.toFixed(4)) }).eq('id', subj.id)
+        await supabase.from('insumos').update({ preco_compra: Number(custoKg.toFixed(4)) }).eq('id', vincId)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['fichas'] }); qc.invalidateQueries({ queryKey: ['insumos'] }); onSaved() },
@@ -114,12 +121,12 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
 
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="vm" style={{ width: 760 }} onClick={(e) => e.stopPropagation()}>
+      <div className="vm" style={{ width: 820 }} onClick={(e) => e.stopPropagation()}>
         <div className="vm-head">
-          <h2>{ficha?.id ? 'Editar Ficha' : 'Nova Ficha'}</h2>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button className="fm-b" onClick={onClose}>Cancelar</button>
-            <button className="fm-b primary" disabled={save.isPending} onClick={() => { setErro(''); save.mutate() }}>{save.isPending ? 'Salvando…' : 'Salvar'}</button>
+          <h2>{ficha?.id ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}</h2>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <button className="fm-cancel" onClick={onClose}>Cancelar</button>
+            <button className="fm-save" disabled={save.isPending} onClick={() => { setErro(''); save.mutate() }}>{save.isPending ? 'Salvando…' : 'Salvar'}</button>
           </div>
         </div>
         <div className="vm-body">
@@ -127,48 +134,51 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
 
           <div className="fm-row">
             <div className="fm-g"><label className="fm-l">Produto / Insumo *</label><SearchSelect value={pickLabel} onChange={onPick} options={[...pickMap.keys()]} placeholder="Selecione produto ou insumo..." /></div>
-            <div className="fm-g"><label className="fm-l">Grupo</label><input className="fm-i" value={categoria} readOnly style={{ background: '#f8fafc', color: '#475569' }} /></div>
+            <div className="fm-g"><label className="fm-l">Grupo</label><input className="fm-i ro" value={categoria} readOnly placeholder="Vem do produto/insumo" /></div>
           </div>
           <div className="fm-row">
             <div className="fm-g"><label className="fm-l">Rendimento (porções) *</label><input className="fm-i" type="number" min="1" value={porcoes} onChange={(e) => setPorcoes(e.target.value)} /></div>
+            <div className="fm-g"><label className="fm-l">Preço de venda — salão (R$)</label><input className="fm-i" type="number" step="0.01" value={preco} disabled={ehProc} onChange={(e) => setPreco(e.target.value)} placeholder="Ex: 49.90" /></div>
+          </div>
+          <div className="fm-row">
+            <div className="fm-g"><label className="fm-l">Preço de delivery (R$)</label><input className="fm-i" type="number" step="0.01" value={precoDel} disabled={ehProc} onChange={(e) => setPrecoDel(e.target.value)} placeholder="Ex: 59.90 (maior, p/ cobrir o iFood)" /><small className="fm-hint">Deixe vazio se for igual ao salão</small></div>
             <div className="fm-g"><label className="fm-l">Status</label><select className="fm-i" value={status} onChange={(e) => setStatus(e.target.value)}><option value="ativa">Ativa</option><option value="rascunho">Rascunho</option><option value="arquivada">Arquivada</option></select></div>
           </div>
-          {!ehProc && (
-            <div className="fm-row">
-              <div className="fm-g"><label className="fm-l">Preço de venda — salão (R$)</label><input className="fm-i" type="number" step="0.01" value={preco} onChange={(e) => setPreco(e.target.value)} placeholder="Ex: 49.90" /></div>
-              <div className="fm-g"><label className="fm-l">Preço de delivery (R$)</label><input className="fm-i" type="number" step="0.01" value={precoDel} onChange={(e) => setPrecoDel(e.target.value)} placeholder="Vazio = igual ao salão" /></div>
-            </div>
-          )}
-          {ehProc && (
-            <div className="fm-row">
-              <div className="fm-g" style={{ gridColumn: 'span 2' }}><label className="fm-l">Rendimento da receita * (processado — atualiza o preço do insumo)</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input className="fm-i" type="number" step="any" value={rendVal} onChange={(e) => setRendVal(e.target.value)} placeholder="Ex: 0.8" style={{ flex: 1 }} />
-                  <select className="fm-i" value={rendUnid} onChange={(e) => setRendUnid(e.target.value)} style={{ width: 80 }}><option value="kg">kg</option><option value="g">g</option><option value="L">litro</option><option value="ml">ml</option></select>
-                </div>
+
+          <div className="fm-divider" />
+          <div className="fm-sec-label">Vincular a insumo existente</div>
+          <div className="fm-row">
+            <div className="fm-g"><label className="fm-l">Insumo que receberá o custo</label><SearchSelect value={vincName} options={insNames} placeholder="— Não vincular —" onChange={(nm) => setVincId(insByName.get(nm) || '')} /></div>
+            <div className="fm-g"><label className="fm-l">Rendimento da receita *</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input className="fm-i" type="number" step="any" value={rendVal} disabled={!vincId} onChange={(e) => setRendVal(e.target.value)} placeholder="Ex: 800" style={{ flex: 1 }} />
+                <select className="fm-i" value={rendUnid} disabled={!vincId} onChange={(e) => setRendUnid(e.target.value)} style={{ width: 80 }}><option value="kg">kg</option><option value="g">g</option><option value="L">litro</option><option value="ml">ml</option></select>
               </div>
             </div>
-          )}
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 18, marginBottom: 10 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700 }}>Ingredientes</h3>
+            <h3 style={{ fontSize: 15, fontWeight: 700 }}>Ingredientes</h3>
             <div style={{ flex: 1 }} />
-            <button className="fm-b" onClick={() => setItens((a) => [...a, { insumo_id: '', qtd: '' }])}>+ Adicionar</button>
+            <button className="fm-add" onClick={() => setItens((a) => [...a, { insumo_id: '', qtd: '' }])}>+ Adicionar</button>
           </div>
           <table className="ing-tbl">
-            <thead><tr><th>Insumo</th><th>UM</th><th className="r">Qtd</th><th className="r">Custo total</th><th /></tr></thead>
+            <thead><tr><th>Insumo</th><th>UM</th><th className="r">Qtd</th><th className="r">% Aprov.</th><th className="r">Custo unit.</th><th className="r">Custo total</th><th /></tr></thead>
             <tbody>
-              {itens.length === 0 ? <tr><td colSpan={5} style={{ padding: 14, textAlign: 'center', color: '#94a3b8' }}>Adicione ingredientes</td></tr>
+              {itens.length === 0 ? <tr><td colSpan={7} style={{ padding: 14, textAlign: 'center', color: '#94a3b8' }}>Adicione ingredientes</td></tr>
                 : itens.map((r, idx) => {
                   const ins = insMap[r.insumo_id]; const um = umOf(ins)
                   const qtdG = isW(um) ? (Number(r.qtd) || 0) * 1000 : (Number(r.qtd) || 0)
                   const ct = ins ? custoIng(ins, qtdG) : 0
+                  const cu = ins ? custoIng(ins, isW(um) ? 1000 : 1) : 0
                   return (
                     <tr key={idx}>
-                      <td style={{ minWidth: 240 }}><SearchSelect value={ins?.nome || ''} options={insNames} placeholder="Selecione o insumo..." onChange={(nm) => { const id = insByName.get(nm) || ''; setItens((a) => a.map((x, i) => i === idx ? { ...x, insumo_id: id } : x)) }} /></td>
+                      <td style={{ minWidth: 230 }}><SearchSelect value={ins?.nome || ''} options={insNames} placeholder="Selecione insumo ou produto..." onChange={(nm) => { const id = insByName.get(nm) || ''; setItens((a) => a.map((x, i) => i === idx ? { ...x, insumo_id: id } : x)) }} /></td>
                       <td style={{ color: '#64748b' }}>{ins ? um : '—'}</td>
-                      <td className="r"><input className="fm-i" style={{ width: 90, height: 34, textAlign: 'right' }} type="number" step="any" value={r.qtd} onChange={(e) => setItens((a) => a.map((x, i) => i === idx ? { ...x, qtd: e.target.value } : x))} /></td>
-                      <td className="r" style={{ fontFamily: 'DM Mono, monospace' }}>{brl(ct)}</td>
+                      <td className="r"><input className="fm-i" style={{ width: 84, height: 34, textAlign: 'right' }} type="number" step="any" value={r.qtd} onChange={(e) => setItens((a) => a.map((x, i) => i === idx ? { ...x, qtd: e.target.value } : x))} /></td>
+                      <td className="r" style={{ color: '#64748b' }}>{ins ? (ins.rendimento_pct || 100) + '%' : '—'}</td>
+                      <td className="r" style={{ color: '#64748b', fontFamily: 'DM Mono, monospace' }}>{ins ? brl(cu) : '—'}</td>
+                      <td className="r" style={{ fontFamily: 'DM Mono, monospace', fontWeight: 600 }}>{ins ? brl(ct) : '—'}</td>
                       <td><button className="fm-x" onClick={() => setItens((a) => a.filter((_, i) => i !== idx))}>✕</button></td>
                     </tr>
                   )
@@ -176,9 +186,9 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
             </tbody>
           </table>
 
-          <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 12, marginTop: 16, marginBottom: 18 }}>
             <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #eef1f5', borderRadius: 10, padding: '12px 16px' }}>
-              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Custo {ehProc ? 'por unidade (kg/L)' : 'unitário da receita'}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Custo {vincId ? 'por unidade (kg/L)' : 'unitário da receita'}</div>
               <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'DM Mono, monospace', marginTop: 4 }}>{brl(custoUnit)}</div>
             </div>
             <div style={{ flex: 1, background: '#eef4ff', border: '1px solid #dbe6ff', borderRadius: 10, padding: '12px 16px' }}>
@@ -186,6 +196,14 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
               <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'DM Mono, monospace', marginTop: 4, color: '#1d4ed8' }}>{brl(total)}</div>
             </div>
           </div>
+
+          <div className="fm-tabs">
+            <button className={'fm-tab' + (aba === 'preparo' ? ' on' : '')} onClick={() => setAba('preparo')}>Modo de Preparo</button>
+            <button className={'fm-tab' + (aba === 'obs' ? ' on' : '')} onClick={() => setAba('obs')}>Observações</button>
+          </div>
+          {aba === 'preparo'
+            ? <textarea className="fm-ta" value={preparo} onChange={(e) => setPreparo(e.target.value)} placeholder="Descreva o processo..." />
+            : <textarea className="fm-ta" value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observações..." />}
         </div>
       </div>
     </div>
