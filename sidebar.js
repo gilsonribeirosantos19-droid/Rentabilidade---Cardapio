@@ -84,8 +84,12 @@
       { label:'Importar / API',         href:'pdv.html?tab=importar' },
     ]},
     { id:'producao', label:'Produção', icon:I.chef, sections:[
-      { label:'Produção',      href:'pcp.html' },
-      { label:'Porcionamento', href:'porcionamento.html' },
+      { label:'Produção', href:'pcp.html' },
+      { group:'Porcionamento', items:[
+        { label:'Lançamentos',           href:'porcionamento.html?tab=lancamento' },
+        { label:'Relatório Consolidado', href:'porcionamento.html?tab=relatorio' },
+        { label:'Saldo Operacional',     href:'porcionamento.html?tab=saldo-op' },
+      ]},
     ]},
     { id:'config', label:'Config', icon:I.gear, sections:[
       { label:'Geral',      href:'configuracoes.html?tab=geral' },

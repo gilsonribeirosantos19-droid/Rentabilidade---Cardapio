@@ -1486,7 +1486,7 @@ function exportar(){
 /* ================================================================
    START
 ================================================================ */
-carregar();
+carregar().then(()=>{ const _t=new URLSearchParams(location.search).get('tab'); if(_t) switchTab(_t); });
 </script>
 </body>
 </html>
