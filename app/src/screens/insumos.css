@@ -66,5 +66,20 @@
 .ins-screen .f-btn.primary:hover { background: #ea6a0a; }
 .ins-screen .f-btn:disabled { opacity: .6; cursor: default; }
 
+/* ===== SELECT COM BUSCA ===== */
+.ins-screen .ss { position: relative; width: 100%; }
+.ins-screen .prod-toolbar .ss { width: auto; min-width: 160px; }
+.ins-screen .ss-btn { width: 100%; height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; padding: 0 30px 0 12px; text-align: left; font-size: 13px; font-family: inherit; color: #0f172a; cursor: pointer; position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ins-screen .ss-btn:hover { border-color: #f97316; }
+.ins-screen .ss-btn.ph { color: #94a3b8; }
+.ins-screen .ss-btn::after { content: ''; position: absolute; right: 13px; top: 15px; width: 7px; height: 7px; border-right: 2px solid #94a3b8; border-bottom: 2px solid #94a3b8; transform: rotate(45deg); }
+.ins-screen .ss-pop { position: absolute; top: calc(100% + 4px); left: 0; right: 0; min-width: 210px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.14); z-index: 100; overflow: hidden; }
+.ins-screen .ss-q { width: 100%; border: none; border-bottom: 1px solid #eef1f5; padding: 11px 13px; font-size: 13px; outline: none; font-family: inherit; color: #0f172a; }
+.ins-screen .ss-list { max-height: 240px; overflow-y: auto; }
+.ins-screen .ss-opt { padding: 9px 13px; font-size: 13px; cursor: pointer; color: #334155; }
+.ins-screen .ss-opt:hover { background: #fff7ed; color: #f97316; }
+.ins-screen .ss-opt.on { background: #fff7ed; color: #f97316; font-weight: 600; }
+.ins-screen .ss-none { padding: 10px 13px; color: #94a3b8; font-size: 12px; }
+
 .ins-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 200; }
 .ins-screen .toast.ok { background: #059669; } .ins-screen .toast.err { background: #ef4444; }

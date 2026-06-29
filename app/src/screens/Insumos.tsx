@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -280,21 +280,41 @@ export function Insumos() {
 
 const menuItemStyle = { display: 'block', width: '100%', textAlign: 'left' as const, padding: '9px 13px', background: 'none', border: 'none', fontSize: 13, fontFamily: 'inherit', color: '#334155', cursor: 'pointer' }
 
+function SearchSelect({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: string[]; placeholder: string }) {
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+  const filtered = options.filter((o) => norm(o).includes(norm(q)))
+  return (
+    <div className="ss" ref={ref}>
+      <button type="button" className={'ss-btn' + (value ? '' : ' ph')} onClick={() => { setOpen((o) => !o); setQ('') }}>
+        {value || placeholder}
+      </button>
+      {open && (
+        <div className="ss-pop">
+          <input className="ss-q" autoFocus placeholder="Digite para buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="ss-list">
+            <div className="ss-opt" onClick={() => { onChange(''); setOpen(false) }}>{placeholder}</div>
+            {filtered.map((o) => <div key={o} className={'ss-opt' + (o === value ? ' on' : '')} onClick={() => { onChange(o); setOpen(false) }}>{o}</div>)}
+            {filtered.length === 0 && <div className="ss-none">Nada encontrado</div>}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 function Sel({ label, value, options, onChange }: { label: string; value?: string; options: string[]; onChange: (v: string) => void }) {
   return (
     <div className="form-group"><label className="form-label">{label}</label>
-      <select className="form-select" value={value || ''} onChange={(e) => onChange(e.target.value)}>
-        <option value="">Selecione...</option>
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
-      </select>
+      <SearchSelect value={value || ''} options={options} placeholder="Selecione..." onChange={onChange} />
     </div>
   )
 }
 function FSel({ value, onChange, ph, options }: { value: string; onChange: (v: string) => void; ph: string; options: string[] }) {
-  return (
-    <select className="prod-filter" value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">{ph}</option>
-      {options.map((o) => <option key={o} value={o}>{o}</option>)}
-    </select>
-  )
+  return <SearchSelect value={value} onChange={onChange} placeholder={ph} options={options} />
 }
