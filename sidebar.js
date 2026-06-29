@@ -7,6 +7,7 @@
   const _params = new URLSearchParams(location.search);
   let _urlTab  = _params.get('tab')  || '';
   let _urlNome = _params.get('nome') || '';
+  let _urlRel  = _params.get('rel')  || '';
 
   // ── Ícones ──
   const I = {
@@ -76,9 +77,13 @@
       { label:'Fechamento de Custo',href:'fechamento_custo.html' },
     ]},
     { id:'pdv', label:'PDV', icon:I.cart, sections:[
-      { label:'Dashboard',     href:'pdv.html?tab=dash' },
-      { label:'Relatórios',    href:'pdv.html?tab=rel' },
-      { label:'Importar / API',href:'pdv.html?tab=importar' },
+      { label:'Faturamento',           href:'pdv.html?tab=faturamento' },
+      { label:'Faturamento por Produto',href:'pdv.html?tab=vendas' },
+      { group:'Relatórios', items:[
+        { label:'Curva ABC',             href:'pdv.html?tab=relatorios&rel=abc' },
+        { label:'Engenharia de Cardápio',href:'pdv.html?tab=relatorios&rel=engenharia' },
+      ]},
+      { label:'Importar / API',        href:'pdv.html?tab=importar' },
     ]},
     { id:'producao', label:'Produção', icon:I.chef, sections:[
       { label:'Produção',      href:'pcp.html' },
@@ -124,8 +129,12 @@
     const [hp, hq] = href.split('?');
     if (hp !== page) return false;
     const p = new URLSearchParams(hq || '');
-    const ht = p.get('tab'), hn = p.get('nome');
-    if (ht !== null) return ht === _urlTab;
+    const ht = p.get('tab'), hn = p.get('nome'), hr = p.get('rel');
+    if (ht !== null) {
+      if (ht !== _urlTab) return false;
+      if (hr !== null) return hr === _urlRel;   // tab + rel (ex.: PDV Relatórios)
+      return true;
+    }
     if (hn !== null) return hn === _urlNome;
     return !_urlTab && !_urlNome;   // item sem parâmetro (ex.: Visão Geral)
   }
@@ -299,11 +308,13 @@
     let url; try { url = new URL(a.href, location.href); } catch { return; }
     const aPage = url.pathname.split('/').pop();
     const tab = url.searchParams.get('tab');
+    const rel = url.searchParams.get('rel');
     if (aPage === page && tab && typeof window.switchTab === 'function') {
       e.preventDefault();
       window.switchTab(tab);
+      if (rel && typeof window.switchRelTab === 'function') window.switchRelTab(rel);
       try { history.replaceState({}, '', a.getAttribute('href')); } catch (_) {}
-      _urlTab = tab; _urlNome = '';
+      _urlTab = tab; _urlNome = ''; _urlRel = rel || '';
       renderAll();
     }
     // demais casos: navegação normal (recarrega)
