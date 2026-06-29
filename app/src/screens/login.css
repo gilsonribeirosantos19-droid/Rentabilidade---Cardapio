@@ -1,0 +1,46 @@
+.lg-wrap { height: 100%; display: flex; background: #fff; color: #0f172a; }
+
+/* ===== LADO ESQUERDO (marca) ===== */
+.lg-brand { flex: 1.1; position: relative; overflow: hidden; background: linear-gradient(150deg, #1e293b 0%, #0f172a 60%, #0b1220 100%); color: #fff; display: flex; flex-direction: column; justify-content: space-between; padding: 42px 52px; }
+.lg-brand::before { content: ''; position: absolute; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(249,115,22,.32), transparent 65%); top: -160px; right: -140px; filter: blur(10px); }
+.lg-brand::after { content: ''; position: absolute; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, rgba(0,180,255,.10), transparent 65%); bottom: -120px; left: -80px; }
+.lg-btop { display: flex; align-items: center; gap: 12px; position: relative; z-index: 2; }
+.lg-mk { width: 46px; height: 46px; background: #f97316; border-radius: 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(249,115,22,.5); }
+.lg-btop b { font-size: 24px; font-weight: 900; letter-spacing: -.5px; }
+.lg-btop small { display: block; font-size: 12px; color: #f97316; font-weight: 600; margin-top: -2px; }
+.lg-mid { position: relative; z-index: 2; max-width: 430px; }
+.lg-mid h1 { font-size: 38px; font-weight: 800; line-height: 1.12; letter-spacing: -1px; margin-bottom: 16px; }
+.lg-mid h1 span { color: #f97316; }
+.lg-mid p { font-size: 15px; color: #94a3b8; line-height: 1.6; margin-bottom: 34px; }
+.lg-feat { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.lg-feat .ic { width: 42px; height: 42px; border-radius: 11px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; flex: none; }
+.lg-feat .ic svg { width: 20px; height: 20px; stroke: #f97316; fill: none; stroke-width: 2; }
+.lg-feat .ft { font-size: 14px; font-weight: 600; }
+.lg-feat .fd { font-size: 12.5px; color: #94a3b8; }
+.lg-foot { position: relative; z-index: 2; font-size: 12px; color: #64748b; }
+
+/* ===== LADO DIREITO (form) ===== */
+.lg-panel { flex: .9; display: flex; align-items: center; justify-content: center; padding: 40px; }
+.lg-form { width: 100%; max-width: 380px; }
+.lg-form h2 { font-size: 26px; font-weight: 800; letter-spacing: -.5px; margin-bottom: 6px; }
+.lg-form .sub { font-size: 14px; color: #64748b; margin-bottom: 30px; }
+.lg-fld { margin-bottom: 18px; }
+.lg-fld label { display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 7px; }
+.lg-inp { position: relative; }
+.lg-inp input { width: 100%; height: 48px; border: 1.5px solid #e2e8f0; border-radius: 11px; padding: 0 44px 0 14px; font-size: 14px; font-family: inherit; color: #0f172a; transition: border-color .15s, box-shadow .15s; background: #fff; }
+.lg-inp input:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 4px rgba(249,115,22,.12); }
+.lg-inp .ic { position: absolute; right: 14px; top: 14px; color: #94a3b8; cursor: pointer; background: none; border: none; padding: 0; }
+.lg-inp .ic svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 2; }
+.lg-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.lg-chk { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569; cursor: pointer; }
+.lg-chk input { width: 16px; height: 16px; accent-color: #f97316; }
+.lg-link { font-size: 13px; color: #f97316; font-weight: 600; text-decoration: none; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; }
+.lg-link:hover { text-decoration: underline; }
+.lg-btn { width: 100%; height: 50px; background: #f97316; color: #fff; border: none; border-radius: 11px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(249,115,22,.28); transition: background .15s, transform .05s; }
+.lg-btn:hover { background: #ea6a0a; }
+.lg-btn:active { transform: translateY(1px); }
+.lg-btn:disabled { opacity: .7; cursor: default; }
+.lg-err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13px; padding: 10px 12px; border-radius: 9px; margin-bottom: 16px; }
+.lg-help { text-align: center; font-size: 13px; color: #94a3b8; margin-top: 26px; }
+
+@media (max-width: 860px) { .lg-brand { display: none; } }
