@@ -50,9 +50,9 @@ export function SaldoEstoque() {
     queryKey: ['est-lojas', tenantId], enabled: !!tenantId,
     queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Loja[] },
   })
-  const { data: saldos = [], isLoading: loadingSaldos } = useQuery({
+  const { data: saldos = [], isLoading: loadingSaldos, error: errSaldos } = useQuery({
     queryKey: ['est-saldos', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).range(f, t)),
   })
   // fornecedor: vínculos insumo→fornecedor (p/ o filtro) — pequeno, sempre carregado
   const { data: fornData } = useQuery({
@@ -216,7 +216,7 @@ export function SaldoEstoque() {
           <tbody>
             {carregando ? <tr><td colSpan={10} className="empty">Carregando…</td></tr>
               : (posicao !== 'atual' && !dataBase) ? <tr><td colSpan={10} className="empty">Selecione uma data base.</td></tr>
-              : rows.length === 0 ? <tr><td colSpan={10} className="empty">Nenhum saldo encontrado.</td></tr>
+              : rows.length === 0 ? <tr><td colSpan={10} className="empty">Nenhum saldo encontrado.<br /><span style={{ fontSize: 11, color: '#cbd5e1' }}>(insumos: {insumos.length} · saldos: {saldos.length}{errSaldos ? ' · erro: ' + (errSaldos as Error).message : ''})</span></td></tr>
               : rows.map((r, i) => {
                 const q = r.s.quantidade || 0
                 const status = (r.ins.minimo && r.ins.minimo > 0 && q < r.ins.minimo)
