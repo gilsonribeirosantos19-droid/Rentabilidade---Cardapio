@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
-import { SearchSelect } from '../components/SearchSelect'
 import './fichas.css'
 
 type Item = { id?: string; insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number; ordem?: number }
@@ -22,6 +21,7 @@ export function FichasTecnicas() {
   const { tenantId } = useAuth()
   const [busca, setBusca] = useState('')
   const [fCat, setFCat] = useState('')
+  const [fStatus, setFStatus] = useState('')
   const [fCmv, setFCmv] = useState('')
   const [ver, setVer] = useState<Ficha | null>(null)
 
@@ -105,6 +105,7 @@ export function FichasTecnicas() {
     return fichas.filter((f) => {
       if (q && !norm(f.nome || '').includes(q)) return false
       if (fCat && (f.categoria || '') !== fCat) return false
+      if (fStatus && (f.status || 'ativa') !== fStatus) return false
       if (fCmv) {
         const { cmv, pv } = metricas(f)
         if (fCmv === 'sem' && pv) return false
@@ -114,7 +115,7 @@ export function FichasTecnicas() {
       }
       return true
     })
-  }, [fichas, busca, fCat, fCmv]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fichas, busca, fCat, fStatus, fCmv]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="fic-screen">
@@ -123,31 +124,44 @@ export function FichasTecnicas() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar ficha..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
-        <div className="fic-filter"><SearchSelect value={fCat} onChange={setFCat} options={categorias} placeholder="Categoria" /></div>
-        <select className="ass-btn" style={{ width: 160, height: 40 }} value={fCmv} onChange={(e) => setFCmv(e.target.value)}>
-          <option value="">CMV (todos)</option>
-          <option value="verde">🟢 Bom (≤30%)</option>
-          <option value="amarelo">🟡 Atenção (≤38%)</option>
-          <option value="vermelho">🔴 Crítico (&gt;38%)</option>
-          <option value="sem">Sem preço</option>
-        </select>
+        <div className="fic-field"><span className="fic-label">Categoria</span>
+          <select className="fic-sel" value={fCat} onChange={(e) => setFCat(e.target.value)}>
+            <option value="">Todas categorias</option>
+            {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div className="fic-field"><span className="fic-label">Status</span>
+          <select className="fic-sel" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+            <option value="">Todos</option><option value="ativa">Ativa</option><option value="rascunho">Rascunho</option><option value="arquivada">Arquivada</option>
+          </select>
+        </div>
+        <div className="fic-field"><span className="fic-label">CMV</span>
+          <select className="fic-sel" value={fCmv} onChange={(e) => setFCmv(e.target.value)}>
+            <option value="">Todos</option>
+            <option value="verde">🟢 Bom (≤30%)</option>
+            <option value="amarelo">🟡 Atenção (≤38%)</option>
+            <option value="vermelho">🔴 Crítico (&gt;38%)</option>
+            <option value="sem">Sem preço</option>
+          </select>
+        </div>
+        <button className="fic-mais"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg> Mais filtros</button>
+        <button className="fic-nova" onClick={() => alert('Cadastro/edição de fichas — em breve nesta etapa da migração.')}>+ Nova ficha</button>
       </div>
 
       <div className="tbl-card"><div className="tbl-scroll">
         <table>
           <thead><tr>
-            <th style={{ width: 28 }}></th><th>Nome da Ficha</th><th>Categoria</th><th>Rendimento</th>
+            <th>Nome da Ficha</th><th>Categoria</th><th>Rendimento</th>
             <th className="r">Custo</th><th className="r">Preço Venda</th><th className="r">CMV%</th><th className="r">Margem%</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody>
-            {isLoading ? <tr><td colSpan={10} className="empty">Carregando…</td></tr>
-              : filtrada.length === 0 ? <tr><td colSpan={10} className="empty">Nenhuma ficha encontrada</td></tr>
+            {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
+              : filtrada.length === 0 ? <tr><td colSpan={9} className="empty" style={{ height: 70 }}>Nenhuma ficha encontrada</td></tr>
               : filtrada.map((f) => {
                 const { custo, pv, cmv, margem } = metricas(f)
                 const st = statusPill(f, cmv, pv)
                 return (
                   <tr key={f.id} onClick={() => setVer(f)}>
-                    <td><span style={{ color: '#cbd5e1' }}>☆</span></td>
                     <td style={{ fontWeight: 600 }}>{f.nome}</td>
                     <td><span className="tbl-cat">{f.categoria || '—'}</span></td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{f.rendimento_porcoes || 1} un</td>
@@ -163,6 +177,8 @@ export function FichasTecnicas() {
           </tbody>
         </table>
       </div></div>
+
+      <div className="fic-foot">{filtrada.length} fichas</div>
 
       {ver && <VerFicha ficha={ver} m={metricas(ver)} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} cmvCls={cmvCls} onClose={() => setVer(null)} />}
     </div>

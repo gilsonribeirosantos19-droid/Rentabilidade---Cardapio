@@ -1,12 +1,19 @@
 /* Tela de Fichas Técnicas — fiel ao original (escopado .fic-screen) */
 .fic-screen { padding: 18px 24px; }
 
-.fic-screen .fic-toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
-.fic-screen .fic-search { position: relative; flex: 1; min-width: 240px; }
+.fic-screen .fic-toolbar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+.fic-screen .fic-search { position: relative; width: 280px; }
 .fic-screen .fic-search svg { position: absolute; left: 13px; top: 12px; }
-.fic-screen .fic-search input { width: 100%; height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px 0 36px; font-size: 13px; font-family: inherit; color: #0f172a; }
+.fic-screen .fic-search input { width: 100%; height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px 0 36px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
 .fic-screen .fic-search input:focus { outline: none; border-color: #f97316; }
-.fic-screen .fic-filter { min-width: 160px; }
+.fic-screen .fic-field { display: flex; flex-direction: column; gap: 5px; }
+.fic-screen .fic-label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; }
+.fic-screen .fic-sel { height: 40px; min-width: 150px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; cursor: pointer; }
+.fic-screen .fic-sel:focus { outline: none; border-color: #f97316; }
+.fic-screen .fic-mais { height: 40px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.fic-screen .fic-nova { margin-left: auto; height: 40px; padding: 0 18px; border: none; border-radius: 9px; background: #2563eb; color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+.fic-screen .fic-nova:hover { background: #1d4ed8; }
+.fic-screen .fic-foot { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 12px 18px; margin-top: 14px; font-size: 13px; color: #64748b; }
 
 .fic-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
 .fic-screen .tbl-scroll { overflow-x: auto; }
