@@ -101,7 +101,7 @@
         { label:'Saldo Operacional',     href:'porcionamento.html?tab=saldo-op' },
       ]},
     ]},
-    { id:'config', label:'Config', icon:I.gear, sections:[
+    { id:'config', label:'Configurações', icon:I.gear, sections:[
       { label:'Geral',      href:'configuracoes.html?tab=geral' },
       { label:'Usuários',   href:'configuracoes.html?tab=usuarios' },
       { label:'Permissões', href:'configuracoes.html?tab=permissoes' },
