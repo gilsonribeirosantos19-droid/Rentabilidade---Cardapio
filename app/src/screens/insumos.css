@@ -1,0 +1,50 @@
+/* Estilos da tela de Insumos — replicando o original (escopados em .ins-screen) */
+.ins-screen { padding: 0; }
+
+/* abas do módulo */
+.ins-screen .mod-tabs { display: flex; gap: 26px; border-bottom: 1px solid #e7ebf0; padding: 0 24px; background: #fff; }
+.ins-screen .mod-tab { background: none; border: none; font-family: inherit; font-size: 14px; font-weight: 600; color: #64748b; padding: 16px 2px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.ins-screen .mod-tab:hover { color: #0f172a; }
+.ins-screen .mod-tab.active { color: #f97316; border-bottom-color: #f97316; }
+
+.ins-screen .ins-body { padding: 18px 24px; }
+
+/* barra de filtros */
+.ins-screen .prod-toolbar { display: flex; flex-wrap: wrap; gap: 12px; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.ins-screen .prod-search { position: relative; flex: 1; min-width: 220px; }
+.ins-screen .prod-search svg { position: absolute; left: 13px; top: 12px; }
+.ins-screen .prod-search input { width: 100%; height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px 0 36px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.ins-screen .prod-search input:focus { outline: none; border-color: #f97316; }
+.ins-screen .prod-filter { height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #475569; background: #fff; cursor: pointer; min-width: 150px; }
+.ins-screen .prod-filter:focus { outline: none; border-color: #f97316; }
+.ins-screen .prod-filter:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+
+/* tabela */
+.ins-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
+.ins-screen .tbl-scroll { overflow-x: auto; }
+.ins-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ins-screen thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; text-align: left; padding: 11px 14px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.ins-screen thead th.r { text-align: right; }
+.ins-screen thead th.c { text-align: center; }
+.ins-screen tbody td { padding: 0 14px; height: 46px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; }
+.ins-screen tbody td.r { text-align: right; }
+.ins-screen tbody td.c { text-align: center; }
+.ins-screen tbody tr { cursor: pointer; }
+.ins-screen tbody tr:hover td { background: #f8fafc; }
+.ins-screen tbody tr.sel td { background: #e8f0fe; }
+.ins-screen .td-mono { font-family: 'DM Mono', monospace; }
+
+/* badge de grupo */
+.ins-screen .badge { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
+.ins-screen .b-cat { background: #eef2f7; color: #475569; }
+
+/* checkbox calcula CMV */
+.ins-screen .cmv-on { display: inline-flex; width: 16px; height: 16px; border: 1.5px solid #cbd5e1; border-radius: 4px; background: #fff; align-items: center; justify-content: center; color: #f97316; font-weight: 800; font-size: 11px; line-height: 1; }
+.ins-screen .cmv-off { display: inline-block; width: 16px; height: 16px; border: 1.5px solid #cbd5e1; border-radius: 4px; background: #fff; }
+
+/* botão de ações */
+.ins-screen .acoes-btn { border: none; background: none; border-radius: 6px; padding: 2px 7px; font-size: 16px; line-height: 1; color: #94a3b8; cursor: pointer; }
+.ins-screen .acoes-btn:hover { background: #f1f5f9; color: #475569; }
+.ins-screen .colgrid { cursor: pointer; vertical-align: -3px; margin-right: 9px; opacity: .85; }
+
+.ins-screen .empty { text-align: center; color: #94a3b8; padding: 50px 20px; font-size: 14px; }
