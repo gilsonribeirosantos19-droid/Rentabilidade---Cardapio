@@ -48,7 +48,11 @@
         { label:'Inflação',  href:'relatorios.html?nome=inflacao' },
         { label:'Resumo',    href:'relatorios.html?nome=resumo' },
       ]},
-      { label:'Ajustes',    href:'ajustes.html' },
+      { group:'Ajustes', items:[
+        { label:'Ajuste de Estoque',     href:'ajustes.html?tab=estoque' },
+        { label:'Ajuste de Custo Médio', href:'ajustes.html?tab=custo' },
+        { label:'Recalcular',            href:'ajustes.html?tab=recalcular' },
+      ]},
     ]},
     { id:'compras', label:'Compras', icon:I.cart, sections:[
       { label:'Sugestão de Compras', href:'estoque.html?tab=compras' },
