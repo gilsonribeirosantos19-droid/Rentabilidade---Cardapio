@@ -19,6 +19,7 @@ const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as str
 export function Fornecedores() {
   const { tenantId } = useAuth()
   const qc = useQueryClient()
+  const [tab, setTab] = useState<'fornecedores' | 'vinculos' | 'custos'>('fornecedores')
   const [busca, setBusca] = useState('')
   const [fCidade, setFCidade] = useState('')
   const [fStatus, setFStatus] = useState('')
@@ -90,6 +91,15 @@ export function Fornecedores() {
 
   return (
     <div className="forn-screen">
+      <div className="mod-tabs">
+        <button className={'mod-tab' + (tab === 'fornecedores' ? ' active' : '')} onClick={() => setTab('fornecedores')}>Cadastro de Fornecedor</button>
+        <button className={'mod-tab' + (tab === 'vinculos' ? ' active' : '')} onClick={() => setTab('vinculos')}>Item × Fornecedor</button>
+        <button className={'mod-tab' + (tab === 'custos' ? ' active' : '')} onClick={() => setTab('custos')}>Base de Custos</button>
+      </div>
+      {tab !== 'fornecedores' ? (
+        <div style={{ background: '#fff', border: '1px solid #e7ebf0', borderRadius: 12 }}><div className="empty">🚧 Esta aba será migrada em breve.</div></div>
+      ) : (
+      <>
       <div className="fl-toolbar">
         <div className="fl-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
@@ -133,6 +143,9 @@ export function Fornecedores() {
           </tbody>
         </table>
       </div></div>
+      <div className="list-foot">Mostrando {filtrada.length ? 1 : 0}–{filtrada.length} de {filtrada.length}</div>
+      </>
+      )}
 
       {editing && <FornModal inicial={editing} saving={saveMut.isPending} onClose={() => setEditing(null)} onSave={(f) => saveMut.mutate(f)} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
@@ -148,10 +161,7 @@ function FornModal({ inicial, saving, onClose, onSave }: { inicial: Form; saving
       <div className="fm" onClick={(e) => e.stopPropagation()}>
         <div className="fm-head">
           <h2>{form.id ? 'Editar Fornecedor' : 'Novo Fornecedor'}</h2>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button className="fm-btn" onClick={onClose}>Cancelar</button>
-            <button className="fm-btn primary" disabled={saving} onClick={() => onSave(form)}>{saving ? 'Salvando…' : 'Salvar Fornecedor'}</button>
-          </div>
+          <button className="fm-close" onClick={onClose}>✕</button>
         </div>
         <div className="fm-body">
           <div className="form-section">
@@ -186,6 +196,10 @@ function FornModal({ inicial, saving, onClose, onSave }: { inicial: Form; saving
               <div className="form-group full"><label className="form-label">Observações</label><textarea className="form-input form-textarea" value={form.observacoes || ''} onChange={(e) => set('observacoes', e.target.value)} placeholder="Informações adicionais sobre o fornecedor..." /></div>
             </div>
           </div>
+        </div>
+        <div className="fm-foot">
+          <button className="fm-btn" onClick={onClose}>Cancelar</button>
+          <button className="fm-btn primary" disabled={saving} onClick={() => onSave(form)}>{saving ? 'Salvando…' : 'Salvar Fornecedor'}</button>
         </div>
       </div>
     </div>
