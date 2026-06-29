@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
+import { VinculosPane } from './VinculosPane'
 import './fornecedores.css'
 
 type Fornecedor = {
@@ -95,8 +96,8 @@ export function Fornecedores() {
         <button className={'mod-tab' + (tab === 'fornecedores' ? ' active' : '')} onClick={() => setTab('fornecedores')}>Cadastro de Fornecedor</button>
         <button className={'mod-tab' + (tab === 'vinculos' ? ' active' : '')} onClick={() => setTab('vinculos')}>Item × Fornecedor</button>
       </div>
-      {tab !== 'fornecedores' ? (
-        <div style={{ background: '#fff', border: '1px solid #e7ebf0', borderRadius: 12 }}><div className="empty">🚧 Esta aba será migrada em breve.</div></div>
+      {tab === 'vinculos' ? (
+        <VinculosPane fornecedores={lista} />
       ) : (
       <>
       <div className="fl-toolbar">

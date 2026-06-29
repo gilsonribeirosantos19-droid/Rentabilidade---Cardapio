@@ -63,5 +63,27 @@
 .forn-screen .mod-tab:hover:not(.active) { color: #0f172a; }
 .forn-screen .list-foot { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 12px 18px; margin-top: 14px; font-size: 13px; color: #64748b; }
 
+/* === Item × Fornecedor === */
+.forn-screen thead th.c, .forn-screen tbody td.c { text-align: center; }
+.forn-screen .b-cat { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #eef2f7; color: #475569; }
+.forn-screen .b-star { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: #fff7ed; color: #f97316; }
+.forn-screen .vin-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding: 14px 18px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
+.forn-screen .vin-back { padding: 7px 16px; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; cursor: pointer; font-family: inherit; font-weight: 600; }
+.forn-screen .vin-back:hover { background: #f8fafc; }
+.forn-screen .vin-h-nome { font-weight: 700; font-size: 15px; color: #0f172a; }
+.forn-screen .vin-h-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.forn-screen .vin-filter { position: relative; width: 180px; }
+.forn-screen .vin-filter svg { position: absolute; left: 11px; top: 10px; }
+.forn-screen .vin-filter input { width: 100%; height: 36px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0 10px 0 32px; font-size: 12px; font-family: inherit; }
+.forn-screen .vin-filter input:focus { outline: none; border-color: #f97316; }
+.forn-screen .vin-add { white-space: nowrap; height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.forn-screen .vin-add:hover { background: #ea6a0a; }
+.forn-screen .vin-form { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.forn-screen .vin-form-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
+.forn-screen .vin-chk { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: #334155; cursor: pointer; }
+.forn-screen .vin-chk input { width: 15px; height: 15px; accent-color: #f97316; cursor: pointer; }
+.forn-screen .conv-preview { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 9px; color: #059669; font-size: 13px; font-weight: 600; }
+.forn-screen .vin-form-foot { display: flex; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e2e8f0; }
+
 .forn-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 200; }
 .forn-screen .toast.ok { background: #059669; } .forn-screen .toast.err { background: #ef4444; }
