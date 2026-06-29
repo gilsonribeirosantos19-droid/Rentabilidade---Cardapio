@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { Fornecedores } from '../screens/Fornecedores'
 import { Insumos } from '../screens/Insumos'
 import { Produtos } from '../screens/Produtos'
+import { FichasTecnicas } from '../screens/FichasTecnicas'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -14,6 +15,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'fornecedores') return <Fornecedores />
   if (k === 'insumos') return <Insumos />
   if (k === 'produtos') return <Produtos />
+  if (k === 'fichas') return <FichasTecnicas />
   return <Placeholder label={label} />
 }
 
