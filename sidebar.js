@@ -77,13 +77,11 @@
       { label:'Fechamento de Custo',href:'fechamento_custo.html' },
     ]},
     { id:'pdv', label:'PDV', icon:I.cart, sections:[
-      { label:'Faturamento',           href:'pdv.html?tab=faturamento' },
+      { label:'Faturamento',            href:'pdv.html?tab=faturamento' },
       { label:'Faturamento por Produto',href:'pdv.html?tab=vendas' },
-      { group:'Relatórios', items:[
-        { label:'Curva ABC',             href:'pdv.html?tab=relatorios&rel=abc' },
-        { label:'Engenharia de Cardápio',href:'pdv.html?tab=relatorios&rel=engenharia' },
-      ]},
-      { label:'Importar / API',        href:'pdv.html?tab=importar' },
+      { label:'Curva ABC',              href:'pdv.html?tab=relatorios&rel=abc' },
+      { label:'Engenharia de Cardápio', href:'pdv.html?tab=relatorios&rel=engenharia' },
+      { label:'Importar / API',         href:'pdv.html?tab=importar' },
     ]},
     { id:'producao', label:'Produção', icon:I.chef, sections:[
       { label:'Produção',      href:'pcp.html' },
