@@ -57,6 +57,7 @@ export function Movimentacao() {
   const [colsOpen, setColsOpen] = useState(false)
   const [colsPos, setColsPos] = useState({ top: 0, left: 0 })
   const colsIcoRef = useRef<SVGSVGElement>(null)
+  const colsDdRef = useRef<HTMLDivElement>(null)
 
   const { data: insumos = [] } = useQuery({ queryKey: ['mov-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: entradas = [] } = useQuery({ queryKey: ['mov-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)) })
@@ -157,7 +158,15 @@ export function Movimentacao() {
   const limpar = () => { setCatF(''); setBusca(''); setTipo(''); setFamilia(''); setSubgrupo(''); setFornecedor(''); setUnidade(''); setCmvMode('todos'); setComSaldo(true); setSoCmv(false) }
 
   const openCols = () => { const r = colsIcoRef.current?.getBoundingClientRect(); if (r) setColsPos({ top: r.bottom + 4, left: r.left }); setColsOpen((o) => !o) }
-  useEffect(() => { if (!colsOpen) return; const h = () => setColsOpen(false); document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h) }, [colsOpen])
+  useEffect(() => {
+    if (!colsOpen) return
+    const close = () => setColsOpen(false)
+    const onScroll = (e: Event) => { if (colsDdRef.current && colsDdRef.current.contains(e.target as Node)) return; setColsOpen(false) }
+    document.addEventListener('mousedown', close)
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', close)
+    return () => { document.removeEventListener('mousedown', close); window.removeEventListener('scroll', onScroll, true); window.removeEventListener('resize', close) }
+  }, [colsOpen])
   const toggleCol = (id: string) => setCols((c) => ({ ...c, [id]: !c[id] }))
   const salvarCols = () => { try { localStorage.setItem(COLS_KEY, JSON.stringify(cols)) } catch { /* ignore */ } setColsOpen(false) }
 
@@ -273,7 +282,7 @@ export function Movimentacao() {
       <div className="pag-info">{rows.length} registro(s)</div>
 
       {colsOpen && (
-        <div className="cols-dd" style={{ top: colsPos.top, left: colsPos.left }} onMouseDown={(e) => e.stopPropagation()}>
+        <div ref={colsDdRef} className="cols-dd" style={{ top: colsPos.top, left: colsPos.left }} onMouseDown={(e) => e.stopPropagation()}>
           <div className="tit">Colunas visíveis</div>
           {MOV_COLS.filter((c) => !c.fixed).map((c) => <label key={c.id}><input type="checkbox" checked={visible(c.id)} onChange={() => toggleCol(c.id)} /> {c.label}</label>)}
           <button className="save" onClick={salvarCols}>Salvar preferência</button>
