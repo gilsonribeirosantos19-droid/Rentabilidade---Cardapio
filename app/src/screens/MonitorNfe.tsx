@@ -91,6 +91,72 @@ export function MonitorNfe() {
   const nSel = picked.size
 
   const abrirItem = (n: Nfe, t: 'itens' | 'erros') => { setSel(n.id); setTab(t) }
+  const [busy, setBusy] = useState(false)
+
+  // grava 1 entrada de NF-e: insere em entradas_estoque + recalcula saldo (média ponderada) + histórico + preço do vínculo
+  async function registrarEntradaNfe(insId: string, loja: string, fornId: string | null, fornNome: string | undefined, dados: any) {
+    const { error } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, fornecedor_id: fornId, fornecedor_nome: fornNome || null, ...dados })
+    if (error) throw error
+    const { data: sd } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('insumo_id', insId).eq('loja_id', loja).limit(1)
+    const qA = sd?.[0]?.quantidade || 0, cmA = sd?.[0]?.custo_medio || 0, qN = qA + dados.quantidade
+    const cmN = (qA > 0 && qN > 0) ? (qA * cmA + dados.quantidade * dados.custo_unitario) / qN : dados.custo_unitario
+    await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, quantidade: +qN.toFixed(4), custo_medio: +cmN.toFixed(6), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
+    try { await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, saldo_anterior: +qA.toFixed(4), custo_medio_anterior: +cmA.toFixed(4), qtd_entrada: +dados.quantidade.toFixed(4), custo_entrada: +dados.custo_unitario.toFixed(4), novo_custo_medio: +cmN.toFixed(4), impacto_pct: cmA > 0 ? +(((cmN - cmA) / cmA) * 100).toFixed(4) : null, origem: 'nfe' }) } catch { /* opcional */ }
+    if (fornId) { try { await supabase.from('insumo_fornecedores').update({ preco_unitario: +dados.custo_unitario.toFixed(6) }).eq('insumo_id', insId).eq('fornecedor_id', fornId) } catch { /* opcional */ } }
+  }
+
+  // processa 1 NF-e (gravação no estoque) — com trava anti-duplicação
+  async function processarUma(n: Nfe): Promise<{ ok: boolean; msg?: string }> {
+    if (n.status !== 'pronta') return { ok: false, msg: `NF-e ${n.numero}: não está "Pronta".` }
+    const loja = n.loja_id || lojaId
+    if (!loja) return { ok: false, msg: `NF-e ${n.numero}: sem loja (selecione uma loja no topo).` }
+    const { data: its } = await supabase.from('nfe_itens').select('*').eq('nfe_id', n.id)
+    const items = (its ?? []) as Item[]
+    if (!items.length) return { ok: false, msg: `NF-e ${n.numero}: sem itens.` }
+    // anti-duplicação (chave de acesso, senão número/série)
+    let dup
+    if (n.chave_acesso) dup = await supabase.from('entradas_estoque').select('id').eq('tenant_id', tenantId).eq('tipo', 'nfe').eq('chave_acesso', n.chave_acesso).limit(1)
+    else dup = await supabase.from('entradas_estoque').select('id').eq('tenant_id', tenantId).eq('tipo', 'nfe').eq('nfe_numero', `${n.numero}/${n.serie}`).limit(1)
+    if (dup.data && dup.data.length) { await supabase.from('nfe_recebidas').update({ status: 'processada', processada_em: new Date().toISOString() }).eq('id', n.id); return { ok: true, msg: `NF-e ${n.numero}: já estava no estoque (marcada processada).` } }
+    const f = fornByCnpj(n.cnpj_emitente); const fornId = f?.id || null, fornNome = f?.nome || n.nome_emitente
+    const dataStr = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : new Date().toISOString().split('T')[0]
+    let okItens = 0
+    for (const it of items) {
+      const v = it.vinculacao_id ? ifvMap[it.vinculacao_id] : null
+      if (!v) continue
+      const fator = v.qtd_por_embalagem || 1
+      const qtdEst = +((it.quantidade || 0) * fator).toFixed(6)
+      const custoUnit = +((it.valor_unitario || 0) / fator).toFixed(6)
+      try {
+        await registrarEntradaNfe(v.insumo_id, loja, fornId, fornNome, { quantidade: qtdEst, unidade_compra: it.unidade_nfe || null, fator_conversao: fator, custo_unitario: custoUnit, tipo: 'nfe', nfe_numero: `${n.numero}/${n.serie}`, chave_acesso: n.chave_acesso || null, observacao: `NF-e ${n.numero}/${n.serie}`, criado_em: dataStr + 'T12:00:00.000Z' })
+        okItens++
+      } catch (e) { console.warn('item falhou', it.descricao_nfe, e) }
+    }
+    if (okItens < items.length) { await supabase.rpc('estornar_nfe', { p_nfe_id: n.id }).then(() => {}, () => {}); return { ok: false, msg: `NF-e ${n.numero}: falha em ${items.length - okItens} item(ns), revertida.` } }
+    await supabase.from('nfe_recebidas').update({ status: 'processada', processada_em: new Date().toISOString() }).eq('id', n.id)
+    return { ok: true }
+  }
+
+  const invalidarTudo = () => qc.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === 'string' && /mon-|sald|entrad|inc-|est-|sai-|ent-/i.test(k) } })
+
+  const processarSel = async (ids?: string[]) => {
+    const notas = nfes.filter((n) => (ids || [...picked]).includes(n.id))
+    if (!notas.length) return
+    if (!confirm(`Processar ${notas.length} nota(s)? As entradas serão lançadas no estoque (média de custo recalculada).`)) return
+    setBusy(true)
+    let ok = 0, fail = 0; const msgs: string[] = []
+    for (const n of notas) { const r = await processarUma(n); if (r.ok) ok++; else { fail++; if (r.msg) msgs.push(r.msg) }; if (r.msg && r.ok) msgs.push(r.msg) }
+    setPicked(new Set()); await invalidarTudo(); setBusy(false)
+    showToast(`${ok} processada(s)${fail ? ` · ${fail} com problema` : ''}.`, fail ? 'err' : 'ok')
+    if (msgs.length) console.warn('Monitor:\n' + msgs.join('\n'))
+  }
+
+  const excluirSel = async () => {
+    if (!nSel) return
+    if (!confirm(`Excluir ${nSel} nota(s) do Monitor? (não estorna o que já foi processado)`)) return
+    setBusy(true)
+    try { for (const id of picked) { await supabase.from('nfe_itens').delete().eq('nfe_id', id); await supabase.from('nfe_recebidas').delete().eq('id', id) } setPicked(new Set()); await invalidarTudo(); showToast(`${nSel} nota(s) excluída(s).`, 'ok') } catch (e: any) { showToast('Erro: ' + e.message, 'err') } finally { setBusy(false) }
+  }
   void now
 
   return (
@@ -124,8 +190,8 @@ export function MonitorNfe() {
         <label className="sit-chip"><input type="checkbox" checked={chkErro} style={{ accentColor: '#dc2626' }} onChange={(e) => setChkErro(e.target.checked)} /><span className="dot" style={{ background: '#dc2626' }} />Com Erro <span className="cnt" style={{ color: '#dc2626' }}>({cnt.erro})</span></label>
         <label className="sit-chip"><input type="checkbox" checked={chkCanc} style={{ accentColor: '#94a3b8' }} onChange={(e) => setChkCanc(e.target.checked)} /><span className="dot" style={{ background: '#94a3b8' }} />Cancelada <span className="cnt" style={{ color: '#94a3b8' }}>({cnt.canc})</span></label>
         <div className="act-r">
-          <button className={'b-del' + (nSel ? ' on' : '')} disabled={!nSel} onClick={() => showToast('Excluir selecionadas chega na Parte 2.', 'ok')}>🗑 Excluir (<span>{nSel}</span>)</button>
-          <button className={'b-proc' + (nSel ? ' on' : '')} disabled={!nSel} onClick={() => showToast('Processar selecionadas chega na Parte 2.', 'ok')}>▷ Processar selecionadas (<span>{nSel}</span>)</button>
+          <button className={'b-del' + (nSel ? ' on' : '')} disabled={!nSel || busy} onClick={excluirSel}>🗑 Excluir (<span>{nSel}</span>)</button>
+          <button className={'b-proc' + (nSel ? ' on' : '')} disabled={!nSel || busy} onClick={() => processarSel()}>▷ {busy ? 'Processando…' : `Processar selecionadas (${nSel})`}</button>
         </div>
       </div>
 
@@ -173,7 +239,7 @@ export function MonitorNfe() {
 
       {tab === 'itens' && (
         <>
-          <div className="det-bar"><span>📄</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os itens'}</span></div>
+          <div className="det-bar"><span>📄</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os itens'}</span>{selNfe?.status === 'pronta' && <button className="btn-pri" style={{ marginLeft: 'auto' }} disabled={busy} onClick={() => processarSel([selNfe.id])}>▷ {busy ? 'Processando…' : 'Processar esta nota'}</button>}</div>
           <div className="tbl-wrap"><div className="tbl-scroll">
             <table className="tbl">
               <thead><tr><th className="c">Seq.</th><th>Item Fornecedor</th><th>Descrição</th><th>Item Interno</th><th>Embalagem</th><th className="c">UM</th><th className="r">Q. na Emb.</th><th className="r">Q. de Embalagens</th><th className="r">V. Unitário</th><th className="r">V. Total</th><th className="r">Q. Estoque</th></tr></thead>
