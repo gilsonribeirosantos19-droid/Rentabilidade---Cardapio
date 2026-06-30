@@ -160,12 +160,11 @@ export function Movimentacao() {
   const openCols = () => { const r = colsIcoRef.current?.getBoundingClientRect(); if (r) setColsPos({ top: r.bottom + 4, left: r.left }); setColsOpen((o) => !o) }
   useEffect(() => {
     if (!colsOpen) return
-    const close = () => setColsOpen(false)
-    const onScroll = (e: Event) => { if (colsDdRef.current && colsDdRef.current.contains(e.target as Node)) return; setColsOpen(false) }
+    // fecha só ao clicar FORA (clique dentro é barrado pelo onMouseDown do dropdown).
+    // NÃO fecha ao rolar — o usuário rola DENTRO da lista p/ ver/marcar as colunas escondidas.
+    const close = (e: MouseEvent) => { if (colsDdRef.current && colsDdRef.current.contains(e.target as Node)) return; setColsOpen(false) }
     document.addEventListener('mousedown', close)
-    window.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', close)
-    return () => { document.removeEventListener('mousedown', close); window.removeEventListener('scroll', onScroll, true); window.removeEventListener('resize', close) }
+    return () => document.removeEventListener('mousedown', close)
   }, [colsOpen])
   const toggleCol = (id: string) => setCols((c) => ({ ...c, [id]: !c[id] }))
   const salvarCols = () => { try { localStorage.setItem(COLS_KEY, JSON.stringify(cols)) } catch { /* ignore */ } setColsOpen(false) }
