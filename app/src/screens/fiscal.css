@@ -15,14 +15,14 @@
 
 .fiscal-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
 .fiscal-screen .tbl-scroll { overflow-x: auto; }
-.fiscal-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-.fiscal-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.fiscal-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.fiscal-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 10px; text-align: left; padding: 6px 10px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
 .fiscal-screen .tbl thead th.sortable { cursor: pointer; user-select: none; }
 .fiscal-screen .tbl thead th.sortable:hover { color: #0f172a; }
 .fiscal-screen .tbl th.r, .fiscal-screen .tbl td.r { text-align: right; }
 .fiscal-screen .tbl th.c, .fiscal-screen .tbl td.c { text-align: center; }
-.fiscal-screen .tbl tbody td { padding: 5px 12px; border-bottom: 1px solid #e7ecf3; color: #0f172a; vertical-align: middle; white-space: nowrap; }
-.fiscal-screen .tbl td.fornec { white-space: normal; min-width: 220px; }
+.fiscal-screen .tbl tbody td { padding: 2.5px 10px; border-bottom: 1px solid #e7ecf3; color: #0f172a; vertical-align: middle; white-space: nowrap; line-height: 1.35; }
+.fiscal-screen .tbl td.fornec { white-space: normal; min-width: 320px; }
 .fiscal-screen .tbl tbody tr:hover td { background: #f8fafc; }
 /* modo gradeado (grade em célula) — Monitor/DANFE */
 .fiscal-screen .tbl th, .fiscal-screen .tbl td { border-right: 1px solid #e7ecf3; }
