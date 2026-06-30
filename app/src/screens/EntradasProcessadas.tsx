@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { imprimirDanfe, gerarDanfeAiko } from '../lib/danfe'
+import { SearchSelect } from '../components/SearchSelect'
 import './fiscal.css'
 
 type Nfe = { id: string; numero?: string; serie?: string; data_emissao?: string; processada_em?: string; nome_emitente?: string; cnpj_emitente?: string; valor_total?: number; chave_acesso?: string }
@@ -42,6 +43,9 @@ export function EntradasProcessadas() {
   })
 
   const fornecedores = useMemo(() => { const m: Record<string, string> = {}; nfes.forEach((n) => { if (n.cnpj_emitente && n.nome_emitente) m[n.cnpj_emitente] = n.nome_emitente }); return Object.entries(m).sort((a, b) => a[1].localeCompare(b[1])) }, [nfes])
+  const fornNomes = useMemo(() => fornecedores.map(([, n]) => n), [fornecedores])
+  const fornByNome = useMemo(() => Object.fromEntries(fornecedores.map(([c, n]) => [n, c])) as Record<string, string>, [fornecedores])
+  const fornNomeOf = useMemo(() => Object.fromEntries(fornecedores.map(([c, n]) => [c, n])) as Record<string, string>, [fornecedores])
 
   const filtrada = useMemo(() => {
     const num = fNum.replace(/\D/g, '')
@@ -94,18 +98,17 @@ export function EntradasProcessadas() {
 
   return (
     <div className="fiscal-screen">
-      <div className="fh">
-        <div><div className="fh-title">Notas Fiscais Processadas</div><div className="fh-sub">Histórico de NF-e confirmadas no estoque</div></div>
-        <div className="fh-right">
-          <select className="field" style={{ minWidth: 150 }} value={fForn} onChange={(e) => { setFForn(e.target.value); setPag(1) }}><option value="">Fornecedor: Todos</option>{fornecedores.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select>
-          <input className="field" style={{ width: 120 }} placeholder="Nº NF-e…" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />
-          <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => aplicarPeriodo(e.target.value)}><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="todos">Todos</option><option value="periodo">Período</option></select>
-          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>até</span>
-          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} />
-          <button className="btn-g" onClick={limpar}>Limpar</button>
-          <button className="btn-g" onClick={() => exportCSV(filtrada)}>↓ Exportar</button>
-        </div>
+      <div className="fh-title">Notas Fiscais Processadas</div>
+      <div className="fh-sub">Histórico de NF-e confirmadas no estoque</div>
+      <div className="fl-bar">
+        <SearchSelect value={fForn ? (fornNomeOf[fForn] || '') : ''} options={['Todos os fornecedores', ...fornNomes]} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : (fornByNome[nm] || '')); setPag(1) }} />
+        <input className="field" style={{ width: 120 }} placeholder="Nº NF-e…" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />
+        <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => aplicarPeriodo(e.target.value)}><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="todos">Todos</option><option value="periodo">Período</option></select>
+        <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
+        <span style={{ fontSize: 12, color: '#94a3b8' }}>até</span>
+        <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} />
+        <button className="btn-g" onClick={limpar}>Limpar</button>
+        <button className="btn-g" onClick={() => exportCSV(filtrada)}>↓ Exportar</button>
       </div>
 
       <div className="summary"><span>{filtrada.length.toLocaleString('pt-BR')} registro{filtrada.length !== 1 ? 's' : ''} encontrado{filtrada.length !== 1 ? 's' : ''}</span><span>Valor total filtrado: <span className="sval">{brl(totalValor)}</span></span></div>

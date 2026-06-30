@@ -1,9 +1,9 @@
 /* Módulo Fiscal — escopado .fiscal-screen */
 .fiscal-screen { padding: 18px 24px; }
-.fiscal-screen .fh { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
 .fiscal-screen .fh-title { font-size: 16px; font-weight: 800; color: #0f172a; }
 .fiscal-screen .fh-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
-.fiscal-screen .fh-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fiscal-screen .fl-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+.fiscal-screen .fl-bar .ass { flex: 0 1 300px; min-width: 200px; }
 .fiscal-screen .field { height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
 .fiscal-screen .field:focus { outline: none; border-color: #f97316; }
 .fiscal-screen select.field { cursor: pointer; }
