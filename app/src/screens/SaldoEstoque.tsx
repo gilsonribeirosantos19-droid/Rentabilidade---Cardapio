@@ -221,7 +221,7 @@ export function SaldoEstoque() {
           <tbody>
             {carregando ? <tr><td colSpan={10} className="empty">Carregando…</td></tr>
               : (posicao !== 'atual' && !dataBase) ? <tr><td colSpan={10} className="empty">Selecione uma data base.</td></tr>
-              : rows.length === 0 ? <tr><td colSpan={10} className="empty">Nenhum saldo encontrado.<br /><span style={{ fontSize: 11, color: '#cbd5e1' }}>(insumos: {insumos.length} · saldos: {saldos.length}{errSaldos ? ' · erro: ' + (errSaldos as Error).message : ''})</span></td></tr>
+              : rows.length === 0 ? <tr><td colSpan={10} className="empty">{errSaldos ? 'Erro: ' + (errSaldos as Error).message : 'Nenhum saldo encontrado.'}</td></tr>
               : rows.map((r, i) => {
                 const q = r.s.quantidade || 0
                 const status = (r.ins.minimo && r.ins.minimo > 0 && q < r.ins.minimo)
