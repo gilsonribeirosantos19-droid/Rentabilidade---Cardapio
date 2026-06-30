@@ -84,6 +84,14 @@
 .est-screen .fg textarea { height: auto; min-height: 64px; padding: 10px 12px; resize: vertical; }
 .est-screen .fg input:focus, .est-screen .fg select:focus, .est-screen .fg textarea:focus { outline: none; border-color: #f97316; }
 .est-screen .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.est-screen .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.est-screen .conv-box { margin: 0 0 14px; padding: 9px 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; font-size: 12px; color: #059669; font-family: 'DM Mono', monospace; }
+.est-screen .kpi-bar { display: flex; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 14px; flex-wrap: wrap; }
+.est-screen .kpi-cell { padding: 12px 18px; border-right: 1px solid #e2e8f0; min-width: 0; }
+.est-screen .kpi-cell .l { font-size: 11px; color: #94a3b8; margin-bottom: 3px; }
+.est-screen .kpi-cell .v { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; color: #0f172a; }
+.est-screen .kpi-cell .v.sm { font-size: 13px; font-weight: 600; }
+.est-screen .kpi-cell .v.red { color: #e11d48; }
 .est-screen .saldo-info { margin-bottom: 14px; padding: 8px 12px; background: #f1f5f9; border-radius: 8px; font-size: 12px; color: #475569; font-family: 'DM Mono', monospace; }
 .est-screen .modal-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .est-screen .btn-sec { height: 38px; padding: 0 16px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
