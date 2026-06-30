@@ -34,6 +34,25 @@ function calcFator(desc: string): number | null {
   return 1
 }
 
+type XmlItem = { descricao: string; codigo: string; unidade: string; quantidade: number; valorUnit: number }
+function parseNfeXml(xml: string) {
+  const doc = new DOMParser().parseFromString(xml, 'text/xml')
+  if (doc.querySelector('parsererror')) throw new Error('XML inválido')
+  const nNF = doc.querySelector('nNF')?.textContent || ''
+  const serie = doc.querySelector('serie')?.textContent || ''
+  const emitNome = doc.querySelector('emit xNome')?.textContent?.trim() || ''
+  const cnpjEmit = (doc.querySelector('emit CNPJ')?.textContent || '').replace(/\D/g, '')
+  const chaveAcesso = (doc.querySelector('infNFe')?.getAttribute('Id') || '').replace(/^NFe/, '')
+  const dhEmi = doc.querySelector('ide dhEmi')?.textContent || doc.querySelector('ide dEmi')?.textContent || ''
+  const vNF = parseFloat(doc.querySelector('ICMSTot vNF')?.textContent || '0')
+  const itens: XmlItem[] = []
+  doc.querySelectorAll('det').forEach((det) => {
+    const prod = det.querySelector('prod'); if (!prod) return
+    itens.push({ descricao: prod.querySelector('xProd')?.textContent?.trim() || '', codigo: prod.querySelector('cProd')?.textContent?.trim() || '', unidade: prod.querySelector('uCom')?.textContent?.trim() || '', quantidade: parseFloat(prod.querySelector('qCom')?.textContent || '0'), valorUnit: parseFloat(prod.querySelector('vUnCom')?.textContent || '0') })
+  })
+  return { nNF, serie, emitNome, cnpjEmit, chaveAcesso, dhEmi, vNF, itens }
+}
+
 export function MonitorNfe() {
   const { tenantId } = useAuth()
   const { lojas, lojaId, setLojaId } = useLoja()
@@ -46,6 +65,7 @@ export function MonitorNfe() {
   const [sel, setSel] = useState<string | null>(null)
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [vinc, setVinc] = useState<Item | null>(null)
+  const [xmlOpen, setXmlOpen] = useState(false)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
 
@@ -169,7 +189,7 @@ export function MonitorNfe() {
           <span className="lbl-mini">Loja:</span>
           <select className="field" style={{ minWidth: 160 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
           <button className="btn-g" onClick={() => qc.invalidateQueries({ queryKey: ['mon-nfe'] })}>↻ Atualizar</button>
-          <button className="btn-xml" onClick={() => showToast('Upload de XML chega na Parte 2.', 'ok')}>⤓ Entrada por NF-e XML</button>
+          <button className="btn-xml" onClick={() => setXmlOpen(true)}>⤓ Entrada por NF-e XML</button>
         </div>
       </div>
 
@@ -301,6 +321,7 @@ export function MonitorNfe() {
         </>
       )}
 
+      {xmlOpen && <ImportXmlModal tenantId={tenantId!} vinculos={vinculos} ifv={ifv} insumos={insumos} fornecedores={fornecedores} onClose={() => setXmlOpen(false)} onDone={() => { setXmlOpen(false); qc.invalidateQueries({ predicate: (q) => /mon-/i.test(String(q.queryKey[0])) }) }} onToast={showToast} />}
       {vinc && selNfe && <CorrigirItem item={vinc} nfe={selNfe} insumos={insumos} vinculos={vinculos} forn={fornByCnpj(selNfe.cnpj_emitente)} lojas={lojas} tenantId={tenantId!}
         onClose={() => setVinc(null)} onRefresh={() => qc.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === 'string' && /mon-/i.test(k) } })} onToast={showToast} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
@@ -484,6 +505,110 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
         <div className="cor-ft">
           <button className="cor-back" onClick={onClose}>‹ Voltar para a lista</button>
           <button className="cor-save" onClick={onClose}>Salvar correção</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, onClose, onDone, onToast }: { tenantId: string; vinculos: Vinc[]; ifv: IFV[]; insumos: Insumo[]; fornecedores: Forn[]; onClose: () => void; onDone: () => void; onToast: (m: string, t?: 'ok' | 'err') => void }) {
+  const [parsed, setParsed] = useState<ReturnType<typeof parseNfeXml> | null>(null)
+  const [fornId, setFornId] = useState('')
+  const [data, setData] = useState(new Date().toISOString().split('T')[0])
+  const [saving, setSaving] = useState(false)
+  const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
+
+  const handleFile = (file?: File | null) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const p = parseNfeXml(String(reader.result)); setParsed(p)
+        const en = p.emitNome.toLowerCase()
+        const fm = fornecedores.find((f) => (f.cnpj || '').replace(/\D/g, '') === p.cnpjEmit) || fornecedores.find((f) => (f.nome || '').toLowerCase() === en || (en && (f.nome || '').toLowerCase().includes(en.substring(0, 6))))
+        if (fm) setFornId(fm.id)
+        if (p.dhEmi) setData(p.dhEmi.slice(0, 10))
+      } catch (e: any) { onToast('Erro ao ler XML: ' + e.message, 'err') }
+    }
+    reader.readAsText(file, 'utf-8')
+  }
+
+  const matchItem = (it: XmlItem): string | null => {
+    if (it.codigo) { const d = ifv.find((v) => v.codigo_fornecedor === it.codigo && (!fornId || v.fornecedor_id === fornId)); if (d) return d.id }
+    let vn = it.codigo ? vinculos.find((v) => v.codigo_nfe && v.codigo_nfe === it.codigo) : null
+    if (!vn?.insumo_id) vn = vinculos.find((v) => norm(v.descricao_nfe) === norm(it.descricao))
+    if (vn?.insumo_id) { const d = ifv.find((v) => v.insumo_id === vn!.insumo_id && (!fornId || v.fornecedor_id === fornId)) || ifv.find((v) => v.insumo_id === vn!.insumo_id); if (d) return d.id }
+    return null
+  }
+  const matched = parsed ? parsed.itens.map(matchItem) : []
+  const okCount = matched.filter(Boolean).length
+  const pend = parsed ? parsed.itens.length - okCount : 0
+
+  const criar = async (p: any, status: string): Promise<string> => { const { data: d, error } = await supabase.from('nfe_recebidas').insert({ tenant_id: tenantId, numero: p.nNF || '0', serie: p.serie || '1', chave_acesso: p.chaveAcesso || null, cnpj_emitente: p.cnpjEmit || '', nome_emitente: p.emitNome || '', data_emissao: p.dhEmi || (data + 'T12:00:00'), valor_total: p.vNF || 0, status, fonte: 'upload' }).select('id'); if (error) throw error; return d![0].id }
+
+  const registrar = async () => {
+    if (!parsed) return
+    setSaving(true)
+    try {
+      const p = parsed
+      const status = pend === 0 ? 'pronta' : 'aguard_vinculacao'
+      let nfeId = ''
+      if (p.chaveAcesso) {
+        const { data: ex } = await supabase.from('nfe_recebidas').select('id').eq('tenant_id', tenantId).eq('chave_acesso', p.chaveAcesso).limit(1)
+        if (ex && ex.length) {
+          const { data: its } = await supabase.from('nfe_itens').select('id').eq('nfe_id', ex[0].id).limit(1)
+          if (its && its.length) { onToast(`NF-e ${p.nNF} já estava registrada no Monitor.`, 'ok'); setSaving(false); onDone(); return }
+          nfeId = ex[0].id
+          await supabase.from('nfe_recebidas').update({ status, numero: p.nNF || '0', serie: p.serie || '1', nome_emitente: p.emitNome, valor_total: p.vNF || 0, data_emissao: p.dhEmi || (data + 'T12:00:00'), fonte: 'upload' }).eq('id', nfeId)
+        } else nfeId = await criar(p, status)
+      } else nfeId = await criar(p, status)
+      const batch = p.itens.map((it, i) => ({ nfe_id: nfeId, tenant_id: tenantId, descricao_nfe: (it.descricao || '').toUpperCase(), codigo_item_fornecedor: it.codigo || null, quantidade: it.quantidade || 0, unidade_nfe: (it.unidade || 'UN').toUpperCase(), valor_unitario: it.valorUnit || 0, valor_total: +((it.quantidade || 0) * (it.valorUnit || 0)).toFixed(2), vinculacao_id: matched[i] }))
+      const { error } = await supabase.from('nfe_itens').insert(batch); if (error) throw error
+      onToast(pend === 0 ? `NF-e ${p.nNF} registrada e pronta para processar!` : `NF-e ${p.nNF} registrada com ${pend} item(ns) pendente(s).`, 'ok')
+      onDone()
+    } catch (e: any) { onToast('Erro: ' + e.message, 'err') } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="cor-ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="cor" style={{ width: 'min(880px, 96vw)' }} onClick={(e) => e.stopPropagation()}>
+        <div className="cor-hd"><div><h2>Entrada por NF-e / XML</h2><div className="s">Importe o XML da nota fiscal para registrar no Monitor.</div></div><button className="cor-x" onClick={onClose}>✕</button></div>
+        <div className="cor-body">
+          {!parsed ? (
+            <div onClick={() => document.getElementById('xml-file')?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }} style={{ border: '2px dashed #cbd5e1', borderRadius: 12, padding: '44px 20px', textAlign: 'center', cursor: 'pointer', background: '#f8fafc' }}>
+              <div style={{ fontSize: 40, marginBottom: 8 }}>📄</div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>Clique ou arraste o arquivo XML</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>NF-e padrão SEFAZ · .xml</div>
+              <input type="file" id="xml-file" accept=".xml" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files?.[0])} />
+            </div>
+          ) : (
+            <>
+              <div className="cor-card" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr 1fr', gap: '4px 18px', alignItems: 'end' }}>
+                <div><div className="l" style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase' }}>NF-e</div><div style={{ fontWeight: 700, color: '#2563eb', fontSize: 14 }}>{parsed.nNF}/{parsed.serie}</div></div>
+                <div><div className="l" style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase' }}>Emitente</div><div style={{ fontWeight: 600, fontSize: 12 }}>{parsed.emitNome}</div><div style={{ fontSize: 11, color: '#94a3b8' }}>{brl(parsed.vNF)}</div></div>
+                <div className="cor-fg"><label>Fornecedor</label><select value={fornId} onChange={(e) => setFornId(e.target.value)}><option value="">Sem fornecedor</option>{fornecedores.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</select></div>
+                <div className="cor-fg"><label>Data de entrada</label><input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
+              </div>
+              {okCount > 0 && <div className="cor-conv">✓ {okCount} item(ns) reconhecido(s) automaticamente{pend > 0 ? ` · ${pend} pendente(s) de vínculo` : ''}.</div>}
+              <div className="cor-tbl"><div className="cor-tbl-sc" style={{ maxHeight: 300 }}>
+                <table>
+                  <thead><tr><th>Descrição (NF-e)</th><th>Código</th><th>UM</th><th className="r">Qtd.</th><th className="r">V. Unit.</th><th>Item interno</th></tr></thead>
+                  <tbody>
+                    {parsed.itens.map((it, i) => { const mid = matched[i]; const v = mid ? ifv.find((x) => x.id === mid) : null; const ins = v ? insMap[v.insumo_id] : null; return (
+                      <tr key={i} style={mid ? { background: '#f0fdf4' } : undefined}>
+                        <td>{it.descricao}</td><td className="mono">{it.codigo || '—'}</td><td>{it.unidade}</td><td className="r mono">{fmtQ(it.quantidade)}</td><td className="r mono">{brl(it.valorUnit)}</td>
+                        <td>{ins ? <span style={{ color: '#16a34a' }}>✓ {ins.nome}</span> : <span style={{ color: '#dc2626' }}>pendente</span>}</td>
+                      </tr>
+                    ) })}
+                  </tbody>
+                </table>
+              </div></div>
+            </>
+          )}
+        </div>
+        <div className="cor-ft">
+          <button className="cor-back" onClick={onClose}>Cancelar</button>
+          {parsed && <button className="cor-save" disabled={saving} onClick={registrar}>{saving ? 'Salvando…' : (pend === 0 ? 'Registrar no Monitor' : `Registrar no Monitor (${pend} pend.)`)}</button>}
         </div>
       </div>
     </div>
