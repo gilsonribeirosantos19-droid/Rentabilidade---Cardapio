@@ -74,13 +74,15 @@ export function Shell() {
   }
 
   const title = active === '__home' ? 'Início' : labelForKey(active)
+  // telas que abrem em TELA CHEIA (sem topbar/abas do workspace) — têm cabeçalho próprio e precisam de espaço
+  const isFull = active.startsWith('fiscal/')
 
   return (
     <div className={'shell' + (dived ? ' dived' : '')}>
       <Sidebar activeKey={active} onOpen={openScreen} dived={dived} setDived={setDived} />
 
       <div className="main">
-        <div className="topbar">
+        {!isFull && <div className="topbar">
           <h1>{title}</h1>
           <div className="tr">
             <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
@@ -92,9 +94,9 @@ export function Shell() {
               ⎋ Sair
             </button>
           </div>
-        </div>
+        </div>}
 
-        <div className="tabs">
+        {!isFull && <div className="tabs">
           <div className={'tab' + (active === '__home' ? ' on' : '')} onClick={() => setActive('__home')} title="Início">
             🏠
           </div>
@@ -108,7 +110,7 @@ export function Shell() {
               <span className="x" onClick={(e) => { e.stopPropagation(); closeTab(t.key) }}>×</span>
             </div>
           ))}
-        </div>
+        </div>}
 
         <div className="content">
           <div style={{ display: active === '__home' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>

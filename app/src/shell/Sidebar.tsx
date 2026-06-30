@@ -26,7 +26,7 @@ export function Sidebar({
   dived: string | null
   setDived: (id: string | null) => void
 }) {
-  const { usuario } = useAuth()
+  const { usuario, signOut } = useAuth()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
   const active = MODULES.find((m) => m.id === dived)
@@ -78,6 +78,7 @@ export function Sidebar({
             <div className="muname">{nome}</div>
             <div className="murole">{usuario?.role || usuario?.perfil || 'Usuário'}</div>
           </div>
+          <button title="Sair" onClick={() => signOut()} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 17, padding: '4px 6px', borderRadius: 6, flexShrink: 0 }}>⎋</button>
         </div>
       </nav>
 
