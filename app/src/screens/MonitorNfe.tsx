@@ -178,8 +178,10 @@ export function MonitorNfe() {
         </div>
         <div className="ds-field"><label>Período</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select className="field" style={{ minWidth: 120 }} value={periodo} onChange={(e) => setPreset(e.target.value)}><option value="todos">Todos</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="periodo">Período</option></select>
-            {periodo === 'periodo' && <><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /><span style={{ color: '#94a3b8', fontSize: 12 }}>até</span><input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} /></>}
+            <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => setPreset(e.target.value)}><option value="todos">Todos</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="periodo">Período</option></select>
+            <input type="date" className="field" title="De" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
+            <span style={{ color: '#94a3b8', fontSize: 12 }}>até</span>
+            <input type="date" className="field" title="Até" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} />
           </div>
         </div>
         <div style={{ marginLeft: 'auto' }}><button className="btn-g" onClick={limpar}>▽ Limpar filtros</button></div>
