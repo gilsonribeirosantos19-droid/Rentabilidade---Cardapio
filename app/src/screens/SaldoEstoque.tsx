@@ -52,14 +52,14 @@ export function SaldoEstoque() {
   })
   const { data: saldos = [], isLoading: loadingSaldos, error: errSaldos } = useQuery({
     queryKey: ['est-saldos', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').order('loja_id').range(f, t)),
   })
   // fornecedor: vínculos insumo→fornecedor (p/ o filtro) — pequeno, sempre carregado
   const { data: fornData } = useQuery({
     queryKey: ['est-forn', tenantId], enabled: !!tenantId,
     queryFn: async () => {
       const [vinc, forns] = await Promise.all([
-        fetchAll<{ insumo_id: string; fornecedor_id: string }>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).range(f, t)),
+        fetchAll<{ insumo_id: string; fornecedor_id: string }>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).order('insumo_id').order('fornecedor_id').range(f, t)),
         supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome').then((r) => r.data ?? []),
       ])
       const map: Record<string, Set<string>> = {}
@@ -71,11 +71,11 @@ export function SaldoEstoque() {
   const histAtivo = posicao !== 'atual'
   const { data: entradas = [], isLoading: loadEnt } = useQuery({
     queryKey: ['est-entradas', tenantId], enabled: !!tenantId && histAtivo,
-    queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)),
   })
   const { data: saidas = [], isLoading: loadSai } = useQuery({
     queryKey: ['est-saidas', tenantId], enabled: !!tenantId && histAtivo,
-    queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)),
   })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
@@ -98,7 +98,12 @@ export function SaldoEstoque() {
 
   // reconstrói o saldo na data (média móvel ponderada), igual ao Kardex
   const saldosCalc = useMemo<Saldo[]>(() => {
-    if (posicao === 'atual') return saldos
+    if (posicao === 'atual') {
+      // dedup defensivo por insumo|loja (1 saldo por insumo/loja) — evita duplicata de paginação
+      const m: Record<string, Saldo> = {}
+      for (const s of saldos) m[s.insumo_id + '|' + (s.loja_id || '')] = s
+      return Object.values(m)
+    }
     if (!dataBase) return []
     const dtLim = dataBase + 'T23:59:59'
     const dtOf = (m: Mov) => m.criado_em || m.created_at || ''
