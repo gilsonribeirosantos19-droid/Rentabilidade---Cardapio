@@ -300,75 +300,159 @@ export function MonitorNfe() {
         </>
       )}
 
-      {vinc && selNfe && <VincularModal item={vinc} nfe={selNfe} insumos={insumos} ifv={ifv} vinculos={vinculos} forn={fornByCnpj(selNfe.cnpj_emitente)} tenantId={tenantId!}
-        onClose={() => setVinc(null)} onSaved={async () => { setVinc(null); await qc.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === 'string' && /mon-/i.test(k) } }); showToast('Vínculo salvo!', 'ok') }} onErr={(m) => showToast(m, 'err')} />}
+      {vinc && selNfe && <CorrigirItem item={vinc} nfe={selNfe} insumos={insumos} vinculos={vinculos} forn={fornByCnpj(selNfe.cnpj_emitente)} lojas={lojas} tenantId={tenantId!}
+        onClose={() => setVinc(null)} onRefresh={() => qc.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === 'string' && /mon-/i.test(k) } })} onToast={showToast} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
 }
 
-function VincularModal({ item, nfe, insumos, ifv, vinculos, forn, tenantId, onClose, onSaved, onErr }: { item: Item; nfe: Nfe; insumos: Insumo[]; ifv: IFV[]; vinculos: Vinc[]; forn?: Forn; tenantId: string; onClose: () => void; onSaved: () => void; onErr: (m: string) => void }) {
+function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onClose, onRefresh, onToast }: { item: Item; nfe: Nfe; insumos: Insumo[]; vinculos: Vinc[]; forn?: Forn; lojas: { id: string; nome: string }[]; tenantId: string; onClose: () => void; onRefresh: () => void; onToast: (m: string, t?: 'ok' | 'err') => void }) {
   const [insId, setInsId] = useState('')
+  const [embDesc, setEmbDesc] = useState('')
+  const [qtEmb, setQtEmb] = useState('1')
   const [codForn, setCodForn] = useState(item.codigo_item_fornecedor || '')
   const [descr, setDescr] = useState(item.descricao_nfe || '')
-  const [embDesc, setEmbDesc] = useState('')
-  const [fator, setFator] = useState('1')
+  const [embPadrao, setEmbPadrao] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [busca, setBusca] = useState(''); const [pag, setPag] = useState(1); const pageSize = 20
   const [saving, setSaving] = useState(false)
-  const insSel = insumos.find((i) => i.id === insId)
-  const insByName = new Map(insumos.map((i) => [i.nome, i.id]))
-  const q = Number(item.quantidade) || 0
-  const f = parseFloat(fator) || 0
-  const onEmb = (val: string) => { setEmbDesc(val); const c = calcFator(val); if (c != null) setFator(String(c)) }
+
+  const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
+  const insLabel = (i: Insumo) => (i.codigo_interno ? i.codigo_interno + ' — ' : '') + i.nome
+  const insOptions = useMemo(() => insumos.map(insLabel), [insumos])
+  const insByLabel = useMemo(() => new Map(insumos.map((i) => [insLabel(i), i.id])), [insumos])
+  const insSel = insMap[insId]
+
+  const { data: embOpts = [] } = useQuery({ queryKey: ['cor-emb', tenantId], queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome,tipo').eq('tenant_id', tenantId).eq('tipo', 'embalagem').order('nome'); return ((data ?? []) as any[]).map((e) => e.nome as string) } })
+  const { data: fornVinc = [], refetch } = useQuery({ queryKey: ['cor-fv', forn?.id], enabled: !!forn?.id, queryFn: async () => { const { data } = await supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).eq('fornecedor_id', forn!.id).order('id'); return (data ?? []) as IFV[] } })
+
+  const q = Number(item.quantidade) || 0, f = parseFloat(qtEmb) || 0
+  const onEmb = (val: string) => { setEmbDesc(val); const c = calcFator(val); if (c != null) setQtEmb(String(c)) }
+  const reset = () => { setInsId(''); setEmbDesc(''); setQtEmb('1'); setCodForn(item.codigo_item_fornecedor || ''); setDescr(item.descricao_nfe || ''); setEmbPadrao(false); setEditId(null) }
+  const editar = (v: IFV) => { setEditId(v.id); setInsId(v.insumo_id); setEmbDesc(v.embalagem_descricao || ''); setQtEmb(String(v.qtd_por_embalagem || 1)); setCodForn(v.codigo_fornecedor || ''); setDescr(v.descricao_fornecedor || ''); setEmbPadrao(!!(v as any).embalagem_padrao) }
 
   const salvar = async () => {
-    if (!insId) return onErr('Selecione o insumo interno.')
-    if (f <= 0) return onErr('Informe a quantidade na embalagem (fator).')
+    if (!insId) return onToast('Selecione o item interno.', 'err')
+    if (f <= 0) return onToast('Informe a Qt. na embalagem.', 'err')
     setSaving(true)
     try {
       const fornId = forn?.id || null
       const preco = f > 0 ? +((item.valor_unitario || 0) / f).toFixed(4) : null
-      const existing = ifv.find((v) => v.insumo_id === insId && (!fornId || v.fornecedor_id === fornId) && (codForn ? v.codigo_fornecedor === codForn : v.embalagem_descricao === embDesc))
-      let vincId: string
-      if (existing) {
-        const { error } = await supabase.from('insumo_fornecedores').update({ qtd_por_embalagem: f, codigo_fornecedor: codForn || null, preco_unitario: preco, embalagem_descricao: embDesc || existing.embalagem_descricao, descricao_fornecedor: descr.trim() || null }).eq('id', existing.id); if (error) throw error
-        vincId = existing.id
+      const body = { insumo_id: insId, embalagem_descricao: embDesc || null, qtd_por_embalagem: f, codigo_fornecedor: codForn || null, descricao_fornecedor: descr.trim() || null, embalagem_padrao: embPadrao, preco_unitario: preco }
+      if (editId) {
+        const { error } = await supabase.from('insumo_fornecedores').update(body).eq('id', editId); if (error) throw error
+        onToast('Vínculo atualizado.', 'ok')
       } else {
-        const { data, error } = await supabase.from('insumo_fornecedores').insert({ tenant_id: tenantId, insumo_id: insId, fornecedor_id: fornId, embalagem_descricao: embDesc || null, qtd_por_embalagem: f, codigo_fornecedor: codForn || null, preco_unitario: preco, descricao_fornecedor: descr.trim() || null }).select('id'); if (error) throw error
-        vincId = data![0].id
+        const existing = fornVinc.find((v) => v.insumo_id === insId && (codForn ? v.codigo_fornecedor === codForn : v.embalagem_descricao === embDesc))
+        let vincId: string
+        if (existing) { const { error } = await supabase.from('insumo_fornecedores').update(body).eq('id', existing.id); if (error) throw error; vincId = existing.id }
+        else { const { data, error } = await supabase.from('insumo_fornecedores').insert({ tenant_id: tenantId, fornecedor_id: fornId, ...body }).select('id'); if (error) throw error; vincId = data![0].id }
+        const ev = vinculos.find((v) => (item.codigo_item_fornecedor && v.codigo_nfe === item.codigo_item_fornecedor) || norm(v.descricao_nfe) === norm(item.descricao_nfe))
+        if (ev) await supabase.from('vinculos_nfe').update({ insumo_id: insId, fator_conversao: f }).eq('id', ev.id)
+        else await supabase.from('vinculos_nfe').insert({ tenant_id: tenantId, descricao_nfe: item.descricao_nfe, codigo_nfe: item.codigo_item_fornecedor || null, insumo_id: insId, fator_conversao: f })
+        await supabase.from('nfe_itens').update({ vinculacao_id: vincId }).eq('id', item.id)
+        const { data: upd } = await supabase.from('nfe_itens').select('vinculacao_id').eq('nfe_id', nfe.id)
+        if (upd && upd.length > 0 && upd.every((x: any) => x.vinculacao_id)) await supabase.from('nfe_recebidas').update({ status: 'pronta' }).eq('id', nfe.id)
+        onToast('Vínculo incluído e item vinculado!', 'ok')
       }
-      const existVin = vinculos.find((v) => (item.codigo_item_fornecedor && v.codigo_nfe === item.codigo_item_fornecedor) || norm(v.descricao_nfe) === norm(item.descricao_nfe))
-      if (existVin) await supabase.from('vinculos_nfe').update({ insumo_id: insId, fator_conversao: f }).eq('id', existVin.id)
-      else await supabase.from('vinculos_nfe').insert({ tenant_id: tenantId, descricao_nfe: item.descricao_nfe, codigo_nfe: item.codigo_item_fornecedor || null, insumo_id: insId, fator_conversao: f })
-      const { error: e3 } = await supabase.from('nfe_itens').update({ vinculacao_id: vincId }).eq('id', item.id); if (e3) throw e3
-      const { data: upd } = await supabase.from('nfe_itens').select('vinculacao_id').eq('nfe_id', nfe.id)
-      if (upd && upd.length > 0 && upd.every((x: any) => x.vinculacao_id)) await supabase.from('nfe_recebidas').update({ status: 'pronta' }).eq('id', nfe.id)
-      onSaved()
-    } catch (e: any) { onErr('Erro: ' + e.message) } finally { setSaving(false) }
+      await refetch(); onRefresh(); reset()
+    } catch (e: any) { onToast('Erro: ' + e.message, 'err') } finally { setSaving(false) }
   }
 
+  const excluir = async (v: IFV) => { if (!confirm('Excluir este vínculo?')) return; const { error } = await supabase.from('insumo_fornecedores').delete().eq('id', v.id); if (error) { onToast('Erro: ' + error.message, 'err'); return } await refetch(); onRefresh(); onToast('Vínculo excluído.', 'ok') }
+
+  const filtrada = useMemo(() => { const b = busca.toLowerCase().trim(); return !b ? fornVinc : fornVinc.filter((v) => { const ins = insMap[v.insumo_id]; return (ins?.nome || '').toLowerCase().includes(b) || (ins?.codigo_interno || '').toLowerCase().includes(b) || (v.codigo_fornecedor || '').toLowerCase().includes(b) || (v.embalagem_descricao || '').toLowerCase().includes(b) }) }, [fornVinc, busca, insMap])
+  const totalPags = Math.max(1, Math.ceil(filtrada.length / pageSize)), pagAtual = Math.min(pag, totalPags)
+  const page = filtrada.slice((pagAtual - 1) * pageSize, pagAtual * pageSize)
+
   return (
-    <div className="ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="vmodal" onClick={(e) => e.stopPropagation()}>
-        <h2>Vincular item da NF-e</h2>
-        <div className="vsub">Ligue o item da nota a um insumo interno e defina a conversão de embalagem.</div>
-        <div className="vbox">
-          <div>Descrição NF: <b>{item.descricao_nfe || '—'}</b></div>
-          <div>Código: <b>{item.codigo_item_fornecedor || '—'}</b></div>
-          <div>Qtd. NF: <b>{fmtQ(item.quantidade)} {item.unidade_nfe || ''}</b></div>
-          <div>Fornecedor: <b>{nfe.nome_emitente || '—'}</b></div>
+    <div className="cor-ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="cor" onClick={(e) => e.stopPropagation()}>
+        <div className="cor-hd">
+          <div><h2>Corrigir item da NF-e</h2><div className="s">Vincule o item da nota fiscal a um item do seu estoque</div></div>
+          <button className="cor-x" onClick={onClose}>✕</button>
         </div>
-        <div className="vsec">Item interno</div>
-        <div className="vfg"><label>Insumo / Matéria-prima *</label><SearchSelect value={insSel?.nome || ''} options={insumos.map((i) => i.nome)} placeholder="Selecione o insumo..." onChange={(nm) => setInsId(insByName.get(nm) || '')} /></div>
-        <div className="vfg"><label>Código no fornecedor</label><input value={codForn} onChange={(e) => setCodForn(e.target.value)} placeholder="SKU do fornecedor (opcional)" /></div>
-        <div className="vfg"><label>Descrição no fornecedor</label><input value={descr} onChange={(e) => setDescr(e.target.value)} placeholder="Como o fornecedor chama" /></div>
-        <div className="vsec">Embalagem e conversão</div>
-        <div className="vfg"><label>Embalagem (descrição)</label><input value={embDesc} onChange={(e) => onEmb(e.target.value)} placeholder="Ex: CAIXA C/ 12, FARDO 20KG, 27x0,375…" /></div>
-        <div className="vfg"><label>Qt. na embalagem (un. estoque) *</label><input type="number" step="0.001" min="0" value={fator} onChange={(e) => setFator(e.target.value)} /></div>
-        {f > 0 && <div className="vconv">{fmtQ(q)} {item.unidade_nfe || ''} × {fmtQ(f)} = {fmtQ(q * f)} {insSel?.unidade_medida || ''} no estoque · Custo/un: {brl(f > 0 ? (item.valor_unitario || 0) / f : 0)}</div>}
-        <div className="vfoot">
-          <button className="v-sec" onClick={onClose}>Cancelar</button>
-          <div style={{ flex: 1 }} />
-          <button className="v-pri" disabled={saving} onClick={salvar}>{saving ? 'Salvando…' : 'Salvar vínculo'}</button>
+
+        <div className="cor-body">
+          {/* fornecedor */}
+          <div className="cor-card">
+            <div className="cor-st">🏢 Dados do fornecedor</div>
+            <div className="cor-forn">
+              <div><div className="l">Código</div><div className="v">{forn?.codigo || '—'}</div></div>
+              <div><div className="l">Nome</div><div className="v">{forn?.nome || nfe.nome_emitente || '—'}</div></div>
+              <div><div className="l">CNPJ</div><div className="v" style={{ fontFamily: 'DM Mono, monospace' }}>{nfe.cnpj_emitente || '—'}</div></div>
+              <div><div className="l">Telefone</div><div className="v">—</div></div>
+            </div>
+          </div>
+
+          {/* vincular novo */}
+          <div className="cor-card">
+            <div className="cor-st">🔗 {editId ? 'Editar vínculo' : 'Vincular novo item'}</div>
+            <div className="cor-r1">
+              <div className="cor-fg"><label>Código</label><input className="mono" readOnly value={insSel?.codigo_interno || ''} placeholder="—" /></div>
+              <div className="cor-fg"><label>Item interno (estoque) *</label><SearchSelect value={insSel ? insLabel(insSel) : ''} options={insOptions} placeholder="Pesquisar por código ou nome..." onChange={(lbl) => setInsId(insByLabel.get(lbl) || '')} /></div>
+              <div className="cor-fg"><label>Un. controle *</label><input readOnly value={insSel?.unidade_medida || ''} placeholder="—" /></div>
+              <div className="cor-fg"><label>Emb. (fornecedor) *</label><input list="cor-emb-list" value={embDesc} onChange={(e) => onEmb(e.target.value)} placeholder="Selecione ou digite..." /><datalist id="cor-emb-list">{embOpts.map((o) => <option key={o} value={o} />)}</datalist></div>
+              <div className="cor-fg"><label>Qt. na emb. *</label><input className="mono" type="number" step="0.001" min="0" value={qtEmb} onChange={(e) => setQtEmb(e.target.value)} /></div>
+            </div>
+            <div className="cor-r2">
+              <div className="cor-fg"><label>Código no fornecedor</label><input className="mono" value={codForn} onChange={(e) => setCodForn(e.target.value)} placeholder="(da NF-e)" /></div>
+              <div className="cor-fg"><label>Descrição do item (NF-e)</label><input value={descr} onChange={(e) => setDescr(e.target.value)} /></div>
+              <div className="cor-fg"><label>Valor unitário (NF-e)</label><input className="mono" readOnly value={brl(item.valor_unitario)} /></div>
+              <label className="cor-chk"><input type="checkbox" checked={embPadrao} onChange={(e) => setEmbPadrao(e.target.checked)} /> Embalagem padrão deste fornecedor</label>
+              <div className="cor-fg"><label>&nbsp;</label><div style={{ display: 'flex', gap: 8 }}>{editId && <button className="cor-back" style={{ height: 31 }} onClick={reset}>Cancelar</button>}<button className="cor-add" disabled={saving} onClick={salvar}>{saving ? 'Salvando…' : (editId ? 'Salvar vínculo' : '+ Incluir vínculo')}</button></div></div>
+            </div>
+            {f > 0 && insSel && <div className="cor-conv">{fmtQ(q)} {item.unidade_nfe || ''} × {fmtQ(f)} = {fmtQ(q * f)} {insSel.unidade_medida || ''} no estoque · Custo/un: {brl((item.valor_unitario || 0) / f)}</div>}
+          </div>
+
+          {/* tabela vínculos */}
+          <div className="cor-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9, flexWrap: 'wrap', gap: 10 }}>
+              <div className="cor-st" style={{ margin: 0 }}>📋 Itens já vinculados a este fornecedor</div>
+              <div className="cor-search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg><input placeholder="Pesquisar item..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} /></div>
+            </div>
+            <div className="cor-tbl"><div className="cor-tbl-sc">
+              <table>
+                <thead><tr><th>Item interno</th><th>Descrição do item</th><th>UM</th><th>Emb. (fornec.)</th><th>Cód. fornecedor</th><th className="r">Vl. unitário</th><th className="c">Emb. padrão</th><th>Empresas</th><th className="c">Ações</th></tr></thead>
+                <tbody>
+                  {!forn ? <tr><td colSpan={9} style={{ textAlign: 'center', color: '#94a3b8', padding: 18 }}>Fornecedor não cadastrado — vínculos não listados.</td></tr>
+                    : page.length === 0 ? <tr><td colSpan={9} style={{ textAlign: 'center', color: '#94a3b8', padding: 18 }}>Nenhum vínculo encontrado.</td></tr>
+                    : page.map((v) => { const ins = insMap[v.insumo_id]; return (
+                      <tr key={v.id}>
+                        <td className="mono">{ins?.codigo_interno || '—'}</td>
+                        <td>{ins?.nome || '—'}</td>
+                        <td>{ins?.unidade_medida || '—'}</td>
+                        <td>{v.embalagem_descricao || '—'}</td>
+                        <td className="mono">{v.codigo_fornecedor || '—'}</td>
+                        <td className="r mono">{brl(v.preco_unitario)}</td>
+                        <td className="c">{(v as any).embalagem_padrao ? <span className="cor-pad">★</span> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                        <td><span className="cor-emp" onClick={() => onToast('Regras por loja: em breve.', 'ok')}>🏪 todas</span></td>
+                        <td className="c"><button className="cor-ico" title="Editar" onClick={() => editar(v)}>✏️</button><button className="cor-ico del" title="Excluir" onClick={() => excluir(v)}>🗑️</button></td>
+                      </tr>
+                    ) })}
+                </tbody>
+              </table>
+            </div></div>
+            <div className="cor-pag">
+              <span>{filtrada.length ? `Mostrando ${(pagAtual - 1) * pageSize + 1} a ${Math.min(pagAtual * pageSize, filtrada.length)} de ${filtrada.length.toLocaleString('pt-BR')} registros` : '0 registros'}</span>
+              <div style={{ display: 'flex', gap: 4 }}><button className="pbtn" disabled={pagAtual === 1} onClick={() => setPag(pagAtual - 1)}>‹</button><span className="pbtn on" style={{ borderColor: '#f97316' }}>{pagAtual}</span><button className="pbtn" disabled={pagAtual === totalPags} onClick={() => setPag(pagAtual + 1)}>›</button></div>
+            </div>
+          </div>
+
+          {/* empresas */}
+          <div className="cor-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 9 }}>
+              <div><div className="cor-st" style={{ margin: 0 }}>🏢 Empresas vinculadas (regras de disponibilidade)</div><div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Defina em quais lojas este vínculo estará disponível. (Em breve — hoje vale para todas.)</div></div>
+              <button className="cor-back" style={{ height: 32 }} onClick={() => onToast('Gerenciar empresas: em breve.', 'ok')}>⚙ Gerenciar empresas</button>
+            </div>
+            <div className="cor-emprow"><span className="cor-tag count">🏪 {lojas.length} loja(s)</span>{lojas.map((l) => <span key={l.id} className="cor-tag">{l.nome}</span>)}</div>
+          </div>
+        </div>
+
+        <div className="cor-ft">
+          <button className="cor-back" onClick={onClose}>‹ Voltar para a lista</button>
+          <button className="cor-save" onClick={onClose}>Salvar correção</button>
         </div>
       </div>
     </div>

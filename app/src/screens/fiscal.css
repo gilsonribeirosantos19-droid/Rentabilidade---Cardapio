@@ -122,5 +122,56 @@
 .fiscal-screen .btn-pri { height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .fiscal-screen .btn-pri:disabled { opacity: .5; cursor: default; }
 
-.fiscal-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 3000; }
+/* Corrigir item da NF-e (tela nova de vínculo) */
+.cor-ov { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: flex-start; justify-content: center; padding: 14px; overflow: auto; z-index: 1000; }
+.cor { background: #fff; width: min(1180px, 98vw); border-radius: 14px; box-shadow: 0 24px 70px rgba(15,23,42,.3); display: flex; flex-direction: column; max-height: calc(100vh - 28px); font-size: 13px; }
+.cor-hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #e5e9f0; flex-shrink: 0; }
+.cor-hd h2 { font-size: 17px; font-weight: 800; color: #0f172a; }
+.cor-hd .s { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.cor-hd .x { width: 32px; height: 32px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; color: #64748b; font-size: 15px; }
+.cor-body { overflow: auto; padding: 12px 18px; display: flex; flex-direction: column; gap: 10px; }
+.cor-card { border: 1px solid #e5e9f0; border-radius: 10px; padding: 11px 13px; }
+.cor-st { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+.cor-forn { display: grid; grid-template-columns: 110px 1.4fr 1fr 1fr; gap: 3px 22px; }
+.cor-forn .l { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; }
+.cor-forn .v { font-size: 13px; font-weight: 700; color: #0f172a; }
+.cor-fg { display: flex; flex-direction: column; gap: 3px; }
+.cor-fg > label { font-size: 10.5px; font-weight: 600; color: #475569; }
+.cor-fg input, .cor-fg select { height: 31px; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0 9px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
+.cor-fg input:focus, .cor-fg select:focus { outline: none; border-color: #f97316; }
+.cor-fg input[readonly] { background: #f8fafc; color: #475569; }
+.cor-r1 { display: grid; grid-template-columns: 80px 1fr 120px 170px 110px; gap: 9px; align-items: end; }
+.cor-r2 { display: grid; grid-template-columns: 150px 1fr 120px auto auto; gap: 9px; align-items: end; margin-top: 9px; }
+.cor-chk { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: #334155; cursor: pointer; height: 31px; white-space: nowrap; }
+.cor-chk input { width: 15px; height: 15px; accent-color: #f97316; }
+.cor-add { height: 31px; padding: 0 14px; border: none; border-radius: 7px; background: #2563eb; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.cor-add:disabled { opacity: .55; cursor: default; }
+.cor-conv { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 7px 11px; font-size: 12px; color: #059669; font-weight: 600; margin-top: 9px; }
+.cor-tbar { display: flex; align-items: center; gap: 10px; margin: 0 0 9px; }
+.cor-search { position: relative; flex: 1; max-width: 320px; }
+.cor-search input { width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px 0 30px; font-size: 12.5px; font-family: inherit; }
+.cor-search svg { position: absolute; left: 9px; top: 9px; color: #94a3b8; }
+.cor-tbl { border: 1px solid #e5e9f0; border-radius: 10px; overflow: hidden; }
+.cor-tbl-sc { overflow: auto; max-height: 300px; }
+.cor-tbl table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.cor-tbl thead th { position: sticky; top: 0; background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: .03em; text-align: left; padding: 7px 9px; border-bottom: 1px solid #d6dce6; white-space: nowrap; z-index: 2; }
+.cor-tbl th.r, .cor-tbl td.r { text-align: right; } .cor-tbl th.c, .cor-tbl td.c { text-align: center; }
+.cor-tbl tbody td { padding: 4px 9px; border-bottom: 1px solid #eef1f5; border-right: 1px solid #f3f5f9; white-space: nowrap; }
+.cor-tbl tbody td:last-child { border-right: none; }
+.cor-tbl tbody tr:hover td { background: #f8fafc; }
+.cor-tbl .mono { font-family: 'DM Mono', monospace; }
+.cor-pad { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 4px; color: #f97316; font-weight: 800; font-size: 11px; }
+.cor-emp { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 14px; padding: 2px 9px; cursor: pointer; }
+.cor-ico { border: none; background: none; cursor: pointer; padding: 2px 5px; border-radius: 6px; color: #64748b; }
+.cor-ico:hover { background: #f1f5f9; } .cor-ico.del:hover { color: #dc2626; }
+.cor-pag { display: flex; align-items: center; justify-content: space-between; padding: 8px 2px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; gap: 8px; }
+.cor-emprow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cor-tag { font-size: 12px; font-weight: 600; color: #334155; background: #f1f5f9; border: 1px solid #e5e9f0; border-radius: 8px; padding: 6px 12px; }
+.cor-tag.count { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+.cor-ft { display: flex; align-items: center; justify-content: space-between; padding: 13px 20px; border-top: 1px solid #e5e9f0; flex-shrink: 0; }
+.cor-back { height: 38px; padding: 0 16px; border: 1px solid #e5e9f0; border-radius: 9px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.cor-save { height: 38px; padding: 0 22px; border: none; border-radius: 9px; background: #f97316; color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+.fiscal-screen .toast, .cor-toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 3000; }
+.cor-toast.ok { background: #059669; } .cor-toast.err { background: #ef4444; }
 .fiscal-screen .toast.ok { background: #059669; } .fiscal-screen .toast.err { background: #ef4444; }
