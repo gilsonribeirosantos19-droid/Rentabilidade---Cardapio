@@ -57,3 +57,35 @@
 .est-screen .neg { color: #e11d48 !important; font-weight: 700; }
 .est-screen .pag-info { padding: 12px 4px; font-size: 12px; color: #94a3b8; }
 .est-screen tfoot td { font-weight: 700; }
+
+/* toolbar de ações (Saídas/Entradas) */
+.est-screen .act-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.est-screen .btn-pri { height: 38px; padding: 0 16px; border: none; border-radius: 9px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.est-screen .btn-pri:hover { background: #ea6a0a; }
+.est-screen .btn-pri:disabled { opacity: .55; cursor: default; }
+.est-screen .srch { position: relative; }
+.est-screen .srch input { height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px 0 32px; font-size: 13px; font-family: inherit; }
+.est-screen .srch svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.est-screen .badge-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.est-screen .icon-btn { border: none; background: none; cursor: pointer; color: #64748b; padding: 4px; border-radius: 6px; }
+.est-screen .icon-btn:hover { background: #f1f5f9; }
+.est-screen .pag-btn { min-width: 30px; height: 30px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; color: #475569; font-size: 12px; cursor: pointer; font-family: inherit; }
+.est-screen .pag-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
+.est-screen .pag-btn:disabled { opacity: .5; cursor: default; }
+.est-screen .pag-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; font-size: 12px; color: #94a3b8; margin-top: 8px; }
+
+/* modal (Nova saída / entrada) */
+.est-screen .ov { position: fixed; inset: 0; background: rgba(15,23,42,.4); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+.est-screen .modal { background: #fff; border-radius: 14px; width: min(520px, 95vw); max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(15,23,42,.25); padding: 22px; }
+.est-screen .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+.est-screen .fg { margin-bottom: 14px; display: flex; flex-direction: column; }
+.est-screen .fg > label { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+.est-screen .fg input, .est-screen .fg select, .est-screen .fg textarea { height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.est-screen .fg textarea { height: auto; min-height: 64px; padding: 10px 12px; resize: vertical; }
+.est-screen .fg input:focus, .est-screen .fg select:focus, .est-screen .fg textarea:focus { outline: none; border-color: #f97316; }
+.est-screen .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.est-screen .saldo-info { margin-bottom: 14px; padding: 8px 12px; background: #f1f5f9; border-radius: 8px; font-size: 12px; color: #475569; font-family: 'DM Mono', monospace; }
+.est-screen .modal-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.est-screen .btn-sec { height: 38px; padding: 0 16px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.est-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 200; }
+.est-screen .toast.ok { background: #059669; } .est-screen .toast.err { background: #ef4444; }
