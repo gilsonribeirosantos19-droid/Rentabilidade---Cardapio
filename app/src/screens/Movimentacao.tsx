@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { custoDoInsumo, type Mov } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
@@ -43,6 +44,7 @@ type Row = { nome: string; un: string; cat: string; qAnt: number; vAnt: number; 
 
 export function Movimentacao() {
   const { tenantId } = useAuth()
+  const { lojaId } = useLoja()
   const d30 = new Date(); d30.setDate(d30.getDate() - 30)
   const [de, setDe] = useState(iso(d30))
   const [ate, setAte] = useState(iso(new Date()))
@@ -90,16 +92,20 @@ export function Movimentacao() {
   const subgrupos = useMemo(() => uniq(insumos.map((i) => i.subgrupo)), [insumos])
   const unidades = useMemo(() => uniq(insumos.map((i) => i.unidade_medida || i.unidade_compra)), [insumos])
 
+  // filtra pela loja selecionada no topo (vazio = todas)
+  const entradasL = useMemo(() => lojaId ? entradas.filter((e: any) => (e.loja_id || null) === lojaId) : entradas, [entradas, lojaId])
+  const saidasL = useMemo(() => lojaId ? saidas.filter((s: any) => (s.loja_id || null) === lojaId) : saidas, [saidas, lojaId])
+
   // pré-agrupa entradas/saidas por insumo (acelera o custo médio)
-  const entByIns = useMemo(() => { const m: Record<string, Mov[]> = {}; entradas.forEach((e) => { (m[e.insumo_id] = m[e.insumo_id] || []).push(e) }); return m }, [entradas])
-  const saiByIns = useMemo(() => { const m: Record<string, Saida[]> = {}; saidas.forEach((s) => { (m[s.insumo_id] = m[s.insumo_id] || []).push(s) }); return m }, [saidas])
+  const entByIns = useMemo(() => { const m: Record<string, Mov[]> = {}; entradasL.forEach((e) => { (m[e.insumo_id] = m[e.insumo_id] || []).push(e) }); return m }, [entradasL])
+  const saiByIns = useMemo(() => { const m: Record<string, Saida[]> = {}; saidasL.forEach((s) => { (m[s.insumo_id] = m[s.insumo_id] || []).push(s) }); return m }, [saidasL])
 
   // CÁLCULO PESADO — recomputa quando filtros "duros" mudam (não na busca)
   const rowsAll = useMemo<Row[]>(() => {
     if (!de || !ate || !insumos.length) return []
     const ateLim = ate + 'T23:59:59'
-    const entsPer = entradas.filter((e) => (e.criado_em || '') >= de && (e.criado_em || '') <= ateLim)
-    const saisPer = saidas.filter((s) => (s.criado_em || '') >= de && (s.criado_em || '') <= ateLim)
+    const entsPer = entradasL.filter((e) => (e.criado_em || '') >= de && (e.criado_em || '') <= ateLim)
+    const saisPer = saidasL.filter((s) => (s.criado_em || '') >= de && (s.criado_em || '') <= ateLim)
     const entsPerByIns: Record<string, Mov[]> = {}; entsPer.forEach((e) => { (entsPerByIns[e.insumo_id] = entsPerByIns[e.insumo_id] || []).push(e) })
     const saisPerByIns: Record<string, Saida[]> = {}; saisPer.forEach((s) => { (saisPerByIns[s.insumo_id] = saisPerByIns[s.insumo_id] || []).push(s) })
     const invIni = invPerdas?.invIni || []
@@ -138,7 +144,7 @@ export function Movimentacao() {
     })
     if (comSaldo) rows = rows.filter((r) => r.qFin > 0 || r.qAnt > 0 || r.qEnt > 0 || r.qCon > 0 || r.qPerd > 0)
     return rows
-  }, [de, ate, insumos, entradas, saidas, saldos, vinculos, invPerdas, catF, cmvMode, tipo, familia, subgrupo, unidade, fornecedor, comSaldo, entByIns, saiByIns, fornMap])
+  }, [de, ate, insumos, entradasL, saidasL, saldos, vinculos, invPerdas, catF, cmvMode, tipo, familia, subgrupo, unidade, fornecedor, comSaldo, entByIns, saiByIns, fornMap])
 
   const rows = useMemo(() => { const b = norm(busca.trim()); return b ? rowsAll.filter((r) => norm(r.nome).includes(b)) : rowsAll }, [rowsAll, busca])
   const tot = useMemo(() => {

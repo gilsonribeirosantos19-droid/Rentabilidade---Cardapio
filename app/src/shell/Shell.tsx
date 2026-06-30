@@ -3,6 +3,7 @@ import './shell.css'
 import { Sidebar } from './Sidebar'
 import { labelForKey } from './nav'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { Fornecedores } from '../screens/Fornecedores'
 import { Insumos } from '../screens/Insumos'
 import { Produtos } from '../screens/Produtos'
@@ -39,6 +40,7 @@ function Home() {
 
 export function Shell() {
   const { usuario, signOut } = useAuth()
+  const { lojas, lojaId, setLojaId } = useLoja()
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [active, setActive] = useState('__home')
   const [dived, setDived] = useState<string | null>(null)
@@ -70,8 +72,9 @@ export function Shell() {
         <div className="topbar">
           <h1>{title}</h1>
           <div className="tr">
-            <select className="input" style={{ width: 150, height: 34 }}>
-              <option>Todas as lojas</option>
+            <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
+              <option value="">Todas as lojas</option>
+              {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
             </select>
             <span>{usuario?.nome || usuario?.email || '—'}</span>
             <button className="btn ghost" style={{ height: 32, color: 'var(--red)' }} onClick={() => signOut()}>

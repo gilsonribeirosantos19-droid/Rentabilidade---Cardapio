@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from './lib/auth'
+import { LojaProvider } from './lib/loja'
 import { Login } from './screens/Login'
 import { Shell } from './shell/Shell'
 
@@ -11,7 +12,7 @@ function Gate() {
       </div>
     )
   }
-  return session ? <Shell /> : <Login />
+  return session ? <LojaProvider><Shell /></LojaProvider> : <Login />
 }
 
 export default function App() {

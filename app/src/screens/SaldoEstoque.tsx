@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
@@ -30,6 +31,7 @@ async function fetchAll<T>(build: (from: number, to: number) => any): Promise<T[
 
 export function SaldoEstoque() {
   const { tenantId } = useAuth()
+  const { lojaId } = useLoja()
   const [posicao, setPosicao] = useState<'atual' | 'mes_anterior' | 'especifica'>('atual')
   const [dataBase, setDataBase] = useState('')
   const [categoria, setCategoria] = useState('')   // = "Grupo" (mesmo campo)
@@ -96,19 +98,24 @@ export function SaldoEstoque() {
     } else if (v === 'atual') { setDataBase('') }
   }
 
+  // filtra pela loja selecionada no topo (vazio = todas)
+  const saldosL = useMemo(() => lojaId ? saldos.filter((s) => (s.loja_id || null) === lojaId) : saldos, [saldos, lojaId])
+  const entradasL = useMemo(() => lojaId ? entradas.filter((e: any) => (e.loja_id || null) === lojaId) : entradas, [entradas, lojaId])
+  const saidasL = useMemo(() => lojaId ? saidas.filter((s: any) => (s.loja_id || null) === lojaId) : saidas, [saidas, lojaId])
+
   // reconstrói o saldo na data (média móvel ponderada), igual ao Kardex
   const saldosCalc = useMemo<Saldo[]>(() => {
     if (posicao === 'atual') {
       // dedup defensivo por insumo|loja (1 saldo por insumo/loja) — evita duplicata de paginação
       const m: Record<string, Saldo> = {}
-      for (const s of saldos) m[s.insumo_id + '|' + (s.loja_id || '')] = s
+      for (const s of saldosL) m[s.insumo_id + '|' + (s.loja_id || '')] = s
       return Object.values(m)
     }
     if (!dataBase) return []
     const dtLim = dataBase + 'T23:59:59'
     const dtOf = (m: Mov) => m.criado_em || m.created_at || ''
     const map: Record<string, Saldo> = {}
-    const ents = entradas.filter((e) => dtOf(e) <= dtLim).sort((a, b) => dtOf(a).localeCompare(dtOf(b)))
+    const ents = entradasL.filter((e) => dtOf(e) <= dtLim).sort((a, b) => dtOf(a).localeCompare(dtOf(b)))
     for (const e of ents) {
       const key = e.insumo_id + '|' + (e.loja_id || '')
       const cur = (map[key] = map[key] || { insumo_id: e.insumo_id, loja_id: e.loja_id || null, quantidade: 0, custo_medio: 0 })
@@ -118,13 +125,13 @@ export function SaldoEstoque() {
       if (nq > 0) cur.custo_medio = ((cur.quantidade || 0) * (cur.custo_medio || 0) + qtdE * custoE) / nq
       cur.quantidade = nq
     }
-    for (const s of saidas.filter((x) => dtOf(x) <= dtLim)) {
+    for (const s of saidasL.filter((x) => dtOf(x) <= dtLim)) {
       const key = s.insumo_id + '|' + (s.loja_id || '')
       const cur = (map[key] = map[key] || { insumo_id: s.insumo_id, loja_id: s.loja_id || null, quantidade: 0, custo_medio: 0 })
       cur.quantidade = Math.max(0, (cur.quantidade || 0) - (s.quantidade || 0))
     }
     return Object.values(map)
-  }, [posicao, dataBase, saldos, entradas, saidas])
+  }, [posicao, dataBase, saldosL, entradasL, saidasL])
 
   const rows = useMemo(() => {
     const out = saldosCalc.map((s) => {

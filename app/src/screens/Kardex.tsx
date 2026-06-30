@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
@@ -18,6 +19,7 @@ const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s
 
 export function Kardex() {
   const { tenantId } = useAuth()
+  const { lojaId } = useLoja()
   const now = new Date()
   const [insId, setInsId] = useState('')
   const [de, setDe] = useState(iso(new Date(now.getFullYear(), now.getMonth(), 1)))
@@ -35,11 +37,11 @@ export function Kardex() {
   const { abertura, movs } = useMemo<{ abertura: KxMov | null; movs: KxMov[] }>(() => {
     if (!insId) return { abertura: null, movs: [] }
     const todos: Omit<KxMov, 'vEntrada' | 'vSaida' | 'qAcum' | 'vAcum' | 'cmedio'>[] = []
-    entradas.filter((e) => e.insumo_id === insId).forEach((e) => {
+    entradas.filter((e) => e.insumo_id === insId && (!lojaId || (e as any).loja_id === lojaId)).forEach((e) => {
       const vUnit = e.custo_unitario || 0
       todos.push({ data: e.criado_em || '', tipo: 'entrada', desc: (+(e.quantidade || 0) === 0) ? 'Ajuste de custo médio' : (e.tipo === 'nfe' ? `NF-e ${e.nfe_numero || ''}` : `Manual${e.fornecedor_nome ? ' · ' + e.fornecedor_nome : ''}`), qMov: e.quantidade || 0, vUnit })
     })
-    saidas.filter((s) => s.insumo_id === insId).forEach((s) => {
+    saidas.filter((s) => s.insumo_id === insId && (!lojaId || (s as any).loja_id === lojaId)).forEach((s) => {
       todos.push({ data: s.criado_em || '', tipo: 'saida', desc: cap(s.tipo || '') + (s.motivo ? ' · ' + s.motivo : ''), qMov: s.quantidade || 0, vUnit: 0 })
     })
     todos.sort((a, b) => a.data < b.data ? -1 : 1)
@@ -60,7 +62,7 @@ export function Kardex() {
     if (de) ms = ms.filter((m) => m.data >= de)
     if (ate) ms = ms.filter((m) => m.data <= ate + 'T23:59:59')
     return { abertura: ab, movs: ms }
-  }, [insId, entradas, saidas, de, ate])
+  }, [insId, entradas, saidas, de, ate, lojaId])
 
   const totEnt = movs.filter((m) => m.tipo === 'entrada').reduce((s, m) => s + m.vEntrada, 0)
   const totSai = movs.filter((m) => m.tipo === 'saida').reduce((s, m) => s + m.vSaida, 0)
