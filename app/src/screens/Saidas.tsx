@@ -111,6 +111,12 @@ export function Saidas() {
   })
 
   const verSaida = (s: Saida) => { const ins = insMap[s.insumo_id]; const u = ins?.unidade_medida || ins?.unidade_compra || 'un'; alert(`Saída\n\nInsumo: ${ins?.nome || '—'}\nQuantidade: ${qtd(s.quantidade)} ${u}\nTipo: ${s.tipo}\nMotivo: ${s.motivo || '—'}\nResponsável: ${s.responsavel || '—'}\nData: ${fmtDH(s.criado_em)}`) }
+  const setPreset = (v: string) => {
+    const n = new Date()
+    if (v === 'mes_atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
+    else if (v === 'mes_anterior') { setDe(iso(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(iso(new Date(n.getFullYear(), n.getMonth(), 0))) }
+    setPag(1)
+  }
 
   return (
     <div className="est-screen">
@@ -132,6 +138,11 @@ export function Saidas() {
           <option value="">Responsável: Todos</option>{resps.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}>
+            <option value="periodo">Período</option>
+            <option value="mes_atual">Mês Atual</option>
+            <option value="mes_anterior">Mês Anterior</option>
+          </select>
           <input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} />
           <span style={{ color: '#94a3b8' }}>–</span>
           <input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} />
