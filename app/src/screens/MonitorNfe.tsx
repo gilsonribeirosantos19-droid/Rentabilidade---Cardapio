@@ -319,9 +319,7 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
   const [saving, setSaving] = useState(false)
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
-  const insLabel = (i: Insumo) => (i.codigo_interno ? i.codigo_interno + ' — ' : '') + i.nome
-  const insOptions = useMemo(() => insumos.map(insLabel), [insumos])
-  const insByLabel = useMemo(() => new Map(insumos.map((i) => [insLabel(i), i.id])), [insumos])
+  const insByName = useMemo(() => new Map(insumos.map((i) => [i.nome, i.id])), [insumos])
   const insSel = insMap[insId]
 
   const { data: embOpts = [] } = useQuery({ queryKey: ['cor-emb', tenantId], queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome,tipo').eq('tenant_id', tenantId).eq('tipo', 'embalagem').order('nome'); return ((data ?? []) as any[]).map((e) => e.nome as string) } })
@@ -391,9 +389,9 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
             <div className="cor-st">🔗 {editId ? 'Editar vínculo' : 'Vincular novo item'}</div>
             <div className="cor-r1">
               <div className="cor-fg"><label>Código</label><input className="mono" readOnly value={insSel?.codigo_interno || ''} placeholder="—" /></div>
-              <div className="cor-fg"><label>Item interno (estoque) *</label><SearchSelect value={insSel ? insLabel(insSel) : ''} options={insOptions} placeholder="Pesquisar por código ou nome..." onChange={(lbl) => setInsId(insByLabel.get(lbl) || '')} /></div>
+              <div className="cor-fg"><label>Item interno (estoque) *</label><SearchSelect value={insSel?.nome || ''} options={insumos.map((i) => i.nome)} placeholder="Pesquisar item..." onChange={(nm) => setInsId(insByName.get(nm) || '')} /></div>
               <div className="cor-fg"><label>Un. controle *</label><input readOnly value={insSel?.unidade_medida || ''} placeholder="—" /></div>
-              <div className="cor-fg"><label>Emb. (fornecedor) *</label><input list="cor-emb-list" value={embDesc} onChange={(e) => onEmb(e.target.value)} placeholder="Selecione ou digite..." /><datalist id="cor-emb-list">{embOpts.map((o) => <option key={o} value={o} />)}</datalist></div>
+              <div className="cor-fg"><label>Emb. (fornecedor) *</label><SearchSelect value={embDesc} options={embOpts} placeholder="Selecione..." onChange={onEmb} /></div>
               <div className="cor-fg"><label>Qt. na emb. *</label><input className="mono" type="number" step="0.001" min="0" value={qtEmb} onChange={(e) => setQtEmb(e.target.value)} /></div>
             </div>
             <div className="cor-r2">
