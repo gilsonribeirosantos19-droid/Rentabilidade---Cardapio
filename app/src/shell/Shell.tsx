@@ -14,6 +14,7 @@ import { Kardex } from '../screens/Kardex'
 import { Saidas } from '../screens/Saidas'
 import { Entradas } from '../screens/Entradas'
 import { Inventario } from '../screens/Inventario'
+import { Inicio } from '../screens/Inicio'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -106,8 +107,8 @@ export function Shell() {
         </div>
 
         <div className="content">
-          <div style={{ display: active === '__home' ? 'block' : 'none', height: '100%' }}>
-            <Home />
+          <div style={{ display: active === '__home' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>
+            <Inicio />
           </div>
           {openTabs.map((t) => (
             <div key={t.key} style={{ display: active === t.key ? 'block' : 'none', height: '100%' }}>
