@@ -92,6 +92,7 @@ export function MonitorNfe() {
 
   const abrirItem = (n: Nfe, t: 'itens' | 'erros') => { setSel(n.id); setTab(t) }
   const [busy, setBusy] = useState(false)
+  const [prog, setProg] = useState<{ done: number; total: number } | null>(null)
 
   // grava 1 entrada de NF-e: insere em entradas_estoque + recalcula saldo (média ponderada) + histórico + preço do vínculo
   async function registrarEntradaNfe(insId: string, loja: string, fornId: string | null, fornNome: string | undefined, dados: any) {
@@ -143,10 +144,10 @@ export function MonitorNfe() {
     const notas = nfes.filter((n) => (ids || [...picked]).includes(n.id))
     if (!notas.length) return
     if (!confirm(`Processar ${notas.length} nota(s)? As entradas serão lançadas no estoque (média de custo recalculada).`)) return
-    setBusy(true)
+    setBusy(true); setProg({ done: 0, total: notas.length })
     let ok = 0, fail = 0; const msgs: string[] = []
-    for (const n of notas) { const r = await processarUma(n); if (r.ok) ok++; else { fail++; if (r.msg) msgs.push(r.msg) }; if (r.msg && r.ok) msgs.push(r.msg) }
-    setPicked(new Set()); await invalidarTudo(); setBusy(false)
+    for (let i = 0; i < notas.length; i++) { const r = await processarUma(notas[i]); if (r.ok) ok++; else { fail++; if (r.msg) msgs.push(r.msg) }; if (r.msg && r.ok) msgs.push(r.msg); setProg({ done: i + 1, total: notas.length }) }
+    setPicked(new Set()); await invalidarTudo(); setBusy(false); setProg(null)
     showToast(`${ok} processada(s)${fail ? ` · ${fail} com problema` : ''}.`, fail ? 'err' : 'ok')
     if (msgs.length) console.warn('Monitor:\n' + msgs.join('\n'))
   }
@@ -191,7 +192,7 @@ export function MonitorNfe() {
         <label className="sit-chip"><input type="checkbox" checked={chkCanc} style={{ accentColor: '#94a3b8' }} onChange={(e) => setChkCanc(e.target.checked)} /><span className="dot" style={{ background: '#94a3b8' }} />Cancelada <span className="cnt" style={{ color: '#94a3b8' }}>({cnt.canc})</span></label>
         <div className="act-r">
           <button className={'b-del' + (nSel ? ' on' : '')} disabled={!nSel || busy} onClick={excluirSel}>🗑 Excluir (<span>{nSel}</span>)</button>
-          <button className={'b-proc' + (nSel ? ' on' : '')} disabled={!nSel || busy} onClick={() => processarSel()}>▷ {busy ? 'Processando…' : `Processar selecionadas (${nSel})`}</button>
+          <button className={'b-proc' + (nSel ? ' on' : '')} disabled={!nSel || busy} onClick={() => processarSel()}>▷ {busy ? `Processando ${prog?.done ?? 0}/${prog?.total ?? 0}…` : `Processar selecionadas (${nSel})`}</button>
         </div>
       </div>
 
@@ -239,7 +240,7 @@ export function MonitorNfe() {
 
       {tab === 'itens' && (
         <>
-          <div className="det-bar"><span>📄</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os itens'}</span>{selNfe?.status === 'pronta' && <button className="btn-pri" style={{ marginLeft: 'auto' }} disabled={busy} onClick={() => processarSel([selNfe.id])}>▷ {busy ? 'Processando…' : 'Processar esta nota'}</button>}</div>
+          <div className="det-bar"><span>📄</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os itens'}</span>{selNfe?.status === 'pronta' && <button className="btn-pri" style={{ marginLeft: 'auto' }} disabled={busy} onClick={() => processarSel([selNfe.id])}>▷ {busy ? `Processando ${prog?.done ?? 0}/${prog?.total ?? 0}…` : 'Processar esta nota'}</button>}</div>
           <div className="tbl-wrap"><div className="tbl-scroll">
             <table className="tbl">
               <thead><tr><th className="c">Seq.</th><th>Item Fornecedor</th><th>Descrição</th><th>Item Interno</th><th>Embalagem</th><th className="c">UM</th><th className="r">Q. na Emb.</th><th className="r">Q. de Embalagens</th><th className="r">V. Unitário</th><th className="r">V. Total</th><th className="r">Q. Estoque</th></tr></thead>
