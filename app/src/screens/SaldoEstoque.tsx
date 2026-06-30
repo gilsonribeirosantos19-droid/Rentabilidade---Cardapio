@@ -44,7 +44,7 @@ export function SaldoEstoque() {
 
   const { data: insumos = [] } = useQuery({
     queryKey: ['est-insumos', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,tipo_item,unidade_medida,unidade_compra,familia,subgrupo,participa_cmv,minimo').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)),
+    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)),
   })
   const { data: lojas = [] } = useQuery({
     queryKey: ['est-lojas', tenantId], enabled: !!tenantId,
@@ -71,11 +71,11 @@ export function SaldoEstoque() {
   const histAtivo = posicao !== 'atual'
   const { data: entradas = [], isLoading: loadEnt } = useQuery({
     queryKey: ['est-entradas', tenantId], enabled: !!tenantId && histAtivo,
-    queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,loja_id,quantidade,custo_unitario,criado_em,created_at').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).range(f, t)),
   })
   const { data: saidas = [], isLoading: loadSai } = useQuery({
     queryKey: ['est-saidas', tenantId], enabled: !!tenantId && histAtivo,
-    queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,loja_id,quantidade,criado_em,created_at').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).range(f, t)),
   })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
