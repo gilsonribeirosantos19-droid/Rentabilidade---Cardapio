@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -326,11 +326,19 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
 
   const { data: embOpts = [] } = useQuery({ queryKey: ['cor-emb', tenantId], queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome,tipo').eq('tenant_id', tenantId).eq('tipo', 'embalagem').order('nome'); return ((data ?? []) as any[]).map((e) => e.nome as string) } })
   const { data: fornVinc = [], refetch } = useQuery({ queryKey: ['cor-fv', forn?.id], enabled: !!forn?.id, queryFn: async () => { const { data } = await supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).eq('fornecedor_id', forn!.id).order('id'); return (data ?? []) as IFV[] } })
+  const { data: lojasFull = [] } = useQuery({ queryKey: ['cor-lojas', tenantId], queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as any[] } })
+  const [empSel, setEmpSel] = useState<Set<string>>(new Set())
+  const [empBusca, setEmpBusca] = useState(''); const [empSomente, setEmpSomente] = useState(false)
+  const allLojaIds = () => new Set(lojasFull.map((l) => l.id as string))
+  useEffect(() => { if (lojasFull.length && empSel.size === 0 && !editId) setEmpSel(allLojaIds()) }, [lojasFull])
+  const empFiltradas = useMemo(() => { const b = empBusca.toLowerCase().trim(); return lojasFull.filter((l) => { if (empSomente && !empSel.has(l.id)) return false; if (b && !((l.nome_fantasia || l.nome || '') + ' ' + (l.razao_social || '') + ' ' + (l.cnpj || '')).toLowerCase().includes(b)) return false; return true }) }, [lojasFull, empBusca, empSomente, empSel])
+  const toggleEmp = (id: string) => setEmpSel((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const todasEmp = lojasFull.length > 0 && empSel.size === lojasFull.length
 
   const q = Number(item.quantidade) || 0, f = parseFloat(qtEmb) || 0
   const onEmb = (val: string) => { setEmbDesc(val); const c = calcFator(val); if (c != null) setQtEmb(String(c)) }
-  const reset = () => { setInsId(''); setEmbDesc(''); setQtEmb('1'); setCodForn(item.codigo_item_fornecedor || ''); setDescr(item.descricao_nfe || ''); setEmbPadrao(false); setEditId(null) }
-  const editar = (v: IFV) => { setEditId(v.id); setInsId(v.insumo_id); setEmbDesc(v.embalagem_descricao || ''); setQtEmb(String(v.qtd_por_embalagem || 1)); setCodForn(v.codigo_fornecedor || ''); setDescr(v.descricao_fornecedor || ''); setEmbPadrao(!!(v as any).embalagem_padrao) }
+  const reset = () => { setInsId(''); setEmbDesc(''); setQtEmb('1'); setCodForn(item.codigo_item_fornecedor || ''); setDescr(item.descricao_nfe || ''); setEmbPadrao(false); setEditId(null); setEmpSel(allLojaIds()) }
+  const editar = async (v: IFV) => { setEditId(v.id); setInsId(v.insumo_id); setEmbDesc(v.embalagem_descricao || ''); setQtEmb(String(v.qtd_por_embalagem || 1)); setCodForn(v.codigo_fornecedor || ''); setDescr(v.descricao_fornecedor || ''); setEmbPadrao(!!(v as any).embalagem_padrao); try { const { data } = await supabase.from('insumo_fornecedor_lojas').select('loja_id').eq('vinculacao_id', v.id); const ids = (data ?? []).map((x: any) => x.loja_id as string); setEmpSel(ids.length ? new Set(ids) : allLojaIds()) } catch { setEmpSel(allLojaIds()) } }
 
   const salvar = async () => {
     if (!insId) return onToast('Selecione o item interno.', 'err')
@@ -340,12 +348,11 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
       const fornId = forn?.id || null
       const preco = f > 0 ? +((item.valor_unitario || 0) / f).toFixed(4) : null
       const body = { insumo_id: insId, embalagem_descricao: embDesc || null, qtd_por_embalagem: f, codigo_fornecedor: codForn || null, descricao_fornecedor: descr.trim() || null, embalagem_padrao: embPadrao, preco_unitario: preco }
+      let vincId = editId || ''
       if (editId) {
         const { error } = await supabase.from('insumo_fornecedores').update(body).eq('id', editId); if (error) throw error
-        onToast('Vínculo atualizado.', 'ok')
       } else {
         const existing = fornVinc.find((v) => v.insumo_id === insId && (codForn ? v.codigo_fornecedor === codForn : v.embalagem_descricao === embDesc))
-        let vincId: string
         if (existing) { const { error } = await supabase.from('insumo_fornecedores').update(body).eq('id', existing.id); if (error) throw error; vincId = existing.id }
         else { const { data, error } = await supabase.from('insumo_fornecedores').insert({ tenant_id: tenantId, fornecedor_id: fornId, ...body }).select('id'); if (error) throw error; vincId = data![0].id }
         const ev = vinculos.find((v) => (item.codigo_item_fornecedor && v.codigo_nfe === item.codigo_item_fornecedor) || norm(v.descricao_nfe) === norm(item.descricao_nfe))
@@ -354,8 +361,13 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
         await supabase.from('nfe_itens').update({ vinculacao_id: vincId }).eq('id', item.id)
         const { data: upd } = await supabase.from('nfe_itens').select('vinculacao_id').eq('nfe_id', nfe.id)
         if (upd && upd.length > 0 && upd.every((x: any) => x.vinculacao_id)) await supabase.from('nfe_recebidas').update({ status: 'pronta' }).eq('id', nfe.id)
-        onToast('Vínculo incluído e item vinculado!', 'ok')
       }
+      // regra de disponibilidade por loja (best-effort — só grava se a tabela existir)
+      try {
+        await supabase.from('insumo_fornecedor_lojas').delete().eq('vinculacao_id', vincId)
+        if (empSel.size > 0 && empSel.size < lojasFull.length) await supabase.from('insumo_fornecedor_lojas').insert([...empSel].map((loja_id) => ({ tenant_id: tenantId, vinculacao_id: vincId, loja_id })))
+      } catch { /* tabela ainda não criada */ }
+      onToast(editId ? 'Vínculo atualizado.' : 'Vínculo incluído e item vinculado!', 'ok')
       await refetch(); onRefresh(); reset()
     } catch (e: any) { onToast('Erro: ' + e.message, 'err') } finally { setSaving(false) }
   }
@@ -440,13 +452,32 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
             </div>
           </div>
 
-          {/* empresas */}
+          {/* empresas vinculadas */}
           <div className="cor-card">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 9 }}>
-              <div><div className="cor-st" style={{ margin: 0 }}>🏢 Empresas vinculadas (regras de disponibilidade)</div><div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Defina em quais lojas este vínculo estará disponível. (Em breve — hoje vale para todas.)</div></div>
-              <button className="cor-back" style={{ height: 32 }} onClick={() => onToast('Gerenciar empresas: em breve.', 'ok')}>⚙ Gerenciar empresas</button>
+            <div style={{ marginBottom: 9 }}><div className="cor-st" style={{ margin: 0 }}>🏢 Empresas vinculadas (regras de disponibilidade)</div><div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Marque em quais lojas este vínculo vale. Todas marcadas = vale para todas.</div></div>
+            <div className="cor-tbar">
+              <label className="cor-chk" style={{ height: 'auto' }}><input type="checkbox" checked={empSomente} onChange={(e) => setEmpSomente(e.target.checked)} /> Exibir somente vinculadas</label>
+              <div className="cor-search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg><input placeholder="Digite um texto para pesquisar..." value={empBusca} onChange={(e) => setEmpBusca(e.target.value)} /></div>
+              <label className="cor-chk" style={{ marginLeft: 'auto', height: 'auto' }}>Selecionar Todos <input type="checkbox" checked={todasEmp} onChange={(e) => setEmpSel(e.target.checked ? allLojaIds() : new Set())} /></label>
             </div>
-            <div className="cor-emprow"><span className="cor-tag count">🏪 {lojas.length} loja(s)</span>{lojas.map((l) => <span key={l.id} className="cor-tag">{l.nome}</span>)}</div>
+            <div className="cor-tbl"><div className="cor-tbl-sc" style={{ maxHeight: 220 }}>
+              <table>
+                <thead><tr><th className="c" style={{ width: 36 }}>Sel.</th><th className="c" style={{ width: 70 }}>Empresa</th><th>Fantasia</th><th>Razão Social</th><th>CNPJ</th></tr></thead>
+                <tbody>
+                  {empFiltradas.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhuma empresa.</td></tr>
+                    : empFiltradas.map((l, i) => (
+                      <tr key={l.id} onClick={() => toggleEmp(l.id)} style={{ cursor: 'pointer' }}>
+                        <td className="c"><input type="checkbox" checked={empSel.has(l.id)} onChange={() => toggleEmp(l.id)} onClick={(e) => e.stopPropagation()} /></td>
+                        <td className="c mono">{i + 1}</td>
+                        <td>{l.nome_fantasia || l.nome || '—'}</td>
+                        <td>{l.razao_social || '—'}</td>
+                        <td className="mono">{l.cnpj || '—'}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div></div>
+            <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6 }}>{todasEmp ? 'Vale para TODAS as lojas.' : `${empSel.size} de ${lojasFull.length} loja(s) selecionada(s).`}</div>
           </div>
         </div>
 
