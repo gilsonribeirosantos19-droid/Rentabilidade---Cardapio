@@ -6,7 +6,8 @@
 .ass-pop { position: fixed; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.18); z-index: 2000; overflow: hidden; }
 .ass-q { width: 100%; border: none; border-bottom: 1px solid #eef1f5; padding: 11px 13px; font-size: 13px; outline: none; font-family: inherit; color: #0f172a; }
 .ass-list { max-height: 240px; overflow-y: auto; }
-.ass-opt { padding: 9px 13px; font-size: 13px; cursor: pointer; color: #334155; }
+.ass-opt { padding: 9px 13px; font-size: 13px; cursor: pointer; color: #334155; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ass-opt:hover { background: #fff7ed; color: #f97316; }
 .ass-opt.on { background: #fff7ed; color: #f97316; font-weight: 600; }
+.ass-meta { font-size: 11px; color: #94a3b8; font-family: 'DM Mono', monospace; flex-shrink: 0; }
 .ass-none { padding: 10px 13px; color: #94a3b8; font-size: 12px; }

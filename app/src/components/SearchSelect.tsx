@@ -8,11 +8,13 @@ export function SearchSelect({
   onChange,
   options,
   placeholder = 'Selecione...',
+  meta,
 }: {
   value: string
   onChange: (v: string) => void
   options: string[]
   placeholder?: string
+  meta?: Record<string, string>
 }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
@@ -39,7 +41,7 @@ export function SearchSelect({
     setOpen((o) => !o)
   }
 
-  const filtered = options.filter((o) => norm(o).includes(norm(q)))
+  const filtered = options.filter((o) => norm(o + ' ' + (meta?.[o] || '')).includes(norm(q)))
 
   return (
     <div className="ass" ref={ref}>
@@ -52,7 +54,7 @@ export function SearchSelect({
           <div className="ass-list">
             <div className="ass-opt" onClick={() => { onChange(''); setOpen(false) }}>{placeholder}</div>
             {filtered.map((o) => (
-              <div key={o} className={'ass-opt' + (o === value ? ' on' : '')} onClick={() => { onChange(o); setOpen(false) }}>{o}</div>
+              <div key={o} className={'ass-opt' + (o === value ? ' on' : '')} onClick={() => { onChange(o); setOpen(false) }}><span>{o}</span>{meta?.[o] ? <span className="ass-meta">{meta[o]}</span> : null}</div>
             ))}
             {filtered.length === 0 && <div className="ass-none">Nada encontrado</div>}
           </div>
