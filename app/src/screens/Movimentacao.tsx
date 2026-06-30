@@ -157,7 +157,16 @@ export function Movimentacao() {
   }
   const limpar = () => { setCatF(''); setBusca(''); setTipo(''); setFamilia(''); setSubgrupo(''); setFornecedor(''); setUnidade(''); setCmvMode('todos'); setComSaldo(true); setSoCmv(false) }
 
-  const openCols = () => { const r = colsIcoRef.current?.getBoundingClientRect(); if (r) setColsPos({ top: r.bottom + 4, left: r.left }); setColsOpen((o) => !o) }
+  const openCols = () => {
+    const r = colsIcoRef.current?.getBoundingClientRect()
+    if (r) {
+      const estH = 330 // altura estimada do dropdown compacto
+      const below = window.innerHeight - r.bottom
+      const top = below < estH ? Math.max(8, window.innerHeight - estH - 8) : r.bottom + 4
+      setColsPos({ top, left: r.left })
+    }
+    setColsOpen((o) => !o)
+  }
   useEffect(() => {
     if (!colsOpen) return
     // fecha só ao clicar FORA (clique dentro é barrado pelo onMouseDown do dropdown).
