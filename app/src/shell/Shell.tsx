@@ -8,6 +8,7 @@ import { Insumos } from '../screens/Insumos'
 import { Produtos } from '../screens/Produtos'
 import { FichasTecnicas } from '../screens/FichasTecnicas'
 import { SaldoEstoque } from '../screens/SaldoEstoque'
+import { Movimentacao } from '../screens/Movimentacao'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -18,6 +19,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'produtos') return <Produtos />
   if (k === 'fichas') return <FichasTecnicas />
   if (k === 'estoque/saldo') return <SaldoEstoque />
+  if (k === 'estoque/movimentacao') return <Movimentacao />
   return <Placeholder label={label} />
 }
 
