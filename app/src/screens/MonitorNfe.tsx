@@ -17,6 +17,7 @@ const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLoc
 const fmtQ = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
 const fmtD = (iso?: string | null) => iso ? new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString('pt-BR') : '—'
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+const fmtCod = (c?: any) => (c != null && c !== '' ? String(c).padStart(6, '0') : '')
 const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 const DOT: Record<string, string> = { pendente: '#f59e0b', em_transito: '#f59e0b', aguard_vinculacao: '#dc2626', pronta: '#2563eb', processada: '#16a34a', com_erro: '#dc2626', recusada: '#94a3b8', cancelada: '#94a3b8' }
@@ -320,7 +321,7 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const insByName = useMemo(() => new Map(insumos.map((i) => [i.nome, i.id])), [insumos])
-  const insMeta = useMemo(() => Object.fromEntries(insumos.map((i) => [i.nome, i.codigo_interno || ''])) as Record<string, string>, [insumos])
+  const insMeta = useMemo(() => Object.fromEntries(insumos.map((i) => [i.nome, fmtCod(i.codigo_interno)])) as Record<string, string>, [insumos])
   const insSel = insMap[insId]
 
   const { data: embOpts = [] } = useQuery({ queryKey: ['cor-emb', tenantId], queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome,tipo').eq('tenant_id', tenantId).eq('tipo', 'embalagem').order('nome'); return ((data ?? []) as any[]).map((e) => e.nome as string) } })
@@ -389,7 +390,7 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
           <div className="cor-card">
             <div className="cor-st">🔗 {editId ? 'Editar vínculo' : 'Vincular novo item'}</div>
             <div className="cor-r1">
-              <div className="cor-fg"><label>Código</label><input className="mono" readOnly value={insSel?.codigo_interno || ''} placeholder="—" /></div>
+              <div className="cor-fg"><label>Código</label><input className="mono" readOnly value={insSel ? fmtCod(insSel.codigo_interno) : ''} placeholder="—" /></div>
               <div className="cor-fg"><label>Item interno (estoque) *</label><SearchSelect value={insSel?.nome || ''} options={insumos.map((i) => i.nome)} meta={insMeta} placeholder="Pesquisar por nome ou código..." onChange={(nm) => setInsId(insByName.get(nm) || '')} /></div>
               <div className="cor-fg"><label>Un. controle *</label><input readOnly value={insSel?.unidade_medida || ''} placeholder="—" /></div>
               <div className="cor-fg"><label>Emb. (fornecedor) *</label><SearchSelect value={embDesc} options={embOpts} placeholder="Selecione..." onChange={onEmb} /></div>
@@ -419,7 +420,7 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
                     : page.length === 0 ? <tr><td colSpan={9} style={{ textAlign: 'center', color: '#94a3b8', padding: 18 }}>Nenhum vínculo encontrado.</td></tr>
                     : page.map((v) => { const ins = insMap[v.insumo_id]; return (
                       <tr key={v.id}>
-                        <td className="mono">{ins?.codigo_interno || '—'}</td>
+                        <td className="mono">{fmtCod(ins?.codigo_interno) || '—'}</td>
                         <td>{ins?.nome || '—'}</td>
                         <td>{ins?.unidade_medida || '—'}</td>
                         <td>{v.embalagem_descricao || '—'}</td>
