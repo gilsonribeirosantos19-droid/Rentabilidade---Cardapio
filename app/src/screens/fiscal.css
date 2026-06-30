@@ -62,13 +62,29 @@
 .fov-portal .mono { font-family: 'DM Mono', monospace; }
 
 /* Monitor NF-e */
-.fiscal-screen .mon-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
-.fiscal-screen .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-.fiscal-screen .chip { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.fiscal-screen .chip:hover { background: #f8fafc; }
-.fiscal-screen .chip.on { background: #fff7ed; border-color: #f97316; color: #f97316; }
-.fiscal-screen .chip .n { font-family: 'DM Mono', monospace; background: #f1f5f9; border-radius: 10px; padding: 1px 7px; font-size: 11px; }
-.fiscal-screen .chip.on .n { background: #ffe6cc; }
+.fiscal-screen .mon-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.fiscal-screen .mon-top-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fiscal-screen .lbl-mini { font-size: 12px; color: #475569; font-weight: 600; white-space: nowrap; }
+.fiscal-screen .btn-xml { height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.fiscal-screen .f1 { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin: 14px 0 8px; }
+.fiscal-screen .f1 .ds-field { display: flex; flex-direction: column; gap: 5px; }
+.fiscal-screen .f1 .ds-field > label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+.fiscal-screen .sit-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.fiscal-screen .sit-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; user-select: none; padding: 6px 13px; border-radius: 99px; border: 1.5px solid #e2e8f0; background: #fff; }
+.fiscal-screen .sit-chip input { width: 14px; height: 14px; cursor: pointer; }
+.fiscal-screen .sit-chip .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.fiscal-screen .sit-chip .cnt { font-weight: 700; }
+.fiscal-screen .act-r { margin-left: auto; display: inline-flex; gap: 10px; align-items: center; }
+.fiscal-screen .b-del { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #fff; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.fiscal-screen .b-del.on { color: #dc2626; border-color: #fecaca; }
+.fiscal-screen .b-proc { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: none; border-radius: 8px; background: #e2e8f0; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: not-allowed; font-family: inherit; }
+.fiscal-screen .b-proc.on { background: #f97316; color: #fff; cursor: pointer; }
+.fiscal-screen .tabs { display: flex; gap: 4px; border-bottom: 1px solid #e2e8f0; margin-top: 4px; }
+.fiscal-screen .tab-btn { padding: 9px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; font-family: inherit; margin-bottom: -1px; display: inline-flex; align-items: center; gap: 7px; }
+.fiscal-screen .tab-btn.active { color: #f97316; border-bottom-color: #f97316; }
+.fiscal-screen .tab-cnt { font-family: 'DM Mono', monospace; background: #f1f5f9; border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+.fiscal-screen .det-bar { display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #64748b; }
+.fiscal-screen .chk { accent-color: #f97316; width: 14px; height: 14px; cursor: pointer; }
 .fiscal-screen .stat-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .fiscal-screen .stat-err { color: #dc2626; font-weight: 800; cursor: pointer; }
 .fiscal-screen .nfe-num { color: #2563eb; font-weight: 700; cursor: pointer; }

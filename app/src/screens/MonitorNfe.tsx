@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
@@ -17,23 +17,11 @@ const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLoc
 const fmtQ = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
 const fmtD = (iso?: string | null) => iso ? new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString('pt-BR') : '—'
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-const STATUS: Record<string, { dot: string; label: string }> = {
-  pendente: { dot: '#f59e0b', label: 'Pendente' }, em_transito: { dot: '#f59e0b', label: 'Em trânsito' },
-  aguard_vinculacao: { dot: '#dc2626', label: 'Aguard. vínculo' }, pronta: { dot: '#2563eb', label: 'Pronta' },
-  processada: { dot: '#16a34a', label: 'Processada' }, com_erro: { dot: '#dc2626', label: 'Com erro' },
-  recusada: { dot: '#475569', label: 'Recusada' }, cancelada: { dot: '#ef4444', label: 'Cancelada' },
-}
-const CHIPS: { key: string; label: string; st: string[] }[] = [
-  { key: 'todas', label: 'Todas', st: [] },
-  { key: 'pendente', label: 'Pendente', st: ['pendente', 'em_transito'] },
-  { key: 'processar', label: 'Para processar', st: ['pronta'] },
-  { key: 'processada', label: 'Processada', st: ['processada'] },
-  { key: 'erro', label: 'Com Erro', st: ['aguard_vinculacao', 'com_erro'] },
-  { key: 'cancelada', label: 'Cancelada', st: ['cancelada', 'recusada'] },
-]
+const DOT: Record<string, string> = { pendente: '#f59e0b', em_transito: '#f59e0b', aguard_vinculacao: '#dc2626', pronta: '#2563eb', processada: '#16a34a', com_erro: '#dc2626', recusada: '#94a3b8', cancelada: '#94a3b8' }
+const G_PEND = ['pendente', 'em_transito'], G_PROC = ['pronta'], G_ERRO = ['aguard_vinculacao', 'com_erro'], G_CANC = ['cancelada', 'recusada']
 
-// fator a partir da descrição da embalagem (ex: "27x0,375"→10,125; "965ML"→0,965)
 function calcFator(desc: string): number | null {
   const d = desc.trim(); if (!d) return null
   const mult = d.replace(/,/g, '.').match(/(\d+\.?\d*)\s*[xX×]\s*(\d+\.?\d*)/)
@@ -47,11 +35,15 @@ function calcFator(desc: string): number | null {
 
 export function MonitorNfe() {
   const { tenantId } = useAuth()
-  const { lojas } = useLoja()
+  const { lojas, lojaId, setLojaId } = useLoja()
   const qc = useQueryClient()
-  const [chip, setChip] = useState('todas')
+  const now = new Date()
+  const [fForn, setFForn] = useState('')
+  const [periodo, setPeriodo] = useState('todos'); const [de, setDe] = useState(''); const [ate, setAte] = useState('')
+  const [chkPend, setChkPend] = useState(true), [chkProc, setChkProc] = useState(true), [chkErro, setChkErro] = useState(true), [chkCanc, setChkCanc] = useState(false)
+  const [tab, setTab] = useState<'nfe' | 'itens' | 'erros'>('nfe')
   const [sel, setSel] = useState<string | null>(null)
-  const [subtab, setSubtab] = useState<'itens' | 'erros'>('itens')
+  const [picked, setPicked] = useState<Set<string>>(new Set())
   const [vinc, setVinc] = useState<Item | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
@@ -67,114 +59,175 @@ export function MonitorNfe() {
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const ifvMap = useMemo(() => Object.fromEntries(ifv.map((v) => [v.id, v])) as Record<string, IFV>, [ifv])
   const fornByCnpj = (cnpj?: string) => { const c = (cnpj || '').replace(/\D/g, ''); return fornecedores.find((f) => (f.cnpj || '').replace(/\D/g, '') === c) }
+  const fornOpts = useMemo(() => { const m: Record<string, string> = {}; nfes.forEach((n) => { if (n.cnpj_emitente && n.nome_emitente) m[n.cnpj_emitente] = n.nome_emitente }); return Object.entries(m).sort((a, b) => a[1].localeCompare(b[1])) }, [nfes])
 
-  const counts = useMemo(() => { const m: Record<string, number> = {}; CHIPS.forEach((c) => { m[c.key] = c.st.length ? nfes.filter((n) => c.st.includes(n.status || '')).length : nfes.length }); return m }, [nfes])
-  const lista = useMemo(() => { const st = CHIPS.find((c) => c.key === chip)?.st || []; return st.length ? nfes.filter((n) => st.includes(n.status || '')) : nfes }, [nfes, chip])
+  const inGroup = (st: string | undefined, g: string[]) => g.includes(st || '')
+  const cnt = useMemo(() => ({
+    pend: nfes.filter((n) => inGroup(n.status, G_PEND)).length,
+    proc: nfes.filter((n) => inGroup(n.status, G_PROC)).length,
+    erro: nfes.filter((n) => inGroup(n.status, G_ERRO)).length,
+    canc: nfes.filter((n) => inGroup(n.status, G_CANC)).length,
+  }), [nfes])
+
+  const lista = useMemo(() => {
+    const allowed = [...(chkPend ? G_PEND : []), ...(chkProc ? G_PROC : []), ...(chkErro ? G_ERRO : []), ...(chkCanc ? G_CANC : [])]
+    return nfes.filter((n) => {
+      if (!allowed.includes(n.status || '')) return false
+      if (lojaId && (n.loja_id || null) !== lojaId) return false
+      if (fForn && n.cnpj_emitente !== fForn) return false
+      if (periodo !== 'todos') { if (de && (n.data_emissao || '') < de) return false; if (ate && (n.data_emissao || '') > ate + 'T23:59:59') return false }
+      return true
+    })
+  }, [nfes, chkPend, chkProc, chkErro, chkCanc, lojaId, fForn, periodo, de, ate])
+
   const selNfe = nfes.find((n) => n.id === sel) || null
   const erros = itens.filter((i) => !i.vinculacao_id)
+  const nErros = sel ? erros.length : lista.filter((n) => inGroup(n.status, G_ERRO)).length
+
+  const setPreset = (v: string) => { setPeriodo(v); const d = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(d.getFullYear(), d.getMonth(), 1))); setAte(isoD(d)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(d.getFullYear(), d.getMonth() - 1, 1))); setAte(isoD(new Date(d.getFullYear(), d.getMonth(), 0))) } else { setDe(''); setAte('') } }
+  const limpar = () => { setFForn(''); setPreset('todos'); setChkPend(true); setChkProc(true); setChkErro(true); setChkCanc(false) }
+  const toggleAll = (on: boolean) => setPicked(on ? new Set(lista.map((n) => n.id)) : new Set())
+  const togglePick = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const nSel = picked.size
+
+  const abrirItem = (n: Nfe, t: 'itens' | 'erros') => { setSel(n.id); setTab(t) }
+  void now
 
   return (
     <div className="fiscal-screen">
-      <div className="fh-title">Monitor NF-e</div>
-      <div className="fh-sub">Recebimento, vinculação e processamento de notas fiscais de entrada</div>
-
-      <div className="mon-bar">
-        <div className="chips">
-          {CHIPS.map((c) => <button key={c.key} className={'chip' + (chip === c.key ? ' on' : '')} onClick={() => setChip(c.key)}>{c.label}<span className="n">{counts[c.key] || 0}</span></button>)}
+      <div className="mon-top">
+        <div><div className="fh-title">Monitor NF-e</div><div className="fh-sub">Notas fiscais recebidas</div></div>
+        <div className="mon-top-r">
+          <span className="lbl-mini">Loja:</span>
+          <select className="field" style={{ minWidth: 160 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
+          <button className="btn-g" onClick={() => qc.invalidateQueries({ queryKey: ['mon-nfe'] })}>↻ Atualizar</button>
+          <button className="btn-xml" onClick={() => showToast('Upload de XML chega na Parte 2.', 'ok')}>⤓ Entrada por NF-e XML</button>
         </div>
-        <button className="btn-g" style={{ marginLeft: 'auto' }} onClick={() => qc.invalidateQueries({ queryKey: ['mon-nfe'] })}>↻ Atualizar</button>
       </div>
 
-      <div className="tbl-wrap"><div className="tbl-scroll">
-        <table className="tbl">
-          <thead><tr><th className="c">Sit.</th><th>Código</th><th>Fornecedor</th><th>Loja</th><th>NF-e</th><th className="c">Série</th><th>D. Emissão</th><th>D. Integração</th><th className="r">V. Total</th><th className="r">V. Título</th><th>D. Venc.</th><th>Portador</th></tr></thead>
-          <tbody>
-            {isLoading ? <tr><td colSpan={12} className="empty">Carregando…</td></tr>
-              : lista.length === 0 ? <tr><td colSpan={12} className="empty">Nenhuma NF-e nesta situação.</td></tr>
-              : lista.map((n) => {
-                const st = STATUS[n.status || ''] || { dot: '#94a3b8', label: n.status || '—' }
-                const forn = fornByCnpj(n.cnpj_emitente)
-                const isErro = n.status === 'aguard_vinculacao' || n.status === 'com_erro'
-                return (
-                  <tr key={n.id} className={sel === n.id ? 'sel' : ''}>
-                    <td className="c" title={st.label}>{isErro ? <span className="stat-err" onClick={() => { setSel(n.id); setSubtab('erros') }}>!</span> : <span className="stat-dot" style={{ background: st.dot }} />}</td>
-                    <td className="mono" style={{ color: '#64748b', fontSize: 12 }}>{forn?.codigo || '—'}</td>
-                    <td className="fornec nfe-fornec" onClick={() => { setSel(n.id); setSubtab('itens') }}><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div><div style={{ fontSize: 10, color: '#94a3b8' }} className="mono">{n.cnpj_emitente || ''}</div></td>
-                    <td style={{ color: '#64748b', fontSize: 12 }}>{lojaMap[n.loja_id || ''] || '—'}</td>
-                    <td><span className="nfe-num" onClick={() => { setSel(n.id); setSubtab('itens') }}>{n.numero || '—'}</span></td>
-                    <td className="c mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
-                    <td className="mono" style={{ fontSize: 12 }}>{fmtD(n.data_emissao)}</td>
-                    <td className="mono" style={{ fontSize: 12 }}>{fmtD(n.data_integracao)}</td>
-                    <td className="r mono" style={{ fontWeight: 600 }}>{brl(n.valor_total)}</td>
-                    <td className="r mono" style={{ color: '#64748b' }}>{n.valor_titulo ? brl(n.valor_titulo) : '—'}</td>
-                    <td className="mono" style={{ fontSize: 12, color: '#64748b' }}>{n.data_vencimento ? fmtD(n.data_vencimento) : '—'}</td>
-                    <td style={{ fontSize: 12, color: '#64748b' }}>{n.portador || '—'}</td>
-                  </tr>
-                )
-              })}
-          </tbody>
-        </table>
-      </div></div>
-
-      {/* DETALHE DA NOTA SELECIONADA */}
-      {!selNfe ? <div className="sel-hint">Clique numa NF-e acima para ver os itens e erros.</div> : (
-        <>
-          <div className="subtabs">
-            <button className={'subtab' + (subtab === 'itens' ? ' on' : '')} onClick={() => setSubtab('itens')}>Itens NF <span className="n">{itens.length}</span></button>
-            <button className={'subtab' + (subtab === 'erros' ? ' on' : '')} onClick={() => setSubtab('erros')}>Erros <span className="n">{erros.length}</span></button>
-            <div style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12, color: '#94a3b8', paddingRight: 4 }}>NF-e {selNfe.numero}/{selNfe.serie} · {selNfe.nome_emitente}</div>
+      <div className="f1">
+        <div className="ds-field"><label>Fornecedor</label>
+          <select className="field" style={{ minWidth: 200 }} value={fForn} onChange={(e) => setFForn(e.target.value)}><option value="">Todos</option>{fornOpts.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select>
+        </div>
+        <div className="ds-field"><label>Período</label>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <select className="field" style={{ minWidth: 120 }} value={periodo} onChange={(e) => setPreset(e.target.value)}><option value="todos">Todos</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="periodo">Período</option></select>
+            {periodo === 'periodo' && <><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /><span style={{ color: '#94a3b8', fontSize: 12 }}>até</span><input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} /></>}
           </div>
+        </div>
+        <div style={{ marginLeft: 'auto' }}><button className="btn-g" onClick={limpar}>▽ Limpar filtros</button></div>
+      </div>
 
-          {subtab === 'itens' ? (
-            <div className="tbl-wrap" style={{ marginTop: 12 }}><div className="tbl-scroll">
-              <table className="tbl">
-                <thead><tr><th className="c">Seq.</th><th>Item Fornecedor</th><th>Descrição</th><th>Item Interno</th><th>Embalagem</th><th className="c">UM</th><th className="r">Q. na Emb.</th><th className="r">Q. Embalagens</th><th className="r">V. Unit.</th><th className="r">V. Total</th><th className="r">Q. Estoque</th></tr></thead>
-                <tbody>
-                  {itens.length === 0 ? <tr><td colSpan={11} className="empty">Sem itens.</td></tr>
-                    : itens.map((it, i) => {
-                      const v = it.vinculacao_id ? ifvMap[it.vinculacao_id] : null
-                      const ins = v ? insMap[v.insumo_id] : null
-                      const total = (it.quantidade || 0) * (it.valor_unitario || 0)
-                      const qEst = v ? (it.quantidade || 0) * (v.qtd_por_embalagem || 0) : null
-                      return (
-                        <tr key={it.id}>
-                          <td className="c" style={{ color: '#94a3b8' }}>{i + 1}</td>
-                          <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{it.codigo_item_fornecedor || '—'}</td>
-                          <td>{it.descricao_nfe || '—'}</td>
-                          <td className="mono">{ins ? (ins.codigo_interno || ins.nome) : <span style={{ color: '#dc2626' }}>—</span>}</td>
-                          <td style={{ color: '#64748b' }}>{v?.embalagem_descricao || '—'}</td>
-                          <td className="c">{it.unidade_nfe || '—'}</td>
-                          <td className="r mono">{v ? fmtQ(v.qtd_por_embalagem) : '—'}</td>
-                          <td className="r mono">{fmtQ(it.quantidade)}</td>
-                          <td className="r mono">{brl(it.valor_unitario)}</td>
-                          <td className="r mono">{brl(total)}</td>
-                          <td className="r mono" style={{ fontWeight: 600 }}>{qEst != null ? `${fmtQ(qEst)} ${ins?.unidade_medida || ''}` : '—'}</td>
-                        </tr>
-                      )
-                    })}
-                </tbody>
-              </table>
-            </div></div>
-          ) : (
-            <div className="tbl-wrap" style={{ marginTop: 12 }}><div className="tbl-scroll">
-              <table className="tbl">
-                <thead><tr><th>Descrição</th><th>Código</th><th className="c">UM</th><th className="r">Qtd.</th><th className="r">V. Unit.</th><th className="c">Ação</th></tr></thead>
-                <tbody>
-                  {erros.length === 0 ? <tr><td colSpan={6} className="empty" style={{ color: '#16a34a' }}>✓ Todos os itens estão vinculados.</td></tr>
-                    : erros.map((it) => (
+      <div className="sit-row">
+        <label className="sit-chip"><input type="checkbox" checked={chkPend} style={{ accentColor: '#f59e0b' }} onChange={(e) => setChkPend(e.target.checked)} /><span className="dot" style={{ background: '#f59e0b' }} />Pendente SEFAZ <span className="cnt" style={{ color: '#f59e0b' }}>({cnt.pend})</span></label>
+        <label className="sit-chip"><input type="checkbox" checked={chkProc} style={{ accentColor: '#2563eb' }} onChange={(e) => setChkProc(e.target.checked)} /><span className="dot" style={{ background: '#2563eb' }} />Para processar <span className="cnt" style={{ color: '#2563eb' }}>({cnt.proc})</span></label>
+        <label className="sit-chip"><input type="checkbox" checked={chkErro} style={{ accentColor: '#dc2626' }} onChange={(e) => setChkErro(e.target.checked)} /><span className="dot" style={{ background: '#dc2626' }} />Com Erro <span className="cnt" style={{ color: '#dc2626' }}>({cnt.erro})</span></label>
+        <label className="sit-chip"><input type="checkbox" checked={chkCanc} style={{ accentColor: '#94a3b8' }} onChange={(e) => setChkCanc(e.target.checked)} /><span className="dot" style={{ background: '#94a3b8' }} />Cancelada <span className="cnt" style={{ color: '#94a3b8' }}>({cnt.canc})</span></label>
+        <div className="act-r">
+          <button className={'b-del' + (nSel ? ' on' : '')} disabled={!nSel} onClick={() => showToast('Excluir selecionadas chega na Parte 2.', 'ok')}>🗑 Excluir (<span>{nSel}</span>)</button>
+          <button className={'b-proc' + (nSel ? ' on' : '')} disabled={!nSel} onClick={() => showToast('Processar selecionadas chega na Parte 2.', 'ok')}>▷ Processar selecionadas (<span>{nSel}</span>)</button>
+        </div>
+      </div>
+
+      <div className="tabs">
+        <button className={'tab-btn' + (tab === 'nfe' ? ' active' : '')} onClick={() => setTab('nfe')}>📄 DANFE <span className="tab-cnt">{lista.length}</span></button>
+        <button className={'tab-btn' + (tab === 'itens' ? ' active' : '')} onClick={() => setTab('itens')}>≣ ITENS NF <span className="tab-cnt">{sel ? itens.length : 0}</span></button>
+        <button className={'tab-btn' + (tab === 'erros' ? ' active' : '')} onClick={() => setTab('erros')}>⊙ ERROS <span className="tab-cnt">{nErros}</span></button>
+      </div>
+
+      {tab === 'nfe' && (
+        <div className="tbl-wrap" style={{ marginTop: 12 }}><div className="tbl-scroll">
+          <table className="tbl">
+            <thead><tr>
+              <th style={{ width: 36, textAlign: 'center' }}><input type="checkbox" className="chk" checked={lista.length > 0 && nSel === lista.length} onChange={(e) => toggleAll(e.target.checked)} /></th>
+              <th className="c">Sit.</th><th className="r" style={{ width: 64 }}>Código</th><th>Fornecedor / Razão Social</th><th>Loja</th><th>DANFE</th><th className="c">Série</th><th>D. Emissão</th><th>D. Integração</th><th className="r">V. Total</th><th className="r">V. Título</th><th>D. Vencimento</th><th>Portador</th>
+            </tr></thead>
+            <tbody>
+              {isLoading ? <tr><td colSpan={13} className="empty">Carregando…</td></tr>
+                : lista.length === 0 ? <tr><td colSpan={13} className="empty">Nenhuma NF-e nesta situação.</td></tr>
+                : lista.map((n) => {
+                  const forn = fornByCnpj(n.cnpj_emitente)
+                  const isErro = inGroup(n.status, G_ERRO)
+                  return (
+                    <tr key={n.id} className={sel === n.id ? 'sel' : ''}>
+                      <td className="c"><input type="checkbox" className="chk" checked={picked.has(n.id)} onChange={() => togglePick(n.id)} /></td>
+                      <td className="c" title={n.status}>{isErro ? <span className="stat-err" onClick={() => abrirItem(n, 'erros')}>!</span> : <span className="stat-dot" style={{ background: DOT[n.status || ''] || '#94a3b8' }} />}</td>
+                      <td className="r mono" style={{ color: '#64748b', fontSize: 12 }}>{forn?.codigo || '—'}</td>
+                      <td className="fornec nfe-fornec" onClick={() => abrirItem(n, 'itens')}><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div><div style={{ fontSize: 10, color: '#94a3b8' }} className="mono">{n.cnpj_emitente || ''}</div></td>
+                      <td style={{ color: '#64748b', fontSize: 12 }}>{lojaMap[n.loja_id || ''] || '—'}</td>
+                      <td><span className="nfe-num" onClick={() => abrirItem(n, 'itens')}>{n.numero || '—'}</span></td>
+                      <td className="c mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
+                      <td className="mono" style={{ fontSize: 12 }}>{fmtD(n.data_emissao)}</td>
+                      <td className="mono" style={{ fontSize: 12 }}>{fmtD(n.data_integracao)}</td>
+                      <td className="r mono" style={{ fontWeight: 600 }}>{brl(n.valor_total)}</td>
+                      <td className="r mono" style={{ color: '#64748b' }}>{n.valor_titulo ? brl(n.valor_titulo) : '—'}</td>
+                      <td className="mono" style={{ fontSize: 12, color: '#64748b' }}>{n.data_vencimento ? fmtD(n.data_vencimento) : '—'}</td>
+                      <td style={{ fontSize: 12, color: '#64748b' }}>{n.portador || '—'}</td>
+                    </tr>
+                  )
+                })}
+            </tbody>
+          </table>
+        </div></div>
+      )}
+
+      {tab === 'itens' && (
+        <>
+          <div className="det-bar"><span>📄</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os itens'}</span></div>
+          <div className="tbl-wrap"><div className="tbl-scroll">
+            <table className="tbl">
+              <thead><tr><th className="c">Seq.</th><th>Item Fornecedor</th><th>Descrição</th><th>Item Interno</th><th>Embalagem</th><th className="c">UM</th><th className="r">Q. na Emb.</th><th className="r">Q. de Embalagens</th><th className="r">V. Unitário</th><th className="r">V. Total</th><th className="r">Q. Estoque</th></tr></thead>
+              <tbody>
+                {!selNfe ? <tr><td colSpan={11} className="empty">Selecione uma NF-e na aba DANFE.</td></tr>
+                  : itens.length === 0 ? <tr><td colSpan={11} className="empty">Sem itens.</td></tr>
+                  : itens.map((it, i) => {
+                    const v = it.vinculacao_id ? ifvMap[it.vinculacao_id] : null
+                    const ins = v ? insMap[v.insumo_id] : null
+                    const qEst = v ? (it.quantidade || 0) * (v.qtd_por_embalagem || 0) : null
+                    return (
                       <tr key={it.id}>
-                        <td>{it.descricao_nfe || '—'}</td>
+                        <td className="c" style={{ color: '#94a3b8' }}>{i + 1}</td>
                         <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{it.codigo_item_fornecedor || '—'}</td>
+                        <td>{it.descricao_nfe || '—'}</td>
+                        <td className="mono">{ins ? (ins.codigo_interno || ins.nome) : <span style={{ color: '#dc2626' }}>—</span>}</td>
+                        <td style={{ color: '#64748b' }}>{v?.embalagem_descricao || '—'}</td>
                         <td className="c">{it.unidade_nfe || '—'}</td>
+                        <td className="r mono">{v ? fmtQ(v.qtd_por_embalagem) : '—'}</td>
                         <td className="r mono">{fmtQ(it.quantidade)}</td>
                         <td className="r mono">{brl(it.valor_unitario)}</td>
-                        <td className="c"><button className="corrigir" onClick={() => setVinc(it)}>Corrigir</button></td>
+                        <td className="r mono">{brl((it.quantidade || 0) * (it.valor_unitario || 0))}</td>
+                        <td className="r mono" style={{ fontWeight: 600 }}>{qEst != null ? `${fmtQ(qEst)} ${ins?.unidade_medida || ''}` : '—'}</td>
                       </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div></div>
-          )}
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div></div>
+        </>
+      )}
+
+      {tab === 'erros' && (
+        <>
+          <div className="det-bar" style={{ background: '#fff' }}><span>⚠</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os erros'}</span></div>
+          <div className="tbl-wrap"><div className="tbl-scroll">
+            <table className="tbl">
+              <thead><tr><th>Produto NF-e</th><th>Cód. Fornecedor</th><th>Unidade</th><th className="r">Quantidade</th><th className="r">V. Unitário</th><th className="c">Ação</th></tr></thead>
+              <tbody>
+                {!selNfe ? <tr><td colSpan={6} className="empty">Selecione uma NF-e na aba DANFE.</td></tr>
+                  : erros.length === 0 ? <tr><td colSpan={6} className="empty" style={{ color: '#16a34a' }}>✓ Todos os itens estão vinculados.</td></tr>
+                  : erros.map((it) => (
+                    <tr key={it.id}>
+                      <td>{it.descricao_nfe || '—'}</td>
+                      <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{it.codigo_item_fornecedor || '—'}</td>
+                      <td>{it.unidade_nfe || '—'}</td>
+                      <td className="r mono">{fmtQ(it.quantidade)}</td>
+                      <td className="r mono">{brl(it.valor_unitario)}</td>
+                      <td className="c"><button className="corrigir" onClick={() => setVinc(it)}>Corrigir</button></td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div></div>
         </>
       )}
 
@@ -196,8 +249,6 @@ function VincularModal({ item, nfe, insumos, ifv, vinculos, forn, tenantId, onCl
   const insByName = new Map(insumos.map((i) => [i.nome, i.id]))
   const q = Number(item.quantidade) || 0
   const f = parseFloat(fator) || 0
-  const qEst = q * f
-
   const onEmb = (val: string) => { setEmbDesc(val); const c = calcFator(val); if (c != null) setFator(String(c)) }
 
   const salvar = async () => {
@@ -207,7 +258,6 @@ function VincularModal({ item, nfe, insumos, ifv, vinculos, forn, tenantId, onCl
     try {
       const fornId = forn?.id || null
       const preco = f > 0 ? +((item.valor_unitario || 0) / f).toFixed(4) : null
-      // 1. insumo_fornecedores (PATCH existente ou POST)
       const existing = ifv.find((v) => v.insumo_id === insId && (!fornId || v.fornecedor_id === fornId) && (codForn ? v.codigo_fornecedor === codForn : v.embalagem_descricao === embDesc))
       let vincId: string
       if (existing) {
@@ -217,13 +267,10 @@ function VincularModal({ item, nfe, insumos, ifv, vinculos, forn, tenantId, onCl
         const { data, error } = await supabase.from('insumo_fornecedores').insert({ tenant_id: tenantId, insumo_id: insId, fornecedor_id: fornId, embalagem_descricao: embDesc || null, qtd_por_embalagem: f, codigo_fornecedor: codForn || null, preco_unitario: preco, descricao_fornecedor: descr.trim() || null }).select('id'); if (error) throw error
         vincId = data![0].id
       }
-      // 2. vinculos_nfe (de-para p/ auto-match futuro)
       const existVin = vinculos.find((v) => (item.codigo_item_fornecedor && v.codigo_nfe === item.codigo_item_fornecedor) || norm(v.descricao_nfe) === norm(item.descricao_nfe))
       if (existVin) await supabase.from('vinculos_nfe').update({ insumo_id: insId, fator_conversao: f }).eq('id', existVin.id)
       else await supabase.from('vinculos_nfe').insert({ tenant_id: tenantId, descricao_nfe: item.descricao_nfe, codigo_nfe: item.codigo_item_fornecedor || null, insumo_id: insId, fator_conversao: f })
-      // 3. nfe_itens.vinculacao_id
       const { error: e3 } = await supabase.from('nfe_itens').update({ vinculacao_id: vincId }).eq('id', item.id); if (e3) throw e3
-      // 4. se todos os itens da nota têm vínculo → status 'pronta'
       const { data: upd } = await supabase.from('nfe_itens').select('vinculacao_id').eq('nfe_id', nfe.id)
       if (upd && upd.length > 0 && upd.every((x: any) => x.vinculacao_id)) await supabase.from('nfe_recebidas').update({ status: 'pronta' }).eq('id', nfe.id)
       onSaved()
@@ -241,17 +288,14 @@ function VincularModal({ item, nfe, insumos, ifv, vinculos, forn, tenantId, onCl
           <div>Qtd. NF: <b>{fmtQ(item.quantidade)} {item.unidade_nfe || ''}</b></div>
           <div>Fornecedor: <b>{nfe.nome_emitente || '—'}</b></div>
         </div>
-
         <div className="vsec">Item interno</div>
         <div className="vfg"><label>Insumo / Matéria-prima *</label><SearchSelect value={insSel?.nome || ''} options={insumos.map((i) => i.nome)} placeholder="Selecione o insumo..." onChange={(nm) => setInsId(insByName.get(nm) || '')} /></div>
         <div className="vfg"><label>Código no fornecedor</label><input value={codForn} onChange={(e) => setCodForn(e.target.value)} placeholder="SKU do fornecedor (opcional)" /></div>
         <div className="vfg"><label>Descrição no fornecedor</label><input value={descr} onChange={(e) => setDescr(e.target.value)} placeholder="Como o fornecedor chama" /></div>
-
         <div className="vsec">Embalagem e conversão</div>
         <div className="vfg"><label>Embalagem (descrição)</label><input value={embDesc} onChange={(e) => onEmb(e.target.value)} placeholder="Ex: CAIXA C/ 12, FARDO 20KG, 27x0,375…" /></div>
         <div className="vfg"><label>Qt. na embalagem (un. estoque) *</label><input type="number" step="0.001" min="0" value={fator} onChange={(e) => setFator(e.target.value)} /></div>
-        {f > 0 && <div className="vconv">{fmtQ(q)} {item.unidade_nfe || ''} × {fmtQ(f)} = {fmtQ(qEst)} {insSel?.unidade_medida || ''} no estoque · Custo/un: {brl(f > 0 ? (item.valor_unitario || 0) / f : 0)}</div>}
-
+        {f > 0 && <div className="vconv">{fmtQ(q)} {item.unidade_nfe || ''} × {fmtQ(f)} = {fmtQ(q * f)} {insSel?.unidade_medida || ''} no estoque · Custo/un: {brl(f > 0 ? (item.valor_unitario || 0) / f : 0)}</div>}
         <div className="vfoot">
           <button className="v-sec" onClick={onClose}>Cancelar</button>
           <div style={{ flex: 1 }} />
