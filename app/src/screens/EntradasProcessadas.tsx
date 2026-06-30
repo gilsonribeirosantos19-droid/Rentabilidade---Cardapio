@@ -2,9 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { imprimirDanfe, gerarDanfeAiko } from '../lib/danfe'
 import './fiscal.css'
-
-const NFE_WEBHOOK = 'https://trczpnjidqfippbfxtpe.supabase.co/functions/v1/nfe-webhook'
 
 type Nfe = { id: string; numero?: string; serie?: string; data_emissao?: string; processada_em?: string; nome_emitente?: string; cnpj_emitente?: string; valor_total?: number; chave_acesso?: string }
 type NfeItem = { id?: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; valor_total?: number }
@@ -81,12 +80,6 @@ export function EntradasProcessadas() {
     onError: (e: Error) => { if (e.message !== '__cancel__') showToast('Erro ao estornar: ' + e.message, 'err') },
   })
 
-  const imprimirDanfe = async (chave?: string) => {
-    if (!chave) { showToast('Nota sem chave de acesso.', 'err'); return }
-    showToast('Gerando DANFE…', 'ok')
-    try { const r = await fetch(NFE_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ danfe: true, chave }) }); const j = await r.json(); if (j?.ok && j.url) window.open(j.url, '_blank'); else showToast('DANFE indisponível para esta nota (o Focus não tem o PDF dela).', 'err') } catch (e: any) { showToast('Erro ao gerar DANFE: ' + e.message, 'err') }
-  }
-
   const exportCSV = (rows: Nfe[]) => {
     if (!rows.length) { showToast('Nenhum dado para exportar.', 'err'); return }
     const head = ['NF-e', 'Série', 'D. Emissão', 'D. Processamento', 'Fornecedor', 'CNPJ', 'V. Total', 'Itens']
@@ -137,7 +130,7 @@ export function EntradasProcessadas() {
                   <td className="c mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
                   <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.data_emissao)}</span><br /><span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(n.data_emissao)}</span></td>
                   <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.processada_em)}</span><br /><span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(n.processada_em)}</span></td>
-                  <td><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div><div style={{ fontSize: 10, color: '#94a3b8' }} className="mono">{n.cnpj_emitente || ''}</div></td>
+                  <td className="fornec"><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div><div style={{ fontSize: 10, color: '#94a3b8' }} className="mono">{n.cnpj_emitente || ''}</div></td>
                   <td className="r mono" style={{ fontWeight: 600 }}>{brl(n.valor_total)}</td>
                   <td className="c" style={{ fontWeight: 600 }}>{itensCount[n.id] || '—'}</td>
                   <td className="c"><span className="badge b-proc"><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />Processada</span></td>
@@ -163,13 +156,13 @@ export function EntradasProcessadas() {
         <button className="danger" onClick={() => { const n = menu.nfe; setMenu(null); estornarMut.mutate(n) }}>↺ Estornar nota</button>
       </div>}
 
-      {detNfe && <DetalheModal nfe={detNfe} onClose={() => setDetNfe(null)} onDanfe={imprimirDanfe} />}
+      {detNfe && <DetalheModal nfe={detNfe} onClose={() => setDetNfe(null)} onMsg={showToast} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
 }
 
-function DetalheModal({ nfe, onClose, onDanfe }: { nfe: Nfe; onClose: () => void; onDanfe: (c?: string) => void }) {
+function DetalheModal({ nfe, onClose, onMsg }: { nfe: Nfe; onClose: () => void; onMsg: (m: string, t?: 'ok' | 'err') => void }) {
   const itensRef = useRef<HTMLDivElement>(null)
   const { data: itens = [] } = useQuery({ queryKey: ['ep-det', nfe.id], queryFn: async () => { const { data } = await supabase.from('nfe_itens').select('*').eq('nfe_id', nfe.id).order('id'); return (data ?? []) as NfeItem[] } })
   const lbl = (t: string) => <div className="lbl">{t}</div>
@@ -179,7 +172,8 @@ function DetalheModal({ nfe, onClose, onDanfe }: { nfe: Nfe; onClose: () => void
         <div className="det-head">
           <div className="t">NF-e {nfe.numero || '—'} / {nfe.serie || '1'}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {nfe.chave_acesso && <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => onDanfe(nfe.chave_acesso)} title="Abrir o DANFE em PDF para imprimir"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>Imprimir DANFE</button>}
+            {nfe.chave_acesso && <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => imprimirDanfe(nfe.chave_acesso!, onMsg)} title="Abrir o DANFE em PDF para imprimir"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>Imprimir DANFE</button>}
+            {nfe.chave_acesso && <button className="det-danfe" style={{ border: '1.5px solid #f97316', background: '#fff7ed', color: '#ea6c00' }} onClick={() => gerarDanfeAiko(nfe.chave_acesso!, onMsg)} title="Visualizar o DANFE (espelho interno)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>Ver DANFE</button>}
             <button className="det-x" onClick={onClose}>✕</button>
           </div>
         </div>

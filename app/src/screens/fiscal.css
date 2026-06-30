@@ -21,13 +21,14 @@
 .fiscal-screen .tbl thead th.sortable:hover { color: #0f172a; }
 .fiscal-screen .tbl th.r, .fiscal-screen .tbl td.r { text-align: right; }
 .fiscal-screen .tbl th.c, .fiscal-screen .tbl td.c { text-align: center; }
-.fiscal-screen .tbl tbody td { padding: 8px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; vertical-align: middle; }
+.fiscal-screen .tbl tbody td { padding: 5px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; vertical-align: middle; white-space: nowrap; }
+.fiscal-screen .tbl td.fornec { white-space: normal; min-width: 220px; }
 .fiscal-screen .tbl tbody tr:hover td { background: #f8fafc; }
 .fiscal-screen .mono { font-family: 'DM Mono', monospace; }
 .fiscal-screen .nfe-link { font-weight: 700; color: #0f172a; }
 .fiscal-screen .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
 .fiscal-screen .b-proc { background: #dcfce7; color: #16a34a; }
-.fiscal-screen .lnk-btn { height: 28px; padding: 0 10px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.fiscal-screen .lnk-btn { height: 28px; padding: 0 10px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .fiscal-screen .lnk-btn:hover { background: #f8fafc; }
 .fiscal-screen .kebab { border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 16px; padding: 2px 6px; border-radius: 6px; }
 .fiscal-screen .kebab:hover { background: #f1f5f9; }
