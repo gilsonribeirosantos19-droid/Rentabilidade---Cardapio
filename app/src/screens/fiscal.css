@@ -1,0 +1,64 @@
+/* Módulo Fiscal — escopado .fiscal-screen */
+.fiscal-screen { padding: 18px 24px; }
+.fiscal-screen .fh { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.fiscal-screen .fh-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+.fiscal-screen .fh-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.fiscal-screen .fh-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fiscal-screen .field { height: 36px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.fiscal-screen .field:focus { outline: none; border-color: #f97316; }
+.fiscal-screen select.field { cursor: pointer; }
+.fiscal-screen .btn-g { height: 36px; padding: 0 13px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.fiscal-screen .btn-g:hover { background: #f8fafc; }
+
+.fiscal-screen .summary { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; font-size: 13px; color: #64748b; }
+.fiscal-screen .summary .sval { font-weight: 700; color: #16a34a; font-family: 'DM Mono', monospace; }
+
+.fiscal-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
+.fiscal-screen .tbl-scroll { overflow-x: auto; }
+.fiscal-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fiscal-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.fiscal-screen .tbl thead th.sortable { cursor: pointer; user-select: none; }
+.fiscal-screen .tbl thead th.sortable:hover { color: #0f172a; }
+.fiscal-screen .tbl th.r, .fiscal-screen .tbl td.r { text-align: right; }
+.fiscal-screen .tbl th.c, .fiscal-screen .tbl td.c { text-align: center; }
+.fiscal-screen .tbl tbody td { padding: 8px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; vertical-align: middle; }
+.fiscal-screen .tbl tbody tr:hover td { background: #f8fafc; }
+.fiscal-screen .mono { font-family: 'DM Mono', monospace; }
+.fiscal-screen .nfe-link { font-weight: 700; color: #0f172a; }
+.fiscal-screen .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.fiscal-screen .b-proc { background: #dcfce7; color: #16a34a; }
+.fiscal-screen .lnk-btn { height: 28px; padding: 0 10px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.fiscal-screen .lnk-btn:hover { background: #f8fafc; }
+.fiscal-screen .kebab { border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 16px; padding: 2px 6px; border-radius: 6px; }
+.fiscal-screen .kebab:hover { background: #f1f5f9; }
+.fiscal-screen .empty { text-align: center; color: #94a3b8; padding: 40px 20px; font-size: 14px; }
+
+.fiscal-screen .pag-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; font-size: 12px; color: #94a3b8; }
+.fiscal-screen .pag-btn { min-width: 30px; height: 30px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; color: #475569; font-size: 12px; cursor: pointer; font-family: inherit; }
+.fiscal-screen .pag-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
+.fiscal-screen .pag-btn:disabled { opacity: .5; cursor: default; }
+
+/* menu flutuante (⋮) */
+.fiscal-screen .fmenu, .fmenu-portal { position: fixed; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 2000; min-width: 165px; padding: 4px 0; }
+.fmenu-portal .fm-h { padding: 8px 14px; font-size: 11px; color: #94a3b8; border-bottom: 1px solid #f1f5f9; }
+.fmenu-portal button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 14px; border: none; background: none; font-size: 13px; cursor: pointer; color: #0f172a; font-family: inherit; }
+.fmenu-portal button:hover { background: #f8fafc; }
+.fmenu-portal button.danger { color: #dc2626; border-top: 1px solid #f1f5f9; }
+
+/* modal detalhe */
+.fiscal-screen .ov, .fov-portal { position: fixed; inset: 0; background: rgba(15,23,42,.4); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.fov-portal .det { background: #fff; border-radius: 14px; width: 96vw; max-width: 1040px; max-height: 90vh; overflow: auto; box-shadow: 0 8px 40px rgba(0,0,0,.25); }
+.fov-portal .det-head { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+.fov-portal .det-head .t { font-size: 15px; font-weight: 700; }
+.fov-portal .det-info { padding: 16px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; font-size: 13px; }
+.fov-portal .det-info .lbl { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+.fov-portal .det-danfe { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.fov-portal .det-x { background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; padding: 2px 8px; }
+.fov-portal table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fov-portal .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 11px; text-align: left; padding: 9px 12px; }
+.fov-portal .tbl th.r { text-align: right; } .fov-portal .tbl td.r { text-align: right; }
+.fov-portal .tbl tbody td { padding: 8px 12px; border-bottom: 1px solid #eef1f5; }
+.fov-portal .mono { font-family: 'DM Mono', monospace; }
+
+.fiscal-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 3000; }
+.fiscal-screen .toast.ok { background: #059669; } .fiscal-screen .toast.err { background: #ef4444; }
