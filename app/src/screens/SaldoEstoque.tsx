@@ -162,8 +162,6 @@ export function SaldoEstoque() {
 
   return (
     <div className="est-screen">
-      <div className="est-title">Saldo de Estoque <span>— posição financeira por loja</span></div>
-
       <div className="ds-filterbar">
         <div className="ds-field">
           <label>Posição</label>

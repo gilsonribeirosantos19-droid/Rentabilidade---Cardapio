@@ -84,8 +84,6 @@ export function Kardex() {
 
   return (
     <div className="est-screen">
-      <div className="est-title">Kardex <span>— extrato de movimentação por insumo</span></div>
-
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 240 }}><SearchSelect value={insSel?.nome || ''} onChange={(nm) => setInsId(insByName.get(nm) || '')} options={insOptions} placeholder="Selecione um insumo..." /></div>
         <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}>

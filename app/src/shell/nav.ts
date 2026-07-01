@@ -134,6 +134,8 @@ export function labelForKey(key: string): string {
 // as demais caem no labelForKey (breadcrumb de 1 nível só).
 const TITLE_OVERRIDES: Record<string, string> = {
   'estoque/movimentacao': 'Movimentação de Estoque no Período',
+  'estoque/saldo': 'Posição financeira por loja',
+  'estoque/kardex': 'Extrato de movimentação por insumo',
 }
 export function titleForKey(key: string): string {
   return TITLE_OVERRIDES[key] ?? labelForKey(key)

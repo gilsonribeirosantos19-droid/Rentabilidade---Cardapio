@@ -69,8 +69,6 @@ export function Inventario() {
 
   return (
     <div className="est-screen">
-      <div className="est-title">Inventário</div>
-
       <div className="act-bar" style={{ justifyContent: 'flex-end' }}>
         <button className="btn-sec" onClick={() => setGruposOpen(true)}>⚙ Grupos</button>
         <button className="btn-pri" onClick={() => setNovoOpen(true)}>+ Novo inventário</button>
