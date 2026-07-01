@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { imprimirDanfe, gerarDanfeAiko } from '../lib/danfe'
 import './fiscal.css'
 
 type Nfe = { id: string; numero?: string; serie?: string; chave_acesso?: string; cnpj_emitente?: string; nome_emitente?: string; data_emissao?: string; data_integracao?: string; valor_total?: number; valor_titulo?: number; data_vencimento?: string; portador?: string; status?: string; loja_id?: string | null }
@@ -288,7 +289,20 @@ export function MonitorNfe() {
 
       {tab === 'itens' && (
         <>
-          <div className="det-bar"><span>📄</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os itens'}</span></div>
+          <div className="det-bar" style={{ flexWrap: 'wrap' }}>
+            <span>📄</span>
+            {selNfe ? <>
+              <span style={{ color: '#0f172a', fontWeight: 700 }}>NF-e {selNfe.numero}/{selNfe.serie}</span>
+              <span>Emitente: <b style={{ color: '#334155' }}>{selNfe.nome_emitente || '—'}</b></span>
+              <span>Emissão: <b style={{ color: '#334155' }}>{fmtD(selNfe.data_emissao)}</b></span>
+              <span>Total: <b style={{ color: '#334155' }}>{brl(selNfe.valor_total)}</b></span>
+              <span>{itens.length} {itens.length === 1 ? 'item' : 'itens'}</span>
+              {selNfe.chave_acesso && <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => imprimirDanfe(selNfe.chave_acesso!, showToast)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>Imprimir DANFE</button>
+                <button className="det-danfe" style={{ border: '1.5px solid #f97316', background: '#fff7ed', color: '#ea6c00' }} onClick={() => gerarDanfeAiko(selNfe.chave_acesso!, showToast)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>Visualizar DANFE</button>
+              </div>}
+            </> : <span>Selecione uma NF-e na aba DANFE para ver os itens</span>}
+          </div>
           <div className="tbl-wrap"><div className="tbl-scroll">
             <table className="tbl">
               <thead><tr><th className="c">Seq.</th><th>Item Fornecedor</th><th>Descrição</th><th>Item Interno</th><th>Embalagem</th><th className="c">UM</th><th className="r">Q. na Emb.</th><th className="r">Q. de Embalagens</th><th className="r">V. Unitário</th><th className="r">V. Total</th><th className="r">Q. Estoque</th></tr></thead>
