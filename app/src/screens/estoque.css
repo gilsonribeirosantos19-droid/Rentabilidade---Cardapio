@@ -183,6 +183,24 @@
 .est-screen .cm-grid .c-num { text-align: right; font-family: 'DM Mono', monospace; color: #334155; white-space: nowrap; }
 .est-screen .cm-grid input[type=checkbox] { width: 16px; height: 16px; accent-color: #f97316; cursor: pointer; }
 .est-screen .cm-grid-empty { padding: 16px !important; text-align: center; color: #94a3b8; height: auto !important; }
+
+/* Fechamento de Custo — grade estilo Everest (cabeçalho agrupado + Detalhes + situação) */
+.est-screen .cm-grid thead tr.cm-grp th { background: #e8edf4; text-align: center; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #d6dce6; border-left: 1px solid #d6dce6; padding: 5px 10px; top: 0; }
+.est-screen .cm-grid thead tr.cm-sub th { top: 30px; }
+.est-screen .cm-grid thead tr.cm-sub th.c-num { text-align: right; }
+.est-screen .cm-grid .c-det { width: 40px; text-align: center; }
+.est-screen .cm-det { width: 26px; height: 26px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; cursor: pointer; color: #475569; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
+.est-screen .cm-det:hover { background: #eef2f7; }
+.est-screen .fc-sit { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 99px; }
+.est-screen .fc-sit.ab { background: #eff6ff; color: #2563eb; }
+.est-screen .fc-sit.fe { background: #f0fdf4; color: #16a34a; }
+.est-screen .cm-grid td.c-cmv { color: #dc2626; font-weight: 700; }
+.est-screen .cm-grid td.c-neg { color: #94a3b8; }
+.est-screen .cm-grid tfoot td { height: auto; padding: 9px 10px; font-weight: 800; background: #f1f5f9; border-top: 2px solid #d6dce6; color: #0f172a; position: sticky; bottom: 0; }
+.est-screen .cm-grpbar { font-size: 11px; color: #94a3b8; padding: 7px 10px; background: #f8fafc; border: 1px dashed #d6dce6; border-radius: 6px; margin-bottom: 8px; }
+.est-screen .cm-toprow { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.est-screen .cm-selall { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #475569; cursor: pointer; margin-left: auto; }
+.est-screen .cm-selall input { width: 15px; height: 15px; accent-color: #f97316; }
 .est-screen .gnova { width: 120px; height: 30px; border: 1px solid #cbd5e1; border-radius: 5px; padding: 0 8px; font-size: 13px; font-family: 'DM Mono', monospace; text-align: right; background: #fff; color: #0f172a; }
 .est-screen .gnova:disabled { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; }
 /* Recalcular — dropdown de lojas */
