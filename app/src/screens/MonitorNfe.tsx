@@ -407,7 +407,15 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
         const ev = vinculos.find((v) => (item.codigo_item_fornecedor && v.codigo_nfe === item.codigo_item_fornecedor) || norm(v.descricao_nfe) === norm(item.descricao_nfe))
         if (ev) await supabase.from('vinculos_nfe').update({ insumo_id: insId, fator_conversao: f }).eq('id', ev.id)
         else await supabase.from('vinculos_nfe').insert({ tenant_id: tenantId, descricao_nfe: item.descricao_nfe, codigo_nfe: item.codigo_item_fornecedor || null, insumo_id: insId, fator_conversao: f })
-        await supabase.from('nfe_itens').update({ vinculacao_id: vincId }).eq('id', item.id)
+        // propaga o vínculo pra TODOS os itens de mesmo código nas notas do MESMO fornecedor (CNPJ) —
+        // ao vincular um, os outros (mesma nota e outras notas do fornecedor) já ficam vinculados
+        if (item.codigo_item_fornecedor && nfe.cnpj_emitente) {
+          const { data: notasForn } = await supabase.from('nfe_recebidas').select('id').eq('tenant_id', tenantId).eq('cnpj_emitente', nfe.cnpj_emitente)
+          const ids = (notasForn ?? []).map((x: any) => x.id as string)
+          if (ids.length) await supabase.from('nfe_itens').update({ vinculacao_id: vincId }).eq('tenant_id', tenantId).eq('codigo_item_fornecedor', item.codigo_item_fornecedor).is('vinculacao_id', null).in('nfe_id', ids)
+        } else {
+          await supabase.from('nfe_itens').update({ vinculacao_id: vincId }).eq('id', item.id)
+        }
         const { data: upd } = await supabase.from('nfe_itens').select('vinculacao_id').eq('nfe_id', nfe.id)
         if (upd && upd.length > 0 && upd.every((x: any) => x.vinculacao_id)) await supabase.from('nfe_recebidas').update({ status: 'pronta' }).eq('id', nfe.id)
       }
