@@ -9,7 +9,12 @@ import './monitorvendas.css'
 // Quando o Saipos entrar, troca a fonte por uma tabela `vendas` real, mantendo este layout.
 
 type Status = 'processada' | 'erro' | 'cancelada'
-type ItemVenda = { produto: string; qtd: number; valor: number; semFicha?: boolean }
+type ErroItem = 'sem_cadastro' | 'sem_ficha'
+type ItemVenda = { produto: string; qtd: number; valor: number; erro?: ErroItem }
+const ERRO_META: Record<ErroItem, { nome: string; pill: string }> = {
+  sem_cadastro: { nome: 'sem cadastro', pill: 'p-err' },
+  sem_ficha: { nome: 'sem ficha', pill: 'p-pend' },
+}
 type Venda = { id: string; dataHora: string; consumo: string; bruto: number; desconto: number; liquido: number; itens: number; status: Status; detalhe: ItemVenda[] }
 
 const STATUS_META: Record<Status, { nome: string; dot: string; pill: string }> = {
@@ -24,11 +29,11 @@ const MOCK: Venda[] = [
   { id: 'v128', dataHora: '07/06 22:15', consumo: 'Salão', bruto: 285.60, desconto: 13.20, liquido: 272.40, itens: 18, status: 'processada', detalhe: [{ produto: 'Temaki Salmão', qtd: 4, valor: 119.60 }, { produto: 'Hot Roll (8un)', qtd: 3, valor: 89.70 }, { produto: 'Refrigerante Lata', qtd: 11, valor: 63.10 }] },
   { id: 'v127', dataHora: '07/06 22:10', consumo: 'Delivery', bruto: 156.40, desconto: 0, liquido: 156.40, itens: 9, status: 'processada', detalhe: [{ produto: 'Combo Sushi 20 peças', qtd: 1, valor: 98.90 }, { produto: 'Yakisoba Frango', qtd: 1, valor: 42.50 }, { produto: 'Guaraná 1L', qtd: 1, valor: 15.00 }] },
   { id: 'v126', dataHora: '07/06 22:05', consumo: 'Salão', bruto: 362.80, desconto: 17.60, liquido: 345.20, itens: 24, status: 'processada', detalhe: [{ produto: 'Rodízio Adulto', qtd: 4, valor: 320.00 }, { produto: 'Sobremesa', qtd: 4, valor: 42.80 }] },
-  { id: 'v124', dataHora: '07/06 21:50', consumo: 'Salão', bruto: 478.70, desconto: 26.50, liquido: 452.20, itens: 31, status: 'erro', detalhe: [{ produto: 'Combo Executivo (COD 9912)', qtd: 2, valor: 78.00, semFicha: true }, { produto: 'Temaki Salmão', qtd: 5, valor: 149.50 }, { produto: 'Rodízio Adulto', qtd: 3, valor: 224.70 }] },
+  { id: 'v124', dataHora: '07/06 21:50', consumo: 'Salão', bruto: 478.70, desconto: 26.50, liquido: 452.20, itens: 31, status: 'erro', detalhe: [{ produto: 'Combo Executivo (COD 9912)', qtd: 2, valor: 78.00, erro: 'sem_ficha' }, { produto: 'Temaki Salmão', qtd: 5, valor: 149.50 }, { produto: 'Rodízio Adulto', qtd: 3, valor: 224.70 }] },
   { id: 'v123', dataHora: '07/06 21:40', consumo: 'Delivery', bruto: 224.50, desconto: 0, liquido: 224.50, itens: 14, status: 'processada', detalhe: [{ produto: 'Barca 40 peças', qtd: 1, valor: 189.90 }, { produto: 'Missoshiru', qtd: 2, valor: 34.60 }] },
   { id: 'v122', dataHora: '07/06 21:35', consumo: 'Salão', bruto: 609.20, desconto: 30.50, liquido: 578.70, itens: 37, status: 'processada', detalhe: [{ produto: 'Rodízio Adulto', qtd: 6, valor: 480.00 }, { produto: 'Bebidas diversas', qtd: 31, valor: 129.20 }] },
   { id: 'v121', dataHora: '07/06 21:25', consumo: 'Salão', bruto: 162.90, desconto: 8.10, liquido: 154.80, itens: 11, status: 'cancelada', detalhe: [{ produto: 'Hot Roll (8un)', qtd: 3, valor: 89.70 }, { produto: 'Refrigerante Lata', qtd: 8, valor: 73.20 }] },
-  { id: 'v120', dataHora: '07/06 21:20', consumo: 'Retirada', bruto: 76.50, desconto: 0, liquido: 76.50, itens: 5, status: 'erro', detalhe: [{ produto: 'Poke Bowl (COD 8841)', qtd: 1, valor: 39.90, semFicha: true }, { produto: 'Suco Natural', qtd: 3, valor: 36.60 }] },
+  { id: 'v120', dataHora: '07/06 21:20', consumo: 'Retirada', bruto: 76.50, desconto: 0, liquido: 76.50, itens: 5, status: 'erro', detalhe: [{ produto: 'Poke Bowl (COD 8841)', qtd: 1, valor: 39.90, erro: 'sem_cadastro' }, { produto: 'Suco Natural', qtd: 3, valor: 36.60 }] },
   { id: 'v119', dataHora: '07/06 21:10', consumo: 'Delivery', bruto: 134.60, desconto: 0, liquido: 134.60, itens: 8, status: 'processada', detalhe: [{ produto: 'Combo Sushi 20 peças', qtd: 1, valor: 98.90 }, { produto: 'Yakisoba Frango', qtd: 1, valor: 35.70 }] },
 ]
 
@@ -43,6 +48,11 @@ export function MonitorVendas() {
   const cnt = useMemo(() => { const c: Record<Status, number> = { processada: 0, erro: 0, cancelada: 0 }; rows.forEach((r) => { c[r.status]++ }); return c }, [rows])
   const lista = useMemo(() => rows.filter((r) => chips.has(r.status)), [rows, chips])
   const resumo = useMemo(() => ({ total: rows.length, bruto: rows.reduce((s, r) => s + r.bruto, 0), desc: rows.reduce((s, r) => s + r.desconto, 0), liquido: rows.reduce((s, r) => s + r.liquido, 0), itens: rows.reduce((s, r) => s + r.itens, 0) }), [rows])
+  const erroTipos = useMemo(() => {
+    let cad = 0, fic = 0
+    rows.forEach((r) => { if (r.status === 'erro') { if (r.detalhe.some((d) => d.erro === 'sem_cadastro')) cad++; if (r.detalhe.some((d) => d.erro === 'sem_ficha')) fic++ } })
+    return { cad, fic }
+  }, [rows])
 
   const toggleChip = (s: Status) => setChips((p) => { const n = new Set(p); n.has(s) ? n.delete(s) : n.add(s); return n })
   const toggleSel = (id: string) => setSel((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -53,7 +63,7 @@ export function MonitorVendas() {
   const corrigir = (ids: string[]) => {
     const alvo = ids.filter((id) => rows.find((x) => x.id === id)?.status === 'erro')
     if (!alvo.length) { showToast('Selecione vendas Com erro para corrigir.', 'err'); return }
-    setRows((p) => p.map((r) => alvo.includes(r.id) ? { ...r, status: 'processada', detalhe: r.detalhe.map((d) => ({ ...d, semFicha: false })) } : r))
+    setRows((p) => p.map((r) => alvo.includes(r.id) ? { ...r, status: 'processada', detalhe: r.detalhe.map((d) => ({ ...d, erro: undefined })) } : r))
     setSel((p) => { const n = new Set(p); alvo.forEach((id) => n.delete(id)); return n })
     showToast(`${alvo.length} venda(s) corrigida(s) e processada(s). (demonstração)`, 'ok')
   }
@@ -96,7 +106,7 @@ export function MonitorVendas() {
 
       {cnt.erro > 0 && (
         <div className="info-bar">
-          <span>ℹ️ As vendas entram <b>processadas automaticamente</b>. Há <b>{cnt.erro} venda(s) com erro</b> (produto sem ficha) que precisam de correção.</span>
+          <span>ℹ️ As vendas entram <b>processadas automaticamente</b>. Há <b>{cnt.erro} venda(s) com erro</b>: {erroTipos.cad > 0 && <><b>{erroTipos.cad}</b> com produto <b>sem cadastro</b></>}{erroTipos.cad > 0 && erroTipos.fic > 0 && ' · '}{erroTipos.fic > 0 && <><b>{erroTipos.fic}</b> com produto <b>sem ficha técnica</b></>}.</span>
         </div>
       )}
 
@@ -156,11 +166,11 @@ export function MonitorVendas() {
               <thead><tr><th>Produto</th><th className="r">Qtd</th><th className="r">Valor</th><th className="c">Situação</th></tr></thead>
               <tbody>
                 {det.detalhe.map((it, i) => (
-                  <tr key={i} className={it.semFicha ? 'err' : ''}>
+                  <tr key={i} className={it.erro ? 'err' : ''}>
                     <td>{it.produto}</td>
                     <td className="r">{it.qtd}</td>
                     <td className="r">{brl(it.valor)}</td>
-                    <td className="c">{it.semFicha ? <span className="pill p-err"><span className="d" />sem ficha</span> : <span className="pill p-proc"><span className="d" />ok</span>}</td>
+                    <td className="c">{it.erro ? <span className={'pill ' + ERRO_META[it.erro].pill}><span className="d" />{ERRO_META[it.erro].nome}</span> : <span className="pill p-proc"><span className="d" />ok</span>}</td>
                   </tr>
                 ))}
               </tbody>
