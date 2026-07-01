@@ -31,7 +31,6 @@ export function AuditoriaConversao() {
   const [fForn, setFForn] = useState('')
   const [busca, setBusca] = useState('')
   const [statusFil, setStatusFil] = useState('')
-  const [pag, setPag] = useState(1); const [pageSize, setPageSize] = useState(10)
 
   const { data: insumos = [] } = useQuery({ queryKey: ['aud-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,codigo_interno,unidade_medida').eq('tenant_id', tenantId).order('nome').range(f, t)) })
   const { data: notas = [] } = useQuery({ queryKey: ['aud-notas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nota>((f, t) => supabase.from('nfe_recebidas').select('numero,serie,valor_total').eq('tenant_id', tenantId).range(f, t)) })
@@ -87,11 +86,7 @@ export function AuditoriaConversao() {
     })
   }, [rows, statusFil, fForn, busca])
 
-  const totalPags = Math.max(1, Math.ceil(filtradas.length / pageSize))
-  const pagAtual = Math.min(pag, totalPags)
-  const page = filtradas.slice((pagAtual - 1) * pageSize, pagAtual * pageSize)
-
-  const consultar = () => { setApplied({ de, ate, insId, loja }); setPag(1) }
+  const consultar = () => { setApplied({ de, ate, insId, loja }) }
 
   const statusCell = (suspeito: boolean, erro: boolean) => {
     if (erro) return <span style={{ color: '#e11d48', fontWeight: 700, fontSize: 12 }}>Erro</span>
@@ -126,7 +121,7 @@ export function AuditoriaConversao() {
         </div>
         <div className="aud-fg" style={{ width: 230 }}>
           <div className="aud-lb">Fornecedor</div>
-          <SearchSelect value={fForn} options={['Todos', ...fornOpts]} placeholder="Todos" onChange={(nm) => { setFForn(nm === 'Todos' ? '' : nm); setPag(1) }} />
+          <SearchSelect value={fForn} options={['Todos', ...fornOpts]} placeholder="Todos" onChange={(nm) => { setFForn(nm === 'Todos' ? '' : nm) }} />
         </div>
         <div className="aud-fg" style={{ width: 170 }}>
           <div className="aud-lb">Loja</div>
@@ -134,7 +129,7 @@ export function AuditoriaConversao() {
         </div>
         <div className="aud-fg" style={{ width: 230 }}>
           <div className="aud-lb">Pesquisar</div>
-          <input type="text" className="field" style={{ width: '100%' }} placeholder="Descrição, nº DANFE, código…" value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
+          <input type="text" className="field" style={{ width: '100%' }} placeholder="Descrição, nº DANFE, código…" value={busca} onChange={(e) => { setBusca(e.target.value) }} />
         </div>
         <button className="btn-xml" onClick={consultar} style={{ background: '#f97316' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
@@ -143,12 +138,12 @@ export function AuditoriaConversao() {
       </div>
 
       <div style={{ fontSize: 12, color: '#64748b', margin: '4px 0 14px', display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Suspeito' ? '' : 'Suspeito'); setPag(1) }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', display: 'inline-block' }} />Suspeito — fator de conversão igual a 1 com embalagem declarada</span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Erro' ? '' : 'Erro'); setPag(1) }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#e11d48', display: 'inline-block' }} />Erro — diferença entre esperado e lançado</span>
-        {statusFil && <span style={{ color: '#f97316', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setStatusFil(''); setPag(1) }}>✕ limpar filtro ({statusFil})</span>}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Suspeito' ? '' : 'Suspeito') }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', display: 'inline-block' }} />Suspeito — fator de conversão igual a 1 com embalagem declarada</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Erro' ? '' : 'Erro') }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#e11d48', display: 'inline-block' }} />Erro — diferença entre esperado e lançado</span>
+        {statusFil && <span style={{ color: '#f97316', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setStatusFil('') }}>✕ limpar filtro ({statusFil})</span>}
       </div>
 
-      <div className="tbl-wrap"><div className="tbl-scroll">
+      <div className="tbl-wrap"><div className="tbl-scroll aud-scroll">
         <table className="tbl">
           <thead><tr>
             <th style={{ whiteSpace: 'nowrap' }}>DATA EMISSÃO</th>
@@ -169,8 +164,8 @@ export function AuditoriaConversao() {
           </tr></thead>
           <tbody>
             {(isLoading || isFetching) ? <tr><td colSpan={15} className="empty">Carregando…</td></tr>
-              : page.length === 0 ? <tr><td colSpan={15} className="empty">Nenhum lançamento encontrado.</td></tr>
-              : page.map((r) => {
+              : filtradas.length === 0 ? <tr><td colSpan={15} className="empty">Nenhum lançamento encontrado.</td></tr>
+              : filtradas.map((r) => {
                 const dataHora = r.e.criado_em ? new Date(r.e.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
                 return (
                   <tr key={r.e.id}>
@@ -197,11 +192,7 @@ export function AuditoriaConversao() {
       </div></div>
 
       <div className="pag-row">
-        <span>{filtradas.length ? `Mostrando ${(pagAtual - 1) * pageSize + 1} a ${Math.min(pagAtual * pageSize, filtradas.length)} de ${filtradas.length.toLocaleString('pt-BR')} registros` : 'Nenhum registro'}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'flex', gap: 4 }}><button className="pag-btn" disabled={pagAtual === 1} onClick={() => setPag(pagAtual - 1)}>‹</button><span className="pag-btn active">{pagAtual}</span><button className="pag-btn" disabled={pagAtual === totalPags} onClick={() => setPag(pagAtual + 1)}>›</button></div>
-          <select className="field" style={{ height: 30 }} value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPag(1) }}><option value={10}>10 por página</option><option value={25}>25 por página</option><option value={50}>50 por página</option></select>
-        </div>
+        <span>{filtradas.length ? `${filtradas.length.toLocaleString('pt-BR')} registro${filtradas.length !== 1 ? 's' : ''}` : 'Nenhum registro'}</span>
       </div>
     </div>
   )

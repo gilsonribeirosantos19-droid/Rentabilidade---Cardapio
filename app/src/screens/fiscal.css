@@ -20,6 +20,9 @@
 
 .fiscal-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
 .fiscal-screen .tbl-scroll { overflow-x: auto; }
+/* lista sem paginação: rola dentro da área e mantém o cabeçalho fixo no topo */
+.fiscal-screen .aud-scroll { max-height: calc(100vh - 300px); overflow: auto; }
+.fiscal-screen .aud-scroll thead th { position: sticky; top: 0; z-index: 3; }
 .fiscal-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
 .fiscal-screen .tbl tbody td, .fiscal-screen .tbl tbody td * { font-weight: 400 !important; }
 .fiscal-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 10px; text-align: left; padding: 6px 10px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
