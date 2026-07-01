@@ -94,13 +94,6 @@ export function HistoricoEntradas() {
         <div className="ds-actions"><button className="btn-primary" onClick={consultar}>🔍 Consultar</button></div>
       </div>
 
-      <div className="kpi-bar">
-        <div className="kpi-cell" style={{ flex: 1 }}><div className="l">Total de notas</div><div className="v">{kpis.notas.toLocaleString('pt-BR')}</div></div>
-        <div className="kpi-cell" style={{ flex: 2 }}><div className="l">Valor total das entradas</div><div className="v">{brl(kpis.valor)}</div></div>
-        <div className="kpi-cell" style={{ flex: 1 }}><div className="l">NF-e lançadas</div><div className="v">{kpis.nfe.toLocaleString('pt-BR')}</div></div>
-        <div className="kpi-cell" style={{ flex: 1, borderRight: 'none' }}><div className="l">Notas manuais</div><div className="v">{kpis.manual.toLocaleString('pt-BR')}</div></div>
-      </div>
-
       <div className="tbl-wrap"><div className="tbl-scroll">
         <table className="tbl">
           <thead><tr>
