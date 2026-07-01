@@ -1,6 +1,16 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '../lib/auth'
+import { supabase } from '../lib/supabase'
 import './login.css'
+
+// mensagens do Supabase (inglês) traduzidas; o resto aparece cru pra diagnóstico
+function traduzErro(msg: string): string {
+  if (/invalid login credentials/i.test(msg)) return 'E-mail ou senha inválidos.'
+  if (/email not confirmed/i.test(msg)) return 'E-mail ainda não confirmado. Verifique sua caixa de entrada.'
+  if (/only request this after|rate limit|too many/i.test(msg)) return 'Muitas tentativas. Aguarde um instante e tente de novo.'
+  if (/failed to fetch|networkerror|load failed/i.test(msg)) return 'Sem conexão com o servidor. Verifique a internet.'
+  return msg // qualquer outro: mostra o texto real pra sabermos a causa
+}
 
 export function Login() {
   const { signIn } = useAuth()
@@ -8,15 +18,27 @@ export function Login() {
   const [senha, setSenha] = useState('')
   const [showPw, setShowPw] = useState(false)
   const [erro, setErro] = useState('')
+  const [ok, setOk] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    setErro('')
+    setErro(''); setOk('')
     setLoading(true)
     const { error } = await signIn(email.trim(), senha)
     setLoading(false)
-    if (error) setErro('E-mail ou senha inválidos.')
+    if (error) setErro(traduzErro(error))
+  }
+
+  async function esqueciSenha() {
+    setErro(''); setOk('')
+    const mail = email.trim()
+    if (!mail) { setErro('Digite seu e-mail acima para receber o link de redefinição.'); return }
+    const { error } = await supabase.auth.resetPasswordForEmail(mail, {
+      redirectTo: 'https://rentabilidade-cardapio.vercel.app/login.html',
+    })
+    if (error) setErro(traduzErro(error.message))
+    else setOk('Link de redefinição enviado! Verifique seu e-mail (inclusive o spam).')
   }
 
   return (
@@ -94,6 +116,7 @@ export function Login() {
           <div className="sub">Bem-vindo de volta! Entre para continuar.</div>
 
           {erro && <div className="lg-err">{erro}</div>}
+          {ok && <div className="lg-err" style={{ background: '#f0fdf4', borderColor: '#bbf7d0', color: '#16a34a' }}>{ok}</div>}
 
           <div className="lg-fld">
             <label>E-mail</label>
@@ -136,7 +159,7 @@ export function Login() {
             <label className="lg-chk">
               <input type="checkbox" defaultChecked /> Lembrar de mim
             </label>
-            <button type="button" className="lg-link">Esqueci minha senha</button>
+            <button type="button" className="lg-link" onClick={esqueciSenha}>Esqueci minha senha</button>
           </div>
 
           <button className="lg-btn" type="submit" disabled={loading}>
