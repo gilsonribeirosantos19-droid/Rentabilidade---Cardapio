@@ -170,7 +170,7 @@
 .cor-tbl th.r, .cor-tbl td.r { text-align: right; } .cor-tbl th.c, .cor-tbl td.c { text-align: center; }
 .cor-tbl tbody td { padding: 4px 9px; border-bottom: 1px solid #eef1f5; border-right: 1px solid #f3f5f9; white-space: nowrap; }
 .cor-tbl tbody td:last-child { border-right: none; }
-.cor-tbl tbody tr:hover td { background: #f8fafc; }
+.cor-tbl tbody tr:hover td { background: #d7e4f7; }
 .cor-tbl .mono { font-family: 'DM Mono', monospace; }
 .cor-pad { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 4px; color: #f97316; font-weight: 800; font-size: 11px; }
 .cor-emp { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 14px; padding: 2px 9px; cursor: pointer; }

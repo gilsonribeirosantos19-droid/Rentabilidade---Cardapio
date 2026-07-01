@@ -19,7 +19,7 @@
 .prod-screen thead th.r { text-align: right; }
 .prod-screen tbody td { padding: 0 14px; height: 46px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; }
 .prod-screen tbody td.r { text-align: right; }
-.prod-screen tbody tr:hover td { background: #f8fafc; }
+.prod-screen tbody tr:hover td { background: #d7e4f7; }
 .prod-screen .td-mono { font-family: 'DM Mono', monospace; }
 
 /* badges */
