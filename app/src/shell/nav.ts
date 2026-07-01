@@ -79,7 +79,7 @@ export const MODULES: Module[] = [
       { label: 'Faturamento por Produto', key: 'pdv/produto' },
       { label: 'Curva ABC', key: 'pdv/abc' },
       { label: 'Engenharia de Cardápio', key: 'pdv/engenharia' },
-      { label: 'Importar / API', key: 'pdv/importar' },
+      { label: 'Recebimento de Vendas', key: 'pdv/importar' },
     ],
   },
   {
