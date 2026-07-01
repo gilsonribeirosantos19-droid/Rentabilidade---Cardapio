@@ -147,8 +147,6 @@ export function CmvTeoricoReal() {
     URL.revokeObjectURL(url)
   }
 
-  const pctTeo = calc && calc.totalFat > 0 ? calc.totalTeo / calc.totalFat * 100 : 0
-  const pctReal = calc && calc.totalFat > 0 ? calc.totalReal / calc.totalFat * 100 : 0
   const ultimo = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleDateString('pt-BR') + ' ' + new Date(dataUpdatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'
 
   return (
@@ -184,13 +182,13 @@ export function CmvTeoricoReal() {
         </div>
       </div>
 
-      <div className="kpi-row">
-        <div className="kpi"><div className="kpi-lbl">Faturamento</div><div className="kpi-val">{brl(calc?.totalFat)}</div><div className="kpi-sub">no período</div></div>
-        <div className="kpi"><div className="kpi-lbl">CMV Teórico</div><div className="kpi-val">{brl(calc?.totalTeo)}</div><div className="kpi-sub">{pctTeo.toFixed(1)}% do faturamento</div></div>
-        <div className="kpi"><div className="kpi-lbl">CMV Real</div><div className="kpi-val">{brl(calc?.totalReal)}</div><div className="kpi-sub">{pctReal.toFixed(1)}% do faturamento</div></div>
-        <div className="kpi"><div className="kpi-lbl">Diferença</div><div className="kpi-val" style={{ color: (calc?.dif ?? 0) > 0 ? '#e11d48' : (calc?.dif ?? 0) < 0 ? '#16a34a' : '#0f172a' }}>{calc ? (calc.dif >= 0 ? '+' : '') + brl(calc.dif) : 'R$ 0,00'}</div><div className="kpi-sub">{(calc?.dif ?? 0) > 0 ? 'real acima do teórico' : (calc?.dif ?? 0) < 0 ? 'real abaixo do teórico' : 'sem diferença'}</div></div>
-        <div className="kpi"><div className="kpi-lbl">Divergência (%)</div><div className="kpi-val" style={{ color: Math.abs(calc?.divPct ?? 0) > 10 ? '#e11d48' : Math.abs(calc?.divPct ?? 0) > 5 ? '#f97316' : '#16a34a' }}>{(calc && calc.divPct >= 0 ? '+' : '') + (calc?.divPct ?? 0).toFixed(1)}%</div><div className="kpi-sub">acima do teórico</div></div>
-        <div className="kpi"><div className="kpi-lbl">Produtos com Divergência</div><div className="kpi-val" style={{ color: '#f97316' }}>{calc?.comDiv ?? 0}</div><div className="kpi-sub">de {calc?.insAll ?? 0} insumos</div></div>
+      <div className="kbar">
+        <div className="it"><span className="k">Faturamento</span><span className="v">{brl(calc?.totalFat)}</span></div>
+        <div className="it"><span className="k">CMV Teórico</span><span className="v">{brl(calc?.totalTeo)}</span></div>
+        <div className="it"><span className="k">CMV Real</span><span className="v">{brl(calc?.totalReal)}</span></div>
+        <div className="it"><span className="k">Diferença</span><span className="v" style={{ color: (calc?.dif ?? 0) > 0 ? '#e11d48' : (calc?.dif ?? 0) < 0 ? '#16a34a' : '#0f172a' }}>{calc ? (calc.dif >= 0 ? '+' : '') + brl(calc.dif) : 'R$ 0,00'}</span></div>
+        <div className="it"><span className="k">Divergência</span><span className="v" style={{ color: Math.abs(calc?.divPct ?? 0) > 10 ? '#e11d48' : Math.abs(calc?.divPct ?? 0) > 5 ? '#f97316' : '#16a34a' }}>{(calc && calc.divPct >= 0 ? '+' : '') + (calc?.divPct ?? 0).toFixed(1)}%</span></div>
+        <div className="it"><span className="k">Prod. c/ divergência</span><span className="v" style={{ color: '#f97316' }}>{calc?.comDiv ?? 0} / {calc?.insAll ?? 0}</span></div>
       </div>
 
       <div className="tbl-card">
