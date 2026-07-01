@@ -21,6 +21,7 @@ import { AuditoriaConversao } from '../screens/AuditoriaConversao'
 import { HistoricoEntradas } from '../screens/HistoricoEntradas'
 import { ConsumoInsumos } from '../screens/ConsumoInsumos'
 import { HistoricoCustos } from '../screens/HistoricoCustos'
+import { CurvaABC } from '../screens/CurvaABC'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -42,6 +43,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'estoque/rel-entradas') return <HistoricoEntradas />
   if (k === 'estoque/rel-consumo') return <ConsumoInsumos />
   if (k === 'estoque/rel-custos') return <HistoricoCustos />
+  if (k === 'estoque/abc') return <CurvaABC />
   return <Placeholder label={label} />
 }
 
