@@ -4,6 +4,9 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import './insumos.css'
 
+// Title Case pt-BR enquanto digita: 1ª letra de cada palavra maiúscula (igual à normalização do banco)
+const titleCase = (s: string) => s.toLowerCase().replace(/(^|\s)(\S)/g, (_m, sp, c) => sp + (c as string).toUpperCase())
+
 type Insumo = {
   id: string
   tenant_id?: string
@@ -145,7 +148,7 @@ export function Insumos() {
               <div className="form-section-title">1. Identificação</div>
               <div className="form-grid-3">
                 <div className="form-group"><label className="form-label">Código interno</label><input className="form-input" readOnly value={cadForm.id ? fmtCodigo(cadForm.codigo_interno) : ''} placeholder="Gerado automaticamente" /></div>
-                <div className="form-group" style={{ gridColumn: 'span 2' }}><label className="form-label">Descrição do item *</label><input className="form-input" value={cadForm.nome || ''} onChange={(e) => setF('nome', e.target.value)} placeholder="Ex: Salmão fresco" /></div>
+                <div className="form-group" style={{ gridColumn: 'span 2' }}><label className="form-label">Descrição do item *</label><input className="form-input" value={cadForm.nome || ''} onChange={(e) => setF('nome', titleCase(e.target.value))} placeholder="Ex: Salmão fresco" /></div>
                 <div className="form-group"><label className="form-label">NCM</label><input className="form-input" value={cadForm.ncm || ''} onChange={(e) => setF('ncm', e.target.value)} placeholder="00000000" /></div>
                 <div className="form-group"><label className="form-label">Status *</label>
                   <select className="form-select" value={cadForm.ativo === false ? 'false' : 'true'} onChange={(e) => setF('ativo', e.target.value === 'true')}>
