@@ -1,182 +1,190 @@
 import { useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import './fiscal.css'
 
-type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; ativo?: boolean }
-type Forn = { id: string; nome: string; cnpj?: string }
-type IFV = { id: string; insumo_id: string; fornecedor_id?: string | null; descricao_fornecedor?: string; codigo_fornecedor?: string; embalagem_descricao?: string; qtd_por_embalagem?: number | null; embalagem_padrao?: boolean }
+type Insumo = { id: string; nome: string; codigo_interno?: string | number; unidade_medida?: string }
+type Ent = { id: string; criado_em?: string; insumo_id: string; loja_id?: string | null; fator_conversao?: number | null; quantidade?: number | null; quantidade_fornecedor?: number | null; unidade_compra?: string | null; fornecedor_nome?: string | null; nfe_numero?: string | null }
+type Nota = { numero?: string | number | null; serie?: string | number | null; valor_total?: number | null }
+type Vinc = { insumo_id?: string; codigo_nfe?: string }
 
-type Prob = 'sem' | 'suspeito' | 'ok'
-type Row = { id: string; insumo_id: string; fornNome: string; descForn: string; codForn: string; insNome: string; unidade: string; emb: string; fator: number | null; problema: Prob; motivo: string }
-
+const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const fmt3 = (v: number) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+const fmtFator = (v: number) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
+const fmtCod = (c?: string | number | null) => (c != null && c !== '' ? String(c).padStart(6, '0') : '')
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
-const fmtF = (v: number | null) => v == null ? '—' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
-
-// Embalagens que implicam MAIS de 1 unidade — se o fator vier 1, é suspeito.
-const MULTIPACK = /\b(caixa|cx|cxa|fardo|fd|fdo|pacote|pct|pcte|saco|sc|engradado|d[uú]zia|dz|pack|cartela|bandeja|bdj|display|master|resma|blister|kit|jogo|conjunto|cj)\b/i
-
-function auditar(v: IFV, insMap: Record<string, Insumo>): { problema: Prob; motivo: string } {
-  const emb = (v.embalagem_descricao || '').trim()
-  const fator = v.qtd_por_embalagem
-  if (!insMap[v.insumo_id]) return { problema: 'suspeito', motivo: 'Item interno não encontrado (vínculo órfão)' }
-  if (fator == null || Number(fator) === 0) return { problema: 'sem', motivo: 'Sem fator de conversão' }
-  if (Number(fator) < 0) return { problema: 'suspeito', motivo: 'Fator negativo' }
-  if (emb && MULTIPACK.test(emb) && Number(fator) <= 1) return { problema: 'suspeito', motivo: `Embalagem "${emb}" com fator ${fmtF(Number(fator))}` }
-  return { problema: 'ok', motivo: 'Conversão definida' }
-}
+const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const primeiroDiaMes = () => { const d = new Date(); return isoD(new Date(d.getFullYear(), d.getMonth(), 1)) }
+const hoje = () => isoD(new Date())
 
 export function AuditoriaConversao() {
   const { tenantId } = useAuth()
-  const qc = useQueryClient()
+  const { lojas } = useLoja()
+  const [de, setDe] = useState(primeiroDiaMes())
+  const [ate, setAte] = useState(hoje())
+  const [insId, setInsId] = useState('')
+  const [loja, setLoja] = useState('')
+  const [applied, setApplied] = useState({ de: primeiroDiaMes(), ate: hoje(), insId: '', loja: '' })
   const [fForn, setFForn] = useState('')
   const [busca, setBusca] = useState('')
-  const [showSem, setShowSem] = useState(true), [showSusp, setShowSusp] = useState(true), [showOk, setShowOk] = useState(false)
-  const [pag, setPag] = useState(1); const [pageSize, setPageSize] = useState(50)
-  const [editId, setEditId] = useState<string | null>(null); const [editVal, setEditVal] = useState('')
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
+  const [statusFil, setStatusFil] = useState('')
+  const [pag, setPag] = useState(1); const [pageSize, setPageSize] = useState(10)
 
-  const { data: ifv = [], isLoading } = useQuery({ queryKey: ['aud-ifv', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<IFV>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).order('id').range(f, t)) })
-  const { data: insumos = [] } = useQuery({ queryKey: ['aud-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,ativo').eq('tenant_id', tenantId).order('nome').range(f, t)) })
-  const { data: fornecedores = [] } = useQuery({ queryKey: ['aud-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome,cnpj').eq('tenant_id', tenantId); return (data ?? []) as Forn[] } })
+  const { data: insumos = [] } = useQuery({ queryKey: ['aud-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,codigo_interno,unidade_medida').eq('tenant_id', tenantId).order('nome').range(f, t)) })
+  const { data: notas = [] } = useQuery({ queryKey: ['aud-notas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nota>((f, t) => supabase.from('nfe_recebidas').select('numero,serie,valor_total').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: vincs = [] } = useQuery({ queryKey: ['aud-vincs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('insumo_id,codigo_nfe').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: ents = [], isLoading, isFetching } = useQuery({
+    queryKey: ['aud-ents', tenantId, applied.de, applied.ate, applied.insId, applied.loja], enabled: !!tenantId,
+    queryFn: () => fetchAll<Ent>((f, t) => {
+      let q = supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false })
+      if (applied.loja) q = q.eq('loja_id', applied.loja)
+      if (applied.insId) q = q.eq('insumo_id', applied.insId)
+      if (applied.de) q = q.gte('criado_em', applied.de + 'T00:00:00')
+      if (applied.ate) q = q.lte('criado_em', applied.ate + 'T23:59:59')
+      return q.range(f, t)
+    }),
+  })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
-  const fornMap = useMemo(() => Object.fromEntries(fornecedores.map((f) => [f.id, f.nome])) as Record<string, string>, [fornecedores])
+  const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
+  const insOpts = useMemo(() => insumos.map((i) => i.nome), [insumos])
+  const insByNome = useMemo(() => { const m: Record<string, string> = {}; insumos.forEach((i) => { m[i.nome] = i.id }); return m }, [insumos])
+  const notaMap = useMemo(() => { const m: Record<string, number> = {}; notas.forEach((n) => { if (n.numero == null) return; m[`${n.numero}/${n.serie}`] = Number(n.valor_total) || 0; if (m[`${n.numero}`] == null) m[`${n.numero}`] = Number(n.valor_total) || 0 }); return m }, [notas])
+  const codFornMap = useMemo(() => { const m: Record<string, string> = {}; vincs.forEach((v) => { if (v.insumo_id && v.codigo_nfe && !m[v.insumo_id]) m[v.insumo_id] = v.codigo_nfe }); return m }, [vincs])
 
-  const rows = useMemo<Row[]>(() => ifv.map((v) => {
-    const a = auditar(v, insMap)
-    const ins = insMap[v.insumo_id]
-    return {
-      id: v.id, insumo_id: v.insumo_id,
-      fornNome: (v.fornecedor_id && fornMap[v.fornecedor_id]) || '—',
-      descForn: v.descricao_fornecedor || v.embalagem_descricao || '—',
-      codForn: v.codigo_fornecedor || '',
-      insNome: ins?.nome || '(item inexistente)',
-      unidade: ins?.unidade_medida || '',
-      emb: v.embalagem_descricao || '—',
-      fator: v.qtd_por_embalagem == null ? null : Number(v.qtd_por_embalagem),
-      problema: a.problema, motivo: a.motivo,
-    }
-  }), [ifv, insMap, fornMap])
+  const rows = useMemo(() => ents.map((e) => {
+    const ins = insMap[e.insumo_id]
+    const fator = Number(e.fator_conversao) || 1
+    const qtdForn = Number(e.quantidade_fornecedor) || parseFloat((Number(e.quantidade) / fator).toFixed(4))
+    const qtdEst = Number(e.quantidade) || 0
+    const esperado = parseFloat((qtdForn * fator).toFixed(4))
+    const dif = parseFloat((qtdEst - esperado).toFixed(4))
+    const suspeito = fator === 1 && !!e.unidade_compra && (e.unidade_compra || '').toLowerCase() !== (ins?.unidade_medida || '').toLowerCase()
+    const erro = Math.abs(dif) > 0.001
+    const nrDanfe = e.nfe_numero || ''
+    const valorNota = notaMap[nrDanfe] != null ? notaMap[nrDanfe] : notaMap[`${nrDanfe.split('/')[0]}`]
+    const codItem = fmtCod(ins?.codigo_interno)
+    const codForn = codFornMap[e.insumo_id] || ''
+    const unidMed = ins?.unidade_medida || ''
+    const busca = [ins?.nome, e.fornecedor_nome, nrDanfe, codItem, codForn].join(' ').toLowerCase()
+    return { e, ins, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro, nrDanfe, valorNota, codItem, codForn, unidMed, busca, lojaNome: lojaMap[e.loja_id || ''] || '' }
+  }), [ents, insMap, notaMap, codFornMap, lojaMap])
 
-  const cnt = useMemo(() => ({ total: rows.length, sem: rows.filter((r) => r.problema === 'sem').length, susp: rows.filter((r) => r.problema === 'suspeito').length, ok: rows.filter((r) => r.problema === 'ok').length }), [rows])
-
-  const fornOpts = useMemo(() => Array.from(new Set(rows.map((r) => r.fornNome))).filter((n) => n !== '—').sort((a, b) => a.localeCompare(b)), [rows])
+  const fornOpts = useMemo(() => Array.from(new Set(rows.map((r) => r.e.fornecedor_nome).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b, 'pt-BR')), [rows])
 
   const filtradas = useMemo(() => {
-    const b = norm(busca)
+    const termo = norm(busca)
     return rows.filter((r) => {
-      if (r.problema === 'sem' && !showSem) return false
-      if (r.problema === 'suspeito' && !showSusp) return false
-      if (r.problema === 'ok' && !showOk) return false
-      if (fForn && r.fornNome !== fForn) return false
-      if (b && !(norm(r.insNome) + ' ' + norm(r.descForn) + ' ' + norm(r.emb) + ' ' + norm(r.codForn)).includes(b)) return false
+      if (statusFil === 'Erro' && !r.erro) return false
+      if (statusFil === 'Suspeito' && !(r.suspeito && !r.erro)) return false
+      if (statusFil === 'OK' && !(!r.suspeito && !r.erro)) return false
+      if (fForn && r.e.fornecedor_nome !== fForn) return false
+      if (termo && !r.busca.includes(termo)) return false
       return true
-    }).sort((a, b2) => {
-      const ord: Record<Prob, number> = { sem: 0, suspeito: 1, ok: 2 }
-      if (ord[a.problema] !== ord[b2.problema]) return ord[a.problema] - ord[b2.problema]
-      return a.fornNome.localeCompare(b2.fornNome) || a.insNome.localeCompare(b2.insNome)
     })
-  }, [rows, busca, showSem, showSusp, showOk, fForn])
+  }, [rows, statusFil, fForn, busca])
 
   const totalPags = Math.max(1, Math.ceil(filtradas.length / pageSize))
   const pagAtual = Math.min(pag, totalPags)
   const page = filtradas.slice((pagAtual - 1) * pageSize, pagAtual * pageSize)
 
-  const salvarMut = useMutation({
-    mutationFn: async ({ id, fator }: { id: string; fator: number }) => { const { error } = await supabase.from('insumo_fornecedores').update({ qtd_por_embalagem: fator }).eq('id', id); if (error) throw error },
-    onSuccess: () => { setEditId(null); qc.invalidateQueries({ queryKey: ['aud-ifv', tenantId] }); showToast('Fator de conversão atualizado.', 'ok') },
-    onError: (e: Error) => showToast('Erro ao salvar: ' + e.message, 'err'),
-  })
-  const salvar = (r: Row) => { const f = parseFloat(editVal.replace(',', '.')); if (!(f > 0)) { showToast('Informe um fator maior que zero.', 'err'); return } salvarMut.mutate({ id: r.id, fator: Math.round(f * 1000) / 1000 }) }
+  const consultar = () => { setApplied({ de, ate, insId, loja }); setPag(1) }
 
-  const exportCSV = () => {
-    if (!filtradas.length) { showToast('Nada para exportar.', 'err'); return }
-    const head = ['Situação', 'Fornecedor', 'Descrição do fornecedor', 'Cód. Forn.', 'Item interno', 'Un.', 'Embalagem', 'Fator', 'Motivo']
-    const body = filtradas.map((r) => [r.problema === 'sem' ? 'Sem conversão' : r.problema === 'suspeito' ? 'Suspeito' : 'OK', r.fornNome, r.descForn, r.codForn, r.insNome, r.unidade, r.emb, r.fator == null ? '' : String(r.fator).replace('.', ','), r.motivo])
-    const csv = [head, ...body].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'auditoria_conversao.csv'; a.click(); URL.revokeObjectURL(a.href)
+  const statusCell = (suspeito: boolean, erro: boolean) => {
+    if (erro) return <span style={{ color: '#e11d48', fontWeight: 700, fontSize: 12 }}>Erro</span>
+    if (suspeito) return <span style={{ color: '#f97316', fontWeight: 700, fontSize: 12 }}>Suspeito</span>
+    return <span style={{ color: '#16a34a', fontWeight: 700, fontSize: 12 }}>OK</span>
   }
-
-  const limpar = () => { setFForn(''); setBusca(''); setPag(1) }
-  const chip = (on: boolean, set: (v: boolean) => void, cor: string, label: string, n: number) => (
-    <label className="sit-chip" style={on ? { borderColor: cor } : undefined}>
-      <input type="checkbox" checked={on} onChange={(e) => { set(e.target.checked); setPag(1) }} />
-      <span className="dot" style={{ background: cor }} />{label}<span className="cnt">{n}</span>
-    </label>
-  )
+  const difCell = (dif: number, esperado: number) => {
+    if (Math.abs(dif) < 0.001) return <span style={{ color: '#94a3b8' }}>{fmt3(0)} (0%)</span>
+    const pct = esperado > 0 ? dif / esperado * 100 : 0
+    const sign = dif > 0 ? '+' : ''
+    const pctStr = (pct > 0 ? '+' : '') + pct.toFixed(0)
+    return <span style={{ color: dif < 0 ? '#e11d48' : '#16a34a', fontSize: 12, fontWeight: 600 }}>{sign}{fmt3(dif)} ({pctStr}%)</span>
+  }
 
   return (
     <div className="fiscal-screen">
       <div className="fh-title">Auditoria de Conversão</div>
-      <div className="fh-sub">Confere o fator de conversão dos vínculos item × fornecedor — o que entra errado no estoque começa aqui.</div>
+      <div className="fh-sub">Auditoria de fator de conversão nas entradas de NF-e.</div>
 
-      <div className="sit-row" style={{ marginTop: 14 }}>
-        {chip(showSem, setShowSem, '#dc2626', 'Sem conversão', cnt.sem)}
-        {chip(showSusp, setShowSusp, '#f59e0b', 'Suspeito', cnt.susp)}
-        {chip(showOk, setShowOk, '#16a34a', 'OK', cnt.ok)}
-        <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 4 }}>de {cnt.total.toLocaleString('pt-BR')} vínculos</span>
-        <div className="act-r"><button className="btn-g" onClick={exportCSV}>↓ Exportar</button></div>
+      <div className="fl-bar" style={{ alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em' }}>D. Inicial</label>
+          <input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em' }}>D. Final</label>
+          <input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: 230 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em' }}>Insumo</label>
+          <SearchSelect value={insId ? (insMap[insId]?.nome || '') : ''} options={['Todos', ...insOpts]} placeholder="Todos" onChange={(nm) => setInsId(nm === 'Todos' ? '' : (insByNome[nm] || ''))} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: 170 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em' }}>Loja</label>
+          <select className="field" value={loja} onChange={(e) => setLoja(e.target.value)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: 240 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.05em' }}>Pesquisar</label>
+          <input type="text" className="field" placeholder="Descrição, nº DANFE, código…" value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
+        </div>
+        <button className="btn-xml" onClick={consultar} style={{ background: '#f97316' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+          Consultar
+        </button>
       </div>
 
-      <div className="fl-bar">
-        <SearchSelect value={fForn} options={['Todos os fornecedores', ...fornOpts]} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : nm); setPag(1) }} />
-        <input className="field" style={{ minWidth: 240 }} placeholder="Buscar item, embalagem, código…" value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
-        <button className="btn-g" onClick={limpar}>Limpar</button>
-      </div>
-
-      <div className="summary">
-        <span>{filtradas.length.toLocaleString('pt-BR')} vínculo{filtradas.length !== 1 ? 's' : ''} listado{filtradas.length !== 1 ? 's' : ''}</span>
-        {(cnt.sem + cnt.susp) > 0 && <span>⚠ <b style={{ color: '#dc2626' }}>{(cnt.sem + cnt.susp).toLocaleString('pt-BR')}</b> com problema de conversão</span>}
+      <div style={{ fontSize: 12, color: '#64748b', margin: '4px 0 14px', display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Suspeito' ? '' : 'Suspeito'); setPag(1) }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', display: 'inline-block' }} />Suspeito — fator de conversão igual a 1 com embalagem declarada</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Erro' ? '' : 'Erro'); setPag(1) }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#e11d48', display: 'inline-block' }} />Erro — diferença entre esperado e lançado</span>
+        {statusFil && <span style={{ color: '#f97316', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setStatusFil(''); setPag(1) }}>✕ limpar filtro ({statusFil})</span>}
       </div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">
         <table className="tbl">
           <thead><tr>
-            <th className="c" style={{ width: 34 }}></th>
-            <th>Fornecedor</th>
-            <th>Descrição na nota / fornecedor</th>
-            <th>Cód. Forn.</th>
-            <th>Item interno</th>
-            <th className="c">Un.</th>
-            <th>Embalagem</th>
-            <th className="r">Fator</th>
-            <th>Situação</th>
+            <th style={{ whiteSpace: 'nowrap' }}>DATA EMISSÃO</th>
+            <th>DESCRIÇÃO DO ITEM</th>
+            <th>CÓD. ITEM</th>
+            <th>CÓD. FORNECEDOR</th>
+            <th>LOJA</th>
+            <th>FORNECEDOR</th>
+            <th>NR DANFE</th>
+            <th className="r">VALOR DANF</th>
+            <th className="r">QTD FORNECEDOR</th>
+            <th>UNIDADE MEDIDA</th>
+            <th className="r">FATOR</th>
+            <th className="r">QTD ESTOQUE</th>
+            <th className="r">ESPERADO</th>
+            <th className="r">DIFERENÇA</th>
+            <th>STATUS</th>
           </tr></thead>
           <tbody>
-            {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
-              : page.length === 0 ? <tr><td colSpan={9} className="empty">Nenhum vínculo com os filtros atuais. 🎉</td></tr>
+            {(isLoading || isFetching) ? <tr><td colSpan={15} className="empty">Carregando…</td></tr>
+              : page.length === 0 ? <tr><td colSpan={15} className="empty">Nenhum lançamento encontrado.</td></tr>
               : page.map((r) => {
-                const cor = r.problema === 'sem' ? '#dc2626' : r.problema === 'suspeito' ? '#f59e0b' : '#16a34a'
+                const dataHora = r.e.criado_em ? new Date(r.e.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
                 return (
-                  <tr key={r.id}>
-                    <td className="c"><span className="stat-dot" style={{ background: cor }} title={r.motivo} /></td>
-                    <td className="fornec">{r.fornNome}</td>
-                    <td>{r.descForn}</td>
-                    <td className="mono" style={{ color: '#64748b' }}>{r.codForn || '—'}</td>
-                    <td style={{ fontWeight: 600 }}>{r.insNome}</td>
-                    <td className="c mono" style={{ color: '#94a3b8' }}>{r.unidade || '—'}</td>
-                    <td>{r.emb}</td>
-                    <td className="r mono">
-                      {editId === r.id
-                        ? <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <input className="field" style={{ width: 78, height: 26, textAlign: 'right' }} autoFocus value={editVal} onChange={(e) => setEditVal(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') salvar(r); if (e.key === 'Escape') setEditId(null) }} />
-                            <button className="lnk-btn" style={{ height: 26, padding: '0 7px', color: '#16a34a' }} onClick={() => salvar(r)}>✓</button>
-                            <button className="lnk-btn" style={{ height: 26, padding: '0 7px' }} onClick={() => setEditId(null)}>✕</button>
-                          </span>
-                        : <span style={{ color: r.fator == null ? '#dc2626' : '#0f172a', fontWeight: 700 }}>{fmtF(r.fator)}</span>}
-                    </td>
-                    <td>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ color: cor, fontWeight: 700, fontSize: 11 }}>{r.problema === 'sem' ? 'Sem conversão' : r.problema === 'suspeito' ? 'Suspeito' : 'OK'}</span>
-                        {r.problema !== 'ok' && <span style={{ fontSize: 10, color: '#94a3b8' }}>{r.motivo}</span>}
-                        {editId !== r.id && <button className="cor-ico" title="Corrigir fator" onClick={() => { setEditId(r.id); setEditVal(r.fator == null ? '' : String(r.fator)) }}>✎</button>}
-                      </span>
-                    </td>
+                  <tr key={r.e.id}>
+                    <td className="mono" style={{ fontSize: 11, color: '#334155', whiteSpace: 'nowrap' }}>{dataHora}</td>
+                    <td style={{ fontWeight: 600, color: '#334155' }}>{r.ins?.nome || '—'}</td>
+                    <td className="mono" style={{ fontSize: 12, color: '#64748b' }}>{r.codItem || '—'}</td>
+                    <td className="mono" style={{ fontSize: 12, color: '#64748b' }}>{r.codForn || '—'}</td>
+                    <td style={{ fontSize: 12, color: '#64748b' }}>{r.lojaNome || '—'}</td>
+                    <td className="fornec" style={{ fontSize: 12, color: '#334155' }}>{r.e.fornecedor_nome || '—'}</td>
+                    <td className="mono" style={{ fontSize: 12, color: '#334155' }}>{r.nrDanfe || '—'}</td>
+                    <td className="r mono" style={{ color: '#334155' }}>{r.valorNota != null ? brl(r.valorNota) : '—'}</td>
+                    <td className="r mono" style={{ color: '#334155' }}>{fmt3(r.qtdForn)}</td>
+                    <td style={{ fontSize: 12, color: '#64748b' }}>{r.unidMed || '—'}</td>
+                    <td className="r mono" style={{ color: '#334155' }}>{fmtFator(r.fator)}</td>
+                    <td className="r mono" style={{ color: '#334155' }}>{fmt3(r.qtdEst)}</td>
+                    <td className="r mono" style={{ color: '#64748b' }}>{fmt3(r.esperado)}</td>
+                    <td className="r">{difCell(r.dif, r.esperado)}</td>
+                    <td>{statusCell(r.suspeito, r.erro)}</td>
                   </tr>
                 )
               })}
@@ -185,12 +193,12 @@ export function AuditoriaConversao() {
       </div></div>
 
       <div className="pag-row">
-        <span>{filtradas.length ? `Mostrando ${(pagAtual - 1) * pageSize + 1} a ${Math.min(pagAtual * pageSize, filtradas.length)} de ${filtradas.length.toLocaleString('pt-BR')}` : 'Nenhum registro'}</span>
-        <div style={{ display: 'flex', gap: 4 }}><button className="pag-btn" disabled={pagAtual === 1} onClick={() => setPag(pagAtual - 1)}>‹</button><span className="pag-btn active">{pagAtual}</span><button className="pag-btn" disabled={pagAtual === totalPags} onClick={() => setPag(pagAtual + 1)}>›</button></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>Itens por página:<select className="field" style={{ height: 30, width: 70 }} value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPag(1) }}><option value={50}>50</option><option value={100}>100</option><option value={200}>200</option></select></div>
+        <span>{filtradas.length ? `Mostrando ${(pagAtual - 1) * pageSize + 1} a ${Math.min(pagAtual * pageSize, filtradas.length)} de ${filtradas.length.toLocaleString('pt-BR')} registros` : 'Nenhum registro'}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 4 }}><button className="pag-btn" disabled={pagAtual === 1} onClick={() => setPag(pagAtual - 1)}>‹</button><span className="pag-btn active">{pagAtual}</span><button className="pag-btn" disabled={pagAtual === totalPags} onClick={() => setPag(pagAtual + 1)}>›</button></div>
+          <select className="field" style={{ height: 30 }} value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPag(1) }}><option value={10}>10 por página</option><option value={25}>25 por página</option><option value={50}>50 por página</option></select>
+        </div>
       </div>
-
-      {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
 }
