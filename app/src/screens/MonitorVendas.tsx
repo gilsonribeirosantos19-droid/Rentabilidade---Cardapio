@@ -134,7 +134,7 @@ export function MonitorVendas() {
             <thead>
               <tr>
                 <th className="c" style={{ width: 34 }}><input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} /></th>
-                <th>Situação</th><th>Loja</th><th>PDV</th><th>Tipo</th><th>D. Movimento</th><th>Arquivo</th><th>D. Execução</th><th>D. Integração</th><th className="c">Ver</th>
+                <th className="c">Situação</th><th>Loja</th><th>PDV</th><th>Tipo</th><th>D. Movimento</th><th>Arquivo</th><th>D. Execução</th><th>D. Integração</th><th className="c">Ver</th>
               </tr>
             </thead>
             <tbody>
@@ -145,7 +145,7 @@ export function MonitorVendas() {
                   return (
                     <tr key={r.id} className={(sel.has(r.id) ? 'sel ' : '') + (r.situacao === 'com_erros' ? 'err' : '')} onClick={() => setDetId(r.id)}>
                       <td className="c" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} /></td>
-                      <td><span className={'pill ' + m.pill}><span className="d" />{m.nome}</span></td>
+                      <td className="c"><span className="sit-dot" style={{ background: m.dot }} title={m.nome} /></td>
                       <td>{r.loja}</td>
                       <td>{r.pdv}</td>
                       <td>{r.tipo}</td>

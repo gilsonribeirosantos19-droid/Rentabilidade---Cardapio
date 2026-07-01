@@ -61,6 +61,7 @@
 .mvend-screen .p-canc { background: #f1f5f9; color: #94a3b8; } .mvend-screen .p-canc .d { background: #94a3b8; }
 .mvend-screen .p-emproc { background: #eff6ff; color: #2563eb; } .mvend-screen .p-emproc .d { background: #3b82f6; }
 .mvend-screen .p-naorec { background: #eef1f5; color: #111827; } .mvend-screen .p-naorec .d { background: #111827; }
+.mvend-screen .sit-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
 .mvend-screen .arq { font-family: 'DM Mono', monospace; font-size: 11.5px; color: #334155; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mvend-screen .ico-btn { border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; width: 28px; height: 26px; cursor: pointer; color: #475569; }
 .mvend-screen .ico-btn:hover { background: #f1f5f9; }
