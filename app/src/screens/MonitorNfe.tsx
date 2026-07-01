@@ -137,6 +137,8 @@ export function MonitorNfe() {
   const abrirItem = (n: Nfe, t: 'itens' | 'erros') => { setSel(n.id); setTab(t) }
   const [busy, setBusy] = useState(false)
   const [prog, setProg] = useState<{ done: number; total: number } | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const atualizar = async () => { setRefreshing(true); try { await qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && /^mon-/i.test(q.queryKey[0] as string) }) } finally { setRefreshing(false) } }
 
   // grava 1 entrada de NF-e: insere em entradas_estoque + recalcula saldo (média ponderada) + histórico + preço do vínculo
   async function registrarEntradaNfe(insId: string, loja: string, fornId: string | null, fornNome: string | undefined, dados: any) {
@@ -211,7 +213,7 @@ export function MonitorNfe() {
         <div className="mon-top-r">
           <span className="lbl-mini">Loja:</span>
           <select className="field" style={{ minWidth: 160 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
-          <button className="btn-g" onClick={() => qc.invalidateQueries({ queryKey: ['mon-nfe'] })}>↻ Atualizar</button>
+          <button className="btn-g" disabled={refreshing} onClick={atualizar}><span style={refreshing ? { display: 'inline-block', animation: 'mon-spin .7s linear infinite' } : undefined}>↻</span> {refreshing ? 'Atualizando…' : 'Atualizar'}</button>
           <button className="btn-xml" onClick={() => setXmlOpen(true)}>⤓ Entrada por NF-e XML</button>
         </div>
       </div>
