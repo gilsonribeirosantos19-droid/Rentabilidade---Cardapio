@@ -27,6 +27,7 @@ import { ResumoEstoque } from '../screens/ResumoEstoque'
 import { AjusteEstoque } from '../screens/AjusteEstoque'
 import { AjusteCustoMedio } from '../screens/AjusteCustoMedio'
 import { Recalcular } from '../screens/Recalcular'
+import { Compras } from '../screens/Compras'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -54,6 +55,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'ajustes/estoque') return <AjusteEstoque />
   if (k === 'ajustes/custo') return <AjusteCustoMedio />
   if (k === 'ajustes/recalcular') return <Recalcular />
+  if (k === 'compras/pedidos') return <Compras />
   return <Placeholder label={label} />
 }
 

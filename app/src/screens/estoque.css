@@ -127,6 +127,12 @@
 .est-screen .badge.b-A { background: #fee2e2; color: #e11d48; }
 .est-screen .badge.b-B { background: #ffedd5; color: #f97316; }
 .est-screen .badge.b-C { background: #f1f5f9; color: #64748b; }
+.est-screen .badge.b-solicitado { background: #fef3c7; color: #b45309; }
+.est-screen .badge.b-processado { background: #dcfce7; color: #15803d; }
+.est-screen .badge.b-cancelado { background: #fee2e2; color: #dc2626; }
+.est-screen .badge.b-pendente { background: #ffedd5; color: #c2410c; }
+.est-screen .badge.b-enviado { background: #dbeafe; color: #2563eb; }
+.est-screen .badge.b-baixado { background: #f1f5f9; color: #64748b; }
 .est-screen .badge.b-pos { background: #dcfce7; color: #16a34a; }
 .est-screen .badge.b-neg { background: #fee2e2; color: #dc2626; }
 .est-screen .badge.b-cm { background: #dbeafe; color: #2563eb; }
