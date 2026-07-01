@@ -223,17 +223,17 @@ export function Fechamento() {
       </div>
 
       <div className="cm-grid-wrap" style={{ maxHeight: 'calc(100vh - 240px)' }}>
-        <table className="cm-grid">
+        <table className="cm-grid fc">
           <thead>
             <tr className="cm-grp">
               <th rowSpan={2} className="c-sel" style={{ borderLeft: 'none' }}>Sel</th>
               <th rowSpan={2} className="c-det">Det</th>
               <th colSpan={3}>Informações da Loja</th>
-              <th colSpan={9}>Valores de Fechamento</th>
+              <th colSpan={9} className="grp-div">Valores de Fechamento</th>
             </tr>
             <tr className="cm-sub">
-              <th>Fantasia</th><th>CNPJ</th><th style={{ textAlign: 'center' }}>Situação</th>
-              <th className="c-num">V. Estoque Inicial</th>
+              <th className="col-fant">Fantasia</th><th className="col-cnpj">CNPJ</th><th style={{ textAlign: 'center' }}>Situação</th>
+              <th className="c-num grp-div">V. Estoque Inicial</th>
               <th className="c-num">(+) Compras</th>
               <th className="c-num">(+) Ent. Transf.</th>
               <th className="c-num">(−) Saí. Transf.</th>
@@ -254,16 +254,16 @@ export function Fechamento() {
                   <tr key={r.loja.id} className={sel.has(r.loja.id) ? 'sel' : ''}>
                     <td className="c-sel"><input type="checkbox" checked={sel.has(r.loja.id)} onChange={() => toggleRow(r.loja.id)} /></td>
                     <td className="c-det"><button className="cm-det" title="Ver item a item" onClick={() => { setDetLoja(r.loja.id); setDetBusca('') }}>🔍</button></td>
-                    <td style={{ fontWeight: 600 }}>{r.loja.nome}</td>
-                    <td className="c-neg">{r.loja.cnpj || '—'}</td>
+                    <td className="col-fant">{r.loja.nome}</td>
+                    <td className="col-cnpj">{r.loja.cnpj || '—'}</td>
                     <td style={{ textAlign: 'center' }}><span className={'fc-sit ' + (fechado ? 'fe' : 'ab')}>{fechado ? 'FECHADO' : 'ABERTO'}</span></td>
-                    <td className="c-num">{brl(r.estoque_inicial)}</td>
+                    <td className="c-num grp-div">{brl(r.estoque_inicial)}</td>
                     <td className="c-num">{brl(r.compras)}</td>
                     <td className="c-num">{brl(r.entradas_transferencia)}</td>
-                    <td className="c-num c-neg">{brl(r.saidas_transferencia)}</td>
-                    <td className="c-num c-neg">{brl(r.consumo)}</td>
-                    <td className="c-num c-neg">{brl(r.perdas)}</td>
-                    <td className="c-num" style={{ fontWeight: 700 }}>{brl(r.estoque_final)}</td>
+                    <td className="c-num">{brl(r.saidas_transferencia)}</td>
+                    <td className="c-num">{brl(r.consumo)}</td>
+                    <td className="c-num">{brl(r.perdas)}</td>
+                    <td className="c-num">{brl(r.estoque_final)}</td>
                     <td className="c-num c-cmv">{brl(r.cmv)}</td>
                     <td className="c-num">{pct === null ? <span className="c-neg">—</span> : pct.toFixed(1) + '%'}</td>
                   </tr>
@@ -272,8 +272,8 @@ export function Fechamento() {
           </tbody>
           {buscaRows.length > 0 && <tfoot>
             <tr>
-              <td /><td /><td>TOTAL ({buscaRows.length} loja{buscaRows.length > 1 ? 's' : ''})</td><td /><td />
-              <td className="c-num">{brl(total.estoque_inicial)}</td>
+              <td /><td /><td className="col-fant">TOTAL ({buscaRows.length} loja{buscaRows.length > 1 ? 's' : ''})</td><td /><td />
+              <td className="c-num grp-div">{brl(total.estoque_inicial)}</td>
               <td className="c-num">{brl(total.compras)}</td>
               <td className="c-num">{brl(total.entradas_transferencia)}</td>
               <td className="c-num">{brl(total.saidas_transferencia)}</td>
