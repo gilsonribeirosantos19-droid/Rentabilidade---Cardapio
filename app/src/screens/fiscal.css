@@ -33,7 +33,7 @@
 .fiscal-screen .tbl th.c, .fiscal-screen .tbl td.c { text-align: center; }
 .fiscal-screen .tbl tbody td { padding: 2.5px 10px; border-bottom: 1px solid #e7ecf3; color: #0f172a; vertical-align: middle; white-space: nowrap; line-height: 1.35; }
 .fiscal-screen .tbl td.fornec { white-space: nowrap; min-width: 200px; }
-.fiscal-screen .tbl tbody tr:hover td { background: #e7eef8; }
+.fiscal-screen .tbl tbody tr:hover td { background: #d7e4f7; }
 /* modo gradeado (grade em célula) — Monitor/DANFE */
 .fiscal-screen .tbl th, .fiscal-screen .tbl td { border-right: 1px solid #e7ecf3; }
 .fiscal-screen .tbl th:last-child, .fiscal-screen .tbl td:last-child { border-right: none; }
