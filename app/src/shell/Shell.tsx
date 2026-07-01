@@ -32,6 +32,7 @@ import { Divergencias } from '../screens/Divergencias'
 import { Rendimentos } from '../screens/Rendimentos'
 import { CmvTeoricoReal } from '../screens/CmvTeoricoReal'
 import { Fechamento } from '../screens/Fechamento'
+import { PdvFaturamento } from '../screens/PdvFaturamento'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -64,6 +65,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
   if (k === 'gestao/fechamento') return <Fechamento />
+  if (k === 'pdv/faturamento') return <PdvFaturamento />
   return <Placeholder label={label} />
 }
 
