@@ -96,7 +96,13 @@ export function MonitorNfe() {
       if (!allowed.includes(n.status || '')) return false
       if (lojaId && (n.loja_id || null) !== lojaId) return false
       if (fForn && n.cnpj_emitente !== fForn) return false
-      if (periodo !== 'todos') { if (de && (n.data_emissao || '') < de) return false; if (ate && (n.data_emissao || '') > ate + 'T23:59:59') return false }
+      if (periodo !== 'todos') {
+        // compara pela data LOCAL (Brasil) — a mesma que aparece na tela — e não pela UTC crua,
+        // senão nota da noite do dia 30 (virou dia 1 em UTC) cai no filtro do mês seguinte
+        const d = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA') : ''
+        if (de && d && d < de) return false
+        if (ate && d && d > ate) return false
+      }
       return true
     })
   }, [nfes, chkPend, chkProc, chkErro, chkCanc, lojaId, fForn, periodo, de, ate])
