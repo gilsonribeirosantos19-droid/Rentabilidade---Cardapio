@@ -291,7 +291,7 @@ export function MonitorNfe() {
 
       {tab === 'itens' && (
         <>
-          <div className="det-bar"><span>📄</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os itens'}</span>{selNfe?.status === 'pronta' && <button className="btn-pri" style={{ marginLeft: 'auto' }} disabled={busy} onClick={() => processarSel([selNfe.id])}>▷ {busy ? `Processando ${prog?.done ?? 0}/${prog?.total ?? 0}…` : 'Processar esta nota'}</button>}</div>
+          <div className="det-bar"><span>📄</span><span>{selNfe ? `NF-e ${selNfe.numero}/${selNfe.serie} · ${selNfe.nome_emitente}` : 'Selecione uma NF-e na aba DANFE para ver os itens'}</span></div>
           <div className="tbl-wrap"><div className="tbl-scroll">
             <table className="tbl">
               <thead><tr><th className="c">Seq.</th><th>Item Fornecedor</th><th>Descrição</th><th>Item Interno</th><th>Embalagem</th><th className="c">UM</th><th className="r">Q. na Emb.</th><th className="r">Q. de Embalagens</th><th className="r">V. Unitário</th><th className="r">V. Total</th><th className="r">Q. Estoque</th></tr></thead>
