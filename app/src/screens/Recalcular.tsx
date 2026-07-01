@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -17,6 +17,8 @@ export function Recalcular() {
   const [lojaSel, setLojaSel] = useState<Set<string>>(new Set())
   const [alvoIns, setAlvoIns] = useState(''); const [alvoFicha, setAlvoFicha] = useState('')
   const [result, setResult] = useState('')
+  const [dropOpen, setDropOpen] = useState(false)
+  const dropRef = useRef<HTMLDivElement>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
@@ -79,6 +81,7 @@ export function Recalcular() {
   }
 
   const lojaLabel = useMemo(() => { if (!lojaSel.size) return 'Selecione as lojas...'; if (lojaSel.size === lojas.length) return 'Todas as lojas'; if (lojaSel.size === 1) return lojas.find((l) => lojaSel.has(l.id))?.nome || '1 loja'; return `${lojaSel.size} lojas selecionadas` }, [lojaSel, lojas])
+  useEffect(() => { if (!dropOpen) return; const h = (e: MouseEvent) => { if (dropRef.current && !dropRef.current.contains(e.target as Node)) setDropOpen(false) }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h) }, [dropOpen])
 
   return (
     <div className="est-screen">
@@ -95,11 +98,13 @@ export function Recalcular() {
         </div>
 
         <div className="adj-fg" style={{ maxWidth: 340 }}><label>Loja</label>
-          <div style={{ border: '1px solid #cbd5e1', borderRadius: 8, padding: '8px 10px', maxHeight: 160, overflow: 'auto' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, padding: '3px 0', fontWeight: 700 }}><input type="checkbox" checked={lojas.length > 0 && lojaSel.size === lojas.length} onChange={(e) => toggleTodas(e.target.checked)} style={{ accentColor: '#f97316' }} /> Todas as lojas</label>
-            {lojas.map((l) => <label key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, padding: '3px 0' }}><input type="checkbox" checked={lojaSel.has(l.id)} onChange={(e) => toggleLoja(l.id, e.target.checked)} style={{ accentColor: '#f97316' }} /> {l.nome}</label>)}
+          <div ref={dropRef} style={{ position: 'relative' }}>
+            <button type="button" className="rc-loja-btn" onClick={() => setDropOpen((o) => !o)}><span style={{ color: lojaSel.size ? '#0f172a' : '#94a3b8' }}>{lojaLabel}</span><span style={{ color: '#94a3b8' }}>▾</span></button>
+            {dropOpen && <div className="rc-loja-drop">
+              <label style={{ fontWeight: 700 }}><input type="checkbox" checked={lojas.length > 0 && lojaSel.size === lojas.length} onChange={(e) => toggleTodas(e.target.checked)} /> Todas as lojas</label>
+              {lojas.map((l) => <label key={l.id}><input type="checkbox" checked={lojaSel.has(l.id)} onChange={(e) => toggleLoja(l.id, e.target.checked)} /> {l.nome}</label>)}
+            </div>}
           </div>
-          <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{lojaLabel}</div>
         </div>
 
         <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '12px 14px', marginTop: 14, opacity: doCM ? 1 : .45, pointerEvents: doCM ? 'auto' : 'none', background: doCM ? '#fff' : '#f8fafc' }}>
