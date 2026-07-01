@@ -10,6 +10,11 @@
 .fiscal-screen .btn-g { height: 36px; padding: 0 13px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
 .fiscal-screen .btn-g:hover { background: #f8fafc; }
 
+/* grupo de filtro rotulado (bloco simples — evita que .fl-bar .ass{flex} estique o seletor) */
+.fiscal-screen .aud-fg { display: block; }
+.fiscal-screen .aud-fg .aud-lb { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+.fiscal-screen .aud-fg .ass { flex: none; width: 100%; }
+
 .fiscal-screen .summary { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; font-size: 13px; color: #64748b; }
 .fiscal-screen .summary .sval { font-weight: 700; color: #16a34a; font-family: 'DM Mono', monospace; }
 
