@@ -59,6 +59,23 @@
 .mvend-screen .p-proc { background: #ecfdf5; color: #16a34a; } .mvend-screen .p-proc .d { background: #16a34a; }
 .mvend-screen .p-err { background: #fef2f2; color: #dc2626; } .mvend-screen .p-err .d { background: #ef4444; }
 .mvend-screen .p-canc { background: #f1f5f9; color: #94a3b8; } .mvend-screen .p-canc .d { background: #94a3b8; }
+.mvend-screen .p-emproc { background: #eff6ff; color: #2563eb; } .mvend-screen .p-emproc .d { background: #3b82f6; }
+.mvend-screen .p-naorec { background: #eef1f5; color: #111827; } .mvend-screen .p-naorec .d { background: #111827; }
+.mvend-screen .arq { font-family: 'DM Mono', monospace; font-size: 11.5px; color: #334155; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mvend-screen .ico-btn { border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; width: 28px; height: 26px; cursor: pointer; color: #475569; }
+.mvend-screen .ico-btn:hover { background: #f1f5f9; }
+
+/* modal visualizar arquivo (conteúdo cru) */
+.mv-ov { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.mv-modal { background: #fff; border-radius: 12px; width: min(940px, 96vw); max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(15,23,42,.3); }
+.mv-modal .h { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; border-bottom: 1px solid #e5e9f0; }
+.mv-modal .h .t { font-size: 13px; font-weight: 700; font-family: 'DM Mono', monospace; color: #0f172a; word-break: break-all; }
+.mv-modal .h .x { width: 30px; height: 30px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; color: #64748b; font-size: 15px; flex-shrink: 0; }
+.mv-modal pre { margin: 0; overflow: auto; padding: 14px 18px; font-family: 'DM Mono', 'Consolas', monospace; font-size: 12px; line-height: 1.55; color: #1e293b; background: #fbfcfe; white-space: pre; }
+
+/* painel de erros (embaixo, tipo Everest) */
+.mvend-screen .err-panel .h2 { padding: 11px 16px; border-bottom: 1px solid #f1f5f9; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
+.mvend-screen .err-panel .msg { color: #334155; white-space: normal; }
 
 .mvend-screen .pag { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-size: 12px; color: #64748b; flex-wrap: wrap; gap: 8px; }
 

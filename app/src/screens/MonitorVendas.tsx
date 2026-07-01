@@ -2,87 +2,96 @@ import { useMemo, useState } from 'react'
 import './monitorvendas.css'
 
 // TELA MOCK — dados de exemplo em memória (não usa Supabase).
-// CONCEITO (confirmado com o usuário):
-//  - As vendas do PDV entram JÁ COMO "Processada" automaticamente.
-//  - Só as "Com erro" (ex.: produto sem ficha) precisam de correção manual → viram Processada.
-//  - As vendas FICAM nesta tela (é a casa delas) e os relatórios do PDV puxam daqui.
-// Quando o Saipos entrar, troca a fonte por uma tabela `vendas` real, mantendo este layout.
+// CONCEITO (confirmado com o usuário, espelha o Monitor de Transações do Everest):
+//  - Esta tela é o MONITOR DE ARQUIVOS de importação do PDV (os .txt exportados).
+//  - NÃO mostra faturamento/desconto/valores — isso é a OUTRA tela (Vendas), que lê os arquivos processados.
+//  - Cada linha = 1 arquivo, com Situação, Loja, PDV, Tipo, Data do movimento, nome do Arquivo, datas e Visualizar (conteúdo cru).
+//  - Erros possíveis: produto SEM CADASTRO e produto SEM FICHA TÉCNICA. Arquivo que não chega = NÃO RECEBIDO (preto).
+// Quando o Saipos/iComanda entrar, troca a fonte por uma tabela real, mantendo este layout.
 
-type Status = 'processada' | 'erro' | 'cancelada'
-type ErroItem = 'sem_cadastro' | 'sem_ficha'
-type ItemVenda = { produto: string; qtd: number; valor: number; erro?: ErroItem }
-const ERRO_META: Record<ErroItem, { nome: string; pill: string }> = {
-  sem_cadastro: { nome: 'sem cadastro', pill: 'p-err' },
-  sem_ficha: { nome: 'sem ficha', pill: 'p-pend' },
+type Situacao = 'com_erros' | 'nao_recebido' | 'aguardando' | 'em_processamento' | 'processado'
+type ErroLinha = { erro: string; msg: string }
+type Arquivo = {
+  id: string; situacao: Situacao; loja: string; pdv: string; tipo: string
+  dMovimento: string; arquivo: string; dExecucao: string; dIntegracao: string
+  conteudo: string; erros: ErroLinha[]
 }
-type Venda = { id: string; dataHora: string; consumo: string; bruto: number; desconto: number; liquido: number; itens: number; status: Status; detalhe: ItemVenda[] }
 
-const STATUS_META: Record<Status, { nome: string; dot: string; pill: string }> = {
-  erro: { nome: 'Com erro', dot: '#ef4444', pill: 'p-err' },
-  processada: { nome: 'Processada', dot: '#16a34a', pill: 'p-proc' },
-  cancelada: { nome: 'Cancelada', dot: '#94a3b8', pill: 'p-canc' },
+const SIT_META: Record<Situacao, { nome: string; dot: string; pill: string }> = {
+  com_erros: { nome: 'Com Erros', dot: '#ef4444', pill: 'p-err' },
+  nao_recebido: { nome: 'Não Recebido', dot: '#111827', pill: 'p-naorec' },
+  aguardando: { nome: 'Aguardando', dot: '#f59e0b', pill: 'p-pend' },
+  em_processamento: { nome: 'Em Processamento', dot: '#3b82f6', pill: 'p-emproc' },
+  processado: { nome: 'Processado', dot: '#16a34a', pill: 'p-proc' },
 }
-const ORDER: Status[] = ['erro', 'processada', 'cancelada']
-const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const ORDER: Situacao[] = ['com_erros', 'nao_recebido', 'aguardando', 'em_processamento', 'processado']
 
-const MOCK: Venda[] = [
-  { id: 'v128', dataHora: '07/06 22:15', consumo: 'Salão', bruto: 285.60, desconto: 13.20, liquido: 272.40, itens: 18, status: 'processada', detalhe: [{ produto: 'Temaki Salmão', qtd: 4, valor: 119.60 }, { produto: 'Hot Roll (8un)', qtd: 3, valor: 89.70 }, { produto: 'Refrigerante Lata', qtd: 11, valor: 63.10 }] },
-  { id: 'v127', dataHora: '07/06 22:10', consumo: 'Delivery', bruto: 156.40, desconto: 0, liquido: 156.40, itens: 9, status: 'processada', detalhe: [{ produto: 'Combo Sushi 20 peças', qtd: 1, valor: 98.90 }, { produto: 'Yakisoba Frango', qtd: 1, valor: 42.50 }, { produto: 'Guaraná 1L', qtd: 1, valor: 15.00 }] },
-  { id: 'v126', dataHora: '07/06 22:05', consumo: 'Salão', bruto: 362.80, desconto: 17.60, liquido: 345.20, itens: 24, status: 'processada', detalhe: [{ produto: 'Rodízio Adulto', qtd: 4, valor: 320.00 }, { produto: 'Sobremesa', qtd: 4, valor: 42.80 }] },
-  { id: 'v124', dataHora: '07/06 21:50', consumo: 'Salão', bruto: 478.70, desconto: 26.50, liquido: 452.20, itens: 31, status: 'erro', detalhe: [{ produto: 'Combo Executivo (COD 9912)', qtd: 2, valor: 78.00, erro: 'sem_ficha' }, { produto: 'Temaki Salmão', qtd: 5, valor: 149.50 }, { produto: 'Rodízio Adulto', qtd: 3, valor: 224.70 }] },
-  { id: 'v123', dataHora: '07/06 21:40', consumo: 'Delivery', bruto: 224.50, desconto: 0, liquido: 224.50, itens: 14, status: 'processada', detalhe: [{ produto: 'Barca 40 peças', qtd: 1, valor: 189.90 }, { produto: 'Missoshiru', qtd: 2, valor: 34.60 }] },
-  { id: 'v122', dataHora: '07/06 21:35', consumo: 'Salão', bruto: 609.20, desconto: 30.50, liquido: 578.70, itens: 37, status: 'processada', detalhe: [{ produto: 'Rodízio Adulto', qtd: 6, valor: 480.00 }, { produto: 'Bebidas diversas', qtd: 31, valor: 129.20 }] },
-  { id: 'v121', dataHora: '07/06 21:25', consumo: 'Salão', bruto: 162.90, desconto: 8.10, liquido: 154.80, itens: 11, status: 'cancelada', detalhe: [{ produto: 'Hot Roll (8un)', qtd: 3, valor: 89.70 }, { produto: 'Refrigerante Lata', qtd: 8, valor: 73.20 }] },
-  { id: 'v120', dataHora: '07/06 21:20', consumo: 'Retirada', bruto: 76.50, desconto: 0, liquido: 76.50, itens: 5, status: 'erro', detalhe: [{ produto: 'Poke Bowl (COD 8841)', qtd: 1, valor: 39.90, erro: 'sem_cadastro' }, { produto: 'Suco Natural', qtd: 3, valor: 36.60 }] },
-  { id: 'v119', dataHora: '07/06 21:10', consumo: 'Delivery', bruto: 134.60, desconto: 0, liquido: 134.60, itens: 8, status: 'processada', detalhe: [{ produto: 'Combo Sushi 20 peças', qtd: 1, valor: 98.90 }, { produto: 'Yakisoba Frango', qtd: 1, valor: 35.70 }] },
-]
+const CONTEUDO = `R01|20260629|113|113|15939,85|0,00|1358,73|1078,23|15939,85|
+R02|1311|GISELE PN|376706|1|18:05|18:05||144,80|0,00|1||
+R03|1311|GISELE PN|376706|18:05|3187|035 - COMBO PHILADELFIA|1|0|1|94,9|1|0|0||249|
+R03|1311|GISELE PN|376706|18:05|4000|036 - COMBO BUTTERFLY - F. CAMARÃO|1|0|1|49,9|1|0|0||249|
+R05|1120|VITORIA PANTOJA|376706|18:14|727|4-PIX|144,8|
+R02|1271|JOSIANE PN|376708|2|18:07|18:07||49,48|7,58|1||
+R03|1271|JOSIANE PN|376708|18:07|1896|19 - TEMAKI HOT PHILADÉLFIA|1|0|1|75,8|2|33,9|0||249|
+R03|1271|JOSIANE PN|376709|18:13|4193|501 - POKE YUME - SALMAO, CAMARAO EMPANADO|1|0|1|105,8|2|0|0||249|
+R03|1271|JOSIANE PN|376709|18:13|3392|070 - RODÍZIO DE SUSHI|1|0|1|0|0|0|0||249|
+R03|1271|JOSIANE PN|376709|18:13|2554|010 - HOT BOLL|1|0|1|32,9|1|0|0||249|
+R05|1120|VITORIA PANTOJA|376709|19:39|687|3-CARTÃO CRÉDITO|545,71|`
 
-// recebimento do arquivo de vendas por dia (verde = chegou; preto = NÃO chegou, tipo Everest)
-const RECEB: { dia: string; ok: boolean }[] = [
-  { dia: '01/06', ok: true }, { dia: '02/06', ok: true }, { dia: '03/06', ok: false },
-  { dia: '04/06', ok: true }, { dia: '05/06', ok: true }, { dia: '06/06', ok: true }, { dia: '07/06', ok: true },
+const CONTEUDO_OK = `R01|20260628|98|98|13420,50|0,00|1102,00|940,10|13420,50|
+R02|1301|MARIA PN|375510|1|19:12|19:12||212,40|0,00|1||
+R03|1301|MARIA PN|375510|19:12|3187|035 - COMBO PHILADELFIA|1|0|1|94,9|1|0|0||249|
+R05|1120|CAIXA 01|375510|19:40|727|4-PIX|212,4|`
+
+const MOCK: Arquivo[] = [
+  { id: 'a1', situacao: 'com_erros', loja: 'Sushi Ponta Negra', pdv: 'iComanda', tipo: 'Venda', dMovimento: '29/06/2026', arquivo: 'EXPORTACAO_ICOMANDA_VENDA_17802332000354_20260629_3433.txt', dExecucao: '29/06 20:15', dIntegracao: '29/06 20:16', conteudo: CONTEUDO, erros: [
+    { erro: 'Sem ficha técnica', msg: 'Produto 4193 — POKE YUME - SALMAO, CAMARAO EMPANADO: cadastrado, mas sem ficha técnica.' },
+    { erro: 'Sem cadastro', msg: 'Produto 070 — RODÍZIO DE SUSHI: não está cadastrado no sistema.' },
+  ] },
+  { id: 'a2', situacao: 'processado', loja: 'Sushi Ponta Negra', pdv: 'iComanda', tipo: 'Venda', dMovimento: '28/06/2026', arquivo: 'EXPORTACAO_ICOMANDA_VENDA_17802332000354_20260628_3418.txt', dExecucao: '28/06 20:11', dIntegracao: '28/06 20:12', conteudo: CONTEUDO_OK, erros: [] },
+  { id: 'a3', situacao: 'processado', loja: 'Sushi Distrito', pdv: 'iComanda', tipo: 'Venda', dMovimento: '28/06/2026', arquivo: 'EXPORTACAO_ICOMANDA_VENDA_17802332000273_20260628_2210.txt', dExecucao: '28/06 20:14', dIntegracao: '28/06 20:15', conteudo: CONTEUDO_OK, erros: [] },
+  { id: 'a4', situacao: 'aguardando', loja: 'Sushi Ponta Negra', pdv: 'iComanda', tipo: 'Venda', dMovimento: '29/06/2026', arquivo: 'EXPORTACAO_ICOMANDA_VENDA_17802332000354_20260629_3434.txt', dExecucao: '—', dIntegracao: '—', conteudo: CONTEUDO_OK, erros: [] },
+  { id: 'a5', situacao: 'em_processamento', loja: 'Sushi Cidade Nova', pdv: 'iComanda', tipo: 'Venda', dMovimento: '29/06/2026', arquivo: 'EXPORTACAO_ICOMANDA_VENDA_17802332000605_20260629_1188.txt', dExecucao: '29/06 20:16', dIntegracao: '—', conteudo: CONTEUDO_OK, erros: [] },
+  { id: 'a6', situacao: 'nao_recebido', loja: 'Sushi Delivery', pdv: 'iComanda', tipo: 'Venda', dMovimento: '29/06/2026', arquivo: '—', dExecucao: '—', dIntegracao: '—', conteudo: '', erros: [{ erro: 'Não recebido', msg: 'O arquivo de vendas de 29/06/2026 não foi recebido do PDV. Verifique a integração / o fechamento do caixa.' }] },
 ]
 
 export function MonitorVendas() {
-  const [rows, setRows] = useState<Venda[]>(MOCK)
-  const [chips, setChips] = useState<Set<Status>>(new Set(ORDER))
+  const [rows, setRows] = useState<Arquivo[]>(MOCK)
+  const [chips, setChips] = useState<Set<Situacao>>(new Set(ORDER))
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [detId, setDetId] = useState<string | null>(null)
+  const [verId, setVerId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
 
-  const cnt = useMemo(() => { const c: Record<Status, number> = { processada: 0, erro: 0, cancelada: 0 }; rows.forEach((r) => { c[r.status]++ }); return c }, [rows])
-  const lista = useMemo(() => rows.filter((r) => chips.has(r.status)), [rows, chips])
-  const resumo = useMemo(() => ({ total: rows.length, bruto: rows.reduce((s, r) => s + r.bruto, 0), desc: rows.reduce((s, r) => s + r.desconto, 0), liquido: rows.reduce((s, r) => s + r.liquido, 0), itens: rows.reduce((s, r) => s + r.itens, 0) }), [rows])
-  const erroTipos = useMemo(() => {
-    let cad = 0, fic = 0
-    rows.forEach((r) => { if (r.status === 'erro') { if (r.detalhe.some((d) => d.erro === 'sem_cadastro')) cad++; if (r.detalhe.some((d) => d.erro === 'sem_ficha')) fic++ } })
-    return { cad, fic }
-  }, [rows])
+  const cnt = useMemo(() => { const c = { com_erros: 0, nao_recebido: 0, aguardando: 0, em_processamento: 0, processado: 0 } as Record<Situacao, number>; rows.forEach((r) => { c[r.situacao]++ }); return c }, [rows])
+  const lista = useMemo(() => rows.filter((r) => chips.has(r.situacao)), [rows, chips])
 
-  const toggleChip = (s: Status) => setChips((p) => { const n = new Set(p); n.has(s) ? n.delete(s) : n.add(s); return n })
+  const toggleChip = (s: Situacao) => setChips((p) => { const n = new Set(p); n.has(s) ? n.delete(s) : n.add(s); return n })
   const toggleSel = (id: string) => setSel((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
-  const selErros = [...sel].filter((id) => rows.find((x) => x.id === id)?.status === 'erro')
+  const selErros = [...sel].filter((id) => rows.find((x) => x.id === id)?.situacao === 'com_erros')
   const allChecked = lista.length > 0 && lista.every((r) => sel.has(r.id))
   const toggleAll = (on: boolean) => setSel(on ? new Set(lista.map((r) => r.id)) : new Set())
 
-  const corrigir = (ids: string[]) => {
-    const alvo = ids.filter((id) => rows.find((x) => x.id === id)?.status === 'erro')
-    if (!alvo.length) { showToast('Selecione vendas Com erro para corrigir.', 'err'); return }
-    setRows((p) => p.map((r) => alvo.includes(r.id) ? { ...r, status: 'processada', detalhe: r.detalhe.map((d) => ({ ...d, erro: undefined })) } : r))
+  const reprocessar = (ids: string[]) => {
+    const alvo = ids.filter((id) => rows.find((x) => x.id === id)?.situacao === 'com_erros')
+    if (!alvo.length) { showToast('Selecione arquivos Com Erros para reprocessar.', 'err'); return }
+    setRows((p) => p.map((r) => alvo.includes(r.id) ? { ...r, situacao: 'processado', erros: [], dIntegracao: '29/06 20:40' } : r))
     setSel((p) => { const n = new Set(p); alvo.forEach((id) => n.delete(id)); return n })
-    showToast(`${alvo.length} venda(s) corrigida(s) e processada(s). (demonstração)`, 'ok')
+    showToast(`${alvo.length} arquivo(s) reprocessado(s). (demonstração)`, 'ok')
   }
 
   const det = detId ? rows.find((r) => r.id === detId) : null
+  const ver = verId ? rows.find((r) => r.id === verId) : null
 
   return (
     <div className="mvend-screen">
       <div className="ds-filterbar">
-        <div className="ds-field"><label>Período</label><input type="date" className="field" defaultValue="2026-06-07" /></div>
-        <div className="ds-field"><label>até</label><input type="date" className="field" defaultValue="2026-06-07" /></div>
-        <div className="ds-field"><label>Turno</label><select className="field"><option>Todos</option><option>Almoço</option><option>Jantar</option></select></div>
-        <div className="ds-field"><label>Caixa</label><select className="field"><option>Todos</option><option>Caixa 01</option><option>Caixa 02</option><option>Caixa 03</option></select></div>
+        <div className="ds-field"><label>Loja</label><select className="field"><option>Todas as lojas</option><option>Sushi Ponta Negra</option><option>Sushi Distrito</option></select></div>
+        <div className="ds-field"><label>PDV</label><select className="field"><option>Todos</option><option>iComanda</option><option>Saipos</option></select></div>
+        <div className="ds-field"><label>Tipo</label><select className="field"><option>Venda</option><option>Financeiro</option></select></div>
+        <div className="ds-field"><label>Período</label><input type="date" className="field" defaultValue="2026-06-29" /></div>
+        <div className="ds-field"><label>até</label><input type="date" className="field" defaultValue="2026-06-29" /></div>
         <div className="ds-actions">
           <button className="btn-pri">Filtrar</button>
           <button className="btn-ghost">Limpar</button>
@@ -90,77 +99,61 @@ export function MonitorVendas() {
       </div>
 
       <div className="kbar">
-        <div className="it"><span className="k">Total de vendas</span><span className="v">{resumo.total}</span></div>
-        <div className="it"><span className="k">Bruto</span><span className="v">{brl(resumo.bruto)}</span></div>
-        <div className="it"><span className="k">Descontos</span><span className="v">{brl(resumo.desc)}</span></div>
-        <div className="it"><span className="k">Líquido</span><span className="v">{brl(resumo.liquido)}</span></div>
-        <div className="it"><span className="k">Itens</span><span className="v">{resumo.itens.toLocaleString('pt-BR')}</span></div>
-        <div className="it"><span className="k">Processadas</span><span className="v ok">{cnt.processada}</span></div>
-        <div className="it"><span className="k">Com erro</span><span className="v err">{cnt.erro}</span></div>
+        <div className="it"><span className="k">Total de arquivos</span><span className="v">{rows.length}</span></div>
+        <div className="it"><span className="k">Processados</span><span className="v ok">{cnt.processado}</span></div>
+        <div className="it"><span className="k">Aguardando</span><span className="v">{cnt.aguardando}</span></div>
+        <div className="it"><span className="k">Em processamento</span><span className="v">{cnt.em_processamento}</span></div>
+        <div className="it"><span className="k">Com erros</span><span className="v err">{cnt.com_erros}</span></div>
+        <div className="it"><span className="k">Não recebidos</span><span className="v" style={{ color: '#111827' }}>{cnt.nao_recebido}</span></div>
       </div>
-
-      <div className="recv-strip">
-        <span className="lb">Recebimento por dia</span>
-        {RECEB.map((r) => (
-          <span key={r.dia} className={'recv-day ' + (r.ok ? 'ok' : 'nao')} title={r.ok ? 'Arquivo recebido' : 'Arquivo NÃO recebido'}>
-            <span className="d" />{r.dia}{!r.ok && ' · não recebido'}
-          </span>
-        ))}
-      </div>
-
-      {RECEB.some((r) => !r.ok) && (
-        <div className="warn-bar">⚫ Arquivo de vendas <b>não recebido</b> em: {RECEB.filter((r) => !r.ok).map((r) => r.dia).join(', ')}. O PDV não enviou as vendas desse(s) dia(s) — verifique a integração / o caixa.</div>
-      )}
 
       <div className="sit-row">
         {ORDER.map((s) => (
           <label key={s} className="sit-chip">
             <input type="checkbox" checked={chips.has(s)} onChange={() => toggleChip(s)} />
-            <span className="dot" style={{ background: STATUS_META[s].dot }} />
-            {STATUS_META[s].nome} <span className="cnt">({cnt[s]})</span>
+            <span className="dot" style={{ background: SIT_META[s].dot }} />
+            {SIT_META[s].nome} <span className="cnt">({cnt[s]})</span>
           </label>
         ))}
-        <span className="mock-tag">⚑ Dados de exemplo — aguardando integração Saipos</span>
+        <span className="mock-tag">⚑ Dados de exemplo — aguardando integração do PDV</span>
       </div>
 
-      {cnt.erro > 0 && (
-        <div className="info-bar">
-          <span>ℹ️ As vendas entram <b>processadas automaticamente</b>. Há <b>{cnt.erro} venda(s) com erro</b>: {erroTipos.cad > 0 && <><b>{erroTipos.cad}</b> com produto <b>sem cadastro</b></>}{erroTipos.cad > 0 && erroTipos.fic > 0 && ' · '}{erroTipos.fic > 0 && <><b>{erroTipos.fic}</b> com produto <b>sem ficha técnica</b></>}.</span>
-        </div>
+      {cnt.nao_recebido > 0 && (
+        <div className="warn-bar">⚫ <b>{cnt.nao_recebido} arquivo(s) NÃO recebido(s)</b> — o PDV não enviou as vendas desse(s) dia(s). Verifique a integração / o fechamento do caixa.</div>
       )}
 
       <div className="card">
         <div className="toolbar">
           <button className="btn-ghost btn-sm">↻ Atualizar</button>
-          <button className="btn-ghost btn-sm" disabled={sel.size !== 1} onClick={() => setDetId([...sel][0] || null)}>👁 Ver detalhe</button>
-          <button className="btn-ghost btn-sm" disabled={!selErros.length} onClick={() => corrigir(selErros)}>✎ Corrigir selecionadas ({selErros.length})</button>
-          <div className="sp">Registros por página <select className="field btn-sm" style={{ height: 30 }}><option>100</option><option>50</option><option>25</option></select></div>
+          <button className="btn-ghost btn-sm" disabled={sel.size !== 1} onClick={() => { const id = [...sel][0]; if (id) setVerId(id) }}>👁 Visualizar arquivo</button>
+          <button className="btn-ghost btn-sm" disabled={!selErros.length} onClick={() => reprocessar(selErros)}>↻ Reprocessar ({selErros.length})</button>
+          <div className="sp">Registros por página <select className="field btn-sm" style={{ height: 30 }}><option>100</option><option>50</option></select></div>
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
               <tr>
                 <th className="c" style={{ width: 34 }}><input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} /></th>
-                <th>Data / Hora</th><th>Consumo</th>
-                <th className="r">Valor Bruto</th><th className="r">Desconto</th><th className="r">Valor Líquido</th><th className="r">Itens</th><th className="c">Status</th><th className="c">Ações</th>
+                <th>Situação</th><th>Loja</th><th>PDV</th><th>Tipo</th><th>D. Movimento</th><th>Arquivo</th><th>D. Execução</th><th>D. Integração</th><th className="c">Ver</th>
               </tr>
             </thead>
             <tbody>
               {!lista.length
-                ? <tr><td colSpan={9} className="empty">Nenhuma venda neste filtro.</td></tr>
+                ? <tr><td colSpan={10} className="empty">Nenhum arquivo neste filtro.</td></tr>
                 : lista.map((r) => {
-                  const m = STATUS_META[r.status]
+                  const m = SIT_META[r.situacao]
                   return (
-                    <tr key={r.id} className={(sel.has(r.id) ? 'sel ' : '') + (r.status === 'erro' ? 'err' : '')} onClick={() => setDetId(r.id)}>
+                    <tr key={r.id} className={(sel.has(r.id) ? 'sel ' : '') + (r.situacao === 'com_erros' ? 'err' : '')} onClick={() => setDetId(r.id)}>
                       <td className="c" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} /></td>
-                      <td>{r.dataHora}</td>
-                      <td>{r.consumo}</td>
-                      <td className="r">{brl(r.bruto)}</td>
-                      <td className="r">{brl(r.desconto)}</td>
-                      <td className="r">{brl(r.liquido)}</td>
-                      <td className="r">{r.itens}</td>
-                      <td className="c"><span className={'pill ' + m.pill}><span className="d" />{m.nome}</span></td>
-                      <td className="c" onClick={(e) => e.stopPropagation()}>{r.status === 'erro' ? <button className="corrigir-btn" onClick={() => corrigir([r.id])}>Corrigir</button> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                      <td><span className={'pill ' + m.pill}><span className="d" />{m.nome}</span></td>
+                      <td>{r.loja}</td>
+                      <td>{r.pdv}</td>
+                      <td>{r.tipo}</td>
+                      <td>{r.dMovimento}</td>
+                      <td><span className="arq" title={r.arquivo}>{r.arquivo}</span></td>
+                      <td>{r.dExecucao}</td>
+                      <td>{r.dIntegracao}</td>
+                      <td className="c" onClick={(e) => e.stopPropagation()}>{r.arquivo !== '—' ? <button className="ico-btn" title="Visualizar conteúdo" onClick={() => setVerId(r.id)}>👁</button> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                     </tr>
                   )
                 })}
@@ -168,42 +161,48 @@ export function MonitorVendas() {
           </table>
         </div>
         <div className="pag">
-          <span>Mostrando {lista.length} de {rows.length} vendas</span>
-          <span>{sel.size} selecionada(s)</span>
+          <span>Mostrando {lista.length} de {rows.length} arquivos</span>
+          <span>{sel.size} selecionado(s)</span>
         </div>
       </div>
 
-      <div className="det">
-        <div className="h">
-          <span>Detalhes da venda{det ? ` — ${det.dataHora} · ${det.consumo}` : ''}</span>
-          {det && <span style={{ textTransform: 'none', color: '#64748b', fontWeight: 600 }}>{det.itens} itens · {brl(det.liquido)} líquido{det.status === 'erro' ? <button className="corrigir-btn" style={{ marginLeft: 10 }} onClick={() => corrigir([det.id])}>✎ Corrigir esta venda</button> : ''}</span>}
-        </div>
+      <div className="det err-panel">
+        <div className="h2">{det && det.erros.length ? `Erros do arquivo — ${det.arquivo !== '—' ? det.arquivo : det.loja + ' · ' + det.dMovimento}` : 'Erros / Mensagens'}</div>
         {!det
-          ? <div className="b-empty"><span className="i">i</span> Selecione uma venda para ver os itens. Só as <b>Com erro</b> exigem correção — as demais já entram processadas.</div>
-          : (
-            <table>
-              <thead><tr><th>Produto</th><th className="r">Qtd</th><th className="r">Valor</th><th className="c">Situação</th></tr></thead>
-              <tbody>
-                {det.detalhe.map((it, i) => (
-                  <tr key={i} className={it.erro ? 'err' : ''}>
-                    <td>{it.produto}</td>
-                    <td className="r">{it.qtd}</td>
-                    <td className="r">{brl(it.valor)}</td>
-                    <td className="c">{it.erro ? <span className={'pill ' + ERRO_META[it.erro].pill}><span className="d" />{ERRO_META[it.erro].nome}</span> : <span className="pill p-proc"><span className="d" />ok</span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          ? <div className="b-empty"><span className="i">i</span> Selecione um arquivo para ver os erros. Só os <b>Com Erros</b> (produto sem cadastro ou sem ficha) exigem ação.</div>
+          : det.erros.length === 0
+            ? <div className="b-empty"><span className="i" style={{ background: '#ecfdf5', color: '#16a34a' }}>✓</span> Arquivo processado sem erros.</div>
+            : (
+              <table>
+                <thead><tr><th style={{ width: 160 }}>Erro</th><th>Mensagem</th></tr></thead>
+                <tbody>
+                  {det.erros.map((e, i) => (
+                    <tr key={i} className="err">
+                      <td><span className={'pill ' + (/cadastro/i.test(e.erro) ? 'p-err' : /ficha/i.test(e.erro) ? 'p-pend' : 'p-naorec')}><span className="d" />{e.erro}</span></td>
+                      <td className="msg">{e.msg}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
       </div>
 
       <div className="footbar">
-        <span style={{ fontSize: 12, color: '#64748b' }}>Fonte das vendas do PDV · os relatórios (Faturamento, Curva ABC, Engenharia) puxam desta tela</span>
+        <span style={{ fontSize: 12, color: '#64748b' }}>Monitor de arquivos do PDV · os valores (faturamento, itens) ficam na tela <b>Vendas</b>, que lê os arquivos processados</span>
         <div className="foot-r">
-          <button className="btn-ghost">📄 Gerar relatório</button>
-          <button className="btn-green" disabled={!selErros.length} onClick={() => corrigir(selErros)}>✎ Corrigir selecionadas</button>
+          <button className="btn-ghost" disabled={sel.size !== 1} onClick={() => { const id = [...sel][0]; if (id) setVerId(id) }}>👁 Visualizar arquivo</button>
+          <button className="btn-green" disabled={!selErros.length} onClick={() => reprocessar(selErros)}>↻ Reprocessar selecionados</button>
         </div>
       </div>
+
+      {ver && (
+        <div className="mv-ov" onClick={(e) => { if (e.target === e.currentTarget) setVerId(null) }}>
+          <div className="mv-modal">
+            <div className="h"><span className="t">{ver.arquivo}</span><button className="x" onClick={() => setVerId(null)}>✕</button></div>
+            <pre>{ver.conteudo || '(arquivo não recebido — sem conteúdo)'}</pre>
+          </div>
+        </div>
+      )}
 
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
