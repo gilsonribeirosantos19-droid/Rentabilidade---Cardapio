@@ -99,6 +99,8 @@ export function MonitorNfe() {
     return its.every((it) => resolveVinc(it, fornId)) ? 'pronta' : 'aguard_vinculacao'
   }
   const fornOpts = useMemo(() => { const m: Record<string, string> = {}; nfes.forEach((n) => { if (n.cnpj_emitente && n.nome_emitente) m[n.cnpj_emitente] = n.nome_emitente }); return Object.entries(m).sort((a, b) => a[1].localeCompare(b[1])) }, [nfes])
+  const fornNomeByCnpj = useMemo(() => Object.fromEntries(fornOpts) as Record<string, string>, [fornOpts])
+  const fornCnpjByNome = useMemo(() => Object.fromEntries(fornOpts.map(([c, n]) => [n, c])) as Record<string, string>, [fornOpts])
 
   const inGroup = (st: string | undefined, g: string[]) => g.includes(st || '')
   const cnt = useMemo(() => ({
@@ -221,7 +223,7 @@ export function MonitorNfe() {
 
       <div className="f1">
         <div className="ds-field"><label>Fornecedor</label>
-          <select className="field" style={{ minWidth: 200 }} value={fForn} onChange={(e) => setFForn(e.target.value)}><option value="">Todos</option>{fornOpts.map(([c, n]) => <option key={c} value={c}>{n}</option>)}</select>
+          <div style={{ minWidth: 260 }}><SearchSelect value={fForn ? (fornNomeByCnpj[fForn] || '') : ''} options={['Todos', ...fornOpts.map(([, n]) => n)]} placeholder="Todos" onChange={(nm) => setFForn(nm === 'Todos' ? '' : (fornCnpjByNome[nm] || ''))} /></div>
         </div>
         <div className="ds-field"><label>Período</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
