@@ -26,7 +26,7 @@ export function Inicio() {
   const { data: saidas = [] } = useQuery({ queryKey: ['inc-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,loja_id,quantidade,tipo,motivo,criado_em').eq('tenant_id', tenantId).order('criado_em').range(f, t)) })
   const { data: inventarios = [] } = useQuery({ queryKey: ['inc-inv', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('inventarios').select('loja_id,status').eq('tenant_id', tenantId); return (data ?? []) as Inv[] } })
   const { data: pedidos = [] } = useQuery({ queryKey: ['inc-pedidos', tenantId], enabled: !!tenantId, queryFn: async () => { try { const { data } = await supabase.from('pedidos_compra').select('status,loja_id').eq('tenant_id', tenantId); return (data ?? []) as { status?: string; loja_id?: string }[] } catch { return [] } } })
-  const { data: faturamentos = [] } = useQuery({ queryKey: ['inc-fat', tenantId, iniMesDia], enabled: !!tenantId, queryFn: async () => { try { const { data } = await supabase.from('faturamento').select('valor,loja_id,data').eq('tenant_id', tenantId).gte('data', iniMesDia); return (data ?? []) as { valor?: number; loja_id?: string; data?: string }[] } catch { return [] } } })
+  const { data: faturamentos = [] } = useQuery({ queryKey: ['inc-fat', tenantId, iniMesDia], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('faturamento').select('valor,data').eq('tenant_id', tenantId).gte('data', iniMesDia); return (data ?? []) as { valor?: number; data?: string }[] } })
   const { data: cmp = [] } = useQuery({ queryKey: ['inc-cmp', tenantId, iniMesISO], enabled: !!tenantId, queryFn: async () => { const { data, error } = await supabase.rpc('comparativo_lojas', { p_tenant: tenantId, p_inicio: iniMesISO }); if (error) throw error; return (data ?? []) as Cmp[] } })
 
   const byLoja = <T extends { loja_id?: string | null }>(arr: T[]) => lojaId ? arr.filter((x) => (x.loja_id || null) === lojaId) : arr
@@ -63,7 +63,7 @@ export function Inicio() {
   const ruptura = insumos.filter((i) => (getSaldo(i.id).quantidade || 0) <= 0).length
   const critico = insumos.filter((i) => { const s = getSaldo(i.id); return (s.quantidade || 0) > 0 && s.minimo != null && (s.quantidade || 0) <= (s.minimo || 0) }).length
   const vSaidaMes = saidasL.filter((s) => (s.criado_em || '') >= iniMesISO && s.tipo === 'consumo').reduce((acc, s) => acc + (s.quantidade || 0) * (getSaldo(s.insumo_id).custo_medio || 0), 0)
-  const fatMes = byLoja(faturamentos as any).filter((f: any) => (f.data || '') >= iniMesDia).reduce((s: number, f: any) => s + (f.valor || 0), 0)
+  const fatMes = (faturamentos as any[]).filter((f: any) => (f.data || '') >= iniMesDia).reduce((s: number, f: any) => s + (f.valor || 0), 0)
   const cmvPct = fatMes > 0 ? (vSaidaMes / fatMes * 100).toFixed(1) : null
 
   // ---- Cobertura (Estoque Crítico / Ruptura Prevista) ----
