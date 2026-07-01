@@ -24,15 +24,12 @@ create table if not exists pdv_importacoes (
 create unique index if not exists uq_pdv_imp on pdv_importacoes (tenant_id, loja_id, data_movimento, tipo);
 create index if not exists idx_pdv_imp_periodo on pdv_importacoes (tenant_id, data_movimento desc, loja_id);
 
--- RLS: isola por tenant (mesma lógica das demais tabelas)
+-- RLS: isola por tenant — IDÊNTICA às demais tabelas (usa get_my_tenant_id())
 alter table pdv_importacoes enable row level security;
 drop policy if exists tenant_policy on pdv_importacoes;
 create policy tenant_policy on pdv_importacoes
-  using      (tenant_id = (select tenant_id from usuarios where id = auth.uid()))
-  with check (tenant_id = (select tenant_id from usuarios where id = auth.uid()));
+  for all
+  using      (tenant_id = get_my_tenant_id())
+  with check (tenant_id = get_my_tenant_id());
 
 grant select, insert, update, delete on pdv_importacoes to anon, authenticated;
-
--- ⚠️ Observação: esta política espelha a isolação por tenant que o app usa
--- (via usuarios.tenant_id). Se as suas outras tabelas usarem uma tenant_policy
--- diferente, ajuste esta CREATE POLICY para ficar idêntica a elas.
