@@ -86,25 +86,23 @@ export function Shell() {
       <Sidebar activeKey={active} onOpen={openScreen} dived={dived} setDived={setDived} />
 
       <div className="main">
-        <div className="topbar">
+        {!isFull && <div className="topbar">
           <div className="crumb">
             {hasLong
               ? <><span className="c1">{crumbSection}</span><span className="sep">›</span><span className="c2">{crumbLong}</span></>
               : <span className="c2">{crumbSection}</span>}
           </div>
           <div className="tr">
-            {!isFull && (
-              <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
-                <option value="">Todas as lojas</option>
-                {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-              </select>
-            )}
+            <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
+              <option value="">Todas as lojas</option>
+              {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+            </select>
             <span>{usuario?.nome || usuario?.email || '—'}</span>
             <button className="btn ghost" style={{ height: 32, color: 'var(--red)' }} onClick={() => signOut()}>
               ⎋ Sair
             </button>
           </div>
-        </div>
+        </div>}
 
         {!isFull && <div className="tabs">
           <div className={'tab' + (active === '__home' ? ' on' : '')} onClick={() => setActive('__home')} title="Início">
