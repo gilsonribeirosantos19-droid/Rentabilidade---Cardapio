@@ -9,7 +9,7 @@
   /* Superfícies / texto */
   --bg: #eef1f4;
   --surface: #ffffff;
-  --surface-2: #f6f8fb;
+  --surface-2: #f4f6fa;  /* fundo da área de trabalho (canvas cinza — cards brancos flutuam nele) */
   --text1: #0f172a;
   --text2: #475569;
   --text3: #94a3b8;
