@@ -98,8 +98,6 @@ export function EntradasProcessadas() {
 
   return (
     <div className="fiscal-screen">
-      <div className="fh-title">Notas Fiscais Processadas</div>
-      <div className="fh-sub">Histórico de NF-e confirmadas no estoque</div>
       <div className="fl-bar">
         <SearchSelect value={fForn ? (fornNomeOf[fForn] || '') : ''} options={['Todos os fornecedores', ...fornNomes]} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : (fornByNome[nm] || '')); setPag(1) }} />
         <input className="field" style={{ width: 120 }} placeholder="Nº NF-e…" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />

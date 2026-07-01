@@ -183,8 +183,7 @@ export function MonitorNfe() {
 
   return (
     <div className="fiscal-screen">
-      <div className="mon-top">
-        <div><div className="fh-title">Monitor NF-e</div><div className="fh-sub">Notas fiscais recebidas</div></div>
+      <div className="mon-top" style={{ justifyContent: 'flex-end' }}>
         <div className="mon-top-r">
           <span className="lbl-mini">Loja:</span>
           <select className="field" style={{ minWidth: 160 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>

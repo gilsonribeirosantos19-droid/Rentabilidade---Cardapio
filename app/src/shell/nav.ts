@@ -136,6 +136,9 @@ const TITLE_OVERRIDES: Record<string, string> = {
   'estoque/movimentacao': 'Movimentação de Estoque no Período',
   'estoque/saldo': 'Posição financeira por loja',
   'estoque/kardex': 'Extrato de movimentação por insumo',
+  'fiscal/monitor': 'Notas fiscais recebidas',
+  'fiscal/entradas': 'Histórico de NF-e confirmadas no estoque',
+  'fiscal/auditoria': 'Fator de conversão nas entradas de NF-e',
 }
 export function titleForKey(key: string): string {
   return TITLE_OVERRIDES[key] ?? labelForKey(key)

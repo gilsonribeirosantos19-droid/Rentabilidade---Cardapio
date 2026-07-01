@@ -103,9 +103,6 @@ export function AuditoriaConversao() {
 
   return (
     <div className="fiscal-screen">
-      <div className="fh-title">Auditoria de Conversão</div>
-      <div className="fh-sub">Auditoria de fator de conversão nas entradas de NF-e.</div>
-
       <div className="fl-bar" style={{ alignItems: 'flex-end' }}>
         <div className="aud-fg" style={{ width: 150 }}>
           <div className="aud-lb">D. Inicial</div>
