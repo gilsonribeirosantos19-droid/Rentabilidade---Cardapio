@@ -59,13 +59,14 @@
 .topbar .crumb .sep { font-size: 14px; color: var(--text3); font-weight: 600; }
 .topbar .crumb .c2 { font-size: 16px; font-weight: 800; color: var(--text1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .topbar .tr { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--text2); }
-.tabs { display: flex; align-items: center; gap: 6px; padding: 7px 16px; background: var(--surface); flex-shrink: 0; overflow-x: auto; }
-.tab { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; font-size: 12.5px; font-weight: 600; color: var(--text2); background: #f1f5f9; border: 1px solid transparent; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; }
-.tab:hover { background: #e7edf4; color: var(--text1); }
-.tab.on { background: var(--orange); color: #fff; border-color: var(--orange); }
-.tab.on:hover { background: var(--orange-2); }
-.tab .x { color: inherit; opacity: .55; font-size: 15px; line-height: 1; }
-.tab .x:hover { opacity: 1; }
+/* abas estilo ERP (retangulares, sóbrias — acento em cima, tipo TOTVS/Everest) */
+.tabs { display: flex; align-items: stretch; height: 36px; padding: 0; background: #e6ebf2; border-bottom: 1px solid #d3dae3; flex-shrink: 0; overflow-x: auto; }
+.tab { display: inline-flex; align-items: center; gap: 8px; padding: 0 15px; font-size: 12.5px; font-weight: 600; color: #5b6b85; background: transparent; border-right: 1px solid #d3dae3; cursor: pointer; white-space: nowrap; position: relative; }
+.tab:hover { color: var(--text1); background: rgba(255,255,255,.5); }
+.tab.on { color: var(--text1); background: var(--surface-2); font-weight: 700; margin-bottom: -1px; border-bottom: 1px solid var(--surface-2); }
+.tab.on::before { content: ''; position: absolute; top: 0; left: -1px; right: -1px; height: 2.5px; background: var(--orange); }
+.tab .x { color: #adb6c7; font-size: 15px; line-height: 1; margin-left: 2px; padding: 0 3px; border-radius: 5px; }
+.tab .x:hover { background: #fddede; color: var(--red); }
 .content { flex: 1; overflow-y: auto; background: var(--surface-2); border-top: 1px solid var(--border); position: relative; }
 .pane { padding: 24px; }
 
