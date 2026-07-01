@@ -110,16 +110,16 @@ export function InflacaoInsumos() {
               : page.map(({ ins, precos }) => (
                 <tr key={ins.id}>
                   <td style={{ fontWeight: 600 }}>{ins.nome}</td>
-                  <td style={{ color: '#94a3b8', fontSize: 11 }}>{ins.unidade_medida || ins.unidade_compra || 'un'}</td>
+                  <td style={{ color: '#94a3b8', fontSize: 10 }}>{ins.unidade_medida || ins.unidade_compra || 'un'}</td>
                   {precos.map((p, i) => {
                     const prev = [...precos].slice(0, i).reverse().find((x) => x != null)
-                    let delta: React.ReactNode = <span style={{ color: '#94a3b8', fontSize: 11 }}>0,0%</span>
+                    let delta: React.ReactNode = <span style={{ color: '#94a3b8', fontSize: 10 }}>0,0%</span>
                     if (prev != null && p != null && Math.abs(p - prev) > 0.001) {
                       const d = ((p - prev) / prev) * 100
-                      if (Math.abs(d) >= 0.05) delta = d > 0 ? <span style={{ color: '#e11d48', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>▲ {d.toFixed(1)}%</span> : <span style={{ color: '#16a34a', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>▼ {Math.abs(d).toFixed(1)}%</span>
+                      if (Math.abs(d) >= 0.05) delta = d > 0 ? <span style={{ color: '#e11d48', fontSize: 10, fontWeight: 600, whiteSpace: 'nowrap' }}>▲ {d.toFixed(1)}%</span> : <span style={{ color: '#16a34a', fontSize: 10, fontWeight: 600, whiteSpace: 'nowrap' }}>▼ {Math.abs(d).toFixed(1)}%</span>
                     }
                     return <Fragment key={i}>
-                      <td className="r mono" style={{ fontSize: 12, borderLeft: '1px solid #f1f5f9', color: p == null ? '#94a3b8' : '#0f172a' }}>{brl2(p || 0)}</td>
+                      <td className="r mono" style={{ borderLeft: '1px solid #f1f5f9', color: '#0f172a' }}>{brl2(p || 0)}</td>
                       <td className="r">{delta}</td>
                     </Fragment>
                   })}
