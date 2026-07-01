@@ -17,6 +17,7 @@ import { Inventario } from '../screens/Inventario'
 import { Inicio } from '../screens/Inicio'
 import { EntradasProcessadas } from '../screens/EntradasProcessadas'
 import { MonitorNfe } from '../screens/MonitorNfe'
+import { AuditoriaConversao } from '../screens/AuditoriaConversao'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -34,6 +35,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'estoque/inventario') return <Inventario />
   if (k === 'fiscal/entradas') return <EntradasProcessadas />
   if (k === 'fiscal/monitor') return <MonitorNfe />
+  if (k === 'fiscal/auditoria') return <AuditoriaConversao />
   return <Placeholder label={label} />
 }
 
