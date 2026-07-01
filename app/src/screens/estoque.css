@@ -102,6 +102,16 @@
 .est-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 200; }
 .est-screen .toast.ok { background: #059669; } .est-screen .toast.err { background: #ef4444; }
 
+/* Rendimento — preview do modal + acoes da linha */
+.est-screen .rd-prev { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 14px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; }
+.est-screen .rd-prev .pl { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.est-screen .rd-prev .pv { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; }
+.est-screen .rd-act { display: flex; gap: 4px; align-items: center; }
+.est-screen .rd-act button { padding: 5px 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; cursor: pointer; font-family: inherit; font-weight: 600; color: #475569; }
+.est-screen .rd-act button:hover { background: #f8fafc; }
+.est-screen .rd-act .del { color: #e11d48; border-color: #fca5a5; }
+.est-screen .rd-act .del:hover { background: #e11d48; color: #fff; border-color: #e11d48; }
+
 /* Consumo de Insumos (segmentados, sub-abas, cards, gráfico) */
 .est-screen .seg { display: inline-flex; gap: 4px; }
 .est-screen .seg button { height: 34px; padding: 0 12px; border: 1px solid #cbd5e1; background: #fff; color: #64748b; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; border-radius: 8px; }
