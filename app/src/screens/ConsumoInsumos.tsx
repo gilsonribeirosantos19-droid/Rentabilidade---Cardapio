@@ -44,7 +44,7 @@ export function ConsumoInsumos() {
   const [ano, setAno] = useState(String(nowYear))
   const [mDe, setMDe] = useState(`${nowYear}-01`); const [mAte, setMAte] = useState(`${nowYear}-12`)
   const [compara, setCompara] = useState('ano_anterior')
-  const [busca, setBusca] = useState(''); const [grupo, setGrupo] = useState(''); const [forn, setForn] = useState(''); const [unidade, setUnidade] = useState('')
+  const [busca, setBusca] = useState(''); const [grupo, setGrupo] = useState(''); const [forn, setForn] = useState('')
   const [modo, setModo] = useState<'qtd' | 'valor'>('qtd')
   const [sub, setSub] = useState<'consumo' | 'resumo'>('consumo')
   const [top, setTop] = useState(5)
@@ -71,13 +71,11 @@ export function ConsumoInsumos() {
 
   const custo = (insId: string) => { const s = saldos.find((x) => x.insumo_id === insId); if (s && s.custo_medio) return Number(s.custo_medio) || 0; const i = insumos.find((x) => x.id === insId); return Number(i?.preco_compra) || 0 }
   const cats = useMemo(() => [...new Set(insumos.map((i) => i.categoria).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'pt-BR')), [insumos])
-  const unidades = useMemo(() => [...new Set(insumos.map((i) => (i.unidade_medida || '').toLowerCase()).filter(Boolean))].sort(), [insumos])
 
   const { rows, resumo } = useMemo(() => {
     const insForn = forn ? new Set(vincs.filter((v) => v.fornecedor_id === forn).map((v) => v.insumo_id)) : null
     let insFilt = insumos.filter((i) => i.ativo !== false)
     if (grupo) insFilt = insFilt.filter((i) => (i.categoria || '') === grupo)
-    if (unidade) insFilt = insFilt.filter((i) => (i.unidade_medida || '').toLowerCase() === unidade)
     if (insForn) insFilt = insFilt.filter((i) => insForn.has(i.id))
     if (busca) insFilt = insFilt.filter((i) => i.nome.toLowerCase().includes(busca.toLowerCase()))
     const val = (s: Saida, insId: string) => modo === 'valor' ? (Number(s.quantidade) || 0) * custo(insId) : (Number(s.quantidade) || 0)
@@ -101,7 +99,7 @@ export function ConsumoInsumos() {
     evRows.sort((a, b) => b.total - a.total)
     return { rows: evRows, resumo: resumoData }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [insumos, saidas, saidasCmp, meses, modo, grupo, unidade, forn, busca, vincs, saldos, compara])
+  }, [insumos, saidas, saidasCmp, meses, modo, grupo, forn, busca, vincs, saldos, compara])
 
   const fmtCell = (v: number) => modo === 'valor' ? (v ? brl(v) : '–') : (v > 0 ? fmtQ(v) : '–')
   const totalLabels = () => {
@@ -134,14 +132,13 @@ export function ConsumoInsumos() {
   const totalValorGeral = resumo.reduce((s, r) => s + r.totalValor, 0)
   const chartData = { labels: meses.map((m) => m.label), qtd: meses.map((_, i) => resumo.reduce((s, r) => s + (r.porMesQtd[i] || 0), 0)), valor: meses.map((_, i) => resumo.reduce((s, r) => s + (r.porMesQtd[i] || 0) * r.cust, 0)) }
   const pct = (v: number, tot: number) => tot > 0 ? (v / tot * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%' : '–'
-  const unidLabel = unidade || 'Todas'
   const seg = (on: boolean) => (on ? 'on' : '')
 
   return (
     <div className="est-screen">
       <div className="ds-filterbar" style={{ alignItems: 'flex-end' }}>
         <div><div className="flbl">Tipo de visualização</div>
-          <div className="seg"><button className={seg(tipoVis === 'ano')} onClick={() => setTipoVis('ano')}>Ano</button><button className={seg(tipoVis === 'custom')} onClick={() => setTipoVis('custom')}>Período personalizado</button></div>
+          <select className="field" style={{ width: 190 }} value={tipoVis} onChange={(e) => setTipoVis(e.target.value as 'ano' | 'custom')}><option value="ano">Ano</option><option value="custom">Período personalizado</option></select>
         </div>
         {tipoVis === 'ano'
           ? <div><div className="flbl">Ano</div><select className="field" style={{ width: 120 }} value={ano} onChange={(e) => setAno(e.target.value)}>{Array.from({ length: 5 }, (_, i) => nowYear - i).map((y) => <option key={y} value={y}>{y}</option>)}</select></div>
@@ -150,6 +147,7 @@ export function ConsumoInsumos() {
           <select className="field" style={{ width: '100%' }} value={compara} onChange={(e) => setCompara(e.target.value)}><option value="nenhuma">Nenhuma comparação</option><option value="anterior">Período anterior</option><option value="ano_anterior">Mesmo período do ano anterior</option></select>
         </div>
         <div style={{ width: 200 }}><div className="flbl">Insumo</div><input className="field" style={{ width: '100%' }} placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} /></div>
+        <div><div className="flbl">Visualizar</div><div className="seg"><button className={seg(modo === 'qtd')} onClick={() => setModo('qtd')}>Quantidade</button><button className={seg(modo === 'valor')} onClick={() => setModo('valor')}>Valor (R$)</button></div></div>
         <button className="btn-ghost" onClick={() => setMaisFiltros((v) => !v)}>▽ Mais filtros</button>
         <div className="ds-actions"><button className="btn-ghost" onClick={exportCSV}>↓ Exportar CSV</button></div>
       </div>
@@ -159,11 +157,7 @@ export function ConsumoInsumos() {
         <div style={{ width: 240 }}><div className="flbl">Fornecedor</div><select className="field" style={{ width: '100%' }} value={forn} onChange={(e) => setForn(e.target.value)}><option value="">Todos</option>{fornecedores.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</select></div>
       </div>}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '4px 0 12px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span className="flbl" style={{ margin: 0 }}>Visualizar</span><div className="seg"><button className={seg(modo === 'qtd')} onClick={() => setModo('qtd')}>Quantidade</button><button className={seg(modo === 'valor')} onClick={() => setModo('valor')}>Valor (R$)</button></div></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span className="flbl" style={{ margin: 0 }}>Unidade</span><select className="field" style={{ width: 120 }} value={unidade} onChange={(e) => setUnidade(e.target.value)}><option value="">Todas</option>{unidades.map((u) => <option key={u} value={u}>{u}</option>)}</select></div>
-        {cmpP && <div className="ci-banner" style={{ flex: 1 }}><span style={{ opacity: .7 }}>Comparando</span> <b>{labelMes(periodo.de)} a {labelMes(periodo.ate)}</b> <span style={{ opacity: .7 }}>com</span> <b>{labelMes(cmpP.de)} a {labelMes(cmpP.ate)}</b>.</div>}
-      </div>
+      {cmpP && <div className="ci-banner" style={{ margin: '4px 0 12px' }}><span style={{ opacity: .7 }}>Comparando</span> <b>{labelMes(periodo.de)} a {labelMes(periodo.ate)}</b> <span style={{ opacity: .7 }}>com</span> <b>{labelMes(cmpP.de)} a {labelMes(cmpP.ate)}</b>.</div>}
 
       <div className="ci-subtabs">
         <button className={'ci-subtab ' + seg(sub === 'consumo')} onClick={() => setSub('consumo')}>Consumo por Insumo</button>
@@ -214,9 +208,9 @@ export function ConsumoInsumos() {
       </> : (
         !resumo.length ? <div className="empty">Nenhuma saída encontrada no período.</div> : <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(360px,1fr))', gap: 14, marginBottom: 14, alignItems: 'start' }}>
-            <ResumoCard titulo="Mais consumidos" unidLabel={unidLabel} top={top} setTop={setTop} onVerTodos={() => setSub('consumo')}
+            <ResumoCard titulo="Mais consumidos" top={top} setTop={setTop} onVerTodos={() => setSub('consumo')}
               rows={consumoArr.slice(0, top === 0 ? consumoArr.length : top).map((r, i) => ({ i, nome: r.ins.nome, val: <>{fmtQ(r.totalQtd)} <span style={{ color: '#94a3b8', fontSize: 11 }}>{r.ins.unidade_medida || ''}</span></>, pct: pct(r.totalQtd, totalQtdGeral) }))} colVal="CONSUMO" />
-            <ResumoCard titulo="Maior impacto financeiro (R$)" unidLabel={unidLabel} top={top} setTop={setTop} onVerTodos={() => setSub('consumo')}
+            <ResumoCard titulo="Maior impacto financeiro (R$)" top={top} setTop={setTop} onVerTodos={() => setSub('consumo')}
               rows={finArr.slice(0, top === 0 ? finArr.length : top).map((r, i) => ({ i, nome: r.ins.nome, val: brl(r.totalValor), pct: pct(r.totalValor, totalValorGeral) }))} colVal="VALOR CONSUMIDO" />
           </div>
           <div className="ci-card" style={{ marginBottom: 14 }}>
@@ -224,7 +218,6 @@ export function ConsumoInsumos() {
               <div style={{ fontWeight: 700, color: '#0f172a' }}>Evolução do consumo <span style={{ color: '#94a3b8', fontWeight: 500, fontSize: 12 }}>(total do período)</span></div>
               <div style={{ display: 'flex', gap: 4 }}><button className={'ci-chip ' + seg(chartModo === 'qtd')} onClick={() => setChartModo('qtd')}>Quantidade</button><button className={'ci-chip ' + seg(chartModo === 'valor')} onClick={() => setChartModo('valor')}>Valor (R$)</button></div>
             </div>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>Unidade: {unidLabel}</div>
             <Chart labels={chartData.labels} data={chartModo === 'valor' ? chartData.valor : chartData.qtd} valor={chartModo === 'valor'} />
           </div>
           <div style={{ color: '#94a3b8', fontSize: 12 }}>Os dados consideram apenas as saídas de estoque (consumo efetivo). Entradas de notas fiscais não são consideradas.</div>
@@ -234,14 +227,13 @@ export function ConsumoInsumos() {
   )
 }
 
-function ResumoCard({ titulo, unidLabel, top, setTop, onVerTodos, rows, colVal }: { titulo: string; unidLabel: string; top: number; setTop: (n: number) => void; onVerTodos: () => void; rows: { i: number; nome: string; val: React.ReactNode; pct: string }[]; colVal: string }) {
+function ResumoCard({ titulo, top, setTop, onVerTodos, rows, colVal }: { titulo: string; top: number; setTop: (n: number) => void; onVerTodos: () => void; rows: { i: number; nome: string; val: React.ReactNode; pct: string }[]; colVal: string }) {
   return (
     <div className="ci-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <div style={{ fontWeight: 700, color: '#0f172a' }}>{titulo}</div>
         <select className="field" style={{ width: 108, height: 30, padding: '0 8px', fontSize: 12 }} value={top} onChange={(e) => setTop(Number(e.target.value))}>{[5, 10, 20, 0].map((n) => <option key={n} value={n}>{n === 0 ? 'Todos' : 'Top ' + n}</option>)}</select>
       </div>
-      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>Unidade: {unidLabel}</div>
       <table>
         <thead><tr><th>#</th><th>INSUMO</th><th className="r" style={{ whiteSpace: 'nowrap' }}>{colVal}</th><th className="r" style={{ whiteSpace: 'nowrap' }}>% DO TOTAL</th></tr></thead>
         <tbody>
