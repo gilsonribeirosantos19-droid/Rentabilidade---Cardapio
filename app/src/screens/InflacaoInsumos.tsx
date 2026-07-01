@@ -10,7 +10,7 @@ type Ent = { insumo_id: string; criado_em?: string; custo_unitario?: number | nu
 
 const brl2 = (v: number) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const norm = (s?: string) => (s || '').toLowerCase()
-const mesLabel = (m: string) => { const [y, mo] = m.split('-'); return new Date(Number(y), Number(mo) - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '').toUpperCase() }
+const mesLabel = (m: string) => { const [y, mo] = m.split('-'); return new Date(Number(y), Number(mo) - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', '').toUpperCase().replace(' DE ', '/') }
 
 export function InflacaoInsumos() {
   const { tenantId } = useAuth()
@@ -99,10 +99,10 @@ export function InflacaoInsumos() {
       </div>}
 
       <div className="tbl-wrap"><div className="tbl-scroll">
-        <table className="tbl" style={{ minWidth: 700 }}>
+        <table className="tbl inf-tbl" style={{ minWidth: 700 }}>
           <thead>
-            <tr><th rowSpan={2} style={{ width: 240, minWidth: 200 }}>Insumo</th><th rowSpan={2} style={{ width: 40 }}>UN.</th>{meses.map((m) => <th key={m} colSpan={2} className="c" style={{ borderLeft: '1px solid #e2e8f0' }}>{mesLabel(m)}</th>)}</tr>
-            <tr>{meses.map((m) => <th key={m} style={{ borderLeft: '1px solid #e2e8f0', fontSize: 9 }} className="r">PREÇO<span style={{ display: 'inline-block', width: 40 }} />Δ%</th>)}</tr>
+            <tr><th rowSpan={2} style={{ minWidth: 150 }}>Insumo</th><th rowSpan={2}>UN.</th>{meses.map((m) => <th key={m} colSpan={2} className="c" style={{ borderLeft: '1px solid #e2e8f0' }}>{mesLabel(m)}</th>)}</tr>
+            <tr>{meses.map((m) => <Fragment key={m}><th className="r" style={{ borderLeft: '1px solid #e2e8f0' }}>PREÇO</th><th className="r">Δ%</th></Fragment>)}</tr>
           </thead>
           <tbody>
             {isLoading ? <tr><td className="empty" colSpan={2 + meses.length * 2}>Carregando…</td></tr>

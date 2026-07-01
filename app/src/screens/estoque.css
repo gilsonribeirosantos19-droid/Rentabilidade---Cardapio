@@ -118,6 +118,10 @@
 .est-screen .ci-vertodos { font-size: 12px; color: #f97316; cursor: pointer; font-weight: 600; }
 .est-screen .ci-banner { background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; border-radius: 8px; padding: 8px 12px; font-size: 12px; }
 .est-screen .flbl { font-size: 11px; font-weight: 500; color: #64748b; margin-bottom: 3px; }
+/* Inflação — matriz compacta */
+.est-screen .inf-tbl thead th { padding: 3px 6px; font-size: 9px; letter-spacing: 0; }
+.est-screen .inf-tbl tbody td { padding: 2px 6px; font-size: 11px; }
+.est-screen .inf-tbl tbody td.r { padding-right: 8px; }
 .est-screen .badge.b-A { background: #fee2e2; color: #e11d48; }
 .est-screen .badge.b-B { background: #ffedd5; color: #f97316; }
 .est-screen .badge.b-C { background: #f1f5f9; color: #64748b; }
