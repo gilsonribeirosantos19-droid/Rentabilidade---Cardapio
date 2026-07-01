@@ -121,3 +121,35 @@
 .est-screen .badge.b-A { background: #fee2e2; color: #e11d48; }
 .est-screen .badge.b-B { background: #ffedd5; color: #f97316; }
 .est-screen .badge.b-C { background: #f1f5f9; color: #64748b; }
+.est-screen .badge.b-pos { background: #dcfce7; color: #16a34a; }
+.est-screen .badge.b-neg { background: #fee2e2; color: #dc2626; }
+.est-screen .badge.b-cm { background: #dbeafe; color: #2563eb; }
+.est-screen .up { color: #16a34a; font-weight: 600; } .est-screen .down { color: #e11d48; font-weight: 600; }
+
+/* Ajustes — toolbar + grade de lojas (estilo Everest) */
+.est-screen .adj-tbar { display: flex; align-items: center; gap: 6px; max-width: 940px; padding: 7px 9px; margin-bottom: 14px; background: #fff; border: 1px solid #e2e8f0; border-bottom-width: 2px; border-radius: 8px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.est-screen .adj-tbtn { width: 38px; height: 38px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #334155; font-size: 17px; }
+.est-screen .adj-tbtn:hover { background: #eef2f7; }
+.est-screen .adj-tbtn.pri { background: #f97316; border: none; color: #fff; }
+.est-screen .adj-tbtn.pri:hover { background: #ea6c00; }
+.est-screen .adj-tbtn:disabled { opacity: .55; cursor: default; }
+.est-screen .adj-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); padding: 16px 18px; margin-bottom: 16px; }
+.est-screen .adj-sec-head { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 14px; }
+.est-screen .adj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.est-screen .adj-fg { display: flex; flex-direction: column; gap: 5px; }
+.est-screen .adj-fg > label { font-size: 11px; font-weight: 500; color: #64748b; }
+.est-screen .adj-fg input, .est-screen .adj-fg select { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; background: #fff; color: #0f172a; }
+.est-screen .adj-fg input[readonly] { background: #f1f5f9; color: #94a3b8; }
+.est-screen .cm-grid-search { width: 100%; max-width: 360px; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; font-size: 13px; font-family: inherit; background: #fff; margin-bottom: 8px; }
+.est-screen .cm-grid-wrap { border: 1px solid #d6dce6; border-radius: 8px; overflow: auto; max-height: 360px; }
+.est-screen .cm-grid { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+.est-screen .cm-grid thead th { background: #f1f5f9; color: #475569; font-weight: 600; text-align: left; padding: 8px 10px; border-bottom: 1px solid #d6dce6; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+.est-screen .cm-grid tbody td { padding: 0 10px; height: 38px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
+.est-screen .cm-grid tbody tr:nth-child(even) { background: #fafbfc; }
+.est-screen .cm-grid tbody tr.sel { background: #e8f0fe; }
+.est-screen .cm-grid .c-sel { width: 44px; text-align: center; }
+.est-screen .cm-grid .c-num { text-align: right; font-family: 'DM Mono', monospace; color: #334155; white-space: nowrap; }
+.est-screen .cm-grid input[type=checkbox] { width: 16px; height: 16px; accent-color: #f97316; cursor: pointer; }
+.est-screen .cm-grid-empty { padding: 16px !important; text-align: center; color: #94a3b8; height: auto !important; }
+.est-screen .gnova { width: 120px; height: 30px; border: 1px solid #cbd5e1; border-radius: 5px; padding: 0 8px; font-size: 13px; font-family: 'DM Mono', monospace; text-align: right; background: #fff; color: #0f172a; }
+.est-screen .gnova:disabled { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; }

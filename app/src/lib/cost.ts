@@ -4,7 +4,8 @@
 export type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: number; criado_em?: string; created_at?: string }
 export type Saldo = { insumo_id: string; loja_id?: string | null; custo_medio?: number }
 export type Vinculo = { insumo_id: string; preco_unitario?: number }
-export type InsumoLike = { id: string; preco_compra?: number }
+export type InsumoLike = { id: string; preco_compra?: number; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
+export type FichaItem = { insumo_id: string; quantidade_g?: number }
 export type CostCtx = { entradas?: Mov[]; saidas?: Mov[]; saldos?: Saldo[]; vinculos?: Vinculo[]; insumos?: InsumoLike[]; dataLimite?: string | null }
 
 export function custoMedioNaData(insumoId: string, dataLimite: string | null, ctx: CostCtx) {
@@ -22,6 +23,21 @@ export function custoMedioNaData(insumoId: string, dataLimite: string | null, ct
     } else { q = Math.max(0, q - m.q) }
   })
   return { custo: cm, quantidade: q }
+}
+
+// custo de UMA porção da ficha (soma dos itens, respeitando unidade e rendimento do insumo)
+export function custoFichaPorcao(itens: FichaItem[], rendimentoPorcoes: number, lojaId: string | null, ctx: CostCtx): number {
+  const insumos = ctx.insumos || []
+  let total = 0
+  ;(itens || []).forEach((it) => {
+    const ins = insumos.find((i) => i.id === it.insumo_id)
+    const custoBase = custoDoInsumo(it.insumo_id, lojaId, ctx)
+    const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g'
+    if (um === 'un' || um === 'pct' || um === 'cx') { total += custoBase * (+(it.quantidade_g || 0)) }
+    else { const rend = (ins && +(ins.rendimento_pct || 0) > 0) ? (ins.rendimento_pct as number) / 100 : 1; total += (custoBase / rend / 1000) * (+(it.quantidade_g || 0)) }
+  })
+  const por = +rendimentoPorcoes > 0 ? +rendimentoPorcoes : 1
+  return total / por
 }
 
 export function custoDoInsumo(insumoId: string, lojaId: string | null, ctx: CostCtx): number {

@@ -24,6 +24,9 @@ import { HistoricoCustos } from '../screens/HistoricoCustos'
 import { CurvaABC } from '../screens/CurvaABC'
 import { InflacaoInsumos } from '../screens/InflacaoInsumos'
 import { ResumoEstoque } from '../screens/ResumoEstoque'
+import { AjusteEstoque } from '../screens/AjusteEstoque'
+import { AjusteCustoMedio } from '../screens/AjusteCustoMedio'
+import { Recalcular } from '../screens/Recalcular'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -48,6 +51,9 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'estoque/abc') return <CurvaABC />
   if (k === 'estoque/inflacao') return <InflacaoInsumos />
   if (k === 'estoque/resumo') return <ResumoEstoque />
+  if (k === 'ajustes/estoque') return <AjusteEstoque />
+  if (k === 'ajustes/custo') return <AjusteCustoMedio />
+  if (k === 'ajustes/recalcular') return <Recalcular />
   return <Placeholder label={label} />
 }
 
