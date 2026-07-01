@@ -37,6 +37,12 @@ const MOCK: Venda[] = [
   { id: 'v119', dataHora: '07/06 21:10', consumo: 'Delivery', bruto: 134.60, desconto: 0, liquido: 134.60, itens: 8, status: 'processada', detalhe: [{ produto: 'Combo Sushi 20 peças', qtd: 1, valor: 98.90 }, { produto: 'Yakisoba Frango', qtd: 1, valor: 35.70 }] },
 ]
 
+// recebimento do arquivo de vendas por dia (verde = chegou; preto = NÃO chegou, tipo Everest)
+const RECEB: { dia: string; ok: boolean }[] = [
+  { dia: '01/06', ok: true }, { dia: '02/06', ok: true }, { dia: '03/06', ok: false },
+  { dia: '04/06', ok: true }, { dia: '05/06', ok: true }, { dia: '06/06', ok: true }, { dia: '07/06', ok: true },
+]
+
 export function MonitorVendas() {
   const [rows, setRows] = useState<Venda[]>(MOCK)
   const [chips, setChips] = useState<Set<Status>>(new Set(ORDER))
@@ -92,6 +98,19 @@ export function MonitorVendas() {
         <div className="it"><span className="k">Processadas</span><span className="v ok">{cnt.processada}</span></div>
         <div className="it"><span className="k">Com erro</span><span className="v err">{cnt.erro}</span></div>
       </div>
+
+      <div className="recv-strip">
+        <span className="lb">Recebimento por dia</span>
+        {RECEB.map((r) => (
+          <span key={r.dia} className={'recv-day ' + (r.ok ? 'ok' : 'nao')} title={r.ok ? 'Arquivo recebido' : 'Arquivo NÃO recebido'}>
+            <span className="d" />{r.dia}{!r.ok && ' · não recebido'}
+          </span>
+        ))}
+      </div>
+
+      {RECEB.some((r) => !r.ok) && (
+        <div className="warn-bar">⚫ Arquivo de vendas <b>não recebido</b> em: {RECEB.filter((r) => !r.ok).map((r) => r.dia).join(', ')}. O PDV não enviou as vendas desse(s) dia(s) — verifique a integração / o caixa.</div>
+      )}
 
       <div className="sit-row">
         {ORDER.map((s) => (
