@@ -75,25 +75,44 @@ export function MonitorNfe() {
   const { data: ifv = [] } = useQuery({ queryKey: ['mon-ifv', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<IFV>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).range(f, t)) })
   const { data: vinculos = [] } = useQuery({ queryKey: ['mon-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('*').eq('tenant_id', tenantId).range(f, t)) })
   const { data: itens = [] } = useQuery({ queryKey: ['mon-itens', sel], enabled: !!sel, queryFn: async () => { const { data } = await supabase.from('nfe_itens').select('*').eq('nfe_id', sel).order('id'); return (data ?? []) as Item[] } })
+  // todos os itens (leve: 3 colunas) — p/ reavaliar o vínculo por CNPJ+código na exibição
+  const { data: allItens = [] } = useQuery({ queryKey: ['mon-allitens', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ nfe_id: string; codigo_item_fornecedor?: string; vinculacao_id?: string | null }>((f, t) => supabase.from('nfe_itens').select('nfe_id,codigo_item_fornecedor,vinculacao_id').eq('tenant_id', tenantId).range(f, t)) })
 
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const ifvMap = useMemo(() => Object.fromEntries(ifv.map((v) => [v.id, v])) as Record<string, IFV>, [ifv])
   const fornByCnpj = (cnpj?: string) => { const c = (cnpj || '').replace(/\D/g, ''); return fornecedores.find((f) => (f.cnpj || '').replace(/\D/g, '') === c) }
+  const itemsByNfe = useMemo(() => { const m: Record<string, { codigo_item_fornecedor?: string; vinculacao_id?: string | null }[]> = {}; allItens.forEach((it) => (m[it.nfe_id] ||= []).push(it)); return m }, [allItens])
+  // resolve o insumo de um item: pelo vínculo gravado OU, se vazio, casando fornecedor(CNPJ)+código nos vínculos atuais
+  const resolveVinc = (it: { codigo_item_fornecedor?: string; vinculacao_id?: string | null }, fornId: string | null): IFV | null => {
+    if (it.vinculacao_id && ifvMap[it.vinculacao_id]) return ifvMap[it.vinculacao_id]
+    if (fornId && it.codigo_item_fornecedor) return ifv.find((v) => v.fornecedor_id === fornId && (v.codigo_fornecedor || '') === (it.codigo_item_fornecedor || '')) || null
+    return null
+  }
+  // status EFETIVO: reavalia 'pronta'/'aguard_vinculacao' pelos vínculos atuais (um vínculo novo "cura" as outras notas do mesmo forn+código)
+  const effStatus = (n: Nfe): string => {
+    const s = n.status || ''
+    if (s !== 'pronta' && s !== 'aguard_vinculacao') return s
+    const its = itemsByNfe[n.id] || []
+    if (!its.length) return s
+    const fornId = fornByCnpj(n.cnpj_emitente)?.id || null
+    return its.every((it) => resolveVinc(it, fornId)) ? 'pronta' : 'aguard_vinculacao'
+  }
   const fornOpts = useMemo(() => { const m: Record<string, string> = {}; nfes.forEach((n) => { if (n.cnpj_emitente && n.nome_emitente) m[n.cnpj_emitente] = n.nome_emitente }); return Object.entries(m).sort((a, b) => a[1].localeCompare(b[1])) }, [nfes])
 
   const inGroup = (st: string | undefined, g: string[]) => g.includes(st || '')
   const cnt = useMemo(() => ({
-    pend: nfes.filter((n) => inGroup(n.status, G_PEND)).length,
-    proc: nfes.filter((n) => inGroup(n.status, G_PROC)).length,
-    erro: nfes.filter((n) => inGroup(n.status, G_ERRO)).length,
-    canc: nfes.filter((n) => inGroup(n.status, G_CANC)).length,
-  }), [nfes])
+    pend: nfes.filter((n) => inGroup(effStatus(n), G_PEND)).length,
+    proc: nfes.filter((n) => inGroup(effStatus(n), G_PROC)).length,
+    erro: nfes.filter((n) => inGroup(effStatus(n), G_ERRO)).length,
+    canc: nfes.filter((n) => inGroup(effStatus(n), G_CANC)).length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [nfes, itemsByNfe, ifv, ifvMap, fornecedores])
 
   const lista = useMemo(() => {
     const allowed = [...(chkPend ? G_PEND : []), ...(chkProc ? G_PROC : []), ...(chkErro ? G_ERRO : []), ...(chkCanc ? G_CANC : [])]
     return nfes.filter((n) => {
-      if (!allowed.includes(n.status || '')) return false
+      if (!allowed.includes(effStatus(n))) return false
       if (lojaId && (n.loja_id || null) !== lojaId) return false
       if (fForn && n.cnpj_emitente !== fForn) return false
       if (periodo !== 'todos') {
@@ -105,11 +124,12 @@ export function MonitorNfe() {
       }
       return true
     })
-  }, [nfes, chkPend, chkProc, chkErro, chkCanc, lojaId, fForn, periodo, de, ate])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nfes, chkPend, chkProc, chkErro, chkCanc, lojaId, fForn, periodo, de, ate, itemsByNfe, ifv, ifvMap, fornecedores])
 
   const selNfe = nfes.find((n) => n.id === sel) || null
-  const erros = itens.filter((i) => !i.vinculacao_id)
-  const nErros = sel ? erros.length : lista.filter((n) => inGroup(n.status, G_ERRO)).length
+  const erros = itens.filter((i) => !resolveVinc(i, fornByCnpj(selNfe?.cnpj_emitente)?.id || null))
+  const nErros = sel ? erros.length : lista.filter((n) => inGroup(effStatus(n), G_ERRO)).length
 
   const setPreset = (v: string) => { setPeriodo(v); const d = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(d.getFullYear(), d.getMonth(), 1))); setAte(isoD(d)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(d.getFullYear(), d.getMonth() - 1, 1))); setAte(isoD(new Date(d.getFullYear(), d.getMonth(), 0))) } else { setDe(''); setAte('') } }
   const limpar = () => { setFForn(''); setPreset('todos'); setChkPend(true); setChkProc(true); setChkErro(true); setChkCanc(false) }
@@ -135,7 +155,7 @@ export function MonitorNfe() {
 
   // processa 1 NF-e (gravação no estoque) — com trava anti-duplicação
   async function processarUma(n: Nfe): Promise<{ ok: boolean; msg?: string }> {
-    if (n.status !== 'pronta') return { ok: false, msg: `NF-e ${n.numero}: não está "Pronta".` }
+    if (effStatus(n) !== 'pronta') return { ok: false, msg: `NF-e ${n.numero}: não está "Pronta".` }
     const loja = n.loja_id || lojaId
     if (!loja) return { ok: false, msg: `NF-e ${n.numero}: sem loja (selecione uma loja no topo).` }
     const { data: its } = await supabase.from('nfe_itens').select('*').eq('nfe_id', n.id)
@@ -150,7 +170,7 @@ export function MonitorNfe() {
     const dataStr = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : new Date().toISOString().split('T')[0]
     let okItens = 0
     for (const it of items) {
-      const v = it.vinculacao_id ? ifvMap[it.vinculacao_id] : null
+      const v = resolveVinc(it, fornId)
       if (!v) continue
       const fator = v.qtd_por_embalagem || 1
       const qtdEst = +((it.quantidade || 0) * fator).toFixed(6)
@@ -243,11 +263,11 @@ export function MonitorNfe() {
                 : lista.length === 0 ? <tr><td colSpan={13} className="empty">Nenhuma NF-e nesta situação.</td></tr>
                 : lista.map((n) => {
                   const forn = fornByCnpj(n.cnpj_emitente)
-                  const isErro = inGroup(n.status, G_ERRO)
+                  const es = effStatus(n); const isErro = inGroup(es, G_ERRO)
                   return (
                     <tr key={n.id} className={sel === n.id ? 'sel' : ''}>
                       <td className="c"><input type="checkbox" className="chk" checked={picked.has(n.id)} onChange={() => togglePick(n.id)} /></td>
-                      <td className="c" title={n.status}><span className="stat-dot" style={{ background: DOT[n.status || ''] || '#94a3b8', cursor: isErro ? 'pointer' : 'default' }} onClick={isErro ? () => abrirItem(n, 'erros') : undefined} /></td>
+                      <td className="c" title={es}><span className="stat-dot" style={{ background: DOT[es] || '#94a3b8', cursor: isErro ? 'pointer' : 'default' }} onClick={isErro ? () => abrirItem(n, 'erros') : undefined} /></td>
                       <td className="r mono" style={{ color: '#64748b', fontSize: 12 }}>{forn?.codigo || '—'}</td>
                       <td className="fornec nfe-fornec" onClick={() => abrirItem(n, 'itens')} style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</td>
                       <td style={{ color: '#64748b', fontSize: 12 }}>{lojaMap[n.loja_id || ''] || '—'}</td>
