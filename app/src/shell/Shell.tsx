@@ -30,6 +30,7 @@ import { Recalcular } from '../screens/Recalcular'
 import { Compras } from '../screens/Compras'
 import { Divergencias } from '../screens/Divergencias'
 import { Rendimentos } from '../screens/Rendimentos'
+import { CmvTeoricoReal } from '../screens/CmvTeoricoReal'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -60,6 +61,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'compras/pedidos') return <Compras />
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
+  if (k === 'gestao/cmv') return <CmvTeoricoReal />
   return <Placeholder label={label} />
 }
 

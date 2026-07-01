@@ -1,0 +1,71 @@
+/* CMV Teórico × Real — fiel ao cmv.html (escopado .cmv-screen) */
+.cmv-screen { padding: 14px 24px; }
+
+/* filtros (padrão profissional: card branco, labels pequenas) */
+.cmv-screen .ds-filterbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.cmv-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
+.cmv-screen .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; letter-spacing: .01em; }
+.cmv-screen .ds-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.cmv-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.cmv-screen .field:focus { outline: none; border-color: #f97316; }
+.cmv-screen select.field { cursor: pointer; }
+.cmv-screen .btn-ghost { height: 34px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+.cmv-screen .btn-ghost:hover { background: #f8fafc; }
+.cmv-screen .btn-primary { height: 34px; padding: 0 18px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+.cmv-screen .btn-primary:hover { background: #ea6a0a; }
+
+/* toggle "apenas divergências" */
+.cmv-screen .tog-wrap { display: flex; align-items: center; gap: 7px; height: 34px; }
+.cmv-screen .tog { position: relative; width: 38px; height: 20px; cursor: pointer; }
+.cmv-screen .tog input { opacity: 0; width: 0; height: 0; }
+.cmv-screen .tog-sl { position: absolute; inset: 0; background: #cbd5e1; border-radius: 10px; transition: .3s; }
+.cmv-screen .tog-sl:before { position: absolute; content: ''; height: 14px; width: 14px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .3s; }
+.cmv-screen .tog input:checked + .tog-sl { background: #f97316; }
+.cmv-screen .tog input:checked + .tog-sl:before { transform: translateX(18px); }
+
+/* KPI cards */
+.cmv-screen .kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
+.cmv-screen .kpi { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); display: flex; flex-direction: column; gap: 4px; }
+.cmv-screen .kpi-lbl { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; }
+.cmv-screen .kpi-val { font-size: 22px; font-weight: 800; font-family: 'DM Mono', monospace; line-height: 1.1; color: #0f172a; }
+.cmv-screen .kpi-sub { font-size: 11px; color: #94a3b8; }
+
+/* tabela com cabeçalho agrupado (navy) */
+.cmv-screen .tbl-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04); margin-bottom: 12px; }
+.cmv-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 320px); }
+.cmv-screen table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.cmv-screen thead { position: sticky; top: 0; z-index: 3; }
+.cmv-screen .th-main th { position: sticky; top: 0; }
+.cmv-screen .th-sub th { position: sticky; top: 23px; }
+.cmv-screen .th-main { background: #0f2d5c; }
+.cmv-screen .th-main th { padding: 6px 10px; text-align: left; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.85); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; border-right: 1px solid rgba(255,255,255,.08); }
+.cmv-screen .th-main th:last-child { border-right: none; }
+.cmv-screen .th-main th.c { text-align: center; }
+.cmv-screen .th-sub { background: #162d52; }
+.cmv-screen .th-sub th { padding: 6px 12px; font-size: 9px; font-weight: 600; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; text-align: right; border-right: 1px solid rgba(255,255,255,.06); }
+.cmv-screen .th-sub th:first-child, .cmv-screen .th-sub th.l { text-align: left; }
+.cmv-screen .th-sub th:last-child { border-right: none; }
+.cmv-screen tbody td { padding: 3px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #0f172a; }
+.cmv-screen tbody tr:last-child td { border-bottom: none; }
+.cmv-screen tbody tr:hover { background: #fafbfc; }
+.cmv-screen td.r { text-align: right; }
+.cmv-screen td.c { text-align: center; }
+.cmv-screen .mono { font-family: 'DM Mono', monospace; }
+.cmv-screen .status-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.cmv-screen .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.cmv-screen tfoot td { padding: 6px 10px; background: #0f2d5c; font-size: 12px; color: #fff; border-bottom: none; font-weight: 700; }
+.cmv-screen tfoot td.r { text-align: right; }
+.cmv-screen .act-btn { display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; font-size: 11px; font-weight: 600; color: #64748b; cursor: pointer; font-family: inherit; }
+.cmv-screen .act-btn:hover { background: #f8fafc; }
+.cmv-screen .empty { padding: 32px; text-align: center; color: #94a3b8; }
+
+/* resumo inferior */
+.cmv-screen .bottom-row { display: flex; align-items: stretch; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04); margin-bottom: 12px; }
+.cmv-screen .bottom-left { flex: 1; padding: 14px 18px; border-right: 1px solid #e2e8f0; }
+.cmv-screen .bottom-right { padding: 14px 18px; text-align: right; font-size: 11px; color: #94a3b8; min-width: 240px; }
+.cmv-screen .bottom-bar { display: flex; align-items: center; gap: 16px; font-size: 12px; color: #94a3b8; padding: 2px 0; }
+
+/* toast */
+.cmv-screen .toast { position: fixed; bottom: 24px; right: 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 18px; font-size: 13px; z-index: 999; max-width: 320px; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.cmv-screen .toast.err { border-color: #e11d48; color: #e11d48; }
+.cmv-screen .toast.ok { border-color: #16a34a; color: #16a34a; }
