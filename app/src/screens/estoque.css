@@ -118,6 +118,16 @@
 .est-screen .ci-vertodos { font-size: 12px; color: #f97316; cursor: pointer; font-weight: 600; }
 .est-screen .ci-banner { background: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; border-radius: 8px; padding: 8px 12px; font-size: 12px; }
 .est-screen .flbl { font-size: 11px; font-weight: 500; color: #64748b; margin-bottom: 3px; }
+/* Divergências (raio-x) */
+.est-screen .dv-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 16px; }
+.est-screen .dv-kpi { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.est-screen .dv-kpi:hover { border-color: #94a3b8; }
+.est-screen .dv-kpi .l { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .03em; line-height: 1.2; min-height: 22px; }
+.est-screen .dv-kpi .v { font-size: 20px; font-weight: 800; margin-top: 2px; font-family: 'DM Mono', monospace; }
+.est-screen .dv-kpi.ok .v { color: #16a34a; } .est-screen .dv-kpi.warn .v { color: #dc2626; }
+.est-screen .dv-sec { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+.est-screen .dv-sec-h { padding: 12px 16px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.est-screen .dv-empty-ok { padding: 18px; text-align: center; color: #16a34a; font-size: 13px; font-weight: 600; }
 /* Inflação — matriz compacta + cabeçalho de 2 linhas grudando no scroll */
 .est-screen .inf-tbl thead th { padding: 3px 6px; font-size: 9px; letter-spacing: 0; }
 .est-screen .inf-tbl thead tr:first-child th { top: 0; height: 19px; }
