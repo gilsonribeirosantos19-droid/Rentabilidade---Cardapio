@@ -103,31 +103,26 @@ export function MonitorNfe() {
   const fornCnpjByNome = useMemo(() => Object.fromEntries(fornOpts.map(([c, n]) => [n, c])) as Record<string, string>, [fornOpts])
 
   const inGroup = (st: string | undefined, g: string[]) => g.includes(st || '')
+  // notas que passam nos filtros de período/loja/fornecedor (SEM o filtro dos chips de status)
+  const baseFiltered = useMemo(() => nfes.filter((n) => {
+    if (lojaId && (n.loja_id || null) !== lojaId) return false
+    if (fForn && n.cnpj_emitente !== fForn) return false
+    if (periodo !== 'todos') { const d = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA') : ''; if (de && d && d < de) return false; if (ate && d && d > ate) return false }
+    return true
+  }), [nfes, lojaId, fForn, periodo, de, ate])
   const cnt = useMemo(() => ({
-    pend: nfes.filter((n) => inGroup(effStatus(n), G_PEND)).length,
-    proc: nfes.filter((n) => inGroup(effStatus(n), G_PROC)).length,
-    erro: nfes.filter((n) => inGroup(effStatus(n), G_ERRO)).length,
-    canc: nfes.filter((n) => inGroup(effStatus(n), G_CANC)).length,
+    pend: baseFiltered.filter((n) => inGroup(effStatus(n), G_PEND)).length,
+    proc: baseFiltered.filter((n) => inGroup(effStatus(n), G_PROC)).length,
+    erro: baseFiltered.filter((n) => inGroup(effStatus(n), G_ERRO)).length,
+    canc: baseFiltered.filter((n) => inGroup(effStatus(n), G_CANC)).length,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [nfes, itemsByNfe, ifv, ifvMap, fornecedores])
+  }), [baseFiltered, itemsByNfe, ifv, ifvMap, fornecedores])
 
   const lista = useMemo(() => {
     const allowed = [...(chkPend ? G_PEND : []), ...(chkProc ? G_PROC : []), ...(chkErro ? G_ERRO : []), ...(chkCanc ? G_CANC : [])]
-    return nfes.filter((n) => {
-      if (!allowed.includes(effStatus(n))) return false
-      if (lojaId && (n.loja_id || null) !== lojaId) return false
-      if (fForn && n.cnpj_emitente !== fForn) return false
-      if (periodo !== 'todos') {
-        // compara pela data LOCAL (Brasil) — a mesma que aparece na tela — e não pela UTC crua,
-        // senão nota da noite do dia 30 (virou dia 1 em UTC) cai no filtro do mês seguinte
-        const d = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA') : ''
-        if (de && d && d < de) return false
-        if (ate && d && d > ate) return false
-      }
-      return true
-    })
+    return baseFiltered.filter((n) => allowed.includes(effStatus(n)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nfes, chkPend, chkProc, chkErro, chkCanc, lojaId, fForn, periodo, de, ate, itemsByNfe, ifv, ifvMap, fornecedores])
+  }, [baseFiltered, chkPend, chkProc, chkErro, chkCanc, itemsByNfe, ifv, ifvMap, fornecedores])
 
   const selNfe = nfes.find((n) => n.id === sel) || null
   const erros = itens.filter((i) => !resolveVinc(i, fornByCnpj(selNfe?.cnpj_emitente)?.id || null))
