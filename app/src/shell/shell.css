@@ -52,11 +52,15 @@
 
 /* ====== ÁREA PRINCIPAL ====== */
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
-.topbar { height: 58px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar { height: 44px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
 .topbar h1 { font-size: 20px; font-weight: 800; color: var(--text1); }
+.topbar .crumb { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.topbar .crumb .c1 { font-size: 15px; font-weight: 800; color: var(--text3); white-space: nowrap; }
+.topbar .crumb .sep { font-size: 14px; color: var(--text3); font-weight: 600; }
+.topbar .crumb .c2 { font-size: 16px; font-weight: 800; color: var(--text1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .topbar .tr { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--text2); }
-.tabs { display: flex; align-items: flex-end; gap: 3px; padding: 8px 16px 0; background: var(--bg); flex-shrink: 0; overflow-x: auto; }
-.tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--text2); background: #e2e8f0; border: 1px solid #d8dee8; border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; white-space: nowrap; }
+.tabs { display: flex; align-items: flex-end; gap: 3px; padding: 5px 16px 0; background: var(--bg); flex-shrink: 0; overflow-x: auto; }
+.tab { display: inline-flex; align-items: center; gap: 8px; padding: 5px 13px; font-size: 12.5px; font-weight: 600; color: var(--text2); background: #e2e8f0; border: 1px solid #d8dee8; border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; white-space: nowrap; }
 .tab.on { background: var(--surface); color: var(--text1); border-bottom: 2px solid var(--orange); margin-bottom: -1px; }
 .tab .x { color: var(--text3); font-size: 16px; line-height: 1; }
 .tab .x:hover { color: var(--red); }

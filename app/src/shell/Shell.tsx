@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './shell.css'
 import { Sidebar } from './Sidebar'
-import { labelForKey } from './nav'
+import { labelForKey, titleForKey } from './nav'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { Fornecedores } from '../screens/Fornecedores'
@@ -75,7 +75,9 @@ export function Shell() {
     })
   }
 
-  const title = active === '__home' ? 'Início' : labelForKey(active)
+  const crumbSection = active === '__home' ? 'Início' : labelForKey(active)
+  const crumbLong = active === '__home' ? '' : titleForKey(active)
+  const hasLong = !!crumbLong && crumbLong !== crumbSection
   // telas que abrem em TELA CHEIA (sem topbar/abas do workspace) — têm cabeçalho próprio e precisam de espaço
   const isFull = active.startsWith('fiscal/')
 
@@ -85,7 +87,11 @@ export function Shell() {
 
       <div className="main">
         {!isFull && <div className="topbar">
-          <h1>{title}</h1>
+          <div className="crumb">
+            {hasLong
+              ? <><span className="c1">{crumbSection}</span><span className="sep">›</span><span className="c2">{crumbLong}</span></>
+              : <span className="c2">{crumbSection}</span>}
+          </div>
           <div className="tr">
             <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
               <option value="">Todas as lojas</option>

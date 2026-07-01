@@ -1,18 +1,18 @@
 /* Tela de Estoque — fiel ao original (escopado .est-screen) */
-.est-screen { padding: 18px 24px; }
+.est-screen { padding: 14px 24px; }
 .est-screen .est-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 14px; }
 .est-screen .est-title span { font-weight: 400; color: #94a3b8; font-size: 13px; }
 
 /* filterbar */
-.est-screen .ds-filterbar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
-.est-screen .ds-field { display: flex; flex-direction: column; gap: 5px; }
-.est-screen .ds-field > label { font-size: 11px; font-weight: 600; color: #64748b; }
+.est-screen .ds-filterbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.est-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
+.est-screen .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; text-transform: none; letter-spacing: .01em; }
 .est-screen .ds-grow { flex: 1; }
 .est-screen .ds-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.est-screen .field { height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.est-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
 .est-screen .field:focus { outline: none; border-color: #f97316; }
 .est-screen select.field { cursor: pointer; }
-.est-screen .btn-ghost { height: 36px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.est-screen .btn-ghost { height: 34px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .est-screen .btn-ghost:hover { background: #f8fafc; }
 .est-screen .mf-dot { width: 7px; height: 7px; border-radius: 50%; background: #f97316; display: inline-block; }
 
@@ -29,12 +29,12 @@
 
 /* tabela */
 .est-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
-.est-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 250px); }
+.est-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 215px); }
 .est-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .est-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; }
 .est-screen .tbl th.r, .est-screen .tbl td.r { text-align: right; }
 .est-screen .tbl th.c, .est-screen .tbl td.c { text-align: center; }
-.est-screen .tbl tbody td { padding: 5px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; }
+.est-screen .tbl tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; }
 .est-screen .tbl tbody tr:hover td { background: #f8fafc; }
 .est-screen .tbl .mono { font-family: 'DM Mono', monospace; }
 .est-screen .tbl tfoot td { padding: 8px 12px; border-top: 2px solid #e2e8f0; }

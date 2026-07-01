@@ -222,8 +222,6 @@ export function Movimentacao() {
 
   return (
     <div className="est-screen">
-      <div className="est-title">Movimentação de Estoque no Período</div>
-
       <div className="ds-filterbar">
         <div className="ds-field"><label>Período</label>
           <select className="field" style={{ minWidth: 130 }} defaultValue="periodo" onChange={(e) => setPreset(e.target.value)}>

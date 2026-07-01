@@ -128,3 +128,13 @@ export function labelForKey(key: string): string {
   }
   return key
 }
+
+// Título longo/descritivo da tela (2º nível do breadcrumb no topo).
+// Só as telas que TIRARAM o título de dentro do conteúdo entram aqui;
+// as demais caem no labelForKey (breadcrumb de 1 nível só).
+const TITLE_OVERRIDES: Record<string, string> = {
+  'estoque/movimentacao': 'Movimentação de Estoque no Período',
+}
+export function titleForKey(key: string): string {
+  return TITLE_OVERRIDES[key] ?? labelForKey(key)
+}
