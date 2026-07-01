@@ -8,6 +8,9 @@
 .est-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
 .est-screen .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; text-transform: none; letter-spacing: .01em; }
 .est-screen .ds-grow { flex: 1; }
+/* seletor com busca dentro da barra de filtros: mesma altura dos campos (34px) */
+.est-screen .ds-field .ass { width: 100%; }
+.est-screen .ds-field .ass-btn { height: 34px; }
 .est-screen .ds-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .est-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
 .est-screen .field:focus { outline: none; border-color: #f97316; }

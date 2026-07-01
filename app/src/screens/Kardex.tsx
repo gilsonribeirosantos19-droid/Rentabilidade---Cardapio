@@ -84,16 +84,21 @@ export function Kardex() {
 
   return (
     <div className="est-screen">
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 240 }}><SearchSelect value={insSel?.nome || ''} onChange={(nm) => setInsId(insByName.get(nm) || '')} options={insOptions} placeholder="Selecione um insumo..." /></div>
-        <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}>
-          <option value="periodo">Período</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option>
-        </select>
-        <input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => setDe(e.target.value)} />
-        <span style={{ color: '#94a3b8' }}>–</span>
-        <input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => setAte(e.target.value)} />
-        <button className="btn-ghost" onClick={exportCSV}>↓ CSV</button>
-        {insId && <span style={{ fontSize: 12, color: '#94a3b8' }}>{movs.length} movimentação(ões)</span>}
+      <div className="ds-filterbar">
+        <div className="ds-field" style={{ width: 240 }}><label>Insumo</label>
+          <SearchSelect value={insSel?.nome || ''} onChange={(nm) => setInsId(insByName.get(nm) || '')} options={insOptions} placeholder="Selecione um insumo..." />
+        </div>
+        <div className="ds-field"><label>Período</label>
+          <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}>
+            <option value="periodo">Período</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option>
+          </select>
+        </div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => setDe(e.target.value)} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => setAte(e.target.value)} /></div>
+        <div className="ds-actions">
+          <button className="btn-ghost" onClick={exportCSV}>↓ CSV</button>
+          {insId && <span style={{ fontSize: 12, color: '#94a3b8' }}>{movs.length} movimentação(ões)</span>}
+        </div>
       </div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">
