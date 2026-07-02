@@ -23,7 +23,7 @@
 .fic-screen tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; }
 .fic-screen tbody td.r { text-align: right; }
 .fic-screen tbody tr { cursor: pointer; }
-.fic-screen tbody tr:hover td { background: #d7e4f7; }
+.fic-screen tbody tr:hover td { background: #c3d9f5; }
 .fic-screen .mono { font-family: 'DM Mono', monospace; }
 .fic-screen .tbl-cat { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: #eef2f7; color: #475569; }
 .fic-screen .st-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }

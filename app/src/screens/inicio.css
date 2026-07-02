@@ -23,7 +23,7 @@
 .inicio-screen .tbl th.r, .inicio-screen .tbl td.r { text-align: right; }
 .inicio-screen .tbl tbody td { padding: 4px 10px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
 .inicio-screen .tbl tbody tr.clik { cursor: pointer; }
-.inicio-screen .tbl tbody tr.clik:hover td { background: #d7e4f7; }
+.inicio-screen .tbl tbody tr.clik:hover td { background: #c3d9f5; }
 .inicio-screen .tbl tfoot td { padding: 5px 10px; border-top: 2px solid #e2e8f0; font-weight: 700; }
 .inicio-screen .mono { font-family: 'DM Mono', monospace; }
 .inicio-screen .pend-ic { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }

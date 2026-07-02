@@ -30,7 +30,7 @@
 .ins-screen tbody td.r { text-align: right; }
 .ins-screen tbody td.c { text-align: center; }
 .ins-screen tbody tr { cursor: pointer; }
-.ins-screen tbody tr:hover td { background: #d7e4f7; }
+.ins-screen tbody tr:hover td { background: #c3d9f5; }
 .ins-screen tbody tr.sel td { background: #e8f0fe; }
 .ins-screen .td-mono { font-family: 'DM Mono', monospace; }
 
