@@ -26,7 +26,7 @@ const SIT_META: Record<Situacao, { nome: string; dot: string; pill: string }> = 
 const ORDER: Situacao[] = ['com_erros', 'nao_recebido', 'aguardando', 'em_processamento', 'processado']
 
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
-const hojeLocal = () => new Date().toLocaleDateString('en-CA')
+const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const fmtDia = (iso: string) => iso.split('-').reverse().join('/')
 const fmtTs = (ts?: string | null) => ts ? new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'
 function diasPeriodo(de: string, ate: string): string[] {
@@ -39,9 +39,11 @@ function diasPeriodo(de: string, ate: string): string[] {
 
 export function MonitorVendas() {
   const { tenantId } = useAuth()
-  const { lojas, lojaId } = useLoja()
+  const { lojas } = useLoja()
   const [de, setDe] = useState(mesInicio())
-  const [ate, setAte] = useState(hojeLocal())
+  const [ate, setAte] = useState(mesFim())
+  const [lojaSel, setLojaSel] = useState('')
+  const lojaAtual = lojaSel || lojas[0]?.id || ''
   const [chips, setChips] = useState<Set<Situacao>>(new Set(ORDER))
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [detId, setDetId] = useState<string | null>(null)
@@ -55,7 +57,7 @@ export function MonitorVendas() {
 
   // monta as linhas: para cada loja × cada dia do período → registro recebido, senão "Não Recebido"
   const rows = useMemo<Row[]>(() => {
-    const lojasShow = lojaId ? lojas.filter((l) => l.id === lojaId) : lojas
+    const lojasShow = lojas.filter((l) => l.id === lojaAtual)
     const dias = diasPeriodo(de, ate)
     const byKey: Record<string, ImpRow> = {}
     imports.forEach((r) => { byKey[`${r.loja_id || ''}|${r.data_movimento}`] = r })
@@ -66,7 +68,7 @@ export function MonitorVendas() {
       else out.push({ id: `${l.id}|${dia}`, situacao: 'nao_recebido', loja: l.nome, pdv: '—', tipo: 'Venda', dMovimento: fmtDia(dia), arquivo: '—', dExecucao: '—', dIntegracao: '—', conteudo: '', erros: [] })
     }))
     return out
-  }, [imports, lojas, lojaId, de, ate])
+  }, [imports, lojas, lojaAtual, de, ate])
 
   const cnt = useMemo(() => { const c = { com_erros: 0, nao_recebido: 0, aguardando: 0, em_processamento: 0, processado: 0 } as Record<Situacao, number>; rows.forEach((r) => { c[r.situacao]++ }); return c }, [rows])
   const lista = useMemo(() => rows.filter((r) => chips.has(r.situacao)), [rows, chips])
@@ -83,6 +85,11 @@ export function MonitorVendas() {
   return (
     <div className="mvend-screen">
       <div className="ds-filterbar">
+        <div className="ds-field"><label>Loja</label>
+          <select className="field" value={lojaAtual} onChange={(e) => setLojaSel(e.target.value)} style={{ minWidth: 170 }}>
+            {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+          </select>
+        </div>
         <div className="ds-field"><label>PDV</label><select className="field"><option>Todos</option><option>iComanda</option><option>Saipos</option><option>Aloha</option></select></div>
         <div className="ds-field"><label>Tipo</label><select className="field"><option>Venda</option><option>Financeiro</option></select></div>
         <div className="ds-field"><label>Período</label><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
