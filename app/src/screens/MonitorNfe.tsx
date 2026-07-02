@@ -401,6 +401,7 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
   const editar = async (v: IFV) => { setEditId(v.id); setInsId(v.insumo_id); setEmbDesc(v.embalagem_descricao || ''); setQtEmb(String(v.qtd_por_embalagem || 1)); setCodForn(v.codigo_fornecedor || ''); setDescr(v.descricao_fornecedor || ''); setEmbPadrao(!!(v as any).embalagem_padrao); try { const { data } = await supabase.from('insumo_fornecedor_lojas').select('loja_id').eq('vinculacao_id', v.id); const ids = (data ?? []).map((x: any) => x.loja_id as string); setEmpSel(ids.length ? new Set(ids) : allLojaIds()) } catch { setEmpSel(allLojaIds()) } }
 
   const salvar = async () => {
+    if (!forn) return onToast('Fornecedor não cadastrado. Cadastre-o em Cadastros › Fornecedores antes de corrigir.', 'err')
     if (!insId) return onToast('Selecione o item interno.', 'err')
     if (f <= 0) return onToast('Informe a Qt. na embalagem.', 'err')
     setSaving(true)
@@ -455,6 +456,12 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
         </div>
 
         <div className="cor-body">
+          {!forn && (
+            <div className="cor-aviso">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth={2} style={{ flexShrink: 0 }}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+              <span>O fornecedor desta nota <b>não está cadastrado</b>. Cadastre-o em <b>Cadastros › Fornecedores</b> (CNPJ {nfe.cnpj_emitente || '—'}) para poder corrigir os itens — sem cadastro, o vínculo ficaria "solto" e não apareceria na lista do fornecedor.</span>
+            </div>
+          )}
           {/* fornecedor */}
           <div className="cor-card">
             <div className="cor-st">🏢 Dados do fornecedor</div>
@@ -481,7 +488,7 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
               <div className="cor-fg"><label>Descrição do item (NF-e)</label><input value={descr} onChange={(e) => setDescr(e.target.value)} /></div>
               <div className="cor-fg"><label>Valor unitário (NF-e)</label><input className="mono" readOnly value={brl(item.valor_unitario)} /></div>
               <label className="cor-chk"><input type="checkbox" checked={embPadrao} onChange={(e) => setEmbPadrao(e.target.checked)} /> Embalagem padrão deste fornecedor</label>
-              <div className="cor-fg"><label>&nbsp;</label><div style={{ display: 'flex', gap: 8 }}>{editId && <button className="cor-back" style={{ height: 31 }} onClick={reset}>Cancelar</button>}<button className="cor-add" disabled={saving} onClick={salvar}>{saving ? 'Salvando…' : (editId ? 'Salvar vínculo' : '+ Incluir vínculo')}</button></div></div>
+              <div className="cor-fg"><label>&nbsp;</label><div style={{ display: 'flex', gap: 8 }}>{editId && <button className="cor-back" style={{ height: 31 }} onClick={reset}>Cancelar</button>}<button className="cor-add" disabled={saving || !forn} title={!forn ? 'Cadastre o fornecedor antes de corrigir' : undefined} onClick={salvar}>{saving ? 'Salvando…' : (editId ? 'Salvar vínculo' : '+ Incluir vínculo')}</button></div></div>
             </div>
             {f > 0 && insSel && <div className="cor-conv">{fmtQ(q)} {item.unidade_nfe || ''} × {fmtQ(f)} = {fmtQ(q * f)} {insSel.unidade_medida || ''} no estoque · Custo/un: {brl((item.valor_unitario || 0) / f)}</div>}
           </div>
