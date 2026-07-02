@@ -34,7 +34,7 @@
 .pdv-screen .tbl th.r, .pdv-screen .tbl td.r { text-align: right; }
 .pdv-screen .tbl tbody td { padding: 6px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
 .pdv-screen .tbl tbody tr:last-child td { border-bottom: none; }
-.pdv-screen .tbl tbody tr:hover td { background: #c3d9f5; }
+.pdv-screen .tbl tbody tr:hover td { background: #d0dff2; }
 .pdv-screen .mono { font-family: 'DM Mono', monospace; }
 .pdv-screen .empty { text-align: center; color: #94a3b8; padding: 24px; }
 

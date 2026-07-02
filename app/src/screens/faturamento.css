@@ -61,7 +61,7 @@
 .fatv-screen tbody td.c { text-align: center; }
 .fatv-screen thead th:last-child, .fatv-screen tbody td:last-child { border-right: none; }
 .fatv-screen tbody tr:nth-child(even) td { background: #fafbfc; }
-.fatv-screen tbody tr:hover td { background: #c3d9f5; }
+.fatv-screen tbody tr:hover td { background: #d0dff2; }
 .fatv-screen tbody td.grp { color: #64748b; }
 .fatv-screen tbody td.canc-sim { color: #dc2626; font-weight: 700; }
 .fatv-screen tfoot td { position: sticky; bottom: 0; background: #f1f5f9; font-weight: 800; padding: 4px 9px; border-top: 2px solid #d6dce6; text-align: right; font-family: 'DM Mono', monospace; color: #0f172a; }

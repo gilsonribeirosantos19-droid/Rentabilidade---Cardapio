@@ -48,7 +48,7 @@
 .cmv-screen .th-sub th:last-child { border-right: none; }
 .cmv-screen tbody td { padding: 2px 9px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #0f172a; line-height: 1.5; }
 .cmv-screen tbody tr:last-child td { border-bottom: none; }
-.cmv-screen tbody tr:hover { background: #c3d9f5; }
+.cmv-screen tbody tr:hover { background: #d0dff2; }
 .cmv-screen td.r { text-align: right; }
 .cmv-screen td.c { text-align: center; }
 .cmv-screen .mono { font-family: 'DM Mono', monospace; }

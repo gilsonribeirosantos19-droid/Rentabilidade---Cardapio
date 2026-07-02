@@ -38,7 +38,7 @@
 .est-screen .tbl th.r, .est-screen .tbl td.r { text-align: right; }
 .est-screen .tbl th.c, .est-screen .tbl td.c { text-align: center; }
 .est-screen .tbl tbody td { padding: 2px 9px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; line-height: 1.5; }
-.est-screen .tbl tbody tr:hover td { background: #c3d9f5; }
+.est-screen .tbl tbody tr:hover td { background: #d0dff2; }
 .est-screen .tbl .mono { font-family: 'DM Mono', monospace; }
 .est-screen .tbl tfoot td { padding: 8px 12px; border-top: 2px solid #e2e8f0; }
 .est-screen .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
@@ -179,7 +179,7 @@
 .est-screen .cm-grid tbody td { padding: 0 10px; height: 28px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
 .est-screen .cm-grid tbody tr:nth-child(even) { background: #fafbfc; }
 .est-screen .cm-grid tbody tr.sel { background: #e8f0fe; }
-.est-screen .cm-grid tbody tr:not(.sel):hover td { background: #c3d9f5; }
+.est-screen .cm-grid tbody tr:not(.sel):hover td { background: #d0dff2; }
 .est-screen .cm-grid .c-sel { width: 44px; text-align: center; }
 .est-screen .cm-grid .c-num { text-align: right; font-family: 'DM Mono', monospace; color: #334155; white-space: nowrap; }
 .est-screen .cm-grid input[type=checkbox] { width: 16px; height: 16px; accent-color: #f97316; cursor: pointer; }

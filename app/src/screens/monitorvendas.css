@@ -47,7 +47,7 @@
 .mvend-screen tbody td { padding: 3px 10px; border-bottom: 1px solid #f1f5f9; color: #0f172a; white-space: nowrap; line-height: 1.6; }
 .mvend-screen tbody td.r { text-align: right; font-family: 'DM Mono', monospace; } .mvend-screen tbody td.c { text-align: center; }
 .mvend-screen tbody tr { cursor: pointer; }
-.mvend-screen tbody tr:hover td { background: #c3d9f5; }
+.mvend-screen tbody tr:hover td { background: #d0dff2; }
 .mvend-screen tbody tr.sel td { background: #eaf1fb; }
 .mvend-screen tbody tr.err td:not(.c) { background: #fef4f4; }
 .mvend-screen input[type=checkbox] { width: 15px; height: 15px; accent-color: #f97316; cursor: pointer; }
