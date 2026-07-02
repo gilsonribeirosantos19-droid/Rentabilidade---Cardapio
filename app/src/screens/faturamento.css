@@ -1,20 +1,20 @@
 /* Faturamento — grade detalhada de vendas (modelo Everest). Escopado .fatv-screen */
-.fatv-screen { padding: 14px 24px; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; }
+.fatv-screen { padding: 10px 18px; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; }
 .fatv-screen .ds-filterbar, .fatv-screen .search-row { flex-shrink: 0; }
 
-.fatv-screen .ds-filterbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.fatv-screen .ds-filterbar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 10px; padding: 7px 12px; margin-bottom: 7px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .fatv-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
 .fatv-screen .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; }
-.fatv-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #334155; background: #fff; }
+.fatv-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #334155; background: #fff; }
 .fatv-screen .field:focus { outline: none; border-color: #f97316; }
 .fatv-screen select.field { cursor: pointer; }
 .fatv-screen .ds-actions { margin-left: auto; display: flex; gap: 8px; }
-.fatv-screen .btn-ghost { height: 34px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.fatv-screen .btn-ghost { height: 30px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .fatv-screen .btn-ghost:hover { background: #f8fafc; }
 
 /* multi-select loja (reaproveita padrão do Monitor) */
 .fatv-screen .ms { position: relative; }
-.fatv-screen .ms-btn { height: 34px; min-width: 180px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; background: #fff; color: #334155; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: inherit; }
+.fatv-screen .ms-btn { height: 30px; min-width: 170px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; background: #fff; color: #334155; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: inherit; }
 .fatv-screen .ms-btn:hover { border-color: #94a3b8; }
 .fatv-screen .ms-back { position: fixed; inset: 0; z-index: 40; }
 .fatv-screen .ms-pop { position: absolute; top: 38px; left: 0; z-index: 50; background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; box-shadow: 0 8px 24px rgba(15,23,42,.14); min-width: 210px; max-height: 300px; overflow: auto; padding: 6px; }
@@ -23,8 +23,8 @@
 .fatv-screen .ms-opt input { width: 15px; height: 15px; accent-color: #f97316; }
 .fatv-screen .ms-sep { border-top: 1px solid #eef1f5; margin: 4px 0; }
 
-.fatv-screen .search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
-.fatv-screen .search { flex: 1; max-width: 380px; height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; }
+.fatv-screen .search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.fatv-screen .search { flex: 1; max-width: 380px; height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; }
 /* ícones no cabeçalho (grade = ocultar coluna, funil = filtrar) — modelo da Movimentação */
 .fatv-screen .th-in { display: inline-flex; align-items: center; gap: 5px; }
 .fatv-screen .hd-ico { cursor: pointer; color: #94a3b8; flex-shrink: 0; }
@@ -46,11 +46,11 @@
 .fatv-screen .grid-wrap table { height: 100%; }
 .fatv-screen tbody tr.fill { height: 100%; }
 .fatv-screen tbody tr.fill td, .fatv-screen tbody tr.fill:hover td { padding: 0; border: none; background: #fff; }
-.fatv-screen table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.fatv-screen thead th { position: sticky; top: 0; z-index: 2; background: #f1f5f9; color: #475569; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; text-align: left; padding: 7px 10px; border-bottom: 1px solid #d6dce6; border-right: 1px solid #e7ecf3; white-space: nowrap; }
+.fatv-screen table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.fatv-screen thead th { position: sticky; top: 0; z-index: 2; background: #f1f5f9; color: #475569; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .03em; text-align: left; padding: 4px 9px; border-bottom: 1px solid #d6dce6; border-right: 1px solid #e7ecf3; white-space: nowrap; }
 .fatv-screen thead th.r { text-align: right; }
 .fatv-screen thead th.c { text-align: center; }
-.fatv-screen tbody td { padding: 5px 10px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f3f5f9; color: #0f172a; white-space: nowrap; }
+.fatv-screen tbody td { padding: 2px 9px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f3f5f9; color: #0f172a; white-space: nowrap; line-height: 1.5; }
 .fatv-screen tbody td.r { text-align: right; font-family: 'DM Mono', monospace; }
 .fatv-screen tbody td.c { text-align: center; }
 .fatv-screen thead th:last-child, .fatv-screen tbody td:last-child { border-right: none; }
@@ -58,6 +58,6 @@
 .fatv-screen tbody tr:hover td { background: #d7e4f7; }
 .fatv-screen tbody td.grp { color: #64748b; }
 .fatv-screen tbody td.canc-sim { color: #dc2626; font-weight: 700; }
-.fatv-screen tfoot td { position: sticky; bottom: 0; background: #f1f5f9; font-weight: 800; padding: 7px 10px; border-top: 2px solid #d6dce6; text-align: right; font-family: 'DM Mono', monospace; color: #0f172a; }
+.fatv-screen tfoot td { position: sticky; bottom: 0; background: #f1f5f9; font-weight: 800; padding: 4px 9px; border-top: 2px solid #d6dce6; text-align: right; font-family: 'DM Mono', monospace; color: #0f172a; }
 .fatv-screen tfoot td.l { text-align: left; font-family: inherit; }
 .fatv-screen .empty { text-align: center; color: #94a3b8; padding: 30px; }
