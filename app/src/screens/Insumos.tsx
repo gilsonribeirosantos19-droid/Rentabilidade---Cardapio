@@ -216,7 +216,7 @@ export function Insumos() {
                       <td className="td-mono" style={{ color: '#64748b', fontSize: 11 }}>{fmtCodigo(i.codigo_interno)}</td>
                       <td style={{ fontWeight: 600, color: '#0f172a' }}>{i.nome}</td>
                       <td style={{ color: '#64748b' }}>{i.tipo_item || '—'}</td>
-                      <td><span className="badge b-cat">{i.categoria || '—'}</span></td>
+                      <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>
                       <td style={{ color: '#64748b' }}>{i.unidade_medida || '—'}</td>
                       <td className="r td-mono" style={{ color: '#64748b' }}>—</td>
                       <td className="c">{i.participa_cmv !== 'nao' ? <span className="cmv-on">✓</span> : <span className="cmv-off" />}</td>
@@ -254,7 +254,7 @@ export function Insumos() {
                     return (
                       <tr key={i.id} onClick={() => editar(i)}>
                         <td style={{ fontWeight: 600, color: '#0f172a' }}>{i.nome}</td>
-                        <td><span className="badge b-cat">{i.categoria || '—'}</span></td>
+                        <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>
                         <td style={{ color: '#64748b' }}>{i.unidade_compra || i.unidade_medida || '—'}</td>
                         <td className="r td-mono" style={{ color: cm > 0 ? '#0f172a' : '#94a3b8' }}>{cm > 0 ? brl(cm) : '—'}</td>
                         <td className="r td-mono" style={{ fontWeight: 600, color: '#0f172a' }}>{brl(real)}</td>

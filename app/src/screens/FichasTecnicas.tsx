@@ -173,7 +173,7 @@ export function FichasTecnicas() {
                 return (
                   <tr key={f.id} onClick={() => setVer(f)}>
                     <td style={{ fontWeight: 600 }}>{f.nome}</td>
-                    <td><span className="tbl-cat">{f.categoria || '—'}</span></td>
+                    <td style={{ color: '#475569' }}>{f.categoria || '—'}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{f.rendimento_porcoes || 1} un</td>
                     <td className="r mono">{custo > 0 ? brl(custo) : '—'}</td>
                     <td className="r mono">{pv > 0 ? brl(pv) : '—'}</td>

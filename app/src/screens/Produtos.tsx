@@ -128,7 +128,7 @@ export function Produtos() {
                 <tr key={p.id}>
                   <td className="td-mono" style={{ color: '#64748b' }}>{p.codigo_pdv || '—'}</td>
                   <td style={{ fontWeight: 600, color: '#0f172a' }}>{p.nome}</td>
-                  <td><span className="badge b-cat">{p.grupo || p.categoria || '—'}</span></td>
+                  <td style={{ color: '#475569' }}>{p.grupo || p.categoria || '—'}</td>
                   <td><span className="badge b-tipo">{TIPO_LABEL[p.tipo_item || ''] || p.tipo_item || '—'}</span></td>
                   <td className="r td-mono">{brl(p.preco_venda)}</td>
                   <td><span className={'badge ' + (p.participa_cmv ? 'b-sim' : 'b-nao')}>{p.participa_cmv ? 'Sim' : 'Não'}</span></td>
