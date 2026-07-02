@@ -16,8 +16,9 @@
 .cfg-card .ch.open .car { transform: rotate(90deg); }
 .cfg-card .ch .ti { font-weight: 700; font-size: 13.5px; }
 .cfg-card .ch .cnt { color: #94a3b8; font-size: 12px; }
-.cfg-card .ch .add { margin-left: auto; height: 28px; padding: 0 10px; border: 1px solid #f97316; color: #ea6a0a; background: #fff; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.cfg-card .ch .add { margin-left: auto; height: 28px; padding: 0 10px; border: 1px solid #f97316; color: #ea6a0a; background: #fff; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; transition: transform .06s ease, background .12s ease; }
 .cfg-card .ch .add:hover { background: #fff7ed; }
+.cfg-card .ch .add:active { transform: scale(.94); background: #ffedd5; }
 .cfg-card .cb { border-top: 1px solid #eef2f6; }
 
 .cfg-card table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -27,8 +28,9 @@
 .cfg-card tbody td.r { text-align: right; }
 .cfg-card tbody tr:hover td { background: #d0dff2; }
 .cfg-card .empty { color: #94a3b8; padding: 12px 14px; font-size: 12px; }
-.cfg-card .act { border: none; background: transparent; cursor: pointer; color: #64748b; font-size: 12px; padding: 3px 6px; border-radius: 6px; }
+.cfg-card .act { border: none; background: transparent; cursor: pointer; color: #64748b; font-size: 12px; padding: 3px 6px; border-radius: 6px; transition: transform .06s ease, background .12s ease; }
 .cfg-card .act:hover { background: #eef2f6; color: #0f172a; }
+.cfg-card .act:active { transform: scale(.9); }
 .cfg-card .act.del:hover { background: #fef2f2; color: #dc2626; }
 
 /* modal */
@@ -45,10 +47,13 @@
 .cfg-fg input:focus, .cfg-fg select:focus { outline: none; border-color: #f97316; }
 .cfg-fg.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .cfg-modal .mf { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 18px; border-top: 1px solid #eef2f6; }
-.cfg-btn { height: 36px; padding: 0 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; color: #334155; }
+.cfg-btn { height: 36px; padding: 0 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; color: #334155; transition: transform .06s ease, background .12s ease, box-shadow .12s ease; }
 .cfg-btn:hover { background: #f1f5f9; }
+.cfg-btn:active { transform: scale(.96); }
+.cfg-btn:disabled { opacity: .6; cursor: default; transform: none; }
 .cfg-btn.pri { background: #f97316; color: #fff; border-color: #f97316; }
 .cfg-btn.pri:hover { background: #ea6a0a; }
+.cfg-btn.pri:active { background: #d95f08; }
 .cfg-btn.danger { color: #dc2626; border-color: #fecaca; }
 .cfg-btn.danger:hover { background: #fef2f2; }
 

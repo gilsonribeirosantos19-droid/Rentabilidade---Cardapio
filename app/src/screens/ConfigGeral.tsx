@@ -210,7 +210,7 @@ export function ConfigGeral() {
             </div>
             <div className="mf">
               <button className="cfg-btn" onClick={() => setModal(null)}>Cancelar</button>
-              <button className="cfg-btn pri" disabled={saveMut.isPending} onClick={() => saveMut.mutate(modal)}>{modal.id ? 'Salvar alterações' : 'Salvar'}</button>
+              <button className="cfg-btn pri" disabled={saveMut.isPending} onClick={() => saveMut.mutate(modal)}>{saveMut.isPending ? 'Salvando…' : (modal.id ? 'Salvar alterações' : 'Salvar')}</button>
             </div>
           </div>
         </div>
@@ -239,7 +239,7 @@ export function ConfigGeral() {
             </div>
             <div className="mf">
               <button className="cfg-btn" onClick={() => setGModal(null)}>Cancelar</button>
-              <button className="cfg-btn pri" disabled={gSaveMut.isPending} onClick={() => gSaveMut.mutate(gModal)}>{gModal.id ? 'Salvar alterações' : 'Salvar'}</button>
+              <button className="cfg-btn pri" disabled={gSaveMut.isPending} onClick={() => gSaveMut.mutate(gModal)}>{gSaveMut.isPending ? 'Salvando…' : (gModal.id ? 'Salvar alterações' : 'Salvar')}</button>
             </div>
           </div>
         </div>
@@ -253,7 +253,7 @@ export function ConfigGeral() {
             <div className="mb"><p style={{ fontSize: 13, color: '#334155' }}>Excluir <b>{del.nome}</b>? Esta ação não pode ser desfeita.</p></div>
             <div className="mf">
               <button className="cfg-btn" onClick={() => setDel(null)}>Cancelar</button>
-              <button className="cfg-btn danger" disabled={delMut.isPending} onClick={() => delMut.mutate(del)}>Excluir</button>
+              <button className="cfg-btn danger" disabled={delMut.isPending} onClick={() => delMut.mutate(del)}>{delMut.isPending ? 'Excluindo…' : 'Excluir'}</button>
             </div>
           </div>
         </div>
