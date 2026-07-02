@@ -34,6 +34,7 @@ import { CmvTeoricoReal } from '../screens/CmvTeoricoReal'
 import { Fechamento } from '../screens/Fechamento'
 import { FaturamentoVendas } from '../screens/FaturamentoVendas'
 import { MonitorVendas } from '../screens/MonitorVendas'
+import { EngenhariaCardapio } from '../screens/EngenhariaCardapio'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -68,6 +69,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'gestao/fechamento') return <Fechamento />
   if (k === 'pdv/faturamento') return <FaturamentoVendas />
   if (k === 'pdv/importar') return <MonitorVendas />
+  if (k === 'pdv/engenharia') return <EngenhariaCardapio />
   return <Placeholder label={label} />
 }
 
@@ -125,8 +127,8 @@ export function Shell() {
               : <span className="c2">{crumbSection}</span>}
           </div>
           <div className="tr">
-            {/* telas com filtro de loja próprio escondem o seletor global (ex.: Monitor de Vendas, Faturamento) */}
-            {active !== 'pdv/importar' && active !== 'pdv/faturamento' && (
+            {/* telas com filtro de loja próprio escondem o seletor global (ex.: Monitor de Vendas, Faturamento, Engenharia) */}
+            {!['pdv/importar', 'pdv/faturamento', 'pdv/engenharia'].includes(active) && (
               <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
                 <option value="">Todas as lojas</option>
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
