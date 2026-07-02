@@ -202,11 +202,11 @@ export function Rendimentos() {
                     const custoPerda = cmKg > 0 ? perdaKg * cmKg : null
                     return (
                       <tr key={t.id}>
-                        <td style={{ fontWeight: 600 }}>{insMap[t.insumo_id]?.nome || '—'}</td>
+                        <td>{insMap[t.insumo_id]?.nome || '—'}</td>
                         <td className="mono">{brDate(t.criado_em)}</td>
                         <td className="r mono">{fmtKg(bruto)}</td>
                         <td className="r mono">{fmtKg(liquido)}</td>
-                        <td className="r mono" style={{ fontWeight: 700 }}>{rend.toFixed(1)}%</td>
+                        <td className="r mono">{rend.toFixed(1)}%</td>
                         <td className="r mono">{fmtKg(perdaKg)}</td>
                         <td className="r mono">{perdaPct.toFixed(1)}%</td>
                         <td className="r mono">{custoReal != null ? fmtBRL(custoReal) : '—'}</td>

@@ -214,7 +214,7 @@ export function Insumos() {
                   : produtos.map((i) => (
                     <tr key={i.id} onClick={() => editar(i)}>
                       <td className="td-mono" style={{ color: '#64748b', fontSize: 11 }}>{fmtCodigo(i.codigo_interno)}</td>
-                      <td style={{ fontWeight: 600, color: '#0f172a' }}>{i.nome}</td>
+                      <td style={{ color: '#0f172a' }}>{i.nome}</td>
                       <td style={{ color: '#64748b' }}>{i.tipo_item || '—'}</td>
                       <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>
                       <td style={{ color: '#64748b' }}>{i.unidade_medida || '—'}</td>
@@ -253,11 +253,11 @@ export function Insumos() {
                     const st = getStatus(i)
                     return (
                       <tr key={i.id} onClick={() => editar(i)}>
-                        <td style={{ fontWeight: 600, color: '#0f172a' }}>{i.nome}</td>
+                        <td style={{ color: '#0f172a' }}>{i.nome}</td>
                         <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>
                         <td style={{ color: '#64748b' }}>{i.unidade_compra || i.unidade_medida || '—'}</td>
                         <td className="r td-mono" style={{ color: cm > 0 ? '#0f172a' : '#94a3b8' }}>{cm > 0 ? brl(cm) : '—'}</td>
-                        <td className="r td-mono" style={{ fontWeight: 600, color: '#0f172a' }}>{brl(real)}</td>
+                        <td className="r td-mono" style={{ color: '#0f172a' }}>{brl(real)}</td>
                         <td><span className="badge b-cat">{ST_TXT[st]}</span></td>
                         <td><button className="acoes-btn" onClick={(e) => { e.stopPropagation(); setMenu({ id: i.id, x: e.clientX, y: e.clientY }) }}>⋮</button></td>
                       </tr>

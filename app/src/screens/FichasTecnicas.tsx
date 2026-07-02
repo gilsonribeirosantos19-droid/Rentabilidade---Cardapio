@@ -172,7 +172,7 @@ export function FichasTecnicas() {
                 const st = statusPill(f, cmv, pv)
                 return (
                   <tr key={f.id} onClick={() => setVer(f)}>
-                    <td style={{ fontWeight: 600 }}>{f.nome}</td>
+                    <td>{f.nome}</td>
                     <td style={{ color: '#475569' }}>{f.categoria || '—'}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{f.rendimento_porcoes || 1} un</td>
                     <td className="r mono">{custo > 0 ? brl(custo) : '—'}</td>

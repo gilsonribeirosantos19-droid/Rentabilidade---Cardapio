@@ -221,7 +221,7 @@ export function CmvTeoricoReal() {
                     const sign = r.dQtd >= 0 ? '+' : '', psign = r.dPct >= 0 ? '+' : '', isign = r.imp >= 0 ? '+' : ''
                     return (
                       <tr key={r.i.id}>
-                        <td style={{ fontWeight: 600 }}>{r.i.nome}</td>
+                        <td>{r.i.nome}</td>
                         <td style={{ color: '#64748b' }}>{r.un}</td>
                         <td className="r mono">{fq(r.qTeo)}</td>
                         <td className="r mono">{brl(r.cTeo)}</td>

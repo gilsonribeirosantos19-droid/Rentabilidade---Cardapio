@@ -235,14 +235,14 @@ export function SaldoEstoque() {
                   : <span className="badge" style={{ background: '#dcfce7', color: '#16a34a' }}>OK</span>
                 return (
                   <tr key={i}>
-                    <td style={{ fontWeight: 600 }}>{r.ins.nome}</td>
+                    <td>{r.ins.nome}</td>
                     <td>{r.ins.categoria || '—'}</td>
                     <td>{r.ins.tipo_item || '—'}</td>
                     <td>{r.ins.unidade_medida || r.ins.unidade_compra || '—'}</td>
                     <td>{r.loja?.nome || '—'}</td>
                     <td className="r mono">{qtd(q)}</td>
                     <td className="r mono">{brl(r.s.custo_medio)}</td>
-                    <td className="r mono" style={{ fontWeight: 600 }}>{brl(r.valor)}</td>
+                    <td className="r mono">{brl(r.valor)}</td>
                     <td className="c">{status}</td>
                     <td className="c">{r.ins.participa_cmv !== 'nao' ? <span className="cmv-box">✓</span> : <span className="cmv-box" />}</td>
                   </tr>

@@ -99,7 +99,7 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
               : page.length === 0 ? <tr><td colSpan={6} className="empty">Nenhuma solicitação encontrada</td></tr>
               : page.map((s) => <tr key={s.id}>
                 <td className="mono" style={{ whiteSpace: 'nowrap', fontSize: 12 }}>{fmtDH(s.created_at)}</td>
-                <td style={{ fontWeight: 600 }}>{lojaMap[s.loja_id || ''] || '—'}</td>
+                <td>{lojaMap[s.loja_id || ''] || '—'}</td>
                 <td className="c" style={{ fontWeight: 500 }}>{countMap[s.id] || '—'}</td>
                 <td style={{ color: '#94a3b8', fontSize: 12 }}>{s.observacao || '—'}</td>
                 <td><span className={'badge ' + (BADGE[s.status || ''] || 'b-solicitado')}>{LABEL[s.status || ''] || s.status}</span></td>
@@ -198,8 +198,8 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
             {isLoading ? <tr><td colSpan={8} className="empty">Carregando…</td></tr>
               : consolidado.length === 0 ? <tr><td colSpan={8} className="empty">Nenhuma solicitação pendente</td></tr>
               : consolidado.map((d) => <tr key={d.insId}>
-                <td style={{ fontWeight: 600 }}>{d.nome}</td>
-                <td className="r mono" style={{ fontWeight: 600 }}>{fmtQty(d.total)}</td>
+                <td>{d.nome}</td>
+                <td className="r mono">{fmtQty(d.total)}</td>
                 <td className="r"><input type="number" className="field" style={{ width: 100, height: 30, textAlign: 'right' }} min="0" step="0.001" value={qComprar[d.insId] ?? d.total} onChange={(e) => setQComprar((p) => ({ ...p, [d.insId]: parseFloat(e.target.value) || 0 }))} /></td>
                 <td>{d.unidade}</td>
                 <td style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{ultCompra(d.insId)}</td>
@@ -215,7 +215,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
       {verLojas && <div className="ov" onClick={(e) => { if (e.target === e.currentTarget) setVerLojas(null) }}>
         <div className="modal" style={{ width: 'min(480px,95vw)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}><h2>{verLojas.nome}</h2><button className="icon-btn" onClick={() => setVerLojas(null)}>✕</button></div>
-          <div className="tbl-wrap"><table className="tbl"><thead><tr><th>Loja</th><th className="r">Quantidade</th><th>Un.</th></tr></thead><tbody>{verLojas.lojas.map((l, i) => <tr key={i}><td style={{ fontWeight: 600 }}>{l.nome}</td><td className="r mono">{fmtQty(l.qty)}</td><td>{verLojas.unidade}</td></tr>)}</tbody></table></div>
+          <div className="tbl-wrap"><table className="tbl"><thead><tr><th>Loja</th><th className="r">Quantidade</th><th>Un.</th></tr></thead><tbody>{verLojas.lojas.map((l, i) => <tr key={i}><td>{l.nome}</td><td className="r mono">{fmtQty(l.qty)}</td><td>{verLojas.unidade}</td></tr>)}</tbody></table></div>
         </div>
       </div>}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
@@ -299,7 +299,7 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
             {isLoading ? <tr><td colSpan={7} className="empty">Carregando…</td></tr>
               : linhas.length === 0 ? <tr><td colSpan={7} className="empty">Nenhum pedido encontrado</td></tr>
               : linhas.map((r) => { const si = PED_ST[r.st] || { l: r.st, b: 'b-baixado' }; return <tr key={r.fKey}>
-                <td style={{ fontWeight: 600 }}>{r.fornNome}</td>
+                <td>{r.fornNome}</td>
                 <td className="r mono">{r.nItens}</td>
                 <td className="r mono">{brl(r.valor)}</td>
                 <td className="r">{r.nLojas ? r.nLojas + (r.nLojas > 1 ? ' lojas' : ' loja') : '—'}</td>
