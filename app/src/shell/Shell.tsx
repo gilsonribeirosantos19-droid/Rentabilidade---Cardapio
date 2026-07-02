@@ -32,7 +32,7 @@ import { Divergencias } from '../screens/Divergencias'
 import { Rendimentos } from '../screens/Rendimentos'
 import { CmvTeoricoReal } from '../screens/CmvTeoricoReal'
 import { Fechamento } from '../screens/Fechamento'
-import { PdvFaturamento } from '../screens/PdvFaturamento'
+import { FaturamentoVendas } from '../screens/FaturamentoVendas'
 import { MonitorVendas } from '../screens/MonitorVendas'
 import { Placeholder } from '../screens/Placeholder'
 
@@ -66,7 +66,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
   if (k === 'gestao/fechamento') return <Fechamento />
-  if (k === 'pdv/faturamento') return <PdvFaturamento />
+  if (k === 'pdv/faturamento') return <FaturamentoVendas />
   if (k === 'pdv/importar') return <MonitorVendas />
   return <Placeholder label={label} />
 }
