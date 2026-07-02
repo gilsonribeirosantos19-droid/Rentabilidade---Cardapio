@@ -8,7 +8,7 @@
 .cfg-screen .cfg-search:focus { outline: none; border-color: #f97316; }
 
 /* cards accordion */
-.cfg-screen .cfg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; padding-bottom: 18px; }
+.cfg-screen .cfg-grid { display: grid; grid-template-columns: 1fr; gap: 10px; align-items: start; padding-bottom: 18px; }
 .cfg-card { background: #fff; border: 1px solid #e5e9f0; border-radius: 10px; overflow: hidden; }
 .cfg-card .ch { display: flex; align-items: center; gap: 10px; padding: 11px 14px; cursor: pointer; user-select: none; }
 .cfg-card .ch:hover { background: #f8fafc; }
