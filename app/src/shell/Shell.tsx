@@ -137,8 +137,8 @@ export function Shell() {
               : <span className="c2">{crumbSection}</span>}
           </div>
           <div className="tr">
-            {/* telas com filtro de loja próprio escondem o seletor global (ex.: Monitor de Vendas, Faturamento, Engenharia) */}
-            {!['pdv/importar', 'pdv/faturamento', 'pdv/engenharia', 'pdv/abc', 'compras/sugestao'].includes(active) && (
+            {/* telas com filtro de loja próprio ou de config do tenant escondem o seletor global de loja */}
+            {!['pdv/importar', 'pdv/faturamento', 'pdv/engenharia', 'pdv/abc', 'compras/sugestao'].includes(active) && !active.startsWith('config/') && (
               <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
                 <option value="">Todas as lojas</option>
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
