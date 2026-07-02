@@ -39,6 +39,7 @@ import { CurvaAbcVendas } from '../screens/CurvaAbcVendas'
 import { SugestaoCompra } from '../screens/SugestaoCompra'
 import { ConfigGeral } from '../screens/ConfigGeral'
 import { ConfigParametros } from '../screens/ConfigParametros'
+import { ConfigUsuarios } from '../screens/ConfigUsuarios'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -70,6 +71,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'compras/sugestao') return <SugestaoCompra />
   if (k === 'config/geral') return <ConfigGeral />
   if (k === 'config/parametros') return <ConfigParametros />
+  if (k === 'config/usuarios') return <ConfigUsuarios />
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
