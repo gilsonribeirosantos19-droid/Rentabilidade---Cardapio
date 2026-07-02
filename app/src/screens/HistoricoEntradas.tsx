@@ -86,10 +86,10 @@ export function HistoricoEntradas() {
         <div className="ds-field"><label>Data inicial</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => setDe(e.target.value)} /></div>
         <div className="ds-field"><label>Data final</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => setAte(e.target.value)} /></div>
         <div className="ds-field" style={{ width: 200 }}><label>Fornecedor</label>
-          <SearchSelect value={fForn ? (fornMap[fForn] || '') : ''} options={['Todos', ...fornecedores.map((f) => f.nome)]} placeholder="Todos" onChange={(nm) => setFForn(nm === 'Todos' ? '' : (fornByNome[nm] || ''))} />
+          <SearchSelect value={fForn ? (fornMap[fForn] || '') : ''} options={fornecedores.map((f) => f.nome)} placeholder="Todos" onChange={(nm) => setFForn(nm === 'Todos' ? '' : (fornByNome[nm] || ''))} />
         </div>
         <div className="ds-field" style={{ width: 200 }}><label>Insumo</label>
-          <SearchSelect value={fIns ? (insMap[fIns]?.nome || '') : ''} options={['Todos', ...insumos.map((i) => i.nome)]} placeholder="Todos" onChange={(nm) => setFIns(nm === 'Todos' ? '' : (insByNome[nm] || ''))} />
+          <SearchSelect value={fIns ? (insMap[fIns]?.nome || '') : ''} options={insumos.map((i) => i.nome)} placeholder="Todos" onChange={(nm) => setFIns(nm === 'Todos' ? '' : (insByNome[nm] || ''))} />
         </div>
         <div className="ds-actions"><button className="btn-primary" onClick={consultar}>🔍 Consultar</button></div>
       </div>

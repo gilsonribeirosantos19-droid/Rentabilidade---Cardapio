@@ -221,7 +221,7 @@ export function MonitorNfe() {
 
       <div className="f1">
         <div className="ds-field"><label>Fornecedor</label>
-          <div style={{ minWidth: 260 }}><SearchSelect value={fForn ? (fornNomeByCnpj[fForn] || '') : ''} options={['Todos', ...fornOpts.map(([, n]) => n)]} placeholder="Todos" onChange={(nm) => setFForn(nm === 'Todos' ? '' : (fornCnpjByNome[nm] || ''))} /></div>
+          <div style={{ minWidth: 260 }}><SearchSelect value={fForn ? (fornNomeByCnpj[fForn] || '') : ''} options={fornOpts.map(([, n]) => n)} placeholder="Todos" onChange={(nm) => setFForn(nm === 'Todos' ? '' : (fornCnpjByNome[nm] || ''))} /></div>
         </div>
         <div className="ds-field"><label>Período</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

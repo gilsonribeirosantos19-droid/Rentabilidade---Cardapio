@@ -116,11 +116,11 @@ export function AuditoriaConversao() {
         </div>
         <div className="aud-fg" style={{ width: 230 }}>
           <div className="aud-lb">Insumo</div>
-          <SearchSelect value={insId ? (insMap[insId]?.nome || '') : ''} options={['Todos', ...insOpts]} placeholder="Todos" onChange={(nm) => setInsId(nm === 'Todos' ? '' : (insByNome[nm] || ''))} />
+          <SearchSelect value={insId ? (insMap[insId]?.nome || '') : ''} options={insOpts} placeholder="Todos" onChange={(nm) => setInsId(nm === 'Todos' ? '' : (insByNome[nm] || ''))} />
         </div>
         <div className="aud-fg" style={{ width: 230 }}>
           <div className="aud-lb">Fornecedor</div>
-          <SearchSelect value={fForn} options={['Todos', ...fornOpts]} placeholder="Todos" onChange={(nm) => { setFForn(nm === 'Todos' ? '' : nm) }} />
+          <SearchSelect value={fForn} options={fornOpts} placeholder="Todos" onChange={(nm) => { setFForn(nm === 'Todos' ? '' : nm) }} />
         </div>
         <div className="aud-fg" style={{ width: 170 }}>
           <div className="aud-lb">Loja</div>

@@ -54,7 +54,7 @@ export function HistoricoCustos() {
     <div className="est-screen">
       <div className="ds-filterbar">
         <div className="ds-field" style={{ width: 200 }}><label>Insumo</label>
-          <SearchSelect value={insF ? (insMap[insF] || '') : ''} options={['Todos os insumos', ...insumos.map((i) => i.nome)]} placeholder="Todos os insumos" onChange={(nm) => setInsF(nm === 'Todos os insumos' ? '' : (insByNome[nm] || ''))} />
+          <SearchSelect value={insF ? (insMap[insF] || '') : ''} options={insumos.map((i) => i.nome)} placeholder="Todos os insumos" onChange={(nm) => setInsF(nm === 'Todos os insumos' ? '' : (insByNome[nm] || ''))} />
         </div>
         <div className="ds-field"><label>Origem</label>
           <select className="field" value={origem} onChange={(e) => setOrigem(e.target.value)}><option value="">Todas as origens</option><option value="entrada_manual">Entrada Manual</option><option value="nfe">XML / NF-e</option><option value="ajuste">Ajuste</option></select>

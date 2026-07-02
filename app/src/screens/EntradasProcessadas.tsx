@@ -101,7 +101,7 @@ export function EntradasProcessadas() {
       <div className="fh-title">Notas Fiscais Processadas</div>
       <div className="fh-sub">Histórico de NF-e confirmadas no estoque</div>
       <div className="fl-bar">
-        <SearchSelect value={fForn ? (fornNomeOf[fForn] || '') : ''} options={['Todos os fornecedores', ...fornNomes]} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : (fornByNome[nm] || '')); setPag(1) }} />
+        <SearchSelect value={fForn ? (fornNomeOf[fForn] || '') : ''} options={fornNomes} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : (fornByNome[nm] || '')); setPag(1) }} />
         <input className="field" style={{ width: 120 }} placeholder="Nº NF-e…" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />
         <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => aplicarPeriodo(e.target.value)}><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="todos">Todos</option><option value="periodo">Período</option></select>
         <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
