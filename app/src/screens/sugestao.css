@@ -1,6 +1,6 @@
 /* Sugestão de Compra — monocromático, densidade PDV, negrito só nos cabeçalhos */
 .sug-screen { height: 100%; display: flex; flex-direction: column; min-height: 0; }
-.sug-screen .mono { font-family: 'DM Mono', 'Consolas', monospace; }
+.sug-screen .mono { font-family: 'DM Mono', monospace; }
 .sug-screen .muted { color: #64748b; }
 
 /* toolbar densa */
