@@ -99,3 +99,38 @@
 .cfg-screen .role-operador { background: #f0fdf4; color: #166534; }
 .cfg-screen .usr-acts { display: flex; gap: 6px; margin-left: 6px; }
 .cfg-screen .usr-empty { color: #94a3b8; font-size: 13px; text-align: center; padding: 40px; }
+
+/* ===== Permissões ===== */
+.cfg-screen .perm-wrap { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: start; }
+.cfg-screen .grp-panel { background: #fff; border: 1px solid #e5e9f0; border-radius: 12px; overflow: hidden; }
+.cfg-screen .grp-head { padding: 11px 14px; border-bottom: 1px solid #e5e9f0; display: flex; align-items: center; justify-content: space-between; }
+.cfg-screen .grp-head .lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
+.cfg-screen .grp-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f2f5f9; }
+.cfg-screen .grp-item:hover { background: #f8fafc; }
+.cfg-screen .grp-item.on { background: #fff7ed; box-shadow: inset 3px 0 0 #f97316; }
+.cfg-screen .grp-item .nm { font-weight: 600; font-size: 13px; color: #0f172a; }
+.cfg-screen .grp-item .st { font-size: 11px; }
+.cfg-screen .grp-detail { background: #fff; border: 1px solid #e5e9f0; border-radius: 12px; overflow: hidden; }
+.cfg-screen .grp-dh { padding: 12px 16px; border-bottom: 1px solid #e5e9f0; display: flex; align-items: center; gap: 10px; }
+.cfg-screen .grp-nome-in { font-size: 14px; font-weight: 700; flex: 1; max-width: 280px; height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 11px; color: #0f172a; }
+.cfg-screen .grp-nome-in:focus { outline: none; border-color: #f97316; }
+.cfg-screen .grp-x { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 18px; color: #94a3b8; line-height: 1; padding: 2px 6px; }
+.cfg-screen .grp-tabs { display: flex; border-bottom: 1px solid #e5e9f0; padding: 0 6px; }
+.cfg-screen .grp-tabs button { border: 0; background: transparent; padding: 10px 14px; font-size: 13px; font-weight: 500; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; }
+.cfg-screen .grp-tabs button.on { color: #0f172a; border-bottom-color: #f97316; font-weight: 700; }
+.cfg-screen .grp-note { font-size: 12px; color: #64748b; padding: 14px 16px; }
+.cfg-screen .vinc-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.cfg-screen .vinc-tbl th { text-align: left; color: #64748b; font-weight: 700; font-size: 10px; text-transform: uppercase; padding: 7px 14px; background: #f8fafc; border-bottom: 1px solid #e5e9f0; }
+.cfg-screen .vinc-tbl td { padding: 7px 14px; border-bottom: 1px solid #f2f5f9; }
+.cfg-screen .vinc-tbl tr:hover td { background: #d0dff2; }
+.cfg-screen .vinc-tbl input { width: 16px; height: 16px; accent-color: #f97316; }
+.cfg-screen .perm-matrix { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.cfg-screen .perm-matrix th { text-align: left; color: #64748b; font-weight: 700; font-size: 10px; text-transform: uppercase; padding: 8px 14px; background: #f8fafc; border-bottom: 1px solid #e5e9f0; }
+.cfg-screen .perm-matrix th.pc, .cfg-screen .perm-matrix td.pc { text-align: center; width: 120px; }
+.cfg-screen .perm-matrix td { padding: 6px 14px; border-bottom: 1px solid #f2f5f9; }
+.cfg-screen .perm-matrix tr.grp-row td { background: #f1f5f9; font-weight: 700; color: #334155; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; padding: 6px 14px; }
+.cfg-screen .perm-matrix tr.perm-disabled td { opacity: .55; }
+.cfg-screen .perm-matrix input { width: 16px; height: 16px; accent-color: #f97316; cursor: pointer; }
+.cfg-screen .grp-foot { padding: 12px 16px; border-top: 1px solid #e5e9f0; display: flex; justify-content: flex-end; }
+.cfg-screen .grp-empty { padding: 60px; text-align: center; color: #94a3b8; font-size: 13px; background: #fff; border: 1px solid #e5e9f0; border-radius: 12px; }
+.cfg-screen .adm-aviso { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 16px; font-size: 12px; color: #166534; margin-top: 16px; display: flex; align-items: center; gap: 8px; }
