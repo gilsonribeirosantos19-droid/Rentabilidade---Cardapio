@@ -22,7 +22,17 @@
 .fatv-screen .ms-opt input { width: 15px; height: 15px; accent-color: #f97316; }
 .fatv-screen .ms-sep { border-top: 1px solid #eef1f5; margin: 4px 0; }
 
-.fatv-screen .search { width: 100%; max-width: 380px; height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; margin-bottom: 8px; }
+.fatv-screen .search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.fatv-screen .search { flex: 1; max-width: 380px; height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; }
+/* botão + dropdown de colunas (ocultar/mostrar) */
+.fatv-screen .cols { position: relative; margin-left: auto; }
+.fatv-screen .cols-btn { height: 34px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.fatv-screen .cols-btn:hover { background: #f8fafc; }
+.fatv-screen .cols-pop { position: absolute; top: 38px; right: 0; z-index: 50; background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; box-shadow: 0 8px 24px rgba(15,23,42,.14); min-width: 230px; max-height: 340px; overflow: auto; padding: 6px; }
+.fatv-screen .cols-opt { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 6px; font-size: 13px; color: #334155; cursor: pointer; }
+.fatv-screen .cols-opt:hover { background: #f1f5f9; }
+.fatv-screen .cols-opt input { width: 15px; height: 15px; accent-color: #f97316; }
+.fatv-screen td.lower, .fatv-screen .lower { text-transform: lowercase; }
 .fatv-screen .search:focus { outline: none; border-color: #f97316; }
 .fatv-screen .grp-hint { font-size: 11.5px; color: #94a3b8; padding: 7px 10px; background: #f8fafc; border: 1px dashed #d6dce6; border-radius: 6px; margin-bottom: 8px; }
 .fatv-screen .mock-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #b45309; background: #fef9ec; border: 1px solid #fde68a; border-radius: 20px; padding: 3px 10px; margin-left: 10px; }

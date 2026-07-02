@@ -16,6 +16,28 @@ const fmtData = (iso: string) => iso.split('-').reverse().join('/')
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
+// colunas (modelo Everest). `def` = visível por padrão; `sum` = soma no rodapé; `lower` = exibe minúsculo
+type ColKey = 'data' | 'loja' | 'atendente' | 'dow' | 'item' | 'grupo' | 'qtd' | 'familia' | 'vTotal' | 'vDesc' | 'tDesc' | 'vUnit' | 'cancelado' | 'vCancel' | 'tCancel' | 'descDesc'
+type Col = { key: ColKey; label: string; cls?: 'r' | 'c'; lower?: boolean; def: boolean; sum?: 'brl' | 'qtd' | 'int' }
+const COLS: Col[] = [
+  { key: 'data', label: 'D. Movimento', def: true },
+  { key: 'loja', label: 'Loja', def: true },
+  { key: 'atendente', label: 'Atendente', def: true },
+  { key: 'dow', label: 'Dia Semana', def: true },
+  { key: 'item', label: 'Descrição Item PDV', lower: true, def: true },
+  { key: 'grupo', label: 'Grupo', lower: true, def: true },
+  { key: 'qtd', label: 'Q. Item', cls: 'r', def: true, sum: 'qtd' },
+  { key: 'familia', label: 'Família', def: false },
+  { key: 'vTotal', label: 'V. Total', cls: 'r', def: true, sum: 'brl' },
+  { key: 'vDesc', label: 'V. Desconto', cls: 'r', def: true, sum: 'brl' },
+  { key: 'tDesc', label: 'T. Desconto', cls: 'r', def: false, sum: 'int' },
+  { key: 'vUnit', label: 'V. Unitário', cls: 'r', def: true, sum: 'brl' },
+  { key: 'cancelado', label: 'Cancelado', cls: 'c', def: true },
+  { key: 'vCancel', label: 'V. Cancelamento', cls: 'r', def: true, sum: 'brl' },
+  { key: 'tCancel', label: 'T. Cancelamento', cls: 'r', def: false, sum: 'int' },
+  { key: 'descDesc', label: 'Descrição Desconto', def: false },
+]
+
 const MOCK: Venda[] = [
   { id: '1', data: '2026-06-01', loja: 'Sushi Ponta Negra', atendente: 'Ana Carolina', item: '032 - COMBO HOT G', grupo: 'G-COMBINADOS', qtd: 1, vTotal: 134.90, vDesc: 0, vUnit: 134.90, cancelado: false },
   { id: '2', data: '2026-06-01', loja: 'Sushi Ponta Negra', atendente: 'Ana Carolina', item: '074 - RODÍZIO DO MAR', grupo: 'G-RODIZIO DO MAR', qtd: 2, vTotal: 135.80, vDesc: 53.80, vUnit: 67.90, cancelado: false },
@@ -45,6 +67,35 @@ export function FaturamentoVendas() {
   const [busca, setBusca] = useState('')
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
   const [lojaOpen, setLojaOpen] = useState(false)
+  const [colsOpen, setColsOpen] = useState(false)
+  const [vis, setVis] = useState<Set<ColKey>>(new Set(COLS.filter((c) => c.def).map((c) => c.key)))
+  const toggleCol = (k: ColKey) => setVis((p) => { const s = new Set(p); s.has(k) ? s.delete(k) : s.add(k); return s })
+  const visCols = COLS.filter((c) => vis.has(c.key))
+  // valores derivados (Família/T.Desconto/V.Cancelamento/T.Cancelamento) — mock a partir do que já temos
+  const fami = (_v: Venda) => 'VENDAS'
+  const tDesc = (v: Venda) => v.vDesc > 0 ? 1 : 0
+  const vCancel = (v: Venda) => v.cancelado ? v.vTotal : 0
+  const tCancel = (v: Venda) => v.cancelado ? 1 : 0
+  const cellVal = (v: Venda, k: ColKey): string => {
+    switch (k) {
+      case 'data': return fmtData(v.data)
+      case 'loja': return v.loja
+      case 'atendente': return v.atendente
+      case 'dow': return diaSemana(v.data)
+      case 'item': return v.item
+      case 'grupo': return v.grupo
+      case 'qtd': return qtd(v.qtd)
+      case 'familia': return fami(v)
+      case 'vTotal': return brl(v.vTotal)
+      case 'vDesc': return brl(v.vDesc)
+      case 'tDesc': return String(tDesc(v))
+      case 'vUnit': return brl(v.vUnit)
+      case 'cancelado': return v.cancelado ? 'SIM' : 'NÃO'
+      case 'vCancel': return brl(vCancel(v))
+      case 'tCancel': return String(tCancel(v))
+      case 'descDesc': return ''
+    }
+  }
   const initRef = useRef(false)
   useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.nome))) } }, [lojas])
   const allSel = lojas.length > 0 && lojaSet.size === lojas.length
@@ -69,7 +120,17 @@ export function FaturamentoVendas() {
     })
   }, [de, ate, busca, lojaSet, allSel])
 
-  const tot = useMemo(() => lista.reduce((a, v) => ({ qtd: a.qtd + v.qtd, vTotal: a.vTotal + v.vTotal, vDesc: a.vDesc + v.vDesc, vUnit: a.vUnit + v.vUnit }), { qtd: 0, vTotal: 0, vDesc: 0, vUnit: 0 }), [lista])
+  const tot = useMemo(() => {
+    const t: Record<string, number> = {}
+    COLS.filter((c) => c.sum).forEach((c) => {
+      t[c.key] = lista.reduce((a, v) => a + (c.key === 'tDesc' ? tDesc(v) : c.key === 'vCancel' ? vCancel(v) : c.key === 'tCancel' ? tCancel(v) : (v[c.key as keyof Venda] as number || 0)), 0)
+    })
+    return t
+  }, [lista])
+  const footVal = (c: Col): string => {
+    const n = tot[c.key] || 0
+    return c.sum === 'brl' ? brl(n) : c.sum === 'qtd' ? qtd(n) : String(n)
+  }
 
   return (
     <div className="fatv-screen">
@@ -99,42 +160,40 @@ export function FaturamentoVendas() {
         <div className="ds-actions"><button className="btn-ghost">↓ Exportar</button></div>
       </div>
 
-      <input className="search" placeholder="Digite um texto para pesquisar..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-      <div className="grp-hint">Arraste um cabeçalho de coluna aqui para agrupar por essa coluna
+      <div className="search-row">
+        <input className="search" placeholder="Digite um texto para pesquisar..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         <span className="mock-tag">⚑ Dados de exemplo — lê as vendas reais quando o PDV estiver processando</span>
+        <div className="cols">
+          <button className="cols-btn" onClick={() => setColsOpen((o) => !o)}>▦ Colunas ▾</button>
+          {colsOpen && <>
+            <div className="ms-back" onClick={() => setColsOpen(false)} />
+            <div className="cols-pop">
+              {COLS.map((c) => <label key={c.key} className="cols-opt"><input type="checkbox" checked={vis.has(c.key)} onChange={() => toggleCol(c.key)} />{c.label}</label>)}
+            </div>
+          </>}
+        </div>
       </div>
 
       <div className="grid-wrap">
         <table>
           <thead>
-            <tr>
-              <th>D. Movimento</th><th>Loja</th><th>Atendente</th><th>Dia Semana</th><th>Descrição Item PDV</th><th>Grupo</th>
-              <th className="r">Q. Item</th><th className="r">V. Total</th><th className="r">V. Desconto</th><th className="r">V. Unitário</th><th className="c">Cancelado</th>
-            </tr>
+            <tr>{visCols.map((c) => <th key={c.key} className={c.cls}>{c.label}</th>)}</tr>
           </thead>
           <tbody>
             {!lista.length
-              ? <tr><td colSpan={11} className="empty">Nenhum item de venda no filtro.</td></tr>
+              ? <tr><td colSpan={visCols.length} className="empty">Nenhum item de venda no filtro.</td></tr>
               : lista.map((v) => (
                 <tr key={v.id}>
-                  <td>{fmtData(v.data)}</td>
-                  <td>{v.loja}</td>
-                  <td>{v.atendente}</td>
-                  <td>{diaSemana(v.data)}</td>
-                  <td>{v.item}</td>
-                  <td className="grp">{v.grupo}</td>
-                  <td className="r">{qtd(v.qtd)}</td>
-                  <td className="r">{brl(v.vTotal)}</td>
-                  <td className="r">{brl(v.vDesc)}</td>
-                  <td className="r">{brl(v.vUnit)}</td>
-                  <td className={'c' + (v.cancelado ? ' canc-sim' : '')}>{v.cancelado ? 'SIM' : 'NÃO'}</td>
+                  {visCols.map((c) => {
+                    const canc = c.key === 'cancelado' && v.cancelado
+                    return <td key={c.key} className={[c.cls || '', c.lower ? 'lower' : '', canc ? 'canc-sim' : ''].filter(Boolean).join(' ')}>{cellVal(v, c.key)}</td>
+                  })}
                 </tr>
               ))}
           </tbody>
           {lista.length > 0 && <tfoot>
             <tr>
-              <td className="l">{lista.length} itens</td><td /><td /><td /><td /><td />
-              <td>{qtd(tot.qtd)}</td><td>{brl(tot.vTotal)}</td><td>{brl(tot.vDesc)}</td><td>{brl(tot.vUnit)}</td><td />
+              {visCols.map((c, i) => <td key={c.key} className={c.cls}>{c.sum ? footVal(c) : (i === 0 ? `${lista.length} itens` : '')}</td>)}
             </tr>
           </tfoot>}
         </table>
