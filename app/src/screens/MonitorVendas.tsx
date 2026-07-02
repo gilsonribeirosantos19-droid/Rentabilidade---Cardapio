@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -42,8 +42,14 @@ export function MonitorVendas() {
   const { lojas } = useLoja()
   const [de, setDe] = useState(mesInicio())
   const [ate, setAte] = useState(mesFim())
-  const [lojaSel, setLojaSel] = useState('')
-  const lojaAtual = lojaSel || lojas[0]?.id || ''
+  const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
+  const [lojaOpen, setLojaOpen] = useState(false)
+  const initRef = useRef(false)
+  useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.id))) } }, [lojas])
+  const allSel = lojas.length > 0 && lojaSet.size === lojas.length
+  const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma loja' : lojaSet.size === 1 ? (lojas.find((l) => lojaSet.has(l.id))?.nome || '1 loja') : `${lojaSet.size} lojas`
+  const toggleLoja = (id: string) => setLojaSet((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const toggleTodasLojas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.id)))
   const [chips, setChips] = useState<Set<Situacao>>(new Set(ORDER))
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [detId, setDetId] = useState<string | null>(null)
@@ -57,7 +63,7 @@ export function MonitorVendas() {
 
   // monta as linhas: para cada loja × cada dia do período → registro recebido, senão "Não Recebido"
   const rows = useMemo<Row[]>(() => {
-    const lojasShow = lojas.filter((l) => l.id === lojaAtual)
+    const lojasShow = lojas.filter((l) => lojaSet.has(l.id))
     const dias = diasPeriodo(de, ate)
     const byKey: Record<string, ImpRow> = {}
     imports.forEach((r) => { byKey[`${r.loja_id || ''}|${r.data_movimento}`] = r })
@@ -68,7 +74,7 @@ export function MonitorVendas() {
       else out.push({ id: `${l.id}|${dia}`, situacao: 'nao_recebido', loja: l.nome, pdv: '—', tipo: 'Venda', dMovimento: fmtDia(dia), arquivo: '—', dExecucao: '—', dIntegracao: '—', conteudo: '', erros: [] })
     }))
     return out
-  }, [imports, lojas, lojaAtual, de, ate])
+  }, [imports, lojas, lojaSet, de, ate])
 
   const cnt = useMemo(() => { const c = { com_erros: 0, nao_recebido: 0, aguardando: 0, em_processamento: 0, processado: 0 } as Record<Situacao, number>; rows.forEach((r) => { c[r.situacao]++ }); return c }, [rows])
   const lista = useMemo(() => rows.filter((r) => chips.has(r.situacao)), [rows, chips])
@@ -86,9 +92,17 @@ export function MonitorVendas() {
     <div className="mvend-screen">
       <div className="ds-filterbar">
         <div className="ds-field"><label>Loja</label>
-          <select className="field" value={lojaAtual} onChange={(e) => setLojaSel(e.target.value)} style={{ minWidth: 170 }}>
-            {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-          </select>
+          <div className="ms">
+            <button className="ms-btn" onClick={() => setLojaOpen((o) => !o)}>{lojaLabel}<span style={{ color: '#94a3b8' }}>▾</span></button>
+            {lojaOpen && <>
+              <div className="ms-back" onClick={() => setLojaOpen(false)} />
+              <div className="ms-pop">
+                <label className="ms-opt"><input type="checkbox" checked={allSel} onChange={toggleTodasLojas} /><b>Todas as lojas</b></label>
+                <div className="ms-sep" />
+                {lojas.map((l) => <label key={l.id} className="ms-opt"><input type="checkbox" checked={lojaSet.has(l.id)} onChange={() => toggleLoja(l.id)} />{l.nome}</label>)}
+              </div>
+            </>}
+          </div>
         </div>
         <div className="ds-field"><label>PDV</label><select className="field"><option>Todos</option><option>iComanda</option><option>Saipos</option><option>Aloha</option></select></div>
         <div className="ds-field"><label>Tipo</label><select className="field"><option>Venda</option><option>Financeiro</option></select></div>

@@ -125,10 +125,13 @@ export function Shell() {
               : <span className="c2">{crumbSection}</span>}
           </div>
           <div className="tr">
-            <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
-              <option value="">Todas as lojas</option>
-              {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-            </select>
+            {/* telas com filtro de loja próprio escondem o seletor global (ex.: Monitor de Vendas) */}
+            {active !== 'pdv/importar' && (
+              <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
+                <option value="">Todas as lojas</option>
+                {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+              </select>
+            )}
             <span>{usuario?.nome || usuario?.email || '—'}</span>
             <button className="btn ghost" style={{ height: 32, color: 'var(--red)' }} onClick={() => signOut()}>
               ⎋ Sair
