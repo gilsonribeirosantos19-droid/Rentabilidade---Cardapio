@@ -22,7 +22,6 @@ const MODULOS: Modulo[] = [
       { chave: 'data_movimentacao', label: 'Data de movimentação do estoque (entrada de NF-e)', type: 'select', def: 'emissao', options: [{ v: 'emissao', l: 'Data de emissão da nota' }, { v: 'processamento', l: 'Data de processamento (lançamento)' }, { v: 'manual', l: 'Manual (informar ao processar)' }], hint: 'Em que data a entrada afeta o estoque/CMV.' },
       { chave: 'controla_validade', label: 'Controla validade', type: 'radio', def: 'nao', embreve: true },
       { chave: 'obrigar_lote', label: 'Obrigar lote', type: 'radio', def: 'nao' },
-      { chave: 'atualizar_custo_auto', label: 'Atualizar custo automaticamente', type: 'radio', def: 'sim', embreve: true },
       { chave: 'dias_alerta_validade', label: 'Dias para alerta de validade', type: 'input', def: '7', min: 1, max: 365, embreve: true },
       { chave: 'alerta_min_pct', label: 'Alerta de estoque mínimo (%)', type: 'input', def: '20', min: 0, max: 100, hint: 'Alertar quando o estoque atingir X% do mínimo definido.', embreve: true },
     ],
@@ -63,15 +62,18 @@ const MODULOS: Modulo[] = [
     key: 'compras', label: 'Compras', desc: 'Regras do processo de compras e aprovações.', search: 'compras pedidos aprovacao',
     fields: [
       { chave: 'exigir_aprovacao', label: 'Exigir aprovação de pedido', type: 'radio', def: 'nao' },
+      { chave: 'aprovar_acima_valor', label: 'Exigir aprovação p/ pedidos acima de (R$)', type: 'input', def: '0', min: 0, hint: '0 = nunca exige por valor. Ex.: 2000 = pedidos acima de R$ 2.000 precisam de aprovação (alçada).', embreve: true },
       { chave: 'permitir_sem_fornecedor', label: 'Permitir pedido sem fornecedor', type: 'radio', def: 'sim' },
       { chave: 'usar_forn_principal', label: 'Usar fornecedor principal automaticamente', type: 'radio', def: 'sim', embreve: true },
       { chave: 'considerar_menor_preco', label: 'Considerar menor preço na sugestão', type: 'radio', def: 'sim', embreve: true },
+      { chave: 'cobertura_padrao_dias', label: 'Cobertura desejada padrão (dias)', type: 'input', def: '7', min: 1, max: 90, hint: 'Quantos dias de estoque a Sugestão de Compra tenta cobrir.', embreve: true },
+      { chave: 'lead_time_padrao', label: 'Prazo de entrega padrão (dias)', type: 'input', def: '2', min: 0, max: 60, hint: 'Dias que o fornecedor leva pra entregar — usado no ponto de pedido.', embreve: true },
+      { chave: 'arredondar_embalagem', label: 'Arredondar sugestão pela embalagem de compra', type: 'radio', def: 'sim', embreve: true },
     ],
   },
   {
     key: 'ficha', label: 'Ficha Técnica', desc: 'Regras de cálculo e composição das fichas.', search: 'ficha tecnica custo calculo', embreve: true,
     fields: [
-      { chave: 'atualizar_custo_auto', label: 'Atualizar custo automaticamente', type: 'radio', def: 'sim', embreve: true },
       { chave: 'considerar_rendimento', label: 'Considerar rendimento do insumo', type: 'radio', def: 'sim', embreve: true },
       { chave: 'base_custo', label: 'Base de custo usada', type: 'select', def: 'medio', options: [{ v: 'medio', l: 'Custo Médio' }, { v: 'atual', l: 'Custo Atual' }], embreve: true },
       { chave: 'arredondamento', label: 'Arredondamento (casas decimais)', type: 'select', def: '2', options: [{ v: '2', l: '2 casas' }, { v: '3', l: '3 casas' }, { v: '4', l: '4 casas' }], embreve: true },
@@ -89,8 +91,11 @@ const MODULOS: Modulo[] = [
   {
     key: 'precificacao', label: 'Precificação (Margem Real)', desc: 'Taxas que saem da venda — pra calcular a margem de verdade.', search: 'precificacao margem real delivery ifood rappi cartao imposto taxa lucro',
     fields: [
-      { chave: 'taxa_delivery', label: 'Taxa de delivery (%)', type: 'input', def: '27', min: 0, max: 100, step: 0.1, hint: 'Comissão do iFood/Rappi sobre a venda no delivery.' },
+      { chave: 'taxa_delivery', label: 'Taxa delivery próprio / padrão (%)', type: 'input', def: '27', min: 0, max: 100, step: 0.1, hint: 'Comissão média do delivery quando não é iFood/Rappi.' },
+      { chave: 'taxa_ifood', label: 'Taxa iFood (%)', type: 'input', def: '27', min: 0, max: 100, step: 0.1, hint: 'Comissão do iFood sobre a venda.', embreve: true },
+      { chave: 'taxa_rappi', label: 'Taxa Rappi (%)', type: 'input', def: '25', min: 0, max: 100, step: 0.1, hint: 'Comissão do Rappi sobre a venda.', embreve: true },
       { chave: 'taxa_cartao', label: 'Taxa de cartão (%)', type: 'input', def: '3', min: 0, max: 100, step: 0.1, hint: 'Taxa da maquininha (vendas no salão).' },
+      { chave: 'taxa_servico', label: 'Taxa de serviço / garçom (%)', type: 'input', def: '10', min: 0, max: 100, step: 0.1, hint: 'Os 10% do garçom — se aplicável ao seu cálculo.', embreve: true },
       { chave: 'imposto', label: 'Imposto sobre venda (%)', type: 'input', def: '6', min: 0, max: 100, step: 0.1, hint: 'Simples Nacional / imposto sobre faturamento.' },
       { chave: 'margem_minima', label: 'Margem mínima alvo (%)', type: 'input', def: '20', min: 0, max: 100, step: 0.1, hint: 'Abaixo disso, o prato acende alerta vermelho.' },
     ],
