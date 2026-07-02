@@ -38,6 +38,7 @@ export function ConfigGeral() {
   const [del, setDel] = useState<{ table: string; id: string; nome: string } | null>(null)
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const [insBusca, setInsBusca] = useState('')
+  const [checando, setChecando] = useState<string | null>(null)
 
   const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 8000 : 2600) }
   const invalidar = () => qc.invalidateQueries({ queryKey: ['cfg'] })
@@ -141,6 +142,45 @@ export function ConfigGeral() {
     setModal({ key: c.key, id: r.id, nome: r.nome ?? '', abrev: r.abreviacao ?? '', razao: r.razao_social ?? '', cnpj: r.cnpj ?? '', ende: r.endereco ?? '', hm: r.horario_manha ?? '', ht: r.horario_tarde ?? '' })
   }
 
+  // ---- verifica se o cadastro está em uso antes de permitir excluir ----
+  const cnt = async (table: string, build: (q: any) => any): Promise<number> => {
+    try { const { count, error } = await build(supabase.from(table).select('*', { count: 'exact', head: true })); if (error) return 0; return count || 0 } catch { return 0 }
+  }
+  const contarUso = async (c: Cad, r: Row): Promise<{ qtd: number; onde: string }> => {
+    const nome = r.nome ?? ''
+    const T = (q: any) => q.eq('tenant_id', tenantId)
+    switch (c.key) {
+      case 'tipo_item': return { qtd: await cnt('insumos', (q) => T(q).eq('tipo_item', nome)), onde: 'insumo(s)' }
+      case 'familia': return { qtd: await cnt('insumos', (q) => T(q).eq('familia', nome)), onde: 'insumo(s)' }
+      case 'grupo': return { qtd: await cnt('insumos', (q) => T(q).eq('categoria', nome)), onde: 'insumo(s)' }
+      case 'subgrupo': return { qtd: await cnt('insumos', (q) => T(q).eq('subgrupo', nome)), onde: 'insumo(s)' }
+      case 'embalagem': return { qtd: await cnt('insumo_fornecedores', (q) => T(q).eq('embalagem_descricao', nome)), onde: 'vínculo(s) de fornecedor' }
+      case 'cat_ficha': return { qtd: await cnt('fichas_tecnicas', (q) => T(q).eq('categoria', nome)), onde: 'ficha(s)' }
+      case 'unidade': {
+        const vals = [nome, r.abreviacao].filter(Boolean) as string[]
+        const a = await cnt('insumos', (q) => T(q).in('unidade_medida', vals))
+        const b = await cnt('insumos', (q) => T(q).in('unidade_compra', vals))
+        return { qtd: a + b, onde: 'insumo(s)' }
+      }
+      case 'grupo_compra': return { qtd: await cnt('grupos_compra_itens', (q) => q.eq('grupo_id', r.id)), onde: 'item(ns) no grupo' }
+      case 'loja': {
+        let total = 0
+        for (const t of ['saldo_estoque', 'entradas', 'saidas', 'usuarios', 'nfe_recebidas']) total += await cnt(t, (q) => T(q).eq('loja_id', r.id))
+        return { qtd: total, onde: 'movimentação(ões)/usuário(s)' }
+      }
+      default: return { qtd: 0, onde: '' }
+    }
+  }
+  const pedirExcluir = async (c: Cad, r: Row) => {
+    if (checando) return
+    setChecando(r.id)
+    try {
+      const { qtd, onde } = await contarUso(c, r)
+      if (qtd > 0) { showToast(`Não é possível excluir "${r.nome}": ${qtd} ${onde} ${qtd > 1 ? 'usam' : 'usa'} este cadastro. Reclassifique ou remova o uso antes.`, true); return }
+      setDel({ table: c.table, id: r.id, nome: r.nome ?? '' })
+    } finally { setChecando(null) }
+  }
+
   const modalCad = modal ? CADS.find((c) => c.key === modal.key)! : null
   const insFiltrados = useMemo(() => { const q = insBusca.trim().toLowerCase(); return (insumos.data ?? []).filter((i) => !q || (i.nome ?? '').toLowerCase().includes(q)) }, [insumos.data, insBusca])
 
@@ -174,7 +214,7 @@ export function ConfigGeral() {
                             <td className="muted">{fmtData(r.created_at)}</td>
                             <td className="r">
                               <button className="act" onClick={() => editar(c, r)}>Editar</button>
-                              <button className="act del" onClick={() => setDel({ table: c.table, id: r.id, nome: r.nome ?? '' })}>Excluir</button>
+                              <button className="act del" disabled={checando === r.id} onClick={() => pedirExcluir(c, r)}>{checando === r.id ? 'Verificando…' : 'Excluir'}</button>
                             </td>
                           </tr>
                         ))}
