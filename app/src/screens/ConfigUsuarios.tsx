@@ -62,8 +62,11 @@ export function ConfigUsuarios() {
         const auth = await invokeAdmin({ action: 'create', email, password: m.senha })
         const userId = auth?.id
         if (!userId) throw new Error('A conta de acesso não retornou um ID.')
-        // `usuarios` não tem coluna email (o e-mail fica no Auth) — não enviar
-        const { error } = await supabase.from('usuarios').insert({ id: userId, nome, role: m.role, tenant_id: tenantId, loja_id: lojaId, ativo: true }); if (error) throw error
+        // grava email também (coluna adicionada via SQL); se ainda não existir a coluna, cai no catch e insere sem email
+        const base = { id: userId, nome, role: m.role, tenant_id: tenantId, loja_id: lojaId, ativo: true }
+        let ins = await supabase.from('usuarios').insert({ ...base, email })
+        if (ins.error && /email/i.test(ins.error.message)) ins = await supabase.from('usuarios').insert(base)
+        if (ins.error) throw ins.error
       }
     },
     onSuccess: (_d, m) => { qc.invalidateQueries({ queryKey: ['cfg-usuarios'] }); setModal(null); showToast(m.id ? 'Usuário atualizado.' : 'Usuário criado.') },
