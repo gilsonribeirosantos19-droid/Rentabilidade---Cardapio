@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useLoja } from '../lib/loja'
 import './faturamento.css'
 
@@ -13,30 +13,36 @@ const qtd = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 3,
 const DOW = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 const diaSemana = (iso: string) => { const g = new Date(iso + 'T12:00:00').getDay(); return `${g + 1}-${DOW[g]}` }
 const fmtData = (iso: string) => iso.split('-').reverse().join('/')
-
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+// Primeira letra maiúscula de cada palavra (após espaço, hífen ou barra)
+const titleCase = (s: string) => s.toLowerCase().replace(/(^|[\s\-/(])(\S)/g, (_m, p, c) => p + (c as string).toUpperCase())
 
-// colunas (modelo Everest). `def` = visível por padrão; `sum` = soma no rodapé; `lower` = exibe minúsculo
 type ColKey = 'data' | 'loja' | 'atendente' | 'dow' | 'item' | 'grupo' | 'qtd' | 'familia' | 'vTotal' | 'vDesc' | 'tDesc' | 'vUnit' | 'cancelado' | 'vCancel' | 'tCancel' | 'descDesc'
-type Col = { key: ColKey; label: string; cls?: 'r' | 'c'; lower?: boolean; def: boolean; sum?: 'brl' | 'qtd' | 'int' }
+type Col = { key: ColKey; label: string; cls?: 'r' | 'c'; title?: boolean; def: boolean; fixed?: boolean; filt?: boolean; sum?: 'brl' | 'qtd' | 'int' }
 const COLS: Col[] = [
-  { key: 'data', label: 'D. Movimento', def: true },
-  { key: 'loja', label: 'Loja', def: true },
-  { key: 'atendente', label: 'Atendente', def: true },
-  { key: 'dow', label: 'Dia Semana', def: true },
-  { key: 'item', label: 'Descrição Item PDV', lower: true, def: true },
-  { key: 'grupo', label: 'Grupo', lower: true, def: true },
+  { key: 'data', label: 'D. Movimento', def: true, fixed: true, filt: true },
+  { key: 'loja', label: 'Loja', def: true, filt: true },
+  { key: 'atendente', label: 'Atendente', def: true, filt: true },
+  { key: 'dow', label: 'Dia Semana', def: true, filt: true },
+  { key: 'item', label: 'Descrição Item PDV', title: true, def: true },
+  { key: 'grupo', label: 'Grupo', title: true, def: true, filt: true },
   { key: 'qtd', label: 'Q. Item', cls: 'r', def: true, sum: 'qtd' },
-  { key: 'familia', label: 'Família', def: false },
+  { key: 'familia', label: 'Família', def: false, filt: true },
   { key: 'vTotal', label: 'V. Total', cls: 'r', def: true, sum: 'brl' },
   { key: 'vDesc', label: 'V. Desconto', cls: 'r', def: true, sum: 'brl' },
   { key: 'tDesc', label: 'T. Desconto', cls: 'r', def: false, sum: 'int' },
   { key: 'vUnit', label: 'V. Unitário', cls: 'r', def: true, sum: 'brl' },
-  { key: 'cancelado', label: 'Cancelado', cls: 'c', def: true },
+  { key: 'cancelado', label: 'Cancelado', cls: 'c', def: true, filt: true },
   { key: 'vCancel', label: 'V. Cancelamento', cls: 'r', def: true, sum: 'brl' },
   { key: 'tCancel', label: 'T. Cancelamento', cls: 'r', def: false, sum: 'int' },
   { key: 'descDesc', label: 'Descrição Desconto', def: false },
 ]
+
+const COLS_KEY = 'aiko_fat_cols'
+function loadCols(): Record<string, boolean> {
+  try { const s = localStorage.getItem(COLS_KEY); if (s) { const o = JSON.parse(s); COLS.forEach((c) => { if (c.fixed) o[c.key] = true }); return o } } catch { /* ignore */ }
+  const d: Record<string, boolean> = {}; COLS.forEach((c) => { d[c.key] = !!c.def }); return d
+}
 
 const MOCK: Venda[] = [
   { id: '1', data: '2026-06-01', loja: 'Sushi Ponta Negra', atendente: 'Ana Carolina', item: '032 - COMBO HOT G', grupo: 'G-COMBINADOS', qtd: 1, vTotal: 134.90, vDesc: 0, vUnit: 134.90, cancelado: false },
@@ -67,12 +73,40 @@ export function FaturamentoVendas() {
   const [busca, setBusca] = useState('')
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
   const [lojaOpen, setLojaOpen] = useState(false)
+  const initRef = useRef(false)
+  useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.nome))) } }, [lojas])
+  const allSel = lojas.length > 0 && lojaSet.size === lojas.length
+  const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? [...lojaSet][0] : `${lojaSet.size} lojas`
+  const toggleLoja = (n: string) => setLojaSet((p) => { const s = new Set(p); s.has(n) ? s.delete(n) : s.add(n); return s })
+  const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.nome)))
+
+  // ocultar/mostrar colunas (modelo Movimentação: ícone de grade + dropdown + salvar preferência)
+  const [cols, setCols] = useState(loadCols)
+  const [ddPos, setDdPos] = useState({ top: 0, left: 0 })
   const [colsOpen, setColsOpen] = useState(false)
-  const [vis, setVis] = useState<Set<ColKey>>(new Set(COLS.filter((c) => c.def).map((c) => c.key)))
-  const toggleCol = (k: ColKey) => setVis((p) => { const s = new Set(p); s.has(k) ? s.delete(k) : s.add(k); return s })
-  const visCols = COLS.filter((c) => vis.has(c.key))
-  // valores derivados (Família/T.Desconto/V.Cancelamento/T.Cancelamento) — mock a partir do que já temos
-  const fami = (_v: Venda) => 'VENDAS'
+  const toggleCol = (k: ColKey) => setCols((c) => ({ ...c, [k]: !c[k] }))
+  const salvarCols = () => { try { localStorage.setItem(COLS_KEY, JSON.stringify(cols)) } catch { /* ignore */ } setColsOpen(false) }
+  const visCols = COLS.filter((c) => cols[c.key])
+
+  // filtro por coluna (funil no cabeçalho, tipo Everest/Excel)
+  const [colFilters, setColFilters] = useState<Record<string, Set<string>>>({})
+  const [filtCol, setFiltCol] = useState<ColKey | null>(null)
+
+  const openDd = (e: MouseEvent, which: 'cols' | ColKey) => {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const top = Math.min(r.bottom + 4, window.innerHeight - 350)
+    setDdPos({ top: Math.max(8, top), left: Math.max(8, Math.min(r.left, window.innerWidth - 240)) })
+    if (which === 'cols') { setFiltCol(null); setColsOpen((o) => !o) }
+    else { setColsOpen(false); setFiltCol((c) => c === which ? null : which) }
+  }
+
+  const setPeriodo = (tipo: string) => {
+    const d = new Date()
+    if (tipo === 'mes_atual') { setDe(mesInicio()); setAte(mesFim()) }
+    else if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
+  }
+
+  const fami = (_v: Venda) => 'Vendas'
   const tDesc = (v: Venda) => v.vDesc > 0 ? 1 : 0
   const vCancel = (v: Venda) => v.cancelado ? v.vTotal : 0
   const tCancel = (v: Venda) => v.cancelado ? 1 : 0
@@ -82,8 +116,8 @@ export function FaturamentoVendas() {
       case 'loja': return v.loja
       case 'atendente': return v.atendente
       case 'dow': return diaSemana(v.data)
-      case 'item': return v.item
-      case 'grupo': return v.grupo
+      case 'item': return titleCase(v.item)
+      case 'grupo': return titleCase(v.grupo)
       case 'qtd': return qtd(v.qtd)
       case 'familia': return fami(v)
       case 'vTotal': return brl(v.vTotal)
@@ -96,20 +130,9 @@ export function FaturamentoVendas() {
       case 'descDesc': return ''
     }
   }
-  const initRef = useRef(false)
-  useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.nome))) } }, [lojas])
-  const allSel = lojas.length > 0 && lojaSet.size === lojas.length
-  const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? [...lojaSet][0] : `${lojaSet.size} lojas`
-  const toggleLoja = (n: string) => setLojaSet((p) => { const s = new Set(p); s.has(n) ? s.delete(n) : s.add(n); return s })
-  const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.nome)))
 
-  const setPeriodo = (tipo: string) => {
-    const d = new Date()
-    if (tipo === 'mes_atual') { setDe(mesInicio()); setAte(mesFim()) }
-    else if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
-  }
-
-  const lista = useMemo(() => {
+  // 1) filtra por período + loja + busca (antes dos filtros de coluna)
+  const preLista = useMemo(() => {
     const q = norm(busca.trim())
     const filtraLoja = lojaSet.size > 0 && !allSel
     return MOCK.filter((v) => {
@@ -120,6 +143,24 @@ export function FaturamentoVendas() {
     })
   }, [de, ate, busca, lojaSet, allSel])
 
+  // 2) aplica os filtros de coluna
+  const lista = useMemo(() => preLista.filter((v) => Object.entries(colFilters).every(([k, set]) => set.has(cellVal(v, k as ColKey)))), [preLista, colFilters])
+
+  const distinct = (k: ColKey) => [...new Set(preLista.map((v) => cellVal(v, k)))].sort()
+  const toggleFiltVal = (k: ColKey, val: string, all: string[]) => setColFilters((prev) => {
+    const cur = new Set(prev[k] ?? all)
+    cur.has(val) ? cur.delete(val) : cur.add(val)
+    const next = { ...prev }
+    if (cur.size === all.length) delete next[k]; else next[k] = cur
+    return next
+  })
+  const toggleFiltTodos = (k: ColKey, all: string[]) => setColFilters((prev) => {
+    const cur = prev[k] ?? new Set(all)
+    const next = { ...prev }
+    if (cur.size === all.length) next[k] = new Set(); else delete next[k]
+    return next
+  })
+
   const tot = useMemo(() => {
     const t: Record<string, number> = {}
     COLS.filter((c) => c.sum).forEach((c) => {
@@ -127,10 +168,7 @@ export function FaturamentoVendas() {
     })
     return t
   }, [lista])
-  const footVal = (c: Col): string => {
-    const n = tot[c.key] || 0
-    return c.sum === 'brl' ? brl(n) : c.sum === 'qtd' ? qtd(n) : String(n)
-  }
+  const footVal = (c: Col): string => { const n = tot[c.key] || 0; return c.sum === 'brl' ? brl(n) : c.sum === 'qtd' ? qtd(n) : String(n) }
 
   return (
     <div className="fatv-screen">
@@ -163,41 +201,71 @@ export function FaturamentoVendas() {
       <div className="search-row">
         <input className="search" placeholder="Digite um texto para pesquisar..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         <span className="mock-tag">⚑ Dados de exemplo — lê as vendas reais quando o PDV estiver processando</span>
-        <div className="cols">
-          <button className="cols-btn" onClick={() => setColsOpen((o) => !o)}>▦ Colunas ▾</button>
-          {colsOpen && <>
-            <div className="ms-back" onClick={() => setColsOpen(false)} />
-            <div className="cols-pop">
-              {COLS.map((c) => <label key={c.key} className="cols-opt"><input type="checkbox" checked={vis.has(c.key)} onChange={() => toggleCol(c.key)} />{c.label}</label>)}
-            </div>
-          </>}
-        </div>
       </div>
 
       <div className="grid-wrap">
         <table>
           <thead>
-            <tr>{visCols.map((c) => <th key={c.key} className={c.cls}>{c.label}</th>)}</tr>
+            <tr>
+              {visCols.map((c, i) => (
+                <th key={c.key} className={c.cls}>
+                  <span className="th-in">
+                    {c.label}
+                    {c.filt && (
+                      <svg className={'hd-ico' + (colFilters[c.key] ? ' on' : '')} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} onClick={(e) => { e.stopPropagation(); openDd(e, c.key) }}>
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                      </svg>
+                    )}
+                    {i === 0 && (
+                      <svg className="hd-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} onClick={(e) => { e.stopPropagation(); openDd(e, 'cols') }}>
+                        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+                      </svg>
+                    )}
+                  </span>
+                </th>
+              ))}
+            </tr>
           </thead>
           <tbody>
             {!lista.length
               ? <tr><td colSpan={visCols.length} className="empty">Nenhum item de venda no filtro.</td></tr>
               : lista.map((v) => (
                 <tr key={v.id}>
-                  {visCols.map((c) => {
-                    const canc = c.key === 'cancelado' && v.cancelado
-                    return <td key={c.key} className={[c.cls || '', c.lower ? 'lower' : '', canc ? 'canc-sim' : ''].filter(Boolean).join(' ')}>{cellVal(v, c.key)}</td>
-                  })}
+                  {visCols.map((c) => <td key={c.key} className={[c.cls || '', c.key === 'cancelado' && v.cancelado ? 'canc-sim' : ''].filter(Boolean).join(' ')}>{cellVal(v, c.key)}</td>)}
                 </tr>
               ))}
           </tbody>
           {lista.length > 0 && <tfoot>
-            <tr>
-              {visCols.map((c, i) => <td key={c.key} className={c.cls}>{c.sum ? footVal(c) : (i === 0 ? `${lista.length} itens` : '')}</td>)}
-            </tr>
+            <tr>{visCols.map((c, i) => <td key={c.key} className={c.cls}>{c.sum ? footVal(c) : (i === 0 ? `${lista.length} itens` : '')}</td>)}</tr>
           </tfoot>}
         </table>
       </div>
+
+      {/* dropdown: ocultar/mostrar colunas */}
+      {colsOpen && <>
+        <div className="fatv-back" onClick={() => setColsOpen(false)} />
+        <div className="fatv-dd" style={{ top: ddPos.top, left: ddPos.left }}>
+          <div className="tit">Colunas visíveis</div>
+          {COLS.filter((c) => !c.fixed).map((c) => <label key={c.key}><input type="checkbox" checked={!!cols[c.key]} onChange={() => toggleCol(c.key)} />{c.label}</label>)}
+          <button className="save" onClick={salvarCols}>Salvar preferência</button>
+        </div>
+      </>}
+
+      {/* dropdown: filtro por coluna */}
+      {filtCol && (() => {
+        const all = distinct(filtCol)
+        const cur = colFilters[filtCol]
+        const todos = !cur || cur.size === all.length
+        return <>
+          <div className="fatv-back" onClick={() => setFiltCol(null)} />
+          <div className="fatv-dd" style={{ top: ddPos.top, left: ddPos.left }}>
+            <div className="tit">Filtrar: {COLS.find((c) => c.key === filtCol)?.label}</div>
+            <label><input type="checkbox" checked={todos} onChange={() => toggleFiltTodos(filtCol, all)} /><b>(Todos)</b></label>
+            <div className="ms-sep" />
+            {all.map((val) => <label key={val}><input type="checkbox" checked={!cur || cur.has(val)} onChange={() => toggleFiltVal(filtCol, val, all)} />{val || '(vazio)'}</label>)}
+          </div>
+        </>
+      })()}
     </div>
   )
 }
