@@ -85,7 +85,9 @@ export function Insumos() {
       if (fFam && (i.familia || '') !== fFam) return false
       if (fGrupo && (i.categoria || '') !== fGrupo) return false
       if (fSub && (i.subgrupo || '') !== fSub) return false
-      if (fStatus && String(i.ativo !== false) !== fStatus) return false
+      // Status: 'false' = só inativos; 'true' ou vazio (padrão) = só ativos (igual ao original)
+      if (fStatus === 'false') { if (i.ativo !== false) return false }
+      else if (i.ativo === false) return false
       if (fEstq && getStatus(i) !== fEstq) return false
       return true
     })
