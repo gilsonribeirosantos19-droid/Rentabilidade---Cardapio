@@ -35,9 +35,9 @@ export function ConfigUsuarios() {
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 7000 : 2600) }
 
-  const { data: usuarios = [], isLoading } = useQuery({
+  const { data: usuarios = [], isLoading, error: qErr } = useQuery({
     queryKey: ['cfg-usuarios', tenantId], enabled: !!tenantId,
-    queryFn: async () => { const { data, error } = await supabase.from('usuarios').select('id,nome,email,role,loja_id').eq('tenant_id', tenantId).order('nome'); if (error) throw error; return (data ?? []) as Usuario[] },
+    queryFn: async () => { const { data, error } = await supabase.from('usuarios').select('*').eq('tenant_id', tenantId).order('nome'); if (error) throw error; return (data ?? []) as Usuario[] },
   })
   const { data: lojas = [] } = useQuery({
     queryKey: ['cfg-usr-lojas', tenantId], enabled: !!tenantId,
@@ -83,6 +83,7 @@ export function ConfigUsuarios() {
 
       <div className="usr-list">
         {isLoading ? <div className="usr-empty">Carregando usuários…</div>
+          : qErr ? <div className="usr-empty" style={{ color: '#b91c1c' }}>Erro ao carregar: {(qErr as Error).message}</div>
           : usuarios.length === 0 ? <div className="usr-empty">Nenhum usuário cadastrado. Clique em “+ Novo usuário”.</div>
             : usuarios.map((u) => (
               <div className="usr-card" key={u.id}>
