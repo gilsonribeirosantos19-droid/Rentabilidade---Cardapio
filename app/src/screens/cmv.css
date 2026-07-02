@@ -1,12 +1,12 @@
 /* CMV Teórico × Real — fiel ao cmv.html (escopado .cmv-screen) */
-.cmv-screen { padding: 14px 24px; }
+.cmv-screen { padding: 10px 18px; }
 
 /* filtros (padrão profissional: card branco, labels pequenas) */
 .cmv-screen .ds-filterbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .cmv-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
 .cmv-screen .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; letter-spacing: .01em; }
 .cmv-screen .ds-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.cmv-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.cmv-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
 .cmv-screen .field:focus { outline: none; border-color: #f97316; }
 .cmv-screen select.field { cursor: pointer; }
 .cmv-screen .btn-ghost { height: 34px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
@@ -46,7 +46,7 @@
 .cmv-screen .th-sub th { padding: 6px 12px; font-size: 9px; font-weight: 600; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; text-align: right; border-right: 1px solid rgba(255,255,255,.06); }
 .cmv-screen .th-sub th:first-child, .cmv-screen .th-sub th.l { text-align: left; }
 .cmv-screen .th-sub th:last-child { border-right: none; }
-.cmv-screen tbody td { padding: 3px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #0f172a; }
+.cmv-screen tbody td { padding: 2px 9px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #0f172a; line-height: 1.5; }
 .cmv-screen tbody tr:last-child td { border-bottom: none; }
 .cmv-screen tbody tr:hover { background: #d7e4f7; }
 .cmv-screen td.r { text-align: right; }

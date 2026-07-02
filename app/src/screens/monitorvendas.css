@@ -1,11 +1,11 @@
 /* Monitor de Vendas (PDV) — mock, espelha o Monitor de NF-e. Escopado .mvend-screen */
-.mvend-screen { padding: 14px 24px; }
+.mvend-screen { padding: 10px 18px; }
 
 /* filtros — nosso padrão */
 .mvend-screen .ds-filterbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .mvend-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
 .mvend-screen .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; }
-.mvend-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #334155; background: #fff; }
+.mvend-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #334155; background: #fff; }
 .mvend-screen .field:focus { outline: none; border-color: #f97316; }
 .mvend-screen select.field { cursor: pointer; }
 .mvend-screen .ds-actions { margin-left: auto; display: flex; gap: 8px; }
@@ -42,9 +42,9 @@
 .mvend-screen .toolbar .sp { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; }
 
 .mvend-screen table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.mvend-screen thead th { background: #f8fafc; color: #64748b; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 9px 14px; text-align: left; border-bottom: 1px solid #e7ebf0; white-space: nowrap; }
+.mvend-screen thead th { background: #f8fafc; color: #64748b; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 5px 10px; text-align: left; border-bottom: 1px solid #e7ebf0; white-space: nowrap; }
 .mvend-screen thead th.r { text-align: right; } .mvend-screen thead th.c { text-align: center; }
-.mvend-screen tbody td { padding: 8px 14px; border-bottom: 1px solid #f1f5f9; color: #0f172a; white-space: nowrap; }
+.mvend-screen tbody td { padding: 3px 10px; border-bottom: 1px solid #f1f5f9; color: #0f172a; white-space: nowrap; line-height: 1.6; }
 .mvend-screen tbody td.r { text-align: right; font-family: 'DM Mono', monospace; } .mvend-screen tbody td.c { text-align: center; }
 .mvend-screen tbody tr { cursor: pointer; }
 .mvend-screen tbody tr:hover td { background: #d7e4f7; }

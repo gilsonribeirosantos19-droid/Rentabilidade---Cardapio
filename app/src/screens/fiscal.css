@@ -1,11 +1,11 @@
 /* Módulo Fiscal — escopado .fiscal-screen */
-.fiscal-screen { padding: 14px 24px; }
+.fiscal-screen { padding: 10px 18px; }
 @keyframes mon-spin { to { transform: rotate(360deg); } }
 .fiscal-screen .fh-title { font-size: 16px; font-weight: 800; color: #0f172a; }
 .fiscal-screen .fh-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 .fiscal-screen .fl-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 10px 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .fiscal-screen .fl-bar .ass { flex: 0 1 300px; min-width: 200px; }
-.fiscal-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.fiscal-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
 .fiscal-screen .field:focus { outline: none; border-color: #f97316; }
 .fiscal-screen select.field { cursor: pointer; }
 .fiscal-screen .btn-g { height: 36px; padding: 0 13px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }

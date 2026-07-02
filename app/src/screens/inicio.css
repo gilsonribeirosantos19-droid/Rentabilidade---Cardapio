@@ -1,5 +1,5 @@
 /* Tela de Início (Dashboard) — escopado .inicio-screen */
-.inicio-screen { padding: 18px 24px; }
+.inicio-screen { padding: 12px 20px; }
 .inicio-screen .inc-grid { display: grid; grid-template-columns: 1fr 290px; gap: 18px; align-items: start; }
 @media (max-width: 1100px) { .inicio-screen .inc-grid { grid-template-columns: 1fr; } }
 
@@ -18,13 +18,13 @@
 .inicio-screen .sec-sub { font-weight: 400; color: #94a3b8; font-size: 12px; }
 
 .inicio-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
-.inicio-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-.inicio-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.inicio-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.inicio-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 5px 10px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
 .inicio-screen .tbl th.r, .inicio-screen .tbl td.r { text-align: right; }
-.inicio-screen .tbl tbody td { padding: 9px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
+.inicio-screen .tbl tbody td { padding: 4px 10px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
 .inicio-screen .tbl tbody tr.clik { cursor: pointer; }
-.inicio-screen .tbl tbody tr.clik:hover td { background: #f8fafc; }
-.inicio-screen .tbl tfoot td { padding: 10px 12px; border-top: 2px solid #e2e8f0; font-weight: 700; }
+.inicio-screen .tbl tbody tr.clik:hover td { background: #d7e4f7; }
+.inicio-screen .tbl tfoot td { padding: 5px 10px; border-top: 2px solid #e2e8f0; font-weight: 700; }
 .inicio-screen .mono { font-family: 'DM Mono', monospace; }
 .inicio-screen .pend-ic { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .inicio-screen .pend-num { font-size: 18px; font-weight: 800; font-family: 'DM Mono', monospace; }

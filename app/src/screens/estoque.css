@@ -1,5 +1,5 @@
 /* Tela de Estoque — fiel ao original (escopado .est-screen) */
-.est-screen { padding: 14px 24px; }
+.est-screen { padding: 10px 18px; }
 .est-screen .est-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 14px; }
 .est-screen .est-title span { font-weight: 400; color: #94a3b8; font-size: 13px; }
 
@@ -12,7 +12,7 @@
 .est-screen .ds-field .ass { width: 100%; }
 .est-screen .ds-field .ass-btn { height: 34px; }
 .est-screen .ds-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.est-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.est-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
 .est-screen .field:focus { outline: none; border-color: #f97316; }
 .est-screen select.field { cursor: pointer; }
 .est-screen .btn-ghost { height: 34px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -33,11 +33,11 @@
 /* tabela */
 .est-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
 .est-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 215px); }
-.est-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-.est-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 11px; text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; }
+.est-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.est-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; }
 .est-screen .tbl th.r, .est-screen .tbl td.r { text-align: right; }
 .est-screen .tbl th.c, .est-screen .tbl td.c { text-align: center; }
-.est-screen .tbl tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; }
+.est-screen .tbl tbody td { padding: 2px 9px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; line-height: 1.5; }
 .est-screen .tbl tbody tr:hover td { background: #d7e4f7; }
 .est-screen .tbl .mono { font-family: 'DM Mono', monospace; }
 .est-screen .tbl tfoot td { padding: 8px 12px; border-top: 2px solid #e2e8f0; }
@@ -176,7 +176,7 @@
 .est-screen .cm-grid-wrap { border: 1px solid #d6dce6; border-radius: 8px; overflow: auto; max-height: 360px; }
 .est-screen .cm-grid { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
 .est-screen .cm-grid thead th { background: #f1f5f9; color: #475569; font-weight: 600; text-align: left; padding: 8px 10px; border-bottom: 1px solid #d6dce6; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
-.est-screen .cm-grid tbody td { padding: 0 10px; height: 38px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
+.est-screen .cm-grid tbody td { padding: 0 10px; height: 28px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
 .est-screen .cm-grid tbody tr:nth-child(even) { background: #fafbfc; }
 .est-screen .cm-grid tbody tr.sel { background: #e8f0fe; }
 .est-screen .cm-grid tbody tr:not(.sel):hover td { background: #d7e4f7; }
