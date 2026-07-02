@@ -229,11 +229,14 @@ export function FaturamentoVendas() {
           <tbody>
             {!lista.length
               ? <tr><td colSpan={visCols.length} className="empty">Nenhum item de venda no filtro.</td></tr>
-              : lista.map((v) => (
-                <tr key={v.id}>
-                  {visCols.map((c) => <td key={c.key} className={[c.cls || '', c.key === 'cancelado' && v.cancelado ? 'canc-sim' : ''].filter(Boolean).join(' ')}>{cellVal(v, c.key)}</td>)}
-                </tr>
-              ))}
+              : <>
+                {lista.map((v) => (
+                  <tr key={v.id}>
+                    {visCols.map((c) => <td key={c.key} className={[c.cls || '', c.key === 'cancelado' && v.cancelado ? 'canc-sim' : ''].filter(Boolean).join(' ')}>{cellVal(v, c.key)}</td>)}
+                  </tr>
+                ))}
+                <tr className="fill" aria-hidden="true"><td colSpan={visCols.length} /></tr>
+              </>}
           </tbody>
           {lista.length > 0 && <tfoot>
             <tr>{visCols.map((c, i) => <td key={c.key} className={c.cls}>{c.sum ? footVal(c) : (i === 0 ? `${lista.length} itens` : '')}</td>)}</tr>

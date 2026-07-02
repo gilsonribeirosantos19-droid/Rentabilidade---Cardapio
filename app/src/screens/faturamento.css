@@ -42,6 +42,10 @@
 .fatv-screen .mock-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #b45309; background: #fef9ec; border: 1px solid #fde68a; border-radius: 20px; padding: 3px 10px; margin-left: 10px; }
 
 .fatv-screen .grid-wrap { border: 1px solid #d6dce6; border-radius: 10px; overflow: auto; flex: 1 1 auto; min-height: 0; background: #fff; }
+/* faz a tabela preencher a altura: uma linha "esticadora" empurra o rodapé pro fim, com qualquer nº de linhas */
+.fatv-screen .grid-wrap table { height: 100%; }
+.fatv-screen tbody tr.fill { height: 100%; }
+.fatv-screen tbody tr.fill td, .fatv-screen tbody tr.fill:hover td { padding: 0; border: none; background: #fff; }
 .fatv-screen table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .fatv-screen thead th { position: sticky; top: 0; z-index: 2; background: #f1f5f9; color: #475569; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; text-align: left; padding: 7px 10px; border-bottom: 1px solid #d6dce6; border-right: 1px solid #e7ecf3; white-space: nowrap; }
 .fatv-screen thead th.r { text-align: right; }

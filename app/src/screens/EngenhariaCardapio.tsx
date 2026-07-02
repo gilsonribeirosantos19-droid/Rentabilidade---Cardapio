@@ -210,7 +210,10 @@ export function EngenhariaCardapio() {
           <tbody>
             {!lista.length
               ? <tr><td colSpan={visCols.length} className="empty">Nenhum produto no filtro.</td></tr>
-              : lista.map((v) => <tr key={v.id}>{visCols.map((c) => <td key={c.key} className={c.cls}>{cellVal(v, c)}</td>)}</tr>)}
+              : <>
+                {lista.map((v) => <tr key={v.id}>{visCols.map((c) => <td key={c.key} className={c.cls}>{cellVal(v, c)}</td>)}</tr>)}
+                <tr className="fill" aria-hidden="true"><td colSpan={visCols.length} /></tr>
+              </>}
           </tbody>
           {lista.length > 0 && <tfoot>
             <tr>{visCols.map((c, i) => <td key={c.key} className={c.cls}>{c.sum ? fmt(tot[c.key] || 0, c.fmt) : (i === 0 ? `${lista.length} itens` : '')}</td>)}</tr>
