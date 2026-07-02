@@ -39,7 +39,7 @@ export function ConfigGeral() {
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const [insBusca, setInsBusca] = useState('')
 
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), 2600) }
+  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 8000 : 2600) }
   const invalidar = () => qc.invalidateQueries({ queryKey: ['cfg'] })
 
   const useCfg = (table: string, filtro?: (q: ReturnType<typeof supabase.from>) => unknown) =>
@@ -99,7 +99,7 @@ export function ConfigGeral() {
       }
     },
     onSuccess: () => { invalidar(); setModal(null); showToast('Salvo.') },
-    onError: (e: Error) => showToast(e.message, true),
+    onError: (e: Error) => { console.error('[ConfigGeral] erro ao salvar:', e); showToast('Erro ao salvar: ' + e.message, true) },
   })
 
   // ---- salvar grupo de compra (+ itens) ----
