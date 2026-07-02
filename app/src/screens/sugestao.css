@@ -29,7 +29,7 @@
 .sug-screen th.r, .sug-screen td.r { text-align: right; }
 .sug-screen th.c, .sug-screen td.c { text-align: center; }
 .sug-screen tbody td { padding: 3px 9px; border-bottom: 1px solid #eef2f6; line-height: 1.5; white-space: nowrap; color: #0f172a; vertical-align: middle; }
-.sug-screen tbody tr:hover td { background: #eef2f6; }
+.sug-screen tbody tr:hover td { background: #d7e4f7; }
 .sug-screen .empty { text-align: center; color: #94a3b8; padding: 22px; }
 .sug-screen .q { font-size: 9px; color: #c3ccdb; border: 1px solid #d5dce8; border-radius: 50%; width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center; margin-left: 3px; cursor: help; vertical-align: middle; }
 .sug-screen .sug-link { cursor: pointer; border-bottom: 1px dotted #94a3b8; }
