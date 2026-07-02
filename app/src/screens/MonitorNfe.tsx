@@ -551,7 +551,6 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
 
         <div className="cor-ft">
           <button className="cor-back" onClick={onClose}>‹ Voltar para a lista</button>
-          <button className="cor-save" onClick={onClose}>Salvar correção</button>
         </div>
       </div>
     </div>
