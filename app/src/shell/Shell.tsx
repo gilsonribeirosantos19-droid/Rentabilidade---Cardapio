@@ -36,6 +36,7 @@ import { FaturamentoVendas } from '../screens/FaturamentoVendas'
 import { MonitorVendas } from '../screens/MonitorVendas'
 import { EngenhariaCardapio } from '../screens/EngenhariaCardapio'
 import { CurvaAbcVendas } from '../screens/CurvaAbcVendas'
+import { SugestaoCompra } from '../screens/SugestaoCompra'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -64,6 +65,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'ajustes/custo') return <AjusteCustoMedio />
   if (k === 'ajustes/recalcular') return <Recalcular />
   if (k === 'compras/pedidos') return <Compras />
+  if (k === 'compras/sugestao') return <SugestaoCompra />
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
@@ -130,7 +132,7 @@ export function Shell() {
           </div>
           <div className="tr">
             {/* telas com filtro de loja próprio escondem o seletor global (ex.: Monitor de Vendas, Faturamento, Engenharia) */}
-            {!['pdv/importar', 'pdv/faturamento', 'pdv/engenharia', 'pdv/abc'].includes(active) && (
+            {!['pdv/importar', 'pdv/faturamento', 'pdv/engenharia', 'pdv/abc', 'compras/sugestao'].includes(active) && (
               <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
                 <option value="">Todas as lojas</option>
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
