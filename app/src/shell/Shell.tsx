@@ -37,6 +37,7 @@ import { MonitorVendas } from '../screens/MonitorVendas'
 import { EngenhariaCardapio } from '../screens/EngenhariaCardapio'
 import { CurvaAbcVendas } from '../screens/CurvaAbcVendas'
 import { SugestaoCompra } from '../screens/SugestaoCompra'
+import { ConfigGeral } from '../screens/ConfigGeral'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -66,6 +67,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'ajustes/recalcular') return <Recalcular />
   if (k === 'compras/pedidos') return <Compras />
   if (k === 'compras/sugestao') return <SugestaoCompra />
+  if (k === 'config/geral') return <ConfigGeral />
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
