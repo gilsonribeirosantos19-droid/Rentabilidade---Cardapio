@@ -38,11 +38,13 @@ export function SugestaoCompra() {
   const [ideal, setIdeal] = useState<number[]>(MOCK.map((r) => r.sug))
   const [sel, setSel] = useState<boolean[]>(MOCK.map(() => false))
   const [drawer, setDrawer] = useState<number | null>(null)
-  const [fornSel, setFornSel] = useState('Salmão Filé'); void fornSel
+  const [toast, setToast] = useState<string | null>(null)
 
   const setIdealAt = (i: number, v: string) => setIdeal((p) => p.map((x, j) => (j === i ? parseNum(v) : x)))
   const toggle = (i: number) => setSel((p) => p.map((x, j) => (j === i ? !x : x)))
   const toggleAll = (on: boolean) => setSel(MOCK.map(() => on))
+  const showToast = (m: string) => { setToast(m); window.setTimeout(() => setToast(null), 2600) }
+  const recalcular = () => { setIdeal(MOCK.map((r) => r.sug)); showToast('Sugestões recalculadas com base no consumo atual.') }
 
   const foot = useMemo(() => {
     let n = 0, qtd = 0, val = 0
@@ -69,8 +71,7 @@ export function SugestaoCompra() {
         <div className="fld"><label>Categoria</label><select><option>Todas</option><option>Peixes</option><option>Secos</option></select></div>
         <div className="fld"><label>Buscar item</label><input placeholder="Código ou descrição..." /></div>
         <div className="grow" />
-        <button className="btn btn-solid">Recalcular sugestão</button>
-        <button className="btn">Mais filtros</button>
+        <button className="btn btn-solid" onClick={recalcular}>Recalcular sugestão</button>
         <button className="btn">Exportar</button>
       </div>
 
@@ -201,27 +202,91 @@ export function SugestaoCompra() {
           </div>
         </>
       )}
+
+      {toast && <div className="sug-toast">{toast}</div>}
     </div>
   )
 }
 
 // ===================== TELA 2 — PEDIDO DE COMPRA =====================
+// lojas (mock) — no real virão de `lojas` com razao_social/cnpj/endereco
+const LOJAS_PDF = [
+  { nome: 'Ponta Negra', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0001-39', ende: 'R. São Luíz, 105 - Adrianópolis, Manaus-AM, 69057-250' },
+  { nome: 'Djalma Batista', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0002-10', ende: 'Av. Djalma Batista, 2200 - Chapada, Manaus-AM, 69050-010' },
+  { nome: 'Cidade Nova', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0003-00', ende: 'Av. Noel Nutels, 1300 - Cidade Nova, Manaus-AM, 69095-000' },
+  { nome: 'Paraíba', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0004-82', ende: 'R. Paraíba, 45 - Adrianópolis, Manaus-AM, 69057-021' },
+  { nome: 'Centro', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0005-63', ende: 'Av. Eduardo Ribeiro, 520 - Centro, Manaus-AM, 69010-001' },
+  { nome: 'Laranjeiras', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0006-44', ende: 'R. das Laranjeiras, 88 - Flores, Manaus-AM, 69058-030' },
+  { nome: 'Distrito', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0007-25', ende: 'Av. Torquato Tapajós, 7000 - Distrito, Manaus-AM, 69083-000' },
+  { nome: 'Delivery', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0008-06', ende: 'R. Central do CD, 10 - Distrito, Manaus-AM, 69083-100' },
+]
+// itens do fornecedor Dunorte distribuídos por loja (mock)
+const ITENS_LOJA = [
+  { nome: 'Salmão Filé', qty: '100,00', un: 'KG' },
+  { nome: 'Atum', qty: '19,00', un: 'KG' },
+  { nome: 'Nori', qty: '22,00', un: 'UN' },
+  { nome: 'Shoyu', qty: '12,00', un: 'L' },
+  { nome: 'Camarão 9/12', qty: '6,00', un: 'KG' },
+]
+
+function gerarPDFsPorFornecedor(forn: string) {
+  const data = '07/06/2026'
+  const paginas = LOJAS_PDF.map((loja) => {
+    const linhas: (typeof ITENS_LOJA[number] | null)[] = [...ITENS_LOJA]
+    while (linhas.length < 8) linhas.push(null)
+    const corpo = linhas.map((it) => it
+      ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${it.qty} ${it.un}</td></tr>`
+      : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')
+    return `<div class="pagina"><table class="doc">
+      <tr><td class="cel-loja">${loja.nome.toUpperCase()}</td><td class="cel-data-label">DATA:</td><td class="cel-data">${data}</td></tr>
+      <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${loja.razao} CNPJ: ${loja.cnpj}</td></tr>
+      <tr><td colspan="3" class="cel-info">ENDEREÇO: ${loja.ende}</td></tr>
+      <tr><td colspan="2" class="cel-th">ITENS</td><td class="cel-th" style="text-align:center">QUANTIDADE</td></tr>
+      ${corpo}
+      <tr><td class="cel-footer">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">-</td></tr>
+      <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">-</td></tr>
+    </table></div>`
+  }).join('')
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Pedido — ${forn}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;color:#000}
+      body{background:#fff}
+      .pagina{page-break-after:always;padding:20px;max-width:700px;margin:0 auto}
+      .pagina:last-child{page-break-after:avoid}
+      .doc{width:100%;border-collapse:collapse;font-size:13px}
+      .doc td{border:1px solid #000;padding:6px 8px;vertical-align:middle}
+      .cel-loja{font-weight:700;font-size:14px;width:55%}
+      .cel-data-label{font-weight:700;width:15%;text-align:center}
+      .cel-data{font-weight:700;font-size:14px;width:30%;text-align:right}
+      .cel-info{font-size:12px;line-height:1.5;height:36px}
+      .cel-th{font-weight:700;font-size:13px;text-align:center;padding:8px}
+      .cel-item{height:28px;font-size:12px}
+      .cel-qty{text-align:center;font-weight:700;font-size:12px}
+      .cel-footer{font-weight:700;font-size:12px;text-align:center;padding:6px}
+      @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
+    </style></head><body>${paginas}
+    <script>window.onload=function(){window.print()}</script></body></html>`
+  const w = window.open('', '_blank'); if (!w) return
+  w.document.write(html); w.document.close()
+}
+
 function TelaPedido({ onBack }: { onBack: () => void }) {
-  const [selItem, setSelItem] = useState('Salmão Filé')
   const itens = [
-    { nm: 'Salmão Filé', tot: '800,00 kg', preco: 'R$ 42,90', val: 'R$ 34.320,00' },
-    { nm: 'Atum', tot: '150,00 kg', preco: 'R$ 38,90', val: 'R$ 5.835,00' },
-    { nm: 'Nori', tot: '180,00 un', preco: 'R$ 3,20', val: 'R$ 576,00' },
-    { nm: 'Shoyu', tot: '100,00 L', preco: 'R$ 9,80', val: 'R$ 980,00' },
-    { nm: 'Camarão 9/12', tot: '50,00 kg', preco: 'R$ 58,50', val: 'R$ 2.925,00' },
+    { nm: 'Salmão Filé', cod: 'MP0001', grp: 'Peixes', tot: '800,00 kg', preco: 'R$ 42,90', val: 'R$ 34.320,00' },
+    { nm: 'Atum', cod: 'MP0002', grp: 'Peixes', tot: '150,00 kg', preco: 'R$ 38,90', val: 'R$ 5.835,00' },
+    { nm: 'Nori', cod: 'MP0004', grp: 'Secos', tot: '180,00 un', preco: 'R$ 3,20', val: 'R$ 576,00' },
+    { nm: 'Shoyu', cod: 'MP0005', grp: 'Mercearia', tot: '100,00 L', preco: 'R$ 9,80', val: 'R$ 980,00' },
+    { nm: 'Camarão 9/12', cod: 'MP0007', grp: 'Peixes', tot: '50,00 kg', preco: 'R$ 58,50', val: 'R$ 2.925,00' },
   ]
+  const [selItem, setSelItem] = useState('Salmão Filé')
+  const cur = itens.find((x) => x.nm === selItem) || itens[0]
   const lojasDist = [
     ['Ponta Negra', '100,00', '8,00', '4,0 d'], ['Djalma Batista', '100,00', '12,00', '5,0 d'],
     ['Cidade Nova', '100,00', '10,00', '4,5 d'], ['Paraíba', '100,00', '7,00', '3,5 d'],
     ['Centro', '100,00', '9,00', '4,0 d'], ['Laranjeiras', '100,00', '6,00', '3,0 d'],
     ['Distrito', '100,00', '6,00', '3,0 d'], ['Delivery', '100,00', '0,00', '0,0 d'],
   ]
-  const gerarPDFs = () => alert('Protótipo: gera 1 PDF por fornecedor, com a distribuição por loja dentro.')
+  const gerarPDFs = () => gerarPDFsPorFornecedor('Dunorte Distribuidora')
 
   return (
     <div className="sug-screen">
@@ -259,13 +324,13 @@ function TelaPedido({ onBack }: { onBack: () => void }) {
         </div>
 
         <div className="panel">
-          <div className="panel-h"><span className="t">{selItem} <span className="mono muted" style={{ fontWeight: 400 }}>MP0001 · Peixes</span></span><button className="mini">Ver análise do item</button></div>
+          <div className="panel-h"><span className="t">{cur.nm} <span className="mono muted" style={{ fontWeight: 400 }}>{cur.cod} · {cur.grp}</span></span><button className="mini">Ver análise do item</button></div>
           <div className="dtl-top">
-            <div className="c2"><div className="k">Total Geral</div><div className="v">800,00 kg</div></div>
+            <div className="c2"><div className="k">Total Geral</div><div className="v">{cur.tot}</div></div>
             <div className="c2"><div className="k">Total por loja (média)</div><div className="v">100,00 kg</div></div>
             <div className="c2"><div className="k">Fornecedor selecionado</div><div className="v">Dunorte Distribuidora</div></div>
-            <div className="c2"><div className="k">Preço unitário</div><div className="v">R$ 42,90 <span className="muted" style={{ fontSize: 11 }}>/kg</span></div></div>
-            <div className="c2"><div className="k">Valor total</div><div className="v">R$ 34.320,00</div></div>
+            <div className="c2"><div className="k">Preço unitário</div><div className="v">{cur.preco}</div></div>
+            <div className="c2"><div className="k">Valor total</div><div className="v">{cur.val}</div></div>
           </div>
           <div className="split">
             <div style={{ padding: '12px 14px' }}>

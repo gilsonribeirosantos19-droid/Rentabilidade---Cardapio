@@ -4,7 +4,7 @@
 .sug-screen .muted { color: #64748b; }
 
 /* toolbar densa */
-.sug-screen .sug-toolbar { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.sug-screen .sug-toolbar { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 12px; margin-bottom: 10px; }
 .sug-screen .fld { display: flex; flex-direction: column; gap: 2px; }
 .sug-screen .fld label { font-size: 10px; color: #64748b; font-weight: 500; }
 .sug-screen .fld select, .sug-screen .fld input { height: 32px; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0 10px; font-size: 12.5px; background: #fff; color: #0f172a; font-family: inherit; min-width: 130px; }
@@ -93,3 +93,6 @@
 .sug-screen .resumo .row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; border-bottom: 1px solid #f2f5f9; }
 .sug-screen .resumo .row .k { color: #64748b; }
 .sug-screen .link-btn { width: 100%; margin-top: 9px; height: 30px; border: 1px solid #cbd5e1; background: #fff; border-radius: 7px; font-size: 12px; color: #334155; cursor: pointer; }
+
+/* toast */
+.sug-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 12.5px; z-index: 80; box-shadow: 0 6px 20px rgba(0,0,0,.2); }
