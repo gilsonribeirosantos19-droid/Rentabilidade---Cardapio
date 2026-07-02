@@ -50,6 +50,11 @@ export function MonitorVendas() {
   const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma loja' : lojaSet.size === 1 ? (lojas.find((l) => lojaSet.has(l.id))?.nome || '1 loja') : `${lojaSet.size} lojas`
   const toggleLoja = (id: string) => setLojaSet((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
   const toggleTodasLojas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.id)))
+  const setPeriodo = (tipo: string) => {
+    const d = new Date()
+    if (tipo === 'mes_atual') { setDe(mesInicio()); setAte(mesFim()) }
+    else if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
+  }
   const [chips, setChips] = useState<Set<Situacao>>(new Set(ORDER))
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [detId, setDetId] = useState<string | null>(null)
@@ -104,9 +109,15 @@ export function MonitorVendas() {
             </>}
           </div>
         </div>
-        <div className="ds-field"><label>PDV</label><select className="field"><option>Todos</option><option>iComanda</option><option>Saipos</option><option>Aloha</option></select></div>
         <div className="ds-field"><label>Tipo</label><select className="field"><option>Venda</option><option>Financeiro</option></select></div>
-        <div className="ds-field"><label>Período</label><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
+        <div className="ds-field"><label>Período</label>
+          <select className="field" defaultValue="mes_atual" onChange={(e) => setPeriodo(e.target.value)} style={{ minWidth: 130 }}>
+            <option value="periodo">Personalizado</option>
+            <option value="mes_atual">Mês Atual</option>
+            <option value="mes_anterior">Mês Anterior</option>
+          </select>
+        </div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
         <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
         <div className="ds-actions">
           <button className="btn-ghost">Limpar</button>
