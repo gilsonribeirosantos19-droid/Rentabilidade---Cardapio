@@ -46,7 +46,7 @@ export function Insumos() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   // filtros Produtos
   const [busca, setBusca] = useState(''); const [fTipo, setFTipo] = useState(''); const [fFam, setFFam] = useState('')
-  const [fGrupo, setFGrupo] = useState(''); const [fSub, setFSub] = useState(''); const [fStatus, setFStatus] = useState(''); const [fEstq, setFEstq] = useState('')
+  const [fGrupo, setFGrupo] = useState(''); const [fSub, setFSub] = useState(''); const [fStatus, setFStatus] = useState('')
   // filtros Custos
   const [cBusca, setCBusca] = useState(''); const [cCat, setCCat] = useState(''); const [cStatus, setCStatus] = useState('')
 
@@ -88,10 +88,9 @@ export function Insumos() {
       // Status: 'false' = só inativos; 'true' ou vazio (padrão) = só ativos (igual ao original)
       if (fStatus === 'false') { if (i.ativo !== false) return false }
       else if (i.ativo === false) return false
-      if (fEstq && getStatus(i) !== fEstq) return false
       return true
     })
-  }, [lista, busca, fTipo, fFam, fGrupo, fSub, fStatus, fEstq])
+  }, [lista, busca, fTipo, fFam, fGrupo, fSub, fStatus])
 
   const custos = useMemo(() => {
     const q = norm(cBusca.trim())
@@ -202,7 +201,6 @@ export function Insumos() {
             <FSel value={fGrupo} onChange={setFGrupo} ph="Grupo ▾" options={opts.grupos} />
             <FSel value={fSub} onChange={setFSub} ph="Subgrupo ▾" options={opts.subgrupos} />
             <select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Status ▾</option><option value="true">Ativo</option><option value="false">Inativo</option></select>
-            <select className="prod-filter" value={fEstq} onChange={(e) => setFEstq(e.target.value)}><option value="">Situação de estoque ▾</option><option value="ativo">Em estoque</option><option value="atencao">Estoque baixo</option><option value="critico">Crítico</option></select>
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
             <table>
