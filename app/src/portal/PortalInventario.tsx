@@ -32,6 +32,11 @@ export function PortalInventario() {
 
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3200) }
+  const setPeriodo = (t: string) => {
+    const d = new Date()
+    if (t === 'mes_atual') { setDataIni(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-01`); setDataFim(new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA')) }
+    else if (t === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); setDataIni(`${p.getFullYear()}-${pad2(p.getMonth() + 1)}-01`); setDataFim(new Date(d.getFullYear(), d.getMonth(), 0).toLocaleDateString('en-CA')) }
+  }
 
   const { data: insumos = [] } = useQuery({ queryKey: ['pinv-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,codigo_interno,unidade_medida,unidade_compra').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
@@ -84,6 +89,7 @@ export function PortalInventario() {
       <div className="p-sub">Consulte os inventários da sua loja e preencha a contagem dos itens.</div>
 
       <div className="pf-bar">
+        <div className="pf-fld"><label>Período</label><select className="p-field" defaultValue="mes_atual" onChange={(e) => setPeriodo(e.target.value)}><option value="personalizado">Personalizado</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option></select></div>
         <div className="pf-fld"><label>De *</label><input type="date" className="p-field" value={dataIni} onChange={(e) => setDataIni(e.target.value)} /></div>
         <div className="pf-fld"><label>Até *</label><input type="date" className="p-field" value={dataFim} onChange={(e) => setDataFim(e.target.value)} /></div>
         <div className="pf-fld"><label>Situação</label>
