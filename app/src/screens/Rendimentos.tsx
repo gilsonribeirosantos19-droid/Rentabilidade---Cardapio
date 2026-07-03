@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
@@ -28,6 +29,7 @@ const novoForm = (): Form => ({ insumo_id: '', peso_bruto: '', peso_liquido: '',
 
 export function Rendimentos() {
   const { tenantId } = useAuth()
+  const { lojaId } = useLoja()
   const qc = useQueryClient()
   const [fInsumo, setFInsumo] = useState('')
   const ini = periodoRange('mes_atual')!
@@ -55,8 +57,8 @@ export function Rendimentos() {
   const insumos = data?.insumos ?? []
   const testes = data?.testes ?? []
   const insMap = useMemo(() => { const m: Record<string, Insumo> = {}; insumos.forEach((i) => { m[i.id] = i }); return m }, [insumos])
-  // custo por kg — custo médio do saldo, fallback preço de compra (mesma fonte do HTML)
-  const custoKg = (id: string) => custoDoInsumo(id, null, { saldos: data?.saldos, insumos, vinculos: data?.vinc })
+  // custo por kg — custo médio da LOJA selecionada (topo), fallback qualquer loja/preço de compra
+  const custoKg = (id: string) => custoDoInsumo(id, lojaId, { saldos: data?.saldos, insumos, vinculos: data?.vinc })
 
   // selects: só insumos ATIVOS (a lista inclui inativos só p/ resolver nome de testes antigos)
   const ativos = useMemo(() => insumos.filter((i) => i.ativo !== false), [insumos])

@@ -96,19 +96,21 @@ export function Fechamento() {
     const { de, ate } = monthBounds(comp)
     const cmvSet = new Set(base.insumos.filter((i) => i.participa_cmv !== 'nao').map((i) => i.id))
     const insMap: Record<string, Insumo> = {}; base.insumos.forEach((i) => { insMap[i.id] = i })
-    const cmFim: Record<string, number> = {}
-    base.insumos.forEach((ins) => { try { cmFim[ins.id] = custoDoInsumo(ins.id, null, { entradas: base.entradas, saidas: base.saidas, insumos: base.insumos, saldos: base.saldos, dataLimite: ate }) } catch { cmFim[ins.id] = 0 } })
     const entMes = base.entradas.filter((e) => { const d = dataOf(e); return d >= de && d <= ate })
     const saiMes = base.saidas.filter((s) => { const d = dataOf(s); return d >= de && d <= ate })
 
     const compoLoja = (l: Loja) => {
       const { ini, fin } = invMap[l.id] || { ini: null, fin: null }
+      // custo médio de fim de mês POR LOJA (entradas/saídas + saldo daquela loja)
+      const ctxL = { entradas: base.entradas.filter((e) => e.loja_id === l.id), saidas: base.saidas.filter((s) => s.loja_id === l.id), insumos: base.insumos, saldos: base.saldos, dataLimite: ate }
+      const cmCache: Record<string, number> = {}
+      const cmFimL = (id: string) => { if (cmCache[id] == null) { try { cmCache[id] = custoDoInsumo(id, l.id, ctxL) } catch { cmCache[id] = 0 } } return cmCache[id] }
       const byIns: Record<string, ItemRow> = {}
       const ens = (id: string) => byIns[id] || (byIns[id] = { id, nome: insMap[id]?.nome || '—', un: insMap[id]?.unidade_medida || '', ei: 0, compras: 0, entT: 0, saiT: 0, consumo: 0, perdas: 0, ef: 0, cmv: 0 })
       const addInv = (inv: Inv | null, campo: 'ei' | 'ef') => { (inv && itensByInv[inv.id] || []).forEach((it) => { if (cmvSet.has(it.insumo_id)) ens(it.insumo_id)[campo] += (it.qtd_contada || 0) * (it.custo_medio || 0) }) }
       addInv(ini, 'ei'); addInv(fin, 'ef')
       entMes.filter((e) => e.loja_id === l.id && cmvSet.has(e.insumo_id)).forEach((e) => { const o = ens(e.insumo_id), v = (e.quantidade || 0) * (e.custo_unitario || 0); if (e.tipo === 'transferencia') o.entT += v; else o.compras += v })
-      saiMes.filter((s) => s.loja_id === l.id && cmvSet.has(s.insumo_id)).forEach((s) => { const o = ens(s.insumo_id), v = (s.quantidade || 0) * (cmFim[s.insumo_id] || 0); if (s.tipo === 'consumo') o.consumo += v; else if (s.tipo === 'transferencia') o.saiT += v; else if (['perda', 'vencimento', 'descarte'].includes(s.tipo || '')) o.perdas += v })
+      saiMes.filter((s) => s.loja_id === l.id && cmvSet.has(s.insumo_id)).forEach((s) => { const o = ens(s.insumo_id), v = (s.quantidade || 0) * cmFimL(s.insumo_id); if (s.tipo === 'consumo') o.consumo += v; else if (s.tipo === 'transferencia') o.saiT += v; else if (['perda', 'vencimento', 'descarte'].includes(s.tipo || '')) o.perdas += v })
       const itens = Object.values(byIns).map((o) => ({ ...o, cmv: o.ei + o.compras + o.entT + o.perdas - o.ef }))
         .filter((o) => o.ei || o.compras || o.entT || o.consumo || o.perdas || o.saiT || o.ef)
         .sort((a, b) => b.cmv - a.cmv)
