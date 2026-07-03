@@ -75,7 +75,6 @@ export const MODULES: Module[] = [
     id: 'pdv', label: 'PDV', icon: 'cart',
     sections: [
       { label: 'Faturamento', key: 'pdv/faturamento' },
-      { label: 'Faturamento por Produto', key: 'pdv/produto' },
       { label: 'Curva ABC', key: 'pdv/abc' },
       { label: 'Engenharia de Cardápio', key: 'pdv/engenharia' },
       { label: 'Recebimento de Vendas', key: 'pdv/importar' },
