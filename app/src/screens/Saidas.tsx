@@ -115,6 +115,7 @@ export function Saidas() {
     const n = new Date()
     if (v === 'mes_atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
     else if (v === 'mes_anterior') { setDe(iso(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(iso(new Date(n.getFullYear(), n.getMonth(), 0))) }
+    else { setDe(''); setAte('') }
     setPag(1)
   }
 

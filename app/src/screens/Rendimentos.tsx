@@ -76,7 +76,7 @@ export function Rendimentos() {
   const pagAtual = Math.min(pag, totalPags)
   const slice = filtrado.slice((pagAtual - 1) * porPag, (pagAtual - 1) * porPag + porPag)
 
-  const setPeriodo = (tipo: string) => { const r = periodoRange(tipo); if (r) { setDe(r.de); setAte(r.ate); setPag(1) } }
+  const setPeriodo = (tipo: string) => { const r = periodoRange(tipo); if (r) { setDe(r.de); setAte(r.ate); setPag(1) } else { setDe(''); setAte(''); setPag(1) } }
 
   const saveMut = useMutation({
     mutationFn: async ({ id, form }: { id: string | null; form: Form }) => {

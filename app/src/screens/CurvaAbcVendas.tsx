@@ -97,6 +97,7 @@ export function CurvaAbcVendas() {
     const d = new Date()
     if (tipo === 'mes_atual') { setDe(mesInicio()); setAte(mesFim()) }
     else if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
+    else { setDe(''); setAte('') }
   }
 
   // 1) filtra por período/loja/busca/zerado; 2) ordena por V.Líquida desc; 3) classifica A/B/C acumulado

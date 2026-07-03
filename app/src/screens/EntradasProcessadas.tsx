@@ -68,7 +68,7 @@ export function EntradasProcessadas() {
     setPeriodo(v); const d = new Date()
     if (v === 'mes_atual') { setDe(isoD(new Date(d.getFullYear(), d.getMonth(), 1))); setAte(isoD(d)) }
     else if (v === 'mes_anterior') { setDe(isoD(new Date(d.getFullYear(), d.getMonth() - 1, 1))); setAte(isoD(new Date(d.getFullYear(), d.getMonth(), 0))) }
-    else if (v === 'todos') { setDe(''); setAte('') }
+    else { setDe(''); setAte('') }
     setPag(1)
   }
   const limpar = () => { setFForn(''); setFNum(''); aplicarPeriodo('mes_atual') }

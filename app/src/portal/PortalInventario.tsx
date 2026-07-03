@@ -36,6 +36,7 @@ export function PortalInventario() {
     const d = new Date()
     if (t === 'mes_atual') { setDataIni(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-01`); setDataFim(new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA')) }
     else if (t === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); setDataIni(`${p.getFullYear()}-${pad2(p.getMonth() + 1)}-01`); setDataFim(new Date(d.getFullYear(), d.getMonth(), 0).toLocaleDateString('en-CA')) }
+    else { setDataIni(''); setDataFim('') }
   }
 
   const { data: insumos = [] } = useQuery({ queryKey: ['pinv-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,codigo_interno,unidade_medida,unidade_compra').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })

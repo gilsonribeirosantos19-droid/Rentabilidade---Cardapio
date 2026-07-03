@@ -79,7 +79,7 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
   const totalPags = Math.max(1, Math.ceil(pedidos.length / SOL_PER_PAGE)); const pagAtual = Math.min(pag, totalPags)
   const page = pedidos.slice((pagAtual - 1) * SOL_PER_PAGE, pagAtual * SOL_PER_PAGE)
-  const aplicarPeriodo = (v: string) => { setPeriodo(v); const d = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(d.getFullYear(), d.getMonth(), 1))); setAte(isoD(d)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(d.getFullYear(), d.getMonth() - 1, 1))); setAte(isoD(new Date(d.getFullYear(), d.getMonth(), 0))) }; setPag(1) }
+  const aplicarPeriodo = (v: string) => { setPeriodo(v); const d = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(d.getFullYear(), d.getMonth(), 1))); setAte(isoD(d)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(d.getFullYear(), d.getMonth() - 1, 1))); setAte(isoD(new Date(d.getFullYear(), d.getMonth(), 0))) } else { setDe(''); setAte('') }; setPag(1) }
 
   return (
     <>

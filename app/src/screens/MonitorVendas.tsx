@@ -54,6 +54,7 @@ export function MonitorVendas() {
     const d = new Date()
     if (tipo === 'mes_atual') { setDe(mesInicio()); setAte(mesFim()) }
     else if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
+    else { setDe(''); setAte('') }
   }
   const [chips, setChips] = useState<Set<Situacao>>(new Set(ORDER))
   const [sel, setSel] = useState<Set<string>>(new Set())

@@ -160,6 +160,7 @@ export function Movimentacao() {
     const now = new Date()
     if (v === 'mes_atual') { setDe(iso(new Date(now.getFullYear(), now.getMonth(), 1))); setAte(iso(now)) }
     else if (v === 'mes_anterior') { setDe(iso(new Date(now.getFullYear(), now.getMonth() - 1, 1))); setAte(iso(new Date(now.getFullYear(), now.getMonth(), 0))) }
+    else { setDe(''); setAte('') }
   }
   const limpar = () => { setCatF(''); setBusca(''); setTipo(''); setFamilia(''); setSubgrupo(''); setFornecedor(''); setUnidade(''); setCmvMode('todos'); setComSaldo(true); setSoCmv(false) }
 

@@ -138,7 +138,7 @@ export function Entradas() {
 
   const verEntrada = (e: Entrada) => { const ins = insMap[e.insumo_id]; alert(`Entrada\n\nInsumo: ${ins?.nome || '—'}\nFornecedor: ${e.fornecedor_nome || '—'}\nQuantidade: ${qtd(e.quantidade)}\nCusto unit.: ${brl(e.custo_unitario)}\nCusto total: ${brl(e.custo_total)}\nLote: ${e.lote || '—'}\nValidade: ${fmtDate(e.validade)}\nTipo: ${e.tipo}\nData: ${fmtDH(e.criado_em)}`) }
   const duplicar = (e: Entrada) => { setDup({ insumo_id: e.insumo_id, fornecedor_id: e.fornecedor_id || '', data: hojeStr(), qtd: String(e.quantidade_fornecedor || e.quantidade || ''), unidade: e.unidade_compra || '', fator: String(e.fator_conversao || 1), custo: String(e.custo_unitario || ''), lote: e.lote || '', validade: '', obs: '' }); setModal(true) }
-  const setPreset = (v: string) => { const n = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(isoD(n)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(isoD(new Date(n.getFullYear(), n.getMonth(), 0))) } setPag(1) }
+  const setPreset = (v: string) => { const n = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(isoD(n)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(isoD(new Date(n.getFullYear(), n.getMonth(), 0))) } else { setDe(''); setAte('') } setPag(1) }
 
   return (
     <div className="est-screen">

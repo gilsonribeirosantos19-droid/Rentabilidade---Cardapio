@@ -135,7 +135,7 @@ export function CmvTeoricoReal() {
     return { tTeo, tReal, tDQ, tPct, tImp, crit, okC, atenC }
   }, [rows])
 
-  const setPeriodo = (tipo: string) => { const p = periodoRange(tipo); if (p) { setDe(p.de); setAte(p.ate) } }
+  const setPeriodo = (tipo: string) => { const p = periodoRange(tipo); if (p) { setDe(p.de); setAte(p.ate) } else { setDe(''); setAte('') } }
 
   const exportCSV = () => {
     if (!calc) { showToast('Calcule primeiro.', 'err'); return }
