@@ -1,30 +1,32 @@
 import { useMemo, useState } from 'react'
 import type { ChartConfiguration } from 'chart.js'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { ChartBox } from '../components/ChartBox'
 import './sugestao.css'
 
 // Sugestão de Compra (Compras) — responde "o que precisamos comprar?".
-// A escolha do fornecedor acontece só na Tela 2 (Pedido de Compra).
-// TELA MOCK: dados de exemplo. Depende de estoque mínimo / pedido em aberto /
-// mercadoria em trânsito / consumo — dados que ainda serão ligados ao real.
+// DADOS REAIS: estoque/mínimo/custo (saldo_estoque), consumo (saidas_estoque),
+// pedido aberto/em trânsito (pedidos_compra + itens_pedido). Sugestão calculada.
+// A Tela 2 (Pedido) e os gráficos de histórico do drawer ainda são mock.
 
-type Item = { cod: string; desc: string; grp: string; un: string; est: string; cons: string; cobA: string; cobD: string; rup: string; min: string; ab: string; tr: string; sug: number; custo: number; custoTxt: string }
-
-const MOCK: Item[] = [
-  { cod: 'MP0001', desc: 'Salmão Filé', grp: 'Peixes', un: 'kg', est: '58,00', cons: '12,00', cobA: '4,8', cobD: '7', rup: '7,3', min: '15,00', ab: '20,00', tr: '10,00', sug: 24, custo: 42.90, custoTxt: 'R$ 42,90 /kg' },
-  { cod: 'MP0002', desc: 'Atum', grp: 'Peixes', un: 'kg', est: '22,00', cons: '8,00', cobA: '2,8', cobD: '7', rup: '2,8', min: '20,00', ab: '—', tr: '—', sug: 42, custo: 38.90, custoTxt: 'R$ 38,90 /kg' },
-  { cod: 'MP0003', desc: 'Arroz Japonês', grp: 'Secos', un: 'kg', est: '80,00', cons: '10,00', cobA: '8,0', cobD: '7', rup: '12,0', min: '50,00', ab: '—', tr: '40,00', sug: 0, custo: 7.20, custoTxt: 'R$ 7,20 /kg' },
-  { cod: 'MP0004', desc: 'Nori', grp: 'Secos', un: 'un', est: '120,00', cons: '25,00', cobA: '4,8', cobD: '7', rup: '4,8', min: '50,00', ab: '—', tr: '—', sug: 55, custo: 3.20, custoTxt: 'R$ 3,20 /un' },
-  { cod: 'MP0005', desc: 'Shoyu', grp: 'Mercearia', un: 'L', est: '18,00', cons: '7,50', cobA: '2,4', cobD: '7', rup: '2,4', min: '20,00', ab: '—', tr: '—', sug: 56, custo: 9.80, custoTxt: 'R$ 9,80 /L' },
-  { cod: 'MP0006', desc: 'Cream Cheese', grp: 'Laticínios', un: 'kg', est: '40,00', cons: '7,00', cobA: '5,7', cobD: '7', rup: '7,1', min: '30,00', ab: '10,00', tr: '—', sug: 9, custo: 14.50, custoTxt: 'R$ 14,50 /kg' },
-  { cod: 'MP0007', desc: 'Camarão 9/12', grp: 'Peixes', un: 'kg', est: '12,00', cons: '3,60', cobA: '3,3', cobD: '7', rup: '3,3', min: '25,00', ab: '—', tr: '—', sug: 38, custo: 58.50, custoTxt: 'R$ 58,50 /kg' },
-  { cod: 'MP0008', desc: 'Gergelim Mix', grp: 'Secos', un: 'kg', est: '30,00', cons: '2,00', cobA: '15,0', cobD: '7', rup: '15,0', min: '10,00', ab: '—', tr: '—', sug: 0, custo: 22.00, custoTxt: 'R$ 22,00 /kg' },
-]
+type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; preco_compra?: number; unidade_medida?: string; unidade_compra?: string }
+type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number; minimo?: number | null; loja_id?: string }
+type Saida = { insumo_id: string; quantidade?: number; loja_id?: string }
+type Pedido = { id: string; status?: string; loja_id?: string }
+type ItemPed = { pedido_id: string; insumo_id: string; quantidade?: number }
+type Row = { insumoId: string; cod: string; desc: string; grp: string; un: string; est: number; min: number; cons: number; ab: number; tr: number; custo: number; sug: number }
 
 const brl = (n: number) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const q2 = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const parseNum = (v: string) => parseFloat((v || '0').replace(/\./g, '').replace(',', '.')) || 0
+const fmtCod = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')
+const un = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
+const norm = (s?: string) => (s || '').toLowerCase().trim()
+const RECEBIDO = ['recebido', 'recebida', 'concluido', 'concluida', 'finalizado', 'finalizada', 'cancelado', 'cancelada']
+const TRANSITO = ['em_transito', 'em transito', 'transito', 'enviado', 'enviada', 'trânsito']
 
 const baseChart = (): ChartConfiguration['options'] => ({
   responsive: true, maintainAspectRatio: false,
@@ -33,43 +35,92 @@ const baseChart = (): ChartConfiguration['options'] => ({
 })
 
 export function SugestaoCompra() {
+  const { tenantId } = useAuth()
   const { lojas } = useLoja()
   const [view, setView] = useState<'sugestao' | 'pedido'>('sugestao')
-  const [ideal, setIdeal] = useState<number[]>(MOCK.map((r) => r.sug))
-  const [sel, setSel] = useState<boolean[]>(MOCK.map(() => false))
-  const [drawer, setDrawer] = useState<number | null>(null)
+  const [lojaFil, setLojaFil] = useState('')
+  const [periodoDias, setPeriodoDias] = useState(30)
+  const [coberturaDias, setCoberturaDias] = useState(7)
+  const [cat, setCat] = useState('')
+  const [busca, setBusca] = useState('')
+  const [ideal, setIdeal] = useState<Record<string, string>>({})
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const [drawer, setDrawer] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
-
-  const setIdealAt = (i: number, v: string) => setIdeal((p) => p.map((x, j) => (j === i ? parseNum(v) : x)))
-  const toggle = (i: number) => setSel((p) => p.map((x, j) => (j === i ? !x : x)))
-  const toggleAll = (on: boolean) => setSel(MOCK.map(() => on))
   const showToast = (m: string) => { setToast(m); window.setTimeout(() => setToast(null), 2600) }
-  const recalcular = () => { setIdeal(MOCK.map((r) => r.sug)); showToast('Sugestões recalculadas com base no consumo atual.') }
 
-  const foot = useMemo(() => {
-    let n = 0, qtd = 0, val = 0
-    sel.forEach((s, i) => { if (s) { n++; qtd += ideal[i]; val += ideal[i] * MOCK[i].custo } })
-    return { n, qtd, val }
-  }, [sel, ideal])
+  const desdeISO = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - periodoDias); return d.toISOString() }, [periodoDias])
 
-  // gráficos do drawer (monocromático) — configs estáveis
+  const { data: insumos = [] } = useQuery({ queryKey: ['sug-ins', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Insumo[] } })
+  const { data: saldos = [] } = useQuery({ queryKey: ['sug-saldos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId); return (data ?? []) as Saldo[] } })
+  const { data: saidas = [] } = useQuery({ queryKey: ['sug-saidas', tenantId, desdeISO], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id').eq('tenant_id', tenantId).gte('criado_em', desdeISO); return (data ?? []) as Saida[] } })
+  // pedidos + seus itens: itens_pedido não tem tenant_id — busca pelos IDs dos pedidos do tenant
+  const { data: ped = { pedidos: [] as Pedido[], itens: [] as ItemPed[] } } = useQuery({
+    queryKey: ['sug-ped', tenantId], enabled: !!tenantId,
+    queryFn: async () => {
+      const { data: pd } = await supabase.from('pedidos_compra').select('id,status,loja_id').eq('tenant_id', tenantId)
+      const ps = (pd ?? []) as Pedido[]
+      if (!ps.length) return { pedidos: ps, itens: [] as ItemPed[] }
+      const { data: it } = await supabase.from('itens_pedido').select('pedido_id,insumo_id,quantidade').in('pedido_id', ps.map((p) => p.id))
+      return { pedidos: ps, itens: (it ?? []) as ItemPed[] }
+    },
+  })
+
+  const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
+
+  // agregações por insumo (respeitando o filtro de loja)
+  const est = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.quantidade) || 0) }); return m }, [saldos, lojaFil])
+  const min = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.minimo) || 0) }); return m }, [saldos, lojaFil])
+  const cmMap = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { const c = Number(s.custo_medio) || 0; if (c > (m[s.insumo_id] || 0)) m[s.insumo_id] = c }); return m }, [saldos])
+  const consMap = useMemo(() => { const m: Record<string, number> = {}; saidas.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.quantidade) || 0) }); const out: Record<string, number> = {}; for (const k in m) out[k] = m[k] / periodoDias; return out }, [saidas, lojaFil, periodoDias])
+  const pedMap = useMemo(() => {
+    const pById = Object.fromEntries(ped.pedidos.map((p) => [p.id, p])) as Record<string, Pedido>
+    const ab: Record<string, number> = {}, tr: Record<string, number> = {}
+    ped.itens.forEach((it) => { const p = pById[it.pedido_id]; if (!p) return; const st = norm(p.status); if (RECEBIDO.includes(st)) return; if (lojaFil && p.loja_id !== lojaFil) return; const q = Number(it.quantidade) || 0; if (TRANSITO.includes(st)) tr[it.insumo_id] = (tr[it.insumo_id] || 0) + q; else ab[it.insumo_id] = (ab[it.insumo_id] || 0) + q })
+    return { ab, tr }
+  }, [ped, lojaFil])
+
+  const rows = useMemo<Row[]>(() => {
+    const b = norm(busca)
+    return insumos.map((i) => {
+      const cons = consMap[i.id] || 0, e = est[i.id] || 0, mn = min[i.id] || 0, ab = pedMap.ab[i.id] || 0, tr = pedMap.tr[i.id] || 0
+      const alvo = Math.max(cons * coberturaDias, mn)
+      const sug = Math.max(0, alvo - e - ab - tr)
+      const custo = cmMap[i.id] > 0 ? cmMap[i.id] : (i.preco_compra || 0)
+      return { insumoId: i.id, cod: fmtCod(i.codigo_interno), desc: i.nome || '—', grp: i.categoria || '—', un: un(i), est: e, min: mn, cons, ab, tr, custo, sug }
+    })
+      .filter((r) => (r.sug > 0 || r.est > 0 || r.min > 0 || r.cons > 0))
+      .filter((r) => (!cat || r.grp === cat))
+      .filter((r) => (!b || r.desc.toLowerCase().includes(b) || r.cod.includes(b)))
+      .sort((a, z) => z.sug - a.sug || a.desc.localeCompare(z.desc, 'pt-BR'))
+  }, [insumos, consMap, est, min, pedMap, cmMap, coberturaDias, cat, busca])
+
+  const cats = useMemo(() => [...new Set(insumos.map((i) => i.categoria).filter(Boolean))].sort() as string[], [insumos])
+  const idealNum = (r: Row) => (ideal[r.insumoId] != null ? parseNum(ideal[r.insumoId]) : r.sug)
+  const setIdealAt = (id: string, v: string) => setIdeal((p) => ({ ...p, [id]: v }))
+  const toggle = (id: string) => setSel((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const toggleAll = (on: boolean) => setSel(on ? new Set(rows.map((r) => r.insumoId)) : new Set())
+  const recalcular = () => { setIdeal({}); showToast('Sugestões recalculadas com base no consumo e estoque atuais.') }
+
+  const foot = useMemo(() => { let n = 0, qtd = 0, val = 0; rows.forEach((r) => { if (sel.has(r.insumoId)) { const q = idealNum(r); n++; qtd += q; val += q * r.custo } }); return { n, qtd, val } }, [rows, sel, ideal])
+
   const chMes = useMemo<ChartConfiguration>(() => ({ type: 'bar', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [280, 300, 340, 360, 330, 395], backgroundColor: '#334155', borderRadius: 3, barPercentage: 0.6 }] }, options: baseChart() }), [])
   const chPreco = useMemo<ChartConfiguration>(() => ({ type: 'line', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [40.5, 41.2, 41.8, 43.0, 44.1, 42.9], borderColor: '#334155', backgroundColor: 'rgba(51,65,85,.06)', fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2 }] }, options: baseChart() }), [])
   const chEstoque = useMemo<ChartConfiguration>(() => ({ type: 'line', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [120, 95, 140, 70, 110, 58], borderColor: '#94a3b8', backgroundColor: 'rgba(148,163,184,.08)', fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2 }] }, options: baseChart() }), [])
 
   if (view === 'pedido') return <TelaPedido onBack={() => setView('sugestao')} />
 
-  const dr = drawer != null ? MOCK[drawer] : null
+  const dr = drawer != null ? rows.find((r) => r.insumoId === drawer) : null
+  const allSel = rows.length > 0 && rows.every((r) => sel.has(r.insumoId))
 
   return (
     <div className="sug-screen">
       <div className="sug-toolbar">
-        <div className="fld"><label>Loja</label><select><option>Todas as lojas ({lojas.length || 8})</option>{lojas.map((l) => <option key={l.id}>{l.nome}</option>)}</select></div>
-        <div className="fld"><label>Período de análise</label><select><option>Últimos 30 dias</option><option>Últimos 60 dias</option><option>Últimos 90 dias</option></select></div>
-        <div className="fld"><label>Cobertura desejada</label><select><option>7 dias</option><option>15 dias</option><option>30 dias</option></select></div>
-        <div className="fld"><label>Grupo de solicitação</label><select><option>Todos</option><option>Peixes e Frutos do Mar</option><option>Secos</option></select></div>
-        <div className="fld"><label>Categoria</label><select><option>Todas</option><option>Peixes</option><option>Secos</option></select></div>
-        <div className="fld"><label>Buscar item</label><input placeholder="Código ou descrição..." /></div>
+        <div className="fld"><label>Loja</label><select value={lojaFil} onChange={(e) => setLojaFil(e.target.value)}><option value="">Todas as lojas ({lojas.length || '—'})</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>
+        <div className="fld"><label>Período de análise</label><select value={periodoDias} onChange={(e) => setPeriodoDias(Number(e.target.value))}><option value={30}>Últimos 30 dias</option><option value={60}>Últimos 60 dias</option><option value={90}>Últimos 90 dias</option></select></div>
+        <div className="fld"><label>Cobertura desejada</label><select value={coberturaDias} onChange={(e) => setCoberturaDias(Number(e.target.value))}><option value={7}>7 dias</option><option value={15}>15 dias</option><option value={30}>30 dias</option></select></div>
+        <div className="fld"><label>Categoria</label><select value={cat} onChange={(e) => setCat(e.target.value)}><option value="">Todas</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+        <div className="fld"><label>Buscar item</label><input placeholder="Código ou descrição..." value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
         <div className="grow" />
         <button className="btn btn-solid" onClick={recalcular}>Recalcular sugestão</button>
         <button className="btn">Exportar</button>
@@ -77,11 +128,8 @@ export function SugestaoCompra() {
 
       <div className="sug-tabs">
         <button className="on">Por itens</button>
-        <button>Por grupos</button>
-        <button>Análise de consumo</button>
         <div className="right">
-          <span className="mock-tag">⚑ Dados de exemplo — usa o consumo real quando o estoque estiver ligado</span>
-          <span className="mini">Layout</span>
+          <span className="mock-tag">{rows.length} itens · consumo dos últimos {periodoDias}d · cobertura {coberturaDias}d</span>
         </div>
       </div>
 
@@ -89,53 +137,40 @@ export function SugestaoCompra() {
         <table>
           <thead>
             <tr>
-              <th className="c"><input type="checkbox" className="chk" onChange={(e) => toggleAll(e.target.checked)} checked={sel.every(Boolean) && sel.length > 0} /></th>
-              <th>Código</th>
-              <th>Descrição</th>
-              <th>Grupo</th>
-              <th className="r">Estoque Atual</th>
-              <th className="r">Consumo Médio</th>
-              <th className="r">Cob. Atual<span className="q">?</span></th>
-              <th className="r">Cob. Desejada</th>
-              <th className="r">Dias p/ Ruptura<span className="q">?</span></th>
-              <th className="r">Estoque Mínimo</th>
-              <th className="r">Pedido Aberto<span className="q">?</span></th>
-              <th className="r">Em Trânsito<span className="q">?</span></th>
-              <th className="r">Sugestão Sistema<span className="q">?</span></th>
-              <th className="r">Compra Ideal<span className="q">?</span></th>
-              <th className="r">Último Custo</th>
-              <th className="r">Valor Total</th>
-              <th className="c">Ações</th>
+              <th className="c"><input type="checkbox" className="chk" onChange={(e) => toggleAll(e.target.checked)} checked={allSel} /></th>
+              <th>Código</th><th>Descrição</th><th>Grupo</th>
+              <th className="r">Estoque Atual</th><th className="r">Consumo Médio</th>
+              <th className="r">Estoque Mínimo</th><th className="r">Pedido Aberto<span className="q">?</span></th>
+              <th className="r">Em Trânsito<span className="q">?</span></th><th className="r">Sugestão Sistema<span className="q">?</span></th>
+              <th className="r">Compra Ideal<span className="q">?</span></th><th className="r">Último Custo</th><th className="r">Valor Total</th><th className="c">Ações</th>
             </tr>
           </thead>
           <tbody>
-            {MOCK.map((r, i) => {
-              const alterado = Math.abs(ideal[i] - r.sug) > 0.001
-              return (
-                <tr key={r.cod}>
-                  <td className="c"><input type="checkbox" className="chk" checked={sel[i]} onChange={() => toggle(i)} /></td>
-                  <td className="mono muted">{r.cod}</td>
-                  <td>{r.desc}</td>
-                  <td className="muted">{r.grp}</td>
-                  <td className="r mono">{r.est} {r.un}</td>
-                  <td className="r mono">{r.cons} {r.un}/d</td>
-                  <td className="r mono">{r.cobA} d</td>
-                  <td className="r mono muted">{r.cobD} d</td>
-                  <td className="r mono">{r.rup} d</td>
-                  <td className="r mono">{r.min} {r.un}</td>
-                  <td className={'r mono' + (r.ab === '—' ? ' muted' : '')}>{r.ab === '—' ? '—' : r.ab + ' ' + r.un}</td>
-                  <td className={'r mono' + (r.tr === '—' ? ' muted' : '')}>{r.tr === '—' ? '—' : r.tr + ' ' + r.un}</td>
-                  <td className="r mono"><span className="sug-link" onClick={() => setDrawer(i)}>{q2(r.sug)} {r.un}</span></td>
-                  <td className="r">
-                    <input className="ci" value={q2(ideal[i])} onChange={(e) => setIdealAt(i, e.target.value)} />
-                    {alterado && <span className="mark" title={`Alterado por você · Sugestão do sistema: ${q2(r.sug)} → Compra ideal: ${q2(ideal[i])}`}>✎</span>}
-                  </td>
-                  <td className="r mono muted">{r.custoTxt}</td>
-                  <td className="r mono">{brl(ideal[i] * r.custo)}</td>
-                  <td className="c"><button className="mini" style={{ height: 24 }} onClick={() => setDrawer(i)}>Analisar</button></td>
-                </tr>
-              )
-            })}
+            {!rows.length ? <tr><td colSpan={14} style={{ textAlign: 'center', padding: 30, color: '#94a3b8' }}>Nenhum item com estoque/consumo/mínimo.</td></tr>
+              : rows.map((r) => {
+                const ci = idealNum(r), alterado = Math.abs(ci - r.sug) > 0.001
+                return (
+                  <tr key={r.insumoId}>
+                    <td className="c"><input type="checkbox" className="chk" checked={sel.has(r.insumoId)} onChange={() => toggle(r.insumoId)} /></td>
+                    <td className="mono muted">{r.cod}</td>
+                    <td>{r.desc}</td>
+                    <td className="muted">{r.grp}</td>
+                    <td className="r mono">{q2(r.est)} {r.un}</td>
+                    <td className="r mono">{q2(r.cons)} {r.un}/d</td>
+                    <td className="r mono">{q2(r.min)} {r.un}</td>
+                    <td className={'r mono' + (r.ab === 0 ? ' muted' : '')}>{r.ab === 0 ? '—' : q2(r.ab) + ' ' + r.un}</td>
+                    <td className={'r mono' + (r.tr === 0 ? ' muted' : '')}>{r.tr === 0 ? '—' : q2(r.tr) + ' ' + r.un}</td>
+                    <td className="r mono"><span className="sug-link" onClick={() => setDrawer(r.insumoId)}>{q2(r.sug)} {r.un}</span></td>
+                    <td className="r">
+                      <input className="ci" value={ideal[r.insumoId] ?? q2(r.sug)} onChange={(e) => setIdealAt(r.insumoId, e.target.value)} />
+                      {alterado && <span className="mark" title={`Sugestão do sistema: ${q2(r.sug)} → Compra ideal: ${q2(ci)}`}>✎</span>}
+                    </td>
+                    <td className="r mono muted">{brl(r.custo)} /{r.un}</td>
+                    <td className="r mono">{brl(ci * r.custo)}</td>
+                    <td className="c"><button className="mini" style={{ height: 24 }} onClick={() => setDrawer(r.insumoId)}>Analisar</button></td>
+                  </tr>
+                )
+              })}
           </tbody>
         </table>
       </div>
@@ -159,41 +194,21 @@ export function SugestaoCompra() {
             </div>
             <div className="dr-body">
               <div className="dr-sec">
-                <h3>Informações gerais</h3>
-                <div className="kv">
-                  <div><div className="k">Último fornecedor</div><div className="v">Dunorte Distribuidora</div></div>
-                  <div><div className="k">Última compra</div><div className="v">05/06/2026</div></div>
-                  <div><div className="k">Último preço</div><div className="v">{dr.custoTxt}</div></div>
-                  <div><div className="k">Preço médio (90d)</div><div className="v">R$ 43,40 /kg</div></div>
-                  <div><div className="k">Menor preço</div><div className="v">R$ 41,80</div></div>
-                  <div><div className="k">Maior preço</div><div className="v">R$ 45,50</div></div>
-                </div>
-              </div>
-
-              <div className="dr-sec">
                 <h3>Como o AIKO calculou a sugestão</h3>
                 <div className="calc">
-                  <div className="row"><span>Consumo médio diário</span><span>{dr.cons} {dr.un}/dia</span></div>
-                  <div className="row"><span>Cobertura desejada</span><span>{dr.cobD} dias</span></div>
-                  <div className="row"><span>Necessidade (consumo × cobertura)</span><span>84,0 {dr.un}</span></div>
-                  <div className="row"><span>Estoque mínimo</span><span>{dr.min} {dr.un}</span></div>
-                  <div className="row"><span>(−) Estoque atual</span><span>{dr.est} {dr.un}</span></div>
-                  <div className="row"><span>(−) Pedido em aberto</span><span>{dr.ab === '—' ? '0,00' : dr.ab} {dr.un}</span></div>
-                  <div className="row"><span>(−) Mercadoria em trânsito</span><span>{dr.tr === '—' ? '0,00' : dr.tr} {dr.un}</span></div>
+                  <div className="row"><span>Consumo médio diário</span><span>{q2(dr.cons)} {dr.un}/dia</span></div>
+                  <div className="row"><span>Cobertura desejada</span><span>{coberturaDias} dias</span></div>
+                  <div className="row"><span>Necessidade (consumo × cobertura)</span><span>{q2(dr.cons * coberturaDias)} {dr.un}</span></div>
+                  <div className="row"><span>Alvo (máx. entre necessidade e mínimo {q2(dr.min)})</span><span>{q2(Math.max(dr.cons * coberturaDias, dr.min))} {dr.un}</span></div>
+                  <div className="row"><span>(−) Estoque atual</span><span>{q2(dr.est)} {dr.un}</span></div>
+                  <div className="row"><span>(−) Pedido em aberto</span><span>{q2(dr.ab)} {dr.un}</span></div>
+                  <div className="row"><span>(−) Mercadoria em trânsito</span><span>{q2(dr.tr)} {dr.un}</span></div>
                   <div className="row total"><span>Sugestão final</span><span>{q2(dr.sug)} {dr.un}</span></div>
                 </div>
               </div>
 
               <div className="dr-sec">
-                <h3>Alertas inteligentes</h3>
-                <div className="alert"><span className="ic" />Consumo acima da média (+18% nos últimos 15 dias)</div>
-                <div className="alert"><span className="ic" />Estoque insuficiente para a cobertura desejada</div>
-                <div className="alert"><span className="ic" />Último custo aumentou 22% vs. média</div>
-                <div className="alert"><span className="ic o" />Fornecedor com 95% de pontualidade</div>
-              </div>
-
-              <div className="dr-sec">
-                <h3>Histórico</h3>
+                <h3>Histórico <span className="mock-tag" style={{ marginLeft: 6 }}>exemplo</span></h3>
                 <div className="chartbox"><div className="ct">Consumo por mês ({dr.un})</div><div style={{ height: 130 }}><ChartBox config={chMes} style={{ maxHeight: 130 }} /></div></div>
                 <div className="chartbox"><div className="ct">Evolução do custo (R$/{dr.un})</div><div style={{ height: 130 }}><ChartBox config={chPreco} style={{ maxHeight: 130 }} /></div></div>
                 <div className="chartbox"><div className="ct">Evolução do estoque ({dr.un})</div><div style={{ height: 130 }}><ChartBox config={chEstoque} style={{ maxHeight: 130 }} /></div></div>
@@ -208,8 +223,7 @@ export function SugestaoCompra() {
   )
 }
 
-// ===================== TELA 2 — PEDIDO DE COMPRA =====================
-// lojas (mock) — no real virão de `lojas` com razao_social/cnpj/endereco
+// ===================== TELA 2 — PEDIDO DE COMPRA (ainda mock) =====================
 const LOJAS_PDF = [
   { nome: 'Ponta Negra', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0001-39', ende: 'R. São Luíz, 105 - Adrianópolis, Manaus-AM, 69057-250' },
   { nome: 'Djalma Batista', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0002-10', ende: 'Av. Djalma Batista, 2200 - Chapada, Manaus-AM, 69050-010' },
@@ -220,7 +234,6 @@ const LOJAS_PDF = [
   { nome: 'Distrito', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0007-25', ende: 'Av. Torquato Tapajós, 7000 - Distrito, Manaus-AM, 69083-000' },
   { nome: 'Delivery', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0008-06', ende: 'R. Central do CD, 10 - Distrito, Manaus-AM, 69083-100' },
 ]
-// itens do fornecedor Dunorte distribuídos por loja (mock)
 const ITENS_LOJA = [
   { nome: 'Salmão Filé', qty: '100,00', un: 'KG' },
   { nome: 'Atum', qty: '19,00', un: 'KG' },
@@ -297,6 +310,7 @@ function TelaPedido({ onBack }: { onBack: () => void }) {
         <div className="fld"><label>Lojas</label><select><option>8 selecionadas</option></select></div>
         <div className="fld"><label>Valor total</label><input value="R$ 84.350,00" readOnly /></div>
         <div className="grow" />
+        <span className="mock-tag">Tela de exemplo — ligação com dados reais no próximo passo</span>
         <button className="btn btn-solid" onClick={gerarPDFs}>Gerar PDFs por fornecedor</button>
       </div>
 
@@ -347,8 +361,6 @@ function TelaPedido({ onBack }: { onBack: () => void }) {
                 <div className="row"><span className="k">Prazo médio</span><span>2 dias</span></div>
                 <div className="row"><span className="k">Pontualidade</span><span>95%</span></div>
                 <div className="row"><span className="k">Último preço</span><span>R$ 42,90</span></div>
-                <div className="row"><span className="k">Menor preço (30d)</span><span>R$ 41,80</span></div>
-                <div className="row"><span className="k">Maior preço (30d)</span><span>R$ 45,50</span></div>
               </div>
               <button className="link-btn">Histórico de compras</button>
             </div>
@@ -360,7 +372,6 @@ function TelaPedido({ onBack }: { onBack: () => void }) {
         <span className="info">Total geral do pedido: <b>R$ 84.350,00</b></span>
         <div className="grow" />
         <button className="btn">Limpar pedido</button>
-        <button className="btn">Salvar rascunho</button>
         <button className="btn btn-solid" onClick={gerarPDFs}>Gerar PDFs por fornecedor</button>
       </div>
     </div>
