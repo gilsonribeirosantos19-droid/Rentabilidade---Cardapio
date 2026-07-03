@@ -132,10 +132,11 @@ export function PortalPerdas() {
         {/* ===== FORM ===== */}
         <div className="p-card" style={{ padding: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: 12, marginBottom: 12 }}>
-            <div><label style={lbl}>Tipo</label>
-              <div style={{ display: 'inline-flex', border: '1px solid #cbd5e1', borderRadius: 8, overflow: 'hidden' }}>
-                {(['insumo', 'produto'] as const).map((t) => <button key={t} onClick={() => { setTipo(t); setItemId(''); setQtd('') }} style={{ border: 0, padding: '8px 16px', fontSize: 12.5, cursor: 'pointer', background: tipo === t ? '#fff7ed' : '#fff', color: tipo === t ? '#ea6a0a' : '#475569', fontWeight: tipo === t ? 700 : 500 }}>{t === 'insumo' ? 'Insumo' : 'Produto'}</button>)}
-              </div>
+            <div><label style={lbl}>Tipo de item</label>
+              <select className="p-field" style={{ width: '100%' }} value={tipo} onChange={(e) => { setTipo(e.target.value as 'insumo' | 'produto'); setItemId(''); setQtd('') }}>
+                <option value="insumo">Insumo (matéria-prima)</option>
+                <option value="produto">Produto acabado (ficha técnica)</option>
+              </select>
             </div>
             <div><label style={lbl}>Data</label><input type="date" className="p-field" style={{ width: '100%' }} value={data} onChange={(e) => setData(e.target.value)} /></div>
           </div>
