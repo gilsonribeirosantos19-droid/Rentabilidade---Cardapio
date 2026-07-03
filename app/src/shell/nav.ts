@@ -85,21 +85,15 @@ export const MODULES: Module[] = [
   {
     id: 'producao', label: 'Produção', icon: 'chef',
     sections: [
-      { group: 'Operação', items: [
-        { label: 'Produção do Dia', key: 'pcp/dia' },
-        { label: 'Produção Programada', key: 'pcp/programada' },
-        { label: 'Sobras e Perdas', key: 'pcp/sobras' },
+      { group: 'Planejar', items: [
+        { label: 'Planejamento da Produção', key: 'pcp/planejamento' },
+        { label: 'Monitor de Produção', key: 'pcp/monitor' },
       ] },
-      { group: 'Inteligência', items: [
-        { label: 'Dashboard PCP', key: 'pcp/dashboard' },
-        { label: 'Produção Sugerida', key: 'pcp/sugerida' },
-        { label: 'Consumo Médio', key: 'pcp/consumo' },
-      ] },
-      { label: 'Relatórios', key: 'pcp/relatorios' },
-      { group: 'Porcionamento', items: [
-        { label: 'Lançamentos', key: 'porc/lancamentos' },
-        { label: 'Relatório Consolidado', key: 'porc/relatorio' },
-        { label: 'Saldo Operacional', key: 'porc/saldo' },
+      { group: 'Cadastros', items: [
+        { label: 'Item de Porcionamento', key: 'pcp/itens-porc' },
+        { label: 'Setor de Produção', key: 'pcp/setores' },
+        { label: 'Calendário de Produção', key: 'pcp/calendario' },
+        { label: 'Atividades', key: 'pcp/atividades' },
       ] },
     ],
   },

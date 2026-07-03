@@ -41,6 +41,7 @@ import { ConfigGeral } from '../screens/ConfigGeral'
 import { ConfigParametros } from '../screens/ConfigParametros'
 import { ConfigUsuarios } from '../screens/ConfigUsuarios'
 import { ConfigPermissoes } from '../screens/ConfigPermissoes'
+import { SetorProducao } from '../screens/SetorProducao'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -74,6 +75,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'config/parametros') return <ConfigParametros />
   if (k === 'config/usuarios') return <ConfigUsuarios />
   if (k === 'config/permissoes') return <ConfigPermissoes />
+  if (k === 'pcp/setores') return <SetorProducao />
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
@@ -140,7 +142,7 @@ export function Shell() {
           </div>
           <div className="tr">
             {/* telas com filtro de loja próprio ou de config do tenant escondem o seletor global de loja */}
-            {!['pdv/importar', 'pdv/faturamento', 'pdv/engenharia', 'pdv/abc', 'compras/sugestao'].includes(active) && !active.startsWith('config/') && (
+            {!['pdv/importar', 'pdv/faturamento', 'pdv/engenharia', 'pdv/abc', 'compras/sugestao', 'pcp/setores', 'pcp/itens-porc', 'pcp/calendario', 'pcp/atividades'].includes(active) && !active.startsWith('config/') && (
               <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
                 <option value="">Todas as lojas</option>
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
