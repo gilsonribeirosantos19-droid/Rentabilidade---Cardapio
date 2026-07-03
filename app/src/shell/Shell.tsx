@@ -45,6 +45,10 @@ import { SetorProducao } from '../screens/SetorProducao'
 import { ItemPorcionamento } from '../screens/ItemPorcionamento'
 import { OrdemPorcionamento } from '../screens/OrdemPorcionamento'
 import { OrdemProducao } from '../screens/OrdemProducao'
+import { MonitorProducao } from '../screens/MonitorProducao'
+import { PlanejamentoProducao } from '../screens/PlanejamentoProducao'
+import { CalendarioProducao } from '../screens/CalendarioProducao'
+import { AtividadesProducao } from '../screens/AtividadesProducao'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -82,6 +86,10 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'pcp/itens-porc') return <ItemPorcionamento />
   if (k === 'pcp/oporc') return <OrdemPorcionamento />
   if (k === 'pcp/op') return <OrdemProducao />
+  if (k === 'pcp/monitor') return <MonitorProducao />
+  if (k === 'pcp/planejamento') return <PlanejamentoProducao />
+  if (k === 'pcp/calendario') return <CalendarioProducao />
+  if (k === 'pcp/atividades') return <AtividadesProducao />
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
