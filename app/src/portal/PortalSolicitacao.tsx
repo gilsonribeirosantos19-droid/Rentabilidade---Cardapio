@@ -98,7 +98,7 @@ export function PortalSolicitacao() {
               </div>
               {aberto && (
                 <table className="p-tbl">
-                  <thead><tr><th style={{ width: 36 }}></th><th>Código</th><th>Item</th><th>Embalagem</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Solicitar</th></tr></thead>
+                  <thead><tr><th style={{ width: 36 }}></th><th>Código</th><th>Item</th><th>Embalagem</th><th>Estoque atual</th><th>Estoque mínimo</th></tr></thead>
                   <tbody>
                     {itens.map((ins) => {
                       const u = defUn(ins)
@@ -111,7 +111,6 @@ export function PortalSolicitacao() {
                           <td style={{ fontSize: 12, color: '#475569' }}>{embalagem(ins)}</td>
                           <td style={{ color: '#64748b' }}>{fmtV(atual, u)}</td>
                           <td style={{ color: '#64748b' }}>—</td>
-                          <td><input type="number" min="0" step="0.001" value={qty[ins.id] ?? ''} onChange={(e) => onQty(ins.id, e.target.value)} style={{ width: 90, height: 24, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} /></td>
                         </tr>
                       )
                     })}
