@@ -42,6 +42,9 @@ export function Entradas() {
   const { data: entradas = [], isLoading } = useQuery({ queryKey: ['ent-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)) })
   const { data: saidas = [] } = useQuery({ queryKey: ['ent-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,loja_id').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['ent-forns', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Forn[] } })
+  // Parâmetro Estoque › "Obrigar lote": se 'sim', exige lote na entrada manual
+  const { data: params = [] } = useQuery({ queryKey: ['ent-params', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'estoque'); return (data ?? []) as { chave: string; valor: string }[] } })
+  const obrigarLote = useMemo(() => params.find((p) => p.chave === 'obrigar_lote')?.valor === 'sim', [params])
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const getSaldo = (insId: string): Saldo => saldos.find((s) => s.insumo_id === insId && (!lojaId || s.loja_id === lojaId)) || { insumo_id: insId, quantidade: 0, custo_medio: 0 }
@@ -89,6 +92,7 @@ export function Entradas() {
       const qtd_ = parseFloat(f.qtd) || 0, fator = parseFloat(f.fator) || 1, custo = parseFloat(f.custo) || 0
       if (qtd_ <= 0) throw new Error('Informe a quantidade.')
       if (custo <= 0) throw new Error('Informe o custo unitário.')
+      if (obrigarLote && !f.lote.trim()) throw new Error('Informe o lote — obrigatório nos Parâmetros (Configurações › Parâmetros › Estoque).')
       const qtdEst = +(qtd_ * fator).toFixed(4)
       const custoUnit = +(custo / fator).toFixed(6)
       const fornNome = f.fornecedor_id ? (fornecedores.find((x) => x.id === f.fornecedor_id)?.nome || null) : null

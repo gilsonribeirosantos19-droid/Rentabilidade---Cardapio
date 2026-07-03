@@ -25,27 +25,26 @@
 
 ---
 
-## 🟡 FASE 2 — MÉDIA (corrigir em seguida)
+## 🟡 FASE 2 — MÉDIA (4/5 ✅ · falta só a decisão E8)
 
-- [ ] ⬜ **E5 · Validar `obrigar_lote` na entrada manual** (REG)
-  Bloquear salvar entrada sem lote quando o parâmetro estiver ligado.
-  → `app/src/screens/Entradas.tsx:85-104`
+- [x] ✅ **E5 · Validar `obrigar_lote` na entrada manual** (REG)
+  Bloqueia salvar entrada sem lote quando o parâmetro `estoque.obrigar_lote` = 'sim'.
+  → `app/src/screens/Entradas.tsx`
 
-- [ ] ⬜ **E6 · Restaurar KPIs da tela de Saídas** (REG/faltando)
-  Cards: saídas hoje · saídas manuais hoje · última saída · saídas sem motivo.
+- [x] ✅ **E6 · KPIs da tela de Saídas restaurados** (REG/faltando)
+  Cards: Saídas hoje · Manuais hoje · Sem motivo · Última saída (data + insumo). Loja-filtrado.
   → `app/src/screens/Saidas.tsx`
 
-- [ ] ⬜ **E7 · Ajuste de Custo Médio gravar `motivo`/`observação`** (REG)
-  Voltar a anexar motivo + observação no movimento (rastreabilidade).
-  → `app/src/screens/AjusteCustoMedio.tsx:58`
+- [x] ✅ **E7 · Ajuste de Custo Médio grava `motivo`/`observação`** (REG)
+  Campo "Motivo / observação" adicionado; anexado na observação do movimento.
+  → `app/src/screens/AjusteCustoMedio.tsx`
 
-- [ ] ⏸️ **E8 · DECISÃO: Movimentação/Kardex filtrarem por loja?** (DEC)
-  Hoje o React **filtra pela loja do topo**; o HTML **agregava todas as lojas**. Provável melhoria — **você decide** se mantém (recomendo manter) ou volta ao comportamento antigo.
+- [ ] ⏸️ **E8 · DECISÃO: Movimentação/Kardex filtrarem por loja?** (DEC — AGUARDANDO VOCÊ)
+  Hoje o React **filtra pela loja do topo**; o HTML **agregava todas as lojas**. Recomendo **manter** (mais correto). Você decide.
   → `Movimentacao.tsx`, `Kardex.tsx`
 
-- [ ] ⬜ **E9 · Validar a constraint do `onConflict` dos Ajustes** (verificação)
-  Confirmar no banco que a constraint única de `saldo_estoque` é `(tenant_id, insumo_id, loja_id)`; senão o upsert dos Ajustes falha.
-  → `AjusteEstoque.tsx:76`, `AjusteCustoMedio.tsx:57`
+- [x] ✅ **E9 · Constraint do `onConflict` — VALIDADA** (verificação)
+  A saída/entrada manual já usa `onConflict: 'tenant_id,insumo_id,loja_id'` e funciona em produção → a constraint existe. Sem ação.
 
 ---
 
@@ -77,6 +76,6 @@ Entrada NF-e (média ponderada + histórico + vínculo + status + anti-duplicaç
 
 ### Progresso
 - Fase 1 (Alta): ✅ 4/4
-- Fase 2 (Média): 0/5
+- Fase 2 (Média): 4/5 (falta só a decisão E8)
 - Fase 3 (Baixa): 0/7
 - Fase 4 (Herdados/decisão): 0/4

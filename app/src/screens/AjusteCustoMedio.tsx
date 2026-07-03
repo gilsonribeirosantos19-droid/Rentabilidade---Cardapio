@@ -20,6 +20,7 @@ export function AjusteCustoMedio() {
   const [insumoId, setInsumoId] = useState('')
   const [data, setData] = useState(isoD(new Date()))
   const [novo, setNovo] = useState('')
+  const [motivo, setMotivo] = useState('')
   const [busca, setBusca] = useState('')
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [logDe, setLogDe] = useState(isoD(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
@@ -44,7 +45,7 @@ export function AjusteCustoMedio() {
   const trocarInsumo = (id: string) => { setInsumoId(id); setSel(new Set()) }
   const toggleLoja = (id: string, on: boolean) => setSel((prev) => { const n = new Set(prev); on ? n.add(id) : n.delete(id); return n })
   const toggleTodas = (on: boolean) => setSel(on ? new Set(lojas.map((l) => l.id)) : new Set())
-  const limpar = () => { setInsumoId(''); setNovo(''); setBusca(''); setSel(new Set()) }
+  const limpar = () => { setInsumoId(''); setNovo(''); setMotivo(''); setBusca(''); setSel(new Set()) }
 
   const salvarMut = useMutation({
     mutationFn: async () => {
@@ -55,7 +56,8 @@ export function AjusteCustoMedio() {
       for (const lId of selecionadas) {
         const s = saldoDe(lId)
         const { error: e1 } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lId, quantidade: +Number(s.quantidade || 0).toFixed(4), custo_medio: +novoNum.toFixed(6), atualizado_em: agora }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (e1) throw e1
-        const { error: e2 } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lId, quantidade: 0, custo_unitario: +novoNum.toFixed(6), tipo: 'ajuste', observacao: 'Ajuste de custo médio', criado_em: agora }); if (e2) throw e2
+        const obs = motivo.trim() ? ('Ajuste de custo médio — ' + motivo.trim()) : 'Ajuste de custo médio'
+        const { error: e2 } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lId, quantidade: 0, custo_unitario: +novoNum.toFixed(6), tipo: 'ajuste', observacao: obs, criado_em: agora }); if (e2) throw e2
       }
       return selecionadas.length
     },
@@ -76,6 +78,7 @@ export function AjusteCustoMedio() {
           <div className="adj-fg"><label>Insumo *</label><SearchSelect value={insumoId ? (insMap[insumoId] || '') : ''} options={['Selecione um insumo...', ...insumos.map((i) => i.nome)]} placeholder="Selecione um insumo..." onChange={(nm) => trocarInsumo(nm === 'Selecione um insumo...' ? '' : (insByNome[nm] || ''))} /></div>
           <div className="adj-fg"><label>Data do Ajuste *</label><input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
           <div className="adj-fg"><label>Novo Custo Médio (R$/KG) *</label><input type="number" min="0.01" step="0.01" placeholder="0,00" value={novo} onChange={(e) => setNovo(e.target.value)} /></div>
+          <div className="adj-fg"><label>Motivo / observação</label><input placeholder="Ex.: correção de nota, contagem…" value={motivo} onChange={(e) => setMotivo(e.target.value)} /></div>
         </div>
 
         <div style={{ marginTop: 18 }}>
