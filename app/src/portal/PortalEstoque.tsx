@@ -19,6 +19,8 @@ const fmtQtd = (v?: number) => { const n = Number(v) || 0; return n % 1 === 0 ? 
 const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const hojeStr = () => new Date().toLocaleDateString('en-CA')
 const primeiroDiaMes = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
+// Dia seguinte a uma data (YYYY-MM-DD) — usado p/ ancorar o relatório logo APÓS a contagem
+const proxDia = (d: string) => { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + 1); return dt.toLocaleDateString('en-CA') }
 const un = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
 const fmtDataHora = (dt?: string) => (dt ? new Date(dt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—')
 
@@ -79,26 +81,27 @@ export function PortalEstoque() {
 
 // ══════════════════════ RELATÓRIO ══════════════════════
 function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap, tenantId, lojaId, baselineData }: any) {
-  const [de, setDe] = useState<string>(baselineData || primeiroDiaMes())
+  const anchorDe = () => (baselineData ? proxDia(baselineData) : primeiroDiaMes())
+  const [de, setDe] = useState<string>(anchorDe())
   const [ate, setAte] = useState(hojeStr())
   const [grupo, setGrupo] = useState('')
   const [busca, setBusca] = useState('')
   const [soCmv, setSoCmv] = useState(false)
   const [pag, setPag] = useState(1)
-  const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: baselineData || primeiroDiaMes(), ate: hojeStr() })
+  const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: anchorDe(), ate: hojeStr() })
   const [periodo, setPeriodo] = useState('contagem')
   const porPag = 12
 
-  // Enquanto no modo "contagem", ancora o início do período na data da última
-  // contagem encerrada (carrega async, por isso o efeito).
+  // Enquanto no modo "contagem", ancora o início do período no dia SEGUINTE à última
+  // contagem encerrada (o que veio antes/na contagem já está no Estoque Inicial).
   useEffect(() => {
-    if (periodo === 'contagem' && baselineData) { setDe(baselineData); setAplicado((a) => ({ de: baselineData, ate: a?.ate ?? hojeStr() })) }
+    if (periodo === 'contagem' && baselineData) { const d = proxDia(baselineData); setDe(d); setAplicado((a) => ({ de: d, ate: a?.ate ?? hojeStr() })) }
   }, [baselineData, periodo])
 
   const onPeriodo = (p: string) => {
     setPeriodo(p)
     const t = hojeStr()
-    if (p === 'contagem') { const d = baselineData || primeiroDiaMes(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }); setPag(1) }
+    if (p === 'contagem') { const d = anchorDe(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }); setPag(1) }
     else if (p === 'atual') { const d = primeiroDiaMes(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }); setPag(1) }
     else if (p === 'anterior') { const n = new Date(); const f = new Date(n.getFullYear(), n.getMonth() - 1, 1).toLocaleDateString('en-CA'); const l = new Date(n.getFullYear(), n.getMonth(), 0).toLocaleDateString('en-CA'); setDe(f); setAte(l); setAplicado({ de: f, ate: l }); setPag(1) }
     else { setDe(''); setAte('') } // personalizado
@@ -108,8 +111,8 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
     queryKey: ['pest-rel', tenantId, lojaId, aplicado?.de, aplicado?.ate], enabled: !!tenantId && !!lojaId && !!aplicado,
     queryFn: async () => {
       const [e, s] = await Promise.all([
-        supabase.from('entradas_estoque').select('insumo_id,quantidade,criado_em,created_at').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59'),
-        supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em,created_at').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59'),
+        supabase.from('entradas_estoque').select('insumo_id,quantidade,criado_em,created_at,tipo').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59'),
+        supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em,created_at,tipo').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59'),
       ])
       return { entradas: (e.data ?? []) as Mov[], saidas: (s.data ?? []) as Mov[] }
     },
@@ -125,8 +128,8 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
     const b = busca.toLowerCase().trim()
     if (b) lista = lista.filter((i) => (i.nome || '').toLowerCase().includes(b))
     return lista.map((ins) => {
-      const ent = movs.entradas.filter((e) => e.insumo_id === ins.id).reduce((a, e) => a + Number(e.quantidade || 0), 0)
-      const sai = movs.saidas.filter((x) => x.insumo_id === ins.id).reduce((a, x) => a + Number(x.quantidade || 0), 0)
+      const ent = movs.entradas.filter((e) => e.insumo_id === ins.id && e.tipo !== 'ajuste').reduce((a, e) => a + Number(e.quantidade || 0), 0)
+      const sai = movs.saidas.filter((x) => x.insumo_id === ins.id && x.tipo !== 'ajuste').reduce((a, x) => a + Number(x.quantidade || 0), 0)
       const s = saldoMap[ins.id]
       const saldo = Number(s?.quantidade) || 0
       const inicial = inicialMap[ins.id]
