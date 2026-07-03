@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { DetailModal } from '../components/DetailModal'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
@@ -40,6 +41,7 @@ export function Saidas() {
   const [pag, setPag] = useState(1)
   const [porPag, setPorPag] = useState(10)
   const [modal, setModal] = useState(false)
+  const [detalhe, setDetalhe] = useState<Saida | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2800) }
 
@@ -121,7 +123,7 @@ export function Saidas() {
     onError: (e: Error) => { if (e.message !== '__cancel__') showToast(e.message, 'err') },
   })
 
-  const verSaida = (s: Saida) => { const ins = insMap[s.insumo_id]; const u = ins?.unidade_medida || ins?.unidade_compra || 'un'; alert(`Saída\n\nInsumo: ${ins?.nome || '—'}\nQuantidade: ${qtd(s.quantidade)} ${u}\nTipo: ${s.tipo}\nMotivo: ${s.motivo || '—'}\nResponsável: ${s.responsavel || '—'}\nData: ${fmtDH(s.criado_em)}`) }
+  const detRows = (s: Saida): [string, string][] => { const ins = insMap[s.insumo_id]; const u = ins?.unidade_medida || ins?.unidade_compra || 'un'; return [['Insumo', ins?.nome || '—'], ['Quantidade', `${qtd(s.quantidade)} ${u}`], ['Tipo', s.tipo || '—'], ['Motivo', s.motivo || '—'], ['Responsável', s.responsavel || '—'], ['Data', fmtDH(s.criado_em)]] }
   const setPreset = (v: string) => {
     const n = new Date()
     if (v === 'mes_atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
@@ -180,7 +182,7 @@ export function Saidas() {
                     <td className="r mono">{qtd(s.quantidade)}</td>
                     <td style={{ color: '#64748b' }}>{u}</td>
                     <td style={{ color: '#64748b' }}>{s.responsavel || '—'}</td>
-                    <td className="c"><button className="icon-btn" title="Ver detalhes" onClick={() => verSaida(s)}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button></td>
+                    <td className="c"><button className="icon-btn" title="Ver detalhes" onClick={() => setDetalhe(s)}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button></td>
                   </tr>
                 )
               })}
@@ -201,6 +203,7 @@ export function Saidas() {
       </div>
 
       {modal && <SaidaModal insumos={insumos} lojas={lojas.filter((l) => l.id !== lojaId)} getSaldo={getSaldo} saving={saveMut.isPending} onClose={() => setModal(false)} onSave={(f) => saveMut.mutate(f)} />}
+      {detalhe && <DetailModal title="Saída" rows={detRows(detalhe)} onClose={() => setDetalhe(null)} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )

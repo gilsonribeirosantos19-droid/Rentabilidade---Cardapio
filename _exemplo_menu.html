@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Protótipo — Organização de Menus (sidebar + hub reagrupado)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,'Segoe UI',sans-serif;background:#eef1f4;color:#1e293b;font-size:14px;height:100vh;overflow:hidden}
+  .shell{display:flex;height:100vh}
+
+  /* ───── SIDEBAR DE MÓDULOS (sempre visível) ───── */
+  .side{width:230px;background:#0f172a;color:#cbd5e1;flex-shrink:0;display:flex;flex-direction:column;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 18px 18px}
+  .brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#f97316,#fb923c);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px}
+  .brand b{font-size:17px;color:#fff;font-weight:800;line-height:1}
+  .brand small{display:block;color:#64748b;font-size:11px;font-weight:500}
+  .nav-h{font-size:10px;font-weight:700;letter-spacing:.08em;color:#475569;text-transform:uppercase;padding:14px 20px 6px}
+  .nav-i{display:flex;align-items:center;gap:11px;padding:9px 20px;font-size:13.5px;color:#cbd5e1;cursor:pointer;border-left:3px solid transparent}
+  .nav-i:hover{background:#1e293b;color:#fff}
+  .nav-i.on{background:#1e293b;color:#fff;border-left-color:#f97316;font-weight:600}
+  .nav-i svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none;flex:none}
+
+  /* ───── ÁREA PRINCIPAL ───── */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .top{height:60px;background:#fff;border-bottom:1px solid #e7ebf0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+  .top h1{font-size:20px;font-weight:800;color:#0f172a}
+  .top .r{display:flex;align-items:center;gap:14px;font-size:13px;color:#475569}
+  .sel{height:36px;border:1px solid #d3dae3;border-radius:8px;padding:0 10px;font-family:inherit;font-size:13px}
+
+  .tabs{display:flex;align-items:flex-end;gap:2px;padding:10px 24px 0;background:#eef1f4}
+  .tab{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;font-weight:600;color:#64748b;background:#e2e8f0;border:1px solid #d8dee8;border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer}
+  .tab.on{background:#fff;color:#0f172a;border-bottom:2px solid #f97316;margin-bottom:-1px}
+  .tab .x{color:#94a3b8}
+
+  .content{flex:1;overflow-y:auto;padding:22px 24px;background:#fff;border-top:1px solid #e7ebf0}
+  .sec{font-size:11px;font-weight:700;letter-spacing:.06em;color:#94a3b8;text-transform:uppercase;margin:22px 0 10px}
+  .sec:first-child{margin-top:0}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .card{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid #e7ebf0;border-radius:11px;padding:13px 15px;cursor:pointer;transition:border-color .12s, box-shadow .12s}
+  .card:hover{border-color:#f97316;box-shadow:0 3px 12px rgba(15,23,42,.06)}
+  .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+  .ic svg{width:20px;height:20px;stroke-width:2;fill:none}
+  .card .t{font-size:14px;font-weight:700;color:#0f172a;line-height:1.2}
+  .card .d{font-size:11.5px;color:#64748b;margin-top:2px;line-height:1.3}
+  .chev{margin-left:auto;color:#cbd5e1}
+  .c-blue{background:#eff6ff;color:#3b82f6}.c-orange{background:#fff7ed;color:#f97316}.c-green{background:#ecfdf5;color:#10b981}.c-purple{background:#f5f3ff;color:#8b5cf6}.c-red{background:#fef2f2;color:#ef4444}.c-cyan{background:#ecfeff;color:#06b6d4}
+</style>
+</head>
+<body>
+  <div style="background:#0f172a;color:#cbd5e1;font-size:12px;padding:6px 12px">🎨 <b style="color:#fff">Protótipo</b> — minha sugestão: sidebar de módulos SEMPRE visível + hub do Estoque reagrupado por intenção (Registrar / Consultar / Controlar / Decidir).</div>
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside class="side">
+      <div class="brand"><div class="logo">A</div><div><b>Aiko</b><small>sistema</small></div></div>
+      <div class="nav-i"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Início</div>
+      <div class="nav-h">Operação</div>
+      <div class="nav-i on"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Estoque</div>
+      <div class="nav-i"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Compras</div>
+      <div class="nav-i"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Fiscal (NF-e)</div>
+      <div class="nav-h">Cadastros</div>
+      <div class="nav-i"><svg viewBox="0 0 24 24"><path d="M20 7h-9M14 17H5M17 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM7 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg> Insumos</div>
+      <div class="nav-i"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Fichas Técnicas</div>
+      <div class="nav-i"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Fornecedores</div>
+      <div class="nav-h">Gestão</div>
+      <div class="nav-i"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Relatórios</div>
+      <div class="nav-i"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Configurações</div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="top">
+        <h1>Estoque</h1>
+        <div class="r"><select class="sel"><option>Todas as lojas</option></select><span>Djalma Leite Pinheiro Neto</span><span style="color:#ef4444;font-weight:600;cursor:pointer">⎋ Sair</span></div>
+      </div>
+      <div class="tabs">
+        <div class="tab on">🏠 Início</div>
+        <div class="tab">Saldo de Estoque <span class="x">✕</span></div>
+        <div class="tab">Movimentação <span class="x">✕</span></div>
+      </div>
+      <div class="content">
+
+        <div class="sec">Visão geral</div>
+        <div class="grid">
+          <div class="card"><div class="ic c-orange"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><div><div class="t">Dashboard</div><div class="d">Indicadores, alertas e visão geral.</div></div><span class="chev">›</span></div>
+        </div>
+
+        <div class="sec">Registrar (lançamentos)</div>
+        <div class="grid">
+          <div class="card"><div class="ic c-green"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 5 17 10"/><line x1="12" y1="5" x2="12" y2="15"/></svg></div><div><div class="t">Entradas</div><div class="d">Registre entradas de insumos.</div></div><span class="chev">›</span></div>
+          <div class="card"><div class="ic c-red"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div><div class="t">Saídas</div><div class="d">Registre saídas e consumo.</div></div><span class="chev">›</span></div>
+          <div class="card"><div class="ic c-purple"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div><div class="t">Inventário</div><div class="d">Contagem e conferência física.</div></div><span class="chev">›</span></div>
+        </div>
+
+        <div class="sec">Consultar (posição & histórico)</div>
+        <div class="grid">
+          <div class="card"><div class="ic c-blue"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><div><div class="t">Saldo de Estoque</div><div class="d">Saldo, custo médio e valor por loja.</div></div><span class="chev">›</span></div>
+          <div class="card"><div class="ic c-cyan"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div><div><div class="t">Movimentação</div><div class="d">Histórico do período (entradas/saídas).</div></div><span class="chev">›</span></div>
+          <div class="card"><div class="ic c-green"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div><div class="t">Kardex</div><div class="d">Rastreabilidade por insumo no tempo.</div></div><span class="chev">›</span></div>
+        </div>
+
+        <div class="sec">Controlar (fechamento)</div>
+        <div class="grid">
+          <div class="card"><div class="ic c-blue"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div><div class="t">Fechamento</div><div class="d">Consolidação periódica do estoque.</div></div><span class="chev">›</span></div>
+          <div class="card"><div class="ic c-orange"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg></div><div><div class="t">Ajustes</div><div class="d">Ajuste de estoque, custo e recálculo.</div></div><span class="chev">›</span></div>
+        </div>
+
+        <div class="sec">Decidir (análise)</div>
+        <div class="grid">
+          <div class="card"><div class="ic c-orange"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></div><div><div class="t">Sugestão de Compras</div><div class="d">Recomendações baseadas no consumo.</div></div><span class="chev">›</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</body>
+</html>

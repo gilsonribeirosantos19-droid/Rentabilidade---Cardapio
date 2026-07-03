@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Protótipo — DANFE padrão Aiko (completo)</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;background:#64748b;margin:0;padding:24px;color:#000}
+  .toolbar{max-width:1000px;margin:0 auto 12px;display:flex;gap:10px;align-items:center;color:#fff}
+  .toolbar .h{font-size:15px;font-weight:700;flex:1}
+  .btn{background:#f97316;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+  .aviso{max-width:1000px;margin:0 auto 12px;font-size:12px;color:#fff;background:rgba(0,0,0,.25);border-radius:8px;padding:8px 12px}
+
+  .danfe{max-width:1000px;margin:0 auto;background:#fff;padding:8px;font-size:8.5px;line-height:1.2;color:#000}
+  .danfe *{box-sizing:border-box}
+  .bx{border:1px solid #000}
+  .row{display:flex}
+  .cell{border:1px solid #000;padding:2px 5px;flex:1;min-width:0}
+  .lbl{font-size:6.5px;color:#333;text-transform:uppercase;letter-spacing:.02em;display:block}
+  .val{font-size:9.5px;font-weight:600}
+  .b{font-weight:700} .center{text-align:center} .right{text-align:right}
+  .sec{font-size:7px;font-weight:700;text-transform:uppercase;padding:2px 5px;margin-top:3px}
+  /* recebemos */
+  .receb{display:flex;border:1px solid #000;font-size:7.5px}
+  .receb>div{padding:3px 5px;border-right:1px solid #000}
+  .receb .canhoto{width:58%}
+  .receb .sig{flex:1}
+  .receb .nf{width:90px;border-right:none;text-align:center}
+  .tracejado{border-top:1px dashed #000;margin:3px 0}
+  /* cabeçalho */
+  .topo{display:flex;gap:0}
+  .emit{flex:2;border:1px solid #000;padding:8px;text-align:center}
+  .emit .nome{font-size:12px;font-weight:800;margin-bottom:3px}
+  .dbox{flex:1.05;border:1px solid #000;border-left:none;padding:5px;text-align:center}
+  .dbox .t{font-size:14px;font-weight:800;letter-spacing:1px}
+  .dbox .s{font-size:6.5px}
+  .dbox .es{font-size:8px;margin-top:3px}
+  .barra{flex:1.5;border:1px solid #000;border-left:none;padding:5px}
+  .bars{height:30px;background:repeating-linear-gradient(90deg,#000 0 1.5px,#fff 1.5px 3px,#000 3px 5px,#fff 5px 7px);margin-bottom:3px}
+  .chave{font-size:8.5px;font-family:monospace;word-break:break-all;text-align:center;font-weight:700}
+  table{width:100%;border-collapse:collapse;margin-top:2px}
+  th,td{border:1px solid #000;padding:2px 3px;font-size:8px}
+  th{background:#eee;font-size:6.5px;text-transform:uppercase}
+  .prodtbl th,.prodtbl td{font-size:6.3px;padding:1px 2px;white-space:nowrap}
+  .prodtbl th{font-size:5.8px}
+  .prodtbl .pdesc{min-width:230px;white-space:normal;text-align:left}
+  td.r,th.r{text-align:right} td.c,th.c{text-align:center}
+  @media print{ body{background:#fff;padding:0} .toolbar,.aviso{display:none} .danfe{max-width:100%} }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="h">Protótipo — DANFE padrão Aiko (completo · dados fictícios)</div>
+    <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+  </div>
+  <div class="aviso">⚠️ Protótipo só pra ver o visual. Documento INTERNO. A descrição dos itens é a <b>do fornecedor</b> (como vem na nota). Para a Receita, o oficial continua sendo o DANFE do Focus/SEFAZ.</div>
+
+  <div class="danfe">
+    <!-- CANHOTO -->
+    <div class="receb">
+      <div class="canhoto"><span class="lbl">Recebemos de MIKAEL BERNARDO DE SOUZA os produtos constantes da Nota Fiscal indicada ao lado</span></div>
+      <div class="sig"><span class="lbl">Data de recebimento</span><br><span class="lbl">Identificação e assinatura do recebedor</span></div>
+      <div class="nf"><b>NF-e</b><br>Nº 2.547<br>Série 1</div>
+    </div>
+    <div class="tracejado"></div>
+
+    <!-- CABEÇALHO -->
+    <div class="topo">
+      <div class="emit">
+        <div class="nome">MIKAEL BERNARDO DE SOUZA</div>
+        <div>Rua Padre Macamboa, 97 — Monte das Oliveiras<br>Manaus / AM — CEP 69.093-799<br>Fone: (92) 8479-5087</div>
+      </div>
+      <div class="dbox">
+        <div class="t">DANFE</div>
+        <div class="s">Documento Auxiliar da<br>Nota Fiscal Eletrônica</div>
+        <div class="es">0 - ENTRADA &nbsp;&nbsp; 1 - SAÍDA &nbsp; <b>[1]</b></div>
+        <div class="b" style="margin-top:4px">Nº 2.547<br>Série 1 &nbsp; Folha 1/1</div>
+      </div>
+      <div class="barra">
+        <div class="bars"></div>
+        <div class="lbl center">Chave de acesso</div>
+        <div class="chave">1326 0642 4883 8600 0172 5500 1000 0025 4713 0002 5582</div>
+        <div class="lbl center" style="margin-top:3px">Consulta de autenticidade no portal nacional da NF-e (www.nfe.fazenda.gov.br) ou no site da Sefaz</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="cell" style="flex:2"><span class="lbl">Natureza da operação</span><span class="val">VENDA MERCADORIA - OPER. SUJ. SUBST. TRIB. (SUBSTITUÍDO)</span></div>
+      <div class="cell" style="flex:1.5"><span class="lbl">Protocolo de autorização de uso</span><span class="val">113263676459984 - 18/06/2026 13:15:54</span></div>
+    </div>
+    <div class="row">
+      <div class="cell"><span class="lbl">Inscrição Estadual</span><span class="val">054669413</span></div>
+      <div class="cell"><span class="lbl">Inscr. Est. do Subst. Trib.</span><span class="val">—</span></div>
+      <div class="cell"><span class="lbl">CNPJ</span><span class="val">42.488.386/0001-72</span></div>
+    </div>
+
+    <!-- DESTINATÁRIO -->
+    <div class="sec">Destinatário / Remetente</div>
+    <div class="row">
+      <div class="cell" style="flex:2.4"><span class="lbl">Nome / Razão Social</span><span class="val">SPN RESTAURANTE, LANCHONETE E FORNECIMENTO DE ALIMENTOS LTDA</span></div>
+      <div class="cell"><span class="lbl">CNPJ / CPF</span><span class="val">17.802.332/0007-88</span></div>
+      <div class="cell"><span class="lbl">Data da Emissão</span><span class="val">18/06/2026</span></div>
+    </div>
+    <div class="row">
+      <div class="cell" style="flex:2"><span class="lbl">Endereço</span><span class="val">Avenida Coronel Teixeira, 0</span></div>
+      <div class="cell"><span class="lbl">Bairro / Distrito</span><span class="val">Ponta Negra</span></div>
+      <div class="cell"><span class="lbl">CEP</span><span class="val">69.037-000</span></div>
+      <div class="cell"><span class="lbl">Data Saída/Entrada</span><span class="val">18/06/2026</span></div>
+    </div>
+    <div class="row">
+      <div class="cell"><span class="lbl">Município</span><span class="val">MANAUS</span></div>
+      <div class="cell"><span class="lbl">UF</span><span class="val">AM</span></div>
+      <div class="cell"><span class="lbl">Inscrição Estadual</span><span class="val">054616433</span></div>
+      <div class="cell"><span class="lbl">Hora de Saída</span><span class="val">13:15:20</span></div>
+    </div>
+
+    <!-- FATURA / DUPLICATAS -->
+    <div class="sec">Fatura / Duplicatas</div>
+    <div class="row">
+      <div class="cell"><span class="lbl">Fatura</span><span class="val">2547/1</span></div>
+      <div class="cell"><span class="lbl">Valor Original</span><span class="val">1.236,80</span></div>
+      <div class="cell"><span class="lbl">Valor Desconto</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor Líquido</span><span class="val">1.236,80</span></div>
+      <div class="cell"><span class="lbl">Duplicata / Venc.</span><span class="val">001 — 18/07/2026</span></div>
+      <div class="cell"><span class="lbl">Valor</span><span class="val">1.236,80</span></div>
+    </div>
+
+    <!-- CÁLCULO DO IMPOSTO -->
+    <div class="sec">Cálculo do Imposto</div>
+    <div class="row">
+      <div class="cell"><span class="lbl">Base de Cálc. ICMS</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor do ICMS</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Base Cálc. ICMS ST</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor ICMS ST</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor do Frete</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor do Seguro</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Total Produtos</span><span class="val">1.236,80</span></div>
+    </div>
+    <div class="row">
+      <div class="cell"><span class="lbl">Desconto</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Outras Despesas</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor do IPI</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor PIS</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor COFINS</span><span class="val">0,00</span></div>
+      <div class="cell" style="background:#f3f4f6;flex:2"><span class="lbl">Valor Total da Nota</span><span class="val b" style="font-size:11px">1.236,80</span></div>
+    </div>
+
+    <!-- TRANSPORTADOR -->
+    <div class="sec">Transportador / Volumes Transportados</div>
+    <div class="row">
+      <div class="cell" style="flex:2"><span class="lbl">Nome / Razão Social</span><span class="val">—</span></div>
+      <div class="cell"><span class="lbl">Frete por Conta</span><span class="val">9 - Sem Frete</span></div>
+      <div class="cell"><span class="lbl">Placa do Veículo</span><span class="val">—</span></div>
+      <div class="cell"><span class="lbl">Peso Bruto</span><span class="val">0,000</span></div>
+      <div class="cell"><span class="lbl">Peso Líquido</span><span class="val">0,000</span></div>
+    </div>
+
+    <!-- PRODUTOS -->
+    <div class="sec">Dados dos Produtos / Serviços</div>
+    <table class="prodtbl">
+      <thead>
+        <tr>
+          <th rowspan="2" style="width:70px">Cód. Prod.</th>
+          <th rowspan="2" class="pdesc">Descrição do Produto / Serviço</th>
+          <th rowspan="2" class="c">NCM/SH</th>
+          <th rowspan="2" class="c">CST</th>
+          <th rowspan="2" class="c">CFOP</th>
+          <th rowspan="2" class="c">Un.</th>
+          <th rowspan="2" class="r">Quant.</th>
+          <th rowspan="2" class="r">Valor Unitário</th>
+          <th rowspan="2" class="r">Valor Desconto</th>
+          <th rowspan="2" class="r">Valor Total</th>
+          <th rowspan="2" class="r">B. Cálc. ICMS</th>
+          <th rowspan="2" class="r">B. Cálc. ICMS ST</th>
+          <th rowspan="2" class="r">Valor ICMS</th>
+          <th rowspan="2" class="r">Valor ICMS ST</th>
+          <th rowspan="2" class="r">Valor IPI</th>
+          <th colspan="2" class="c">Alíquota %</th>
+        </tr>
+        <tr><th class="c">ICMS</th><th class="c">IPI</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2000000000024</td><td>BIFE KG</td><td class="c">02102000</td><td class="c">060</td><td class="c">5405</td><td class="c">KG</td><td class="r">3,028</td><td class="r">42,40</td><td class="r">0,00</td><td class="r">128,39</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="c">0,00</td><td class="c">0,00</td></tr>
+        <tr><td>2000000000004</td><td>FRANGO KG</td><td class="c">02071100</td><td class="c">060</td><td class="c">5405</td><td class="c">KG</td><td class="r">40,000</td><td class="r">10,29</td><td class="r">0,00</td><td class="r">411,60</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="c">0,00</td><td class="c">0,00</td></tr>
+        <tr><td>2000000000001</td><td>PEÇA DE PATINHO</td><td class="c">02102000</td><td class="c">060</td><td class="c">5405</td><td class="c">KG</td><td class="r">9,112</td><td class="r">43,99</td><td class="r">0,00</td><td class="r">400,84</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="c">0,00</td><td class="c">0,00</td></tr>
+        <tr><td>2000000000136</td><td>QUEIJO 200G</td><td class="c">04069090</td><td class="c">060</td><td class="c">5405</td><td class="c">UN</td><td class="r">1,000</td><td class="r">9,69</td><td class="r">0,00</td><td class="r">9,69</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="c">0,00</td><td class="c">0,00</td></tr>
+        <tr><td>2000000000184</td><td>SACOLA N1 - C/100</td><td class="c">39232910</td><td class="c">060</td><td class="c">5405</td><td class="c">UN</td><td class="r">3,000</td><td class="r">4,99</td><td class="r">0,00</td><td class="r">14,97</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="r">0,00</td><td class="c">0,00</td><td class="c">0,00</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ISSQN -->
+    <div class="sec">Cálculo do ISSQN</div>
+    <div class="row">
+      <div class="cell"><span class="lbl">Inscrição Municipal</span><span class="val">—</span></div>
+      <div class="cell"><span class="lbl">Valor Total Serviços</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Base Cálc. ISSQN</span><span class="val">0,00</span></div>
+      <div class="cell"><span class="lbl">Valor do ISSQN</span><span class="val">0,00</span></div>
+    </div>
+
+    <!-- DADOS ADICIONAIS -->
+    <div class="sec">Dados Adicionais</div>
+    <div class="bx" style="padding:5px;min-height:42px;font-size:8px">Documento emitido por ME ou EPP optante pelo Simples Nacional. Não gera direito a crédito fiscal de ICMS, ISS e IPI.</div>
+  </div>
+</body>
+</html>

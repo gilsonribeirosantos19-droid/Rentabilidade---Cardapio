@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo AIKO — Sugestão de Compra</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  :root { --navy:#16233f; --navy-hover:#26385f; --ink:#0f172a; --t2:#64748b; --t3:#94a3b8; --line:#e5e9f0; --bg:#f4f6fa; }
+  body { font-family:'Segoe UI', Inter, system-ui, sans-serif; background:var(--bg); color:var(--ink); font-size:13px; }
+  .mono { font-family:'DM Mono','Consolas',monospace; }
+  .app { display:flex; min-height:100vh; }
+
+  /* ===== SIDEBAR (única parte com cor — é a casca da marca) ===== */
+  .sidebar { width:206px; background:var(--navy); color:#c7d2e4; flex-shrink:0; display:flex; flex-direction:column; }
+  .logo { font-size:25px; font-weight:800; color:#fff; letter-spacing:.5px; padding:17px 20px 13px; }
+  .nav { flex:1; padding:4px 8px; }
+  .nav a { display:block; padding:8px 12px; border-radius:8px; color:#aeb9cf; text-decoration:none; font-size:13px; font-weight:500; margin-bottom:1px; }
+  .nav a:hover { background:var(--navy-hover); color:#fff; }
+  .nav a.parent.open { color:#fff; font-weight:600; }
+  .nav .sub { margin:2px 0 6px 14px; border-left:1px solid #2c3d63; padding-left:6px; }
+  .nav .sub a { font-size:12.5px; padding:6px 12px; color:#93a1bd; }
+  .nav .sub a.active { background:#2f5fd0; color:#fff; font-weight:600; }
+  .side-foot { padding:8px; border-top:1px solid #2c3d63; }
+  .side-foot a { display:block; padding:8px 12px; color:#aeb9cf; text-decoration:none; font-size:13px; border-radius:8px; }
+  .side-foot a:hover { background:var(--navy-hover); color:#fff; }
+
+  /* ===== CONTENT ===== */
+  .content { flex:1; min-width:0; display:flex; flex-direction:column; height:100vh; }
+  .scr-head { padding:12px 20px 8px; }
+  .scr-head h1 { font-size:17px; font-weight:700; }
+  .scr-head p { font-size:12.5px; color:var(--t2); margin-top:1px; }
+
+  /* filterbar densa */
+  .toolbar { display:flex; align-items:flex-end; gap:10px; padding:0 20px 10px; flex-wrap:wrap; }
+  .fld { display:flex; flex-direction:column; gap:2px; }
+  .fld label { font-size:10px; color:var(--t2); font-weight:500; }
+  .fld select, .fld input { height:32px; border:1px solid #cbd5e1; border-radius:7px; padding:0 10px; font-size:12.5px; background:#fff; color:var(--ink); font-family:inherit; min-width:132px; }
+  .grow { margin-left:auto; }
+  .btn { height:32px; border-radius:7px; padding:0 13px; font-size:12.5px; font-weight:500; cursor:pointer; border:1px solid #cbd5e1; background:#fff; color:var(--ink); display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .btn:hover { background:#f1f5f9; }
+  .btn-solid { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .btn-solid:hover { background:#1e293b; }
+
+  /* tabs */
+  .tabrow { display:flex; align-items:center; padding:0 20px; border-bottom:1px solid var(--line); background:#fff; }
+  .tabs button { border:0; background:transparent; padding:10px 14px; font-size:13px; font-weight:500; color:var(--t2); cursor:pointer; border-bottom:2px solid transparent; }
+  .tabs button.on { color:var(--ink); border-bottom-color:var(--ink); font-weight:600; }
+  .tabrow .right { margin-left:auto; display:flex; align-items:center; gap:7px; }
+  .mini { height:30px; border:1px solid #cbd5e1; border-radius:7px; background:#fff; padding:0 11px; font-size:12px; color:var(--t2); display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+
+  /* ===== TABLE (densidade PDV, tudo preto, sem negrito) ===== */
+  .tablewrap { flex:1; background:#fff; overflow:auto; }
+  table.grid { width:100%; border-collapse:collapse; font-size:11.5px; }
+  table.grid thead th { position:sticky; top:0; z-index:3; background:#f1f5f9; color:#475569; font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:.03em; text-align:left; padding:5px 9px; border-bottom:1px solid #d6dce6; border-right:1px solid #e7ecf3; white-space:nowrap; }
+  table.grid th.r, table.grid td.r { text-align:right; }
+  table.grid th.c, table.grid td.c { text-align:center; }
+  table.grid tbody td { padding:3px 9px; border-bottom:1px solid #eef2f6; line-height:1.5; white-space:nowrap; color:var(--ink); vertical-align:middle; }
+  table.grid tbody tr:hover td { background:#eef2f6; }
+  .muted { color:var(--t2); }
+  .q { font-size:9px; color:#c3ccdb; border:1px solid #d5dce8; border-radius:50%; width:12px; height:12px; display:inline-flex; align-items:center; justify-content:center; margin-left:3px; cursor:help; }
+  .sug { cursor:pointer; border-bottom:1px dotted #94a3b8; }
+  .chk { width:15px; height:15px; accent-color:#334155; cursor:pointer; vertical-align:middle; }
+  .ci { width:70px; height:24px; border:1px solid #cbd5e1; border-radius:5px; text-align:right; padding:0 6px; font-family:'DM Mono',monospace; font-size:11.5px; color:var(--ink); background:#fff; }
+  .ci:focus { outline:1px solid #64748b; }
+  .mark { display:none; margin-left:5px; font-size:11px; color:var(--ink); cursor:help; }
+  .mark.on { display:inline; }
+  .icobtn { border:1px solid #cbd5e1; background:#fff; cursor:pointer; color:var(--t2); padding:2px 7px; border-radius:6px; font-size:11px; }
+  .icobtn:hover { background:#f1f5f9; color:var(--ink); }
+
+  /* footer */
+  .footbar { display:flex; align-items:center; gap:18px; padding:9px 20px; background:#fff; border-top:1px solid var(--line); }
+  .footbar .info { font-size:12.5px; color:var(--t2); }
+  .footbar .info b { color:var(--ink); font-weight:600; }
+  .footbar .grow { margin-left:auto; }
+
+  /* ===== DRAWER ===== */
+  .backdrop { position:fixed; inset:0; background:rgba(15,23,42,.32); opacity:0; pointer-events:none; transition:.2s; z-index:50; }
+  .backdrop.show { opacity:1; pointer-events:auto; }
+  .drawer { position:fixed; top:0; right:-580px; width:560px; max-width:95vw; height:100vh; background:#fff; box-shadow:-8px 0 30px rgba(0,0,0,.15); z-index:60; transition:right .25s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; }
+  .drawer.show { right:0; }
+  .dr-head { padding:14px 18px; border-bottom:1px solid var(--line); display:flex; align-items:flex-start; justify-content:space-between; }
+  .dr-head h2 { font-size:16px; font-weight:700; }
+  .dr-head .sub { font-size:12px; color:var(--t2); margin-top:2px; }
+  .dr-close { border:1px solid var(--line); background:#fff; width:28px; height:28px; border-radius:7px; cursor:pointer; font-size:14px; color:#475569; }
+  .dr-body { flex:1; overflow-y:auto; padding:14px 18px 30px; }
+  .dr-sec { margin-bottom:18px; }
+  .dr-sec > h3 { font-size:10.5px; font-weight:600; color:var(--t3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+  .kv { display:grid; grid-template-columns:1fr 1fr; gap:7px 14px; }
+  .kv .cell .k { font-size:11px; color:var(--t3); } .kv .cell .v { font-size:13px; }
+  .calc { border:1px solid var(--line); border-radius:9px; padding:10px 13px; font-family:'DM Mono',monospace; font-size:12px; }
+  .calc .row { display:flex; justify-content:space-between; padding:2px 0; color:#475569; }
+  .calc .row.total { border-top:1px dashed #cbd5e1; margin-top:5px; padding-top:7px; color:var(--ink); font-size:13px; }
+  .alert { display:flex; align-items:center; gap:8px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; font-size:12px; margin-bottom:6px; color:var(--ink); }
+  .alert .ic { width:8px; height:8px; border-radius:50%; background:var(--ink); flex-shrink:0; }
+  .alert .ic.o { background:#fff; border:1.5px solid var(--ink); }
+  .chartbox { border:1px solid var(--line); border-radius:9px; padding:9px 11px 5px; margin-bottom:9px; }
+  .chartbox .ct { font-size:11.5px; color:#475569; margin-bottom:5px; }
+  .chartbox canvas { max-height:140px; }
+
+  /* ===== SCREEN 2 ===== */
+  .hidden { display:none !important; }
+  .p2top { display:flex; align-items:flex-end; gap:12px; padding:0 20px 12px; flex-wrap:wrap; }
+  .p2cols { flex:1; display:grid; grid-template-columns:minmax(400px,1fr) minmax(520px,1.15fr); gap:14px; padding:0 20px 14px; overflow:auto; align-items:start; }
+  .panel { background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .panel-h { padding:10px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+  .panel-h .t { font-size:13px; font-weight:600; }
+  .forn-grp { border-bottom:1px solid var(--line); }
+  .forn-hd { display:flex; align-items:center; gap:9px; padding:9px 14px; cursor:pointer; }
+  .forn-hd:hover { background:#f8fafc; }
+  .forn-hd .nm { font-weight:600; font-size:13px; }
+  .badge-pref { border:1px solid #cbd5e1; color:#475569; font-size:10px; padding:1px 7px; border-radius:20px; }
+  .forn-hd .cnt { color:var(--t3); font-size:11.5px; }
+  .forn-hd .tot { margin-left:auto; font-family:'DM Mono',monospace; }
+  .subtbl { width:100%; border-collapse:collapse; font-size:11.5px; }
+  .subtbl th { text-align:left; color:var(--t3); font-weight:600; font-size:10px; text-transform:uppercase; padding:5px 14px; background:#f8fafc; border-bottom:1px solid var(--line); }
+  .subtbl th.r { text-align:right; } .subtbl td.r { text-align:right; }
+  .subtbl td { padding:5px 14px; border-bottom:1px solid #f2f5f9; }
+  .fsel { height:28px; border:1px solid #cbd5e1; border-radius:6px; padding:0 7px; font-size:11.5px; background:#fff; max-width:170px; }
+  .selrow td { background:#eef2f6 !important; }
+  .dtl-top { display:flex; flex-wrap:wrap; padding:12px 14px; border-bottom:1px solid var(--line); }
+  .dtl-top .c { flex:1; min-width:110px; padding-right:12px; }
+  .dtl-top .c .k { font-size:10.5px; color:var(--t3); } .dtl-top .c .v { font-size:14px; margin-top:2px; }
+  .split { display:grid; grid-template-columns:1fr 210px; }
+  .split .r-side { border-left:1px solid var(--line); padding:12px 14px; }
+  .resumo .row { display:flex; justify-content:space-between; padding:5px 0; font-size:12px; border-bottom:1px solid #f2f5f9; }
+  .resumo .row .k { color:var(--t2); }
+  .link-btn { width:100%; margin-top:9px; height:30px; border:1px solid #cbd5e1; background:#fff; border-radius:7px; font-size:12px; color:#334155; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="logo">AIKO</div>
+    <nav class="nav">
+      <a>Operação</a>
+      <a class="parent open">Compras ⌄</a>
+      <div class="sub">
+        <a>Solicitações</a><a>Cotações</a><a>Pedidos</a><a>Recebimentos</a>
+        <a class="active">Sugestão de Compra</a><a>Fornecedores</a>
+      </div>
+      <a>Estoque</a><a>Produção (PCP)</a><a>Fiscal</a><a>Relatórios</a><a>Cadastros</a><a>Configurações</a>
+    </nav>
+    <div class="side-foot"><a>Suporte</a><a>Sair</a></div>
+  </aside>
+
+  <!-- ===================== TELA 1 — SUGESTÃO ===================== -->
+  <main class="content" id="screen-sugestao">
+    <div class="scr-head">
+      <h1>Sugestão de Compra</h1>
+      <p>O sistema analisa o consumo e sugere as quantidades ideais. A decisão final é do comprador.</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="fld"><label>Loja</label><select><option>Todas as lojas (8)</option><option>Ponta Negra</option></select></div>
+      <div class="fld"><label>Período de análise</label><select><option>Últimos 30 dias</option><option>Últimos 60 dias</option><option>Últimos 90 dias</option></select></div>
+      <div class="fld"><label>Cobertura desejada</label><select><option selected>7 dias</option><option>15 dias</option><option>30 dias</option></select></div>
+      <div class="fld"><label>Grupo de solicitação</label><select><option>Todos</option><option>Peixes e Frutos do Mar</option><option>Secos</option></select></div>
+      <div class="fld"><label>Categoria</label><select><option>Todas</option><option>Peixes</option><option>Secos</option></select></div>
+      <div class="fld"><label>Buscar item</label><input placeholder="Código ou descrição..."></div>
+      <div class="grow"></div>
+      <button class="btn btn-solid">Recalcular sugestão</button>
+      <button class="btn">Mais filtros</button>
+      <button class="btn">Exportar</button>
+    </div>
+
+    <div class="tabrow">
+      <div class="tabs">
+        <button class="on">Por itens</button><button>Por grupos</button><button>Análise de consumo</button>
+      </div>
+      <div class="right">
+        <span class="mini">Filtros</span><span class="mini">Layout</span>
+      </div>
+    </div>
+
+    <div class="tablewrap">
+      <table class="grid">
+        <thead><tr>
+          <th class="c"><input type="checkbox" class="chk" onclick="toggleAll(this)"></th>
+          <th>Código</th>
+          <th>Descrição</th>
+          <th>Grupo</th>
+          <th class="r">Estoque Atual</th>
+          <th class="r">Consumo Médio</th>
+          <th class="r">Cob. Atual<span class="q">?</span></th>
+          <th class="r">Cob. Desejada</th>
+          <th class="r">Dias p/ Ruptura<span class="q">?</span></th>
+          <th class="r">Estoque Mínimo</th>
+          <th class="r">Pedido Aberto<span class="q">?</span></th>
+          <th class="r">Em Trânsito<span class="q">?</span></th>
+          <th class="r">Sugestão Sistema<span class="q">?</span></th>
+          <th class="r">Compra Ideal<span class="q">?</span></th>
+          <th class="r">Último Custo</th>
+          <th class="r">Valor Total</th>
+          <th class="c">Ações</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="footbar">
+      <span class="info">Itens selecionados: <b id="fCount">0</b></span>
+      <span class="info">Qtd total da compra: <b id="fQtd">0</b></span>
+      <span class="info">Valor total da compra: <b id="fVal">R$ 0,00</b></span>
+      <div class="grow"></div>
+      <button class="btn">Limpar seleção</button>
+      <button class="btn btn-solid" onclick="goPedido()">Gerar Pedido de Compra →</button>
+    </div>
+  </main>
+
+  <!-- ===================== TELA 2 — PEDIDO ===================== -->
+  <main class="content hidden" id="screen-pedido">
+    <div class="scr-head" style="display:flex;align-items:center;gap:12px">
+      <button class="btn" onclick="backSugestao()">← Voltar</button>
+      <div><h1>Pedido de Compra</h1><p>Revise os itens, escolha o fornecedor e gere os pedidos por loja.</p></div>
+    </div>
+
+    <div class="p2top">
+      <div class="fld"><label>Data</label><input type="date" value="2026-06-07"></div>
+      <div class="fld"><label>Grupo de solicitação</label><select><option>Peixes e Frutos do Mar</option></select></div>
+      <div class="fld"><label>Lojas</label><select><option>8 selecionadas</option></select></div>
+      <div class="fld"><label>Valor total</label><input value="R$ 84.350,00" readonly></div>
+      <div class="grow"></div>
+      <button class="btn btn-solid" onclick="alert('Protótipo: gera 1 PDF por fornecedor, com a distribuição por loja dentro.')">Gerar PDFs por fornecedor</button>
+    </div>
+
+    <div class="p2cols">
+      <div class="panel">
+        <div class="panel-h"><span class="t">Itens do pedido <span class="muted" style="font-weight:400">(agrupados por fornecedor)</span></span>
+          <select class="fsel" style="max-width:none"><option>Todos os fornecedores</option></select></div>
+        <div class="forn-grp">
+          <div class="forn-hd"><span class="muted">▾</span><span class="nm">Dunorte Distribuidora</span><span class="badge-pref">Preferencial</span><span class="cnt">5 itens</span><span class="tot">R$ 48.320,00</span></div>
+          <table class="subtbl">
+            <thead><tr><th>Item</th><th class="r">Total Geral</th><th>Fornecedor Sugerido</th><th class="r">Preço Unit.</th><th class="r">Valor Total</th></tr></thead>
+            <tbody>
+              <tr class="selrow" onclick="selItem(this)" style="cursor:pointer"><td>Salmão Filé</td><td class="r mono">800,00 kg</td><td><select class="fsel"><option>Dunorte Distribuidora</option><option>Mar & Cia Pescados</option></select></td><td class="r mono">R$ 42,90</td><td class="r mono">R$ 34.320,00</td></tr>
+              <tr onclick="selItem(this)" style="cursor:pointer"><td>Atum</td><td class="r mono">150,00 kg</td><td><select class="fsel"><option>Dunorte Distribuidora</option></select></td><td class="r mono">R$ 38,90</td><td class="r mono">R$ 5.835,00</td></tr>
+              <tr onclick="selItem(this)" style="cursor:pointer"><td>Nori</td><td class="r mono">180,00 un</td><td><select class="fsel"><option>Dunorte Distribuidora</option></select></td><td class="r mono">R$ 3,20</td><td class="r mono">R$ 576,00</td></tr>
+              <tr onclick="selItem(this)" style="cursor:pointer"><td>Shoyu</td><td class="r mono">100,00 L</td><td><select class="fsel"><option>Dunorte Distribuidora</option></select></td><td class="r mono">R$ 9,80</td><td class="r mono">R$ 980,00</td></tr>
+              <tr onclick="selItem(this)" style="cursor:pointer"><td>Camarão 9/12</td><td class="r mono">50,00 kg</td><td><select class="fsel"><option>Dunorte Distribuidora</option></select></td><td class="r mono">R$ 58,50</td><td class="r mono">R$ 2.925,00</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="forn-grp"><div class="forn-hd"><span class="muted">▸</span><span class="nm">Mar & Cia Pescados</span><span class="cnt">3 itens</span><span class="tot">R$ 24.180,00</span></div></div>
+        <div class="forn-grp"><div class="forn-hd"><span class="muted">▸</span><span class="nm">Amazon Fish</span><span class="cnt">2 itens</span><span class="tot">R$ 11.850,00</span></div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><span class="t">Salmão Filé <span class="mono muted" style="font-weight:400">MP0001 · Peixes</span></span><button class="mini">Ver análise do item</button></div>
+        <div class="dtl-top">
+          <div class="c"><div class="k">Total Geral</div><div class="v">800,00 kg</div></div>
+          <div class="c"><div class="k">Total por loja (média)</div><div class="v">100,00 kg</div></div>
+          <div class="c"><div class="k">Fornecedor selecionado</div><div class="v">Dunorte Distribuidora</div></div>
+          <div class="c"><div class="k">Preço unitário</div><div class="v">R$ 42,90 <span class="muted" style="font-size:11px">/kg</span></div></div>
+          <div class="c"><div class="k">Valor total</div><div class="v">R$ 34.320,00</div></div>
+        </div>
+        <div class="split">
+          <div style="padding:12px 14px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:7px">Distribuição por loja <span class="muted" style="font-weight:400">(serão gerados PDFs individuais)</span></div>
+            <table class="subtbl" style="border:1px solid var(--line);border-radius:8px">
+              <thead><tr><th>Loja</th><th class="r">Sugestão</th><th class="r">Estoque</th><th class="r">Cob. Atual</th></tr></thead>
+              <tbody>
+                <tr><td>Ponta Negra</td><td class="r mono">100,00</td><td class="r mono">8,00</td><td class="r mono">4,0 d</td></tr>
+                <tr><td>Djalma Batista</td><td class="r mono">100,00</td><td class="r mono">12,00</td><td class="r mono">5,0 d</td></tr>
+                <tr><td>Cidade Nova</td><td class="r mono">100,00</td><td class="r mono">10,00</td><td class="r mono">4,5 d</td></tr>
+                <tr><td>Paraíba</td><td class="r mono">100,00</td><td class="r mono">7,00</td><td class="r mono">3,5 d</td></tr>
+                <tr><td>Centro</td><td class="r mono">100,00</td><td class="r mono">9,00</td><td class="r mono">4,0 d</td></tr>
+                <tr><td>Laranjeiras</td><td class="r mono">100,00</td><td class="r mono">6,00</td><td class="r mono">3,0 d</td></tr>
+                <tr><td>Distrito</td><td class="r mono">100,00</td><td class="r mono">6,00</td><td class="r mono">3,0 d</td></tr>
+                <tr><td>Delivery</td><td class="r mono">100,00</td><td class="r mono">0,00</td><td class="r mono">0,0 d</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="r-side">
+            <div style="font-size:12px;font-weight:600;margin-bottom:7px">Resumo da escolha</div>
+            <div class="resumo">
+              <div class="row"><span class="k">Última compra</span><span>05/06/2026</span></div>
+              <div class="row"><span class="k">Prazo médio</span><span>2 dias</span></div>
+              <div class="row"><span class="k">Pontualidade</span><span>95%</span></div>
+              <div class="row"><span class="k">Último preço</span><span>R$ 42,90</span></div>
+              <div class="row"><span class="k">Menor preço (30d)</span><span>R$ 41,80</span></div>
+              <div class="row"><span class="k">Maior preço (30d)</span><span>R$ 45,50</span></div>
+            </div>
+            <button class="link-btn">Histórico de compras</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footbar">
+      <span class="info">Total geral do pedido: <b>R$ 84.350,00</b></span>
+      <div class="grow"></div>
+      <button class="btn">Limpar pedido</button>
+      <button class="btn">Salvar rascunho</button>
+      <button class="btn btn-solid" onclick="alert('Protótipo: gera 1 PDF por fornecedor, com a distribuição por loja dentro.')">Gerar PDFs por fornecedor</button>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== DRAWER ===================== -->
+<div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dr-head">
+    <div><h2 id="dr-item">Salmão Filé</h2><div class="sub"><span id="dr-cod">MP0001</span> · <span id="dr-grp">Peixes</span></div></div>
+    <button class="dr-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="dr-body">
+    <div class="dr-sec">
+      <h3>Informações gerais</h3>
+      <div class="kv">
+        <div class="cell"><div class="k">Último fornecedor</div><div class="v">Dunorte Distribuidora</div></div>
+        <div class="cell"><div class="k">Última compra</div><div class="v">05/06/2026</div></div>
+        <div class="cell"><div class="k">Último preço</div><div class="v">R$ 42,90 /kg</div></div>
+        <div class="cell"><div class="k">Preço médio (90d)</div><div class="v">R$ 43,40 /kg</div></div>
+        <div class="cell"><div class="k">Menor preço</div><div class="v">R$ 41,80</div></div>
+        <div class="cell"><div class="k">Maior preço</div><div class="v">R$ 45,50</div></div>
+      </div>
+    </div>
+
+    <div class="dr-sec">
+      <h3>Como o AIKO calculou a sugestão</h3>
+      <div class="calc">
+        <div class="row"><span>Consumo médio diário</span><span>12,0 kg/dia</span></div>
+        <div class="row"><span>Cobertura desejada</span><span>7 dias</span></div>
+        <div class="row"><span>Necessidade (consumo × cobertura)</span><span>84,0 kg</span></div>
+        <div class="row"><span>Estoque mínimo</span><span>15,0 kg</span></div>
+        <div class="row"><span>(−) Estoque atual</span><span>58,0 kg</span></div>
+        <div class="row"><span>(−) Pedido em aberto</span><span>20,0 kg</span></div>
+        <div class="row"><span>(−) Mercadoria em trânsito</span><span>10,0 kg</span></div>
+        <div class="row total"><span>Sugestão final</span><span>24,0 kg</span></div>
+      </div>
+    </div>
+
+    <div class="dr-sec">
+      <h3>Alertas inteligentes</h3>
+      <div class="alert"><span class="ic"></span>Consumo acima da média (+18% nos últimos 15 dias)</div>
+      <div class="alert"><span class="ic"></span>Estoque insuficiente para a cobertura desejada</div>
+      <div class="alert"><span class="ic"></span>Último custo aumentou 22% vs. média</div>
+      <div class="alert"><span class="ic o"></span>Fornecedor com 95% de pontualidade</div>
+    </div>
+
+    <div class="dr-sec">
+      <h3>Histórico</h3>
+      <div class="chartbox"><div class="ct">Consumo por mês (kg)</div><canvas id="chMes"></canvas></div>
+      <div class="chartbox"><div class="ct">Evolução do custo (R$/kg)</div><canvas id="chPreco"></canvas></div>
+      <div class="chartbox"><div class="ct">Evolução do estoque (kg)</div><canvas id="chEstoque"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- mock (tela 1) ----
+  const U = { kg:'kg', un:'un', L:'L' };
+  const ITENS = [
+    { cod:'MP0001', desc:'Salmão Filé',  grp:'Peixes',    un:'kg', est:'58,00', cons:'12,00', cobA:'4,8', cobD:'7', rup:'7,3',  min:'15,00', ab:'20,00', tr:'10,00', sug:24,  custo:42.90, custoTxt:'R$ 42,90 /kg' },
+    { cod:'MP0002', desc:'Atum',         grp:'Peixes',    un:'kg', est:'22,00', cons:'8,00',  cobA:'2,8', cobD:'7', rup:'2,8',  min:'20,00', ab:'—',     tr:'—',     sug:42,  custo:38.90, custoTxt:'R$ 38,90 /kg' },
+    { cod:'MP0003', desc:'Arroz Japonês',grp:'Secos',     un:'kg', est:'80,00', cons:'10,00', cobA:'8,0', cobD:'7', rup:'12,0', min:'50,00', ab:'—',     tr:'40,00', sug:0,   custo:7.20,  custoTxt:'R$ 7,20 /kg' },
+    { cod:'MP0004', desc:'Nori',         grp:'Secos',     un:'un', est:'120,00',cons:'25,00', cobA:'4,8', cobD:'7', rup:'4,8',  min:'50,00', ab:'—',     tr:'—',     sug:55,  custo:3.20,  custoTxt:'R$ 3,20 /un' },
+    { cod:'MP0005', desc:'Shoyu',        grp:'Mercearia', un:'L',  est:'18,00', cons:'7,50',  cobA:'2,4', cobD:'7', rup:'2,4',  min:'20,00', ab:'—',     tr:'—',     sug:56,  custo:9.80,  custoTxt:'R$ 9,80 /L' },
+    { cod:'MP0006', desc:'Cream Cheese', grp:'Laticínios',un:'kg', est:'40,00', cons:'7,00',  cobA:'5,7', cobD:'7', rup:'7,1',  min:'30,00', ab:'10,00', tr:'—',     sug:9,   custo:14.50, custoTxt:'R$ 14,50 /kg' },
+    { cod:'MP0007', desc:'Camarão 9/12', grp:'Peixes',    un:'kg', est:'12,00', cons:'3,60',  cobA:'3,3', cobD:'7', rup:'3,3',  min:'25,00', ab:'—',     tr:'—',     sug:38,  custo:58.50, custoTxt:'R$ 58,50 /kg' },
+    { cod:'MP0008', desc:'Gergelim Mix', grp:'Secos',     un:'kg', est:'30,00', cons:'2,00',  cobA:'15,0',cobD:'7', rup:'15,0', min:'10,00', ab:'—',     tr:'—',     sug:0,   custo:22.00, custoTxt:'R$ 22,00 /kg' },
+  ];
+  const brl = n => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  const q2  = n => n.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  const state = ITENS.map(r => ({ ideal:r.sug, sel:false }));
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = ITENS.map((r,i) => `
+    <tr>
+      <td class="c"><input type="checkbox" class="chk" onchange="selRow(${i},this.checked)"></td>
+      <td class="mono muted">${r.cod}</td>
+      <td>${r.desc}</td>
+      <td class="muted">${r.grp}</td>
+      <td class="r mono">${r.est} ${r.un}</td>
+      <td class="r mono">${r.cons} ${r.un}/d</td>
+      <td class="r mono">${r.cobA} d</td>
+      <td class="r mono muted">${r.cobD} d</td>
+      <td class="r mono">${r.rup} d</td>
+      <td class="r mono">${r.min} ${r.un}</td>
+      <td class="r mono ${r.ab==='—'?'muted':''}">${r.ab==='—'?'—':r.ab+' '+r.un}</td>
+      <td class="r mono ${r.tr==='—'?'muted':''}">${r.tr==='—'?'—':r.tr+' '+r.un}</td>
+      <td class="r mono"><span class="sug" onclick="openDrawer(${i})">${q2(r.sug)} ${r.un}</span></td>
+      <td class="r"><input class="ci" data-i="${i}" value="${q2(r.sug)}" oninput="ciChange(${i},this)"><span class="mark" id="mk${i}" title="">✎</span></td>
+      <td class="r mono muted">${r.custoTxt}</td>
+      <td class="r mono" id="vt${i}">${brl(r.sug * r.custo)}</td>
+      <td class="c"><button class="icobtn" onclick="openDrawer(${i})">Analisar</button></td>
+    </tr>`).join('');
+
+  function parseNum(v){ return parseFloat((v||'0').toString().replace(/\./g,'').replace(',','.')) || 0; }
+
+  function ciChange(i, inp){
+    const ideal = parseNum(inp.value);
+    state[i].ideal = ideal;
+    document.getElementById('vt'+i).textContent = brl(ideal * ITENS[i].custo);
+    // registrar alteração (auditoria): marca quando difere da sugestão do sistema
+    const mk = document.getElementById('mk'+i);
+    if (Math.abs(ideal - ITENS[i].sug) > 0.001) {
+      mk.classList.add('on');
+      mk.title = `Alterado por você · Sugestão do sistema: ${q2(ITENS[i].sug)} → Compra ideal: ${q2(ideal)}`;
+    } else { mk.classList.remove('on'); }
+    updateFooter();
+  }
+  function selRow(i, on){ state[i].sel = on; updateFooter(); }
+  function toggleAll(cb){
+    document.querySelectorAll('#tbody .chk').forEach((c,i)=>{ c.checked = cb.checked; state[i].sel = cb.checked; });
+    updateFooter();
+  }
+  function updateFooter(){
+    let n=0, qtd=0, val=0;
+    state.forEach((s,i)=>{ if(s.sel){ n++; qtd+=s.ideal; val += s.ideal*ITENS[i].custo; } });
+    document.getElementById('fCount').textContent = n;
+    document.getElementById('fQtd').textContent = q2(qtd);
+    document.getElementById('fVal').textContent = brl(val);
+  }
+
+  // ---- telas ----
+  function goPedido(){ document.getElementById('screen-sugestao').classList.add('hidden'); document.getElementById('screen-pedido').classList.remove('hidden'); }
+  function backSugestao(){ document.getElementById('screen-pedido').classList.add('hidden'); document.getElementById('screen-sugestao').classList.remove('hidden'); }
+  function selItem(tr){ tr.closest('tbody').querySelectorAll('tr').forEach(x=>x.classList.remove('selrow')); tr.classList.add('selrow'); }
+
+  // ---- drawer ----
+  let charts = [];
+  function openDrawer(i){
+    const r = ITENS[i];
+    document.getElementById('dr-item').textContent = r.desc;
+    document.getElementById('dr-cod').textContent = r.cod;
+    document.getElementById('dr-grp').textContent = r.grp;
+    document.getElementById('drawer').classList.add('show');
+    document.getElementById('backdrop').classList.add('show');
+    setTimeout(drawCharts, 60);
+  }
+  function closeDrawer(){ document.getElementById('drawer').classList.remove('show'); document.getElementById('backdrop').classList.remove('show'); }
+  function drawCharts(){
+    charts.forEach(c=>c.destroy()); charts=[];
+    const dark='#334155', mid='#94a3b8', grid='#eef2f7';
+    const base = { responsive:true, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{size:9}}}, y:{grid:{color:grid},ticks:{font:{size:9}}} } };
+    charts.push(new Chart(chMes, { type:'bar', data:{ labels:['Jan','Fev','Mar','Abr','Mai','Jun'], datasets:[{ data:[280,300,340,360,330,395], backgroundColor:dark, borderRadius:3, barPercentage:.6 }] }, options:base }));
+    charts.push(new Chart(chPreco, { type:'line', data:{ labels:['Jan','Fev','Mar','Abr','Mai','Jun'], datasets:[{ data:[40.5,41.2,41.8,43.0,44.1,42.9], borderColor:dark, backgroundColor:'rgba(51,65,85,.06)', fill:true, tension:.35, pointRadius:2, borderWidth:2 }] }, options:base }));
+    charts.push(new Chart(chEstoque, { type:'line', data:{ labels:['Jan','Fev','Mar','Abr','Mai','Jun'], datasets:[{ data:[120,95,140,70,110,58], borderColor:mid, backgroundColor:'rgba(148,163,184,.08)', fill:true, tension:.3, pointRadius:2, borderWidth:2 }] }, options:base }));
+  }
+</script>
+</body>
+</html>

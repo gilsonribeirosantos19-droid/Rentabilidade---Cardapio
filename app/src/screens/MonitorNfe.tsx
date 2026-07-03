@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { mediaPonderada } from '../lib/cost'
 import { imprimirDanfe, gerarDanfeAiko } from '../lib/danfe'
 import './fiscal.css'
 
@@ -147,7 +148,7 @@ export function MonitorNfe() {
     if (error) throw error
     const { data: sd } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('insumo_id', insId).eq('loja_id', loja).limit(1)
     const qA = sd?.[0]?.quantidade || 0, cmA = sd?.[0]?.custo_medio || 0, qN = qA + dados.quantidade
-    const cmN = (qA > 0 && qN > 0) ? (qA * cmA + dados.quantidade * dados.custo_unitario) / qN : dados.custo_unitario
+    const cmN = mediaPonderada(qA, cmA, dados.quantidade, dados.custo_unitario)
     await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, quantidade: +qN.toFixed(4), custo_medio: +cmN.toFixed(6), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
     try { await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, saldo_anterior: +qA.toFixed(4), custo_medio_anterior: +cmA.toFixed(4), qtd_entrada: +dados.quantidade.toFixed(4), custo_entrada: +dados.custo_unitario.toFixed(4), novo_custo_medio: +cmN.toFixed(4), impacto_pct: cmA > 0 ? +(((cmN - cmA) / cmA) * 100).toFixed(4) : null, origem: 'nfe', documento_ref: dados.nfe_numero || null }) } catch { /* opcional */ }
     if (fornId) { try { await supabase.from('insumo_fornecedores').update({ preco_unitario: +dados.custo_unitario.toFixed(6) }).eq('insumo_id', insId).eq('fornecedor_id', fornId) } catch { /* opcional */ } }

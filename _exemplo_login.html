@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Protótipo — Login Aiko</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,'Segoe UI',sans-serif;height:100vh;display:flex;background:#fff;color:#0f172a}
+
+  /* ===== LADO ESQUERDO (marca) ===== */
+  .brand{flex:1.1;position:relative;overflow:hidden;background:linear-gradient(150deg,#1e293b 0%,#0f172a 60%,#0b1220 100%);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:42px 52px}
+  .brand::before{content:'';position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,.32),transparent 65%);top:-160px;right:-140px;filter:blur(10px)}
+  .brand::after{content:'';position:absolute;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(0,180,255,.10),transparent 65%);bottom:-120px;left:-80px}
+  .b-top{display:flex;align-items:center;gap:12px;position:relative;z-index:2}
+  .b-mk{width:46px;height:46px;background:#f97316;border-radius:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(249,115,22,.5)}
+  .b-top b{font-size:24px;font-weight:900;letter-spacing:-.5px}
+  .b-top small{display:block;font-size:12px;color:#f97316;font-weight:600;margin-top:-2px}
+  .b-mid{position:relative;z-index:2;max-width:430px}
+  .b-mid h1{font-size:38px;font-weight:800;line-height:1.12;letter-spacing:-1px;margin-bottom:16px}
+  .b-mid h1 span{color:#f97316}
+  .b-mid p{font-size:15px;color:#94a3b8;line-height:1.6;margin-bottom:34px}
+  .feat{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .feat .ic{width:42px;height:42px;border-radius:11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;flex:none}
+  .feat .ic svg{width:20px;height:20px;stroke:#f97316;fill:none;stroke-width:2}
+  .feat .ft{font-size:14px;font-weight:600}
+  .feat .fd{font-size:12.5px;color:#94a3b8}
+  .b-foot{position:relative;z-index:2;font-size:12px;color:#64748b}
+
+  /* ===== LADO DIREITO (form) ===== */
+  .panel{flex:.9;display:flex;align-items:center;justify-content:center;padding:40px}
+  .form{width:100%;max-width:380px}
+  .form h2{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+  .form .sub{font-size:14px;color:#64748b;margin-bottom:30px}
+  .fld{margin-bottom:18px}
+  .fld label{display:block;font-size:12.5px;font-weight:600;color:#334155;margin-bottom:7px}
+  .inp{position:relative}
+  .inp input{width:100%;height:48px;border:1.5px solid #e2e8f0;border-radius:11px;padding:0 44px 0 14px;font-size:14px;font-family:inherit;color:#0f172a;transition:border-color .15s,box-shadow .15s;background:#fff}
+  .inp input:focus{outline:none;border-color:#f97316;box-shadow:0 0 0 4px rgba(249,115,22,.12)}
+  .inp .ic{position:absolute;right:14px;top:14px;color:#94a3b8;cursor:pointer}
+  .inp .ic svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2}
+  .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .chk{display:flex;align-items:center;gap:8px;font-size:13px;color:#475569;cursor:pointer}
+  .chk input{width:16px;height:16px;accent-color:#f97316}
+  .link{font-size:13px;color:#f97316;font-weight:600;text-decoration:none;cursor:pointer}
+  .link:hover{text-decoration:underline}
+  .btn{width:100%;height:50px;background:#f97316;color:#fff;border:none;border-radius:11px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 20px rgba(249,115,22,.28);transition:background .15s,transform .05s}
+  .btn:hover{background:#ea6a0a}
+  .btn:active{transform:translateY(1px)}
+  .help{text-align:center;font-size:13px;color:#94a3b8;margin-top:26px}
+
+  .note{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.9);color:#fff;font-size:12px;padding:6px 14px;border-radius:20px;z-index:9}
+  @media(max-width:860px){.brand{display:none}}
+</style>
+</head>
+<body>
+  <div class="note">🎨 Protótipo de login — Aiko</div>
+
+  <!-- MARCA -->
+  <div class="brand">
+    <div class="b-top">
+      <div class="b-mk"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,21 8,6 13,13 17,8 23,21"/><line x1="1" y1="21" x2="23" y2="21"/></svg></div>
+      <div><b>Aiko</b><small>sistema</small></div>
+    </div>
+
+    <div class="b-mid">
+      <h1>Gestão inteligente para o seu <span>restaurante</span>.</h1>
+      <p>Controle de estoque, custos e rentabilidade num só lugar — com a precisão que o seu negócio merece.</p>
+
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4z"/><polyline points="3.3 7 12 12 20.7 7"/></svg></div>
+        <div><div class="ft">Estoque em tempo real</div><div class="fd">Saldo, custo médio e movimentação por loja.</div></div>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div><div class="ft">CMV e rentabilidade</div><div class="fd">Saiba quanto cada prato realmente lucra.</div></div>
+      </div>
+      <div class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div><div class="ft">Fichas técnicas</div><div class="fd">Receitas, rendimentos e custo automático.</div></div>
+      </div>
+    </div>
+
+    <div class="b-foot">© 2026 Aiko · Todos os direitos reservados</div>
+  </div>
+
+  <!-- FORM -->
+  <div class="panel">
+    <div class="form">
+      <h2>Acesse sua conta</h2>
+      <div class="sub">Bem-vindo de volta! Entre para continuar.</div>
+
+      <div class="fld">
+        <label>E-mail</label>
+        <div class="inp">
+          <input type="email" placeholder="seu@email.com" value="djalma@sushipn.com">
+          <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+        </div>
+      </div>
+
+      <div class="fld">
+        <label>Senha</label>
+        <div class="inp">
+          <input type="password" id="pw" placeholder="••••••••" value="123456">
+          <span class="ic" onclick="tg()"><svg id="eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="chk"><input type="checkbox" checked> Lembrar de mim</label>
+        <a class="link">Esqueci minha senha</a>
+      </div>
+
+      <button class="btn">Entrar
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+
+      <div class="help">Problemas para acessar? <a class="link">Fale com o suporte</a></div>
+    </div>
+  </div>
+
+  <script>
+    function tg(){ const p=document.getElementById('pw'); p.type = p.type==='password'?'text':'password'; }
+  </script>
+</body>
+</html>

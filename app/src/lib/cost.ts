@@ -8,6 +8,14 @@ export type InsumoLike = { id: string; preco_compra?: number; unidade_medida?: s
 export type FichaItem = { insumo_id: string; quantidade_g?: number }
 export type CostCtx = { entradas?: Mov[]; saidas?: Mov[]; saldos?: Saldo[]; vinculos?: Vinculo[]; insumos?: InsumoLike[]; dataLimite?: string | null }
 
+// Média móvel ponderada: novo custo médio ao ENTRAR `qEnt` unidades a `custoEnt`
+// (mesma regra do custoMedioNaData/recalc do banco). Fonte única p/ Entradas manual e NF-e.
+export function mediaPonderada(qAtual: number, cmAtual: number, qEnt: number, custoEnt: number): number {
+  const qA = +(qAtual || 0), cmA = +(cmAtual || 0), qE = +(qEnt || 0), cE = +(custoEnt || 0)
+  const qN = qA + qE
+  return qN > 0 ? (qA * cmA + qE * cE) / qN : cE
+}
+
 export function custoMedioNaData(insumoId: string, dataLimite: string | null, ctx: CostCtx) {
   const lim = dataLimite ? (String(dataLimite).length === 10 ? dataLimite + 'T23:59:59' : dataLimite) : null
   const dt = (m: Mov) => m.criado_em || m.created_at || ''

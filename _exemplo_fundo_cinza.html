@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo · Fundo cinza + cards</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --orange:#f97316; --text1:#0f172a; --text2:#64748b; --text3:#94a3b8;
+    --border:#e2e8f0; --nav:#0f1a2e;
+    /* alternado pelo botão */
+    --canvas:#f4f6fa;         /* fundo da área de trabalho (recomendado: cinza) */
+    --card-border:#e7ebf0;
+    --card-shadow:0 1px 3px rgba(15,23,42,.06);
+  }
+  body.branco{ --canvas:#ffffff; --card-shadow:0 1px 2px rgba(15,23,42,.04); }
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#eef2f7;color:var(--text1);height:100vh;display:flex;overflow:hidden}
+
+  .rail{width:52px;background:var(--nav);flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:6px}
+  .rail .mk{width:32px;height:32px;background:var(--orange);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;margin-bottom:10px}
+  .rail .ic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:16px}
+  .rail .ic.on{background:rgba(249,115,22,.16);color:var(--orange)}
+
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh;overflow:hidden}
+  .topbar{height:44px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
+  .crumb{display:flex;align-items:baseline;gap:8px;font-weight:800}
+  .crumb .c1{font-size:15px;color:var(--text3)}
+  .crumb .sep{color:var(--text3)} .crumb .c2{font-size:16px;color:var(--text1)}
+  .tr{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text2)}
+  .tr select{height:32px;border:1px solid var(--border);border-radius:8px;padding:0 8px;font-family:inherit;font-size:13px}
+  .tr .sair{color:#e11d48;border:1px solid #fecaca;background:#fff;border-radius:7px;height:30px;padding:0 12px;font-weight:600;cursor:pointer}
+  .tabs{display:flex;align-items:center;gap:6px;padding:7px 16px;background:#fff;flex-shrink:0}
+  .tab{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--text2);background:#f1f5f9;border-radius:999px;cursor:pointer}
+  .tab.on{background:var(--orange);color:#fff}
+  .tab .x{opacity:.55}
+
+  /* AQUI está o efeito: fundo da área de trabalho */
+  .content{flex:1;overflow-y:auto;background:var(--canvas);border-top:1px solid var(--border);padding:16px 22px;transition:background .2s}
+
+  .card{background:#fff;border:1px solid var(--card-border);border-radius:12px;box-shadow:var(--card-shadow)}
+  .filterbar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px}
+  .fg{display:flex;flex-direction:column;gap:3px}
+  .fg label{font-size:11px;font-weight:500;color:var(--text2)}
+  .fg .field{height:34px;border:1px solid #cbd5e1;border-radius:8px;padding:0 10px;font-size:13px;font-family:inherit;color:var(--text1);background:#fff}
+  .fg.grow{flex:1;min-width:220px}.fg.grow .field{width:100%}
+  .btn-ghost{height:34px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-left:auto}
+
+  .tbl-wrap{overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{background:#f1f5f9;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:10.5px;text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+  th.r,td.r{text-align:right}th.c,td.c{text-align:center}
+  tbody td{padding:6px 12px;border-bottom:1px solid #eef1f5;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:#fafbfc}
+  .mono{font-family:'DM Mono',ui-monospace,monospace}
+  .mut{color:var(--text2)}
+  .ok{color:#16a34a;font-weight:700;font-size:11px}
+
+  .demo{position:fixed;right:16px;bottom:16px;background:#0f172a;color:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:99;font-size:13px;display:flex;align-items:center;gap:12px}
+  .demo b{font-weight:700}.demo .hint{color:#94a3b8;font-size:11px}
+  .demo button{background:var(--orange);border:none;color:#fff;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px}
+</style>
+</head>
+<body>
+<div class="rail">
+  <div class="mk">A</div><div class="ic">🏠</div><div class="ic on">📦</div><div class="ic">🛒</div><div class="ic">🧾</div><div class="ic">🗄️</div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="crumb"><span class="c1">Estoque</span><span class="sep">›</span><span class="c2">Saldo de Estoque</span></div>
+    <div class="tr">
+      <select><option>Todas as lojas</option></select>
+      <span>Djalma Leite Pinheiro Neto</span>
+      <button class="sair">⎋ Sair</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab">🏠</div>
+    <div class="tab">Movimentação <span class="x">×</span></div>
+    <div class="tab on">Saldo de Estoque <span class="x">×</span></div>
+  </div>
+
+  <div class="content">
+    <!-- CARD DE FILTROS -->
+    <div class="card filterbar">
+      <div class="fg"><label>Posição</label><select class="field" style="min-width:150px"><option>Posição Atual</option></select></div>
+      <div class="fg"><label>Categoria</label><select class="field" style="min-width:170px"><option>Todas as categorias</option></select></div>
+      <div class="fg grow"><label>Buscar</label><input class="field" placeholder="Pesquisar item..."></div>
+      <button class="btn-ghost">▽ Mais filtros</button>
+    </div>
+
+    <!-- CARD DA TABELA -->
+    <div class="card tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>INSUMO</th><th>CATEGORIA</th><th>TIPO DO ITEM</th><th>UN.</th><th>LOJA</th>
+          <th class="r">SALDO ATUAL</th><th class="r">CUSTO MÉDIO</th><th class="r">VALOR EM ESTOQUE</th><th>STATUS</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="demo">
+  <div><b>Protótipo · fundo</b><br><span class="hint">Veja os cards destacarem no cinza</span></div>
+  <button id="toggle">Ver com fundo branco</button>
+</div>
+
+<script>
+  const DATA=[
+    ['Salmao','Proteinas','Materia Prima','kg','Delivery','1.248,570','R$ 59,95','R$ 74.846,18'],
+    ['Salmao','Proteinas','Materia Prima','kg','Cidade Nova','1.233,200','R$ 59,96','R$ 73.942,44'],
+    ['Salmao','Proteinas','Materia Prima','kg','Ponta Negra','739,550','R$ 59,88','R$ 44.281,02'],
+    ['Salmao','Proteinas','Materia Prima','kg','Parque Laranjeiras','548,460','R$ 59,78','R$ 32.787,24'],
+    ['Salmao','Proteinas','Materia Prima','kg','Paraíba','505,290','R$ 59,70','R$ 30.167,53'],
+    ['Bomba Tare','Orientais','Produto Intermediario','litro','Ponta Negra','7.480,000','R$ 2,96','R$ 22.132,00'],
+    ['Cream Cheese','Frios','Materia Prima','kg','Delivery','294,000','R$ 42,89','R$ 12.609,44'],
+    ['Arroz Japones','Orientais','Materia Prima','kg','Cidade Nova','1.090,000','R$ 11,35','R$ 12.366,20'],
+    ['Alga (Nori)','Orientais','Materia Prima','un','Cidade Nova','13.250,000','R$ 0,85','R$ 11.253,50'],
+    ['Cream Cheese','Frios','Materia Prima','kg','Cidade Nova','258,000','R$ 42,61','R$ 10.994,16'],
+    ['Arroz Japones','Orientais','Materia Prima','kg','Delivery','790,000','R$ 11,33','R$ 8.952,20'],
+    ['Alga (Nori)','Orientais','Materia Prima','un','Delivery','10.500,000','R$ 0,83','R$ 8.749,00'],
+  ];
+  document.getElementById('rows').innerHTML = DATA.map(d=>`
+    <tr><td style="font-weight:600">${d[0]}</td><td class="mut">${d[1]}</td><td class="mut">${d[2]}</td>
+    <td class="mut">${d[3]}</td><td class="mut">${d[4]}</td>
+    <td class="r mono">${d[5]}</td><td class="r mono">${d[6]}</td><td class="r mono" style="font-weight:700">${d[7]}</td>
+    <td><span class="ok">OK</span></td></tr>`).join('');
+
+  const btn=document.getElementById('toggle');
+  btn.onclick=()=>{document.body.classList.toggle('branco');
+    btn.textContent=document.body.classList.contains('branco')?'Ver com fundo cinza':'Ver com fundo branco';};
+</script>
+</body>
+</html>

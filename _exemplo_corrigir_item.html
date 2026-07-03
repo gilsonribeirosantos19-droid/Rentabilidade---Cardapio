@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo — Corrigir Item da NF-e (Aiko)</title>
+<style>
+  :root{ --orange:#f97316; --blue:#2563eb; --bg:#eef1f6; --line:#e5e9f0; --t1:#0f172a; --t2:#475569; --t3:#94a3b8; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:Inter,'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--t1); font-size:13px; }
+  .scrim{ position:fixed; inset:0; background:rgba(15,23,42,.45); display:flex; align-items:flex-start; justify-content:center; padding:14px; overflow:auto; }
+  .panel{ background:#fff; width:min(1180px,98vw); border-radius:14px; box-shadow:0 24px 70px rgba(15,23,42,.3); display:flex; flex-direction:column; max-height:calc(100vh - 28px); }
+
+  /* HEADER */
+  .hd{ display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid var(--line); flex-shrink:0; }
+  .hd h1{ font-size:18px; font-weight:800; }
+  .hd .sub{ font-size:12px; color:var(--t3); margin-top:2px; }
+  .hd .x{ width:32px;height:32px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;color:#64748b;font-size:16px; }
+
+  .body{ overflow:auto; padding:12px 18px; display:flex; flex-direction:column; gap:10px; }
+  .sec-t{ display:flex; align-items:center; gap:7px; font-size:11px; font-weight:800; color:var(--blue); text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; }
+  .sec-t svg{ width:14px;height:14px; }
+  .card{ border:1px solid var(--line); border-radius:10px; padding:11px 13px; background:#fff; }
+
+  /* DADOS FORNECEDOR */
+  .forn{ display:grid; grid-template-columns:110px 1.4fr 1fr 1fr; gap:3px 22px; }
+  .lbl{ font-size:10px; color:var(--t3); text-transform:uppercase; letter-spacing:.04em; }
+  .val{ font-size:13px; font-weight:700; color:var(--t1); }
+
+  /* VINCULAR */
+  .fg{ display:flex; flex-direction:column; gap:3px; }
+  .fg > label{ font-size:10.5px; font-weight:600; color:var(--t2); }
+  .fg .req{ color:var(--orange); }
+  .inp,.sel{ height:31px; border:1px solid #cbd5e1; border-radius:7px; padding:0 9px; font-size:12.5px; font-family:inherit; color:var(--t1); background:#fff; width:100%; }
+  .inp:focus,.sel:focus{ outline:none; border-color:var(--orange); }
+  .inp[readonly]{ background:#f8fafc; color:var(--t2); }
+  .inp.ph{ color:var(--t3); }
+  .row1{ display:grid; grid-template-columns:78px 1fr 120px 150px 120px 100px; gap:9px; align-items:end; }
+  .row2{ display:grid; grid-template-columns:150px 1fr 120px 190px auto; gap:9px; align-items:end; margin-top:9px; }
+  .selwrap{ position:relative; }
+  .selwrap .chev{ position:absolute; right:10px; top:9px; pointer-events:none; color:#64748b; font-size:11px; }
+  .chk{ display:inline-flex; align-items:center; gap:7px; font-size:12px; color:#334155; cursor:pointer; height:31px; white-space:nowrap; }
+  .chk input{ width:15px;height:15px; accent-color:var(--orange); }
+  .btn-blue{ height:31px; padding:0 14px; border:none; border-radius:7px; background:var(--blue); color:#fff; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+
+  /* dropdown pesquisável (mock aberto opcional) */
+  .hint{ font-size:11px; color:var(--t3); margin-top:4px; }
+
+  /* TABELA */
+  .tbar{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .search{ position:relative; flex:1; max-width:320px; }
+  .search input{ width:100%; height:34px; border:1px solid #cbd5e1; border-radius:8px; padding:0 11px 0 32px; font-size:12.5px; font-family:inherit; }
+  .search svg{ position:absolute; left:10px; top:9px; color:#94a3b8; }
+  .btn-g{ height:34px; padding:0 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--t2); font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; }
+  .tbl-wrap{ border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .tbl-scroll{ overflow:auto; max-height:300px; }
+  table{ width:100%; border-collapse:collapse; font-size:12px; }
+  thead th{ position:sticky; top:0; background:#f1f5f9; color:#64748b; font-weight:700; text-transform:uppercase; font-size:10px; letter-spacing:.03em; text-align:left; padding:8px 10px; border-bottom:1px solid #d6dce6; white-space:nowrap; z-index:2; }
+  th.r,td.r{ text-align:right; } th.c,td.c{ text-align:center; }
+  tbody td{ padding:5px 10px; border-bottom:1px solid #eef1f5; border-right:1px solid #f1f5f9; white-space:nowrap; color:var(--t1); }
+  tbody td:last-child{ border-right:none; }
+  tbody tr:hover td{ background:#f8fafc; }
+  .mono{ font-family:'DM Mono',ui-monospace,monospace; }
+  .pad-yes{ display:inline-flex; width:18px;height:18px; align-items:center;justify-content:center; border:1px solid #cbd5e1; border-radius:4px; color:var(--orange); font-weight:800; font-size:11px; background:#fff; }
+  .emp-chip{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--blue); background:#eff6ff; border:1px solid #dbeafe; border-radius:14px; padding:2px 9px; cursor:pointer; }
+  .ico{ border:none;background:none;cursor:pointer; padding:3px 5px; border-radius:6px; }
+  .ico:hover{ background:#f1f5f9; }
+  .pag{ display:flex; align-items:center; justify-content:space-between; padding:9px 4px; font-size:12px; color:var(--t3); flex-wrap:wrap; gap:8px; }
+  .pag .nums{ display:flex; gap:4px; align-items:center; }
+  .pbtn{ min-width:28px;height:28px; border:1px solid var(--line); border-radius:7px; background:#fff; color:var(--t2); font-size:12px; cursor:pointer; font-family:inherit; }
+  .pbtn.on{ background:var(--orange); border-color:var(--orange); color:#fff; }
+
+  /* EMPRESAS */
+  .emp-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .emp-tag{ font-size:12px; font-weight:600; color:#334155; background:#f1f5f9; border:1px solid var(--line); border-radius:8px; padding:6px 12px; }
+  .emp-tag.count{ background:#eff6ff; color:var(--blue); border-color:#dbeafe; }
+
+  /* FOOTER */
+  .ft{ display:flex; align-items:center; justify-content:space-between; padding:14px 22px; border-top:1px solid var(--line); flex-shrink:0; }
+  .btn-back{ height:40px; padding:0 16px; border:1px solid var(--line); border-radius:9px; background:#fff; color:var(--t2); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }
+  .btn-save{ height:40px; padding:0 22px; border:none; border-radius:9px; background:var(--orange); color:#fff; font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; }
+  .tag-proto{ position:fixed; top:8px; right:10px; background:#0f172a; color:#fff; font-size:10px; font-weight:700; padding:4px 9px; border-radius:14px; z-index:99; }
+</style>
+</head>
+<body>
+<div class="tag-proto">PROTÓTIPO</div>
+<div class="scrim">
+  <div class="panel">
+
+    <!-- HEADER -->
+    <div class="hd">
+      <div>
+        <h1>Corrigir item da NF-e</h1>
+        <div class="sub">Vincule o item da nota fiscal a um item do seu estoque</div>
+      </div>
+      <button class="x">✕</button>
+    </div>
+
+    <div class="body">
+
+      <!-- 1. FORNECEDOR -->
+      <div class="card">
+        <div class="sec-t"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3"/></svg> Dados do fornecedor</div>
+        <div class="forn">
+          <div><div class="lbl">Código</div><div class="val">1012</div></div>
+          <div><div class="lbl">Nome</div><div class="val">DUNORTE DISTRIBUIDORA</div></div>
+          <div><div class="lbl">CNPJ</div><div class="val mono">84.466.424/0001-36</div></div>
+          <div><div class="lbl">Telefone</div><div class="val">(92) 3642-1000</div></div>
+        </div>
+      </div>
+
+      <!-- 2. VINCULAR NOVO ITEM -->
+      <div class="card">
+        <div class="sec-t"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg> Vincular novo item</div>
+
+        <!-- linha 1 -->
+        <div class="row1">
+          <div class="fg"><label>Código</label><input class="inp mono" placeholder="—" readonly></div>
+          <div class="fg"><label>Item interno (estoque) <span class="req">*</span></label>
+            <div class="selwrap"><input class="inp ph" placeholder="Pesquisar por código, nome, código de barras..."><span class="chev">▾</span></div>
+          </div>
+          <div class="fg"><label>Un. controle <span class="req">*</span></label><input class="inp" placeholder="—" readonly></div>
+          <div class="fg"><label>Emb. (fornecedor) <span class="req">*</span></label>
+            <div class="selwrap"><select class="sel"><option>Selecione...</option><option>CAIXA</option><option>FARDO</option><option>UNIDADE</option><option>PACOTE</option></select></div>
+          </div>
+          <div class="fg"><label>Pacote</label>
+            <div class="selwrap"><select class="sel"><option>Selecione...</option><option>UNIDADE</option><option>DÚZIA</option></select></div>
+          </div>
+          <div class="fg"><label>Qt. na emb. <span class="req">*</span></label><input class="inp mono" placeholder="0,000"></div>
+        </div>
+
+        <!-- linha 2 -->
+        <div class="row2">
+          <div class="fg"><label>Código no fornecedor</label><input class="inp mono" placeholder="(da NF-e)"></div>
+          <div class="fg"><label>Descrição do item (NF-e)</label><input class="inp" placeholder="Preenchida automaticamente pela NF-e" readonly></div>
+          <div class="fg"><label>Valor unitário (NF-e)</label><input class="inp mono" value="R$ 0,00" readonly></div>
+          <label class="chk"><input type="checkbox"> Embalagem padrão deste fornecedor</label>
+          <div class="fg"><label>&nbsp;</label><button class="btn-blue">+ Incluir vínculo</button></div>
+        </div>
+      </div>
+
+      <!-- 3. ITENS JÁ VINCULADOS -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:10px">
+          <div class="sec-t" style="margin:0"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg> Itens já vinculados a este fornecedor</div>
+          <div class="tbar" style="margin:0">
+            <div class="search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Pesquisar item..."></div>
+            <button class="btn-g">▽ Filtrar</button>
+          </div>
+        </div>
+
+        <div class="tbl-wrap"><div class="tbl-scroll">
+          <table>
+            <thead><tr>
+              <th class="c" style="width:30px"><input type="checkbox"></th>
+              <th>Item interno</th><th>Descrição do item</th><th>UM</th><th>Emb. (fornec.)</th><th>Pacote</th>
+              <th class="r">Qt. emb.</th><th>Cód. fornecedor</th><th class="r">Vl. unitário</th><th class="c">Emb. padrão</th><th>Empresas</th><th class="c">Ações</th>
+            </tr></thead>
+            <tbody>
+              <tr><td class="c"><input type="checkbox"></td><td class="mono">5000000</td><td>MC PAPEL TOALHA</td><td>PACOTE</td><td>PACOTE</td><td>PACOTE</td><td class="r mono">1,0000</td><td class="mono">212787</td><td class="r mono">R$ 345,1050</td><td class="c">3 - UNIDADE</td><td><span class="emp-chip">🏪 3 empresas</span></td><td class="c"><button class="ico">✏️</button><button class="ico">🗑️</button></td></tr>
+              <tr><td class="c"><input type="checkbox"></td><td class="mono">2000134</td><td>MP ATUM LATA</td><td>KG</td><td>QUILOGRAMA</td><td>—</td><td class="r mono">1,0000</td><td class="mono">212172</td><td class="r mono">R$ 7,1749</td><td class="c">3 - UNIDADE</td><td><span class="emp-chip">🏪 2 empresas</span></td><td class="c"><button class="ico">✏️</button><button class="ico">🗑️</button></td></tr>
+              <tr><td class="c"><input type="checkbox"></td><td class="mono">5000009</td><td>MC BOM AR</td><td>UNID</td><td>UNIDADE</td><td>—</td><td class="r mono">1,0000</td><td class="mono">214061</td><td class="r mono">R$ 12,8959</td><td class="c">3 - UNIDADE</td><td><span class="emp-chip">🏪 3 empresas</span></td><td class="c"><button class="ico">✏️</button><button class="ico">🗑️</button></td></tr>
+              <tr><td class="c"><input type="checkbox"></td><td class="mono">5000011</td><td>MC DESENGORDURANTE</td><td>LITRO</td><td>LITRO</td><td>—</td><td class="r mono">1,0000</td><td class="mono">221386</td><td class="r mono">R$ 106,2100</td><td class="c">2 - LITRO</td><td><span class="emp-chip">🏪 1 empresa</span></td><td class="c"><button class="ico">✏️</button><button class="ico">🗑️</button></td></tr>
+              <tr><td class="c"><input type="checkbox"></td><td class="mono">5000012</td><td>MC DESINFETANTE</td><td>UNID</td><td>UNIDADE</td><td>—</td><td class="r mono">5,0000</td><td class="mono">214580</td><td class="r mono">R$ 140,1900</td><td class="c">6 - UN SL</td><td><span class="emp-chip">🏪 2 empresas</span></td><td class="c"><button class="ico">✏️</button><button class="ico">🗑️</button></td></tr>
+              <tr><td class="c"><input type="checkbox"></td><td class="mono">5000015</td><td>MC SACO LIXO 100L</td><td>PACOTE</td><td>FARDO</td><td>UNIDADE</td><td class="r mono">10,0000</td><td class="mono">230011</td><td class="r mono">R$ 58,9000</td><td class="c">3 - UNIDADE</td><td><span class="emp-chip">🏪 5 empresas</span></td><td class="c"><button class="ico">✏️</button><button class="ico">🗑️</button></td></tr>
+              <tr><td class="c"><input type="checkbox"></td><td class="mono">2000201</td><td>MP SHOYU PREMIUM</td><td>LITRO</td><td>CAIXA C/ 12</td><td>UNIDADE</td><td class="r mono">12,0000</td><td class="mono">240199</td><td class="r mono">R$ 392,7000</td><td class="c">2 - LITRO</td><td><span class="emp-chip">🏪 4 empresas</span></td><td class="c"><button class="ico">✏️</button><button class="ico">🗑️</button></td></tr>
+            </tbody>
+          </table>
+        </div></div>
+
+        <div class="pag">
+          <span>Mostrando 1 a 20 de 1.248 registros</span>
+          <span>Linhas por página: <select class="btn-g" style="height:28px;padding:0 8px"><option>20</option><option>50</option><option>100</option></select></span>
+          <div class="nums">
+            <button class="pbtn">‹‹</button><button class="pbtn">‹</button>
+            <button class="pbtn on">1</button><button class="pbtn">2</button><button class="pbtn">3</button>
+            <span style="color:#94a3b8">…</span><button class="pbtn">63</button>
+            <button class="pbtn">›</button><button class="pbtn">››</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. EMPRESAS VINCULADAS -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+          <div>
+            <div class="sec-t" style="margin:0"><svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3"/></svg> Empresas vinculadas (regras de disponibilidade)</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:4px">Defina em quais empresas (lojas) este vínculo estará disponível para uso.</div>
+          </div>
+          <button class="btn-g">⚙ Gerenciar empresas</button>
+        </div>
+        <div class="emp-row">
+          <span class="emp-tag count">🏪 3 empresas vinculadas</span>
+          <span class="emp-tag">Sushi Ponta Negra</span>
+          <span class="emp-tag">Sushi Centro</span>
+          <span class="emp-tag">Sushi Djalma Batista</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="ft">
+      <button class="btn-back">‹ Voltar para a lista</button>
+      <button class="btn-save">Salvar correção</button>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

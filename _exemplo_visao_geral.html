@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo — Visão Geral do Estoque (Aiko)</title>
+<style>
+  :root{ --teal:#f97316; --bg:#f1f5f9; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Segoe UI',Inter,system-ui,sans-serif; background:var(--bg); color:#0f172a; padding:24px; }
+  .wrap{ max-width:1280px; margin:0 auto; }
+  .title{ font-size:20px; font-weight:800; margin-bottom:2px; }
+  .sub{ font-size:13px; color:#94a3b8; margin-bottom:20px; }
+
+  /* KPI cards */
+  .kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  .kpi{ background:#fff; border:1px solid #e7ebf0; border-radius:14px; padding:16px 18px; box-shadow:0 1px 2px rgba(15,23,42,.04); position:relative; overflow:hidden; }
+  .kpi .ic{ width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+  .kpi .lbl{ font-size:12px; color:#64748b; font-weight:600; }
+  .kpi .val{ font-size:26px; font-weight:800; font-family:'DM Mono',ui-monospace,monospace; margin:2px 0 2px; }
+  .kpi .foot{ font-size:11px; color:#94a3b8; }
+  .c-blue{ color:#2563eb; } .c-green{ color:#16a34a; } .c-amber{ color:#f59e0b; } .c-red{ color:#e11d48; }
+  .bg-blue{ background:#eff6ff; } .bg-green{ background:#f0fdf4; } .bg-amber{ background:#fffbeb; } .bg-red{ background:#fef2f2; }
+
+  /* toolbar */
+  .bar{ display:flex; gap:10px; align-items:center; background:#fff; border:1px solid #e7ebf0; border-radius:12px; padding:12px 14px; margin-bottom:14px; flex-wrap:wrap; }
+  .srch{ position:relative; flex:1; min-width:220px; }
+  .srch input{ width:100%; height:38px; border:1px solid #e2e8f0; border-radius:9px; padding:0 12px 0 34px; font-size:13px; font-family:inherit; }
+  .srch svg{ position:absolute; left:11px; top:11px; }
+  .bar select{ height:38px; border:1px solid #e2e8f0; border-radius:9px; padding:0 12px; font-size:13px; font-family:inherit; color:#475569; background:#fff; }
+  .seg{ display:flex; gap:0; border:1px solid #e2e8f0; border-radius:9px; overflow:hidden; }
+  .seg button{ height:38px; padding:0 14px; border:none; background:#fff; color:#475569; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; border-right:1px solid #e2e8f0; }
+  .seg button:last-child{ border-right:none; }
+  .seg button.on{ background:#fff7ed; color:#f97316; }
+
+  /* table */
+  .card{ background:#fff; border:1px solid #e7ebf0; border-radius:12px; overflow:hidden; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  thead th{ background:#f1f5f9; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:11px; text-align:left; padding:11px 14px; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+  th.r,td.r{ text-align:right; } th.c,td.c{ text-align:center; }
+  tbody td{ padding:9px 14px; border-bottom:1px solid #eef1f5; }
+  tbody tr:hover td{ background:#f8fafc; }
+  .mono{ font-family:'DM Mono',ui-monospace,monospace; }
+  .nome{ font-weight:600; }
+  .grp{ font-size:11px; color:#94a3b8; }
+  .badge{ display:inline-block; font-size:11px; font-weight:600; padding:2px 10px; border-radius:20px; }
+  .b-ok{ background:#dcfce7; color:#16a34a; } .b-baixo{ background:#fff7ed; color:#f97316; } .b-zerado{ background:#f1f5f9; color:#64748b; }
+  .mini{ display:inline-block; width:54px; height:6px; background:#f1f5f9; border-radius:3px; overflow:hidden; vertical-align:middle; margin-right:7px; }
+  .mini > i{ display:block; height:100%; border-radius:3px; }
+  .foot-bar{ display:flex; align-items:center; justify-content:space-between; padding:11px 14px; font-size:12px; color:#94a3b8; background:#fbfcfe; border-top:1px solid #eef1f5; }
+  .foot-bar b{ color:#16a34a; font-family:'DM Mono',monospace; }
+  .tag-proto{ position:fixed; top:10px; right:12px; background:#0f172a; color:#fff; font-size:11px; font-weight:700; padding:5px 11px; border-radius:20px; }
+</style>
+</head>
+<body>
+<div class="tag-proto">PROTÓTIPO — Visão Geral</div>
+<div class="wrap">
+  <div class="title">Visão Geral do Estoque</div>
+  <div class="sub">Resumo rápido da saúde do seu estoque — Loja Centro · atualizado agora</div>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="ic bg-blue"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20 7h-9M14 17H5M17 3l3 4-3 4M7 21l-3-4 3-4"/></svg></div>
+      <div class="lbl">Total de insumos</div>
+      <div class="val c-blue">430</div>
+      <div class="foot">cadastrados e ativos</div>
+    </div>
+    <div class="kpi">
+      <div class="ic bg-green"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8"/></svg></div>
+      <div class="lbl">Valor em estoque</div>
+      <div class="val c-green">R$ 92.856,68</div>
+      <div class="foot">custo médio × saldo</div>
+    </div>
+    <div class="kpi">
+      <div class="ic bg-amber"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div class="lbl">Abaixo do mínimo</div>
+      <div class="val c-amber">12</div>
+      <div class="foot">requer reposição</div>
+    </div>
+    <div class="kpi">
+      <div class="ic bg-red"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+      <div class="lbl">Sem movimentação</div>
+      <div class="val c-red">7</div>
+      <div class="foot">sem entrada nem saída há 30d</div>
+    </div>
+  </div>
+
+  <!-- toolbar -->
+  <div class="bar">
+    <div class="srch">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input placeholder="Buscar insumo...">
+    </div>
+    <select><option>Todas as categorias</option><option>Hortifruti</option><option>Frios</option><option>Bebidas</option></select>
+    <div class="seg">
+      <button class="on">Todos</button>
+      <button>OK</button>
+      <button>Baixo</button>
+      <button>Zerado</button>
+    </div>
+  </div>
+
+  <!-- table -->
+  <div class="card">
+    <table>
+      <thead><tr>
+        <th>Insumo</th><th>Un.</th>
+        <th class="r">Quantidade</th><th class="r">Custo Médio</th><th class="r">Valor Total</th>
+        <th class="c">Nível (mín/máx)</th><th class="c">Status</th>
+      </tr></thead>
+      <tbody>
+        <tr><td><div class="nome">Salmão Fresco</div><div class="grp">Peixes</div></td><td>kg</td><td class="r mono">18,400</td><td class="r mono">R$ 79,90</td><td class="r mono">R$ 1.470,16</td><td class="c"><span class="mini"><i style="width:62%;background:#16a34a"></i></span><span class="grp">10 / 30</span></td><td class="c"><span class="badge b-ok">OK</span></td></tr>
+        <tr><td><div class="nome">Cream Cheese</div><div class="grp">Frios</div></td><td>kg</td><td class="r mono">2,800</td><td class="r mono">R$ 41,92</td><td class="r mono">R$ 117,38</td><td class="c"><span class="mini"><i style="width:28%;background:#f97316"></i></span><span class="grp">5 / 18</span></td><td class="c"><span class="badge b-baixo">Baixo</span></td></tr>
+        <tr><td><div class="nome">Couve</div><div class="grp">Hortifruti</div></td><td>kg</td><td class="r mono">5,600</td><td class="r mono">R$ 19,52</td><td class="r mono">R$ 109,31</td><td class="c"><span class="mini"><i style="width:80%;background:#16a34a"></i></span><span class="grp">3 / 8</span></td><td class="c"><span class="badge b-ok">OK</span></td></tr>
+        <tr><td><div class="nome">Shoyu Premium</div><div class="grp">Molhos</div></td><td>l</td><td class="r mono">0,000</td><td class="r mono">R$ 32,73</td><td class="r mono">—</td><td class="c"><span class="mini"><i style="width:0%"></i></span><span class="grp">4 / 12</span></td><td class="c"><span class="badge b-zerado">Zerado</span></td></tr>
+        <tr><td><div class="nome">Arroz para Sushi</div><div class="grp">Estiva Seca</div></td><td>kg</td><td class="r mono">42,000</td><td class="r mono">R$ 8,99</td><td class="r mono">R$ 377,58</td><td class="c"><span class="mini"><i style="width:95%;background:#16a34a"></i></span><span class="grp">15 / 45</span></td><td class="c"><span class="badge b-ok">OK</span></td></tr>
+        <tr><td><div class="nome">Gengibre em Conserva</div><div class="grp">Conservas</div></td><td>kg</td><td class="r mono">1,200</td><td class="r mono">R$ 28,40</td><td class="r mono">R$ 34,08</td><td class="c"><span class="mini"><i style="width:24%;background:#f97316"></i></span><span class="grp">2 / 6</span></td><td class="c"><span class="badge b-baixo">Baixo</span></td></tr>
+        <tr><td><div class="nome">Coca-Cola Lata 350ml</div><div class="grp">Bebidas</div></td><td>un</td><td class="r mono">96,000</td><td class="r mono">R$ 3,50</td><td class="r mono">R$ 336,00</td><td class="c"><span class="mini"><i style="width:70%;background:#16a34a"></i></span><span class="grp">24 / 144</span></td><td class="c"><span class="badge b-ok">OK</span></td></tr>
+      </tbody>
+    </table>
+    <div class="foot-bar">
+      <span>Mostrando 7 de 430 insumos</span>
+      <span>Valor total em estoque: <b>R$ 92.856,68</b></span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

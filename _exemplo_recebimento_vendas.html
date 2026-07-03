@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Recebimento de Vendas (PDV) — padrão Aiko</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter','Segoe UI',system-ui,sans-serif}
+  body{background:#f4f6fa;color:#0f172a;font-size:14px}
+  .mono{font-family:'DM Mono','Consolas',monospace}
+
+  /* topo/breadcrumb no padrão do app */
+  .topbar{display:flex;align-items:center;gap:12px;height:46px;padding:0 24px;background:#fff;border-bottom:1px solid #e7ebf0}
+  .crumb .c1{font-size:12px;color:#94a3b8}.crumb .sep{margin:0 7px;color:#cbd5e1}
+  .crumb .c2{font-size:14px;font-weight:700;color:#0f172a}
+  .top-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .top-r .ctx{display:flex;flex-direction:column;gap:1px}
+  .top-r .ctx label{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  .top-r .ctx .fld{height:30px;border:1px solid #e2e8f0;border-radius:7px;padding:0 10px;font-size:12.5px;display:flex;align-items:center;gap:6px;color:#334155;background:#fff;min-width:120px}
+
+  .wrap{padding:14px 24px}
+
+  /* filtros — NOSSO PADRÃO (card branco, rótulos pequenos, campo 34px) */
+  .ds-filterbar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;background:#fff;border:1px solid #e7ebf0;border-radius:12px;padding:9px 14px;margin-bottom:12px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .ds-field{display:flex;flex-direction:column;gap:3px}
+  .ds-field>label{font-size:11px;font-weight:500;color:#64748b}
+  .fld{height:34px;border:1px solid #cbd5e1;border-radius:8px;padding:0 12px;font-size:13px;font-family:inherit;color:#334155;background:#fff;display:flex;align-items:center;gap:6px}
+  select.fld{cursor:pointer}
+  .ds-actions{margin-left:auto;display:flex;gap:8px}
+  .btn{height:34px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+  .btn.pri{background:#f97316;color:#fff}
+  .btn.gh{background:#fff;border:1px solid #e2e8f0;color:#475569;font-weight:600}
+  .btn.sm{height:32px;padding:0 12px;font-size:12.5px}
+  .btn.green{background:#16a34a;color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+
+  /* resumo — faixa fina (padrão CMV) */
+  .kbar{display:flex;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid #e7ebf0;border-radius:10px;padding:10px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04);margin-bottom:12px}
+  .kbar .it{display:flex;align-items:baseline;gap:6px;padding:0 16px;border-right:1px solid #eef1f5}
+  .kbar .it:first-child{padding-left:0}.kbar .it:last-child{border-right:none}
+  .kbar .k{font-size:11px;color:#64748b}
+  .kbar .v{font-size:14px;font-weight:800;font-family:'DM Mono',monospace}
+  .kbar .v.err{color:#dc2626}.kbar .v.ok{color:#16a34a}
+
+  /* card principal */
+  .card{background:#fff;border:1px solid #e7ebf0;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);overflow:hidden}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid #e7ebf0;padding:0 6px;background:#fff}
+  .tab{position:relative;padding:11px 16px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;background:none;border:none;font-family:inherit}
+  .tab.on{color:#0f172a}
+  .tab.on::after{content:'';position:absolute;left:12px;right:12px;bottom:0;height:2.5px;background:#f97316;border-radius:2px}
+  .toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
+  .toolbar .sp{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{background:#f8fafc;color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:9px 14px;text-align:left;border-bottom:1px solid #e7ebf0;white-space:nowrap}
+  thead th.r{text-align:right}thead th.c{text-align:center}
+  tbody td{padding:8px 14px;border-bottom:1px solid #f1f5f9;color:#0f172a;white-space:nowrap}
+  tbody td.r{text-align:right;font-family:'DM Mono',monospace}
+  tbody td.c{text-align:center}
+  tbody tr:hover td{background:#d7e4f7}
+  tbody tr.sel td{background:#eaf1fb}
+  input[type=checkbox]{width:15px;height:15px;accent-color:#f97316;cursor:pointer}
+  .vnum{color:#2563eb;font-weight:600;cursor:pointer}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px}
+  .pill .d{width:7px;height:7px;border-radius:50%}
+  .p-pend{background:#fef9ec;color:#b45309}.p-pend .d{background:#f59e0b}
+  .p-proc{background:#ecfdf5;color:#16a34a}.p-proc .d{background:#16a34a}
+  .p-err{background:#fef2f2;color:#dc2626}.p-err .d{background:#ef4444}
+  .p-canc{background:#f1f5f9;color:#94a3b8}.p-canc .d{background:#94a3b8}
+
+  .pag{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-size:12px;color:#64748b;flex-wrap:wrap;gap:8px}
+  .pag-btns{display:flex;gap:4px}
+  .pag-btn{min-width:30px;height:30px;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#475569;font-size:12px;cursor:pointer;font-family:inherit}
+  .pag-btn.on{background:#f97316;border-color:#f97316;color:#fff;font-weight:700}
+
+  /* detalhe */
+  .det{background:#fff;border:1px solid #e7ebf0;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);margin-top:12px}
+  .det .h{padding:11px 16px;border-bottom:1px solid #f1f5f9;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+  .det .b{padding:18px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#64748b}
+  .det .b .i{width:22px;height:22px;border-radius:50%;background:#eff4ff;color:#3b82f6;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0}
+
+  /* rodapé de ações */
+  .footbar{display:flex;align-items:center;gap:16px;margin-top:14px;padding:12px 16px;background:#fff;border:1px solid #e7ebf0;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .leg{display:flex;align-items:center;gap:16px;font-size:12px;color:#64748b}
+  .leg span{display:inline-flex;align-items:center;gap:6px}
+  .leg .d{width:8px;height:8px;border-radius:50%}
+  .foot-r{margin-left:auto;display:flex;gap:8px}
+</style>
+</head>
+<body>
+  <!-- TOPO no padrão do app -->
+  <div class="topbar">
+    <div class="crumb"><span class="c1">PDV</span><span class="sep">›</span><span class="c2">Recebimento de Vendas</span></div>
+    <div class="top-r">
+      <div class="fld" style="height:34px">👤 Gilson Santos</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- FILTROS no NOSSO padrão (horizontal, card branco, rótulos pequenos) -->
+    <div class="ds-filterbar">
+      <div class="ds-field"><label>Período</label><div class="fld">07/06 – 07/06 📅</div></div>
+      <div class="ds-field"><label>Loja</label><select class="fld"><option>Sushi Ponta Negra</option><option>Todas as lojas</option></select></div>
+      <div class="ds-field"><label>Turno</label><select class="fld"><option>Todos</option><option>Almoço</option><option>Jantar</option></select></div>
+      <div class="ds-field"><label>Caixa</label><select class="fld"><option>Todos</option><option>Caixa 01</option><option>Caixa 02</option></select></div>
+      <div class="ds-field"><label>Status</label><select class="fld"><option>Todos</option><option>Pendente</option><option>Processada</option><option>Com erro</option></select></div>
+      <div class="ds-actions"><button class="btn pri">Filtrar</button><button class="btn gh">Limpar</button></div>
+    </div>
+
+    <!-- RESUMO em faixa fina -->
+    <div class="kbar">
+      <div class="it"><span class="k">Total de vendas</span><span class="v">128</span></div>
+      <div class="it"><span class="k">Bruto</span><span class="v">R$ 18.752,60</span></div>
+      <div class="it"><span class="k">Descontos</span><span class="v">R$ 1.248,30</span></div>
+      <div class="it"><span class="k">Líquido</span><span class="v">R$ 17.504,30</span></div>
+      <div class="it"><span class="k">Itens</span><span class="v">1.248</span></div>
+      <div class="it"><span class="k">Processados</span><span class="v ok">0</span></div>
+      <div class="it"><span class="k">Com erro</span><span class="v err">0</span></div>
+      <div class="it"><span class="k">Não identificados</span><span class="v">0</span></div>
+    </div>
+
+    <!-- CARD PRINCIPAL: abas + toolbar + grade -->
+    <div class="card">
+      <div class="tabs">
+        <button class="tab on">Vendas disponíveis</button>
+        <button class="tab">Importações realizadas</button>
+      </div>
+      <div class="toolbar">
+        <button class="btn gh sm">↻ Atualizar</button>
+        <button class="btn gh sm">👁 Pré-visualizar venda</button>
+        <button class="btn gh sm" disabled>▶ Processar selecionadas (0)</button>
+        <div class="sp">Registros por página <select class="fld sm" style="height:30px"><option>100</option><option>50</option><option>25</option></select></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th class="c" style="width:34px"><input type="checkbox"></th>
+            <th>Data / Hora</th><th>Consumo</th>
+            <th class="r">Valor Bruto</th><th class="r">Desconto</th><th class="r">Valor Líquido</th><th class="r">Itens</th>
+          </tr></thead>
+          <tbody>
+            <tr class="sel"><td class="c"><input type="checkbox" checked></td><td>07/06 22:15</td><td>Salão</td><td class="r">R$ 285,60</td><td class="r">R$ 13,20</td><td class="r">R$ 272,40</td><td class="r">18</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 22:10</td><td>Delivery</td><td class="r">R$ 156,40</td><td class="r">R$ 0,00</td><td class="r">R$ 156,40</td><td class="r">9</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 22:05</td><td>Salão</td><td class="r">R$ 362,80</td><td class="r">R$ 17,60</td><td class="r">R$ 345,20</td><td class="r">24</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 21:55</td><td>Retirada</td><td class="r">R$ 98,90</td><td class="r">R$ 0,00</td><td class="r">R$ 98,90</td><td class="r">6</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 21:50</td><td>Salão</td><td class="r">R$ 478,70</td><td class="r">R$ 26,50</td><td class="r">R$ 452,20</td><td class="r">31</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 21:40</td><td>Delivery</td><td class="r">R$ 224,50</td><td class="r">R$ 0,00</td><td class="r">R$ 224,50</td><td class="r">14</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 21:35</td><td>Salão</td><td class="r">R$ 609,20</td><td class="r">R$ 30,50</td><td class="r">R$ 578,70</td><td class="r">37</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 21:25</td><td>Salão</td><td class="r">R$ 162,90</td><td class="r">R$ 8,10</td><td class="r">R$ 154,80</td><td class="r">11</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 21:20</td><td>Retirada</td><td class="r">R$ 76,50</td><td class="r">R$ 0,00</td><td class="r">R$ 76,50</td><td class="r">5</td></tr>
+            <tr><td class="c"><input type="checkbox"></td><td>07/06 21:10</td><td>Delivery</td><td class="r">R$ 134,60</td><td class="r">R$ 0,00</td><td class="r">R$ 134,60</td><td class="r">8</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pag">
+        <span>Mostrando 1 a 10 de 128 registros</span>
+        <div class="pag-btns"><button class="pag-btn">«</button><button class="pag-btn on">1</button><button class="pag-btn">2</button><button class="pag-btn">3</button><button class="pag-btn">4</button><button class="pag-btn">5</button><button class="pag-btn">»</button></div>
+      </div>
+    </div>
+
+    <!-- DETALHE DA VENDA -->
+    <div class="det">
+      <div class="h">Detalhes da venda</div>
+      <div class="b"><span class="i">i</span> Selecione uma venda para visualizar os itens e realizar o processamento.</div>
+    </div>
+
+    <!-- RODAPÉ DE AÇÕES -->
+    <div class="footbar">
+      <div class="leg"><span style="font-size:12px;color:#64748b"><b style="color:#0f172a">0</b> de 128 selecionadas · líquido do período <b class="mono" style="color:#0f172a">R$ 17.504,30</b></span></div>
+      <div class="foot-r">
+        <button class="btn gh">📄 Gerar relatório</button>
+        <button class="btn gh" disabled>🗑 Excluir selecionadas</button>
+        <button class="btn green">▶ Processar selecionadas</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

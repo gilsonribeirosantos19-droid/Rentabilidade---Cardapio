@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>PDV Faturamento — premium</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter','Segoe UI',system-ui,sans-serif}
+  body{background:#f4f6fa;color:#0f172a;font-size:14px;padding:22px 28px}
+  h1{font-size:16px;font-weight:800;margin-bottom:2px}
+  .sub{font-size:12px;color:#94a3b8;margin-bottom:18px}
+  .mono{font-family:'DM Mono','Consolas',monospace}
+
+  /* filtros */
+  .fb{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .seg{display:inline-flex;background:#eef1f6;border-radius:9px;padding:3px}
+  .seg button{border:none;background:none;padding:6px 13px;font-size:12.5px;font-weight:600;color:#64748b;border-radius:7px;cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:#0f172a;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+  .f{height:36px;border:1px solid #e2e8f0;border-radius:9px;padding:0 12px;font-size:13px;display:inline-flex;align-items:center;color:#334155;background:#fff}
+  .btn{height:36px;padding:0 16px;border-radius:9px;font-size:13px;font-weight:700;border:none;cursor:pointer}
+  .btn.pri{background:#f97316;color:#fff;box-shadow:0 2px 6px rgba(249,115,22,.28)}
+  .btn.gh{background:#fff;border:1px solid #e2e8f0;color:#475569;font-weight:600}
+
+  /* KPI cards premium */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+  .kpi{background:#fff;border:1px solid #eef1f5;border-radius:16px;padding:16px 18px;box-shadow:0 1px 3px rgba(15,23,42,.05);transition:.15s}
+  .kpi:hover{box-shadow:0 6px 18px rgba(15,23,42,.08);transform:translateY(-1px)}
+  .kpi .top{display:flex;align-items:flex-start;justify-content:space-between}
+  .kpi .ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+  .kpi .ic svg{width:18px;height:18px}
+  .kpi .spark{width:74px;height:34px}
+  .kpi .lbl{font-size:11px;color:#94a3b8;font-weight:600;margin-top:14px;letter-spacing:.01em}
+  .kpi .val{font-size:25px;font-weight:800;font-family:'DM Mono',monospace;margin-top:3px;line-height:1;letter-spacing:-.5px}
+  .kpi .foot{display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12px;color:#94a3b8}
+  .pill{padding:2px 8px;border-radius:20px;font-weight:800;font-size:11px}
+  .pill.up{background:#ecfdf5;color:#059669}.pill.down{background:#fef2f2;color:#dc2626}
+  .ic-b{background:#eff4ff;color:#3b82f6}.ic-g{background:#ecfdf5;color:#10b981}.ic-i{background:#eef0ff;color:#6366f1}.ic-o{background:#fff5ec;color:#f97316}
+
+  /* grid principal */
+  .grid{display:grid;grid-template-columns:1.75fr 1fr;gap:14px;align-items:start}
+  .card{background:#fff;border:1px solid #eef1f5;border-radius:16px;box-shadow:0 1px 3px rgba(15,23,42,.05);margin-bottom:14px;overflow:hidden}
+  .ch{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #f4f6fa}
+  .ct{font-size:14px;font-weight:800}
+  .ct small{display:block;font-size:11px;font-weight:500;color:#94a3b8;margin-top:1px}
+  .cb{padding:16px 18px}
+  .chart-wrap{position:relative;height:250px}
+
+  /* donut + legenda rica */
+  .donut-wrap{display:flex;align-items:center;gap:8px}
+  .donut{position:relative;width:150px;height:150px;flex-shrink:0}
+  .donut .cen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+  .donut .cen .t{font-size:10px;color:#94a3b8}
+  .donut .cen .v{font-size:15px;font-weight:800;font-family:'DM Mono',monospace}
+  .leg{flex:1}
+  .leg .row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f4f6fa;font-size:13px}
+  .leg .row:last-child{border-bottom:none}
+  .leg .nm{display:flex;align-items:center;gap:8px;color:#334155}
+  .leg .dot{width:9px;height:9px;border-radius:3px}
+  .leg .rs{font-family:'DM Mono',monospace;font-weight:700}
+  .leg .pc{color:#94a3b8;font-size:11px;margin-left:8px;min-width:34px;text-align:right;display:inline-block}
+
+  /* tabela premium (barra de proporção na célula) */
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:9px 16px;text-align:right;border-bottom:1px solid #eef1f5;white-space:nowrap}
+  thead th.l{text-align:left}
+  tbody td{padding:9px 16px;text-align:right;border-bottom:1px solid #f4f6fa;font-family:'DM Mono',monospace}
+  tbody td.l{text-align:left;font-family:inherit}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover td{background:#f7faff}
+  .fatcell{display:flex;align-items:center;gap:9px;justify-content:flex-end}
+  .fatbar{width:60px;height:6px;background:#eef1f6;border-radius:3px;overflow:hidden}
+  .fatbar i{display:block;height:100%;background:linear-gradient(90deg,#fdba74,#f97316);border-radius:3px}
+  .up{color:#059669;font-weight:700}.down{color:#dc2626;font-weight:700}
+  .day{font-weight:600}.dow{color:#94a3b8;font-weight:500;margin-left:4px}
+</style>
+</head>
+<body>
+  <h1>PDV › Faturamento</h1>
+  <div class="sub">Versão premium — indicadores com tendência e mini-gráfico, gráfico principal em degradê, canais e destaques. (números de exemplo, gráficos reais)</div>
+
+  <div class="fb">
+    <div class="f">01/06/2026 – 30/06/2026</div>
+    <div class="seg"><button class="on">Dia</button><button>Semana</button><button>Canal</button></div>
+    <button class="btn gh" style="margin-left:auto">↓ Exportar</button>
+    <button class="btn pri">+ Lançar faturamento</button>
+  </div>
+
+  <!-- KPIs premium -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="top">
+        <div class="ic ic-b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <canvas class="spark" id="s1"></canvas>
+      </div>
+      <div class="lbl">Faturamento total</div>
+      <div class="val">R$ 184.320</div>
+      <div class="foot"><span class="pill up">↑ 6,3%</span> vs. mês anterior</div>
+    </div>
+    <div class="kpi">
+      <div class="top">
+        <div class="ic ic-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <canvas class="spark" id="s2"></canvas>
+      </div>
+      <div class="lbl">Médio por dia</div>
+      <div class="val">R$ 6.144</div>
+      <div class="foot"><span class="pill up">↑ 4,1%</span> vs. mês anterior</div>
+    </div>
+    <div class="kpi">
+      <div class="top">
+        <div class="ic ic-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <canvas class="spark" id="s3"></canvas>
+      </div>
+      <div class="lbl">Nº de pedidos</div>
+      <div class="val">1.284</div>
+      <div class="foot"><span class="pill up">↑ 2,8%</span> vs. mês anterior</div>
+    </div>
+    <div class="kpi">
+      <div class="top">
+        <div class="ic ic-o"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="2"/></svg></div>
+        <canvas class="spark" id="s4"></canvas>
+      </div>
+      <div class="lbl">Ticket médio</div>
+      <div class="val">R$ 143,55</div>
+      <div class="foot"><span class="pill down">↓ 1,2%</span> vs. mês anterior</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="ch"><div class="ct">Faturamento ao longo do tempo<small>Junho / 2026 · por dia</small></div></div>
+        <div class="cb"><div class="chart-wrap"><canvas id="ch-linha"></canvas></div></div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><div class="ct">Faturamento por dia</div></div>
+        <table>
+          <thead><tr><th class="l">Data</th><th>Faturamento</th><th>Pedidos</th><th>Ticket</th><th>vs. anterior</th></tr></thead>
+          <tbody>
+            <tr><td class="l"><span class="day">30/06</span><span class="dow">Ter</span></td><td><div class="fatcell"><div class="fatbar"><i style="width:100%"></i></div>R$ 7.420</div></td><td>52</td><td>R$ 142,69</td><td class="up">↑ 8,2%</td></tr>
+            <tr><td class="l"><span class="day">29/06</span><span class="dow">Seg</span></td><td><div class="fatcell"><div class="fatbar"><i style="width:92%"></i></div>R$ 6.860</div></td><td>47</td><td>R$ 145,96</td><td class="down">↓ 3,1%</td></tr>
+            <tr><td class="l"><span class="day">28/06</span><span class="dow">Dom</span></td><td><div class="fatcell"><div class="fatbar"><i style="width:95%"></i></div>R$ 7.080</div></td><td>55</td><td>R$ 128,73</td><td class="up">↑ 12,4%</td></tr>
+            <tr><td class="l"><span class="day">27/06</span><span class="dow">Sáb</span></td><td><div class="fatcell"><div class="fatbar"><i style="width:85%"></i></div>R$ 6.300</div></td><td>44</td><td>R$ 143,18</td><td class="up">↑ 5,7%</td></tr>
+            <tr><td class="l"><span class="day">26/06</span><span class="dow">Sex</span></td><td><div class="fatcell"><div class="fatbar"><i style="width:80%"></i></div>R$ 5.960</div></td><td>41</td><td>R$ 145,37</td><td class="down">↓ 1,9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="ch"><div class="ct">Faturamento por canal</div></div>
+        <div class="cb">
+          <div class="donut-wrap">
+            <div class="donut"><canvas id="ch-donut" width="150" height="150"></canvas><div class="cen"><div class="t">Total</div><div class="v">184K</div></div></div>
+            <div class="leg">
+              <div class="row"><span class="nm"><span class="dot" style="background:#3b82f6"></span>Salão</span><span><span class="rs">R$ 84.780</span><span class="pc">46%</span></span></div>
+              <div class="row"><span class="nm"><span class="dot" style="background:#10b981"></span>iFood</span><span><span class="rs">R$ 57.140</span><span class="pc">31%</span></span></div>
+              <div class="row"><span class="nm"><span class="dot" style="background:#f97316"></span>Delivery</span><span><span class="rs">R$ 27.650</span><span class="pc">15%</span></span></div>
+              <div class="row"><span class="nm"><span class="dot" style="background:#8b5cf6"></span>Rappi</span><span><span class="rs">R$ 14.750</span><span class="pc">8%</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><div class="ct">Destaques do período</div></div>
+        <div class="cb" style="font-size:13px;color:#334155">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f4f6fa"><span>🏆 Melhor dia</span><span class="mono" style="font-weight:700">28/06 · R$ 7.080</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f4f6fa"><span>⭐ Canal líder</span><span style="font-weight:700">Salão · 46%</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0"><span>📈 Crescimento vs. mês anterior</span><span class="up mono">↑ 6,3%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+  const spark=(id,data,color)=>new Chart(document.getElementById(id),{type:'line',
+    data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:color,borderWidth:2,pointRadius:0,tension:.4,fill:false}]},
+    options:{responsive:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},elements:{line:{borderCapStyle:'round'}}}});
+  spark('s1',[5,6,5.5,7,6.5,7.2,7.4],'#3b82f6');
+  spark('s2',[6,5.8,6.1,5.9,6.2,6.0,6.14],'#10b981');
+  spark('s3',[40,44,42,48,45,50,52],'#6366f1');
+  spark('s4',[150,146,148,144,146,145,143],'#f97316');
+
+  const c=document.getElementById('ch-linha'), ctx=c.getContext('2d');
+  const g=ctx.createLinearGradient(0,0,0,250); g.addColorStop(0,'rgba(249,115,22,.22)'); g.addColorStop(1,'rgba(249,115,22,0)');
+  new Chart(c,{type:'line',
+    data:{labels:['01','04','07','10','13','16','19','22','25','28','30'],
+      datasets:[{data:[5200,5600,5900,6100,5600,6800,6400,7100,6300,7080,7420],
+        borderColor:'#f97316',backgroundColor:g,borderWidth:2.5,pointBackgroundColor:'#f97316',pointRadius:0,pointHoverRadius:5,tension:.4,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'R$ '+c.raw.toLocaleString('pt-BR')}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#94a3b8'}},y:{grid:{color:'#f4f6fa'},ticks:{font:{size:10},color:'#94a3b8',callback:v=>v>=1000?(v/1000)+'K':v}}}}});
+
+  new Chart(document.getElementById('ch-donut'),{type:'doughnut',
+    data:{labels:['Salão','iFood','Delivery','Rappi'],datasets:[{data:[84780,57140,27650,14750],backgroundColor:['#3b82f6','#10b981','#f97316','#8b5cf6'],borderWidth:3,borderColor:'#fff',hoverOffset:4}]},
+    options:{responsive:false,cutout:'72%',plugins:{legend:{display:false}}}});
+</script>
+</body>
+</html>

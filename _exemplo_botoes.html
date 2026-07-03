@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exemplo — Modelos de Botão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --orange:#f97316; --t1:#0f172a; --t2:#475569; --t3:#94a3b8; --bd:#e2e8f0; --bd2:#cbd5e1; --bg:#f1f5f9; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t1);padding:28px}
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--t2);font-size:13px;margin:0 0 24px}
+  .card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:20px 22px;margin-bottom:18px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .card.rec{border-color:#fdba74;box-shadow:0 0 0 3px rgba(249,115,22,.10)}
+  .head{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .mname{font-size:15px;font-weight:700}
+  .badge{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:99px;background:#ecfdf5;color:#059669}
+  .badge.warn{background:#fffbeb;color:#b45309}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .vibe{font-size:12px;color:var(--t2);margin-top:14px;line-height:1.55}
+  .vibe b{color:var(--t1)}
+
+  /* base */
+  .b{height:38px;border-radius:9px;padding:0 16px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .15s;border:1.5px solid transparent}
+  .b svg{width:15px;height:15px}
+
+  /* A — Sólido (clássico) */
+  .A .pri{background:var(--orange);color:#fff}
+  .A .pri:hover{background:#ea6a0c}
+  .A .gho{background:#fff;border-color:var(--bd);color:var(--t2)}
+  .A .gho:hover{border-color:var(--bd2);color:var(--t1)}
+
+  /* B — Suave (tinted) */
+  .B .pri{background:#fff7ed;color:#ea6a0c;border-color:#fed7aa}
+  .B .pri:hover{background:#ffedd5}
+  .B .gho{background:transparent;color:var(--t2)}
+  .B .gho:hover{background:#f1f5f9}
+
+  /* C — Pílula */
+  .C .b{border-radius:99px}
+  .C .pri{background:var(--orange);color:#fff}
+  .C .pri:hover{background:#ea6a0c}
+  .C .gho{background:#fff;border-color:var(--bd);color:var(--t2)}
+  .C .gho:hover{border-color:var(--bd2)}
+
+  /* D — Minimalista (outline) */
+  .D .pri{background:#fff;color:#ea6a0c;border-color:#f97316}
+  .D .pri:hover{background:#fff7ed}
+  .D .gho{background:transparent;color:var(--t3)}
+  .D .gho:hover{color:var(--t1)}
+
+  /* E — Sólido com elevação (premium) */
+  .E .pri{background:linear-gradient(180deg,#fb8a3c,#f97316);color:#fff;box-shadow:0 2px 5px rgba(249,115,22,.35),0 1px 2px rgba(0,0,0,.06);font-weight:700}
+  .E .pri:hover{box-shadow:0 4px 10px rgba(249,115,22,.45)}
+  .E .gho{background:#fff;border-color:var(--bd);color:var(--t2);box-shadow:0 1px 2px rgba(15,23,42,.05)}
+  .E .gho:hover{border-color:var(--bd2);color:var(--t1)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Modelos de botão</h1>
+  <p class="sub">O mesmo trio (Filtrar / Limpar / Exportar) em 5 estilos. Passe o mouse pra ver o efeito.</p>
+
+  <!-- A -->
+  <div class="card rec A">
+    <div class="head"><span class="mname">A — Sólido (clássico)</span><span class="badge">Recomendado p/ ERP</span></div>
+    <div class="row">
+      <button class="b pri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filtrar</button>
+      <button class="b gho">Limpar</button>
+      <button class="b gho"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar</button>
+    </div>
+    <div class="vibe"><b>Sério, direto, "sistema de gestão".</b> É o que a maioria dos ERP/SaaS profissionais usa. A ação principal salta (laranja cheio), as secundárias ficam discretas. Aposta mais segura. <i>(É o que está no exemplo anterior.)</i></div>
+  </div>
+
+  <!-- E -->
+  <div class="card rec E">
+    <div class="head"><span class="mname">E — Sólido com elevação (premium)</span><span class="badge">Também ótimo</span></div>
+    <div class="row">
+      <button class="b pri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filtrar</button>
+      <button class="b gho">Limpar</button>
+      <button class="b gho"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar</button>
+    </div>
+    <div class="vibe"><b>Igual ao A, porém com leve sombra/profundidade.</b> Passa um ar mais "premium/produto caprichado", sem perder a seriedade. Diferença é sutil — é questão de gosto.</div>
+  </div>
+
+  <!-- B -->
+  <div class="card B">
+    <div class="head"><span class="mname">B — Suave (tom pastel)</span></div>
+    <div class="row">
+      <button class="b pri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filtrar</button>
+      <button class="b gho">Limpar</button>
+      <button class="b gho">Exportar</button>
+    </div>
+    <div class="vibe"><b>Leve, moderno, "fintech/startup".</b> Bonito, mas a ação principal fica menos forte (não grita "clica aqui"). Ótimo p/ app de consumidor; p/ ERP, a ação importante pode passar despercebida.</div>
+  </div>
+
+  <!-- C -->
+  <div class="card C">
+    <div class="head"><span class="mname">C — Pílula (cantos redondos)</span></div>
+    <div class="row">
+      <button class="b pri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filtrar</button>
+      <button class="b gho">Limpar</button>
+      <button class="b gho">Exportar</button>
+    </div>
+    <div class="vibe"><b>Amigável e moderno.</b> Os cantos 100% redondos dão um ar mais "descontraído". Funciona, mas costuma parecer menos "corporativo/sério" que o A.</div>
+  </div>
+
+  <!-- D -->
+  <div class="card D">
+    <div class="head"><span class="mname">D — Minimalista (contorno)</span><span class="badge warn">Cuidado</span></div>
+    <div class="row">
+      <button class="b pri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filtrar</button>
+      <button class="b gho">Limpar</button>
+      <button class="b gho">Exportar</button>
+    </div>
+    <div class="vibe"><b>Super limpo e elegante.</b> Mas a ação principal vira só um contorno — em tela cheia de dados, o usuário pode não achar o botão de ação. Bonito, porém arriscado pra usabilidade.</div>
+  </div>
+
+  <p class="sub" style="margin-top:6px"><b>Resumo honesto:</b> pra um ERP, o mais profissional e seguro é o <b>A</b> (ou o <b>E</b>, que é o A com um toque premium). B e C são bonitos mas mais "app de consumidor". D é o mais arriscado. Qual te agradou?</p>
+</div>
+</body>
+</html>

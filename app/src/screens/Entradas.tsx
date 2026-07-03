@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { mediaPonderada } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
+import { DetailModal } from '../components/DetailModal'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string; unidade_medida?: string; unidade_compra?: string }
@@ -34,6 +36,7 @@ export function Entradas() {
   const [pag, setPag] = useState(1); const [porPag, setPorPag] = useState(20)
   const [modal, setModal] = useState(false)
   const [dup, setDup] = useState<EntForm | null>(null)
+  const [detalhe, setDetalhe] = useState<Entrada | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2800) }
 
@@ -97,10 +100,10 @@ export function Entradas() {
         criado_em: dataStr + 'T12:00:00.000Z',
       })
       if (e1) throw e1
-      // custo médio ponderado
+      // custo médio ponderado (fonte única: lib/cost.ts)
       const s = getSaldo(f.insumo_id)
       const qA = s.quantidade || 0, cmA = s.custo_medio || 0, qN = qA + qtdEst
-      const cmN = qN > 0 ? (qA * cmA + qtdEst * custoUnit) / qN : custoUnit
+      const cmN = mediaPonderada(qA, cmA, qtdEst, custoUnit)
       await upsertSaldo(f.insumo_id, qN, +cmN.toFixed(6), lojaId)
       // histórico de custo (best-effort)
       try {
@@ -131,7 +134,7 @@ export function Entradas() {
     onError: (e: Error) => { if (e.message !== '__cancel__') showToast(e.message, 'err') },
   })
 
-  const verEntrada = (e: Entrada) => { const ins = insMap[e.insumo_id]; alert(`Entrada\n\nInsumo: ${ins?.nome || '—'}\nFornecedor: ${e.fornecedor_nome || '—'}\nQuantidade: ${qtd(e.quantidade)}\nCusto unit.: ${brl(e.custo_unitario)}\nCusto total: ${brl(e.custo_total)}\nLote: ${e.lote || '—'}\nValidade: ${fmtDate(e.validade)}\nTipo: ${e.tipo}\nData: ${fmtDH(e.criado_em)}`) }
+  const detRows = (e: Entrada): [string, string][] => { const ins = insMap[e.insumo_id]; return [['Insumo', ins?.nome || '—'], ['Fornecedor', e.fornecedor_nome || '—'], ['Quantidade', qtd(e.quantidade)], ['Custo unit.', brl(e.custo_unitario)], ['Custo total', brl(e.custo_total)], ['Lote', e.lote || '—'], ['Validade', fmtDate(e.validade)], ['Tipo', e.tipo || '—'], ['Data', fmtDH(e.criado_em)]] }
   const duplicar = (e: Entrada) => { setDup({ insumo_id: e.insumo_id, fornecedor_id: e.fornecedor_id || '', data: hojeStr(), qtd: String(e.quantidade_fornecedor || e.quantidade || ''), unidade: e.unidade_compra || '', fator: String(e.fator_conversao || 1), custo: String(e.custo_unitario || ''), lote: e.lote || '', validade: '', obs: '' }); setModal(true) }
   const setPreset = (v: string) => { const n = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(isoD(n)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(isoD(new Date(n.getFullYear(), n.getMonth(), 0))) } else { setDe(''); setAte('') } setPag(1) }
 
@@ -182,7 +185,7 @@ export function Entradas() {
                     <td style={{ color: '#94a3b8', fontSize: 12 }}>{e.lote || '—'}</td>
                     <td style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(e.validade)}</td>
                     <td className="c"><div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
-                      <button className="icon-btn" title="Ver detalhes" onClick={() => verEntrada(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
+                      <button className="icon-btn" title="Ver detalhes" onClick={() => setDetalhe(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
                       <button className="icon-btn" title="Duplicar" onClick={() => duplicar(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button>
                       {podeExcluir && <button className="icon-btn" title="Excluir entrada (insumo sem saída)" onClick={() => delMut.mutate(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg></button>}
                     </div></td>
@@ -204,6 +207,7 @@ export function Entradas() {
       </div>
 
       {modal && <EntradaModal insumos={insumos} fornecedores={fornecedores} getSaldo={getSaldo} inicial={dup} saving={saveMut.isPending} onClose={() => { setModal(false); setDup(null) }} onSave={(f) => saveMut.mutate(f)} />}
+      {detalhe && <DetailModal title="Entrada" rows={detRows(detalhe)} onClose={() => setDetalhe(null)} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )

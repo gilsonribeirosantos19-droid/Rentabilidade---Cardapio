@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Protótipo — Movimentação (Parâmetros → Resultado, estilo Everest)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,'Segoe UI',sans-serif;background:#eef1f4;color:#1e293b;font-size:14px;padding:24px}
+  .titulo{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:12px}
+
+  /* sub-abas Parâmetros / Resultado */
+  .subtabs{display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid #cbd5e1}
+  .subtab{padding:8px 18px;font-size:13px;font-weight:600;color:#64748b;background:#e2e8f0;border:1px solid #cbd5e1;border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer}
+  .subtab.active{background:#fff;color:#0f172a;border-bottom:2px solid #f97316;margin-bottom:-1px}
+  .subtab.disabled{opacity:.5;cursor:not-allowed}
+
+  .panel{background:#fff;border:1px solid #cbd5e1;border-top:none;padding:16px 18px}
+
+  .toolbar{display:flex;align-items:center;gap:5px;padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid #e2e8f0}
+  .tb{height:38px;min-width:38px;padding:0 10px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;color:#334155;font-family:inherit;font-size:13px;font-weight:600;transition:background .12s}
+  .tb:hover{background:#eef2f7}
+  .tb svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;flex:none}
+  .tb.go{background:#f97316;border:none;color:#fff}
+  .tb.go:hover{background:#ea6c00}
+  .spacer{flex:1}
+
+  .form-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  .fld-g{display:flex;flex-direction:column;gap:4px}
+  .lbl{font-size:11px;font-weight:600;color:#64748b;margin-left:2px}
+  .fld{height:36px;border:1px solid #cbd5e1;border-radius:6px;padding:0 10px;font-size:13px;font-family:inherit;background:#fff;color:#0f172a}
+  .fld:focus{outline:none;border-color:#f97316}
+  .toggles{display:flex;gap:24px;align-items:center;margin-top:4px}
+  .tg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#334155;cursor:pointer}
+  .tg input{width:16px;height:16px;accent-color:#f97316}
+
+  .resumo{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:#475569;margin-bottom:12px;background:#f8fafc;border:1px solid #eef1f5;border-radius:8px;padding:9px 12px}
+  .resumo b{color:#0f172a}
+
+  .tbl-wrap{overflow-x:auto;border:1px solid #d6dce6;border-radius:8px}
+  table.grid{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap}
+  .grid thead th{background:#f1f5f9;color:#475569;font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid #d6dce6;position:sticky;top:0}
+  .grid th.r,.grid td.r{text-align:right}
+  .grid tbody td{padding:0 10px;height:38px;border-bottom:1px solid #eef1f5;color:#0f172a}
+  .grid tbody tr:nth-child(even){background:#fafbfc}
+  .grid tbody tr:hover{background:#eef4ff}
+  .grid .num{font-family:'DM Mono',monospace;color:#334155}
+  .grid tfoot td{padding:9px 10px;font-weight:700;background:#f8fafc;border-top:2px solid #d6dce6;color:#0f172a}
+  .hint{font-size:12px;color:#94a3b8;margin-top:8px}
+</style>
+</head>
+<body>
+  <div style="background:rgba(15,23,42,.05);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;font-size:12px;color:#475569;margin-bottom:14px">🎨 <b>Protótipo</b> — Movimentação no modelo Everest: <b>aba "Parâmetros"</b> (monta os filtros) → clica na <b>🔍 lupa (Pesquisar)</b> → abre a <b>aba "Resultado"</b> com a tabela. <i>Clique em Pesquisar.</i></div>
+
+  <div class="titulo">Movimentação de Estoque no Período</div>
+
+  <div class="subtabs">
+    <div class="subtab active" id="st-par" onclick="show('par')">Parâmetros</div>
+    <div class="subtab disabled" id="st-res" onclick="show('res')">Resultado</div>
+  </div>
+
+  <!-- ===== PARÂMETROS ===== -->
+  <div class="panel" id="pane-par">
+    <div class="toolbar">
+      <button class="tb go" onclick="pesquisar()" title="Pesquisar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Pesquisar
+      </button>
+      <button class="tb" title="Limpar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></button>
+      <div class="spacer"></div>
+      <button class="tb" title="Voltar"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+    </div>
+
+    <div class="form-row">
+      <div class="fld-g"><span class="lbl">Loja</span>
+        <select class="fld" style="width:260px"><option>Todas as lojas</option><option>Centro</option><option>Ponta Negra</option></select></div>
+      <div class="fld-g"><span class="lbl">Grupo</span>
+        <select class="fld" style="width:200px"><option>Todos os grupos</option><option>Pescados</option><option>Mercearia</option></select></div>
+      <div class="fld-g"><span class="lbl">Insumo (item)</span>
+        <select class="fld" style="width:240px"><option>Todos os insumos</option><option>Salmão Fresco</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="fld-g"><span class="lbl">Período — de</span>
+        <input class="fld" type="date" style="width:160px" value="2026-06-01"></div>
+      <div class="fld-g"><span class="lbl">até</span>
+        <input class="fld" type="date" style="width:160px" value="2026-06-30"></div>
+    </div>
+    <div class="toggles">
+      <label class="tg"><input type="checkbox" checked> Somente com saldo</label>
+      <label class="tg"><input type="checkbox"> Somente itens que calculam CMV</label>
+    </div>
+    <div class="hint">Monte os filtros e clique em <b>Pesquisar</b> — o resultado abre na aba ao lado.</div>
+  </div>
+
+  <!-- ===== RESULTADO ===== -->
+  <div class="panel" id="pane-res" style="display:none">
+    <div class="toolbar">
+      <button class="tb" onclick="show('par')" title="Voltar aos parâmetros">
+        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Parâmetros
+      </button>
+      <div class="spacer"></div>
+      <button class="tb" title="Imprimir"><svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir</button>
+      <button class="tb" title="Exportar"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar</button>
+    </div>
+
+    <div class="resumo">
+      <span>Período: <b>01/06/2026 a 30/06/2026</b></span>
+      <span>Loja: <b>Todas</b></span>
+      <span>Itens: <b>4</b></span>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="grid">
+        <thead><tr>
+          <th>Descrição</th><th>Un.</th><th>Grupo</th>
+          <th class="r">Q. Anterior</th><th class="r">Q. Entradas</th>
+          <th class="r">Q. Consumo</th><th class="r">Q. Perdas</th>
+          <th class="r">Q. Final</th><th class="r">V. Final</th><th class="r">C. Médio</th>
+        </tr></thead>
+        <tbody id="res-body"></tbody>
+        <tfoot><tr>
+          <td colspan="8">TOTAL</td><td class="r num" id="tot-vfinal">—</td><td></td>
+        </tr></tfoot>
+      </table>
+    </div>
+    <div class="hint">Aqui ainda dá pra mostrar/ocultar colunas (as 15: Q/V Anterior, Entradas, Consumo, Perdas, Final, C. Médio, Calcula CMV) — igual hoje.</div>
+  </div>
+
+  <script>
+    const dados = [
+      {desc:'Salmão Fresco', un:'kg', grupo:'Pescados', qa:12.5, qe:40, qc:38.2, qp:1.1, qf:13.2, cm:62.40},
+      {desc:'Arroz Japonês', un:'kg', grupo:'Mercearia', qa:30, qe:50, qc:55, qp:0, qf:25, cm:7.80},
+      {desc:'Camarão', un:'kg', grupo:'Pescados', qa:8, qe:20, qc:18.5, qp:0.5, qf:9, cm:48.90},
+      {desc:'Nori', un:'un', grupo:'Mercearia', qa:200, qe:300, qc:260, qp:0, qf:240, cm:0.85},
+    ];
+    const n3 = v => Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3});
+    const brl = v => 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    function pesquisar(){
+      document.getElementById('res-body').innerHTML = dados.map(d=>`<tr>
+        <td>${d.desc}</td><td>${d.un}</td><td>${d.grupo}</td>
+        <td class="r num">${n3(d.qa)}</td><td class="r num">${n3(d.qe)}</td>
+        <td class="r num">${n3(d.qc)}</td><td class="r num">${n3(d.qp)}</td>
+        <td class="r num">${n3(d.qf)}</td><td class="r num">${brl(d.qf*d.cm)}</td><td class="r num">${brl(d.cm)}</td>
+      </tr>`).join('');
+      document.getElementById('tot-vfinal').textContent = brl(dados.reduce((s,d)=>s+d.qf*d.cm,0));
+      document.getElementById('st-res').classList.remove('disabled');
+      show('res');
+    }
+    function show(which){
+      const isRes = which==='res';
+      document.getElementById('pane-par').style.display = isRes?'none':'block';
+      document.getElementById('pane-res').style.display = isRes?'block':'none';
+      document.getElementById('st-par').classList.toggle('active',!isRes);
+      document.getElementById('st-res').classList.toggle('active',isRes);
+    }
+  </script>
+</body>
+</html>

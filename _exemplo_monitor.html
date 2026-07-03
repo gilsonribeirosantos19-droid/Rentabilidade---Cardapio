@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Protótipo — Aiko (Monitor NF-e)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#f97316;--primary-soft:#fff7ed;--navy:#1e293b;
+    --t1:#0f172a;--t2:#475569;--t3:#94a3b8;
+    --border:#e2e8f0;--border-soft:#f1f5f9;--bg:#f8fafc;--card:#fff;
+    --amber:#f59e0b;--blue:#2563eb;--red:#dc2626;--green:#16a34a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:14px;display:flex;min-height:100vh}
+  .mono{font-family:'DM Mono',monospace}
+
+  .sidebar{width:220px;background:var(--navy);color:#cbd5e1;flex-shrink:0;display:flex;flex-direction:column;padding:16px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{display:flex;align-items:center;gap:10px;padding:4px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:10px}
+  .logo .mark{width:34px;height:34px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .logo .name{font-size:16px;font-weight:800;color:#fff;line-height:1}
+  .logo .sub{font-size:11px;color:var(--primary);font-family:'DM Mono',monospace}
+  .nav-group{padding:10px 12px 2px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:1px 8px;border-radius:8px;font-size:13px;color:#cbd5e1;cursor:pointer;text-decoration:none}
+  .nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+  .nav-item.active{background:var(--primary);color:#fff;font-weight:600}
+  .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.9}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{height:54px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:0 24px;position:sticky;top:0;z-index:10}
+  .loja-sel{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer}
+  .loja-sel svg{width:14px;height:14px;color:var(--t3)}
+  .spacer{flex:1}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+
+  .content{padding:22px 24px;flex:1}
+  .head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+  .breadcrumb{font-size:12px;color:var(--t3)}
+  .page-title{font-size:20px;font-weight:800}
+  .btn{height:36px;border-radius:9px;padding:0 14px;font-weight:600;font-size:13px;cursor:pointer;border:1.5px solid transparent;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+  .btn-pri{background:var(--primary);color:#fff}.btn-gho{background:#fff;border-color:var(--border);color:var(--t2)}
+  .btn-sm{height:32px;font-size:12px;padding:0 11px}
+
+  /* filtros */
+  .bar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .fld{display:flex;flex-direction:column;gap:6px}
+  .fld label{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
+  .inp{height:36px;border:1.5px solid var(--border);border-radius:9px;padding:0 12px;font-family:inherit;font-size:13px;background:#fff;min-width:160px;color:var(--t1)}
+  .acts{margin-left:auto;display:flex;gap:8px;align-items:flex-end}
+
+  /* chips de situação */
+  .chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .chip{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border:1.5px solid var(--border);border-radius:99px;font-size:12.5px;font-weight:600;color:var(--t2);background:#fff;cursor:pointer}
+  .chip.on{border-color:var(--primary);background:var(--primary-soft)}
+  .chip .d{width:8px;height:8px;border-radius:50%}
+  .chip .n{font-weight:800;font-family:'DM Mono',monospace}
+  .chip-acts{margin-left:auto;display:flex;gap:8px}
+
+  /* abas */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:14px}
+  .tab{padding:9px 14px;font-size:13px;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;display:inline-flex;align-items:center;gap:7px}
+  .tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+  .tab .cnt{font-size:11px;background:var(--border-soft);color:var(--t2);padding:1px 7px;border-radius:99px;font-weight:700}
+
+  /* tabela limpa */
+  .tbl-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--t3);padding:11px 14px;border-bottom:2px solid var(--border);background:#f8fafc;white-space:nowrap}
+  th.r,td.r{text-align:right}th.c,td.c{text-align:center}
+  td{padding:11px 14px;border-bottom:1px solid var(--border-soft);white-space:nowrap}
+  td.num{font-family:'DM Mono',monospace}
+  td.l{font-weight:600}
+  tbody tr:hover{background:var(--bg)}
+  tbody tr:last-child td{border-bottom:none}
+  .sit{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .danfe-n{color:var(--blue);font-family:'DM Mono',monospace;font-weight:700;cursor:pointer}
+  .err-badge{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:9px;font-weight:800;cursor:pointer}
+  .muted{color:var(--t3)}
+  .ck{accent-color:var(--primary);width:15px;height:15px;cursor:pointer}
+</style>
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="logo"><div class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><polyline points="1,21 8,6 13,13 17,8 23,21"/><line x1="1" y1="21" x2="23" y2="21"/></svg></div><div><div class="name">Aiko</div><div class="sub">sistema</div></div></div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Início</div>
+    <div class="nav-group">Operação</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Estoque</div>
+    <div class="nav-group">Fiscal</div>
+    <div class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Monitor NF-e</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Entradas Processadas</div>
+    <div class="nav-group">Análises</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>CMV</div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="loja-sel">Todas as lojas <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="spacer"></div>
+      <div class="user"><div class="avatar">GS</div>Gilson Santos</div>
+    </div>
+
+    <div class="content">
+      <div style="background:rgba(15,23,42,.05);border:1px dashed var(--border);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--t2);margin-bottom:16px">🎨 <b>Protótipo visual</b> — proposta da tela <b>Fiscal › Monitor NF-e</b> (dados fictícios).</div>
+
+      <div class="head">
+        <div>
+          <div class="breadcrumb">Fiscal › Monitor</div>
+          <div class="page-title">Monitor NF-e</div>
+        </div>
+        <button class="btn btn-pri"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Entrada por NF-e (XML)</button>
+      </div>
+
+      <!-- filtros linha 1 -->
+      <div class="bar">
+        <div class="fld"><label>Fornecedor</label><select class="inp"><option>Todos</option></select></div>
+        <div class="fld"><label>Período</label><select class="inp"><option>Mês Atual</option><option>Mês Anterior</option></select></div>
+        <div class="acts"><button class="btn btn-gho btn-sm">✕ Limpar filtros</button></div>
+      </div>
+
+      <!-- chips de situação -->
+      <div class="chips">
+        <div class="chip on"><span class="d" style="background:var(--amber)"></span>Pendente SEFAZ <span class="n" style="color:var(--amber)">30</span></div>
+        <div class="chip on"><span class="d" style="background:var(--blue)"></span>Para processar <span class="n" style="color:var(--blue)">103</span></div>
+        <div class="chip on"><span class="d" style="background:var(--red)"></span>Com Erro <span class="n" style="color:var(--red)">124</span></div>
+        <div class="chip"><span class="d" style="background:var(--t3)"></span>Cancelada <span class="n muted">0</span></div>
+        <div class="chip-acts">
+          <button class="btn btn-gho btn-sm" style="border-color:#fca5a5;color:var(--red)">🗑 Excluir (2)</button>
+          <button class="btn btn-pri btn-sm">▶ Processar selecionadas (2)</button>
+        </div>
+      </div>
+
+      <!-- abas -->
+      <div class="tabs">
+        <div class="tab on">📄 DANFE <span class="cnt">133</span></div>
+        <div class="tab">≣ Itens NF <span class="cnt">0</span></div>
+        <div class="tab">⊘ Erros <span class="cnt">3</span></div>
+      </div>
+
+      <!-- tabela -->
+      <div class="tbl-card">
+        <table>
+          <thead><tr>
+            <th class="c" style="width:34px"><input type="checkbox" class="ck"></th>
+            <th class="c">Sit.</th><th>Fornecedor / Razão Social</th><th>Loja</th>
+            <th>DANFE</th><th class="c">Série</th><th>D. Emissão</th><th>D. Integração</th>
+            <th class="r">V. Total</th><th>D. Vencimento</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="c"><input type="checkbox" class="ck"></td><td class="c"><span class="sit" style="background:var(--blue)"></span></td><td class="l">MIKAEL BERNARDO DE SOUZA</td><td class="muted">Ponta Negra</td><td><span class="danfe-n">2459</span></td><td class="c muted">001</td><td class="num">03/06/2026</td><td class="num">15/06/2026</td><td class="r num">1.387,66</td><td class="num">18/07/2026</td></tr>
+            <tr><td class="c"><input type="checkbox" class="ck" checked></td><td class="c"><span class="sit" style="background:var(--red)"></span></td><td class="l">BELO FRUTO HORTIFRUTI LTDA</td><td class="muted">Centro</td><td><span class="danfe-n">8841</span></td><td class="c muted">001</td><td class="num">04/06/2026</td><td class="num">15/06/2026</td><td class="r num">372,85</td><td class="num muted">—</td></tr>
+            <tr><td class="c"><input type="checkbox" class="ck"></td><td class="c"><span class="sit" style="background:var(--amber)"></span></td><td class="l">PESC NORTE COMERCIO LTDA</td><td class="muted">Cidade Nova</td><td><span class="danfe-n">480</span></td><td class="c muted">001</td><td class="num">01/06/2026</td><td class="num">15/06/2026</td><td class="r num">630,00</td><td class="num muted">—</td></tr>
+            <tr><td class="c"><input type="checkbox" class="ck" checked></td><td class="c"><span class="err-badge">!</span></td><td class="l">H V M XAVIER COMERCIO LTDA</td><td class="muted">Djalma Batista</td><td><span class="danfe-n">131754</span></td><td class="c muted">001</td><td class="num">01/06/2026</td><td class="num">15/06/2026</td><td class="r num">574,80</td><td class="num">16/06/2026</td></tr>
+            <tr><td class="c"><input type="checkbox" class="ck"></td><td class="c"><span class="sit" style="background:var(--blue)"></span></td><td class="l">HAJIME COMERCIO DE ALIMENTOS</td><td class="muted">Paraíba</td><td><span class="danfe-n">2547</span></td><td class="c muted">001</td><td class="num">02/06/2026</td><td class="num">14/06/2026</td><td class="r num">1.236,80</td><td class="num">14/07/2026</td></tr>
+            <tr><td class="c"><input type="checkbox" class="ck"></td><td class="c"><span class="sit" style="background:var(--blue)"></span></td><td class="l">RCL COMERCIO DE PRODUTOS</td><td class="muted">Distrito</td><td><span class="danfe-n">1971</span></td><td class="c muted">001</td><td class="num">02/06/2026</td><td class="num">15/06/2026</td><td class="r num">2.874,00</td><td class="num">16/07/2026</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;font-size:12px;color:var(--t3)">
+        <span>Mostrando 6 de 133 notas</span>
+        <span class="muted">Legenda: <span class="sit" style="background:var(--amber);vertical-align:middle"></span> Pendente · <span class="sit" style="background:var(--blue);vertical-align:middle"></span> Para processar · <span class="err-badge" style="vertical-align:middle">!</span> Com erro</span>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

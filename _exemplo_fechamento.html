@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Fechamento de Custo — ideias</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+  body{background:#f4f6fa;color:#0f172a;font-size:14px;padding:26px 30px}
+  h1{font-size:17px;margin-bottom:2px}
+  .sub{font-size:12px;color:#94a3b8;margin-bottom:22px}
+  .lbl{font-size:11px;font-weight:800;color:#f97316;text-transform:uppercase;letter-spacing:.06em;margin:30px 0 12px;display:flex;align-items:center;gap:8px}
+  .lbl span{background:#fff7ed;border:1px solid #fed7aa;border-radius:20px;padding:2px 10px;font-size:10px}
+  .mono{font-family:'DM Mono','Consolas',monospace}
+  .green{color:#16a34a}.red{color:#dc2626}.orange{color:#f97316}.mut{color:#94a3b8}
+
+  /* filtros */
+  .fb{display:flex;gap:12px;align-items:flex-end;background:#fff;border:1px solid #e7ebf0;border-radius:12px;padding:9px 14px;margin-bottom:12px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .fg{display:flex;flex-direction:column;gap:3px}
+  .fg label{font-size:11px;color:#64748b}
+  .fg .f{height:34px;border:1px solid #cbd5e1;border-radius:8px;padding:0 12px;font-size:13px;display:flex;align-items:center;color:#334155;min-width:100px}
+  .sp{margin-left:auto;display:flex;gap:8px}
+  .btn{height:34px;padding:0 16px;border-radius:8px;font-size:13px;font-weight:700;border:none;cursor:pointer}
+  .btn.pri{background:#f97316;color:#fff}
+  .btn.gh{background:#fff;border:1px solid #e2e8f0;color:#475569;font-weight:600}
+  .btn.sm{height:30px;padding:0 12px;font-size:12px}
+
+  /* faixa resumo (igual CMV) */
+  .kbar{display:flex;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04);margin-bottom:16px}
+  .kbar .it{display:flex;align-items:baseline;gap:6px;padding:0 16px;border-right:1px solid #eef1f5}
+  .kbar .it:first-child{padding-left:0}.kbar .it:last-child{border-right:none}
+  .kbar .k{font-size:11px;color:#64748b}
+  .kbar .v{font-size:15px;font-weight:800;font-family:'DM Mono',monospace}
+
+  /* ===== A: tabela enxuta ===== */
+  .tcard{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{background:#f1f5f9;color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:9px 12px;text-align:right;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+  thead th.l{text-align:left}thead th.c{text-align:center}
+  tbody td{padding:9px 12px;text-align:right;border-bottom:1px solid #eef2f7;font-family:'DM Mono',monospace;white-space:nowrap}
+  tbody td.l{text-align:left;font-family:inherit;font-weight:600}
+  tbody td.c{text-align:center}
+  tbody tr:hover{background:#fafbfc;cursor:pointer}
+  tfoot td{padding:9px 12px;text-align:right;font-weight:800;background:#f8fafc;border-top:2px solid #e2e8f0;font-family:'DM Mono',monospace}
+  tfoot td.l{text-align:left}
+  .cmv-hi{background:#fff7ed}
+  thead th.cmv-hi{background:#ffedd5;color:#c2410c}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px}
+  .pill.ab{background:#eff6ff;color:#2563eb}.pill.fe{background:#f0fdf4;color:#16a34a}
+  .colgrp{font-size:9px;color:#94a3b8;font-weight:700}
+
+  /* ===== B: cards de composição (waterfall) ===== */
+  .cards{display:flex;flex-direction:column;gap:12px}
+  .lcard{background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 1px 3px rgba(15,23,42,.05);overflow:hidden}
+  .lcard.fez{border-color:#bbf7d0}
+  .lhead{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #f1f5f9}
+  .lname{font-size:15px;font-weight:800}
+  .lspace{flex:1}
+  .lcmv{text-align:right}
+  .lcmv .n{font-size:22px;font-weight:800;font-family:'DM Mono',monospace;color:#c2410c;line-height:1}
+  .lcmv .p{font-size:11px;color:#94a3b8;margin-top:2px}
+  .flow{display:flex;align-items:stretch;gap:0;padding:14px 18px;flex-wrap:wrap}
+  .step{display:flex;flex-direction:column;gap:3px;padding:0 16px;position:relative;justify-content:center}
+  .step:first-child{padding-left:0}
+  .step .op{position:absolute;left:-6px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:800;color:#cbd5e1}
+  .step .sk{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+  .step .sv{font-size:15px;font-weight:700;font-family:'DM Mono',monospace}
+  .step.plus .sv{color:#0f172a}.step.minus .sv{color:#dc2626}
+  .step.eq{margin-left:auto;padding-right:0;text-align:right;border-left:1px dashed #e2e8f0;padding-left:20px}
+  .step.eq .sv{color:#16a34a}
+  .lfoot{display:flex;align-items:center;gap:10px;padding:10px 18px;background:#fafbfc;border-top:1px solid #f1f5f9;font-size:12px;color:#94a3b8}
+</style>
+</head>
+<body>
+  <h1>Fechamento de Custo Mensal — 2 ideias de layout</h1>
+  <div class="sub">Números de exemplo. A regra é a mesma: CMV = Estoque Inicial + Compras + Entradas de Transf. + Perdas − Estoque Final. Clicar na loja abre o detalhe item a item (modal, mantido nos dois).</div>
+
+  <!-- filtros comuns -->
+  <div class="fb">
+    <div class="fg"><label>Mês</label><div class="f">Junho</div></div>
+    <div class="fg"><label>Ano</label><div class="f">2026</div></div>
+    <div class="fg"><label>Loja</label><div class="f">Todas as lojas</div></div>
+    <div class="sp"><button class="btn pri">Calcular</button><button class="btn gh">↓ Exportar</button></div>
+  </div>
+
+  <!-- faixa resumo (nas duas) -->
+  <div class="kbar">
+    <div class="it"><span class="k">Competência</span><span class="v">06/2026</span></div>
+    <div class="it"><span class="k">CMV total</span><span class="v red">R$ 41.180</span></div>
+    <div class="it"><span class="k">CMV médio</span><span class="v">34,7%</span></div>
+    <div class="it"><span class="k">Compras</span><span class="v">R$ 52.900</span></div>
+    <div class="it"><span class="k">Perdas</span><span class="v red">R$ 1.240</span></div>
+    <div class="it"><span class="k">Lojas fechadas</span><span class="v green">1 / 3</span></div>
+  </div>
+
+  <!-- ===================== A ===================== -->
+  <div class="lbl"><span>A</span> Tabela enxuta — colunas agrupadas, CMV em destaque, Fechar direto na linha</div>
+  <div class="tcard">
+    <table>
+      <thead>
+        <tr>
+          <th class="l">Loja</th><th class="c">Situação</th>
+          <th>Est. Inicial</th>
+          <th class="colgrp">+ Compras</th><th class="colgrp">+ Transf.</th>
+          <th class="colgrp">− Consumo</th><th class="colgrp">− Perdas</th>
+          <th>Est. Final</th>
+          <th class="cmv-hi">CMV</th><th class="cmv-hi">%</th>
+          <th class="c">Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="l">Centro <span class="mut">›</span></td><td class="c"><span class="pill ab">ABERTO</span></td>
+          <td>R$ 8.200</td><td>R$ 15.100</td><td>R$ 300</td>
+          <td class="red">R$ 9.800</td><td class="red">R$ 460</td>
+          <td>R$ 11.000</td>
+          <td class="cmv-hi red">R$ 13.060</td><td class="cmv-hi">38,2%</td>
+          <td class="c"><button class="btn pri sm">Fechar</button></td>
+        </tr>
+        <tr>
+          <td class="l">Ponta Negra <span class="mut">›</span></td><td class="c"><span class="pill ab">ABERTO</span></td>
+          <td>R$ 6.400</td><td>R$ 21.300</td><td>R$ 0</td>
+          <td class="red">R$ 12.100</td><td class="red">R$ 540</td>
+          <td>R$ 9.900</td>
+          <td class="cmv-hi red">R$ 18.340</td><td class="cmv-hi">33,1%</td>
+          <td class="c"><button class="btn pri sm">Fechar</button></td>
+        </tr>
+        <tr style="opacity:.75">
+          <td class="l">Depósito <span class="mut">›</span></td><td class="c"><span class="pill fe">FECHADO</span></td>
+          <td>R$ 4.100</td><td>R$ 16.500</td><td>R$ 0</td>
+          <td class="red">R$ 8.900</td><td class="red">R$ 240</td>
+          <td>R$ 10.900</td>
+          <td class="cmv-hi red">R$ 9.780</td><td class="cmv-hi">—</td>
+          <td class="c"><button class="btn gh sm">Reabrir</button></td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td class="l">TOTAL (3 lojas)</td><td></td>
+          <td>R$ 18.700</td><td>R$ 52.900</td><td>R$ 300</td>
+          <td>R$ 30.800</td><td>R$ 1.240</td>
+          <td>R$ 31.800</td>
+          <td class="cmv-hi red">R$ 41.180</td><td class="cmv-hi"></td><td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- ===================== B ===================== -->
+  <div class="lbl"><span>B</span> Cards de composição — conta a história do custo (de onde veio) e deixa o "Fechar" óbvio (minha sugestão)</div>
+  <div class="cards">
+
+    <div class="lcard">
+      <div class="lhead">
+        <div class="lname">Centro</div>
+        <span class="pill ab">ABERTO</span>
+        <div class="lspace"></div>
+        <div class="lcmv"><div class="n">R$ 13.060</div><div class="p">CMV · 38,2% do faturamento</div></div>
+      </div>
+      <div class="flow">
+        <div class="step plus"><div class="sk">Estoque Inicial</div><div class="sv">R$ 8.200</div></div>
+        <div class="step plus"><div class="op">+</div><div class="sk">Compras</div><div class="sv">R$ 15.100</div></div>
+        <div class="step plus"><div class="op">+</div><div class="sk">Ent. Transf.</div><div class="sv">R$ 300</div></div>
+        <div class="step minus"><div class="op">−</div><div class="sk">Consumo</div><div class="sv">R$ 9.800</div></div>
+        <div class="step minus"><div class="op">−</div><div class="sk">Perdas</div><div class="sv">R$ 460</div></div>
+        <div class="step minus"><div class="op">−</div><div class="sk">Estoque Final</div><div class="sv">R$ 11.000</div></div>
+        <div class="step eq"><div class="sk">= CMV do mês</div><div class="sv red">R$ 13.060</div></div>
+      </div>
+      <div class="lfoot">Clique para ver item a item · <button class="btn pri sm" style="margin-left:auto">Fechar mês</button></div>
+    </div>
+
+    <div class="lcard fez">
+      <div class="lhead">
+        <div class="lname">Depósito</div>
+        <span class="pill fe">FECHADO</span>
+        <div class="lspace"></div>
+        <div class="lcmv"><div class="n">R$ 9.780</div><div class="p">CMV · congelado em 30/06</div></div>
+      </div>
+      <div class="flow">
+        <div class="step plus"><div class="sk">Estoque Inicial</div><div class="sv">R$ 4.100</div></div>
+        <div class="step plus"><div class="op">+</div><div class="sk">Compras</div><div class="sv">R$ 16.500</div></div>
+        <div class="step plus"><div class="op">+</div><div class="sk">Ent. Transf.</div><div class="sv">R$ 0</div></div>
+        <div class="step minus"><div class="op">−</div><div class="sk">Consumo</div><div class="sv">R$ 8.900</div></div>
+        <div class="step minus"><div class="op">−</div><div class="sk">Perdas</div><div class="sv">R$ 240</div></div>
+        <div class="step minus"><div class="op">−</div><div class="sk">Estoque Final</div><div class="sv">R$ 10.900</div></div>
+        <div class="step eq"><div class="sk">= CMV do mês</div><div class="sv red">R$ 9.780</div></div>
+      </div>
+      <div class="lfoot">Fechado por Djalma · <button class="btn gh sm" style="margin-left:auto">Reabrir</button></div>
+    </div>
+
+  </div>
+
+  <div style="height:40px"></div>
+</body>
+</html>

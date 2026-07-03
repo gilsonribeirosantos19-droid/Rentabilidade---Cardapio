@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Protótipo — Aiko (Início / Cockpit proposto)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#f97316;--primary-hover:#ea6c00;--primary-soft:#fff7ed;
+    --navy:#1e293b;--navy-2:#0f172a;
+    --t1:#0f172a;--t2:#475569;--t3:#94a3b8;
+    --border:#e2e8f0;--border-soft:#f1f5f9;--bg:#f8fafc;--card:#fff;
+    --success:#16a34a;--success-s:#f0fdf4;--warning:#f59e0b;--warning-s:#fffbeb;
+    --danger:#dc2626;--danger-s:#fef2f2;--info:#2563eb;--info-s:#eff6ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:14px;display:flex;min-height:100vh}
+  .mono{font-family:'DM Mono',monospace}
+
+  /* ── SIDEBAR ── */
+  .sidebar{width:220px;background:var(--navy);color:#cbd5e1;flex-shrink:0;display:flex;flex-direction:column;padding:16px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .logo{display:flex;align-items:center;gap:10px;padding:4px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:10px}
+  .logo .mark{width:34px;height:34px;background:var(--primary);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .logo .name{font-size:16px;font-weight:800;color:#fff;line-height:1}
+  .logo .sub{font-size:11px;color:var(--primary);font-family:'DM Mono',monospace}
+  .nav-group{padding:10px 12px 2px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#64748b}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:1px 8px;border-radius:8px;font-size:13px;color:#cbd5e1;cursor:pointer;text-decoration:none}
+  .nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+  .nav-item.active{background:var(--primary);color:#fff;font-weight:600}
+  .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.9}
+
+  /* ── MAIN ── */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{height:54px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:0 24px;position:sticky;top:0;z-index:10}
+  .loja-sel{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--t2);background:#fff;cursor:pointer}
+  .loja-sel svg{width:14px;height:14px;color:var(--t3)}
+  .spacer{flex:1}
+  .bell{position:relative;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--t2);cursor:pointer}
+  .bell:hover{background:var(--border-soft)}
+  .bell .dot{position:absolute;top:7px;right:7px;width:8px;height:8px;background:var(--danger);border-radius:50%;border:2px solid #fff}
+  .user{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--t1)}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+
+  .content{padding:22px 24px;flex:1}
+  .page-title{font-size:20px;font-weight:800}
+  .page-sub{font-size:13px;color:var(--t3);margin:2px 0 20px}
+
+  /* ── KPI CARDS ── */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .kpi-lbl{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
+  .kpi-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .kpi-val{font-size:25px;font-weight:800;font-family:'DM Mono',monospace;line-height:1}
+  .kpi-foot{font-size:11.5px;margin-top:6px;display:flex;align-items:center;gap:5px}
+  .up{color:var(--success)} .down{color:var(--danger)} .muted{color:var(--t3)}
+  .pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+  .pill-g{background:var(--success-s);color:var(--success)}
+  .pill-a{background:var(--warning-s);color:#b45309}
+  .pill-r{background:var(--danger-s);color:var(--danger)}
+
+  /* ── GRID 2 col ── */
+  .row2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .card-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border-soft)}
+  .card-h .t{font-size:14px;font-weight:700}
+  .card-h a{font-size:12px;color:var(--primary);text-decoration:none;font-weight:600}
+  .card-b{padding:16px 18px}
+
+  /* alertas */
+  .alert{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;margin-bottom:9px;cursor:pointer;border:1px solid transparent}
+  .alert:last-child{margin-bottom:0}
+  .alert:hover{transform:translateX(2px)}
+  .alert .ai{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .alert .txt{flex:1;font-size:13px}
+  .alert .txt b{font-weight:700}
+  .alert .arr{color:var(--t3);font-size:16px}
+  .a-r{background:var(--danger-s)} .a-r .ai{background:#fee2e2;color:var(--danger)}
+  .a-a{background:var(--warning-s)} .a-a .ai{background:#fef3c7;color:#b45309}
+  .a-i{background:var(--info-s)} .a-i .ai{background:#dbeafe;color:var(--info)}
+
+  /* mini chart */
+  .chart{display:flex;align-items:flex-end;gap:12px;height:130px;padding-top:8px}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .bar{width:100%;max-width:34px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#fb8a3c,#f97316)}
+  .bar.dim{background:#e2e8f0}
+  .bar-lbl{font-size:10px;color:var(--t3)}
+  .bar-val{font-size:10px;font-weight:700;color:var(--t2);font-family:'DM Mono',monospace}
+
+  /* tabela por loja */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--t3);padding:10px 18px;border-bottom:2px solid var(--border-soft)}
+  th.r,td.r{text-align:right}
+  td{padding:11px 18px;border-bottom:1px solid var(--border-soft);font-family:'DM Mono',monospace}
+  td.l{font-family:Inter,sans-serif;font-weight:600}
+  tbody tr:hover{background:var(--bg)}
+  tbody tr:last-child td{border-bottom:none}
+
+  .note{max-width:1100px;margin:0 auto 14px;font-size:12px;color:#fff;background:rgba(15,23,42,.55);border-radius:8px;padding:9px 14px}
+  .btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:8px;border:1.5px solid transparent;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+  .btn-pri{background:var(--primary);color:#fff}
+  .btn-gho{background:#fff;border-color:var(--border);color:var(--t2)}
+</style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><polyline points="1,21 8,6 13,13 17,8 23,21"/><line x1="1" y1="21" x2="23" y2="21"/></svg></div>
+      <div><div class="name">Aiko</div><div class="sub">sistema</div></div>
+    </div>
+
+    <div class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Início</div>
+
+    <div class="nav-group">Operação</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Estoque</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>Compras</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>Produção</div>
+
+    <div class="nav-group">Fiscal</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Monitor NF-e</div>
+
+    <div class="nav-group">Análises</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Fechamento</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>CMV</div>
+
+    <div class="nav-group">Cadastros</div>
+    <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9M14 17H5M17 21a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM7 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>Insumos</div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="loja-sel">Todas as lojas <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="spacer"></div>
+      <div class="bell"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot"></span></div>
+      <div class="user"><div class="avatar">GS</div>Gilson Santos</div>
+    </div>
+
+    <div class="content">
+      <div style="background:rgba(15,23,42,.05);border:1px dashed var(--border);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--t2);margin-bottom:16px">🎨 <b>Protótipo visual</b> — proposta de tela <b>Início / Cockpit</b> (dados fictícios). É a maior mudança da minha visão: uma "casa" que mostra o restaurante em 5 segundos.</div>
+
+      <div class="page-title">Início</div>
+      <div class="page-sub">Visão geral do seu restaurante — Junho 2026</div>
+
+      <!-- KPIs -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-lbl">CMV do mês</span><span class="kpi-ico" style="background:var(--success-s)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span></div>
+          <div class="kpi-val">31,2%</div>
+          <div class="kpi-foot"><span class="pill pill-g">▼ 1,8 pts</span><span class="muted">vs mês anterior</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-lbl">Valor em Estoque</span><span class="kpi-ico" style="background:var(--primary-soft)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span></div>
+          <div class="kpi-val">R$ 84.320</div>
+          <div class="kpi-foot"><span class="muted">8 lojas · 430 itens</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-lbl">Compras do mês</span><span class="kpi-ico" style="background:var(--info-s)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg></span></div>
+          <div class="kpi-val">R$ 142.870</div>
+          <div class="kpi-foot"><span class="up">▲ 6,4%</span><span class="muted">vs mês anterior</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><span class="kpi-lbl">Faturamento</span><span class="kpi-ico" style="background:var(--border-soft)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span></div>
+          <div class="kpi-val" style="color:var(--t3)">—</div>
+          <div class="kpi-foot"><span class="muted">conecte o PDV para ver</span></div>
+        </div>
+      </div>
+
+      <!-- ALERTAS + CHART -->
+      <div class="row2">
+        <div class="card">
+          <div class="card-h"><span class="t">⚡ Precisa da sua atenção</span><a href="#">ver tudo</a></div>
+          <div class="card-b">
+            <div class="alert a-r">
+              <div class="ai"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+              <div class="txt"><b>5 itens em estoque crítico</b> — salmão, camarão e +3 abaixo do mínimo</div>
+              <div class="arr">›</div>
+            </div>
+            <div class="alert a-a">
+              <div class="ai"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div class="txt"><b>3 notas sem vínculo</b> no Monitor Fiscal — esperando você vincular</div>
+              <div class="arr">›</div>
+            </div>
+            <div class="alert a-i">
+              <div class="ai"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <div class="txt"><b>2 lojas com fechamento de junho em aberto</b> — Centro e Paraíba</div>
+              <div class="arr">›</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><span class="t">CMV — últimos 6 meses</span></div>
+          <div class="card-b">
+            <div class="chart">
+              <div class="bar-wrap"><span class="bar-val">35</span><div class="bar dim" style="height:78%"></div><span class="bar-lbl">Jan</span></div>
+              <div class="bar-wrap"><span class="bar-val">34</span><div class="bar dim" style="height:74%"></div><span class="bar-lbl">Fev</span></div>
+              <div class="bar-wrap"><span class="bar-val">33</span><div class="bar dim" style="height:70%"></div><span class="bar-lbl">Mar</span></div>
+              <div class="bar-wrap"><span class="bar-val">34</span><div class="bar dim" style="height:74%"></div><span class="bar-lbl">Abr</span></div>
+              <div class="bar-wrap"><span class="bar-val">33</span><div class="bar dim" style="height:70%"></div><span class="bar-lbl">Mai</span></div>
+              <div class="bar-wrap"><span class="bar-val">31</span><div class="bar" style="height:62%"></div><span class="bar-lbl" style="color:var(--primary);font-weight:700">Jun</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POR LOJA -->
+      <div class="card">
+        <div class="card-h"><span class="t">CMV por loja — Junho</span><a href="#">abrir Fechamento</a></div>
+        <table>
+          <thead><tr><th>Loja</th><th class="r">Estoque (R$)</th><th class="r">Compras (R$)</th><th class="r">CMV (R$)</th><th class="r">CMV %</th><th class="r">Situação</th></tr></thead>
+          <tbody>
+            <tr><td class="l">Sushi Ponta Negra (Matriz)</td><td class="r">14.210</td><td class="r">22.480</td><td class="r">8.940</td><td class="r">29,8%</td><td class="r"><span class="pill pill-g">Saudável</span></td></tr>
+            <tr><td class="l">Sushi Cidade Nova</td><td class="r">11.870</td><td class="r">18.640</td><td class="r">6.210</td><td class="r">31,1%</td><td class="r"><span class="pill pill-g">Saudável</span></td></tr>
+            <tr><td class="l">Sushi Centro</td><td class="r">9.540</td><td class="r">16.120</td><td class="r">6.480</td><td class="r">36,4%</td><td class="r"><span class="pill pill-a">Atenção</span></td></tr>
+            <tr><td class="l">Sushi Paraíba</td><td class="r">8.330</td><td class="r">15.870</td><td class="r">6.990</td><td class="r">39,2%</td><td class="r"><span class="pill pill-r">Alto</span></td></tr>
+            <tr><td class="l">Sushi Distrito</td><td class="r">10.110</td><td class="r">17.230</td><td class="r">5.620</td><td class="r">30,5%</td><td class="r"><span class="pill pill-g">Saudável</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

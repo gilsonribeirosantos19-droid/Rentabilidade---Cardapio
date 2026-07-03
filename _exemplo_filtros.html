@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exemplo — Barra de Filtros (Antes × Depois)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --orange:#f97316; --orange-dim:#fff7ed;
+    --t1:#0f172a; --t2:#475569; --t3:#94a3b8;
+    --bd:#e2e8f0; --bd2:#cbd5e1; --bg:#f1f5f9; --card:#fff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t1);padding:28px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--t2);font-size:13px;margin:0 0 24px}
+  .bloco{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px 22px;margin-bottom:22px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:99px;margin-bottom:16px}
+  .tag-antes{background:#fef2f2;color:#dc2626}
+  .tag-depois{background:#ecfdf5;color:#059669}
+  .note{font-size:12px;color:var(--t2);margin-top:14px;line-height:1.6}
+
+  /* ====== ANTES (réplica do atual: inputs nativos, sem rótulo, alturas variadas) ====== */
+  .old{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+  .old select,.old input[type=text]{height:34px;border:1px solid #e5e7eb;border-radius:6px;padding:0 9px;font-family:inherit;font-size:13px;color:#374151;background:#fff}
+  .old input[type=date]{height:38px;border:1px solid #e5e7eb;border-radius:5px;padding:0 8px;font-family:inherit;font-size:13px;color:#374151;background:#fbfbfb}
+  .old .ghost{color:#9ca3af}
+  .old .chk{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:#374151}
+  .old .b-fil{height:34px;border:none;border-radius:6px;background:var(--orange);color:#fff;font-weight:700;padding:0 18px;font-family:inherit;cursor:pointer}
+  .old .b-lim{height:34px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;color:#374151;padding:0 14px;font-family:inherit;cursor:pointer}
+  .old .b-exp{height:32px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;color:#374151;padding:0 12px;margin-left:auto;font-family:inherit;cursor:pointer}
+
+  /* ====== DEPOIS (padrão ERP: rótulos, mesma altura, ritmo de espaço, switches) ====== */
+  .ds-filterbar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+  .ds-field{display:flex;flex-direction:column;gap:6px}
+  .ds-field>label{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
+  .ds-input{height:38px;border:1.5px solid var(--bd);border-radius:9px;padding:0 12px;font-family:inherit;font-size:13px;color:var(--t1);background:#fff;transition:border-color .15s,box-shadow .15s;min-width:140px}
+  .ds-input:hover{border-color:var(--bd2)}
+  .ds-input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(249,115,22,.14)}
+  select.ds-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+  .ds-grow{flex:1;min-width:180px}
+  .ds-grow .ds-input{width:100%}
+  .ds-date{width:148px}
+
+  .ds-toggles{display:flex;flex-direction:column;gap:8px;padding-bottom:3px}
+  .ds-switch{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--t2);cursor:pointer;user-select:none}
+  .ds-switch input{display:none}
+  .ds-switch>span{width:34px;height:19px;border-radius:99px;background:#cbd5e1;position:relative;transition:background .15s;flex:none}
+  .ds-switch>span::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .ds-switch input:checked+span{background:var(--orange)}
+  .ds-switch input:checked+span::after{transform:translateX(15px)}
+
+  .ds-actions{display:flex;align-items:center;gap:8px;margin-left:auto;padding-bottom:1px}
+  .ds-btn{height:38px;border-radius:9px;padding:0 16px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .15s;border:1.5px solid transparent}
+  .ds-btn svg{width:15px;height:15px}
+  .ds-btn-primary{background:var(--orange);color:#fff}
+  .ds-btn-primary:hover{background:#ea6a0c}
+  .ds-btn-ghost{background:#fff;border-color:var(--bd);color:var(--t2)}
+  .ds-btn-ghost:hover{border-color:var(--bd2);color:var(--t1)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Barra de filtros — Antes × Depois</h1>
+  <p class="sub">Mesmo filtro (Estoque › Movimentação). Em cima, como está hoje. Embaixo, o padrão "ERP".</p>
+
+  <!-- ANTES -->
+  <div class="bloco">
+    <span class="tag tag-antes">Antes (atual)</span>
+    <div class="old">
+      <select><option>Período</option></select>
+      <input type="date" value="2026-05-23">
+      <input type="date" value="2026-06-22">
+      <select><option class="ghost">Todos os grupos</option></select>
+      <select><option class="ghost">Todos os insumos</option></select>
+      <input type="text" placeholder="Pesquisar item...">
+      <label class="chk"><input type="checkbox" checked> Somente com saldo/movimento</label>
+      <label class="chk"><input type="checkbox"> Somente CMV</label>
+      <button class="b-fil">Filtrar</button>
+      <button class="b-lim">Limpar</button>
+      <button class="b-exp">⬇ Exportar CSV</button>
+    </div>
+    <div class="note">Inputs de tamanhos diferentes (datas mais altas que os selects), sem rótulos (texto-fantasma), bordas e cantos variados, espaçamento irregular.</div>
+  </div>
+
+  <!-- DEPOIS -->
+  <div class="bloco">
+    <span class="tag tag-depois">Depois (padrão ERP)</span>
+    <div class="ds-filterbar">
+      <div class="ds-field">
+        <label>Período</label>
+        <select class="ds-input">
+          <option>Mês atual</option><option>Mês anterior</option>
+          <option>Últimos 7 dias</option><option>Hoje</option><option>Personalizado</option>
+        </select>
+      </div>
+      <div class="ds-field">
+        <label>De</label>
+        <input type="date" class="ds-input ds-date" value="2026-05-23">
+      </div>
+      <div class="ds-field">
+        <label>Até</label>
+        <input type="date" class="ds-input ds-date" value="2026-06-22">
+      </div>
+      <div class="ds-field">
+        <label>Grupo</label>
+        <select class="ds-input"><option>Todos os grupos</option></select>
+      </div>
+      <div class="ds-field">
+        <label>Insumo</label>
+        <select class="ds-input"><option>Todos os insumos</option></select>
+      </div>
+      <div class="ds-field ds-grow">
+        <label>Buscar</label>
+        <input class="ds-input" placeholder="Pesquisar item...">
+      </div>
+      <div class="ds-toggles">
+        <label class="ds-switch"><input type="checkbox" checked><span></span>Somente com saldo</label>
+        <label class="ds-switch"><input type="checkbox"><span></span>Somente CMV</label>
+      </div>
+      <div class="ds-actions">
+        <button class="ds-btn ds-btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filtrar
+        </button>
+        <button class="ds-btn ds-btn-ghost">Limpar</button>
+        <button class="ds-btn ds-btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar
+        </button>
+      </div>
+    </div>
+    <div class="note">Tudo na mesma altura (38px), com rótulo em cima de cada filtro, cantos e bordas iguais, espaçamento no compasso, e os toggles viraram interruptores. Foco no campo fica laranja.</div>
+  </div>
+
+  <p class="sub" style="margin-top:8px">Passe o mouse / clique nos campos do "Depois" pra ver o foco laranja e os interruptores. O visual vira uma <b>classe única</b> no design-system.css — todas as telas passam a usar a mesma.</p>
+</div>
+</body>
+</html>

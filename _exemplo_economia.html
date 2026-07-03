@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Protótipo — Economia por Negociação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--orange:#f97316;--t1:#0f172a;--t2:#475569;--t3:#94a3b8;--bd:#e2e8f0;--bg:#f1f5f9;--green:#16a34a;--red:#dc2626}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--t1);padding:24px;font-size:14px}
+  .wrap{max-width:1180px;margin:0 auto}
+  .h1{font-size:20px;font-weight:800}
+  .sub{color:var(--t2);font-size:13px;margin:2px 0 20px}
+  .nota{font-size:11px;color:var(--t3);background:#fff;border:1px dashed var(--bd);border-radius:8px;padding:8px 12px;margin-bottom:16px}
+
+  /* filtros */
+  .bar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .fld{display:flex;flex-direction:column;gap:6px}
+  .fld label{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
+  .inp{height:38px;border:1.5px solid var(--bd);border-radius:9px;padding:0 12px;font-family:inherit;font-size:13px;background:#fff;min-width:140px}
+  .acts{margin-left:auto;display:flex;gap:8px;align-items:flex-end}
+  .btn{height:38px;border-radius:9px;padding:0 16px;font-weight:600;font-size:13px;cursor:pointer;border:1.5px solid transparent;font-family:inherit}
+  .btn-pri{background:var(--orange);color:#fff}
+  .btn-gho{background:#fff;border-color:var(--bd);color:var(--t2)}
+
+  /* resumo */
+  .kpis{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.6fr;gap:14px;margin-bottom:18px}
+  .card{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px 18px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .k-lbl{font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .k-val{font-size:24px;font-weight:800;font-family:'DM Mono',monospace}
+  .k-sub{font-size:11px;color:var(--t3);margin-top:3px}
+  .green{color:var(--green)} .red{color:var(--red)}
+  .meta-bar{height:10px;border-radius:6px;background:#eef2f7;overflow:hidden;margin-top:10px}
+  .meta-fill{height:100%;background:linear-gradient(90deg,#fb8a3c,#f97316);border-radius:6px}
+
+  /* tabela */
+  .tbl-card{background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;text-align:right;padding:12px 12px;border-bottom:2px solid var(--bd);background:#f8fafc;white-space:nowrap}
+  th.l{text-align:left}
+  td{padding:11px 12px;border-bottom:1px solid #eef2f7;text-align:right;font-family:'DM Mono',monospace;white-space:nowrap}
+  td.l{text-align:left;font-family:inherit}
+  tbody tr:hover{background:#fafbfc}
+  tfoot td{font-weight:800;background:#f8fafc;border-top:2px solid var(--bd)}
+  .forn{font-size:11px;color:var(--t3)}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+  .pill-g{background:#f0fdf4;color:var(--green)}
+  .pill-r{background:#fef2f2;color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="h1">Economia por Negociação — Compras</div>
+  <div class="sub">Quanto o time de compras reduziu de custo negociando com fornecedores. Usa o <b>preço real de cada nota</b> (não o custo médio).</div>
+
+  <div class="nota">⚠️ Protótipo com dados fictícios, só pra você ver o layout. Referência usada neste exemplo: <b>Preço-base = mês de referência (dez/2025)</b>. Economia = (Preço base − Preço pago) × Qtd comprada no período.</div>
+
+  <!-- FILTROS -->
+  <div class="bar">
+    <div class="fld"><label>Período</label><select class="inp"><option>Junho 2026</option><option>Maio 2026</option></select></div>
+    <div class="fld"><label>Fornecedor</label><select class="inp"><option>Todos</option><option>PESC NORTE</option><option>HAJIME</option></select></div>
+    <div class="fld"><label>Grupo</label><select class="inp"><option>Todos os grupos</option></select></div>
+    <div class="fld"><label>Referência</label><select class="inp" style="min-width:180px"><option>Mês-base (dez/2025)</option><option>Compra anterior</option><option>Preço médio</option></select></div>
+    <div class="acts">
+      <button class="btn btn-pri">Filtrar</button>
+      <button class="btn btn-gho">↓ Exportar</button>
+    </div>
+  </div>
+
+  <!-- RESUMO -->
+  <div class="kpis">
+    <div class="card">
+      <div class="k-lbl">Economia Total no Período</div>
+      <div class="k-val green">R$ 4.705,00</div>
+      <div class="k-sub">vs preço-base de dez/2025</div>
+    </div>
+    <div class="card">
+      <div class="k-lbl">Redução Média</div>
+      <div class="k-val green">−6,1%</div>
+      <div class="k-sub">média ponderada pelas compras</div>
+    </div>
+    <div class="card">
+      <div class="k-lbl">Itens Negociados</div>
+      <div class="k-val">6</div>
+      <div class="k-sub">5 com economia · 1 em alta</div>
+    </div>
+    <div class="card">
+      <div class="k-lbl">Meta do Mês</div>
+      <div class="k-val">R$ 4.705 <span style="font-size:13px;color:var(--t3)">/ R$ 5.000</span></div>
+      <div class="meta-bar"><div class="meta-fill" style="width:94%"></div></div>
+      <div class="k-sub">94% da meta atingida</div>
+    </div>
+  </div>
+
+  <!-- TABELA -->
+  <div class="tbl-card">
+    <table>
+      <thead><tr>
+        <th class="l">Insumo</th>
+        <th class="l">Fornecedor</th>
+        <th>Un.</th>
+        <th>Preço Base</th>
+        <th>Preço Pago</th>
+        <th>Δ R$/un</th>
+        <th>Δ %</th>
+        <th>Qtd Comprada</th>
+        <th>Economia (R$)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="l" style="font-weight:600">Salmão</td><td class="l forn">PESC NORTE</td><td>kg</td><td>80,00</td><td>74,00</td><td class="green">−6,00</td><td><span class="pill pill-g">−7,5%</span></td><td>520</td><td class="green" style="font-weight:700">R$ 3.120,00</td></tr>
+        <tr><td class="l" style="font-weight:600">Camarão</td><td class="l forn">PESC NORTE</td><td>kg</td><td>62,00</td><td>58,50</td><td class="green">−3,50</td><td><span class="pill pill-g">−5,6%</span></td><td>180</td><td class="green" style="font-weight:700">R$ 630,00</td></tr>
+        <tr><td class="l" style="font-weight:600">Cream Cheese</td><td class="l forn">MIKAEL</td><td>kg</td><td>28,00</td><td>26,40</td><td class="green">−1,60</td><td><span class="pill pill-g">−5,7%</span></td><td>300</td><td class="green" style="font-weight:700">R$ 480,00</td></tr>
+        <tr><td class="l" style="font-weight:600">Alga Nori</td><td class="l forn">HAJIME</td><td>un</td><td>0,95</td><td>0,88</td><td class="green">−0,07</td><td><span class="pill pill-g">−7,4%</span></td><td>4.000</td><td class="green" style="font-weight:700">R$ 280,00</td></tr>
+        <tr><td class="l" style="font-weight:600">Arroz Sushi</td><td class="l forn">RCL</td><td>kg</td><td>7,20</td><td>6,90</td><td class="green">−0,30</td><td><span class="pill pill-g">−4,2%</span></td><td>800</td><td class="green" style="font-weight:700">R$ 240,00</td></tr>
+        <tr><td class="l" style="font-weight:600">Cebola Roxa</td><td class="l forn">BELO FRUTO</td><td>kg</td><td>5,10</td><td>5,40</td><td class="red">+0,30</td><td><span class="pill pill-r">+5,9%</span></td><td>150</td><td class="red" style="font-weight:700">−R$ 45,00</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td class="l">TOTAL</td><td colspan="6"></td><td></td><td class="green">R$ 4.705,00</td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="sub" style="margin-top:14px">
+    <b>Como ler:</b> verde = pagou menos que o preço-base (economia). Vermelho = pagou mais (alta — ex.: hortifruti que subiu de safra).
+    A "Economia" de cada linha = (Preço Base − Preço Pago) × Qtd Comprada. O total alimenta a meta do setor.
+  </div>
+</div>
+</body>
+</html>
