@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { PortalInventario } from './PortalInventario'
 import { PortalSolicitacao } from './PortalSolicitacao'
 import { PortalPerdas } from './PortalPerdas'
+import { PortalEstoque } from './PortalEstoque'
 import './portal.css'
 
 // Portal do Gerente — casca (sidebar escura + navegação). Migração fiel do loja.html.
@@ -68,7 +69,7 @@ export function PortalShell() {
           <div className="p-conn"><span className="p-dot" /> conectado</div>
         </div>
         <div className="p-content">
-          {tab === 'inventario' ? <PortalInventario /> : tab === 'solicitacao' ? <PortalSolicitacao /> : tab === 'perdas' ? <PortalPerdas /> : (
+          {tab === 'inventario' ? <PortalInventario /> : tab === 'solicitacao' ? <PortalSolicitacao /> : tab === 'perdas' ? <PortalPerdas /> : tab === 'estoque' ? <PortalEstoque /> : (
             <div className="p-holder">
               <div className="t">{LABEL[tab]}</div>
               <div>Esta área será migrada em seguida (fiel ao portal atual).</div>
