@@ -172,7 +172,10 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
     onError: (e: Error) => { if (e.message !== '__cancel__') showToast('Erro: ' + e.message, 'err') },
   })
   const reabrirMut = useMutation({
-    mutationFn: async () => { const { error } = await supabase.from('inventarios').update({ status: 'ativo' }).eq('id', invId); if (error) throw error },
+    mutationFn: async () => {
+      if (!confirm('Reabrir este inventário?\n\nVocê poderá editar as contagens e encerrar de novo. O sistema reconcilia automaticamente na DATA da contagem (o novo encerramento acerta a diferença — não duplica). Ainda assim, confira os números antes de reencerrar.')) throw new Error('__cancel__')
+      const { error } = await supabase.from('inventarios').update({ status: 'ativo' }).eq('id', invId); if (error) throw error
+    },
     onSuccess: () => { showToast('Inventário reaberto.', 'ok'); onBack() },
     onError: (e: Error) => showToast('Erro: ' + e.message, 'err'),
   })

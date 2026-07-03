@@ -63,12 +63,12 @@
 
 ---
 
-## 🔵 FASE 4 — HERDADOS (já eram assim no HTML; decidir se corrige agora)
+## 🔵 FASE 4 — HERDADOS ✅ (4/4 — E19/E20 dependem de RODAR o SQL `estoque_fase4_recalc_e_trava.sql`)
 
-- [ ] ⏸️ **E17 · DECISÃO: Histórico do Ajuste de Custo Médio** — a tela lê a tabela `ajustes_custo_medio` que **ninguém preenche** → sempre vazia. Passar a gravar nela, ou remover a aba. → `AjusteCustoMedio.tsx:33`
-- [ ] ⏸️ **E18 · DECISÃO: Reabrir inventário** — reabrir não estorna os ajustes; reabrir+reencerrar empilha. Avaliar estorno no reabrir. → `Inventario.tsx:162-166`
-- [ ] ⏸️ **E19 · DECISÃO: Recalcular no cliente × cron SQL** — duas implementações da mesma regra (risco de divergir). Unificar num só (idealmente chamar a função do banco). → `Recalcular.tsx`
-- [ ] ⏸️ **E20 · Fechamento sem trava no banco** — fechar/reabrir só valida no cliente. Avaliar trava por competência. → `Fechamento.tsx:143-148`
+- [x] ✅ **E17 · Histórico do Ajuste de Custo Médio** — agora lê os MOVIMENTOS reais (entradas_estoque tipo 'ajuste', qtd 0). A tabela `ajustes_custo_medio` órfã foi abandonada. → `AjusteCustoMedio.tsx`
+- [x] ✅ **E18 · Reabrir inventário** — aviso forte adicionado. ⚠️ ACHADO: a RPC `encerrar_inventario` **reconcilia na data da contagem e NÃO empilha** (no reencerrar, v_diff≈0). O risco do agente não se confirma na prática — o aviso é só UX de segurança. → `Inventario.tsx`
+- [x] ✅ **E19 · Recalcular via função do banco** — botão chama a RPC `recalc_custo_medio` (fonte única) com fallback pro cálculo no cliente. ⚠️ RODAR o SQL pra ativar. → `Recalcular.tsx` + `estoque_fase4_recalc_e_trava.sql`
+- [x] ✅ **E20 · Trava de fechamento no banco** — trigger que bloqueia alterar competência já 'fechado' (reabrir = DELETE segue ok). ⚠️ RODAR o SQL. → `estoque_fase4_recalc_e_trava.sql`
 
 ---
 
@@ -81,4 +81,6 @@ Entrada NF-e (média ponderada + histórico + vínculo + status + anti-duplicaç
 - Fase 1 (Alta): ✅ 4/4
 - Fase 2 (Média): ✅ 5/5
 - Fase 3 (Baixa): 5/7 (E13/E15 adiados de propósito — refactor/cosmético)
-- Fase 4 (Herdados/decisão): 0/4
+- Fase 4 (Herdados/decisão): ✅ 4/4 (E19/E20 dependem de rodar o SQL)
+
+**⚠️ AÇÃO DO USUÁRIO:** rodar `estoque_fase4_recalc_e_trava.sql` no Supabase (ativa E19 e E20).
