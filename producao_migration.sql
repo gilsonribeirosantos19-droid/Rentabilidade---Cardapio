@@ -49,3 +49,40 @@ drop policy if exists tenant_policy on itens_porcionamento_derivados;
 create policy tenant_policy on itens_porcionamento_derivados for all
   using (tenant_id = get_my_tenant_id()) with check (tenant_id = get_my_tenant_id());
 grant all on itens_porcionamento_derivados to anon, authenticated;
+
+-- ============================================================
+-- ORDENS DE PORCIONAMENTO (apontamento — Portal do Gerente)
+-- ============================================================
+create table if not exists ordens_porcionamento (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null,
+  loja_id     uuid,
+  data        timestamptz default now(),
+  insumo_id   uuid not null,          -- item original porcionado
+  quantidade  numeric(14,4) default 0,
+  peso        numeric(14,4) default 0,
+  peso_medio  numeric(14,4) default 0,
+  status      text default 'aberta',  -- aberta | finalizada
+  observacao  text,
+  created_at  timestamptz default now()
+);
+alter table ordens_porcionamento enable row level security;
+drop policy if exists tenant_policy on ordens_porcionamento;
+create policy tenant_policy on ordens_porcionamento for all
+  using (tenant_id = get_my_tenant_id()) with check (tenant_id = get_my_tenant_id());
+grant all on ordens_porcionamento to anon, authenticated;
+
+create table if not exists ordens_porcionamento_itens (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null,
+  ordem_id    uuid not null references ordens_porcionamento(id) on delete cascade,
+  insumo_id   uuid not null,          -- derivado
+  quantidade  numeric(14,4) default 0,
+  peso        numeric(14,4) default 0,
+  peso_medio  numeric(14,4) default 0
+);
+alter table ordens_porcionamento_itens enable row level security;
+drop policy if exists tenant_policy on ordens_porcionamento_itens;
+create policy tenant_policy on ordens_porcionamento_itens for all
+  using (tenant_id = get_my_tenant_id()) with check (tenant_id = get_my_tenant_id());
+grant all on ordens_porcionamento_itens to anon, authenticated;

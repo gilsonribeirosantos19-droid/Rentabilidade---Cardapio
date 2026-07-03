@@ -89,6 +89,10 @@ export const MODULES: Module[] = [
         { label: 'Planejamento da Produção', key: 'pcp/planejamento' },
         { label: 'Monitor de Produção', key: 'pcp/monitor' },
       ] },
+      { group: 'Lançar', items: [
+        { label: 'Ordem de Produção', key: 'pcp/op' },
+        { label: 'Ordem de Porcionamento', key: 'pcp/oporc' },
+      ] },
       { group: 'Cadastros', items: [
         { label: 'Item de Porcionamento', key: 'pcp/itens-porc' },
         { label: 'Setor de Produção', key: 'pcp/setores' },
