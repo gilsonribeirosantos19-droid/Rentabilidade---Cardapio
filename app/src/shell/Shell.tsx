@@ -42,6 +42,7 @@ import { ConfigParametros } from '../screens/ConfigParametros'
 import { ConfigUsuarios } from '../screens/ConfigUsuarios'
 import { ConfigPermissoes } from '../screens/ConfigPermissoes'
 import { SetorProducao } from '../screens/SetorProducao'
+import { ItemPorcionamento } from '../screens/ItemPorcionamento'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -76,6 +77,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'config/usuarios') return <ConfigUsuarios />
   if (k === 'config/permissoes') return <ConfigPermissoes />
   if (k === 'pcp/setores') return <SetorProducao />
+  if (k === 'pcp/itens-porc') return <ItemPorcionamento />
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
