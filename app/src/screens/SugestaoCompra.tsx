@@ -27,6 +27,9 @@ const un = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
 const norm = (s?: string) => (s || '').toLowerCase().trim()
 const RECEBIDO = ['recebido', 'recebida', 'concluido', 'concluida', 'finalizado', 'finalizada', 'cancelado', 'cancelada']
 const TRANSITO = ['em_transito', 'em transito', 'transito', 'enviado', 'enviada', 'trânsito']
+const addNest = (m: Record<string, Record<string, number>>, a: string, b: string, v: number) => { (m[a] ||= {})[b] = (m[a][b] || 0) + v }
+const enderecoLoja = (l: Record<string, unknown>) => (l.endereco as string) || [l.logradouro, l.numero, l.bairro, l.cidade, l.uf, l.cep].filter(Boolean).join(', ') || '—'
+type PedItem = { insumoId: string; cod: string; desc: string; grp: string; un: string; custo: number; qtd: number; porLoja: { lojaId: string; qty: number }[] }
 
 const baseChart = (): ChartConfiguration['options'] => ({
   responsive: true, maintainAspectRatio: false,
@@ -104,11 +107,40 @@ export function SugestaoCompra() {
 
   const foot = useMemo(() => { let n = 0, qtd = 0, val = 0; rows.forEach((r) => { if (sel.has(r.insumoId)) { const q = idealNum(r); n++; qtd += q; val += q * r.custo } }); return { n, qtd, val } }, [rows, sel, ideal])
 
+  // --- distribuição por loja (Tela 2): necessidade real de cada loja p/ o item ---
+  const [pedItems, setPedItems] = useState<PedItem[]>([])
+  const perLoja = useMemo(() => {
+    const est2: Record<string, Record<string, number>> = {}, min2: Record<string, Record<string, number>> = {}, cons2: Record<string, Record<string, number>> = {}, ab2: Record<string, Record<string, number>> = {}, tr2: Record<string, Record<string, number>> = {}
+    saldos.forEach((s) => { addNest(est2, s.insumo_id, s.loja_id || '?', Number(s.quantidade) || 0); addNest(min2, s.insumo_id, s.loja_id || '?', Number(s.minimo) || 0) })
+    saidas.forEach((s) => addNest(cons2, s.insumo_id, s.loja_id || '?', (Number(s.quantidade) || 0) / periodoDias))
+    const pById = Object.fromEntries(ped.pedidos.map((p) => [p.id, p])) as Record<string, Pedido>
+    ped.itens.forEach((it) => { const p = pById[it.pedido_id]; if (!p) return; const st = norm(p.status); if (RECEBIDO.includes(st)) return; addNest(TRANSITO.includes(st) ? tr2 : ab2, it.insumo_id, p.loja_id || '?', Number(it.quantidade) || 0) })
+    return { est: est2, min: min2, cons: cons2, ab: ab2, tr: tr2 }
+  }, [saldos, saidas, ped, periodoDias])
+  const needLoja = (insumoId: string, lojaId: string) => {
+    const v = (m: Record<string, Record<string, number>>) => m[insumoId]?.[lojaId] || 0
+    const alvo = Math.max(v(perLoja.cons) * coberturaDias, v(perLoja.min))
+    return Math.max(0, alvo - v(perLoja.est) - v(perLoja.ab) - v(perLoja.tr))
+  }
+  const distribuir = (insumoId: string, total: number): { lojaId: string; qty: number }[] => {
+    if (lojaFil) return [{ lojaId: lojaFil, qty: total }]
+    const ls = lojas.map((l) => ({ lojaId: l.id, need: needLoja(insumoId, l.id) }))
+    const soma = ls.reduce((a, x) => a + x.need, 0)
+    if (soma > 0) return ls.map((x) => ({ lojaId: x.lojaId, qty: total * (x.need / soma) }))
+    const eq = lojas.length ? total / lojas.length : total
+    return lojas.map((l) => ({ lojaId: l.id, qty: eq }))
+  }
+  const gerarPedido = () => {
+    const items = rows.filter((r) => sel.has(r.insumoId)).map((r) => { const q = idealNum(r); return { insumoId: r.insumoId, cod: r.cod, desc: r.desc, grp: r.grp, un: r.un, custo: r.custo, qtd: q, porLoja: distribuir(r.insumoId, q) } })
+    if (!items.length) { showToast('Selecione itens para gerar o pedido.'); return }
+    setPedItems(items); setView('pedido')
+  }
+
   const chMes = useMemo<ChartConfiguration>(() => ({ type: 'bar', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [280, 300, 340, 360, 330, 395], backgroundColor: '#334155', borderRadius: 3, barPercentage: 0.6 }] }, options: baseChart() }), [])
   const chPreco = useMemo<ChartConfiguration>(() => ({ type: 'line', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [40.5, 41.2, 41.8, 43.0, 44.1, 42.9], borderColor: '#334155', backgroundColor: 'rgba(51,65,85,.06)', fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2 }] }, options: baseChart() }), [])
   const chEstoque = useMemo<ChartConfiguration>(() => ({ type: 'line', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [120, 95, 140, 70, 110, 58], borderColor: '#94a3b8', backgroundColor: 'rgba(148,163,184,.08)', fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2 }] }, options: baseChart() }), [])
 
-  if (view === 'pedido') return <TelaPedido onBack={() => setView('sugestao')} />
+  if (view === 'pedido') return <TelaPedido itens={pedItems} onBack={() => setView('sugestao')} />
 
   const dr = drawer != null ? rows.find((r) => r.insumoId === drawer) : null
   const allSel = rows.length > 0 && rows.every((r) => sel.has(r.insumoId))
@@ -181,7 +213,7 @@ export function SugestaoCompra() {
         <span className="info">Valor total da compra: <b>{brl(foot.val)}</b></span>
         <div className="grow" />
         <button className="btn" onClick={() => toggleAll(false)}>Limpar seleção</button>
-        <button className="btn btn-solid" onClick={() => setView('pedido')}>Gerar Pedido de Compra →</button>
+        <button className="btn btn-solid" onClick={gerarPedido}>Gerar Pedido de Compra →</button>
       </div>
 
       {dr && (
@@ -223,43 +255,30 @@ export function SugestaoCompra() {
   )
 }
 
-// ===================== TELA 2 — PEDIDO DE COMPRA (ainda mock) =====================
-const LOJAS_PDF = [
-  { nome: 'Ponta Negra', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0001-39', ende: 'R. São Luíz, 105 - Adrianópolis, Manaus-AM, 69057-250' },
-  { nome: 'Djalma Batista', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0002-10', ende: 'Av. Djalma Batista, 2200 - Chapada, Manaus-AM, 69050-010' },
-  { nome: 'Cidade Nova', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0003-00', ende: 'Av. Noel Nutels, 1300 - Cidade Nova, Manaus-AM, 69095-000' },
-  { nome: 'Paraíba', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0004-82', ende: 'R. Paraíba, 45 - Adrianópolis, Manaus-AM, 69057-021' },
-  { nome: 'Centro', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0005-63', ende: 'Av. Eduardo Ribeiro, 520 - Centro, Manaus-AM, 69010-001' },
-  { nome: 'Laranjeiras', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0006-44', ende: 'R. das Laranjeiras, 88 - Flores, Manaus-AM, 69058-030' },
-  { nome: 'Distrito', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0007-25', ende: 'Av. Torquato Tapajós, 7000 - Distrito, Manaus-AM, 69083-000' },
-  { nome: 'Delivery', razao: 'MORI IZAKAYA RESTAURANTE LTDA', cnpj: '61.753.029/0008-06', ende: 'R. Central do CD, 10 - Distrito, Manaus-AM, 69083-100' },
-]
-const ITENS_LOJA = [
-  { nome: 'Salmão Filé', qty: '100,00', un: 'KG' },
-  { nome: 'Atum', qty: '19,00', un: 'KG' },
-  { nome: 'Nori', qty: '22,00', un: 'UN' },
-  { nome: 'Shoyu', qty: '12,00', un: 'L' },
-  { nome: 'Camarão 9/12', qty: '6,00', un: 'KG' },
-]
+// ===================== TELA 2 — PEDIDO DE COMPRA (real, a partir da Sugestão) =====================
+// AUTOCONTIDA: gera os PDFs por fornecedor/loja. NÃO grava em pedidos_compra
+// (aquela aba vem das solicitações dos gerentes — não pode ser tocada aqui).
 
-function gerarPDFsPorFornecedor(forn: string) {
-  const data = '07/06/2026'
-  const paginas = LOJAS_PDF.map((loja) => {
-    const linhas: (typeof ITENS_LOJA[number] | null)[] = [...ITENS_LOJA]
-    while (linhas.length < 8) linhas.push(null)
-    const corpo = linhas.map((it) => it
-      ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${it.qty} ${it.un}</td></tr>`
-      : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')
+function gerarPDFReal(forn: string, itens: PedItem[], lojas: Record<string, unknown>[]) {
+  const data = new Date().toLocaleDateString('pt-BR')
+  const nomeLoja = (l: Record<string, unknown>) => (l.nome_fantasia as string) || (l.nome as string) || '—'
+  const paginas = lojas.map((loja) => {
+    const linhas = itens.map((it) => { const pl = it.porLoja.find((x) => x.lojaId === loja.id); const q = pl?.qty || 0; return q > 0.0001 ? { nome: it.desc, qty: q.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), un: it.un.toUpperCase() } : null }).filter(Boolean) as { nome: string; qty: string; un: string }[]
+    if (!linhas.length) return ''
+    const linhasP: ({ nome: string; qty: string; un: string } | null)[] = [...linhas]
+    while (linhasP.length < 8) linhasP.push(null)
+    const corpo = linhasP.map((it) => it ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${it.qty} ${it.un}</td></tr>` : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')
     return `<div class="pagina"><table class="doc">
-      <tr><td class="cel-loja">${loja.nome.toUpperCase()}</td><td class="cel-data-label">DATA:</td><td class="cel-data">${data}</td></tr>
-      <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${loja.razao} CNPJ: ${loja.cnpj}</td></tr>
-      <tr><td colspan="3" class="cel-info">ENDEREÇO: ${loja.ende}</td></tr>
-      <tr><td colspan="2" class="cel-th">ITENS</td><td class="cel-th" style="text-align:center">QUANTIDADE</td></tr>
+      <tr><td class="cel-loja">${nomeLoja(loja).toUpperCase()}</td><td class="cel-data-label">DATA:</td><td class="cel-data">${data}</td></tr>
+      <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${(loja.razao_social as string) || '—'} CNPJ: ${(loja.cnpj as string) || '—'}</td></tr>
+      <tr><td colspan="3" class="cel-info">ENDEREÇO: ${enderecoLoja(loja)}</td></tr>
+      <tr><td colspan="2" class="cel-th">ITENS — ${forn.toUpperCase()}</td><td class="cel-th" style="text-align:center">QUANTIDADE</td></tr>
       ${corpo}
       <tr><td class="cel-footer">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">-</td></tr>
       <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">-</td></tr>
     </table></div>`
-  }).join('')
+  }).filter(Boolean).join('')
+  if (!paginas) { alert('Nenhuma quantidade distribuída para este fornecedor.'); return }
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Pedido — ${forn}</title>
     <style>
       *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;color:#000}
@@ -283,96 +302,98 @@ function gerarPDFsPorFornecedor(forn: string) {
   w.document.write(html); w.document.close()
 }
 
-function TelaPedido({ onBack }: { onBack: () => void }) {
-  const itens = [
-    { nm: 'Salmão Filé', cod: 'MP0001', grp: 'Peixes', tot: '800,00 kg', preco: 'R$ 42,90', val: 'R$ 34.320,00' },
-    { nm: 'Atum', cod: 'MP0002', grp: 'Peixes', tot: '150,00 kg', preco: 'R$ 38,90', val: 'R$ 5.835,00' },
-    { nm: 'Nori', cod: 'MP0004', grp: 'Secos', tot: '180,00 un', preco: 'R$ 3,20', val: 'R$ 576,00' },
-    { nm: 'Shoyu', cod: 'MP0005', grp: 'Mercearia', tot: '100,00 L', preco: 'R$ 9,80', val: 'R$ 980,00' },
-    { nm: 'Camarão 9/12', cod: 'MP0007', grp: 'Peixes', tot: '50,00 kg', preco: 'R$ 58,50', val: 'R$ 2.925,00' },
-  ]
-  const [selItem, setSelItem] = useState('Salmão Filé')
-  const cur = itens.find((x) => x.nm === selItem) || itens[0]
-  const lojasDist = [
-    ['Ponta Negra', '100,00', '8,00', '4,0 d'], ['Djalma Batista', '100,00', '12,00', '5,0 d'],
-    ['Cidade Nova', '100,00', '10,00', '4,5 d'], ['Paraíba', '100,00', '7,00', '3,5 d'],
-    ['Centro', '100,00', '9,00', '4,0 d'], ['Laranjeiras', '100,00', '6,00', '3,0 d'],
-    ['Distrito', '100,00', '6,00', '3,0 d'], ['Delivery', '100,00', '0,00', '0,0 d'],
-  ]
-  const gerarPDFs = () => gerarPDFsPorFornecedor('Dunorte Distribuidora')
+function TelaPedido({ itens, onBack }: { itens: PedItem[]; onBack: () => void }) {
+  const { tenantId } = useAuth()
+  const [fornSel, setFornSel] = useState<Record<string, string>>({})
+  const [selItem, setSelItem] = useState(itens[0]?.insumoId || '')
+
+  const { data: lojasFull = [] } = useQuery({ queryKey: ['ped-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Record<string, unknown>[] } })
+  const { data: fornecedores = [] } = useQuery({ queryKey: ['ped-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as { id: string; nome?: string }[] } })
+  const insIds = itens.map((i) => i.insumoId)
+  const { data: ultForn = {} } = useQuery({ queryKey: ['ped-ultforn', tenantId, insIds.join(',')], enabled: !!tenantId && insIds.length > 0, queryFn: async () => { const { data } = await supabase.from('entradas_estoque').select('insumo_id,fornecedor_id,criado_em').eq('tenant_id', tenantId).in('insumo_id', insIds).not('fornecedor_id', 'is', null).order('criado_em', { ascending: false }); const m: Record<string, string> = {}; (data ?? []).forEach((e) => { const r = e as { insumo_id: string; fornecedor_id?: string }; if (r.fornecedor_id && !m[r.insumo_id]) m[r.insumo_id] = r.fornecedor_id }); return m } })
+
+  const lojaMap = useMemo(() => Object.fromEntries(lojasFull.map((l) => [l.id as string, l])) as Record<string, Record<string, unknown>>, [lojasFull])
+  const fornMap = useMemo(() => Object.fromEntries(fornecedores.map((f) => [f.id, f.nome || '—'])) as Record<string, string>, [fornecedores])
+  const fornOf = (it: PedItem) => fornSel[it.insumoId] ?? ultForn[it.insumoId] ?? ''
+  const fornNome = (id: string) => (id ? fornMap[id] || '—' : 'Sem fornecedor')
+
+  const grupos = useMemo(() => {
+    const m: Record<string, PedItem[]> = {}
+    itens.forEach((it) => { (m[fornOf(it)] ||= []).push(it) })
+    return Object.entries(m).map(([fid, its]) => ({ fid, its, total: its.reduce((a, x) => a + x.qtd * x.custo, 0) })).sort((a, z) => z.total - a.total)
+  }, [itens, fornSel, ultForn])
+
+  const totalGeral = itens.reduce((a, x) => a + x.qtd * x.custo, 0)
+  const cur = itens.find((i) => i.insumoId === selItem) || itens[0]
+  const lojaNome = (id: string) => (lojaMap[id]?.nome_fantasia as string) || (lojaMap[id]?.nome as string) || id
+  const gerarTodos = () => grupos.forEach((g) => gerarPDFReal(fornNome(g.fid), g.its, lojasFull))
+
+  if (!itens.length) return (
+    <div className="sug-screen"><div className="sug-toolbar"><button className="btn" onClick={onBack}>← Voltar</button><span className="mock-tag">Selecione itens na Sugestão e clique em “Gerar Pedido de Compra”.</span></div></div>
+  )
 
   return (
     <div className="sug-screen">
       <div className="sug-toolbar">
         <button className="btn" onClick={onBack}>← Voltar</button>
-        <div className="fld"><label>Data</label><input type="date" defaultValue="2026-06-07" /></div>
-        <div className="fld"><label>Grupo de solicitação</label><select><option>Peixes e Frutos do Mar</option></select></div>
-        <div className="fld"><label>Lojas</label><select><option>8 selecionadas</option></select></div>
-        <div className="fld"><label>Valor total</label><input value="R$ 84.350,00" readOnly /></div>
+        <div className="fld"><label>Data</label><input type="date" defaultValue={new Date().toLocaleDateString('en-CA')} /></div>
+        <div className="fld"><label>Resumo</label><input value={`${itens.length} itens · ${lojasFull.length} lojas`} readOnly /></div>
+        <div className="fld"><label>Valor total</label><input value={brl(totalGeral)} readOnly /></div>
         <div className="grow" />
-        <span className="mock-tag">Tela de exemplo — ligação com dados reais no próximo passo</span>
-        <button className="btn btn-solid" onClick={gerarPDFs}>Gerar PDFs por fornecedor</button>
+        <span className="mock-tag">Gera PDFs — não grava na aba “Pedidos de Compra”</span>
+        <button className="btn btn-solid" onClick={gerarTodos}>Gerar PDFs por fornecedor</button>
       </div>
 
       <div className="p2cols">
         <div className="panel">
-          <div className="panel-h"><span className="t">Itens do pedido <span className="muted" style={{ fontWeight: 400 }}>(agrupados por fornecedor)</span></span>
-            <select className="fsel" style={{ maxWidth: 'none' }}><option>Todos os fornecedores</option></select></div>
-          <div className="forn-grp">
-            <div className="forn-hd"><span className="muted">▾</span><span className="nm">Dunorte Distribuidora</span><span className="badge-pref">Preferencial</span><span className="cnt">5 itens</span><span className="tot">R$ 48.320,00</span></div>
-            <table className="subtbl">
-              <thead><tr><th>Item</th><th className="r">Total Geral</th><th>Fornecedor Sugerido</th><th className="r">Preço Unit.</th><th className="r">Valor Total</th></tr></thead>
-              <tbody>
-                {itens.map((it) => (
-                  <tr key={it.nm} className={selItem === it.nm ? 'selrow' : ''} style={{ cursor: 'pointer' }} onClick={() => setSelItem(it.nm)}>
-                    <td>{it.nm}</td><td className="r mono">{it.tot}</td>
-                    <td><select className="fsel" onClick={(e) => e.stopPropagation()}><option>Dunorte Distribuidora</option><option>Mar & Cia Pescados</option><option>Amazon Fish</option></select></td>
-                    <td className="r mono">{it.preco}</td><td className="r mono">{it.val}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="forn-grp"><div className="forn-hd"><span className="muted">▸</span><span className="nm">Mar & Cia Pescados</span><span className="cnt">3 itens</span><span className="tot">R$ 24.180,00</span></div></div>
-          <div className="forn-grp"><div className="forn-hd"><span className="muted">▸</span><span className="nm">Amazon Fish</span><span className="cnt">2 itens</span><span className="tot">R$ 11.850,00</span></div></div>
+          <div className="panel-h"><span className="t">Itens do pedido <span className="muted" style={{ fontWeight: 400 }}>(agrupados por fornecedor)</span></span></div>
+          {grupos.map((g) => (
+            <div className="forn-grp" key={g.fid || 'sem'}>
+              <div className="forn-hd"><span className="muted">▾</span><span className="nm">{fornNome(g.fid)}</span><span className="cnt">{g.its.length} itens</span><span className="tot">{brl(g.total)}</span>
+                <button className="mini" style={{ marginLeft: 8 }} onClick={() => gerarPDFReal(fornNome(g.fid), g.its, lojasFull)}>PDF</button></div>
+              <table className="subtbl">
+                <thead><tr><th>Item</th><th className="r">Total</th><th>Fornecedor</th><th className="r">Preço Unit.</th><th className="r">Valor Total</th></tr></thead>
+                <tbody>
+                  {g.its.map((it) => (
+                    <tr key={it.insumoId} className={selItem === it.insumoId ? 'selrow' : ''} style={{ cursor: 'pointer' }} onClick={() => setSelItem(it.insumoId)}>
+                      <td>{it.desc}</td><td className="r mono">{q2(it.qtd)} {it.un}</td>
+                      <td><select className="fsel" value={fornOf(it)} onClick={(e) => e.stopPropagation()} onChange={(e) => setFornSel((p) => ({ ...p, [it.insumoId]: e.target.value }))}><option value="">Sem fornecedor</option>{fornecedores.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</select></td>
+                      <td className="r mono">{brl(it.custo)}</td><td className="r mono">{brl(it.qtd * it.custo)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
         </div>
 
         <div className="panel">
-          <div className="panel-h"><span className="t">{cur.nm} <span className="mono muted" style={{ fontWeight: 400 }}>{cur.cod} · {cur.grp}</span></span><button className="mini">Ver análise do item</button></div>
-          <div className="dtl-top">
-            <div className="c2"><div className="k">Total Geral</div><div className="v">{cur.tot}</div></div>
-            <div className="c2"><div className="k">Total por loja (média)</div><div className="v">100,00 kg</div></div>
-            <div className="c2"><div className="k">Fornecedor selecionado</div><div className="v">Dunorte Distribuidora</div></div>
-            <div className="c2"><div className="k">Preço unitário</div><div className="v">{cur.preco}</div></div>
-            <div className="c2"><div className="k">Valor total</div><div className="v">{cur.val}</div></div>
-          </div>
-          <div className="split">
+          {cur && <>
+            <div className="panel-h"><span className="t">{cur.desc} <span className="mono muted" style={{ fontWeight: 400 }}>{cur.cod} · {cur.grp}</span></span></div>
+            <div className="dtl-top">
+              <div className="c2"><div className="k">Total do item</div><div className="v">{q2(cur.qtd)} {cur.un}</div></div>
+              <div className="c2"><div className="k">Fornecedor</div><div className="v">{fornNome(fornOf(cur))}</div></div>
+              <div className="c2"><div className="k">Preço unitário</div><div className="v">{brl(cur.custo)}</div></div>
+              <div className="c2"><div className="k">Valor total</div><div className="v">{brl(cur.qtd * cur.custo)}</div></div>
+            </div>
             <div style={{ padding: '12px 14px' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 7 }}>Distribuição por loja <span className="muted" style={{ fontWeight: 400 }}>(serão gerados PDFs individuais)</span></div>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 7 }}>Distribuição por loja <span className="muted" style={{ fontWeight: 400 }}>(vira PDF individual por loja)</span></div>
               <table className="subtbl" style={{ border: '1px solid #e5e9f0', borderRadius: 8 }}>
-                <thead><tr><th>Loja</th><th className="r">Sugestão</th><th className="r">Estoque</th><th className="r">Cob. Atual</th></tr></thead>
-                <tbody>{lojasDist.map((l) => <tr key={l[0]}><td>{l[0]}</td><td className="r mono">{l[1]}</td><td className="r mono">{l[2]}</td><td className="r mono">{l[3]}</td></tr>)}</tbody>
+                <thead><tr><th>Loja</th><th className="r">Quantidade</th></tr></thead>
+                <tbody>
+                  {cur.porLoja.filter((pl) => pl.qty > 0.0001).map((pl) => <tr key={pl.lojaId}><td>{lojaNome(pl.lojaId)}</td><td className="r mono">{q2(pl.qty)} {cur.un}</td></tr>)}
+                  {cur.porLoja.every((pl) => pl.qty <= 0.0001) && <tr><td colSpan={2} style={{ color: '#94a3b8' }}>Sem distribuição — defina estoque mínimo/consumo nas lojas.</td></tr>}
+                </tbody>
               </table>
             </div>
-            <div className="r-side">
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 7 }}>Resumo da escolha</div>
-              <div className="resumo">
-                <div className="row"><span className="k">Última compra</span><span>05/06/2026</span></div>
-                <div className="row"><span className="k">Prazo médio</span><span>2 dias</span></div>
-                <div className="row"><span className="k">Pontualidade</span><span>95%</span></div>
-                <div className="row"><span className="k">Último preço</span><span>R$ 42,90</span></div>
-              </div>
-              <button className="link-btn">Histórico de compras</button>
-            </div>
-          </div>
+          </>}
         </div>
       </div>
 
       <div className="footbar">
-        <span className="info">Total geral do pedido: <b>R$ 84.350,00</b></span>
+        <span className="info">Total geral do pedido: <b>{brl(totalGeral)}</b></span>
         <div className="grow" />
-        <button className="btn">Limpar pedido</button>
-        <button className="btn btn-solid" onClick={gerarPDFs}>Gerar PDFs por fornecedor</button>
+        <button className="btn btn-solid" onClick={gerarTodos}>Gerar PDFs por fornecedor</button>
       </div>
     </div>
   )
