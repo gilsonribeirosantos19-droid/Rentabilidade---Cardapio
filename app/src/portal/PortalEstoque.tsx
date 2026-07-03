@@ -86,14 +86,23 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const [soCmv, setSoCmv] = useState(false)
   const [pag, setPag] = useState(1)
   const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: baselineData || primeiroDiaMes(), ate: hojeStr() })
-  const [deTouched, setDeTouched] = useState(false)
+  const [periodo, setPeriodo] = useState('contagem')
   const porPag = 12
 
-  // Ancora o início do período na data da última contagem encerrada (a menos que
-  // o gerente troque a data manualmente). A contagem carrega async, por isso o efeito.
+  // Enquanto no modo "contagem", ancora o início do período na data da última
+  // contagem encerrada (carrega async, por isso o efeito).
   useEffect(() => {
-    if (baselineData && !deTouched) { setDe(baselineData); setAplicado((a) => ({ de: baselineData, ate: a?.ate ?? hojeStr() })) }
-  }, [baselineData, deTouched])
+    if (periodo === 'contagem' && baselineData) { setDe(baselineData); setAplicado((a) => ({ de: baselineData, ate: a?.ate ?? hojeStr() })) }
+  }, [baselineData, periodo])
+
+  const onPeriodo = (p: string) => {
+    setPeriodo(p)
+    const t = hojeStr()
+    if (p === 'contagem') { const d = baselineData || primeiroDiaMes(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }); setPag(1) }
+    else if (p === 'atual') { const d = primeiroDiaMes(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }); setPag(1) }
+    else if (p === 'anterior') { const n = new Date(); const f = new Date(n.getFullYear(), n.getMonth() - 1, 1).toLocaleDateString('en-CA'); const l = new Date(n.getFullYear(), n.getMonth(), 0).toLocaleDateString('en-CA'); setDe(f); setAte(l); setAplicado({ de: f, ate: l }); setPag(1) }
+    else { setDe(''); setAte('') } // personalizado
+  }
 
   const { data: movs, isFetching } = useQuery({
     queryKey: ['pest-rel', tenantId, lojaId, aplicado?.de, aplicado?.ate], enabled: !!tenantId && !!lojaId && !!aplicado,
@@ -129,7 +138,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const totalPags = Math.max(1, Math.ceil(rows.length / porPag))
   const pg = Math.min(pag, totalPags)
   const slice = rows.slice((pg - 1) * porPag, pg * porPag)
-  const aplicar = () => { setAplicado({ de, ate }); setPag(1) }
+  const aplicar = () => { if (!de || !ate) return; setAplicado({ de, ate }); setPag(1) }
 
   const exportar = () => {
     if (!rows.length) return
@@ -142,8 +151,9 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   return (
     <>
       <div className="pf-bar">
-        <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={de} onChange={(e) => { setDe(e.target.value); setDeTouched(true) }} /></div>
-        <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
+        <div className="pf-fld"><label>Período</label><select className="p-field" value={periodo} onChange={(e) => onPeriodo(e.target.value)}><option value="contagem">Desde a última contagem</option><option value="atual">Mês atual</option><option value="anterior">Mês anterior</option><option value="personalizado">Personalizado</option></select></div>
+        <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('personalizado') }} /></div>
+        <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('personalizado') }} /></div>
         <div className="pf-fld"><label>Grupo</label><select className="p-field" value={grupo} onChange={(e) => setGrupo(e.target.value)}><option value="">Todos os grupos</option>{grupos.filter((g: Grupo) => (gruposItens[g.id] || []).length).map((g: Grupo) => <option key={g.id} value={g.id}>{g.nome}</option>)}</select></div>
         <div className="pf-fld"><label>Buscar item</label><input className="p-field" style={{ minWidth: 200 }} placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
         <label className="pf-chk"><input type="checkbox" checked={soCmv} onChange={(e) => setSoCmv(e.target.checked)} />Só CMV</label>
@@ -346,7 +356,16 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
   const [tipo, setTipo] = useState('')
   const [resp, setResp] = useState('')
   const [busca, setBusca] = useState('')
+  const [periodo, setPeriodo] = useState('atual')
   const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: primeiroDiaMes(), ate: hojeStr() })
+
+  const onPeriodo = (p: string) => {
+    setPeriodo(p)
+    const t = hojeStr()
+    if (p === 'atual') { const d = primeiroDiaMes(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }) }
+    else if (p === 'anterior') { const n = new Date(); const f = new Date(n.getFullYear(), n.getMonth() - 1, 1).toLocaleDateString('en-CA'); const l = new Date(n.getFullYear(), n.getMonth(), 0).toLocaleDateString('en-CA'); setDe(f); setAte(l); setAplicado({ de: f, ate: l }) }
+    else { setDe(''); setAte('') } // personalizado
+  }
 
   const { data: movs, isFetching } = useQuery({
     queryKey: ['pest-hist', tenantId, lojaId, aplicado?.de, aplicado?.ate], enabled: !!tenantId && !!lojaId && !!aplicado,
@@ -381,8 +400,9 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
   return (
     <>
       <div className="pf-bar">
-        <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
-        <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
+        <div className="pf-fld"><label>Período</label><select className="p-field" value={periodo} onChange={(e) => onPeriodo(e.target.value)}><option value="atual">Mês atual</option><option value="anterior">Mês anterior</option><option value="personalizado">Personalizado</option></select></div>
+        <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('personalizado') }} /></div>
+        <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('personalizado') }} /></div>
         <div className="pf-fld"><label>Grupo</label><select className="p-field" value={grupo} onChange={(e) => setGrupo(e.target.value)}><option value="">Todos</option>{grupos.map((g: Grupo) => <option key={g.id} value={g.id}>{g.nome}</option>)}</select></div>
         <div className="pf-fld"><label>Tipo</label><select className="p-field" value={tipo} onChange={(e) => setTipo(e.target.value)}><option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ajuste">Ajuste</option></select></div>
         <div className="pf-fld"><label>Responsável</label><select className="p-field" value={resp} onChange={(e) => setResp(e.target.value)}><option value="">Todos</option>{responsaveis.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
