@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ChartConfiguration } from 'chart.js'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { ChartBox } from '../components/ChartBox'
@@ -12,7 +13,7 @@ import './sugestao.css'
 // pedido aberto/em trânsito (pedidos_compra + itens_pedido). Sugestão calculada.
 // A Tela 2 (Pedido) e os gráficos de histórico do drawer ainda são mock.
 
-type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; preco_compra?: number; unidade_medida?: string; unidade_compra?: string }
+type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; preco_compra?: number; unidade_medida?: string; unidade_compra?: string; minimo?: number }
 type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number; minimo?: number | null; loja_id?: string }
 type Saida = { insumo_id: string; quantidade?: number; loja_id?: string }
 type Pedido = { id: string; status?: string; loja_id?: string }
@@ -25,7 +26,10 @@ const parseNum = (v: string) => parseFloat((v || '0').replace(/\./g, '').replace
 const fmtCod = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')
 const un = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
 const norm = (s?: string) => (s || '').toLowerCase().trim()
-const RECEBIDO = ['recebido', 'recebida', 'concluido', 'concluida', 'finalizado', 'finalizada', 'cancelado', 'cancelada']
+// Status de pedidos_compra (vocabulário real): solicitado, pendente, enviado,
+// baixado, cancelado, aguardando_aprovacao, aprovado, processado.
+// "baixado" = já recebido; "processado" = solicitação já virou pedido firme → NÃO conta como aberto.
+const RECEBIDO = ['recebido', 'recebida', 'baixado', 'concluido', 'concluida', 'finalizado', 'finalizada', 'cancelado', 'cancelada', 'processado']
 const TRANSITO = ['em_transito', 'em transito', 'transito', 'enviado', 'enviada', 'trânsito']
 const addNest = (m: Record<string, Record<string, number>>, a: string, b: string, v: number) => { (m[a] ||= {})[b] = (m[a][b] || 0) + v }
 const enderecoLoja = (l: Record<string, unknown>) => (l.endereco as string) || [l.logradouro, l.numero, l.bairro, l.cidade, l.uf, l.cep].filter(Boolean).join(', ') || '—'
@@ -54,18 +58,18 @@ export function SugestaoCompra() {
 
   const desdeISO = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - periodoDias); return d.toISOString() }, [periodoDias])
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['sug-ins', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Insumo[] } })
-  const { data: saldos = [] } = useQuery({ queryKey: ['sug-saldos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId); return (data ?? []) as Saldo[] } })
-  const { data: saidas = [] } = useQuery({ queryKey: ['sug-saidas', tenantId, desdeISO], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id').eq('tenant_id', tenantId).gte('criado_em', desdeISO); return (data ?? []) as Saida[] } })
+  // fetchAll (paginação por range) — evita o cap silencioso de 1000 linhas do Supabase
+  const { data: insumos = [] } = useQuery({ queryKey: ['sug-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra,minimo').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  const { data: saldos = [] } = useQuery({ queryKey: ['sug-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
+  const { data: saidas = [] } = useQuery({ queryKey: ['sug-saidas', tenantId, desdeISO], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id').eq('tenant_id', tenantId).gte('criado_em', desdeISO).order('criado_em').range(f, t)) })
   // pedidos + seus itens: itens_pedido não tem tenant_id — busca pelos IDs dos pedidos do tenant
   const { data: ped = { pedidos: [] as Pedido[], itens: [] as ItemPed[] } } = useQuery({
     queryKey: ['sug-ped', tenantId], enabled: !!tenantId,
     queryFn: async () => {
-      const { data: pd } = await supabase.from('pedidos_compra').select('id,status,loja_id').eq('tenant_id', tenantId)
-      const ps = (pd ?? []) as Pedido[]
+      const ps = await fetchAll<Pedido>((f, t) => supabase.from('pedidos_compra').select('id,status,loja_id').eq('tenant_id', tenantId).order('id').range(f, t))
       if (!ps.length) return { pedidos: ps, itens: [] as ItemPed[] }
-      const { data: it } = await supabase.from('itens_pedido').select('pedido_id,insumo_id,quantidade').in('pedido_id', ps.map((p) => p.id))
-      return { pedidos: ps, itens: (it ?? []) as ItemPed[] }
+      const it = await fetchAll<ItemPed>((f, t) => supabase.from('itens_pedido').select('pedido_id,insumo_id,quantidade').in('pedido_id', ps.map((p) => p.id)).order('pedido_id').range(f, t))
+      return { pedidos: ps, itens: it }
     },
   })
 
@@ -73,7 +77,8 @@ export function SugestaoCompra() {
 
   // agregações por insumo (respeitando o filtro de loja)
   const est = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.quantidade) || 0) }); return m }, [saldos, lojaFil])
-  const min = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.minimo) || 0) }); return m }, [saldos, lojaFil])
+  // mínimo por loja (saldo_estoque.minimo); se vazio, cai no mínimo global do insumo (insumos.minimo)
+  const min = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.minimo) || 0) }); insumos.forEach((i) => { if (!m[i.id] && Number(i.minimo) > 0) m[i.id] = Number(i.minimo) }); return m }, [saldos, lojaFil, insumos])
   const cmMap = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { const c = Number(s.custo_medio) || 0; if (c > (m[s.insumo_id] || 0)) m[s.insumo_id] = c }); return m }, [saldos])
   const consMap = useMemo(() => { const m: Record<string, number> = {}; saidas.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.quantidade) || 0) }); const out: Record<string, number> = {}; for (const k in m) out[k] = m[k] / periodoDias; return out }, [saidas, lojaFil, periodoDias])
   const pedMap = useMemo(() => {

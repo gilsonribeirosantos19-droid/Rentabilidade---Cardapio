@@ -45,6 +45,9 @@ export function Saidas() {
   const { data: insumos = [] } = useQuery({ queryKey: ['sai-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['sai-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
   const { data: saidas = [], isLoading } = useQuery({ queryKey: ['sai-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)) })
+  // Parâmetro Estoque › "Permitir estoque negativo": se 'nao', bloqueia saída que supera o saldo (default = permite, como no HTML)
+  const { data: params = [] } = useQuery({ queryKey: ['sai-params', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'estoque'); return (data ?? []) as { chave: string; valor: string }[] } })
+  const permiteNeg = useMemo(() => (params.find((p) => p.chave === 'permitir_negativo')?.valor) !== 'nao', [params])
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const getSaldo = (insId: string): Saldo => saldos.find((s) => s.insumo_id === insId && (!lojaId || s.loja_id === lojaId)) || { insumo_id: insId, quantidade: 0, custo_medio: 0 }
@@ -80,7 +83,10 @@ export function Saidas() {
       const q = parseFloat(f.quantidade) || 0
       if (q <= 0) throw new Error('Informe a quantidade.')
       const s = getSaldo(f.insumo_id)
-      if (q > (s.quantidade || 0)) { if (!confirm(`Quantidade (${qtd(q)}) supera o saldo (${qtd(s.quantidade || 0)}). Continuar?`)) throw new Error('__cancel__') }
+      if (q > (s.quantidade || 0)) {
+        if (!permiteNeg) throw new Error(`Saldo insuficiente: a saída de ${qtd(q)} supera o saldo (${qtd(s.quantidade || 0)}). Estoque negativo está bloqueado nos Parâmetros (Configurações › Parâmetros › Estoque).`)
+        if (!confirm(`Quantidade (${qtd(q)}) supera o saldo (${qtd(s.quantidade || 0)}). Continuar?`)) throw new Error('__cancel__')
+      }
       let destinoId: string | null = null
       if (f.tipo === 'transferencia') {
         destinoId = f.destino || null
