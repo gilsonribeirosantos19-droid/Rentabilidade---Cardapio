@@ -88,7 +88,7 @@ export function PortalSolicitacao() {
           const aberto = !colapso.has(g.id)
           return (
             <div className="p-card" key={g.id} style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', background: '#f8fafc' }} onClick={() => setColapso((c) => { const n = new Set(c); n.has(g.id) ? n.delete(g.id) : n.add(g.id); return n })}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 14px', cursor: 'pointer', background: '#f8fafc' }} onClick={() => setColapso((c) => { const n = new Set(c); n.has(g.id) ? n.delete(g.id) : n.add(g.id); return n })}>
                 <span style={{ fontWeight: 700, fontSize: 13.5 }}>{g.nome}</span>
                 <span style={{ color: '#94a3b8', fontSize: 12 }}>{itens.length} itens</span>
                 <span style={{ marginLeft: 'auto', color: '#94a3b8', transform: aberto ? 'none' : 'rotate(-90deg)', transition: '.15s' }}>▾</span>
@@ -108,8 +108,8 @@ export function PortalSolicitacao() {
                           <td style={{ color: '#64748b' }}>—</td>
                           <td style={{ color: '#64748b' }}>—</td>
                           <td><div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                            <input type="number" min="0" step="0.001" value={qty[ins.id] ?? ''} onChange={(e) => onQty(ins.id, e.target.value)} style={{ width: 80, height: 28, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} />
-                            <select value={un[ins.id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [ins.id]: e.target.value }))} style={{ height: 28, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{UNIDADES.map((x) => <option key={x} value={x}>{x}</option>)}</select>
+                            <input type="number" min="0" step="0.001" value={qty[ins.id] ?? ''} onChange={(e) => onQty(ins.id, e.target.value)} style={{ width: 80, height: 24, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} />
+                            <select value={un[ins.id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [ins.id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{UNIDADES.map((x) => <option key={x} value={x}>{x}</option>)}</select>
                           </div></td>
                         </tr>
                       )
@@ -146,8 +146,8 @@ export function PortalSolicitacao() {
                       <td style={{ color: '#64748b' }}>{fmtV(saldoMap[id], u)}</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td style={{ color: '#64748b' }}>—</td>
-                      <td className="r"><input type="number" min="0" step="0.001" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 90, height: 28, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} /></td>
-                      <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 28, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{UNIDADES.map((x) => <option key={x} value={x}>{x}</option>)}</select></td>
+                      <td className="r"><input type="number" min="0" step="0.001" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 90, height: 24, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} /></td>
+                      <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{UNIDADES.map((x) => <option key={x} value={x}>{x}</option>)}</select></td>
                     </tr>
                   ) })}
                 </tbody>
