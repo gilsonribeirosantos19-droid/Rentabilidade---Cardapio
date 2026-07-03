@@ -89,10 +89,8 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const [grupo, setGrupo] = useState('')
   const [busca, setBusca] = useState('')
   const [soCmv, setSoCmv] = useState(false)
-  const [pag, setPag] = useState(1)
   const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: anchorDe(), ate: hojeStr() })
   const [periodo, setPeriodo] = useState('contagem')
-  const porPag = 12
 
   // Enquanto no modo "contagem", ancora o início do período no dia SEGUINTE à última
   // contagem encerrada (o que veio antes/na contagem já está no Estoque Inicial).
@@ -103,9 +101,9 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const onPeriodo = (p: string) => {
     setPeriodo(p)
     const t = hojeStr()
-    if (p === 'contagem') { const d = anchorDe(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }); setPag(1) }
-    else if (p === 'atual') { const d = primeiroDiaMes(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }); setPag(1) }
-    else if (p === 'anterior') { const n = new Date(); const f = new Date(n.getFullYear(), n.getMonth() - 1, 1).toLocaleDateString('en-CA'); const l = new Date(n.getFullYear(), n.getMonth(), 0).toLocaleDateString('en-CA'); setDe(f); setAte(l); setAplicado({ de: f, ate: l }); setPag(1) }
+    if (p === 'contagem') { const d = anchorDe(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }) }
+    else if (p === 'atual') { const d = primeiroDiaMes(); setDe(d); setAte(t); setAplicado({ de: d, ate: t }) }
+    else if (p === 'anterior') { const n = new Date(); const f = new Date(n.getFullYear(), n.getMonth() - 1, 1).toLocaleDateString('en-CA'); const l = new Date(n.getFullYear(), n.getMonth(), 0).toLocaleDateString('en-CA'); setDe(f); setAte(l); setAplicado({ de: f, ate: l }) }
     else { setDe(''); setAte('') } // personalizado
   }
 
@@ -140,10 +138,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
     }).filter(Boolean).sort((a: any, b: any) => a.ins.nome.localeCompare(b.ins.nome, 'pt-BR')) as any[]
   }, [movs, insumos, grupo, gruposItens, soCmv, busca, saldoMap, inicialMap])
 
-  const totalPags = Math.max(1, Math.ceil(rows.length / porPag))
-  const pg = Math.min(pag, totalPags)
-  const slice = rows.slice((pg - 1) * porPag, pg * porPag)
-  const aplicar = () => { if (!de || !ate) return; setAplicado({ de, ate }); setPag(1) }
+  const aplicar = () => { if (!de || !ate) return; setAplicado({ de, ate }) }
 
   const exportar = () => {
     if (!rows.length) return
@@ -173,32 +168,25 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
           </tr></thead>
           <tbody>
             {isFetching ? <tr><td colSpan={10} className="p-empty">Carregando…</td></tr>
-              : !slice.length ? <tr><td colSpan={10} className="p-empty">Nenhum item encontrado.</td></tr>
-                : slice.map((r: any) => (
+              : !rows.length ? <tr><td colSpan={10} className="p-empty">Nenhum item encontrado.</td></tr>
+                : rows.map((r: any) => (
                   <tr key={r.ins.id}>
                     <td style={{ fontWeight: 600 }}>{r.ins.nome}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{un(r.ins)}</td>
-                    <td className="r mono" style={{ color: '#0369a1' }}>{fQ(r.inicial)}</td>
-                    <td className="r mono" style={{ color: r.ent > 0 ? '#16a34a' : '#94a3b8' }}>{r.ent > 0 ? fQ(r.ent) : '—'}</td>
-                    <td className="r mono" style={{ color: r.sai > 0 ? '#dc2626' : '#94a3b8' }}>{r.sai > 0 ? fQ(r.sai) : '—'}</td>
+                    <td className="r mono" style={{ color: '#0369a1' }}>{fQ(r.inicial ?? 0)}</td>
+                    <td className="r mono" style={{ color: r.ent > 0 ? '#16a34a' : '#94a3b8' }}>{fQ(r.ent)}</td>
+                    <td className="r mono" style={{ color: r.sai > 0 ? '#dc2626' : '#94a3b8' }}>{fQ(r.sai)}</td>
                     <td className="r mono" style={{ fontWeight: 700 }}>{fQ(r.saldo)}</td>
-                    <td className="r mono" style={{ color: '#94a3b8' }}>{r.min != null ? fQ(r.min) : '—'}</td>
-                    <td className="r mono" style={{ color: '#94a3b8' }}>{r.max != null ? fQ(r.max) : '—'}</td>
-                    <td className="r mono">{r.cm > 0 ? brl(r.saldo * r.cm) : '—'}</td>
+                    <td className="r mono" style={{ color: '#94a3b8' }}>{fQ(r.min ?? 0)}</td>
+                    <td className="r mono" style={{ color: '#94a3b8' }}>{fQ(r.max ?? 0)}</td>
+                    <td className="r mono">{brl(r.saldo * r.cm)}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{r.ult ? fmtDataHora(r.ult) : '—'}</td>
                   </tr>
                 ))}
           </tbody>
         </table>
         {rows.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderTop: '1px solid #f1f5f9', fontSize: 12, color: '#64748b' }}>
-            <span>{(pg - 1) * porPag + 1}–{Math.min(pg * porPag, rows.length)} de {rows.length}</span>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
-              <button className="p-btn p-btn-sm" disabled={pg <= 1} onClick={() => setPag(pg - 1)}>‹</button>
-              <span style={{ padding: '0 8px', alignSelf: 'center' }}>{pg}/{totalPags}</span>
-              <button className="p-btn p-btn-sm" disabled={pg >= totalPags} onClick={() => setPag(pg + 1)}>›</button>
-            </div>
-          </div>
+          <div style={{ padding: '8px 12px', borderTop: '1px solid #f1f5f9', fontSize: 12, color: '#64748b' }}>{rows.length} {rows.length === 1 ? 'item' : 'itens'}</div>
         )}
       </div>
     </>
