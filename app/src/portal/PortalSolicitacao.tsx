@@ -74,7 +74,7 @@ export function PortalSolicitacao() {
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
 
-  const fmtV = (v: number | undefined, u: string) => (v != null ? `${v} ${u}` : '—')
+  const fmtV = (v: number | undefined, u: string) => (v != null ? `${v} ${u}` : '0,00')
 
   return (
     <div style={{ paddingBottom: nSel > 0 ? 70 : 0 }}>
@@ -110,7 +110,7 @@ export function PortalSolicitacao() {
                           <td style={{ fontWeight: 600 }}>{ins.nome}</td>
                           <td style={{ fontSize: 12, color: '#475569' }}>{embalagem(ins)}</td>
                           <td style={{ color: '#64748b' }}>{fmtV(atual, u)}</td>
-                          <td style={{ color: '#64748b' }}>—</td>
+                          <td style={{ color: '#64748b' }}>0,00</td>
                         </tr>
                       )
                     })}
