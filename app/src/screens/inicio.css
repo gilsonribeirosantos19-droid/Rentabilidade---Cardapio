@@ -1,0 +1,46 @@
+/* Tela de Início (Dashboard) — escopado .inicio-screen */
+.inicio-screen { padding: 12px 20px; }
+.inicio-screen .inc-grid { display: grid; grid-template-columns: 1fr 290px; gap: 18px; align-items: start; }
+@media (max-width: 1100px) { .inicio-screen .inc-grid { grid-template-columns: 1fr; } }
+
+.inicio-screen .kpi-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 22px; }
+@media (max-width: 1400px) { .inicio-screen .kpi-5 { grid-template-columns: repeat(3, 1fr); } }
+.inicio-screen .kpi-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.inicio-screen .kpi-label { font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 10px; }
+.inicio-screen .kpi-icon-row { display: flex; align-items: center; gap: 10px; }
+.inicio-screen .kpi-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.inicio-screen .kpi-val { font-size: 19px; font-weight: 800; font-family: 'DM Mono', monospace; color: #0f172a; }
+.inicio-screen .kpi-unit { font-size: 11px; color: #94a3b8; }
+.inicio-screen .kpi-cmp { font-size: 11px; margin-top: 10px; font-weight: 600; }
+.inicio-screen .kpi-cmp.up { color: #16a34a; } .inicio-screen .kpi-cmp.down { color: #e11d48; } .inicio-screen .kpi-cmp.neutral { color: #94a3b8; }
+
+.inicio-screen .sec-title { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 10px; }
+.inicio-screen .sec-sub { font-weight: 400; color: #94a3b8; font-size: 12px; }
+
+.inicio-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+.inicio-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.inicio-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 5px 10px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.inicio-screen .tbl th.r, .inicio-screen .tbl td.r { text-align: right; }
+.inicio-screen .tbl tbody td { padding: 4px 10px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
+.inicio-screen .tbl tbody tr.clik { cursor: pointer; }
+.inicio-screen .tbl tbody tr.clik:hover td { background: #d0dff2; }
+.inicio-screen .tbl tfoot td { padding: 5px 10px; border-top: 2px solid #e2e8f0; font-weight: 700; }
+.inicio-screen .mono { font-family: 'DM Mono', monospace; }
+.inicio-screen .pend-ic { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.inicio-screen .pend-num { font-size: 18px; font-weight: 800; font-family: 'DM Mono', monospace; }
+.inicio-screen .loja-icon { width: 22px; height: 22px; border-radius: 6px; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; }
+.inicio-screen .mini-bar-wrap { width: 72px; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.inicio-screen .mini-bar { height: 100%; border-radius: 3px; }
+
+.inicio-screen .right-panel { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 14px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.inicio-screen .rp-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
+.inicio-screen .alert-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; margin-bottom: 6px; text-decoration: none; cursor: pointer; }
+.inicio-screen .alert-dot { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.inicio-screen .alert-row-title { font-size: 12.5px; font-weight: 600; color: #0f172a; }
+.inicio-screen .alert-row-sub { font-size: 11px; color: #94a3b8; }
+.inicio-screen .alert-row-arrow { margin-left: auto; color: #cbd5e1; font-size: 16px; }
+.inicio-screen .crit-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12.5px; border-bottom: 1px solid #f1f5f9; }
+.inicio-screen .crit-row:last-child { border-bottom: none; }
+.inicio-screen .crit-nome { color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inicio-screen .crit-dias { font-weight: 700; font-family: 'DM Mono', monospace; flex-shrink: 0; margin-left: 8px; }
+.inicio-screen .muted { font-size: 12px; color: #94a3b8; padding: 8px 0; }

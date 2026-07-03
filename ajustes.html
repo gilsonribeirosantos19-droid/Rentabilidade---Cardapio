@@ -586,6 +586,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!document.getElementById('cfg-flyout').contains(e.target) && !document.getElementById('cfg-nav-trigger').contains(e.target))
       document.getElementById('cfg-flyout').style.display = 'none';
   });
+
+  // abre a aba pedida pela URL (?tab=) — vindo do menu lateral
+  const _qtab = new URLSearchParams(location.search).get('tab');
+  if (_qtab) switchTab(_qtab);
 });
 
 function popularLojas() {

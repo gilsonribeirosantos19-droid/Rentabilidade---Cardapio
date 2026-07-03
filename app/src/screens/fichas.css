@@ -1,0 +1,96 @@
+/* Tela de Fichas Técnicas — fiel ao original (escopado .fic-screen) */
+.fic-screen { padding: 10px 18px; }
+
+.fic-screen .fic-toolbar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+.fic-screen .fic-search { position: relative; width: 280px; }
+.fic-screen .fic-search svg { position: absolute; left: 13px; top: 12px; }
+.fic-screen .fic-search input { width: 100%; height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px 0 36px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.fic-screen .fic-search input:focus { outline: none; border-color: #f97316; }
+.fic-screen .fic-field { display: flex; flex-direction: column; gap: 5px; }
+.fic-screen .fic-label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; }
+.fic-screen .fic-sel { height: 40px; min-width: 150px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; cursor: pointer; }
+.fic-screen .fic-sel:focus { outline: none; border-color: #f97316; }
+.fic-screen .fic-mais { height: 40px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.fic-screen .fic-nova { margin-left: auto; height: 40px; padding: 0 18px; border: none; border-radius: 9px; background: #2563eb; color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+.fic-screen .fic-nova:hover { background: #1d4ed8; }
+.fic-screen .fic-foot { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 12px 18px; margin-top: 14px; font-size: 13px; color: #64748b; }
+
+.fic-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
+.fic-screen .tbl-scroll { overflow-x: auto; }
+.fic-screen table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.fic-screen thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.fic-screen thead th.r { text-align: right; }
+.fic-screen tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; }
+.fic-screen tbody td.r { text-align: right; }
+.fic-screen tbody tr { cursor: pointer; }
+.fic-screen tbody tr:hover td { background: #d0dff2; }
+.fic-screen .mono { font-family: 'DM Mono', monospace; }
+.fic-screen .tbl-cat { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: #eef2f7; color: #475569; }
+.fic-screen .st-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.fic-screen .ver-btn { border: 1px solid #e2e8f0; background: #fff; border-radius: 7px; padding: 4px 10px; font-size: 12px; font-family: inherit; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.fic-screen .ver-btn:hover { border-color: #f97316; color: #f97316; }
+.fic-screen .empty { text-align: center; color: #94a3b8; padding: 50px 20px; font-size: 14px; }
+
+/* modal de visualização */
+.fic-screen .overlay { position: fixed; inset: 0; background: rgba(15,23,42,.4); display: flex; align-items: flex-start; justify-content: center; z-index: 100; padding: 30px 20px; overflow-y: auto; }
+.fic-screen .vm { background: #fff; border-radius: 14px; width: 720px; max-width: 100%; box-shadow: 0 20px 60px rgba(15,23,42,.25); }
+.fic-screen .vm-head { padding: 20px 24px; border-bottom: 1px solid #e7ebf0; display: flex; align-items: flex-start; justify-content: space-between; }
+.fic-screen .vm-head h2 { font-size: 19px; font-weight: 800; }
+.fic-screen .vm-head .cat { font-size: 12px; color: #64748b; margin-top: 3px; }
+.fic-screen .vm-x { border: none; background: #f1f5f9; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; color: #64748b; font-size: 15px; }
+.fic-screen .vm-body { padding: 20px 24px 24px; }
+.fic-screen .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.fic-screen .kpi { background: #f8fafc; border: 1px solid #eef1f5; border-radius: 10px; padding: 12px 14px; }
+.fic-screen .kpi .l { font-size: 10.5px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.fic-screen .kpi .v { font-size: 19px; font-weight: 800; margin-top: 5px; font-family: 'DM Mono', monospace; }
+.fic-screen .ing-tbl { width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #eef1f5; border-radius: 8px; overflow: hidden; }
+.fic-screen .ing-tbl th { background: #f8fafc; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; text-align: left; padding: 8px 12px; border-bottom: 1px solid #eef1f5; }
+.fic-screen .ing-tbl th.r { text-align: right; }
+.fic-screen .ing-tbl td { padding: 9px 12px; border-bottom: 1px solid #f5f7fa; }
+.fic-screen .ing-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
+.fic-screen .ing-tbl tr:last-child td { border-bottom: none; }
+.fic-screen .cmv-ok { color: #16a34a; } .fic-screen .cmv-warn { color: #f59e0b; } .fic-screen .cmv-bad { color: #e11d48; }
+
+/* modal de edição de ficha */
+.fic-screen .fm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin-bottom: 14px; }
+.fic-screen .fm-g { display: flex; flex-direction: column; }
+.fic-screen .fm-l { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+.fic-screen .fm-i { height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.fic-screen .fm-i:focus { outline: none; border-color: #f97316; }
+.fic-screen .fm-i:disabled, .fic-screen .fm-i.ro { background: #f8fafc; color: #94a3b8; cursor: default; }
+.fic-screen .fm-hint { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+.fic-screen .fm-cancel { border: none; background: none; font-size: 14px; font-family: inherit; color: #475569; cursor: pointer; font-weight: 500; }
+.fic-screen .fm-save { height: 38px; padding: 0 22px; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; border: none; background: #f97316; color: #fff; }
+.fic-screen .fm-save:hover { background: #ea6a0a; }
+.fic-screen .fm-save:disabled { opacity: .6; }
+.fic-screen .fm-add { border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; font-family: inherit; color: #475569; cursor: pointer; }
+.fic-screen .fm-add:hover { border-color: #f97316; color: #f97316; }
+.fic-screen .fm-x { border: none; background: none; color: #e11d48; cursor: pointer; font-size: 14px; padding: 4px 8px; }
+.fic-screen .fm-divider { border-top: 1px solid #e2e8f0; margin: 18px 0 12px; }
+.fic-screen .fm-sec-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; font-weight: 600; }
+.fic-screen .fm-tabs { display: flex; gap: 22px; border-bottom: 1px solid #e2e8f0; margin-bottom: 12px; }
+.fic-screen .fm-tab { background: none; border: none; font-family: inherit; font-size: 13px; font-weight: 600; color: #94a3b8; padding: 8px 2px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; text-transform: uppercase; letter-spacing: .03em; }
+.fic-screen .fm-tab.on { color: #f97316; border-bottom-color: #f97316; }
+.fic-screen .fm-ta { width: 100%; min-height: 90px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 10px 12px; font-size: 13px; font-family: inherit; color: #0f172a; resize: vertical; }
+.fic-screen .fm-ta:focus { outline: none; border-color: #f97316; }
+.fic-screen .ed-btn { border: 1px solid #e2e8f0; background: #fff; border-radius: 7px; padding: 4px 10px; font-size: 12px; font-family: inherit; color: #475569; cursor: pointer; margin-right: 6px; }
+.fic-screen .ed-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+/* ingredientes — estilo moderno (grid) */
+.fic-screen .ing2 { border: 1px solid #e7ebf0; border-radius: 12px; background: #fff; box-shadow: 0 1px 2px rgba(15,23,42,.03); }
+.fic-screen .ing2-head, .fic-screen .ing2-row { display: grid; grid-template-columns: 1fr 56px 104px 78px 112px 124px 38px; align-items: center; gap: 12px; padding: 0 16px; }
+.fic-screen .ing2-head { height: 42px; background: #f8fafc; border-bottom: 1px solid #eef1f5; border-radius: 12px 12px 0 0; }
+.fic-screen .ing2-head > div { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; }
+.fic-screen .ing2-row { min-height: 58px; border-bottom: 1px solid #f3f5f8; padding-top: 10px; padding-bottom: 10px; }
+.fic-screen .ing2-row:last-child { border-bottom: none; }
+.fic-screen .ing2 .r { text-align: right; }
+.fic-screen .ing2-head .r, .fic-screen .ing2-row .r { justify-self: end; }
+.fic-screen .ing2 .um { color: #64748b; font-size: 13px; }
+.fic-screen .ing2 .muted { color: #94a3b8; font-size: 13px; }
+.fic-screen .ing2 .mono { font-family: 'DM Mono', monospace; }
+.fic-screen .ing2 .bold { font-weight: 700; color: #0f172a; }
+.fic-screen .ing2-qtd { width: 100%; height: 38px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; text-align: right; color: #0f172a; background: #fff; }
+.fic-screen .ing2-qtd:focus { outline: none; border-color: #f97316; }
+.fic-screen .ing2-del { border: none; background: none; color: #cbd5e1; cursor: pointer; font-size: 15px; padding: 4px; }
+.fic-screen .ing2-del:hover { color: #e11d48; }
+.fic-screen .ing2-empty { padding: 26px; text-align: center; color: #94a3b8; font-size: 13px; }

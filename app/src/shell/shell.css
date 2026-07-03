@@ -52,15 +52,22 @@
 
 /* ====== ÁREA PRINCIPAL ====== */
 .main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
-.topbar { height: 58px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar { height: 44px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
 .topbar h1 { font-size: 20px; font-weight: 800; color: var(--text1); }
+.topbar .crumb { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.topbar .crumb .c1 { font-size: 15px; font-weight: 800; color: var(--text3); white-space: nowrap; }
+.topbar .crumb .sep { font-size: 14px; color: var(--text3); font-weight: 600; }
+.topbar .crumb .c2 { font-size: 16px; font-weight: 800; color: var(--text1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .topbar .tr { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--text2); }
-.tabs { display: flex; align-items: flex-end; gap: 3px; padding: 8px 16px 0; background: var(--bg); flex-shrink: 0; overflow-x: auto; }
-.tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--text2); background: #e2e8f0; border: 1px solid #d8dee8; border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; white-space: nowrap; }
-.tab.on { background: var(--surface); color: var(--text1); border-bottom: 2px solid var(--orange); margin-bottom: -1px; }
-.tab .x { color: var(--text3); font-size: 16px; line-height: 1; }
-.tab .x:hover { color: var(--red); }
-.content { flex: 1; overflow-y: auto; background: var(--surface); border-top: 1px solid var(--border); position: relative; }
+/* abas estilo ERP (SAP Fiori — faixa branca lisa, sublinhado laranja na ativa) */
+.tabs { display: flex; align-items: stretch; height: 36px; padding: 0 8px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; }
+.tab { display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; font-size: 12.5px; font-weight: 600; color: #5b6b85; background: transparent; cursor: pointer; white-space: nowrap; position: relative; }
+.tab:hover { color: var(--text1); }
+.tab.on { color: var(--text1); font-weight: 700; }
+.tab.on::after { content: ''; position: absolute; bottom: 0; left: 10px; right: 10px; height: 2.5px; background: var(--orange); border-radius: 2px; }
+.tab .x { color: #adb6c7; font-size: 15px; line-height: 1; margin-left: 2px; padding: 0 3px; border-radius: 5px; }
+.tab .x:hover { background: #fddede; color: var(--red); }
+.content { flex: 1; overflow-y: auto; background: var(--surface-2); border-top: 1px solid var(--border); position: relative; }
 .pane { padding: 24px; }
 
 /* ====== UI genérica ====== */
@@ -78,11 +85,11 @@ textarea.input { height: auto; padding: 9px 12px; min-height: 70px; resize: vert
 .scr-d { font-size: 13px; color: var(--text2); margin: 2px 0 18px; }
 .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 
-.table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; font-size: 13px; }
+.table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; font-size: 13px; background: var(--surface); }
 .table th { background: #f1f5f9; color: var(--text2); font-weight: 700; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .table td { padding: 0 14px; height: 46px; border-bottom: 1px solid #eef1f5; color: var(--text1); }
 .table tr:last-child td { border-bottom: none; }
-.table tr:hover td { background: #fafbfc; }
+.table tr:hover td { background: #d7e4f7; }
 .badge { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
 .badge.ok { background: #ecfdf5; color: #059669; }
 .badge.off { background: #f1f5f9; color: #64748b; }

@@ -1,0 +1,191 @@
+/* Módulo Fiscal — escopado .fiscal-screen */
+.fiscal-screen { padding: 10px 18px; }
+@keyframes mon-spin { to { transform: rotate(360deg); } }
+.fiscal-screen .fh-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+.fiscal-screen .fh-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.fiscal-screen .fl-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 10px 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.fiscal-screen .fl-bar .ass { flex: 0 1 300px; min-width: 200px; }
+.fiscal-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
+.fiscal-screen .field:focus { outline: none; border-color: #f97316; }
+.fiscal-screen select.field { cursor: pointer; }
+.fiscal-screen .btn-g { height: 36px; padding: 0 13px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.fiscal-screen .btn-g:hover { background: #f8fafc; }
+
+/* grupo de filtro rotulado (bloco simples — evita que .fl-bar .ass{flex} estique o seletor) */
+.fiscal-screen .aud-fg { display: block; }
+.fiscal-screen .aud-fg .aud-lb { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+.fiscal-screen .aud-fg .ass { flex: none; width: 100%; }
+
+.fiscal-screen .summary { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; font-size: 13px; color: #64748b; }
+.fiscal-screen .summary .sval { font-weight: 700; color: #16a34a; font-family: 'DM Mono', monospace; }
+
+.fiscal-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
+.fiscal-screen .tbl-scroll { overflow-x: auto; }
+/* lista sem paginação: rola dentro da área e mantém o cabeçalho fixo no topo */
+.fiscal-screen .aud-scroll { max-height: calc(100vh - 300px); overflow: auto; }
+.fiscal-screen .aud-scroll thead th { position: sticky; top: 0; z-index: 3; }
+.fiscal-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.fiscal-screen .tbl tbody td, .fiscal-screen .tbl tbody td * { font-weight: 400 !important; }
+.fiscal-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 10px; text-align: left; padding: 6px 10px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.fiscal-screen .tbl thead th.sortable { cursor: pointer; user-select: none; }
+.fiscal-screen .tbl thead th.sortable:hover { color: #0f172a; }
+.fiscal-screen .tbl th.r, .fiscal-screen .tbl td.r { text-align: right; }
+.fiscal-screen .tbl th.c, .fiscal-screen .tbl td.c { text-align: center; }
+.fiscal-screen .tbl tbody td { padding: 2.5px 10px; border-bottom: 1px solid #e7ecf3; color: #0f172a; vertical-align: middle; white-space: nowrap; line-height: 1.35; }
+.fiscal-screen .tbl td.fornec { white-space: nowrap; min-width: 200px; }
+.fiscal-screen .tbl tbody tr:hover td { background: #d0dff2; }
+/* modo gradeado (grade em célula) — Monitor/DANFE */
+.fiscal-screen .tbl th, .fiscal-screen .tbl td { border-right: 1px solid #e7ecf3; }
+.fiscal-screen .tbl th:last-child, .fiscal-screen .tbl td:last-child { border-right: none; }
+.fiscal-screen .tbl thead th { border-bottom: 1px solid #d6dce6; }
+.fiscal-screen .mono { font-family: 'DM Mono', monospace; }
+.fiscal-screen .nfe-link { font-weight: 700; color: #0f172a; }
+.fiscal-screen .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.fiscal-screen .b-proc { background: #dcfce7; color: #16a34a; }
+.fiscal-screen .lnk-btn { height: 28px; padding: 0 10px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.fiscal-screen .lnk-btn:hover { background: #f8fafc; }
+.fiscal-screen .kebab { border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 16px; padding: 2px 6px; border-radius: 6px; }
+.fiscal-screen .kebab:hover { background: #f1f5f9; }
+.fiscal-screen .empty { text-align: center; color: #94a3b8; padding: 40px 20px; font-size: 14px; }
+
+.fiscal-screen .pag-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; font-size: 12px; color: #94a3b8; }
+.fiscal-screen .pag-btn { min-width: 30px; height: 30px; border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; color: #475569; font-size: 12px; cursor: pointer; font-family: inherit; }
+.fiscal-screen .pag-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
+.fiscal-screen .pag-btn:disabled { opacity: .5; cursor: default; }
+
+/* menu flutuante (⋮) */
+.fiscal-screen .fmenu, .fmenu-portal { position: fixed; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 2000; min-width: 165px; padding: 4px 0; }
+.fmenu-portal .fm-h { padding: 8px 14px; font-size: 11px; color: #94a3b8; border-bottom: 1px solid #f1f5f9; }
+.fmenu-portal button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 14px; border: none; background: none; font-size: 13px; cursor: pointer; color: #0f172a; font-family: inherit; }
+.fmenu-portal button:hover { background: #f8fafc; }
+.fmenu-portal button.danger { color: #dc2626; border-top: 1px solid #f1f5f9; }
+
+/* modal detalhe */
+.fiscal-screen .ov, .fov-portal { position: fixed; inset: 0; background: rgba(15,23,42,.4); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.fov-portal .det { background: #fff; border-radius: 14px; width: 96vw; max-width: 1040px; max-height: 90vh; overflow: auto; box-shadow: 0 8px 40px rgba(0,0,0,.25); }
+.fov-portal .det-head { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; z-index: 1; }
+.fov-portal .det-head .t { font-size: 15px; font-weight: 700; }
+.fov-portal .det-info { padding: 16px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; font-size: 13px; }
+.fov-portal .det-info .lbl { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+.fov-portal .det-danfe, .fiscal-screen .det-danfe { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.fiscal-screen .det-bar .det-danfe:hover { filter: brightness(.97); }
+.fov-portal .det-x { background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; padding: 2px 8px; }
+.fov-portal table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fov-portal .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 11px; text-align: left; padding: 9px 12px; }
+.fov-portal .tbl th.r { text-align: right; } .fov-portal .tbl td.r { text-align: right; }
+.fov-portal .tbl tbody td { padding: 8px 12px; border-bottom: 1px solid #eef1f5; }
+.fov-portal .mono { font-family: 'DM Mono', monospace; }
+
+/* Monitor NF-e */
+.fiscal-screen .mon-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.fiscal-screen .mon-top-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fiscal-screen .lbl-mini { font-size: 12px; color: #475569; font-weight: 600; white-space: nowrap; }
+.fiscal-screen .btn-xml { height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.fiscal-screen .f1 { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin: 6px 0 12px; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 10px 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.fiscal-screen .f1 .ds-field { display: flex; flex-direction: column; gap: 3px; }
+.fiscal-screen .f1 .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; text-transform: none; letter-spacing: .01em; }
+.fiscal-screen .f1 .ass { width: 100%; } .fiscal-screen .f1 .ass-btn { height: 34px; }
+.fiscal-screen .sit-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.fiscal-screen .sit-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; user-select: none; padding: 6px 13px; border-radius: 99px; border: 1.5px solid #e2e8f0; background: #fff; }
+.fiscal-screen .sit-chip input { width: 14px; height: 14px; cursor: pointer; }
+.fiscal-screen .sit-chip .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.fiscal-screen .sit-chip .cnt { font-weight: 700; }
+.fiscal-screen .act-r { margin-left: auto; display: inline-flex; gap: 10px; align-items: center; }
+.fiscal-screen .b-del { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1.5px solid #e2e8f0; border-radius: 8px; background: #fff; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.fiscal-screen .b-del.on { color: #dc2626; border-color: #fecaca; }
+.fiscal-screen .b-proc { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: none; border-radius: 8px; background: #e2e8f0; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: not-allowed; font-family: inherit; }
+.fiscal-screen .b-proc.on { background: #f97316; color: #fff; cursor: pointer; }
+.fiscal-screen .tabs { display: flex; gap: 4px; border-bottom: 1px solid #e2e8f0; margin-top: 4px; }
+.fiscal-screen .tab-btn { padding: 9px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; font-family: inherit; margin-bottom: -1px; display: inline-flex; align-items: center; gap: 7px; }
+.fiscal-screen .tab-btn.active { color: #f97316; border-bottom-color: #f97316; }
+.fiscal-screen .tab-cnt { font-family: 'DM Mono', monospace; background: #f1f5f9; border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+.fiscal-screen .det-bar { display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #64748b; }
+.fiscal-screen .chk { accent-color: #f97316; width: 14px; height: 14px; cursor: pointer; }
+.fiscal-screen .stat-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.fiscal-screen .stat-err { color: #dc2626; font-weight: 800; cursor: pointer; }
+.fiscal-screen .nfe-num { color: #2563eb; font-weight: 700; cursor: pointer; }
+.fiscal-screen .nfe-fornec { cursor: pointer; }
+.fiscal-screen .nfe-fornec:hover { color: #2563eb; }
+.fiscal-screen tr.sel td { background: #dbeafe !important; }
+
+.fiscal-screen .subtabs { display: flex; gap: 4px; border-bottom: 1px solid #e2e8f0; margin: 18px 0 0; }
+.fiscal-screen .subtab { padding: 9px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; font-family: inherit; margin-bottom: -1px; display: inline-flex; align-items: center; gap: 7px; }
+.fiscal-screen .subtab.on { color: #f97316; border-bottom-color: #f97316; }
+.fiscal-screen .subtab .n { font-family: 'DM Mono', monospace; background: #f1f5f9; border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+.fiscal-screen .sel-hint { font-size: 13px; color: #94a3b8; padding: 30px 20px; text-align: center; }
+.fiscal-screen .corrigir { height: 28px; padding: 0 12px; border: 1px solid #f97316; border-radius: 7px; background: #fff7ed; color: #ea6c00; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+/* modal vincular */
+.fiscal-screen .vmodal { background: #fff; border-radius: 14px; width: min(560px, 95vw); max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(15,23,42,.25); padding: 20px; }
+.fiscal-screen .vmodal h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+.fiscal-screen .vmodal .vsub { font-size: 12px; color: #94a3b8; margin-bottom: 14px; }
+.fiscal-screen .vbox { background: #f8fafc; border: 1px solid #eef1f5; border-radius: 9px; padding: 10px 12px; font-size: 12px; color: #475569; margin-bottom: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; }
+.fiscal-screen .vbox b { color: #0f172a; }
+.fiscal-screen .vsec { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin: 14px 0 8px; }
+.fiscal-screen .vfg { display: flex; flex-direction: column; margin-bottom: 12px; }
+.fiscal-screen .vfg label { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+.fiscal-screen .vfg input, .fiscal-screen .vfg select { height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; background: #fff; }
+.fiscal-screen .vfg input:focus, .fiscal-screen .vfg select:focus { outline: none; border-color: #f97316; }
+.fiscal-screen .vconv { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 9px; padding: 10px 12px; font-size: 12px; color: #059669; font-weight: 600; margin-bottom: 12px; }
+.fiscal-screen .vfoot { display: flex; gap: 10px; margin-top: 8px; }
+.fiscal-screen .v-pri { height: 40px; padding: 0 18px; border: none; border-radius: 9px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.fiscal-screen .v-sec { height: 40px; padding: 0 16px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.fiscal-screen .btn-pri { height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.fiscal-screen .btn-pri:disabled { opacity: .5; cursor: default; }
+
+/* Corrigir item da NF-e (tela nova de vínculo) */
+.cor-ov { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: flex-start; justify-content: center; padding: 14px; overflow: auto; z-index: 1000; }
+.cor { background: #fff; width: min(1180px, 98vw); border-radius: 14px; box-shadow: 0 24px 70px rgba(15,23,42,.3); display: flex; flex-direction: column; max-height: calc(100vh - 28px); font-size: 13px; }
+.cor-hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #e5e9f0; flex-shrink: 0; }
+.cor-hd h2 { font-size: 17px; font-weight: 800; color: #0f172a; }
+.cor-hd .s { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.cor-hd .x { width: 32px; height: 32px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; color: #64748b; font-size: 15px; }
+.cor-body { overflow: auto; padding: 12px 18px; display: flex; flex-direction: column; gap: 10px; }
+.cor-aviso { display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #92400e; line-height: 1.4; }
+.cor-add:disabled { opacity: .5; cursor: not-allowed; }
+.cor-card { border: 1px solid #e5e9f0; border-radius: 10px; padding: 11px 13px; }
+.cor-st { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+.cor-forn { display: grid; grid-template-columns: 110px 1.4fr 1fr 1fr; gap: 3px 22px; }
+.cor-forn .l { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; }
+.cor-forn .v { font-size: 13px; font-weight: 700; color: #0f172a; }
+.cor-fg { display: flex; flex-direction: column; gap: 3px; }
+.cor-fg > label { font-size: 10.5px; font-weight: 600; color: #475569; }
+.cor-fg input, .cor-fg select { height: 31px; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0 9px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
+.cor-fg input:focus, .cor-fg select:focus { outline: none; border-color: #f97316; }
+.cor-fg input[readonly] { background: #f8fafc; color: #475569; }
+.cor-r1 { display: grid; grid-template-columns: 80px 1fr 120px 170px 110px; gap: 9px; align-items: end; }
+.cor-fg .ass-btn { height: 31px; font-size: 12.5px; border-radius: 7px; padding: 0 9px; }
+.cor-r2 { display: grid; grid-template-columns: 150px 1fr 120px auto auto; gap: 9px; align-items: end; margin-top: 9px; }
+.cor-chk { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: #334155; cursor: pointer; height: 31px; white-space: nowrap; }
+.cor-chk input { width: 15px; height: 15px; accent-color: #f97316; }
+.cor-add { height: 31px; padding: 0 14px; border: none; border-radius: 7px; background: #2563eb; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.cor-add:disabled { opacity: .55; cursor: default; }
+.cor-conv { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 7px 11px; font-size: 12px; color: #059669; font-weight: 600; margin-top: 9px; }
+.cor-tbar { display: flex; align-items: center; gap: 10px; margin: 0 0 9px; }
+.cor-search { position: relative; flex: 1; max-width: 320px; }
+.cor-search input { width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px 0 30px; font-size: 12.5px; font-family: inherit; }
+.cor-search svg { position: absolute; left: 9px; top: 9px; color: #94a3b8; }
+.cor-tbl { border: 1px solid #e5e9f0; border-radius: 10px; overflow: hidden; }
+.cor-tbl-sc { overflow: auto; max-height: 300px; }
+.cor-tbl table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.cor-tbl thead th { position: sticky; top: 0; background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: .03em; text-align: left; padding: 7px 9px; border-bottom: 1px solid #d6dce6; white-space: nowrap; z-index: 2; }
+.cor-tbl th.r, .cor-tbl td.r { text-align: right; } .cor-tbl th.c, .cor-tbl td.c { text-align: center; }
+.cor-tbl tbody td { padding: 4px 9px; border-bottom: 1px solid #eef1f5; border-right: 1px solid #f3f5f9; white-space: nowrap; }
+.cor-tbl tbody td:last-child { border-right: none; }
+.cor-tbl tbody tr:hover td { background: #d0dff2; }
+.cor-tbl .mono { font-family: 'DM Mono', monospace; }
+.cor-pad { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; border: 1px solid #cbd5e1; border-radius: 4px; color: #f97316; font-weight: 800; font-size: 11px; }
+.cor-emp { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 14px; padding: 2px 9px; cursor: pointer; }
+.cor-ico { border: none; background: none; cursor: pointer; padding: 2px 5px; border-radius: 6px; color: #64748b; }
+.cor-ico:hover { background: #f1f5f9; } .cor-ico.del:hover { color: #dc2626; }
+.cor-pag { display: flex; align-items: center; justify-content: space-between; padding: 8px 2px; font-size: 12px; color: #94a3b8; flex-wrap: wrap; gap: 8px; }
+.cor-emprow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cor-tag { font-size: 12px; font-weight: 600; color: #334155; background: #f1f5f9; border: 1px solid #e5e9f0; border-radius: 8px; padding: 6px 12px; }
+.cor-tag.count { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+.cor-ft { display: flex; align-items: center; justify-content: space-between; padding: 13px 20px; border-top: 1px solid #e5e9f0; flex-shrink: 0; }
+.cor-back { height: 38px; padding: 0 16px; border: 1px solid #e5e9f0; border-radius: 9px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.cor-save { height: 38px; padding: 0 22px; border: none; border-radius: 9px; background: #f97316; color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+.fiscal-screen .toast, .cor-toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 3000; }
+.cor-toast.ok { background: #059669; } .cor-toast.err { background: #ef4444; }
+.fiscal-screen .toast.ok { background: #059669; } .fiscal-screen .toast.err { background: #ef4444; }

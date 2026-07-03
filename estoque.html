@@ -381,11 +381,6 @@
             <div class="est-hub-body"><div class="est-hub-title">Inventário</div><div class="est-hub-desc">Contagem e conferência física do estoque.</div></div>
             <div class="est-hub-arrow">›</div>
           </div>
-          <div class="est-hub-card" onclick="switchTab('fechamento')">
-            <div class="est-hub-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-            <div class="est-hub-body"><div class="est-hub-title">Fechamento</div><div class="est-hub-desc">Fechamento periódico e consolidação do estoque.</div></div>
-            <div class="est-hub-arrow">›</div>
-          </div>
           <div class="est-hub-card" onclick="switchTab('kardex')">
             <div class="est-hub-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
             <div class="est-hub-body"><div class="est-hub-title">Kardex</div><div class="est-hub-desc">Rastreabilidade e saldo por insumo ao longo do tempo.</div></div>
@@ -763,117 +758,6 @@
             <tfoot id="inv-det-foot"></tfoot>
           </table>
         </div></div>
-      </div>
-    </div>
-
-    <!-- TAB: FECHAMENTO MENSAL -->
-    <div id="tab-fechamento" class="tab-pane">
-      <!-- FILTROS + KPI BAR (sticky) -->
-      <div style="position:sticky;top:114px;z-index:40;background:#fff;padding-bottom:12px;margin-top:-18px;padding-top:18px;border-bottom:1px solid #e2e8f0;margin-bottom:16px">
-      <!-- FILTROS -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <select class="field field-sm" onchange="setPeriodoRange(this.value,'fm-de','fm-ate')" style="min-width:130px">
-          <option value="periodo">Período</option>
-          <option value="mes_atual" selected>Mês Atual</option>
-          <option value="mes_anterior">Mês Anterior</option>
-        </select>
-        <div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px">
-          <input class="field field-sm" type="date" id="fm-de" style="border:none;padding:0;background:transparent;width:110px">
-          <span style="color:#94a3b8">–</span>
-          <input class="field field-sm" type="date" id="fm-ate" style="border:none;padding:0;background:transparent;width:110px">
-        </div>
-        <button class="btn btn-primary" onclick="calcFechamento()">Calcular CMV</button>
-        <div style="margin-left:auto">
-          <button class="btn btn-ghost" id="btn-exp-fm" style="display:none" onclick="exportFechamentoCSV()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Exportar CSV
-          </button>
-        </div>
-      </div>
-      <!-- KPI BAR -->
-      <div id="fm-kpi-bar" style="display:none;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:16px">
-        <div style="display:flex;flex-wrap:wrap">
-          <div style="padding:14px 18px;border-right:1px solid #e2e8f0;flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">EST. INICIAL</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#2563eb" id="fm-k-ini">—</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h-1a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1"/></svg>
-            </div>
-          </div>
-          <div style="padding:14px 18px;border-right:1px solid #e2e8f0;flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">+ COMPRAS</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#2563eb" id="fm-k-ent">—</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </div>
-          </div>
-          <div style="padding:14px 18px;border-right:1px solid #e2e8f0;flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">- PERDAS</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="fm-k-perd">—</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-            </div>
-          </div>
-          <div style="padding:14px 18px;border-right:1px solid #e2e8f0;flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">= EST. FINAL</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#2563eb" id="fm-k-fin">—</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h-1a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1"/></svg>
-            </div>
-          </div>
-          <div style="padding:14px 18px;border-right:1px solid #e2e8f0;flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">= CMV REAL</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="fm-k-cmv">—</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-          </div>
-          <div style="padding:14px 18px;border-right:1px solid #e2e8f0;flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">FATURAMENTO</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace;color:#0f172a" id="fm-k-fat">—</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
-            </div>
-          </div>
-          <div style="padding:14px 18px;flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">CMV%</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="font-size:16px;font-weight:700;font-family:'DM Mono',monospace" id="fm-k-pct">—</div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-            </div>
-            <div style="font-size:10px;color:#94a3b8;margin-top:2px" id="fm-k-pct-sub"></div>
-          </div>
-        </div>
-      </div>
-      </div><!-- /sticky header -->
-      <!-- TABELA -->
-      <div id="fm-tabela" style="display:none">
-        <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:12px">Detalhamento por insumo</div>
-        <div class="tbl-wrap"><div class="tbl-scroll" style="max-height:calc(100vh - 380px);overflow-y:auto">
-          <table class="tbl">
-            <thead style="position:sticky;top:0;z-index:5"><tr>
-              <th>Insumo</th><th>Categoria</th>
-              <th class="r">Est. Inicial</th><th class="r">+ Compras</th>
-              <th class="r">- Perdas</th><th class="r">Consumo</th>
-              <th class="r">= Est. Final</th><th class="r">CMV Real</th>
-            </tr></thead>
-            <tbody id="fm-body"></tbody>
-            <tfoot id="fm-foot"></tfoot>
-          </table>
-        </div>
-        <!-- PAGINAÇÃO -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #f1f5f9;font-size:12px;color:#64748b;flex-wrap:wrap;gap:8px">
-          <span id="fm-pag-info"></span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="display:flex;gap:4px" id="fm-pag-btns"></div>
-            <select class="field field-sm" id="fm-por-pag" onchange="_fmPorPag=+this.value;_fmPag=1;_renderFmPage()" style="padding:4px 8px;font-size:11px">
-              <option value="10" selected>10 por página</option>
-              <option value="20">20 por página</option>
-              <option value="50">50 por página</option>
-            </select>
-          </div>
-        </div>
-        </div>
       </div>
     </div>
 
@@ -2058,7 +1942,7 @@ function _initSaldoEst(){
 
 
 // ── WORKSPACE MULTI-ABA ───────────────────────────────────────────
-const _tabNames = {dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',fechamento:'Fechamento',movimentacao:'Movimentação',compras:'Sugestão de Compras','saldo-est':'Saldo de Estoque'};
+const _tabNames = {dashboard:'Dashboard',entradas:'Entradas',saidas:'Saídas',kardex:'Kardex',inventario:'Inventário',movimentacao:'Movimentação',compras:'Sugestão de Compras','saldo-est':'Saldo de Estoque'};
 let _openTabs = [], _activeTab = null, _loadedTabs = {};
 
 function _renderTabStrip() {
@@ -2135,10 +2019,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const d30 = d.toISOString().split('T')[0];
   document.getElementById('kx-de').value = d30;
   document.getElementById('kx-ate').value = hoje();
-  // Fechamento: mês atual
-  const ini = new Date(); ini.setDate(1);
-  document.getElementById('fm-de').value = ini.toISOString().split('T')[0];
-  document.getElementById('fm-ate').value = hoje();
   // Movimentação: últimos 30 dias
   document.getElementById('mov-de').value = d30;
   document.getElementById('mov-ate').value = hoje();
@@ -4088,128 +3968,6 @@ async function excluirGrupo(id) {
     toast('Grupo excluído.','ok');
     abrirModalGrupos();
   } catch(e) { toast('Erro: '+e.message,'err'); }
-}
-
-// ── FECHAMENTO MENSAL ─────────────────────────────────────────────
-async function calcFechamento() {
-  const de = document.getElementById('fm-de').value;
-  const ate = document.getElementById('fm-ate').value;
-  if (!de || !ate) { toast('Selecione o período.', 'err'); return; }
-  try {
-    const entsPer = entradas.filter(e => e.criado_em >= de && e.criado_em <= ate + 'T23:59:59');
-    const saisPer = saidas.filter(s => s.criado_em >= de && s.criado_em <= ate + 'T23:59:59');
-
-    let invIni = [];
-    try {
-      const r = await api(`inventarios?tenant_id=eq.${TENANT_ID}&criado_em=lt.${de}&status=eq.encerrado&order=criado_em.desc&limit=1`);
-      if (r.length) invIni = await api(`inventario_itens?inventario_id=eq.${r[0].id}`);
-    } catch(e) {}
-
-    let invFin = []; let usaSaldo = true;
-    try {
-      const r = await api(`inventarios?tenant_id=eq.${TENANT_ID}&criado_em=lte.${ate}T23:59:59&status=eq.encerrado&order=criado_em.desc&limit=1`);
-      if (r.length && r[0].criado_em >= de) { invFin = await api(`inventario_itens?inventario_id=eq.${r[0].id}`); usaSaldo = false; }
-    } catch(e) {}
-
-    let totIni=0, totEnt=0, totPerd=0, totCons=0, totFin=0;
-    const rows = insumos.map(ins => {
-      // Custo da ÉPOCA (ver ARQUITETURA.md): fim do período p/ perdas/consumo/saldo final; início p/ estoque inicial
-      const cmFim = custoDoInsumo(ins.id, null, {entradas, saidas, insumos, saldos, dataLimite: ate});
-      const cmIni = custoDoInsumo(ins.id, null, {entradas, saidas, insumos, saldos, dataLimite: de});
-      const s = getSaldo(ins.id);
-      const iniIt = invIni.find(i => i.insumo_id === ins.id);
-      const qIni = iniIt?.qtd_contada || 0; const vIni = qIni * (iniIt?.custo_medio || cmIni);
-      const entsIns = entsPer.filter(e => e.insumo_id === ins.id);
-      const qEnt = entsIns.reduce((a,e) => a + (e.quantidade||0), 0);
-      const vEnt = entsIns.reduce((a,e) => a + ((e.quantidade||0)*(e.custo_unitario||0)), 0);
-      const perdIns = saisPer.filter(x => x.insumo_id === ins.id && ['perda','vencimento','descarte'].includes(x.tipo));
-      const qPerd = perdIns.reduce((a,p) => a + (p.quantidade||0), 0); const vPerd = qPerd * cmFim;
-      const consIns = saisPer.filter(x => x.insumo_id === ins.id && ['consumo'].includes(x.tipo));
-      const qCons = consIns.reduce((a,c) => a + (c.quantidade||0), 0); const vCons = qCons * cmFim;
-      const finIt = usaSaldo ? null : invFin.find(i => i.insumo_id === ins.id);
-      const qFin = finIt?.qtd_contada ?? (s.quantidade||0); const vFin = Math.max(0,qFin) * cmFim;
-      const cmv = vIni + vEnt + vPerd - vFin;
-      totIni+=vIni; totEnt+=vEnt; totPerd+=vPerd; totCons+=vCons; totFin+=vFin;
-      if (!qIni && !qEnt && !qPerd && !qCons && !qFin) return null;
-      return { nome: ins.nome, cat: ins.categoria||'—', vIni, vEnt, vPerd, vCons, vFin, cmv };
-    }).filter(Boolean);
-
-    const cmvTotal = totIni + totEnt + totPerd - totFin;
-
-    let faturamentoTotal = 0;
-    try {
-      const fats = await api(`faturamento?tenant_id=eq.${TENANT_ID}&data=gte.${de}&data=lte.${ate}`);
-      faturamentoTotal = fats.reduce((s, f) => s + (f.valor||0), 0);
-    } catch(e) {}
-
-    const cmvPct = faturamentoTotal > 0 ? (cmvTotal / faturamentoTotal * 100) : null;
-    const cmvCor = cmvPct === null ? '' : cmvPct <= 30 ? 'c-green' : cmvPct <= 38 ? 'c-amber' : 'c-red';
-
-    // KPI bar
-    const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-    document.getElementById('fm-kpi-bar').style.display='';
-    setEl('fm-k-ini',brl(totIni)); setEl('fm-k-ent',brl(totEnt)); setEl('fm-k-perd',brl(totPerd));
-    setEl('fm-k-fin',brl(totFin)); setEl('fm-k-cmv',brl(cmvTotal));
-    setEl('fm-k-fat',faturamentoTotal>0?brl(faturamentoTotal):'—');
-    const pctEl=document.getElementById('fm-k-pct');
-    const pctSub=document.getElementById('fm-k-pct-sub');
-    if(pctEl){pctEl.textContent=cmvPct!==null?cmvPct.toFixed(1)+'%':'—';pctEl.style.color=cmvPct===null?'#94a3b8':cmvPct<=30?'#16a34a':cmvPct<=38?'#f59e0b':'#e11d48';}
-    if(pctSub)pctSub.textContent=cmvPct!==null?(cmvPct<=30?'Excelente':cmvPct<=38?'Atenção':'Crítico'):'';
-
-    document.getElementById('fm-tabela').style.display='';
-    document.getElementById('btn-exp-fm').style.display='';
-
-    // Paginação
-    window._fmRows=rows;
-    window._fmMeta={de,ate,totIni,totEnt,totPerd,totCons,totFin,cmvTotal};
-    window._fmPag=1; window._fmPorPag=+(document.getElementById('fm-por-pag')?.value||10);
-    _renderFmPage();
-
-    document.getElementById('fm-foot').innerHTML=`<tr style="background:#f8fafc;font-weight:700;border-top:2px solid #e2e8f0">
-      <td colspan="2">Total</td>
-      <td class="r mono">${brl(totIni)}</td><td class="r mono">${brl(totEnt)}</td>
-      <td class="r mono">${brl(totPerd)}</td><td class="r mono">${brl(totCons)}</td>
-      <td class="r mono">${brl(totFin)}</td><td class="r mono" style="font-weight:700">${brl(cmvTotal)}</td>
-    </tr>`;
-  } catch(e) { toast('Erro ao calcular: ' + e.message, 'err'); }
-}
-
-function _renderFmPage(){
-  const rows=window._fmRows||[];
-  const pag=window._fmPag||1;
-  const por=window._fmPorPag||10;
-  const start=(pag-1)*por;
-  const slice=rows.slice(start,start+por);
-  const total=rows.length;
-  const totalPags=Math.max(1,Math.ceil(total/por));
-  const info=document.getElementById('fm-pag-info');
-  if(info)info.textContent=`Mostrando ${start+1} a ${Math.min(start+por,total)} de ${total} itens`;
-  document.getElementById('fm-body').innerHTML=slice.map(r=>`<tr>
-    <td style="font-weight:500">${esc(r.nome)}</td>
-    <td style="color:#f97316;font-size:12px">${esc(r.cat)}</td>
-    <td class="r mono">${brl(r.vIni)}</td><td class="r mono">${brl(r.vEnt)}</td>
-    <td class="r mono">${brl(r.vPerd)}</td><td class="r mono">${brl(r.vCons)}</td>
-    <td class="r mono">${brl(r.vFin)}</td><td class="r mono" style="font-weight:600">${brl(r.cmv)}</td>
-  </tr>`).join('');
-  const btns=document.getElementById('fm-pag-btns');
-  if(!btns)return;
-  let h=`<button class="pag-btn" onclick="window._fmPag=Math.max(1,window._fmPag-1);_renderFmPage()" ${pag===1?'disabled':''}>‹</button>`;
-  for(let p=1;p<=totalPags;p++){
-    if(totalPags>7&&Math.abs(p-pag)>2&&p!==1&&p!==totalPags){if(p===2||p===totalPags-1)h+=`<span style="padding:0 4px;color:#94a3b8">…</span>`;continue;}
-    h+=`<button class="pag-btn${p===pag?' active':''}" onclick="window._fmPag=${p};_renderFmPage()">${p}</button>`;
-  }
-  h+=`<button class="pag-btn" onclick="window._fmPag=Math.min(${totalPags},window._fmPag+1);_renderFmPage()" ${pag===totalPags?'disabled':''}>›</button>`;
-  btns.innerHTML=h;
-}
-
-function exportFechamentoCSV() {
-  if (!window._fmRows) return;
-  const { de, ate } = window._fmMeta;
-  const header = 'Insumo;Categoria;Est.Inicial;Compras;Perdas;Consumo;Est.Final;CMV Real\n';
-  const body = window._fmRows.map(r =>
-    `${r.nome};${r.cat};${r.vIni.toFixed(2)};${r.vEnt.toFixed(2)};${r.vPerd.toFixed(2)};${r.vCons.toFixed(2)};${r.vFin.toFixed(2)};${r.cmv.toFixed(2)}`
-  ).join('\n');
-  downloadCSV(`fechamento_${de}_${ate}.csv`, header + body);
 }
 
 // ── MOVIMENTAÇÃO NO PERÍODO ───────────────────────────────────────

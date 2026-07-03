@@ -1,0 +1,61 @@
+/* PDV — escopado .pdv-screen */
+.pdv-screen { padding: 14px 24px; }
+.pdv-screen .db-filter { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); flex-wrap: wrap; }
+.pdv-screen .date-range { display: flex; align-items: center; gap: 8px; }
+.pdv-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.pdv-screen .field:focus { outline: none; border-color: #f97316; }
+.pdv-screen select.field { cursor: pointer; }
+.pdv-screen .btn-pri { height: 34px; padding: 0 16px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.pdv-screen .btn-pri:hover { background: #ea6a0a; }
+.pdv-screen .btn-ghost { height: 34px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.pdv-screen .btn-ghost:hover { background: #f8fafc; }
+
+/* KPIs */
+.pdv-screen .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+.pdv-screen .kpi-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.04); display: flex; gap: 12px; align-items: flex-start; }
+.pdv-screen .kpi-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pdv-screen .kpi-icon svg { width: 18px; height: 18px; }
+.pdv-screen .ki-blue { background: #3b82f6; } .pdv-screen .ki-green { background: #10b981; } .pdv-screen .ki-indigo { background: #6366f1; } .pdv-screen .ki-orange { background: #f97316; } .pdv-screen .ki-teal { background: #14b8a6; }
+.pdv-screen .kpi-lbl { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; }
+.pdv-screen .kpi-val { font-size: 19px; font-weight: 800; font-family: 'DM Mono', monospace; color: #0f172a; margin-top: 3px; line-height: 1.1; }
+.pdv-screen .kpi-sub { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+
+/* grid + cards */
+.pdv-screen .dash-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; align-items: start; }
+.pdv-screen .dash-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04); margin-bottom: 14px; overflow: hidden; }
+.pdv-screen .dash-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+.pdv-screen .dash-head-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+.pdv-screen .dash-body { padding: 14px 16px; }
+.pdv-screen .chart-wrap { position: relative; height: 230px; }
+
+/* tabela */
+.pdv-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pdv-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 10px; text-align: left; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.pdv-screen .tbl th.r, .pdv-screen .tbl td.r { text-align: right; }
+.pdv-screen .tbl tbody td { padding: 6px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; }
+.pdv-screen .tbl tbody tr:last-child td { border-bottom: none; }
+.pdv-screen .tbl tbody tr:hover td { background: #d0dff2; }
+.pdv-screen .mono { font-family: 'DM Mono', monospace; }
+.pdv-screen .empty { text-align: center; color: #94a3b8; padding: 24px; }
+
+/* donut legenda + resumo */
+.pdv-screen .canal-leg-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #334155; }
+.pdv-screen .canal-dot { width: 10px; height: 10px; border-radius: 3px; }
+.pdv-screen .resumo-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; font-size: 13px; color: #334155; border-bottom: 1px solid #f5f7fa; }
+.pdv-screen .resumo-row.neg { color: #94a3b8; }
+.pdv-screen .resumo-row.dest { font-weight: 700; color: #0f172a; }
+
+/* modal */
+.pdv-screen .ov { position: fixed; inset: 0; background: rgba(15,23,42,.4); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+.pdv-screen .modal { background: #fff; border-radius: 14px; width: min(400px, 95vw); box-shadow: 0 20px 60px rgba(15,23,42,.25); padding: 22px; }
+.pdv-screen .modal h2 { font-size: 17px; font-weight: 800; margin-bottom: 16px; }
+.pdv-screen .fg { margin-bottom: 14px; display: flex; flex-direction: column; }
+.pdv-screen .fg > label { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+.pdv-screen .fg input, .pdv-screen .fg select { height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.pdv-screen .fg input:focus, .pdv-screen .fg select:focus { outline: none; border-color: #f97316; }
+.pdv-screen .modal-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.pdv-screen .btn-sec { height: 40px; padding: 0 16px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.pdv-screen .btn-pri-lg { height: 40px; padding: 0 18px; border: none; border-radius: 9px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+.pdv-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 200; }
+.pdv-screen .toast.ok { background: #059669; } .pdv-screen .toast.err { background: #ef4444; }

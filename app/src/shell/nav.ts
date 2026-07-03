@@ -11,7 +11,6 @@ export const MODULES: Module[] = [
   {
     id: 'estoque', label: 'Estoque', icon: 'box',
     sections: [
-      { label: 'Visão Geral', key: 'estoque/visao' },
       { group: 'Lançamentos', items: [
         { label: 'Entradas', key: 'estoque/entradas' },
         { label: 'Saídas', key: 'estoque/saidas' },
@@ -76,30 +75,27 @@ export const MODULES: Module[] = [
     id: 'pdv', label: 'PDV', icon: 'cart',
     sections: [
       { label: 'Faturamento', key: 'pdv/faturamento' },
-      { label: 'Faturamento por Produto', key: 'pdv/produto' },
       { label: 'Curva ABC', key: 'pdv/abc' },
       { label: 'Engenharia de Cardápio', key: 'pdv/engenharia' },
-      { label: 'Importar / API', key: 'pdv/importar' },
+      { label: 'Recebimento de Vendas', key: 'pdv/importar' },
     ],
   },
   {
     id: 'producao', label: 'Produção', icon: 'chef',
     sections: [
-      { group: 'Operação', items: [
-        { label: 'Produção do Dia', key: 'pcp/dia' },
-        { label: 'Produção Programada', key: 'pcp/programada' },
-        { label: 'Sobras e Perdas', key: 'pcp/sobras' },
+      { group: 'Planejar', items: [
+        { label: 'Planejamento da Produção', key: 'pcp/planejamento' },
+        { label: 'Monitor de Produção', key: 'pcp/monitor' },
       ] },
-      { group: 'Inteligência', items: [
-        { label: 'Dashboard PCP', key: 'pcp/dashboard' },
-        { label: 'Produção Sugerida', key: 'pcp/sugerida' },
-        { label: 'Consumo Médio', key: 'pcp/consumo' },
+      { group: 'Lançar', items: [
+        { label: 'Ordem de Produção', key: 'pcp/op' },
+        { label: 'Ordem de Porcionamento', key: 'pcp/oporc' },
       ] },
-      { label: 'Relatórios', key: 'pcp/relatorios' },
-      { group: 'Porcionamento', items: [
-        { label: 'Lançamentos', key: 'porc/lancamentos' },
-        { label: 'Relatório Consolidado', key: 'porc/relatorio' },
-        { label: 'Saldo Operacional', key: 'porc/saldo' },
+      { group: 'Cadastros', items: [
+        { label: 'Item de Porcionamento', key: 'pcp/itens-porc' },
+        { label: 'Setor de Produção', key: 'pcp/setores' },
+        { label: 'Calendário de Produção', key: 'pcp/calendario' },
+        { label: 'Atividades', key: 'pcp/atividades' },
       ] },
     ],
   },
@@ -127,4 +123,19 @@ export function labelForKey(key: string): string {
     }
   }
   return key
+}
+
+// Título longo/descritivo da tela (2º nível do breadcrumb no topo).
+// Só as telas que TIRARAM o título de dentro do conteúdo entram aqui;
+// as demais caem no labelForKey (breadcrumb de 1 nível só).
+const TITLE_OVERRIDES: Record<string, string> = {
+  'estoque/movimentacao': 'Movimentação de Estoque no Período',
+  'estoque/saldo': 'Posição financeira por loja',
+  'estoque/kardex': 'Extrato de movimentação por insumo',
+  'fiscal/monitor': 'Notas fiscais recebidas',
+  'fiscal/entradas': 'Histórico de NF-e confirmadas no estoque',
+  'fiscal/auditoria': 'Fator de conversão nas entradas de NF-e',
+}
+export function titleForKey(key: string): string {
+  return TITLE_OVERRIDES[key] ?? labelForKey(key)
 }
