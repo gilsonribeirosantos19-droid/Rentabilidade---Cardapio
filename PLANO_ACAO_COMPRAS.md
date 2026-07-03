@@ -33,10 +33,9 @@
 - [x] ✅ **C5 · Consumo/dia da Sugestão pelos dias REAIS cobertos** (BUG) — usuário: corrigir.
   `consMap` agora divide o total de saídas pelos dias efetivamente cobertos (1ª saída → hoje, no máx. o período), não pelo período cheio. Insumo/loja novo deixa de ser subestimado. Incluído `criado_em` na query de saídas. → `SugestaoCompra.tsx`
 
-## ⏸️ DECISÃO DO USUÁRIO
+## ✅ Verificado e descartado
 
-- [ ] ⏸️ **C6 · Fallback de "grupo" no modal/PDF do pedido** (REG leve)
-  HTML usava `categoria || grupo`; React só `categoria`. NÃO apliquei porque pedir a coluna `grupo` no select pode ZERAR a query se ela não existir na tabela `insumos` (lição do [[project_portal_select_star]]). Confirmar se `grupo` existe antes.
+- [x] ✅ **C6 · Fallback de "grupo" — NÃO se aplica.** A coluna `grupo` existe em `produtos`, NÃO em `insumos`. No pedido a coluna é do insumo → `categoria` é a canônica. O `ins?.grupo` do HTML apontava pra campo inexistente (sempre vazio). Sem mudança.
 
 ---
 
