@@ -35,6 +35,17 @@ export function Inventario() {
   const { data: insumos = [] } = useQuery({ queryKey: ['inv-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['inv-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
   const { data: invs = [], isLoading } = useQuery({ queryKey: ['inv-list', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Inv>((f, t) => supabase.from('inventarios').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)) })
+  // contador "X/Y contados" por inventário (itens com qtd_contada preenchida / total)
+  const invIds = invs.map((i) => i.id)
+  const { data: itensCount = {} as Record<string, { total: number; cont: number }> } = useQuery({
+    queryKey: ['inv-counts', tenantId, invIds.join(',')], enabled: !!tenantId && invIds.length > 0,
+    queryFn: async () => {
+      const rows = await fetchAll<{ inventario_id: string; qtd_contada: number | null }>((f, t) => supabase.from('inventario_itens').select('inventario_id,qtd_contada').in('inventario_id', invIds).range(f, t))
+      const m: Record<string, { total: number; cont: number }> = {}
+      rows.forEach((r) => { const e = (m[r.inventario_id] ||= { total: 0, cont: 0 }); e.total++; if (r.qtd_contada != null) e.cont++ })
+      return m
+    },
+  })
   const { data: grupos = [] } = useQuery({
     queryKey: ['inv-grupos', tenantId], enabled: !!tenantId,
     queryFn: async () => {
@@ -84,10 +95,10 @@ export function Inventario() {
 
       <div className="tbl-wrap"><div className="tbl-scroll">
         <table className="tbl">
-          <thead><tr><th>Loja</th><th>Tipo</th><th>D. Inicial</th><th>D. Final</th><th className="c">Situação</th><th className="c">Ações</th></tr></thead>
+          <thead><tr><th>Loja</th><th>Tipo</th><th>D. Inicial</th><th>D. Final</th><th className="c">Contagem</th><th className="c">Situação</th><th className="c">Ações</th></tr></thead>
           <tbody>
-            {isLoading ? <tr><td colSpan={6} className="empty">Carregando…</td></tr>
-              : page.length === 0 ? <tr><td colSpan={6} className="empty">Nenhum inventário encontrado.</td></tr>
+            {isLoading ? <tr><td colSpan={7} className="empty">Carregando…</td></tr>
+              : page.length === 0 ? <tr><td colSpan={7} className="empty">Nenhum inventário encontrado.</td></tr>
               : page.map((i) => {
                 const st = i.status === 'encerrado' ? { t: 'Encerrado', bg: '#eff6ff', c: '#2563eb' } : i.status === 'cancelado' ? { t: 'Cancelado', bg: '#fff1f2', c: '#e11d48' } : { t: 'Ativo', bg: '#f0fdf4', c: '#16a34a' }
                 return (
@@ -96,6 +107,7 @@ export function Inventario() {
                     <td>{TIPO_LABEL[i.tipo || ''] || i.tipo || '—'}</td>
                     <td>{fmtD(i.data_inicial)}</td>
                     <td>{fmtD(i.data_final)}</td>
+                    <td className="c mono">{itensCount[i.id] ? `${itensCount[i.id].cont}/${itensCount[i.id].total}` : '—'}</td>
                     <td className="c"><span className="badge-pill" style={{ background: st.bg, color: st.c }}>{st.t}</span></td>
                     <td className="c"><button className="icon-btn" title="Ver / contar" onClick={() => { setSelId(i.id); setView('detalhe') }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button></td>
                   </tr>

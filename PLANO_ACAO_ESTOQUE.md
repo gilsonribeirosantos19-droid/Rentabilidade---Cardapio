@@ -39,8 +39,8 @@
   Campo "Motivo / observação" adicionado; anexado na observação do movimento.
   → `app/src/screens/AjusteCustoMedio.tsx`
 
-- [ ] ⏸️ **E8 · DECISÃO: Movimentação/Kardex filtrarem por loja?** (DEC — AGUARDANDO VOCÊ)
-  Hoje o React **filtra pela loja do topo**; o HTML **agregava todas as lojas**. Recomendo **manter** (mais correto). Você decide.
+- [x] ✅ **E8 · DECISÃO: filtro por loja em Movimentação/Kardex — MANTER** (decidido 2026-07-03)
+  Usuário escolheu manter o filtro por loja (novo, mais correto). Nenhuma mudança de código.
   → `Movimentacao.tsx`, `Kardex.tsx`
 
 - [x] ✅ **E9 · Constraint do `onConflict` — VALIDADA** (verificação)
@@ -48,15 +48,18 @@
 
 ---
 
-## 🟢 FASE 3 — BAIXA (refino / limpeza)
+## 🟢 FASE 3 — BAIXA (refino / limpeza) — 5/7 feitos
 
-- [ ] ⬜ **E10 · Filtro "Motivo" em Saídas** (faltando) → `Saidas.tsx`
-- [ ] ⬜ **E11 · Contador "X/Y contados" na lista de Inventário** (faltando) → `Inventario.tsx`
-- [ ] ⬜ **E12 · Entrada manual gravar `responsavel` e `documento_ref`** → `Entradas.tsx`
-- [ ] ⬜ **E13 · Refatorar: helper único de "média ponderada + histórico + preço do vínculo"** (tira duplicação MonitorNfe × Entradas) → `lib/`
-- [ ] ⬜ **E14 · `fetchAll` duplicado local no Saldo de Estoque → importar de `lib/db`** → `SaldoEstoque.tsx:20-30`
-- [ ] ⬜ **E15 · Trocar `alert()`/`confirm()` nativos por modal/toast do padrão novo** → `Entradas.tsx`, `Saidas.tsx`
-- [ ] ⬜ **E16 · Sugestão: custo ponderado (não máx entre lojas) + limpar comentário + botão "Exportar"** → `SugestaoCompra.tsx`
+- [x] ✅ **E10 · Filtro "Motivo" em Saídas** → `Saidas.tsx` (novo select de motivo)
+- [x] ✅ **E11 · Contador "X/Y contados" na lista de Inventário** → `Inventario.tsx` (nova coluna Contagem)
+- [x] ✅ **E12 · Entrada grava `responsavel`; NF-e grava `documento_ref` no histórico** → `Entradas.tsx`, `MonitorNfe.tsx`
+- [x] ✅ **E14 · `fetchAll` duplicado removido → importa de `lib/db`** → `SaldoEstoque.tsx`
+- [x] ✅ **E16 · Sugestão: custo PONDERADO por qtd + comentário atualizado + Exportar CSV real** → `SugestaoCompra.tsx`
+
+- [ ] ⏸️ **E13 · ADIADO (de propósito) · Helper único de "média ponderada + histórico + vínculo"** (dedup MonitorNfe × Entradas)
+  Motivo: é o **motor de custo** (entrada→saldo→custo médio→CMV). Refatorar aqui tem risco real pra uma limpeza de baixa prioridade. Fazer isolado, com teste dedicado, quando der. Sem impacto pro usuário hoje. → `lib/`
+- [ ] ⏸️ **E15 · ADIADO (de propósito) · Trocar `alert()`/`confirm()` por modal/toast** (Entradas/Saídas)
+  Motivo: puramente cosmético; o `confirm()` funciona (é o gate de saldo). Muita mexida de UI pra pouco valor. Fazer num pente-fino de UX depois. → `Entradas.tsx`, `Saidas.tsx`
 
 ---
 
@@ -76,6 +79,6 @@ Entrada NF-e (média ponderada + histórico + vínculo + status + anti-duplicaç
 
 ### Progresso
 - Fase 1 (Alta): ✅ 4/4
-- Fase 2 (Média): 4/5 (falta só a decisão E8)
-- Fase 3 (Baixa): 0/7
+- Fase 2 (Média): ✅ 5/5
+- Fase 3 (Baixa): 5/7 (E13/E15 adiados de propósito — refactor/cosmético)
 - Fase 4 (Herdados/decisão): 0/4

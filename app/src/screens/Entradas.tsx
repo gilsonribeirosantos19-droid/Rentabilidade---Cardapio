@@ -23,7 +23,7 @@ const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStar
 const uniq = (a: (string | null | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
 
 export function Entradas() {
-  const { tenantId } = useAuth()
+  const { tenantId, usuario } = useAuth()
   const { lojaId } = useLoja()
   const qc = useQueryClient()
   const now = new Date()
@@ -103,6 +103,7 @@ export function Entradas() {
         quantidade: qtdEst, quantidade_fornecedor: qtd_, unidade_compra: f.unidade.trim() || null,
         fator_conversao: fator, custo_unitario: custoUnit, lote: f.lote.trim() || null,
         validade: f.validade || null, tipo: 'manual', observacao: f.obs.trim() || null,
+        responsavel: usuario?.nome || null,
         criado_em: dataStr + 'T12:00:00.000Z',
       })
       if (e1) throw e1

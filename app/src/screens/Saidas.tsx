@@ -34,6 +34,7 @@ export function Saidas() {
   const [busca, setBusca] = useState('')
   const [fTipo, setFTipo] = useState('')
   const [fResp, setFResp] = useState('')
+  const [fMotivo, setFMotivo] = useState('')
   const [de, setDe] = useState(iso(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(iso(now))
   const [pag, setPag] = useState(1)
@@ -60,6 +61,7 @@ export function Saidas() {
   const manualHojeN = saidasHoje.filter((s) => s.tipo !== 'consumo').length
   const ultimaSai = saidasL.length ? saidasL.reduce((a, b) => (a.criado_em || '') > (b.criado_em || '') ? a : b) : null
   const semMotivoN = saidasL.filter((s) => !s.motivo).length
+  const motivos = useMemo(() => [...new Set(saidasL.map((s) => s.motivo).filter(Boolean) as string[])].sort(), [saidasL])
 
   const filtrada = useMemo(() => {
     const b = busca.toLowerCase().trim()
@@ -67,10 +69,11 @@ export function Saidas() {
     if (b) rows = rows.filter((s) => (insMap[s.insumo_id]?.nome || '').toLowerCase().includes(b))
     if (fTipo) rows = rows.filter((s) => s.tipo === fTipo)
     if (fResp) rows = rows.filter((s) => s.responsavel === fResp)
+    if (fMotivo) rows = rows.filter((s) => (s.motivo || '') === fMotivo)
     if (de) rows = rows.filter((s) => (s.criado_em || '') >= de)
     if (ate) rows = rows.filter((s) => (s.criado_em || '') <= ate + 'T23:59:59')
     return rows
-  }, [saidas, lojaId, busca, fTipo, fResp, de, ate, insMap])
+  }, [saidas, lojaId, busca, fTipo, fResp, fMotivo, de, ate, insMap])
 
   const total = filtrada.length
   const totalPags = Math.max(1, Math.ceil(total / porPag))
@@ -155,6 +158,9 @@ export function Saidas() {
         </select>
         <select className="field" value={fResp} onChange={(e) => { setFResp(e.target.value); setPag(1) }}>
           <option value="">Responsável: Todos</option>{resps.map((r) => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <select className="field" value={fMotivo} onChange={(e) => { setFMotivo(e.target.value); setPag(1) }}>
+          <option value="">Motivo: Todos</option>{motivos.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
           <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}>

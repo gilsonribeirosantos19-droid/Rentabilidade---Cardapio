@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
@@ -15,19 +16,6 @@ const brl = (v?: number | null) => (v == null || v === 0) ? '—' : 'R$ ' + Numb
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean).map((v) => ('' + v).trim()).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'pt'))
-
-// busca paginada (equivalente ao apiAll do utils.js — vence o limite de 1000 do PostgREST)
-async function fetchAll<T>(build: (from: number, to: number) => any): Promise<T[]> {
-  const out: T[] = []; let from = 0; const size = 1000
-  for (;;) {
-    const { data, error } = await build(from, from + size - 1)
-    if (error) throw error
-    const rows = (data ?? []) as T[]; out.push(...rows)
-    if (rows.length < size) break
-    from += size
-  }
-  return out
-}
 
 export function SaldoEstoque() {
   const { tenantId } = useAuth()

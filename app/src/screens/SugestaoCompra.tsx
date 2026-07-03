@@ -11,7 +11,7 @@ import './sugestao.css'
 // Sugestão de Compra (Compras) — responde "o que precisamos comprar?".
 // DADOS REAIS: estoque/mínimo/custo (saldo_estoque), consumo (saidas_estoque),
 // pedido aberto/em trânsito (pedidos_compra + itens_pedido). Sugestão calculada.
-// A Tela 2 (Pedido) e os gráficos de histórico do drawer ainda são mock.
+// A Tela 2 (Pedido) gera PDFs por fornecedor/loja (autocontida — não grava em pedidos_compra); gráficos do drawer são reais.
 
 type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; preco_compra?: number; unidade_medida?: string; unidade_compra?: string; minimo?: number }
 type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number; minimo?: number | null; loja_id?: string }
@@ -79,7 +79,8 @@ export function SugestaoCompra() {
   const est = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.quantidade) || 0) }); return m }, [saldos, lojaFil])
   // mínimo por loja (saldo_estoque.minimo); se vazio, cai no mínimo global do insumo (insumos.minimo)
   const min = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.minimo) || 0) }); insumos.forEach((i) => { if (!m[i.id] && Number(i.minimo) > 0) m[i.id] = Number(i.minimo) }); return m }, [saldos, lojaFil, insumos])
-  const cmMap = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { const c = Number(s.custo_medio) || 0; if (c > (m[s.insumo_id] || 0)) m[s.insumo_id] = c }); return m }, [saldos])
+  // custo médio PONDERADO pela quantidade (respeita filtro de loja); se qtd 0, cai no maior custo conhecido
+  const cmMap = useMemo(() => { const num: Record<string, number> = {}, den: Record<string, number> = {}, mx: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; const q = Math.max(Number(s.quantidade) || 0, 0), c = Number(s.custo_medio) || 0; if (c > 0) { num[s.insumo_id] = (num[s.insumo_id] || 0) + c * q; den[s.insumo_id] = (den[s.insumo_id] || 0) + q; if (c > (mx[s.insumo_id] || 0)) mx[s.insumo_id] = c } }); const m: Record<string, number> = {}; for (const k in mx) m[k] = den[k] > 0 ? num[k] / den[k] : mx[k]; return m }, [saldos, lojaFil])
   const consMap = useMemo(() => { const m: Record<string, number> = {}; saidas.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.quantidade) || 0) }); const out: Record<string, number> = {}; for (const k in m) out[k] = m[k] / periodoDias; return out }, [saidas, lojaFil, periodoDias])
   const pedMap = useMemo(() => {
     const pById = Object.fromEntries(ped.pedidos.map((p) => [p.id, p])) as Record<string, Pedido>
@@ -109,6 +110,13 @@ export function SugestaoCompra() {
   const toggle = (id: string) => setSel((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
   const toggleAll = (on: boolean) => setSel(on ? new Set(rows.map((r) => r.insumoId)) : new Set())
   const recalcular = () => { setIdeal({}); showToast('Sugestões recalculadas com base no consumo e estoque atuais.') }
+  const exportar = () => {
+    if (!rows.length) { showToast('Nada para exportar.'); return }
+    const head = ['Código', 'Descrição', 'Grupo', 'Un', 'Estoque', 'Consumo/dia', 'Mínimo', 'Pedido Aberto', 'Em Trânsito', 'Sugestão', 'Compra Ideal', 'Custo', 'Valor']
+    const linhas = rows.map((r) => { const ci = idealNum(r); return [r.cod, r.desc, r.grp, r.un, q2(r.est), q2(r.cons), q2(r.min), q2(r.ab), q2(r.tr), q2(r.sug), q2(ci), r.custo.toFixed(2), (ci * r.custo).toFixed(2)] })
+    const csv = '﻿' + [head, ...linhas].map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
+    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = `sugestao_compra_${new Date().toLocaleDateString('en-CA')}.csv`; a.click()
+  }
 
   const foot = useMemo(() => { let n = 0, qtd = 0, val = 0; rows.forEach((r) => { if (sel.has(r.insumoId)) { const q = idealNum(r); n++; qtd += q; val += q * r.custo } }); return { n, qtd, val } }, [rows, sel, ideal])
 
@@ -189,7 +197,7 @@ export function SugestaoCompra() {
         <div className="fld"><label>Buscar item</label><input placeholder="Código ou descrição..." value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
         <div className="grow" />
         <button className="btn btn-solid" onClick={recalcular}>Recalcular sugestão</button>
-        <button className="btn">Exportar</button>
+        <button className="btn" onClick={exportar}>Exportar</button>
       </div>
 
       <div className="sug-tabs">
