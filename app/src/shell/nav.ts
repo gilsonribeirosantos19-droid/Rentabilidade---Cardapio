@@ -11,7 +11,6 @@ export const MODULES: Module[] = [
   {
     id: 'estoque', label: 'Estoque', icon: 'box',
     sections: [
-      { label: 'Visão Geral', key: 'estoque/visao' },
       { group: 'Lançamentos', items: [
         { label: 'Entradas', key: 'estoque/entradas' },
         { label: 'Saídas', key: 'estoque/saidas' },
