@@ -136,9 +136,38 @@ export function SugestaoCompra() {
     setPedItems(items); setView('pedido')
   }
 
-  const chMes = useMemo<ChartConfiguration>(() => ({ type: 'bar', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [280, 300, 340, 360, 330, 395], backgroundColor: '#334155', borderRadius: 3, barPercentage: 0.6 }] }, options: baseChart() }), [])
-  const chPreco = useMemo<ChartConfiguration>(() => ({ type: 'line', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [40.5, 41.2, 41.8, 43.0, 44.1, 42.9], borderColor: '#334155', backgroundColor: 'rgba(51,65,85,.06)', fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2 }] }, options: baseChart() }), [])
-  const chEstoque = useMemo<ChartConfiguration>(() => ({ type: 'line', data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], datasets: [{ data: [120, 95, 140, 70, 110, 58], borderColor: '#94a3b8', backgroundColor: 'rgba(148,163,184,.08)', fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2 }] }, options: baseChart() }), [])
+  // Histórico do drawer (real): movimentações dos últimos 6 meses do item selecionado
+  type HEnt = { quantidade?: number; custo_unitario?: number; criado_em?: string }
+  type HSai = { quantidade?: number; criado_em?: string }
+  const { data: hist = { entradas: [] as HEnt[], saidas: [] as HSai[] } } = useQuery({
+    queryKey: ['sug-hist', tenantId, drawer, lojaFil], enabled: !!tenantId && !!drawer,
+    queryFn: async () => {
+      const d = new Date(); d.setMonth(d.getMonth() - 5); d.setDate(1); d.setHours(0, 0, 0, 0); const desde = d.toISOString()
+      let qe = supabase.from('entradas_estoque').select('quantidade,custo_unitario,criado_em').eq('tenant_id', tenantId).eq('insumo_id', drawer!).gte('criado_em', desde)
+      let qs = supabase.from('saidas_estoque').select('quantidade,criado_em').eq('tenant_id', tenantId).eq('insumo_id', drawer!).gte('criado_em', desde)
+      if (lojaFil) { qe = qe.eq('loja_id', lojaFil); qs = qs.eq('loja_id', lojaFil) }
+      const [re, rs] = await Promise.all([qe, qs])
+      return { entradas: (re.data ?? []) as HEnt[], saidas: (rs.data ?? []) as HSai[] }
+    },
+  })
+  const histCharts = useMemo(() => {
+    const now = new Date()
+    const months = Array.from({ length: 6 }, (_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1); return { key: d.getFullYear() * 12 + d.getMonth(), label: d.toLocaleDateString('pt-BR', { month: 'short' }) } })
+    const keys = months.map((m) => m.key)
+    const idxOf = (dt?: string) => { if (!dt) return -1; const d = new Date(dt); return keys.indexOf(d.getFullYear() * 12 + d.getMonth()) }
+    const cons = keys.map(() => 0), cSum = keys.map(() => 0), cN = keys.map(() => 0), net = keys.map(() => 0)
+    hist.entradas.forEach((e) => { const i = idxOf(e.criado_em); if (i < 0) return; const q = Number(e.quantidade) || 0; net[i] += q; if (e.custo_unitario) { cSum[i] += Number(e.custo_unitario) * q; cN[i] += q } })
+    hist.saidas.forEach((s) => { const i = idxOf(s.criado_em); if (i < 0) return; const q = Number(s.quantidade) || 0; cons[i] += q; net[i] -= q })
+    let lastC = drawer ? (rows.find((r) => r.insumoId === drawer)?.custo || 0) : 0
+    const custo = keys.map((_, i) => { if (cN[i] > 0) lastC = cSum[i] / cN[i]; return Number(lastC.toFixed(2)) })
+    const saldoAtual = drawer ? (est[drawer] || 0) : 0
+    let run = saldoAtual - net.reduce((a, b) => a + b, 0)
+    const estoque = keys.map((_, i) => { run += net[i]; return Math.max(0, Number(run.toFixed(2))) })
+    return { labels: months.map((m) => m.label), cons: cons.map((v) => Number(v.toFixed(2))), custo, estoque }
+  }, [hist, drawer, est, rows])
+  const chMes = useMemo<ChartConfiguration>(() => ({ type: 'bar', data: { labels: histCharts.labels, datasets: [{ data: histCharts.cons, backgroundColor: '#334155', borderRadius: 3, barPercentage: 0.6 }] }, options: baseChart() }), [histCharts])
+  const chPreco = useMemo<ChartConfiguration>(() => ({ type: 'line', data: { labels: histCharts.labels, datasets: [{ data: histCharts.custo, borderColor: '#334155', backgroundColor: 'rgba(51,65,85,.06)', fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2 }] }, options: baseChart() }), [histCharts])
+  const chEstoque = useMemo<ChartConfiguration>(() => ({ type: 'line', data: { labels: histCharts.labels, datasets: [{ data: histCharts.estoque, borderColor: '#94a3b8', backgroundColor: 'rgba(148,163,184,.08)', fill: true, tension: 0.3, pointRadius: 2, borderWidth: 2 }] }, options: baseChart() }), [histCharts])
 
   if (view === 'pedido') return <TelaPedido itens={pedItems} onBack={() => setView('sugestao')} />
 
@@ -240,7 +269,7 @@ export function SugestaoCompra() {
               </div>
 
               <div className="dr-sec">
-                <h3>Histórico <span className="mock-tag" style={{ marginLeft: 6 }}>exemplo</span></h3>
+                <h3>Histórico <span className="muted" style={{ fontWeight: 400, fontSize: 11 }}>· últimos 6 meses</span></h3>
                 <div className="chartbox"><div className="ct">Consumo por mês ({dr.un})</div><div style={{ height: 130 }}><ChartBox config={chMes} style={{ maxHeight: 130 }} /></div></div>
                 <div className="chartbox"><div className="ct">Evolução do custo (R$/{dr.un})</div><div style={{ height: 130 }}><ChartBox config={chPreco} style={{ maxHeight: 130 }} /></div></div>
                 <div className="chartbox"><div className="ct">Evolução do estoque ({dr.un})</div><div style={{ height: 130 }}><ChartBox config={chEstoque} style={{ maxHeight: 130 }} /></div></div>
