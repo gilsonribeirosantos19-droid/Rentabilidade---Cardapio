@@ -171,12 +171,12 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
               : !rows.length ? <tr><td colSpan={10} className="p-empty">Nenhum item encontrado.</td></tr>
                 : rows.map((r: any) => (
                   <tr key={r.ins.id}>
-                    <td style={{ fontWeight: 600 }}>{r.ins.nome}</td>
+                    <td>{r.ins.nome}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{un(r.ins)}</td>
                     <td className="r mono" style={{ color: '#0369a1' }}>{fQ(r.inicial ?? 0)}</td>
                     <td className="r mono" style={{ color: r.ent > 0 ? '#16a34a' : '#94a3b8' }}>{fQ(r.ent)}</td>
                     <td className="r mono" style={{ color: r.sai > 0 ? '#dc2626' : '#94a3b8' }}>{fQ(r.sai)}</td>
-                    <td className="r mono" style={{ fontWeight: 700 }}>{fQ(r.saldo)}</td>
+                    <td className="r mono">{fQ(r.saldo)}</td>
                     <td className="r mono" style={{ color: '#94a3b8' }}>{fQ(r.min ?? 0)}</td>
                     <td className="r mono" style={{ color: '#94a3b8' }}>{fQ(r.max ?? 0)}</td>
                     <td className="r mono">{brl(r.saldo * r.cm)}</td>
@@ -223,8 +223,8 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
     queryKey: ['pest-mov', tenantId, lojaId, data, tipoFil], enabled: !!tenantId && !!lojaId && !!data,
     queryFn: async () => {
       const qs: PromiseLike<Mov[]>[] = []
-      qs.push((!tipoFil || tipoFil === 'entrada') ? supabase.from('entradas_estoque').select('id,insumo_id,quantidade,observacao,responsavel,criado_em,created_at').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', data + 'T00:00:00').lte('criado_em', data + 'T23:59:59').order('criado_em', { ascending: false }).then((r) => (r.data ?? []) as Mov[]) : Promise.resolve([]))
-      qs.push((!tipoFil || tipoFil === 'saida') ? supabase.from('saidas_estoque').select('id,insumo_id,quantidade,motivo,responsavel,criado_em,created_at').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', data + 'T00:00:00').lte('criado_em', data + 'T23:59:59').order('criado_em', { ascending: false }).then((r) => (r.data ?? []) as Mov[]) : Promise.resolve([]))
+      qs.push((!tipoFil || tipoFil === 'entrada') ? supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', data + 'T00:00:00').lte('criado_em', data + 'T23:59:59').order('criado_em', { ascending: false }).then((r) => (r.data ?? []) as Mov[]) : Promise.resolve([]))
+      qs.push((!tipoFil || tipoFil === 'saida') ? supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', data + 'T00:00:00').lte('criado_em', data + 'T23:59:59').order('criado_em', { ascending: false }).then((r) => (r.data ?? []) as Mov[]) : Promise.resolve([]))
       const [ent, sai] = await Promise.all(qs)
       return [...ent.map((e) => ({ ...e, _tipo: 'entrada' })), ...sai.map((s) => ({ ...s, _tipo: 'saida' }))].sort((a, b) => (b.criado_em || b.created_at || '').localeCompare(a.criado_em || a.created_at || ''))
     },
@@ -328,8 +328,8 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
                   <tr key={m.id || idx}>
                     <td className="mono" style={{ color: '#64748b', fontSize: 12 }}>{hora}</td>
                     <td><span style={{ padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: isE ? '#dcfce7' : '#fee2e2', color: isE ? '#16a34a' : '#dc2626' }}>{isE ? 'Entrada' : 'Saída'}</span></td>
-                    <td style={{ fontWeight: 600 }}>{ins?.nome || '?'}</td>
-                    <td className="r mono" style={{ color: isE ? '#16a34a' : '#dc2626', fontWeight: 700 }}>{isE ? '+' : '-'}{fmtQtd(m.quantidade)} {un(ins)}</td>
+                    <td>{ins?.nome || '?'}</td>
+                    <td className="r mono" style={{ color: isE ? '#16a34a' : '#dc2626' }}>{isE ? '+' : '-'}{fmtQtd(m.quantidade)} {un(ins)}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{m.observacao || m.motivo || '—'}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{m.responsavel || usuario?.nome || '—'}</td>
                   </tr>
@@ -364,8 +364,8 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
     queryKey: ['pest-hist', tenantId, lojaId, aplicado?.de, aplicado?.ate], enabled: !!tenantId && !!lojaId && !!aplicado,
     queryFn: async () => {
       const [e, s] = await Promise.all([
-        supabase.from('entradas_estoque').select('id,insumo_id,quantidade,observacao,responsavel,criado_em,created_at,tipo').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59').order('criado_em', { ascending: false }),
-        supabase.from('saidas_estoque').select('id,insumo_id,quantidade,motivo,responsavel,criado_em,created_at,tipo').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59').order('criado_em', { ascending: false }),
+        supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59').order('criado_em', { ascending: false }),
+        supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59').order('criado_em', { ascending: false }),
       ])
       return [...((e.data ?? []) as Mov[]).map((m) => ({ ...m, _lado: 'entrada' })), ...((s.data ?? []) as Mov[]).map((m) => ({ ...m, _lado: 'saida' }))].sort((a, b) => (b.criado_em || b.created_at || '').localeCompare(a.criado_em || a.created_at || ''))
     },
@@ -414,9 +414,9 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
                   <tr key={m.id || idx}>
                     <td className="mono" style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{fmtDataHora(m.criado_em || m.created_at)}</td>
                     <td><span style={{ padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: tp === 'entrada' ? '#dcfce7' : tp === 'saida' ? '#fee2e2' : '#dbeafe', color: tp === 'entrada' ? '#16a34a' : tp === 'saida' ? '#dc2626' : '#2563eb' }}>{tp === 'entrada' ? 'Entrada' : tp === 'saida' ? 'Saída' : 'Ajuste'}</span></td>
-                    <td style={{ fontWeight: 600 }}>{ins?.nome || '?'}</td>
+                    <td>{ins?.nome || '?'}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{grupoNome(m.insumo_id)}</td>
-                    <td className="r mono" style={{ color: pos ? '#16a34a' : '#dc2626', fontWeight: 700 }}>{pos ? '+' : '-'}{fmtQtd(m.quantidade)}</td>
+                    <td className="r mono" style={{ color: pos ? '#16a34a' : '#dc2626' }}>{pos ? '+' : '-'}{fmtQtd(m.quantidade)}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{un(ins)}</td>
                     <td style={{ fontSize: 12, color: '#475569' }}>{m.responsavel || '—'}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{m.observacao || m.motivo || '—'}</td>
