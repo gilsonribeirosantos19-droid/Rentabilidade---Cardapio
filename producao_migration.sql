@@ -86,3 +86,39 @@ drop policy if exists tenant_policy on ordens_porcionamento_itens;
 create policy tenant_policy on ordens_porcionamento_itens for all
   using (tenant_id = get_my_tenant_id()) with check (tenant_id = get_my_tenant_id());
 grant all on ordens_porcionamento_itens to anon, authenticated;
+
+-- ============================================================
+-- ORDENS DE PRODUÇÃO (item com ficha técnica)
+-- ============================================================
+create table if not exists ordens_producao (
+  id                  uuid primary key default gen_random_uuid(),
+  tenant_id           uuid not null,
+  loja_id             uuid,
+  data                timestamptz default now(),
+  ficha_id            uuid not null,
+  insumo_produzido_id uuid,
+  quantidade          numeric(14,4) default 0,
+  custo_total         numeric(14,4) default 0,
+  status              text default 'aberta',
+  observacao          text,
+  created_at          timestamptz default now()
+);
+alter table ordens_producao enable row level security;
+drop policy if exists tenant_policy on ordens_producao;
+create policy tenant_policy on ordens_producao for all
+  using (tenant_id = get_my_tenant_id()) with check (tenant_id = get_my_tenant_id());
+grant all on ordens_producao to anon, authenticated;
+
+create table if not exists ordens_producao_itens (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null,
+  ordem_id    uuid not null references ordens_producao(id) on delete cascade,
+  insumo_id   uuid not null,
+  quantidade  numeric(14,4) default 0,
+  custo       numeric(14,4) default 0
+);
+alter table ordens_producao_itens enable row level security;
+drop policy if exists tenant_policy on ordens_producao_itens;
+create policy tenant_policy on ordens_producao_itens for all
+  using (tenant_id = get_my_tenant_id()) with check (tenant_id = get_my_tenant_id());
+grant all on ordens_producao_itens to anon, authenticated;
