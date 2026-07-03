@@ -1,0 +1,48 @@
+/* Portal do Gerente — casca (sidebar escura + abas). Escopado .portal */
+.portal { display: flex; height: 100vh; background: #f8fafc; color: #0f172a; font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; }
+
+/* ===== SIDEBAR ===== */
+.portal .p-sidebar { width: 220px; background: #1e293b; color: #cbd5e1; flex-shrink: 0; display: flex; flex-direction: column; }
+.portal .p-logo { padding: 16px 18px 4px; }
+.portal .p-logo .b { font-size: 19px; font-weight: 800; color: #fff; letter-spacing: .3px; }
+.portal .p-logo .s { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+.portal .p-loja { margin: 8px 12px 6px; padding: 8px 10px; background: rgba(249,115,22,.12); border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #f97316; display: flex; align-items: center; gap: 7px; }
+.portal .p-nav { flex: 1; padding: 6px 8px; overflow-y: auto; }
+.portal .p-navlabel { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .07em; padding: 12px 10px 4px; }
+.portal .p-navitem { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px; border-radius: 7px; color: rgba(148,163,184,.9); font-size: 12.5px; font-weight: 500; background: none; border: none; cursor: pointer; text-align: left; margin: 1px 0; font-family: inherit; }
+.portal .p-navitem:hover { background: rgba(255,255,255,.07); color: #fff; }
+.portal .p-navitem.on { background: rgba(249,115,22,.15); color: #f97316; font-weight: 600; }
+.portal .p-navitem svg { width: 16px; height: 16px; flex-shrink: 0; }
+.portal .p-foot { border-top: 1px solid rgba(255,255,255,.08); padding: 10px 12px; }
+.portal .p-user { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.portal .p-avatar { width: 32px; height: 32px; border-radius: 50%; background: #334155; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+.portal .p-user .n { font-size: 12.5px; font-weight: 600; color: #e2e8f0; line-height: 1.1; }
+.portal .p-user .p { font-size: 10.5px; color: #94a3b8; }
+.portal .p-sair { width: 100%; padding: 7px; background: none; border: 1px solid rgba(255,255,255,.15); border-radius: 7px; color: #fca5a5; font-size: 12px; cursor: pointer; font-family: inherit; }
+.portal .p-sair:hover { background: rgba(239,68,68,.12); }
+
+/* ===== MAIN ===== */
+.portal .p-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.portal .p-topbar { height: 48px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; padding: 0 18px; flex-shrink: 0; }
+.portal .p-hamb { display: none; background: none; border: none; cursor: pointer; font-size: 20px; color: #475569; }
+.portal .p-title { font-size: 14px; font-weight: 700; }
+.portal .p-conn { margin-left: auto; font-size: 11.5px; color: #64748b; display: flex; align-items: center; gap: 6px; }
+.portal .p-dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; display: inline-block; }
+.portal .p-content { flex: 1; overflow: auto; padding: 18px 20px; }
+
+.portal .p-holder { background: #fff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 48px 24px; text-align: center; color: #94a3b8; }
+.portal .p-holder .t { font-size: 18px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+
+/* ===== MOBILE NAV ===== */
+.portal .p-mobnav { display: none; }
+@media (max-width: 700px) {
+  .portal .p-sidebar { position: fixed; z-index: 60; height: 100vh; left: -240px; transition: left .2s; }
+  .portal .p-sidebar.open { left: 0; }
+  .portal .p-hamb { display: block; }
+  .portal .p-content { padding-bottom: 78px; }
+  .portal .p-mobnav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 62px; background: #fff; border-top: 1px solid #e2e8f0; z-index: 50; }
+  .portal .p-mobitem { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; cursor: pointer; color: #64748b; font-size: 10.5px; font-family: inherit; }
+  .portal .p-mobitem svg { width: 21px; height: 21px; }
+  .portal .p-mobitem.on { color: #f97316; }
+  .portal .p-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 55; }
+}

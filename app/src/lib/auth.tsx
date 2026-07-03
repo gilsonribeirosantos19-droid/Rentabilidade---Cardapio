@@ -9,6 +9,7 @@ export type Usuario = {
   role?: string
   perfil?: string
   tenant_id?: string
+  loja_id?: string | null
 }
 
 type AuthCtx = {
