@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -86,7 +86,14 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const [soCmv, setSoCmv] = useState(false)
   const [pag, setPag] = useState(1)
   const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: baselineData || primeiroDiaMes(), ate: hojeStr() })
+  const [deTouched, setDeTouched] = useState(false)
   const porPag = 12
+
+  // Ancora o início do período na data da última contagem encerrada (a menos que
+  // o gerente troque a data manualmente). A contagem carrega async, por isso o efeito.
+  useEffect(() => {
+    if (baselineData && !deTouched) { setDe(baselineData); setAplicado((a) => ({ de: baselineData, ate: a?.ate ?? hojeStr() })) }
+  }, [baselineData, deTouched])
 
   const { data: movs, isFetching } = useQuery({
     queryKey: ['pest-rel', tenantId, lojaId, aplicado?.de, aplicado?.ate], enabled: !!tenantId && !!lojaId && !!aplicado,
@@ -135,7 +142,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   return (
     <>
       <div className="pf-bar">
-        <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
+        <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={de} onChange={(e) => { setDe(e.target.value); setDeTouched(true) }} /></div>
         <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
         <div className="pf-fld"><label>Grupo</label><select className="p-field" value={grupo} onChange={(e) => setGrupo(e.target.value)}><option value="">Todos os grupos</option>{grupos.filter((g: Grupo) => (gruposItens[g.id] || []).length).map((g: Grupo) => <option key={g.id} value={g.id}>{g.nome}</option>)}</select></div>
         <div className="pf-fld"><label>Buscar item</label><input className="p-field" style={{ minWidth: 200 }} placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
