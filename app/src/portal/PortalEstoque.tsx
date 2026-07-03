@@ -35,11 +35,13 @@ export function PortalEstoque() {
   const showToast = (m: string, err = false) => { setToast({ msg: m, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
 
   // ---- dados compartilhados ----
-  const { data: insumos = [] } = useQuery({ queryKey: ['pest-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,ativo,participa_cmv,unidade_medida,unidade_compra,preco_compra').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })
+  // select('*') p/ resiliência: colunas opcionais (participa_cmv/minimo/maximo) podem não existir
+  // em todos os tenants; pedir coluna inexistente faz o Supabase ERRAR e zerar o resultado.
+  const { data: insumos = [] } = useQuery({ queryKey: ['pest-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('*').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })
   const { data: grupos = [] } = useQuery({ queryKey: ['pest-grupos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra').select('id,nome,ativo').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Grupo[] } })
   const { data: gci = [] } = useQuery({ queryKey: ['pest-gci', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra_itens').select('grupo_id,insumo_id').eq('tenant_id', tenantId); return (data ?? []) as GI[] } })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['pest-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Forn[] } })
-  const { data: saldos = [] } = useQuery({ queryKey: ['pest-saldos', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,quantidade,custo_medio,minimo,maximo').eq('tenant_id', tenantId).eq('loja_id', lojaId!); return (data ?? []) as Saldo[] } })
+  const { data: saldos = [] } = useQuery({ queryKey: ['pest-saldos', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).eq('loja_id', lojaId!); return (data ?? []) as Saldo[] } })
   const { data: baseline } = useQuery({
     queryKey: ['pest-baseline', tenantId, lojaId], enabled: !!tenantId && !!lojaId,
     queryFn: async () => {
