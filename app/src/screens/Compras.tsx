@@ -65,12 +65,12 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
 
   const { data: pedidos = [], isLoading } = useQuery({
     queryKey: ['cmp-sol', tenantId, lojaF, statusF, de, ate], enabled: !!tenantId,
-    queryFn: async () => {
+    queryFn: () => fetchAll<Pedido>((f, t) => {
       let q = supabase.from('pedidos_compra').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false })
       if (statusF) q = q.eq('status', statusF); else q = q.in('status', ['solicitado', 'processado', 'cancelado', 'pendente'])
       if (lojaF) q = q.eq('loja_id', lojaF); if (de) q = q.gte('data_pedido', de); if (ate) q = q.lte('data_pedido', ate)
-      const { data } = await q; return (data ?? []) as Pedido[]
-    },
+      return q.range(f, t)
+    }),
   })
   const { data: countMap = {} } = useQuery({
     queryKey: ['cmp-solcount', tenantId, pedidos.map((p) => p.id).join(',')], enabled: !!tenantId && pedidos.length > 0,
@@ -126,8 +126,12 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
-  const { data: sols = [], isLoading, refetch, isFetching } = useQuery({ queryKey: ['cmp-cons-sols', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('pedidos_compra').select('id,loja_id').eq('tenant_id', tenantId).eq('status', 'solicitado').order('created_at'); return (data ?? []) as Pedido[] } })
+  const { data: sols = [], isLoading, refetch, isFetching } = useQuery({ queryKey: ['cmp-cons-sols', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Pedido>((f, t) => supabase.from('pedidos_compra').select('id,loja_id').eq('tenant_id', tenantId).eq('status', 'solicitado').order('created_at').range(f, t)) })
   const { data: itensSol = [] } = useQuery({ queryKey: ['cmp-cons-itens', tenantId, sols.map((s) => s.id).join(',')], enabled: !!tenantId && sols.length > 0, queryFn: async () => { const rows = await fetchAll<ItemPedido>((f, t) => supabase.from('itens_pedido').select('*').in('pedido_id', sols.map((s) => s.id)).range(f, t)); return rows } })
+  // Parâmetros de Compras (Configurações › Parâmetros › Compras)
+  const { data: params = [] } = useQuery({ queryKey: ['cmp-params', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'compras'); return (data ?? []) as { chave: string; valor: string }[] } })
+  const permitirSemForn = useMemo(() => (params.find((p) => p.chave === 'permitir_sem_fornecedor')?.valor ?? 'sim') !== 'nao', [params])
+  const exigirAprovacao = useMemo(() => params.find((p) => p.chave === 'exigir_aprovacao')?.valor === 'sim', [params])
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
@@ -165,13 +169,17 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
     mutationFn: async () => {
       if (!consolidado.length) throw new Error('Nada para gerar.')
       for (const d of consolidado) { if (!(qComprar[d.insId] > 0)) throw new Error('Informe Q. Comprar para todos os itens.') }
+      // Parâmetro: fornecedor obrigatório
+      if (!permitirSemForn) { const semForn = consolidado.filter((d) => !fornSel[d.insId]); if (semForn.length) throw new Error(`${semForn.length} item(ns) sem fornecedor. Obrigatório (Parâmetros › Compras).`) }
+      // Parâmetro: exigir aprovação → pedido nasce "aguardando aprovação"
+      const statusInicial = exigirAprovacao ? 'aguardando_aprovacao' : 'pendente'
       const porForn: Record<string, typeof consolidado> = {}
       consolidado.forEach((d) => { const k = fornSel[d.insId] || '__sem__'; (porForn[k] = porForn[k] || []).push(d) })
       for (const [fKey, itensForn] of Object.entries(porForn)) {
         const fornId = fKey === '__sem__' ? null : fKey
         const lojasResumo = [...new Set(itensForn.flatMap((it) => it.lojas.map((l) => l.nome)))]
         const obs = 'Lojas: ' + lojasResumo.join(', ')
-        const { data: ped, error: e1 } = await supabase.from('pedidos_compra').insert({ tenant_id: tenantId, loja_id: null, fornecedor_id: fornId, status: 'pendente', data_pedido: hoje(), observacao: obs, solicitante_id: usuario?.id || null }).select('id').single()
+        const { data: ped, error: e1 } = await supabase.from('pedidos_compra').insert({ tenant_id: tenantId, loja_id: null, fornecedor_id: fornId, status: statusInicial, data_pedido: hoje(), observacao: obs, solicitante_id: usuario?.id || null }).select('id').single()
         if (e1) throw e1
         const itensPay = itensForn.map((it) => ({ pedido_id: ped!.id, insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario || null, observacao: it.lojas.map((l) => l.nome + ': ' + fmtQtyDoc(l.qty)).join(', ') }))
         const { error: e2 } = await supabase.from('itens_pedido').insert(itensPay); if (e2) throw e2
@@ -234,13 +242,13 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
 
   const { data: pedidos = [], isLoading } = useQuery({
     queryKey: ['cmp-ped', tenantId, statusF], enabled: !!tenantId,
-    queryFn: async () => {
+    queryFn: () => fetchAll<Pedido>((f, t) => {
       let q = supabase.from('pedidos_compra').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false })
-      if (statusF === 'ativos' || statusF === '') q = q.in('status', ['pendente', 'enviado'])
+      if (statusF === 'ativos' || statusF === '') q = q.in('status', ['aguardando_aprovacao', 'pendente', 'enviado'])
       else if (statusF === 'todos') q = q.in('status', ['pendente', 'enviado', 'baixado', 'cancelado', 'aguardando_aprovacao', 'aprovado'])
       else q = q.eq('status', statusF)
-      const { data } = await q; return (data ?? []) as Pedido[]
-    },
+      return q.range(f, t)
+    }),
   })
   const { data: itensMap = {} } = useQuery({
     queryKey: ['cmp-peditens', tenantId, pedidos.map((p) => p.id).join(',')], enabled: !!tenantId && pedidos.length > 0,
@@ -273,6 +281,8 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     const its = itensMap[pedId] || []
     let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`
     its.forEach((it) => { msg += `• ${insMap[it.insumo_id]?.nome || '?'}: ${fmtQtyDoc(it.quantidade)} ${it.unidade || 'un'}\n`; if (it.observacao) it.observacao.split(', ').forEach((part) => { msg += `    → ${part}\n` }) })
+    const ped = pedidos.find((p) => p.id === pedId)
+    if (ped?.observacao) msg += `\n${ped.observacao}\n`
     window.open(`https://wa.me/55${forn.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
     await mudarStatus(pedId, 'enviado')
   }
@@ -288,7 +298,7 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '4px 0 12px' }}>
         <input className="field" style={{ minWidth: 200 }} placeholder="Buscar fornecedor..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <select className="field" value={statusF} onChange={(e) => setStatusF(e.target.value)}><option value="ativos">Ativos (a enviar / enviados)</option><option value="pendente">Aguardando envio</option><option value="enviado">Enviado</option><option value="baixado">Baixados</option><option value="cancelado">Cancelados</option><option value="todos">Todos</option></select>
+        <select className="field" value={statusF} onChange={(e) => setStatusF(e.target.value)}><option value="ativos">Ativos (a enviar / enviados)</option><option value="aguardando_aprovacao">Aguardando aprovação</option><option value="pendente">Aguardando envio</option><option value="enviado">Enviado</option><option value="baixado">Baixados</option><option value="cancelado">Cancelados</option><option value="todos">Todos</option></select>
         <select className="field" value={filData} onChange={(e) => setFilData(e.target.value)}><option value="">Qualquer data</option><option value="hoje">Hoje</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select>
         <select className="field" value={ordenar} onChange={(e) => setOrdenar(e.target.value)}><option value="forn">Fornecedor (A-Z)</option><option value="data">Data (mais recente)</option><option value="valor">Valor (maior)</option></select>
         <button className="btn-ghost" onClick={() => { setStatusF('ativos'); setBusca(''); setFilData(''); setOrdenar('forn') }}>Limpar filtros</button>
@@ -337,6 +347,10 @@ function VerPedido({ pedido, itens, forn, insMap, onClose, onStatus, onWhats, on
         </table></div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
           <button className="btn-ghost" onClick={() => onPrint(forn?.nome || '—', [pedido])}>🖨 Imprimir / PDF</button>
+          {pedido.status === 'aguardando_aprovacao' && <>
+            <button className="btn-primary" style={{ background: '#16a34a' }} onClick={() => onStatus(pedido.id, 'pendente')}>✓ Aprovar</button>
+            <button className="btn-ghost" style={{ color: '#e11d48' }} onClick={() => onStatus(pedido.id, 'cancelado')}>✕ Cancelar</button>
+          </>}
           {pedido.status === 'pendente' && <>
             <button className="btn-primary" style={{ background: '#16a34a' }} onClick={() => onStatus(pedido.id, 'enviado')}>📤 Marcar como Enviado</button>
             <button className="btn-ghost" style={{ color: '#e11d48' }} onClick={() => onStatus(pedido.id, 'cancelado')}>✕ Cancelar</button>
