@@ -6,13 +6,14 @@ import { PortalInventario } from './PortalInventario'
 import { PortalSolicitacao } from './PortalSolicitacao'
 import { PortalPerdas } from './PortalPerdas'
 import { PortalEstoque } from './PortalEstoque'
+import { PortalPcp } from './PortalPcp'
 import './portal.css'
 
 // Portal do Gerente — casca (sidebar escura + navegação). Migração fiel do loja.html.
 // As abas são preenchidas uma a uma; por enquanto mostram um placeholder.
 
-type TabKey = 'inventario' | 'solicitacao' | 'perdas' | 'estoque' | 'pcp' | 'porcionamento'
-const LABEL: Record<TabKey, string> = { inventario: 'Inventário', solicitacao: 'Solicitação de Compra', perdas: 'Perdas', estoque: 'Estoque', pcp: 'PCP', porcionamento: 'Porcionamento' }
+type TabKey = 'inventario' | 'solicitacao' | 'perdas' | 'estoque' | 'pcp'
+const LABEL: Record<TabKey, string> = { inventario: 'Inventário', solicitacao: 'Solicitação de Compra', perdas: 'Perdas', estoque: 'Estoque', pcp: 'PCP' }
 
 const ico = (d: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>{d.split('|').map((p, i) => <path key={i} d={p} />)}</svg>
 const ICONS: Record<TabKey, ReactNode> = {
@@ -21,11 +22,10 @@ const ICONS: Record<TabKey, ReactNode> = {
   perdas: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
   estoque: ico('M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'),
   pcp: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 8h1a4 4 0 0 1 0 8h-1" /><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" /></svg>,
-  porcionamento: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><line x1="18" y1="6" x2="6" y2="18" /><circle cx="7" cy="7" r="2" /><circle cx="17" cy="17" r="2" /></svg>,
 }
 const GROUPS: { label: string; items: TabKey[] }[] = [
   { label: 'Operações', items: ['inventario', 'solicitacao', 'perdas', 'estoque'] },
-  { label: 'PCP', items: ['pcp', 'porcionamento'] },
+  { label: 'Produção', items: ['pcp'] },
 ]
 
 export function PortalShell() {
@@ -69,7 +69,7 @@ export function PortalShell() {
           <div className="p-conn"><span className="p-dot" /> conectado</div>
         </div>
         <div className="p-content">
-          {tab === 'inventario' ? <PortalInventario /> : tab === 'solicitacao' ? <PortalSolicitacao /> : tab === 'perdas' ? <PortalPerdas /> : tab === 'estoque' ? <PortalEstoque /> : (
+          {tab === 'inventario' ? <PortalInventario /> : tab === 'solicitacao' ? <PortalSolicitacao /> : tab === 'perdas' ? <PortalPerdas /> : tab === 'estoque' ? <PortalEstoque /> : tab === 'pcp' ? <PortalPcp /> : (
             <div className="p-holder">
               <div className="t">{LABEL[tab]}</div>
               <div>Esta área será migrada em seguida (fiel ao portal atual).</div>

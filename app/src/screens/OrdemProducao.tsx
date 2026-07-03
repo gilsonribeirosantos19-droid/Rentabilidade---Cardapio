@@ -21,12 +21,13 @@ const num = (v: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const brl = (n: number) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const q3 = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
-export function OrdemProducao() {
+export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
   const { tenantId } = useAuth()
   const { lojas, lojaId } = useLoja()
   const qc = useQueryClient()
   const [data, setData] = useState(nowLocal())
-  const [loja, setLoja] = useState(lojaId ?? '')
+  const [lojaSel, setLojaSel] = useState(lojaId ?? '')
+  const loja = lojaFixa ?? lojaSel
   const [fichaId, setFichaId] = useState('')
   const [qtd, setQtd] = useState('')
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
@@ -84,9 +85,9 @@ export function OrdemProducao() {
       </div>
 
       <div className="cfg-card">
-        <div style={{ display: 'grid', gridTemplateColumns: '190px 180px 1fr 90px 130px', gap: 12, alignItems: 'end', padding: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: lojaFixa ? '190px 1fr 90px 130px' : '190px 180px 1fr 90px 130px', gap: 12, alignItems: 'end', padding: 14 }}>
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Data / hora</label><input type="datetime-local" value={data} onChange={(e) => setData(e.target.value)} /></div>
-          <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Loja</label><select value={loja} onChange={(e) => setLoja(e.target.value)}><option value="">—</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>
+          {!lojaFixa && <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Loja</label><select value={lojaSel} onChange={(e) => setLojaSel(e.target.value)}><option value="">—</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>}
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Item a produzir * <span className="muted" style={{ fontWeight: 400 }}>(só itens com ficha)</span></label><SearchSelect value={fichaSel?.nome || ''} options={fichaOpts} placeholder="Selecione…" onChange={(nm) => setFichaId(fichaByNome.get(nm) || '')} /></div>
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>UM</label><input value={produzido?.unidade_medida?.toUpperCase() || ''} readOnly style={{ background: '#f1f5f9' }} /></div>
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Quantidade a produzir *</label><input value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></div>
