@@ -25,13 +25,15 @@
 
 ---
 
+## ✅ FEITO (decisões do usuário 2026-07-03)
+
+- [x] ✅ **C4 · Romaneio consolidado "Baixar todos (por loja)"** (LACUNA) — usuário: construir.
+  Botão na aba Pedidos Gerados imprime 1 folha por loja com todos os itens consolidados dos pedidos LISTADOS (respeita o filtro atual). Portado fiel do HTML (`gerarImpressaoPorLoja`), agrupa por loja pelo breakdown da observação do item; lojas via `select('*')`. → `Compras.tsx`
+
+- [x] ✅ **C5 · Consumo/dia da Sugestão pelos dias REAIS cobertos** (BUG) — usuário: corrigir.
+  `consMap` agora divide o total de saídas pelos dias efetivamente cobertos (1ª saída → hoje, no máx. o período), não pelo período cheio. Insumo/loja novo deixa de ser subestimado. Incluído `criado_em` na query de saídas. → `SugestaoCompra.tsx`
+
 ## ⏸️ DECISÃO DO USUÁRIO
-
-- [ ] ⏸️ **C4 · "Baixar todos em PDF / Visualizar todos" (romaneio consolidado por loja)** (LACUNA, esforço médio)
-  O HTML tinha impressão consolidada de TODOS os pedidos ativos agrupada por loja (`imprimirTodosPorLoja`). O React só tem PDF por fornecedor. Dá pra reusar o layout de PDF por loja que já existe na Sugestão. **Construir?**
-
-- [ ] ⏸️ **C5 · Consumo/dia da Sugestão divide pelo período cheio** (BUG sutil / design)
-  `SugestaoCompra` faz `soma_saídas / períodoDias`. Se a loja tem menos histórico que o período (insumo novo), o consumo médio fica subestimado → sugere comprar menos. Corrigir = dividir pelos dias efetivamente cobertos. **É design intencional ou corrigir?**
 
 - [ ] ⏸️ **C6 · Fallback de "grupo" no modal/PDF do pedido** (REG leve)
   HTML usava `categoria || grupo`; React só `categoria`. NÃO apliquei porque pedir a coluna `grupo` no select pode ZERAR a query se ela não existir na tabela `insumos` (lição do [[project_portal_select_star]]). Confirmar se `grupo` existe antes.

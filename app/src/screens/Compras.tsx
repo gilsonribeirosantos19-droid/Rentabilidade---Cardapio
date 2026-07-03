@@ -231,6 +231,38 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   )
 }
 
+// romaneio consolidado: 1 página por loja (portado do HTML antigo)
+type LojaFull = { id?: string; nome?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string }
+type PorLoja = Record<string, { loja: LojaFull; itens: Record<string, { qty: number; un: string }> }>
+function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string) {
+  const dataFormatada = new Date(dataRef.length === 10 ? dataRef + 'T12:00:00' : dataRef).toLocaleDateString('pt-BR')
+  const paginas = Object.values(porLoja).map(({ loja, itens }) => {
+    const linhas: ({ nome: string; qty: number; un: string } | null)[] = Object.entries(itens).map(([nome, { qty, un }]) => ({ nome, qty, un }))
+    while (linhas.length < 8) linhas.push(null)
+    const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || '', hrManha = loja?.horario_manha || '-', hrTarde = loja?.horario_tarde || '-'
+    return `<div class="pagina"><table class="doc">
+      <tr><td class="cel-loja">${nomeLoja.toUpperCase()}</td><td class="cel-data-label">DATA:</td><td class="cel-data">${dataFormatada}</td></tr>
+      <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${razao}${cnpj ? ' CNPJ: ' + cnpj : ''}</td></tr>
+      <tr><td colspan="3" class="cel-info">ENDEREÇO: ${ende}</td></tr>
+      <tr><td colspan="2" class="cel-th">ITENS</td><td class="cel-th" style="text-align:center">QUANTIDADE</td></tr>
+      ${linhas.map((it) => it ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${fmtQtyDoc(it.qty)} ${it.un.toUpperCase()}</td></tr>` : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
+      <tr><td class="cel-footer">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
+      <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">${hrTarde}</td></tr>
+    </table></div>`
+  }).join('')
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Pedidos por Loja — ${dataFormatada}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}body{background:#fff}
+    .pagina{page-break-after:always;padding:20px;max-width:700px;margin:0 auto}.pagina:last-child{page-break-after:avoid}
+    .doc{width:100%;border-collapse:collapse;font-size:13px}.doc td{border:1px solid #000;padding:6px 8px;vertical-align:middle}
+    .cel-loja{font-weight:700;font-size:14px;width:55%}.cel-data-label{font-weight:700;width:15%;text-align:center}.cel-data{font-weight:700;font-size:14px;width:30%;text-align:right}
+    .cel-info{background:#f4cccc;font-size:12px;line-height:1.5;height:36px}.cel-th{background:#ffff00;font-weight:700;font-size:13px;text-align:center;padding:8px}
+    .cel-item{height:28px;font-size:12px}.cel-qty{text-align:center;font-weight:600;font-size:12px}.cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
+    @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
+  </style></head><body>${paginas}<script>window.onload=function(){window.onafterprint=function(){window.close()};window.print();}<\/script></body></html>`
+  const win = window.open('', '_blank'); if (!win) return
+  win.document.write(html); win.document.close()
+}
+
 // ═══════════════════════ PEDIDOS GERADOS ═══════════════════════
 function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared }) {
   const { insumos, fornecedores } = shared
@@ -256,6 +288,36 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
   })
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const fornMap = useMemo(() => Object.fromEntries(fornecedores.map((f) => [f.id, f])) as Record<string, Forn>, [fornecedores])
+  // lojas completas (razão/cnpj/endereço/horários) p/ o romaneio consolidado — select('*') evita zerar por coluna inexistente
+  const { data: lojasFull = [] } = useQuery({ queryKey: ['cmp-lojas-full', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as LojaFull[] } })
+
+  // "Baixar todos por loja": consolida os itens de TODOS os pedidos da lista atual, agrupando por loja
+  const imprimirTodos = () => {
+    if (!pedidos.length) { showToast('Nenhum pedido para imprimir.', 'err'); return }
+    const porLoja: PorLoja = {}
+    const dataRef = pedidos[0]?.data_pedido || pedidos[0]?.created_at || hoje()
+    pedidos.forEach((p) => {
+      (itensMap[p.id] || []).forEach((it) => {
+        const nomeIns = insMap[it.insumo_id]?.nome || it.insumo_id
+        const un = it.unidade || 'un'
+        const obs = it.observacao || ''
+        if (!obs) {
+          const k = '__geral__'; (porLoja[k] = porLoja[k] || { loja: { nome: 'Geral' }, itens: {} })
+          const prev = porLoja[k].itens[nomeIns]; porLoja[k].itens[nomeIns] = { qty: (prev?.qty || 0) + (Number(it.quantidade) || 0), un }
+        } else {
+          obs.split(', ').forEach((parte) => {
+            const m = parte.match(/^(.+?):\s*([\d.]+)$/); if (!m) return
+            const nomeLoja = m[1].trim(), qty = parseFloat(m[2]) || 0
+            const lojaObj = lojasFull.find((l) => (l.nome || '').toLowerCase() === nomeLoja.toLowerCase()) || { nome: nomeLoja }
+            const k = lojaObj.id || nomeLoja; (porLoja[k] = porLoja[k] || { loja: lojaObj, itens: {} })
+            const prev = porLoja[k].itens[nomeIns]; porLoja[k].itens[nomeIns] = { qty: (prev?.qty || 0) + qty, un }
+          })
+        }
+      })
+    })
+    if (!Object.keys(porLoja).length) { showToast('Sem itens para consolidar.', 'err'); return }
+    gerarImpressaoPorLoja(porLoja, dataRef)
+  }
 
   const linhas = useMemo(() => {
     const porForn: Record<string, Pedido[]> = {}
@@ -302,6 +364,7 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
         <select className="field" value={filData} onChange={(e) => setFilData(e.target.value)}><option value="">Qualquer data</option><option value="hoje">Hoje</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select>
         <select className="field" value={ordenar} onChange={(e) => setOrdenar(e.target.value)}><option value="forn">Fornecedor (A-Z)</option><option value="data">Data (mais recente)</option><option value="valor">Valor (maior)</option></select>
         <button className="btn-ghost" onClick={() => { setStatusF('ativos'); setBusca(''); setFilData(''); setOrdenar('forn') }}>Limpar filtros</button>
+        <button className="btn-ghost" style={{ marginLeft: 'auto' }} title="Imprime 1 folha por loja com todos os itens consolidados dos pedidos listados" onClick={imprimirTodos}>🖨 Baixar todos (por loja)</button>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
         <table className="tbl"><thead><tr><th>Fornecedor</th><th className="r">Itens</th><th className="r">Valor Total</th><th className="r">Lojas</th><th>Data</th><th>Status</th><th className="c">Ações</th></tr></thead>

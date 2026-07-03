@@ -15,7 +15,7 @@ import './sugestao.css'
 
 type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; preco_compra?: number; unidade_medida?: string; unidade_compra?: string; minimo?: number }
 type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number; minimo?: number | null; loja_id?: string }
-type Saida = { insumo_id: string; quantidade?: number; loja_id?: string }
+type Saida = { insumo_id: string; quantidade?: number; loja_id?: string; criado_em?: string }
 type Pedido = { id: string; status?: string; loja_id?: string }
 type ItemPed = { pedido_id: string; insumo_id: string; quantidade?: number }
 type Row = { insumoId: string; cod: string; desc: string; grp: string; un: string; est: number; min: number; cons: number; ab: number; tr: number; custo: number; sug: number }
@@ -61,7 +61,7 @@ export function SugestaoCompra() {
   // fetchAll (paginação por range) — evita o cap silencioso de 1000 linhas do Supabase
   const { data: insumos = [] } = useQuery({ queryKey: ['sug-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra,minimo').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['sug-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
-  const { data: saidas = [] } = useQuery({ queryKey: ['sug-saidas', tenantId, desdeISO], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id').eq('tenant_id', tenantId).gte('criado_em', desdeISO).order('criado_em').range(f, t)) })
+  const { data: saidas = [] } = useQuery({ queryKey: ['sug-saidas', tenantId, desdeISO], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', desdeISO).order('criado_em').range(f, t)) })
   // pedidos + seus itens: itens_pedido não tem tenant_id — busca pelos IDs dos pedidos do tenant
   const { data: ped = { pedidos: [] as Pedido[], itens: [] as ItemPed[] } } = useQuery({
     queryKey: ['sug-ped', tenantId], enabled: !!tenantId,
@@ -81,7 +81,25 @@ export function SugestaoCompra() {
   const min = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.minimo) || 0) }); insumos.forEach((i) => { if (!m[i.id] && Number(i.minimo) > 0) m[i.id] = Number(i.minimo) }); return m }, [saldos, lojaFil, insumos])
   // custo médio PONDERADO pela quantidade (respeita filtro de loja); se qtd 0, cai no maior custo conhecido
   const cmMap = useMemo(() => { const num: Record<string, number> = {}, den: Record<string, number> = {}, mx: Record<string, number> = {}; saldos.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; const q = Math.max(Number(s.quantidade) || 0, 0), c = Number(s.custo_medio) || 0; if (c > 0) { num[s.insumo_id] = (num[s.insumo_id] || 0) + c * q; den[s.insumo_id] = (den[s.insumo_id] || 0) + q; if (c > (mx[s.insumo_id] || 0)) mx[s.insumo_id] = c } }); const m: Record<string, number> = {}; for (const k in mx) m[k] = den[k] > 0 ? num[k] / den[k] : mx[k]; return m }, [saldos, lojaFil])
-  const consMap = useMemo(() => { const m: Record<string, number> = {}; saidas.forEach((s) => { if (lojaFil && s.loja_id !== lojaFil) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.quantidade) || 0) }); const out: Record<string, number> = {}; for (const k in m) out[k] = m[k] / periodoDias; return out }, [saidas, lojaFil, periodoDias])
+  // consumo médio diário = total de saídas ÷ dias REALMENTE cobertos (1ª saída → hoje, no máx. o período).
+  // Assim, insumo/loja com pouco histórico não fica subestimado (não divide por período cheio).
+  const consMap = useMemo(() => {
+    const soma: Record<string, number> = {}, primeira: Record<string, string> = {}
+    saidas.forEach((s) => {
+      if (lojaFil && s.loja_id !== lojaFil) return
+      soma[s.insumo_id] = (soma[s.insumo_id] || 0) + (Number(s.quantidade) || 0)
+      const d = s.criado_em || ''
+      if (d && (!primeira[s.insumo_id] || d < primeira[s.insumo_id])) primeira[s.insumo_id] = d
+    })
+    const agora = Date.now(), out: Record<string, number> = {}
+    for (const k in soma) {
+      const p = primeira[k]
+      const cobertos = p ? Math.floor((agora - new Date(p).getTime()) / 864e5) + 1 : periodoDias
+      const dias = Math.min(periodoDias, Math.max(1, cobertos))
+      out[k] = soma[k] / dias
+    }
+    return out
+  }, [saidas, lojaFil, periodoDias])
   const pedMap = useMemo(() => {
     const pById = Object.fromEntries(ped.pedidos.map((p) => [p.id, p])) as Record<string, Pedido>
     const ab: Record<string, number> = {}, tr: Record<string, number> = {}
