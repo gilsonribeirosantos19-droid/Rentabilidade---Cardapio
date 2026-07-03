@@ -6,7 +6,7 @@ import { useAuth } from '../lib/auth'
 // Portal › Solicitação de Compra — o gerente seleciona insumos por grupo,
 // informa quantidades e envia a solicitação para Compras. Fiel ao loja.html.
 
-type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; unidade_medida?: string; unidade_compra?: string }
+type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; preco_compra?: number; unidade_medida?: string; unidade_compra?: string }
 type Grupo = { id: string; nome?: string; ativo?: boolean }
 type GI = { grupo_id: string; insumo_id: string }
 type Saldo = { insumo_id: string; quantidade?: number }
@@ -16,6 +16,9 @@ const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',')
 const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const hoje7 = () => new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-CA')
 const hojeStr = () => new Date().toLocaleDateString('en-CA')
+const fmtCod = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')
+const EMB: Record<string, string> = { kg: 'QUILOGRAMA', g: 'GRAMA', l: 'LITRO', litro: 'LITRO', ml: 'MILILITRO', un: 'UNIDADE', unid: 'UNIDADE', cx: 'CAIXA', pct: 'PACOTE', fd: 'FARDO', fardo: 'FARDO' }
+const embalagem = (i?: { unidade_compra?: string; unidade_medida?: string }) => { const u = (i?.unidade_compra || i?.unidade_medida || '').toLowerCase().trim(); return EMB[u] || (u ? u.toUpperCase() : '—') }
 
 export function PortalSolicitacao() {
   const { tenantId, usuario } = useAuth()
@@ -32,7 +35,7 @@ export function PortalSolicitacao() {
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const showToast = (m: string, err = false) => { setToast({ msg: m, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['psol-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,preco_compra,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Insumo[] } })
+  const { data: insumos = [] } = useQuery({ queryKey: ['psol-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Insumo[] } })
   const { data: grupos = [] } = useQuery({ queryKey: ['psol-grupos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra').select('id,nome,ativo').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Grupo[] } })
   const { data: gci = [] } = useQuery({ queryKey: ['psol-gci', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra_itens').select('grupo_id,insumo_id').eq('tenant_id', tenantId); return (data ?? []) as GI[] } })
   const { data: saldos = [] } = useQuery({ queryKey: ['psol-saldos', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,quantidade').eq('tenant_id', tenantId).eq('loja_id', lojaId!); return (data ?? []) as Saldo[] } })
@@ -95,7 +98,7 @@ export function PortalSolicitacao() {
               </div>
               {aberto && (
                 <table className="p-tbl">
-                  <thead><tr><th style={{ width: 36 }}></th><th>Item</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Sugestão</th><th>Solicitar</th></tr></thead>
+                  <thead><tr><th style={{ width: 36 }}></th><th>Código</th><th>Item</th><th>Embalagem</th><th>Estoque atual</th><th>Estoque mínimo</th><th>Solicitar</th></tr></thead>
                   <tbody>
                     {itens.map((ins) => {
                       const u = defUn(ins)
@@ -103,14 +106,12 @@ export function PortalSolicitacao() {
                       return (
                         <tr key={ins.id} style={{ background: sel.has(ins.id) ? '#fff7ed' : undefined }}>
                           <td className="c"><input type="checkbox" style={{ width: 16, height: 16, accentColor: '#f97316' }} checked={sel.has(ins.id)} onChange={(e) => toggle(ins.id, e.target.checked)} /></td>
+                          <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(ins.codigo_interno)}</td>
                           <td style={{ fontWeight: 600 }}>{ins.nome}</td>
+                          <td style={{ fontSize: 12, color: '#475569' }}>{embalagem(ins)}</td>
                           <td style={{ color: '#64748b' }}>{fmtV(atual, u)}</td>
                           <td style={{ color: '#64748b' }}>—</td>
-                          <td style={{ color: '#64748b' }}>—</td>
-                          <td><div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                            <input type="number" min="0" step="0.001" value={qty[ins.id] ?? ''} onChange={(e) => onQty(ins.id, e.target.value)} style={{ width: 80, height: 24, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} />
-                            <select value={un[ins.id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [ins.id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{UNIDADES.map((x) => <option key={x} value={x}>{x}</option>)}</select>
-                          </div></td>
+                          <td><input type="number" min="0" step="0.001" value={qty[ins.id] ?? ''} onChange={(e) => onQty(ins.id, e.target.value)} style={{ width: 90, height: 24, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} /></td>
                         </tr>
                       )
                     })}
