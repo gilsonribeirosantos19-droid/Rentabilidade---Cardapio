@@ -145,6 +145,18 @@ export function Fechamento() {
       if (acao === 'fechar') {
         const fechar = alvo.filter((r) => r.situacao === 'aberto')
         if (!fechar.length) throw new Error('Selecione lojas ABERTAS para fechar.')
+        // Regra SEQUENCIAL (Everest): só fecha o mês se o anterior já estiver fechado
+        // (a menos que seja o 1º fechamento da loja). Fecha em ordem: Jan → Fev → Mar…
+        const [ay, am] = comp.split('-').map(Number)
+        const pd = new Date(ay, am - 2, 1)
+        const prevComp = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`
+        const fechadas = base?.fechamentos.filter((f) => f.situacao === 'fechado') || []
+        const bloqueadas = fechar.filter((r) => {
+          const prevOk = fechadas.some((f) => f.loja_id === r.loja.id && f.competencia === prevComp)
+          if (prevOk) return false
+          return fechadas.some((f) => f.loja_id === r.loja.id && (f.competencia || '') < comp) // tem mês fechado antes → é pulo
+        })
+        if (bloqueadas.length) throw new Error(`Fechamento é sequencial: feche antes o mês ${prevComp}. Pendente(s): ${bloqueadas.map((r) => r.loja.nome).join(', ')}`)
         const payload = fechar.map((r) => ({ tenant_id: tenantId, loja_id: r.loja.id, competencia: comp, situacao: 'fechado', estoque_inicial: r.estoque_inicial, compras: r.compras, entradas_transferencia: r.entradas_transferencia, saidas_transferencia: r.saidas_transferencia, consumo: r.consumo, perdas: r.perdas, estoque_final: r.estoque_final, cmv: r.cmv, faturamento: r.faturamento || 0, fechado_por: usuario?.id || null }))
         const { error } = await supabase.from('fechamento_custo').upsert(payload, { onConflict: 'tenant_id,loja_id,competencia' })
         if (error) throw error
