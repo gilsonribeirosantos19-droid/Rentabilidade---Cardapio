@@ -45,8 +45,14 @@ export function PortalSolicitacao() {
   const gruposItens = useMemo(() => { const m: Record<string, string[]> = {}; gci.forEach((g) => { if (insMap[g.insumo_id]) (m[g.grupo_id] ||= []).push(g.insumo_id) }); return m }, [gci, insMap])
   const defUn = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
 
-  const gruposVis = useMemo(() => grupos.filter((g) => (gruposItens[g.id] || []).length && (!filGrupo || g.id === filGrupo)), [grupos, gruposItens, filGrupo])
-  const gruposComGrupos = useMemo(() => { const b = busca.toLowerCase().trim(); return gruposVis.map((g) => { let itens = (gruposItens[g.id] || []).map((id) => insMap[id]).filter(Boolean) as Insumo[]; if (b) itens = itens.filter((i) => (i.nome || '').toLowerCase().includes(b) || (i.categoria || '').toLowerCase().includes(b)); return { g, itens } }).filter((x) => x.itens.length) }, [gruposVis, gruposItens, insMap, busca])
+  const [buscado, setBuscado] = useState<{ grupo: string; busca: string } | null>(null)
+  const buscar = () => setBuscado({ grupo: filGrupo, busca })
+  const resultado = useMemo(() => {
+    if (!buscado) return []
+    const b = buscado.busca.toLowerCase().trim()
+    const gs = grupos.filter((g) => (gruposItens[g.id] || []).length && (!buscado.grupo || g.id === buscado.grupo))
+    return gs.map((g) => { let itens = (gruposItens[g.id] || []).map((id) => insMap[id]).filter(Boolean) as Insumo[]; if (b) itens = itens.filter((i) => (i.nome || '').toLowerCase().includes(b) || (i.categoria || '').toLowerCase().includes(b)); return { g, itens } }).filter((x) => x.itens.length)
+  }, [buscado, grupos, gruposItens, insMap])
 
   const toggle = (id: string, on: boolean) => {
     setSel((s) => { const n = new Set(s); on ? n.add(id) : n.delete(id); return n })
@@ -81,13 +87,15 @@ export function PortalSolicitacao() {
       <div className="p-ttl">Solicitação de Compra</div>
       <div className="p-sub">Selecione os itens por grupo, informe as quantidades e envie para Compras.</div>
 
-      <div className="pf-bar">
-        <input className="p-field" style={{ flex: 1, minWidth: 200 }} placeholder="Buscar item, categoria ou código…" value={busca} onChange={(e) => setBusca(e.target.value)} />
+      <div className="pf-bar" style={{ position: 'sticky', top: 0, zIndex: 5 }}>
+        <input className="p-field" style={{ flex: 1, minWidth: 200 }} placeholder="Buscar item, categoria ou código…" value={busca} onChange={(e) => setBusca(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') buscar() }} />
         <select className="p-field" value={filGrupo} onChange={(e) => setFilGrupo(e.target.value)}><option value="">Todos os grupos</option>{grupos.filter((g) => (gruposItens[g.id] || []).length).map((g) => <option key={g.id} value={g.id}>{g.nome}</option>)}</select>
+        <button className="p-btn p-btn-pri" onClick={buscar}>Buscar</button>
       </div>
 
-      {gruposComGrupos.length === 0 ? <div className="p-card"><div className="p-empty">Nenhum grupo/item encontrado.</div></div>
-        : gruposComGrupos.map(({ g, itens }) => {
+      {!buscado ? <div className="p-card"><div className="p-empty">Selecione um grupo e clique em <b>Buscar</b> para ver os itens.</div></div>
+        : resultado.length === 0 ? <div className="p-card"><div className="p-empty">Nenhum item encontrado.</div></div>
+        : resultado.map(({ g, itens }) => {
           const aberto = !colapso.has(g.id)
           return (
             <div className="p-card" key={g.id} style={{ marginBottom: 12 }}>
