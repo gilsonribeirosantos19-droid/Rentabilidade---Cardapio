@@ -164,6 +164,18 @@ export function Fechamento() {
       } else {
         const abrir = alvo.filter((r) => r.situacao === 'fechado')
         if (!abrir.length) throw new Error('Selecione lojas FECHADAS para reabrir.')
+        // Regra SEQUENCIAL AO CONTRÁRIO (Everest): só reabre o mês mais recente fechado da loja.
+        // Se existe um mês FECHADO DEPOIS deste, ele foi calculado em cima do fechamento deste →
+        // é preciso reabrir o(s) mês(es) mais novo(s) primeiro (senão o mais novo fica "pendurado"
+        // num mês que mudou). Reabre na ordem inversa: Jul → Jun → Mai.
+        const fechadas = base?.fechamentos.filter((f) => f.situacao === 'fechado') || []
+        const bloqueadas = abrir.map((r) => {
+          const proxFechado = fechadas
+            .filter((f) => f.loja_id === r.loja.id && (f.competencia || '') > comp)
+            .sort((a, b) => (a.competencia || '').localeCompare(b.competencia || ''))[0]
+          return proxFechado ? { nome: r.loja.nome, prox: proxFechado.competencia } : null
+        }).filter(Boolean) as { nome?: string; prox?: string }[]
+        if (bloqueadas.length) throw new Error(`Reabertura é sequencial (do mês mais recente para o mais antigo): reabra antes o mês ${bloqueadas[0].prox}. Pendente(s): ${bloqueadas.map((b) => b.nome).join(', ')}`)
         const { error } = await supabase.from('fechamento_custo').delete().eq('tenant_id', tenantId).eq('competencia', comp).in('loja_id', abrir.map((r) => r.loja.id))
         if (error) throw error
         return `${abrir.length} loja(s) reaberta(s).`
