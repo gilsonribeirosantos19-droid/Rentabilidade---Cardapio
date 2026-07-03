@@ -74,7 +74,7 @@ export function PortalSolicitacao() {
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
 
-  const fmtV = (v: number | undefined, u: string) => (v != null ? `${v} ${u}` : '0,00')
+  const fmtV = (v?: number) => (v != null ? v.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '0,000')
 
   return (
     <div style={{ paddingBottom: nSel > 0 ? 70 : 0 }}>
@@ -101,7 +101,6 @@ export function PortalSolicitacao() {
                   <thead><tr><th style={{ width: 36 }}></th><th>Código</th><th>Item</th><th>Embalagem</th><th>Estoque atual</th><th>Estoque mínimo</th></tr></thead>
                   <tbody>
                     {itens.map((ins) => {
-                      const u = defUn(ins)
                       const atual = saldoMap[ins.id]
                       return (
                         <tr key={ins.id} style={{ background: sel.has(ins.id) ? '#fff7ed' : undefined }}>
@@ -109,8 +108,8 @@ export function PortalSolicitacao() {
                           <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(ins.codigo_interno)}</td>
                           <td style={{ fontWeight: 600 }}>{ins.nome}</td>
                           <td style={{ fontSize: 12, color: '#475569' }}>{embalagem(ins)}</td>
-                          <td style={{ color: '#64748b' }}>{fmtV(atual, u)}</td>
-                          <td style={{ color: '#64748b' }}>0,00</td>
+                          <td style={{ color: '#64748b' }}>{fmtV(atual)}</td>
+                          <td style={{ color: '#64748b' }}>0,000</td>
                         </tr>
                       )
                     })}
@@ -143,7 +142,7 @@ export function PortalSolicitacao() {
                   {selIds.map((id) => { const ins = insMap[id]; const u = defUn(ins); return (
                     <tr key={id}>
                       <td style={{ fontWeight: 600 }}>{ins?.nome || id}</td>
-                      <td style={{ color: '#64748b' }}>{fmtV(saldoMap[id], u)}</td>
+                      <td style={{ color: '#64748b' }}>{fmtV(saldoMap[id])}</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td className="r"><input type="number" min="0" step="0.001" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 90, height: 24, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} /></td>
