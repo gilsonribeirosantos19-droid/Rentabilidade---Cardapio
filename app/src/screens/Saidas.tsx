@@ -54,13 +54,7 @@ export function Saidas() {
   const getSaldo = (insId: string): Saldo => saldos.find((s) => s.insumo_id === insId && (!lojaId || s.loja_id === lojaId)) || { insumo_id: insId, quantidade: 0, custo_medio: 0 }
   const resps = useMemo(() => [...new Set(saidas.map((s) => s.responsavel).filter(Boolean) as string[])].sort(), [saidas])
 
-  // KPIs (loja-filtrado)
   const saidasL = useMemo(() => lojaId ? saidas.filter((s) => (s.loja_id || null) === lojaId) : saidas, [saidas, lojaId])
-  const hojeSai = hojeStr()
-  const saidasHoje = saidasL.filter((s) => s.criado_em?.startsWith(hojeSai))
-  const manualHojeN = saidasHoje.filter((s) => s.tipo !== 'consumo').length
-  const ultimaSai = saidasL.length ? saidasL.reduce((a, b) => (a.criado_em || '') > (b.criado_em || '') ? a : b) : null
-  const semMotivoN = saidasL.filter((s) => !s.motivo).length
   const motivos = useMemo(() => [...new Set(saidasL.map((s) => s.motivo).filter(Boolean) as string[])].sort(), [saidasL])
 
   const filtrada = useMemo(() => {
@@ -138,12 +132,6 @@ export function Saidas() {
 
   return (
     <div className="est-screen">
-      <div className="kpi-bar">
-        <div className="kpi-cell"><div className="l">Saídas hoje</div><div className="v">{saidasHoje.length}</div></div>
-        <div className="kpi-cell"><div className="l">Manuais hoje</div><div className="v">{manualHojeN}</div></div>
-        <div className="kpi-cell"><div className="l">Sem motivo</div><div className="v red">{semMotivoN}</div></div>
-        <div className="kpi-cell" style={{ flex: 1 }}><div className="l">Última saída</div><div className="v sm">{ultimaSai ? `${new Date(ultimaSai.criado_em!).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · ${insMap[ultimaSai.insumo_id]?.nome || '—'}` : '—'}</div></div>
-      </div>
       <div className="act-bar">
         <button className="btn-pri" disabled={!lojaId} title={!lojaId ? 'Selecione uma loja específica no topo' : ''} onClick={() => { if (!lojaId) { showToast('Selecione uma loja específica no topo para registrar a saída.', 'err'); return } setModal(true) }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>

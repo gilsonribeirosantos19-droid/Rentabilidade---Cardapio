@@ -31,9 +31,9 @@
   Bloqueia salvar entrada sem lote quando o parâmetro `estoque.obrigar_lote` = 'sim'.
   → `app/src/screens/Entradas.tsx`
 
-- [x] ✅ **E6 · KPIs da tela de Saídas restaurados** (REG/faltando)
-  Cards: Saídas hoje · Manuais hoje · Sem motivo · Última saída (data + insumo). Loja-filtrado.
-  → `app/src/screens/Saidas.tsx`
+- [x] ↩️ **E6 · KPIs de Saídas — REVERTIDO a pedido do usuário (2026-07-03)**
+  Eu tinha restaurado os KPIs, mas o usuário decidiu **remover os cards** (não os queria de volta). Removidos das telas de **Saídas E Entradas** (os de Entradas eram pré-existentes). Filtro de Motivo (E10) foi mantido.
+  → `app/src/screens/Saidas.tsx`, `app/src/screens/Entradas.tsx`
 
 - [x] ✅ **E7 · Ajuste de Custo Médio grava `motivo`/`observação`** (REG)
   Campo "Motivo / observação" adicionado; anexado na observação do movimento.

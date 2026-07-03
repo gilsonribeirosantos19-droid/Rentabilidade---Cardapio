@@ -52,16 +52,6 @@ export function Entradas() {
   const cats = useMemo(() => uniq(insumos.map((i) => i.categoria)), [insumos])
   const fornNomes = useMemo(() => uniq(entradasL.map((e) => e.fornecedor_nome)), [entradasL])
 
-  // KPIs
-  const hojeS = hojeStr()
-  const hojeEnts = entradasL.filter((e) => e.criado_em?.startsWith(hojeS))
-  const valorHoje = hojeEnts.reduce((s, e) => s + (e.custo_total || 0), 0)
-  const nfeCount = entradasL.filter((e) => e.tipo === 'nfe' || e.tipo === 'nfe_importada').length
-  const manualCount = entradasL.filter((e) => e.tipo === 'manual').length
-  const ultima = entradasL.length ? entradasL.reduce((a, b) => (a.criado_em || '') > (b.criado_em || '') ? a : b) : null
-  const pendCount = entradasL.filter((e) => !e.custo_unitario || !insMap[e.insumo_id]).length
-  const valorPeriodo = entradasL.reduce((s, e) => s + (e.custo_total || 0), 0)
-
   const filtrada = useMemo(() => {
     const b = busca.toLowerCase().trim()
     let rows = entradasL
@@ -165,16 +155,6 @@ export function Entradas() {
           <span style={{ color: '#94a3b8' }}>–</span>
           <input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} />
         </div>
-      </div>
-
-      <div className="kpi-bar">
-        <div className="kpi-cell"><div className="l">Entradas hoje</div><div className="v">{hojeEnts.length || 0}</div></div>
-        <div className="kpi-cell"><div className="l">Valor hoje</div><div className="v">{brl0(valorHoje)}</div></div>
-        <div className="kpi-cell"><div className="l">NF-es</div><div className="v">{nfeCount}</div></div>
-        <div className="kpi-cell"><div className="l">Manuais</div><div className="v">{manualCount}</div></div>
-        <div className="kpi-cell"><div className="l">Pendências</div><div className="v red">{pendCount}</div></div>
-        <div className="kpi-cell"><div className="l">Última entrada</div><div className="v sm">{ultima ? fmtDH(ultima.criado_em) : '—'}</div></div>
-        <div className="kpi-cell" style={{ flex: 1 }}><div className="l">Valor no período</div><div className="v">{brl0(valorPeriodo)}</div></div>
       </div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">
