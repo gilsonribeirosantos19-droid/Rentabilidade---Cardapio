@@ -56,10 +56,10 @@
 - [x] ✅ **E14 · `fetchAll` duplicado removido → importa de `lib/db`** → `SaldoEstoque.tsx`
 - [x] ✅ **E16 · Sugestão: custo PONDERADO por qtd + comentário atualizado + Exportar CSV real** → `SugestaoCompra.tsx`
 
-- [ ] ⏸️ **E13 · ADIADO (de propósito) · Helper único de "média ponderada + histórico + vínculo"** (dedup MonitorNfe × Entradas)
-  Motivo: é o **motor de custo** (entrada→saldo→custo médio→CMV). Refatorar aqui tem risco real pra uma limpeza de baixa prioridade. Fazer isolado, com teste dedicado, quando der. Sem impacto pro usuário hoje. → `lib/`
-- [ ] ⏸️ **E15 · ADIADO (de propósito) · Trocar `alert()`/`confirm()` por modal/toast** (Entradas/Saídas)
-  Motivo: puramente cosmético; o `confirm()` funciona (é o gate de saldo). Muita mexida de UI pra pouco valor. Fazer num pente-fino de UX depois. → `Entradas.tsx`, `Saidas.tsx`
+- [x] ✅ **E13 · FEITO (subset seguro) · Fórmula única da média ponderada** (dedup MonitorNfe × Entradas)
+  Extraída `mediaPonderada()` pura pro `lib/cost.ts` e usada em `Entradas` (saveMut) e `MonitorNfe` (registrarEntradaNfe). O **fluxo de gravação** (insert + saldo + histórico + vínculo) foi mantido em cada tela — só a **conta** ficou centralizada (risco baixo). Unificar o fluxo inteiro num helper de banco NÃO foi feito de propósito (as telas montam payloads diferentes). → `lib/cost.ts`, `Entradas.tsx`, `MonitorNfe.tsx`
+- [x] ✅ **E15 · FEITO (subset) · `alert()` de "Ver detalhes" → mini-modal** (Entradas/Saídas)
+  Criado `components/DetailModal.tsx` (reutilizável, usa `.ov/.modal`). Os `alert()` de detalhe viraram modal. Os `confirm()` dos gates (excluir/estornar/supera saldo) foram **mantidos de propósito** — funcionam e trocá-los é muita mexida de fluxo pra pouco valor. → `DetailModal.tsx`, `Entradas.tsx`, `Saidas.tsx`
 
 ---
 
