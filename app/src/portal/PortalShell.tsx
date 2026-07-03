@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { PortalInventario } from './PortalInventario'
 import './portal.css'
 
 // Portal do Gerente — casca (sidebar escura + navegação). Migração fiel do loja.html.
@@ -65,10 +66,12 @@ export function PortalShell() {
           <div className="p-conn"><span className="p-dot" /> conectado</div>
         </div>
         <div className="p-content">
-          <div className="p-holder">
-            <div className="t">{LABEL[tab]}</div>
-            <div>Esta área será migrada em seguida (fiel ao portal atual).</div>
-          </div>
+          {tab === 'inventario' ? <PortalInventario /> : (
+            <div className="p-holder">
+              <div className="t">{LABEL[tab]}</div>
+              <div>Esta área será migrada em seguida (fiel ao portal atual).</div>
+            </div>
+          )}
         </div>
       </div>
 
