@@ -17,6 +17,12 @@ const brl = (v?: number | null) => (v == null || v === 0) ? '—' : 'R$ ' + Numb
 const fmtDH = (iso?: string) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const hojeStr = () => new Date().toISOString().split('T')[0]
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+// dropdowns com busca da toolbar (rótulo ↔ valor)
+const SPER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
+const SPER_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+const STIPO_OPTS = ['Consumo', 'Perda', 'Vencimento', 'Transferência', 'Descarte', 'Ajuste']
+const STIPO_LBL: Record<string, string> = { consumo: 'Consumo', perda: 'Perda', vencimento: 'Vencimento', transferencia: 'Transferência', descarte: 'Descarte', ajuste: 'Ajuste' }
+const STIPO_VAL: Record<string, string> = { 'Consumo': 'consumo', 'Perda': 'perda', 'Vencimento': 'vencimento', 'Transferência': 'transferencia', 'Descarte': 'descarte', 'Ajuste': 'ajuste' }
 
 const TIPO_BADGE: Record<string, { label: string; color: string; bg: string }> = {
   consumo: { label: 'Consumo', color: '#f97316', bg: '#fff7ed' },
@@ -38,6 +44,7 @@ export function Saidas() {
   const [fMotivo, setFMotivo] = useState('')
   const [de, setDe] = useState(iso(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(iso(now))
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [pag, setPag] = useState(1)
   const [porPag, setPorPag] = useState(10)
   const [modal, setModal] = useState(false)
@@ -124,11 +131,11 @@ export function Saidas() {
   })
 
   const detRows = (s: Saida): [string, string][] => { const ins = insMap[s.insumo_id]; const u = ins?.unidade_medida || ins?.unidade_compra || 'un'; return [['Insumo', ins?.nome || '—'], ['Quantidade', `${qtd(s.quantidade)} ${u}`], ['Tipo', s.tipo || '—'], ['Motivo', s.motivo || '—'], ['Responsável', s.responsavel || '—'], ['Data', fmtDH(s.criado_em)]] }
-  const setPreset = (v: string) => {
+  const setPreset = (label: string) => {
+    const l = label || 'Período'; setPeriodoSel(l)
     const n = new Date()
-    if (v === 'mes_atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
-    else if (v === 'mes_anterior') { setDe(iso(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(iso(new Date(n.getFullYear(), n.getMonth(), 0))) }
-    else { setDe(''); setAte('') }
+    if (l === 'Mês Atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
+    else if (l === 'Mês Anterior') { setDe(iso(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(iso(new Date(n.getFullYear(), n.getMonth(), 0))) }
     setPag(1)
   }
 
@@ -143,24 +150,14 @@ export function Saidas() {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
         </div>
-        <select className="field" value={fTipo} onChange={(e) => { setFTipo(e.target.value); setPag(1) }}>
-          <option value="">Tipo: Todos</option><option value="consumo">Consumo</option><option value="perda">Perda</option><option value="vencimento">Vencimento</option><option value="transferencia">Transferência</option><option value="descarte">Descarte</option><option value="ajuste">Ajuste</option>
-        </select>
-        <select className="field" value={fResp} onChange={(e) => { setFResp(e.target.value); setPag(1) }}>
-          <option value="">Responsável: Todos</option>{resps.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-        <select className="field" value={fMotivo} onChange={(e) => { setFMotivo(e.target.value); setPag(1) }}>
-          <option value="">Motivo: Todos</option>{motivos.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
+        <div className="fbar-ss" style={{ minWidth: 155 }}><SearchSelect value={STIPO_LBL[fTipo] || ''} options={STIPO_OPTS} placeholder="Tipo: Todos" onChange={(l) => { setFTipo(STIPO_VAL[l] || ''); setPag(1) }} /></div>
+        <div className="fbar-ss" style={{ minWidth: 160 }}><SearchSelect value={fResp} options={resps} placeholder="Responsável: Todos" onChange={(v) => { setFResp(v); setPag(1) }} /></div>
+        <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={fMotivo} options={motivos} placeholder="Motivo: Todos" onChange={(v) => { setFMotivo(v); setPag(1) }} /></div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}>
-            <option value="periodo">Período</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
-          <input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} />
+          <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={periodoSel} options={SPER_OPTS} placeholder="Período" onChange={(l) => setPreset(SPER_VAL[l] ? l : 'Período')} /></div>
+          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} />
           <span style={{ color: '#94a3b8' }}>–</span>
-          <input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} />
+          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} />
         </div>
       </div>
 

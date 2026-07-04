@@ -23,6 +23,13 @@ const fmtDate = (d?: string | null) => d ? new Date(d + 'T12:00:00').toLocaleDat
 const hojeStr = () => new Date().toISOString().split('T')[0]
 const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const uniq = (a: (string | null | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
+// dropdowns com busca da toolbar (rótulo ↔ valor)
+const PER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
+const PER_LBL: Record<string, string> = { periodo: 'Período', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior' }
+const PER_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+const TIPO_OPTS = ['Manual', 'NF-e', 'Ajuste']
+const TIPO_LBL: Record<string, string> = { manual: 'Manual', nfe: 'NF-e', ajuste: 'Ajuste' }
+const TIPO_VAL: Record<string, string> = { 'Manual': 'manual', 'NF-e': 'nfe', 'Ajuste': 'ajuste' }
 
 export function Entradas() {
   const { tenantId, usuario } = useAuth()
@@ -33,6 +40,7 @@ export function Entradas() {
   const [fCat, setFCat] = useState(''); const [fTipo, setFTipo] = useState(''); const [fForn, setFForn] = useState('')
   const [de, setDe] = useState(isoD(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(isoD(now))
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [pag, setPag] = useState(1); const [porPag, setPorPag] = useState(20)
   const [modal, setModal] = useState(false)
   const [dup, setDup] = useState<EntForm | null>(null)
@@ -136,7 +144,7 @@ export function Entradas() {
 
   const detRows = (e: Entrada): [string, string][] => { const ins = insMap[e.insumo_id]; return [['Insumo', ins?.nome || '—'], ['Fornecedor', e.fornecedor_nome || '—'], ['Quantidade', qtd(e.quantidade)], ['Custo unit.', brl(e.custo_unitario)], ['Custo total', brl(e.custo_total)], ['Lote', e.lote || '—'], ['Validade', fmtDate(e.validade)], ['Tipo', e.tipo || '—'], ['Data', fmtDH(e.criado_em)]] }
   const duplicar = (e: Entrada) => { setDup({ insumo_id: e.insumo_id, fornecedor_id: e.fornecedor_id || '', data: hojeStr(), qtd: String(e.quantidade_fornecedor || e.quantidade || ''), unidade: e.unidade_compra || '', fator: String(e.fator_conversao || 1), custo: String(e.custo_unitario || ''), lote: e.lote || '', validade: '', obs: '' }); setModal(true) }
-  const setPreset = (v: string) => { const n = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(isoD(n)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(isoD(new Date(n.getFullYear(), n.getMonth(), 0))) } else { setDe(''); setAte('') } setPag(1) }
+  const setPreset = (label: string) => { const l = label || 'Período'; setPeriodoSel(l); const n = new Date(); if (l === 'Mês Atual') { setDe(isoD(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(isoD(n)) } else if (l === 'Mês Anterior') { setDe(isoD(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(isoD(new Date(n.getFullYear(), n.getMonth(), 0))) } setPag(1) }
 
   return (
     <div className="est-screen">
@@ -149,14 +157,14 @@ export function Entradas() {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
         </div>
-        <select className="field" value={fCat} onChange={(e) => { setFCat(e.target.value); setPag(1) }}><option value="">Grupo: Todos</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select>
-        <select className="field" value={fTipo} onChange={(e) => { setFTipo(e.target.value); setPag(1) }}><option value="">Tipo: Todos</option><option value="manual">Manual</option><option value="nfe">NF-e</option><option value="ajuste">Ajuste</option></select>
-        <select className="field" value={fForn} onChange={(e) => { setFForn(e.target.value); setPag(1) }}><option value="">Fornecedor: Todos</option>{fornNomes.map((f) => <option key={f} value={f}>{f}</option>)}</select>
+        <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={fCat} options={cats} placeholder="Grupo: Todos" onChange={(v) => { setFCat(v); setPag(1) }} /></div>
+        <div className="fbar-ss" style={{ minWidth: 140 }}><SearchSelect value={TIPO_LBL[fTipo] || ''} options={TIPO_OPTS} placeholder="Tipo: Todos" onChange={(l) => { setFTipo(TIPO_VAL[l] || ''); setPag(1) }} /></div>
+        <div className="fbar-ss" style={{ minWidth: 160 }}><SearchSelect value={fForn} options={fornNomes} placeholder="Fornecedor: Todos" onChange={(v) => { setFForn(v); setPag(1) }} /></div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}><option value="periodo">Período</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option></select>
-          <input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} />
+          <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={periodoSel} options={PER_OPTS} placeholder="Período" onChange={(l) => setPreset(PER_VAL[l] ? l : 'Período')} /></div>
+          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} />
           <span style={{ color: '#94a3b8' }}>–</span>
-          <input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} />
+          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} />
         </div>
       </div>
 
