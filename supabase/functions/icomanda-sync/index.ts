@@ -26,8 +26,6 @@ const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: 
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/\b(sushi|pn|mao|pvh|unidade|antig[oa]|matriz|lanchonete|restaurante)\b/g, ' ')
   .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
-// hora de corte entre almoço e jantar: vendas < 17h = almoço, >= 17h = jantar
-const CORTE_JANTAR = 17
 // palavras-chave do nome (ignora conectores/abreviações e tokens curtos)
 const STOP = new Set(['das', 'dos', 'de', 'do', 'da', 'pq', 'e', 'com'])
 const toks = (s: string) => norm(s).split(' ').filter((t) => t.length >= 3 && !STOP.has(t))
@@ -119,12 +117,17 @@ serve(async (req) => {
           const linhas = []
           for (const { loja, filial } of mapa) {
             const f = byId.get(filial.id) || {}
-            // TURNO: faturamento por hora → soma antes das 17h (almoço) e a partir das 17h (jantar)
+            // TURNO: soma os CAIXAS por tipo_turno (EXATO — cada turno é uma sessão de caixa própria).
+            // Isso resolve o "almoço fantasma": loja sem caixa de almoço dá almoço = 0, sem chute de hora.
             let fatAlmoco = 0, fatJantar = 0
             try {
-              const horas = asArray(await ico('faturamento.por_horario', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })) as any[]
-              for (const h of horas) { const hr = Number(h.hora); const v = Number(h.faturado) || 0; if (hr < CORTE_JANTAR) fatAlmoco += v; else fatJantar += v }
-            } catch { /* sem por_horario: turno fica 0/0 (a tela cai p/ consolidado) */ }
+              const dc = await ico('caixas.lista', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })
+              const cx = (dc && Array.isArray((dc as { caixas?: unknown }).caixas) ? (dc as { caixas: any[] }).caixas : []) as any[]
+              for (const c of cx) {
+                const v = Number(c.faturado_caixa_valores) || 0
+                if (String(c.tipo_turno || '').toLowerCase().startsWith('almoc')) fatAlmoco += v; else fatJantar += v
+              }
+            } catch { /* sem caixas: turno fica 0/0 */ }
             // CANAL (salão/delivery/balcão): exato, do faturamento.por_tipo
             let porCanal: any[] | null = null
             try {

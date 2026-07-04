@@ -153,7 +153,7 @@ export function VendasDiario() {
         {msg
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando…</span>
-          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas por dia — só dias Processados{turnoSel !== 'Todos' ? ` · turno estimado por horário` : ''}</span>}
+          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas por dia — só dias Processados{turnoSel !== 'Todos' ? ` · turno pelo caixa (rateado por canal)` : ''}</span>}
       </div>
 
       <div className="grid-wrap">
