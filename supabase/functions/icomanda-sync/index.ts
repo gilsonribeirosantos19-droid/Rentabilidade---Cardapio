@@ -110,11 +110,26 @@ serve(async (req) => {
       let processados = 0, comErro = 0
       for (const dia of dias) {
         try {
-          const fils = asArray(await ico('filiais.listar', { data_ini: dia, data_fim: dia })) as { id: number; faturado?: number; qtd_caixas?: number }[]
-          const byId = new Map<number, { faturado?: number; qtd_caixas?: number }>(fils.map((f) => [Number(f.id), f]))
+          // pacote completo do dia (faturamento.total já traz TODAS as lojas em por_filial)
+          const dados = await ico('faturamento.total', { data_ini: dia, data_fim: dia })
+          const pf = (dados && Array.isArray((dados as { por_filial?: unknown }).por_filial) ? (dados as { por_filial: any[] }).por_filial : []) as any[]
+          const byId = new Map<number, any>(pf.map((f) => [Number(f.filial_id), f]))
           const linhas = mapa.map(({ loja, filial }) => {
-            const f = byId.get(filial.id)
-            return { tenant_id, loja_id: loja.id, data: dia, faturado: Number(f?.faturado) || 0, qtd_caixas: Number(f?.qtd_caixas) || 0, status: 'processado', erros: null, data_integracao: now, atualizado_em: now }
+            const f = byId.get(filial.id) || {}
+            return {
+              tenant_id, loja_id: loja.id, data: dia,
+              faturado: Number(f.faturado_caixa_valores) || 0,
+              subtotal: Number(f.subtotal) || 0,
+              desconto: Number(f.desconto) || 0,
+              taxa: Number(f.tax) || 0,
+              couvert: Number(f.couvert) || 0,
+              qtd_caixas: Number(f.qtd_caixas) || 0,
+              qtd_comandas: Number(f.qtd_comandas) || 0,
+              qtd_canceladas: Number(f.qtd_comandas_canceladas) || 0,
+              pessoas: Number(f.pessoas) || 0,
+              ticket_medio: Number(f.ticket_medio_comanda) || 0,
+              status: 'processado', erros: null, data_integracao: now, atualizado_em: now,
+            }
           })
           const { error } = await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
           if (error) throw error

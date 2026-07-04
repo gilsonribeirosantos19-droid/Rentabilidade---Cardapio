@@ -12,8 +12,8 @@ import './monitorvendas.css'
 // Com Erro (fica bloqueado). Botão "Puxar do iComanda" roda o motor no modo diário.
 
 type Situacao = 'com_erros' | 'nao_recebido' | 'processado'
-type RecRow = { loja_id: string; data: string; status: string; faturado?: number; qtd_caixas?: number; erros?: string | null; data_integracao?: string | null }
-type Row = { id: string; situacao: Situacao; loja: string; dMovimento: string; faturado: number; caixas: number; dIntegracao: string; erros: string }
+type RecRow = { loja_id: string; data: string; status: string; faturado?: number; desconto?: number; taxa?: number; couvert?: number; qtd_caixas?: number; qtd_comandas?: number; qtd_canceladas?: number; pessoas?: number; ticket_medio?: number; erros?: string | null; data_integracao?: string | null }
+type Row = { id: string; situacao: Situacao; loja: string; dMovimento: string; faturado: number; desconto: number; caixas: number; comandas: number; canceladas: number; pessoas: number; ticket: number; dIntegracao: string; erros: string }
 
 const SIT_META: Record<Situacao, { nome: string; dot: string }> = {
   com_erros: { nome: 'Com Erro', dot: '#ef4444' },
@@ -92,8 +92,8 @@ export function MonitorVendas() {
     const out: Row[] = []
     lojasShow.forEach((l) => dias.forEach((dia) => {
       const rec = byKey[`${l.id}|${dia}`]
-      if (rec) out.push({ id: `${l.id}|${dia}`, situacao: mapSit(rec.status), loja: l.nome, dMovimento: fmtDia(dia), faturado: Number(rec.faturado) || 0, caixas: Number(rec.qtd_caixas) || 0, dIntegracao: fmtTs(rec.data_integracao), erros: rec.erros || '' })
-      else out.push({ id: `${l.id}|${dia}`, situacao: 'nao_recebido', loja: l.nome, dMovimento: fmtDia(dia), faturado: 0, caixas: 0, dIntegracao: '—', erros: '' })
+      if (rec) out.push({ id: `${l.id}|${dia}`, situacao: mapSit(rec.status), loja: l.nome, dMovimento: fmtDia(dia), faturado: Number(rec.faturado) || 0, desconto: Number(rec.desconto) || 0, caixas: Number(rec.qtd_caixas) || 0, comandas: Number(rec.qtd_comandas) || 0, canceladas: Number(rec.qtd_canceladas) || 0, pessoas: Number(rec.pessoas) || 0, ticket: Number(rec.ticket_medio) || 0, dIntegracao: fmtTs(rec.data_integracao), erros: rec.erros || '' })
+      else out.push({ id: `${l.id}|${dia}`, situacao: 'nao_recebido', loja: l.nome, dMovimento: fmtDia(dia), faturado: 0, desconto: 0, caixas: 0, comandas: 0, canceladas: 0, pessoas: 0, ticket: 0, dIntegracao: '—', erros: '' })
     }))
     return out
   }, [recebidos, lojas, lojaSet, de, ate])
@@ -166,23 +166,26 @@ export function MonitorVendas() {
             <thead>
               <tr>
                 <th className="c" style={{ width: 34 }}><input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} /></th>
-                <th className="c">Situação</th><th>Loja</th><th>Tipo</th><th>D. Movimento</th><th className="r">Faturamento</th><th className="r">Caixas</th><th>D. Integração</th>
+                <th className="c">Situação</th><th>Loja</th><th>D. Movimento</th><th className="r">Comandas</th><th className="r">Cancel.</th><th className="r">Faturamento</th><th className="r">Desconto</th><th className="r">Ticket</th><th>D. Integração</th>
               </tr>
             </thead>
             <tbody>
               {!lista.length
-                ? <tr><td colSpan={8} className="empty">{lojas.length ? 'Nenhum dia neste filtro.' : 'Carregando lojas…'}</td></tr>
+                ? <tr><td colSpan={10} className="empty">{lojas.length ? 'Nenhum dia neste filtro.' : 'Carregando lojas…'}</td></tr>
                 : lista.map((r) => {
                   const m = SIT_META[r.situacao]
+                  const nr = r.situacao === 'nao_recebido'
                   return (
                     <tr key={r.id} className={(sel.has(r.id) ? 'sel ' : '') + (r.situacao === 'com_erros' ? 'err' : '')} onClick={() => setDetId(r.id)}>
                       <td className="c" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} /></td>
                       <td className="c"><span className="sit-dot" style={{ background: m.dot }} title={m.nome} /></td>
                       <td>{r.loja}</td>
-                      <td>Venda</td>
                       <td>{r.dMovimento}</td>
-                      <td className="r">{r.situacao === 'nao_recebido' ? '—' : brl(r.faturado)}</td>
-                      <td className="r">{r.situacao === 'nao_recebido' ? '—' : r.caixas}</td>
+                      <td className="r">{nr ? '—' : r.comandas}</td>
+                      <td className="r">{nr ? '—' : r.canceladas}</td>
+                      <td className="r">{nr ? '—' : brl(r.faturado)}</td>
+                      <td className="r">{nr ? '—' : brl(r.desconto)}</td>
+                      <td className="r">{nr ? '—' : brl(r.ticket)}</td>
                       <td>{r.dIntegracao}</td>
                     </tr>
                   )
@@ -201,7 +204,7 @@ export function MonitorVendas() {
             ? <div className="b-empty"><span className="i" style={{ background: '#eef1f5', color: '#111827' }}>⚫</span> Dia <b>{det.dMovimento}</b> ainda <b>não recebido</b>. Clique em <b>Puxar do iComanda</b>.</div>
             : det.situacao === 'com_erros'
               ? <div className="b-empty"><span className="i" style={{ background: '#fef2f2', color: '#ef4444' }}>!</span> <b>Falha na puxada:</b> {det.erros || 'erro desconhecido'}. Este dia <b>não entra nos relatórios</b> até ser reprocessado.</div>
-              : <div className="b-empty"><span className="i" style={{ background: '#ecfdf5', color: '#16a34a' }}>✓</span> Recebido e <b>processado</b> · faturamento <b>R$ {brl(det.faturado)}</b> · {det.caixas} caixa(s). Já entra nos relatórios.</div>}
+              : <div className="b-empty"><span className="i" style={{ background: '#ecfdf5', color: '#16a34a' }}>✓</span> Recebido e <b>processado</b> · faturamento <b>R$ {brl(det.faturado)}</b> · desconto R$ {brl(det.desconto)} · {det.comandas} comandas ({det.canceladas} cancel.) · {det.pessoas} pessoas · ticket R$ {brl(det.ticket)} · {det.caixas} caixa(s). Já entra nos relatórios.</div>}
       </div>
 
       <div className="footbar">
