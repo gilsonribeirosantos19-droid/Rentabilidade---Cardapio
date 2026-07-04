@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useLoja } from '../lib/loja'
+import { useAuth } from '../lib/auth'
+import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
 import './faturamento.css'
 
 // Engenharia de Cardápio — análise POR PRODUTO (modelo Everest).
-// TELA MOCK: dados de exemplo. Quando o PDV estiver processando as vendas,
-// esta tela agrega por produto (Q. Venda, V. Líquida, Custo Médio, CMV, % Custo, % Margem).
+// VENDAS reais do iComanda (icomanda_vendas), respeitando o portão (só mês sem erro).
+// As colunas de CUSTO/CMV/Margem dependem da FICHA (de-para produto↔ficha) — enquanto
+// o produto não tem ficha, elas aparecem como "—" (aguardando ficha) e o faturamento entra normal.
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
 
 type Prod = { id: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number; vCustoMedio: number }
@@ -44,34 +47,27 @@ function loadCols(): Record<string, boolean> {
   const d: Record<string, boolean> = {}; COLS.forEach((c) => { d[c.key] = !!c.def }); return d
 }
 
-const L = 'Sushi Ponta Negra'
-const MOCK: Prod[] = [
-  { id: '1', loja: L, item: '030 - COMBO HOT P', codigo: '3182', grupo: 'G-COMBINADOS', qVenda: 35, vBruta: 2376.50, vDesc: 236.28, vCustoMedio: 18.45 },
-  { id: '2', loja: L, item: '032 - COMBO HOT G', codigo: '3183', grupo: 'G-COMBINADOS', qVenda: 19, vBruta: 2563.10, vDesc: 171.20, vCustoMedio: 38.07 },
-  { id: '3', loja: L, item: '034 - COMBO PRIME', codigo: '3185', grupo: 'G-COMBINADOS', qVenda: 34, vBruta: 4586.60, vDesc: 155.59, vCustoMedio: 42.04 },
-  { id: '4', loja: L, item: '035 - COMBO PHILADELFIA', codigo: '3187', grupo: 'G-COMBINADOS', qVenda: 20, vBruta: 1898.00, vDesc: 166.45, vCustoMedio: 27.55 },
-  { id: '5', loja: L, item: '001 - HARUMAKI CAMARAO', codigo: '1870', grupo: 'G-ENTRADAS', qVenda: 35, vBruta: 836.50, vDesc: 93.49, vCustoMedio: 5.47 },
-  { id: '6', loja: L, item: '002 - CAMARAO EMPANADO', codigo: '1871', grupo: 'G-ENTRADAS', qVenda: 22, vBruta: 789.80, vDesc: 64.21, vCustoMedio: 8.49 },
-  { id: '7', loja: L, item: '005 - CEVICHE', codigo: '1874', grupo: 'G-ENTRADAS', qVenda: 3, vBruta: 134.70, vDesc: 0, vCustoMedio: 12.93 },
-  { id: '8', loja: L, item: '010 - HOT BOLL', codigo: '2554', grupo: 'G-ENTRADAS', qVenda: 10.5, vBruta: 345.45, vDesc: 61.62, vCustoMedio: 17.46 },
-  { id: '9', loja: L, item: '56 - HOT PHILADELFIA', codigo: '1928', grupo: 'G-HOT ROLL', qVenda: 70, vBruta: 2513.00, vDesc: 175.53, vCustoMedio: 6.88 },
-  { id: '10', loja: L, item: '57 - HOT BUTTERFLY', codigo: '1929', grupo: 'G-HOT ROLL', qVenda: 12, vBruta: 406.60, vDesc: 9.31, vCustoMedio: 4.73 },
-  { id: '11', loja: L, item: '169 - HOT SUSHIZAO', codigo: '2640', grupo: 'G-HOT ROLL', qVenda: 25.5, vBruta: 1170.45, vDesc: 35.50, vCustoMedio: 16.38 },
-  { id: '12', loja: L, item: '074 - RODIZIO DO MAR', codigo: '3301', grupo: 'G-RODIZIO DO MAR', qVenda: 40, vBruta: 3200.00, vDesc: 0, vCustoMedio: 22.00 },
-  { id: '13', loja: L, item: 'REFRI. COCA ZERO LATA', codigo: '1200', grupo: 'G-BEBIDAS', qVenda: 120, vBruta: 948.00, vDesc: 30.00, vCustoMedio: 3.20 },
-  // itens de RODÍZIO com valor zerado (só aparecem com o filtro ligado)
-  { id: 'z1', loja: L, item: '(RS) 56 - HOT PHILADELFIA', codigo: '1928', grupo: 'G-RODIZIO DE SUSHI', qVenda: 68, vBruta: 0, vDesc: 0, vCustoMedio: 6.88 },
-  { id: 'z2', loja: L, item: '(RS) 62 - HOT MORANGO NUT', codigo: '1934', grupo: 'G-RODIZIO DE SUSHI', qVenda: 15, vBruta: 0, vDesc: 0, vCustoMedio: 6.88 },
-  { id: 'z3', loja: L, item: '(RDM) CAMAROES EMPANADOS', codigo: '3300', grupo: 'G-RODIZIO DO MAR', qVenda: 30, vBruta: 0, vDesc: 0, vCustoMedio: 8.49 },
-]
-
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const diasEntre = (de: string, ate: string) => Math.max(1, Math.round((new Date(ate + 'T12:00:00').getTime() - new Date(de + 'T12:00:00').getTime()) / 86400000) + 1)
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 
+// competências 'YYYY-MM' tocadas pelo intervalo (os dados do iComanda são por MÊS)
+function compsBetween(de: string, ate: string): string[] {
+  if (!de || !ate) return []
+  const [y1, m1] = de.slice(0, 7).split('-').map(Number)
+  const [y2, m2] = ate.slice(0, 7).split('-').map(Number)
+  const out: string[] = []
+  let y = y1, m = m1
+  while ((y < y2 || (y === y2 && m <= m2)) && out.length < 24) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++ } }
+  return out
+}
+// colunas que dependem do custo da ficha (mostram "—" enquanto o produto não tem ficha)
+const COST_KEYS = new Set<ColKey>(['vCustoMedio', 'cmvTeo', 'cmvAjust', 'pctCusto', 'pctMargem'])
+
 export function EngenhariaCardapio() {
   const { lojas } = useLoja()
+  const { tenantId } = useAuth()
   const [de, setDe] = useState('2026-06-01')
   const [ate, setAte] = useState('2026-06-30')
   const [periodoSel, setPeriodoSel] = useState('Personalizado')
@@ -85,6 +81,93 @@ export function EngenhariaCardapio() {
   const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? [...lojaSet][0] : `${lojaSet.size} lojas`
   const toggleLoja = (n: string) => setLojaSet((p) => { const s = new Set(p); s.has(n) ? s.delete(n) : s.add(n); return s })
   const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.nome)))
+
+  // --- dados REAIS do iComanda (icomanda_vendas), respeitando o portão ---
+  const [rows, setRows] = useState<Prod[]>([])
+  const [loading, setLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [bloqueados, setBloqueados] = useState<string[]>([])
+  const lojaNome = useMemo(() => { const m: Record<string, string> = {}; lojas.forEach((l) => { m[l.id] = l.nome }); return m }, [lojas])
+  const buildRows = (data: Record<string, unknown>[]): Prod[] => {
+    const map = new Map<string, Prod>()
+    for (const r of data) {
+      const key = `${r.loja_id}|${r.produto_id}`
+      const ex = map.get(key)
+      if (ex) { ex.qVenda += Number(r.qtd) || 0; ex.vBruta += Number(r.faturado) || 0 }
+      else map.set(key, { id: key, loja: lojaNome[r.loja_id as string] || '—', item: String(r.produto_nome || ''), codigo: String(r.produto_id ?? ''), grupo: String(r.grupo || ''), qVenda: Number(r.qtd) || 0, vBruta: Number(r.faturado) || 0, vDesc: 0, vCustoMedio: 0 })
+    }
+    return [...map.values()]
+  }
+  // produtos + portão: uma loja×mês só entra se recebida e SEM erro (regra do portão)
+  async function fetchVendas(comps: string[]): Promise<Prod[]> {
+    const gateDe = comps[0] + '-01'
+    const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
+    const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
+    const [vendas, gate] = await Promise.all([
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_recebimento').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
+    ])
+    const gk = new Map<string, { ok: boolean; erro: boolean }>()
+    for (const r of gate) {
+      const k = `${r.loja_id}|${String(r.data).slice(0, 7)}`
+      const g = gk.get(k) || { ok: false, erro: false }
+      if (r.status === 'processado') g.ok = true
+      if (r.status === 'com_erro') g.erro = true
+      gk.set(k, g)
+    }
+    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok && !g.erro }
+    const bloq = new Set<string>()
+    const okVendas = vendas.filter((r) => {
+      if (liberado(String(r.loja_id), String(r.competencia))) return true
+      bloq.add(`${lojaNome[r.loja_id as string] || r.loja_id} · ${r.competencia}`)
+      return false
+    })
+    setBloqueados([...bloq])
+    return buildRows(okVendas)
+  }
+  async function carregar(comps: string[]) {
+    try { setRows(await fetchVendas(comps)) }
+    catch (e) { setMsg('Erro ao carregar vendas: ' + (e as Error).message); setRows([]) }
+  }
+  useEffect(() => {
+    if (!tenantId) { setRows([]); return }
+    const comps = compsBetween(de, ate)
+    if (!comps.length) { setRows([]); return }
+    let alive = true
+    setLoading(true)
+    fetchVendas(comps)
+      .then((r) => { if (alive) setRows(r) })
+      .catch((e) => { if (alive) { setMsg('Erro ao carregar vendas: ' + (e as Error).message); setRows([]) } })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, de, ate, lojaNome])
+  async function puxar() {
+    if (!tenantId || syncing) return
+    const comps = compsBetween(de, ate)
+    if (!comps.length) { setMsg('Selecione um período.'); return }
+    const gateDe = comps[0] + '-01'
+    const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
+    const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
+    setSyncing(true); setMsg('Puxando do iComanda… (portão + produtos, pode levar ~1 min)')
+    try {
+      const d1 = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: gateDe, data_fim: gateAte } })
+      if (d1.error) throw d1.error
+      if (d1.data?.status !== 'ok') throw new Error(d1.data?.mensagem || 'erro no portão')
+      let prods = 0
+      for (const competencia of comps) {
+        const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, competencia } })
+        if (error) throw error
+        if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro nos produtos')
+        prods += data.produtos_gravados
+      }
+      setMsg(`✓ ${d1.data.processados} dias processados · ${prods} produtos.`)
+      await carregar(comps)
+    } catch (e) {
+      setMsg('Erro ao puxar: ' + (e as Error).message)
+    } finally { setSyncing(false) }
+  }
 
   const [cols, setCols] = useState(loadCols)
   const [ddPos, setDdPos] = useState({ top: 0, left: 0 })
@@ -135,20 +218,23 @@ export function EngenhariaCardapio() {
       case 'item': return titleCase(v.item)
       case 'codigo': return v.codigo
       case 'grupo': return titleCase(v.grupo)
-      default: return fmt(num(v, c.key), c.fmt)
+      default:
+        // custo/CMV/margem só quando o produto tem ficha (custo médio > 0); senão "—"
+        if (COST_KEYS.has(c.key) && !v.vCustoMedio) return '—'
+        return fmt(num(v, c.key), c.fmt)
     }
   }
 
   const preLista = useMemo(() => {
     const q = norm(busca.trim())
     const filtraLoja = lojaSet.size > 0 && !allSel
-    return MOCK.filter((v) => {
+    return rows.filter((v) => {
       if (!incluirZerado && (v.vBruta - v.vDesc) === 0) return false
       if (filtraLoja && !lojaSet.has(v.loja)) return false
       if (q && !norm([v.item, v.grupo, v.codigo].join(' ')).includes(q)) return false
       return true
     })
-  }, [busca, lojaSet, allSel, incluirZerado])
+  }, [rows, busca, lojaSet, allSel, incluirZerado])
   const lista = useMemo(() => preLista.filter((v) => Object.entries(colFilters).every(([k, set]) => set.has(cellVal(v, COLS.find((c) => c.key === k)!)))), [preLista, colFilters])
 
   const distinct = (k: ColKey) => { const c = COLS.find((x) => x.key === k)!; return [...new Set(preLista.map((v) => cellVal(v, c)))].sort() }
@@ -184,12 +270,19 @@ export function EngenhariaCardapio() {
             Incluir itens com valor zerado
           </label>
         </div>
-        <div className="ds-actions"><button className="btn-ghost">↓ Exportar</button></div>
+        <div className="ds-actions">
+          <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
+          <button className="btn-ghost">↓ Exportar</button>
+        </div>
       </div>
 
       <div className="search-row">
         <input className="search" placeholder="Digite um texto para pesquisar..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <span className="mock-tag">⚑ Dados de exemplo — lê as vendas reais quando o PDV estiver processando</span>
+        {msg
+          ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
+          : loading ? <span className="mock-tag">Carregando vendas…</span>
+          : <span className="mock-tag" style={{ background: '#fff7ed', color: '#9a3412', borderColor: 'transparent' }}>● Vendas reais — custo/margem em "—" até cadastrar a ficha do produto</span>}
+        {bloqueados.length > 0 && <span className="mock-tag" style={{ background: '#fef2f2', color: '#b91c1c', borderColor: 'transparent' }} title={bloqueados.join(', ')}>⛔ {bloqueados.length} loja×mês bloqueado(s) por erro no portão</span>}
       </div>
 
       <div className="grid-wrap">
