@@ -125,6 +125,22 @@ serve(async (req) => {
               const horas = asArray(await ico('faturamento.por_horario', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })) as any[]
               for (const h of horas) { const hr = Number(h.hora); const v = Number(h.faturado) || 0; if (hr < CORTE_JANTAR) fatAlmoco += v; else fatJantar += v }
             } catch { /* sem por_horario: turno fica 0/0 (a tela cai p/ consolidado) */ }
+            // CANAL (salão/delivery/balcão): exato, do faturamento.por_tipo
+            let porCanal: any[] | null = null
+            try {
+              const dt = await ico('faturamento.por_tipo', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })
+              const tipos = (dt && Array.isArray((dt as { tipos?: unknown }).tipos) ? (dt as { tipos: any[] }).tipos : asArray(dt)) as any[]
+              const acc: Record<string, any> = {}
+              for (const t of tipos) {
+                const tc = String(t.tipo_comanda || '').toLowerCase()
+                const c = tc === 'mesa' ? 'Salão' : tc === 'delivery' ? 'Delivery' : tc === 'balcao' ? 'Balcão' : 'Outros'
+                const a = acc[c] || { canal: c, faturado: 0, comandas: 0, pessoas: 0, desconto: 0, taxa: 0, couvert: 0 }
+                a.faturado += Number(t.faturado) || 0; a.comandas += Number(t.qtd_comandas) || 0; a.pessoas += Number(t.pessoas) || 0
+                a.desconto += Number(t.desconto) || 0; a.taxa += Number(t.tax) || 0; a.couvert += Number(t.couvert) || 0
+                acc[c] = a
+              }
+              porCanal = Object.values(acc).map((a: any) => ({ canal: a.canal, faturado: +a.faturado.toFixed(2), comandas: a.comandas, pessoas: a.pessoas, desconto: +a.desconto.toFixed(2), taxa: +a.taxa.toFixed(2), couvert: +a.couvert.toFixed(2) }))
+            } catch { /* sem por_tipo: canal fica null */ }
             linhas.push({
               tenant_id, loja_id: loja.id, data: dia,
               faturado: Number(f.faturado_caixa_valores) || 0,
@@ -138,6 +154,7 @@ serve(async (req) => {
               pessoas: Number(f.pessoas) || 0,
               ticket_medio: Number(f.ticket_medio_comanda) || 0,
               fat_almoco: +fatAlmoco.toFixed(2), fat_jantar: +fatJantar.toFixed(2),
+              por_canal: porCanal,
               status: 'processado', erros: null, data_integracao: now, atualizado_em: now,
             })
           }
