@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useLoja } from '../lib/loja'
+import { SearchSelect } from '../components/SearchSelect'
 import './faturamento.css'
 
 // Curva ABC (PDV) — ranqueia os PRODUTOS por faturamento (V. Venda Líquida).
@@ -61,11 +62,13 @@ const MOCK: Prod[] = [
 
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
+const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 
 export function CurvaAbcVendas() {
   const { lojas } = useLoja()
   const [de, setDe] = useState('2026-06-01')
   const [ate, setAte] = useState('2026-06-30')
+  const [periodoSel, setPeriodoSel] = useState('Personalizado')
   const [busca, setBusca] = useState('')
   const [incluirZerado, setIncluirZerado] = useState(false)
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
@@ -93,10 +96,10 @@ export function CurvaAbcVendas() {
     else { setColsOpen(false); setFiltCol((c) => c === which ? null : which) }
   }
 
-  const setPeriodo = (tipo: string) => {
-    const d = new Date()
-    if (tipo === 'mes_atual') { setDe(mesInicio()); setAte(mesFim()) }
-    else if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
+  const setPeriodo = (label: string) => {
+    const lb = label || 'Personalizado'; setPeriodoSel(lb); const d = new Date()
+    if (lb === 'Mês Atual') { setDe(mesInicio()); setAte(mesFim()) }
+    else if (lb === 'Mês Anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
     else { setDe(''); setAte('') }
   }
 
@@ -157,15 +160,11 @@ export function CurvaAbcVendas() {
             </>}
           </div>
         </div>
-        <div className="ds-field"><label>Período</label>
-          <select className="field" defaultValue="periodo" onChange={(e) => setPeriodo(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="periodo">Personalizado</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
+        <div className="ds-field" style={{ minWidth: 130 }}><label>Período</label>
+          <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
-        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
-        <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-field"><label>&nbsp;</label>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 34, fontSize: 13, color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             <input type="checkbox" checked={incluirZerado} onChange={(e) => setIncluirZerado(e.target.checked)} style={{ width: 15, height: 15, accentColor: '#f97316' }} />

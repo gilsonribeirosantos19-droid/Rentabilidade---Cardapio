@@ -124,7 +124,7 @@ export function AuditoriaConversao() {
         </div>
         <div className="aud-fg" style={{ width: 170 }}>
           <div className="aud-lb">Loja</div>
-          <select className="field" style={{ width: '100%' }} value={loja} onChange={(e) => setLoja(e.target.value)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
+          <SearchSelect value={lojas.find((l) => l.id === loja)?.nome || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => setLoja(lojas.find((l) => l.nome === nm)?.id || '')} />
         </div>
         <div className="aud-fg" style={{ width: 230 }}>
           <div className="aud-lb">Pesquisar</div>

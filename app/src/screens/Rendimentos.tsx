@@ -27,6 +27,9 @@ function periodoRange(tipo: string): { de: string; ate: string } | null {
 type Form = { insumo_id: string; peso_bruto: string; peso_liquido: string; observacao: string }
 const novoForm = (): Form => ({ insumo_id: '', peso_bruto: '', peso_liquido: '', observacao: '' })
 
+const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
+const PERIODO_TIPO: Record<string, string> = { 'Personalizado': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+
 export function Rendimentos() {
   const { tenantId } = useAuth()
   const { lojaId } = useLoja()
@@ -35,6 +38,7 @@ export function Rendimentos() {
   const ini = periodoRange('mes_atual')!
   const [de, setDe] = useState(ini.de)
   const [ate, setAte] = useState(ini.ate)
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [pag, setPag] = useState(1)
   const [porPag, setPorPag] = useState(10)
   const [modal, setModal] = useState<{ id: string | null; form: Form } | null>(null)
@@ -78,7 +82,7 @@ export function Rendimentos() {
   const pagAtual = Math.min(pag, totalPags)
   const slice = filtrado.slice((pagAtual - 1) * porPag, (pagAtual - 1) * porPag + porPag)
 
-  const setPeriodo = (tipo: string) => { const r = periodoRange(tipo); if (r) { setDe(r.de); setAte(r.ate); setPag(1) } else { setDe(''); setAte(''); setPag(1) } }
+  const setPeriodo = (label: string) => { const l = label || 'Personalizado'; setPeriodoSel(l); const r = periodoRange(PERIODO_TIPO[l]); if (r) { setDe(r.de); setAte(r.ate); setPag(1) } else { setDe(''); setAte(''); setPag(1) } }
 
   const saveMut = useMutation({
     mutationFn: async ({ id, form }: { id: string | null; form: Form }) => {
@@ -158,21 +162,17 @@ export function Rendimentos() {
           <label>Insumo</label>
           <SearchSelect value={fInsumo ? (idToNome[fInsumo] || '') : ''} onChange={(n) => { setFInsumo(n ? (nomeToId[n] || '') : ''); setPag(1) }} options={nomes} placeholder="Todos os insumos" />
         </div>
-        <div className="ds-field">
+        <div className="ds-field" style={{ minWidth: 130 }}>
           <label>Período</label>
-          <select className="field" defaultValue="mes_atual" onChange={(e) => setPeriodo(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="periodo">Personalizado</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
+          <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
         <div className="ds-field">
           <label>De</label>
-          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPag(1) }} />
+          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPag(1); setPeriodoSel('Personalizado') }} />
         </div>
         <div className="ds-field">
           <label>Até</label>
-          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPag(1) }} />
+          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPag(1); setPeriodoSel('Personalizado') }} />
         </div>
         <div className="ds-actions">
           <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>{filtrado.length} registro{filtrado.length !== 1 ? 's' : ''}</span>

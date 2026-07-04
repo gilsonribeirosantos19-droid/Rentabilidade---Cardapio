@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
+import { SearchSelect } from '../components/SearchSelect'
 import './cmv.css'
 
 type Insumo = { id: string; nome?: string; categoria?: string; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
@@ -29,12 +30,16 @@ function periodoRange(tipo: string): { de: string; ate: string } | null {
   return null
 }
 
+const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
+const PERIODO_TIPO: Record<string, string> = { 'Personalizado': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+
 export function CmvTeoricoReal() {
   const { tenantId } = useAuth()
   const { lojaId } = useLoja()
   const ini = periodoRange('mes_atual')!
   const [de, setDe] = useState(ini.de)
   const [ate, setAte] = useState(ini.ate)
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [cat, setCat] = useState('')
   const [apenasDiv, setApenasDiv] = useState(false)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
@@ -135,7 +140,7 @@ export function CmvTeoricoReal() {
     return { tTeo, tReal, tDQ, tPct, tImp, crit, okC, atenC }
   }, [rows])
 
-  const setPeriodo = (tipo: string) => { const p = periodoRange(tipo); if (p) { setDe(p.de); setAte(p.ate) } else { setDe(''); setAte('') } }
+  const setPeriodo = (label: string) => { const l = label || 'Personalizado'; setPeriodoSel(l); const p = periodoRange(PERIODO_TIPO[l]); if (p) { setDe(p.de); setAte(p.ate) } else { setDe(''); setAte('') } }
 
   const exportCSV = () => {
     if (!calc) { showToast('Calcule primeiro.', 'err'); return }
@@ -152,22 +157,15 @@ export function CmvTeoricoReal() {
   return (
     <div className="cmv-screen">
       <div className="ds-filterbar">
-        <div className="ds-field">
+        <div className="ds-field" style={{ minWidth: 130 }}>
           <label>Período</label>
-          <select className="field" defaultValue="mes_atual" onChange={(e) => setPeriodo(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="periodo">Personalizado</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
+          <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
-        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
-        <div className="ds-field"><label>Até</label><input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
-        <div className="ds-field">
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field" style={{ minWidth: 130 }}>
           <label>Grupo</label>
-          <select className="field" value={cat} onChange={(e) => setCat(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="">Todos os grupos</option>
-            {grupos.map((g) => <option key={g} value={g}>{g}</option>)}
-          </select>
+          <SearchSelect value={cat} options={grupos} placeholder="Todos os grupos" onChange={(v) => setCat(v)} />
         </div>
         <div className="ds-field">
           <label>Mostrar</label>

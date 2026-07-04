@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { SearchSelect } from '../components/SearchSelect'
 import './monitorvendas.css'
 
 // Monitor de ARQUIVOS de importação do PDV (espelha o Monitor de Transações do Everest).
@@ -24,6 +25,7 @@ const SIT_META: Record<Situacao, { nome: string; dot: string; pill: string }> = 
   processado: { nome: 'Processado', dot: '#16a34a', pill: 'p-proc' },
 }
 const ORDER: Situacao[] = ['com_erros', 'nao_recebido', 'aguardando', 'em_processamento', 'processado']
+const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
@@ -42,6 +44,7 @@ export function MonitorVendas() {
   const { lojas } = useLoja()
   const [de, setDe] = useState(mesInicio())
   const [ate, setAte] = useState(mesFim())
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
   const [lojaOpen, setLojaOpen] = useState(false)
   const initRef = useRef(false)
@@ -50,10 +53,10 @@ export function MonitorVendas() {
   const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma loja' : lojaSet.size === 1 ? (lojas.find((l) => lojaSet.has(l.id))?.nome || '1 loja') : `${lojaSet.size} lojas`
   const toggleLoja = (id: string) => setLojaSet((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
   const toggleTodasLojas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.id)))
-  const setPeriodo = (tipo: string) => {
-    const d = new Date()
-    if (tipo === 'mes_atual') { setDe(mesInicio()); setAte(mesFim()) }
-    else if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
+  const setPeriodo = (label: string) => {
+    const lb = label || 'Personalizado'; setPeriodoSel(lb); const d = new Date()
+    if (lb === 'Mês Atual') { setDe(mesInicio()); setAte(mesFim()) }
+    else if (lb === 'Mês Anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
     else { setDe(''); setAte('') }
   }
   const [chips, setChips] = useState<Set<Situacao>>(new Set(ORDER))
@@ -111,15 +114,11 @@ export function MonitorVendas() {
           </div>
         </div>
         <div className="ds-field"><label>Tipo</label><select className="field"><option>Venda</option><option>Financeiro</option></select></div>
-        <div className="ds-field"><label>Período</label>
-          <select className="field" defaultValue="mes_atual" onChange={(e) => setPeriodo(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="periodo">Personalizado</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
+        <div className="ds-field" style={{ minWidth: 130 }}><label>Período</label>
+          <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
-        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
-        <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-actions">
           <button className="btn-ghost">Limpar</button>
         </div>

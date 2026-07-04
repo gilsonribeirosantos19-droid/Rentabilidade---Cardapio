@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { custoDoInsumo } from '../lib/cost'
+import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
 type Loja = { id: string; nome?: string; cnpj?: string; razao_social?: string }
@@ -18,6 +19,9 @@ type Row = { loja: Loja; situacao: 'aberto' | 'fechado'; itens: ItemRow[]; fatur
 const brl = (v?: number) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const dataOf = (m: Mov) => (m.criado_em || m.created_at || '').slice(0, 10)
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+const ACAO_OPTS = ['Fechar', 'Abrir (reabrir)']
+const ACAO_LBL: Record<string, string> = { fechar: 'Fechar', abrir: 'Abrir (reabrir)' }
+const ACAO_VAL: Record<string, 'fechar' | 'abrir'> = { 'Fechar': 'fechar', 'Abrir (reabrir)': 'abrir' }
 
 function monthBounds(comp: string) {
   const [y, m] = comp.split('-').map(Number)
@@ -225,17 +229,11 @@ export function Fechamento() {
             {anos.map((y) => <option key={y} value={String(y)}>{y}</option>)}
           </select>
         </div>
-        <div className="ds-field"><label>Loja</label>
-          <select className="field" value={lojaFiltro} onChange={(e) => setLojaFiltro(e.target.value)} style={{ minWidth: 180 }}>
-            <option value="">Todas as lojas</option>
-            {(base?.lojas || []).map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-          </select>
+        <div className="ds-field" style={{ minWidth: 180 }}><label>Loja</label>
+          <SearchSelect value={(base?.lojas || []).find((l) => l.id === lojaFiltro)?.nome || ''} options={(base?.lojas || []).map((l) => l.nome || '')} placeholder="Todas as lojas" onChange={(nm) => setLojaFiltro((base?.lojas || []).find((l) => l.nome === nm)?.id || '')} />
         </div>
-        <div className="ds-field"><label>Ação</label>
-          <select className="field" value={acao} onChange={(e) => setAcao(e.target.value as 'fechar' | 'abrir')} style={{ minWidth: 140 }}>
-            <option value="fechar">Fechar</option>
-            <option value="abrir">Abrir (reabrir)</option>
-          </select>
+        <div className="ds-field" style={{ minWidth: 140 }}><label>Ação</label>
+          <SearchSelect value={ACAO_LBL[acao] || 'Fechar'} options={ACAO_OPTS} placeholder="Fechar" onChange={(l) => setAcao(ACAO_VAL[l] || 'fechar')} />
         </div>
         <div className="ds-actions">
           <button className="btn-pri" disabled={aplicarMut.isPending || !sel.size} onClick={aplicar}>{acao === 'fechar' ? 'Fechar' : 'Reabrir'} ({sel.size})</button>
