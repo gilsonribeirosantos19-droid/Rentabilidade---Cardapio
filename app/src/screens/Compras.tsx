@@ -28,6 +28,23 @@ const LABEL: Record<string, string> = { solicitado: 'Aguardando', processado: 'P
 const PED_ST: Record<string, { l: string; b: string }> = { pendente: { l: 'Aguardando envio', b: 'b-pendente' }, enviado: { l: 'Enviado', b: 'b-enviado' }, baixado: { l: 'Baixado', b: 'b-baixado' }, cancelado: { l: 'Cancelado', b: 'b-cancelado' }, aguardando_aprovacao: { l: 'Aguard. aprovação', b: 'b-solicitado' }, aprovado: { l: 'Aprovado', b: 'b-processado' } }
 const PED_ORDEM: Record<string, number> = { aguardando_aprovacao: 0, pendente: 1, enviado: 2, aprovado: 3, baixado: 4, cancelado: 5 }
 
+// dropdowns com busca da aba Compras (rótulo ↔ valor interno)
+const CMP_PER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
+const CMP_PER_LBL: Record<string, string> = { periodo: 'Período', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior' }
+const CMP_PER_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+const SOL_ST_OPTS = ['Todos os status', 'Aguardando', 'Processado', 'Cancelado']
+const SOL_ST_LBL: Record<string, string> = { '': 'Todos os status', solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
+const SOL_ST_VAL: Record<string, string> = { 'Todos os status': '', 'Aguardando': 'solicitado', 'Processado': 'processado', 'Cancelado': 'cancelado' }
+const PG_ST_OPTS = ['Ativos (a enviar / enviados)', 'Aguardando aprovação', 'Aguardando envio', 'Enviado', 'Baixados', 'Cancelados', 'Todos']
+const PG_ST_LBL: Record<string, string> = { ativos: 'Ativos (a enviar / enviados)', aguardando_aprovacao: 'Aguardando aprovação', pendente: 'Aguardando envio', enviado: 'Enviado', baixado: 'Baixados', cancelado: 'Cancelados', todos: 'Todos' }
+const PG_ST_VAL: Record<string, string> = { 'Ativos (a enviar / enviados)': 'ativos', 'Aguardando aprovação': 'aguardando_aprovacao', 'Aguardando envio': 'pendente', 'Enviado': 'enviado', 'Baixados': 'baixado', 'Cancelados': 'cancelado', 'Todos': 'todos' }
+const PG_DT_OPTS = ['Qualquer data', 'Hoje', 'Últimos 7 dias', 'Últimos 30 dias']
+const PG_DT_LBL: Record<string, string> = { '': 'Qualquer data', hoje: 'Hoje', '7': 'Últimos 7 dias', '30': 'Últimos 30 dias' }
+const PG_DT_VAL: Record<string, string> = { 'Qualquer data': '', 'Hoje': 'hoje', 'Últimos 7 dias': '7', 'Últimos 30 dias': '30' }
+const PG_ORD_OPTS = ['Fornecedor (A-Z)', 'Data (mais recente)', 'Valor (maior)']
+const PG_ORD_LBL: Record<string, string> = { forn: 'Fornecedor (A-Z)', data: 'Data (mais recente)', valor: 'Valor (maior)' }
+const PG_ORD_VAL: Record<string, string> = { 'Fornecedor (A-Z)': 'forn', 'Data (mais recente)': 'data', 'Valor (maior)': 'valor' }
+
 // dados compartilhados (leves) usados por várias abas
 function useCompras(tenantId: string) {
   const insumos = useQuery({ queryKey: ['cmp-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,codigo_interno,categoria').eq('tenant_id', tenantId).order('nome').range(f, t)) })
@@ -90,10 +107,10 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
         <div><div style={{ fontSize: 13, fontWeight: 700 }}>1. SOLICITAÇÕES</div><div style={{ fontSize: 12, color: '#94a3b8' }}>Lista de solicitações enviadas pelas lojas</div></div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
-          <select className="field" style={{ minWidth: 150 }} value={lojaF} onChange={(e) => { setLojaF(e.target.value); setPag(1) }}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
-          <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => aplicarPeriodo(e.target.value)}><option value="periodo">Período</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option></select>
+          <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={lojaMap[lojaF] || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => { setLojaF(lojas.find((l) => l.nome === nm)?.id || ''); setPag(1) }} /></div>
+          <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={CMP_PER_LBL[periodo] || 'Período'} options={CMP_PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(CMP_PER_VAL[l] || 'periodo')} /></div>
           <input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo'); setPag(1) }} /><span style={{ fontSize: 12, color: '#94a3b8' }}>até</span><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo'); setPag(1) }} />
-          <select className="field" value={statusF} onChange={(e) => { setStatusF(e.target.value); setPag(1) }}><option value="">Todos os status</option><option value="solicitado">Aguardando</option><option value="processado">Processado</option><option value="cancelado">Cancelado</option></select>
+          <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={SOL_ST_LBL[statusF] || 'Todos os status'} options={SOL_ST_OPTS} placeholder="Todos os status" onChange={(l) => { setStatusF(SOL_ST_VAL[l] || ''); setPag(1) }} /></div>
         </div>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
@@ -400,9 +417,9 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '4px 0 12px' }}>
         <input className="field" style={{ minWidth: 200 }} placeholder="Buscar fornecedor..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <select className="field" value={statusF} onChange={(e) => setStatusF(e.target.value)}><option value="ativos">Ativos (a enviar / enviados)</option><option value="aguardando_aprovacao">Aguardando aprovação</option><option value="pendente">Aguardando envio</option><option value="enviado">Enviado</option><option value="baixado">Baixados</option><option value="cancelado">Cancelados</option><option value="todos">Todos</option></select>
-        <select className="field" value={filData} onChange={(e) => setFilData(e.target.value)}><option value="">Qualquer data</option><option value="hoje">Hoje</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select>
-        <select className="field" value={ordenar} onChange={(e) => setOrdenar(e.target.value)}><option value="forn">Fornecedor (A-Z)</option><option value="data">Data (mais recente)</option><option value="valor">Valor (maior)</option></select>
+        <div className="fbar-ss" style={{ minWidth: 200 }}><SearchSelect value={PG_ST_LBL[statusF] || 'Ativos (a enviar / enviados)'} options={PG_ST_OPTS} placeholder="Status" onChange={(l) => setStatusF(PG_ST_VAL[l] || 'ativos')} /></div>
+        <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={PG_DT_LBL[filData] || 'Qualquer data'} options={PG_DT_OPTS} placeholder="Qualquer data" onChange={(l) => setFilData(PG_DT_VAL[l] ?? '')} /></div>
+        <div className="fbar-ss" style={{ minWidth: 170 }}><SearchSelect value={PG_ORD_LBL[ordenar] || 'Fornecedor (A-Z)'} options={PG_ORD_OPTS} placeholder="Ordenar" onChange={(l) => setOrdenar(PG_ORD_VAL[l] || 'forn')} /></div>
         <button className="btn-ghost" onClick={() => { setStatusF('ativos'); setBusca(''); setFilData(''); setOrdenar('forn') }}>Limpar filtros</button>
         <button className="btn-ghost" style={{ marginLeft: 'auto' }} title="Imprime 1 folha por loja com todos os itens consolidados dos pedidos listados" onClick={imprimirTodos}>🖨 Baixar todos (por loja)</button>
       </div>

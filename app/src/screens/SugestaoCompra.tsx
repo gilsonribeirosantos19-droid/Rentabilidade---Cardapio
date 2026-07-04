@@ -6,7 +6,16 @@ import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { ChartBox } from '../components/ChartBox'
+import { SearchSelect } from '../components/SearchSelect'
 import './sugestao.css'
+
+// dropdowns com busca da toolbar (rótulo ↔ valor)
+const PA_OPTS = ['Últimos 30 dias', 'Últimos 60 dias', 'Últimos 90 dias']
+const PA_LBL: Record<number, string> = { 30: 'Últimos 30 dias', 60: 'Últimos 60 dias', 90: 'Últimos 90 dias' }
+const PA_VAL: Record<string, number> = { 'Últimos 30 dias': 30, 'Últimos 60 dias': 60, 'Últimos 90 dias': 90 }
+const CB_OPTS = ['7 dias', '15 dias', '30 dias']
+const CB_LBL: Record<number, string> = { 7: '7 dias', 15: '15 dias', 30: '30 dias' }
+const CB_VAL: Record<string, number> = { '7 dias': 7, '15 dias': 15, '30 dias': 30 }
 
 // Sugestão de Compra (Compras) — responde "o que precisamos comprar?".
 // DADOS REAIS: estoque/mínimo/custo (saldo_estoque), consumo (saidas_estoque),
@@ -210,10 +219,10 @@ export function SugestaoCompra() {
   return (
     <div className="sug-screen">
       <div className="sug-toolbar">
-        <div className="fld"><label>Loja</label><select value={lojaFil} onChange={(e) => setLojaFil(e.target.value)}><option value="">Todas as lojas ({lojas.length || '—'})</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>
-        <div className="fld"><label>Período de análise</label><select value={periodoDias} onChange={(e) => setPeriodoDias(Number(e.target.value))}><option value={30}>Últimos 30 dias</option><option value={60}>Últimos 60 dias</option><option value={90}>Últimos 90 dias</option></select></div>
-        <div className="fld"><label>Cobertura desejada</label><select value={coberturaDias} onChange={(e) => setCoberturaDias(Number(e.target.value))}><option value={7}>7 dias</option><option value={15}>15 dias</option><option value={30}>30 dias</option></select></div>
-        <div className="fld"><label>Categoria</label><select value={cat} onChange={(e) => setCat(e.target.value)}><option value="">Todas</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+        <div className="fld"><label>Loja</label><SearchSelect value={lojaFil ? (lojas.find((l) => l.id === lojaFil)?.nome || '') : ''} options={lojas.map((l) => l.nome)} placeholder={`Todas as lojas (${lojas.length || '—'})`} onChange={(nm) => setLojaFil(lojas.find((l) => l.nome === nm)?.id || '')} /></div>
+        <div className="fld"><label>Período de análise</label><SearchSelect value={PA_LBL[periodoDias]} options={PA_OPTS} placeholder="Período" onChange={(l) => setPeriodoDias(PA_VAL[l] || 30)} /></div>
+        <div className="fld"><label>Cobertura desejada</label><SearchSelect value={CB_LBL[coberturaDias]} options={CB_OPTS} placeholder="Cobertura" onChange={(l) => setCoberturaDias(CB_VAL[l] || 7)} /></div>
+        <div className="fld"><label>Categoria</label><SearchSelect value={cat} options={cats} placeholder="Todas" onChange={setCat} /></div>
         <div className="fld"><label>Buscar item</label><input placeholder="Código ou descrição..." value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
         <div className="grow" />
         <button className="btn btn-solid" onClick={recalcular}>Recalcular sugestão</button>
