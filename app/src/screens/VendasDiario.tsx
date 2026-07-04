@@ -5,13 +5,13 @@ import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
 import './faturamento.css'
 
-// Vendas por Dia — relatório detalhado por loja × DIA (lê o portão icomanda_recebimento,
-// só dias 'processado'). Mostra tudo que o dia trouxe: comandas, canceladas, pessoas,
-// faturamento, desconto, taxa, couvert, ticket. Botão "Puxar do iComanda" (modo diário).
+// Vendas por Dia — detalhado por loja × DIA (lê o portão icomanda_recebimento, só 'processado').
+// Dois filtros SEPARADOS: Canal (salão/delivery/balcão — EXATO, do faturamento.por_tipo) e
+// Turno (almoço/jantar — recorte por horário, corte 17h, aproximado pela proporção do dia).
 
 type Canal = { canal: string; faturado: number; comandas: number; pessoas: number; desconto: number; taxa: number; couvert: number }
-type RecRow = { loja_id: string; data: string; status: string; faturado?: number; desconto?: number; taxa?: number; couvert?: number; qtd_comandas?: number; qtd_canceladas?: number; pessoas?: number; ticket_medio?: number; fat_almoco?: number; fat_jantar?: number; por_canal?: Canal[] | null }
-type Row = { id: string; loja: string; data: string; seg: string; dMovimento: string; comandas: number; canceladas: number; pessoas: number; faturado: number; desconto: number; taxa: number; couvert: number; ticket: number }
+type RecRow = { loja_id: string; data: string; status: string; faturado?: number; desconto?: number; taxa?: number; couvert?: number; qtd_comandas?: number; pessoas?: number; fat_almoco?: number; fat_jantar?: number; por_canal?: Canal[] | null }
+type Row = { id: string; loja: string; data: string; canal: string; dMovimento: string; comandas: number; pessoas: number; faturado: number; desconto: number; taxa: number; couvert: number; ticket: number }
 
 const brl = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const int = (v: number) => v.toLocaleString('pt-BR')
@@ -19,7 +19,8 @@ const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${Str
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const fmtDia = (iso: string) => iso.split('-').reverse().join('/')
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
-const DETALHE_OPTS = ['Consolidado', 'Turno', 'Canal']
+const TURNO_FILTRO = ['Todos', 'Almoço', 'Jantar']
+const CANAL_FILTRO = ['Todos', 'Salão', 'Delivery', 'Balcão']
 
 export function VendasDiario() {
   const { lojas } = useLoja()
@@ -29,7 +30,8 @@ export function VendasDiario() {
   const [periodoSel, setPeriodoSel] = useState('Personalizado')
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
   const [lojaOpen, setLojaOpen] = useState(false)
-  const [detalheSel, setDetalheSel] = useState('Consolidado')
+  const [turnoSel, setTurnoSel] = useState('Todos')
+  const [canalSel, setCanalSel] = useState('Todos')
   const [syncing, setSyncing] = useState(false)
   const [msg, setMsg] = useState('')
   const initRef = useRef(false)
@@ -83,33 +85,33 @@ export function VendasDiario() {
     const out: Row[] = []
     for (const r of base) {
       const loja = lojaNome[r.loja_id] || '—'
-      const day = { comandas: Number(r.qtd_comandas) || 0, canceladas: Number(r.qtd_canceladas) || 0, pessoas: Number(r.pessoas) || 0, faturado: Number(r.faturado) || 0, desconto: Number(r.desconto) || 0, taxa: Number(r.taxa) || 0, couvert: Number(r.couvert) || 0 }
-      const mkRow = (seg: string, d: typeof day): Row => ({ id: `${r.loja_id}|${r.data}|${seg}`, loja, data: r.data, seg, dMovimento: fmtDia(r.data), ...d, ticket: d.comandas ? d.faturado / d.comandas : 0 })
-      if (detalheSel === 'Consolidado') { out.push(mkRow('', day)); continue }
-      if (detalheSel === 'Canal') {
-        // canal vem EXATO do iComanda (faturamento.por_tipo); só canais com venda
-        const canais = Array.isArray(r.por_canal) ? r.por_canal : []
-        if (!canais.length) { out.push(mkRow('(sem canal)', day)); continue }
-        for (const c of canais) {
-          if (!(Number(c.faturado) > 0)) continue
-          out.push(mkRow(c.canal, { comandas: Number(c.comandas) || 0, canceladas: 0, pessoas: Number(c.pessoas) || 0, faturado: Number(c.faturado) || 0, desconto: Number(c.desconto) || 0, taxa: Number(c.taxa) || 0, couvert: Number(c.couvert) || 0 }))
-        }
-        continue
-      }
-      // Turno: divide pela proporção do faturamento por hora; almoço = proporcional, jantar = resto (soma exata)
+      // fator do turno: proporção do faturamento por hora (corte 17h). Todos = dia inteiro.
       const fa = Number(r.fat_almoco) || 0, fj = Number(r.fat_jantar) || 0
       const propA = fa + fj > 0 ? fa / (fa + fj) : 0
-      const alm = { comandas: Math.round(day.comandas * propA), canceladas: Math.round(day.canceladas * propA), pessoas: Math.round(day.pessoas * propA), faturado: +(day.faturado * propA).toFixed(2), desconto: +(day.desconto * propA).toFixed(2), taxa: +(day.taxa * propA).toFixed(2), couvert: +(day.couvert * propA).toFixed(2) }
-      const jan = { comandas: day.comandas - alm.comandas, canceladas: day.canceladas - alm.canceladas, pessoas: day.pessoas - alm.pessoas, faturado: +(day.faturado - alm.faturado).toFixed(2), desconto: +(day.desconto - alm.desconto).toFixed(2), taxa: +(day.taxa - alm.taxa).toFixed(2), couvert: +(day.couvert - alm.couvert).toFixed(2) }
-      if (alm.faturado > 0) out.push(mkRow('Almoço', alm))
-      if (jan.faturado > 0) out.push(mkRow('Jantar', jan))
+      const factor = turnoSel === 'Almoço' ? propA : turnoSel === 'Jantar' ? (1 - propA) : 1
+      // quebra por canal (exato). Sem por_canal (dado antigo) → 1 linha "(sem canal)" com o dia.
+      const canais: Canal[] = Array.isArray(r.por_canal) && r.por_canal.length
+        ? r.por_canal
+        : [{ canal: '(sem canal)', faturado: Number(r.faturado) || 0, comandas: Number(r.qtd_comandas) || 0, pessoas: Number(r.pessoas) || 0, desconto: Number(r.desconto) || 0, taxa: Number(r.taxa) || 0, couvert: Number(r.couvert) || 0 }]
+      for (const c of canais) {
+        if (canalSel !== 'Todos' && c.canal !== canalSel) continue
+        const faturado = +((Number(c.faturado) || 0) * factor).toFixed(2)
+        if (!(faturado > 0)) continue
+        const comandas = Math.round((Number(c.comandas) || 0) * factor)
+        out.push({
+          id: `${r.loja_id}|${r.data}|${c.canal}`, loja, data: r.data, canal: c.canal, dMovimento: fmtDia(r.data),
+          comandas, pessoas: Math.round((Number(c.pessoas) || 0) * factor), faturado,
+          desconto: +((Number(c.desconto) || 0) * factor).toFixed(2), taxa: +((Number(c.taxa) || 0) * factor).toFixed(2), couvert: +((Number(c.couvert) || 0) * factor).toFixed(2),
+          ticket: comandas ? faturado / comandas : 0,
+        })
+      }
     }
-    return out.sort((a, b) => b.data.localeCompare(a.data) || a.loja.localeCompare(b.loja) || a.seg.localeCompare(b.seg))
-  }, [recebidos, lojaSet, allSel, lojaNome, detalheSel])
+    return out.sort((a, b) => b.data.localeCompare(a.data) || a.loja.localeCompare(b.loja) || a.canal.localeCompare(b.canal))
+  }, [recebidos, lojaSet, allSel, lojaNome, turnoSel, canalSel])
 
   const tot = useMemo(() => {
-    const t = { comandas: 0, canceladas: 0, pessoas: 0, faturado: 0, desconto: 0, taxa: 0, couvert: 0 }
-    lista.forEach((r) => { t.comandas += r.comandas; t.canceladas += r.canceladas; t.pessoas += r.pessoas; t.faturado += r.faturado; t.desconto += r.desconto; t.taxa += r.taxa; t.couvert += r.couvert })
+    const t = { comandas: 0, pessoas: 0, faturado: 0, desconto: 0, taxa: 0, couvert: 0 }
+    lista.forEach((r) => { t.comandas += r.comandas; t.pessoas += r.pessoas; t.faturado += r.faturado; t.desconto += r.desconto; t.taxa += r.taxa; t.couvert += r.couvert })
     return t
   }, [lista])
   const ticketMedio = tot.comandas > 0 ? tot.faturado / tot.comandas : 0
@@ -130,8 +132,11 @@ export function VendasDiario() {
             </>}
           </div>
         </div>
-        <div className="ds-field" style={{ minWidth: 130 }}><label>Detalhar por</label>
-          <SearchSelect value={detalheSel} options={DETALHE_OPTS} placeholder="Detalhar" onChange={(v) => setDetalheSel(v || 'Consolidado')} />
+        <div className="ds-field" style={{ minWidth: 120 }}><label>Canal</label>
+          <SearchSelect value={canalSel} options={CANAL_FILTRO} placeholder="Canal" onChange={(v) => setCanalSel(v || 'Todos')} />
+        </div>
+        <div className="ds-field" style={{ minWidth: 110 }}><label>Turno</label>
+          <SearchSelect value={turnoSel} options={TURNO_FILTRO} placeholder="Turno" onChange={(v) => setTurnoSel(v || 'Todos')} />
         </div>
         <div className="ds-field" style={{ minWidth: 130 }}><label>Período</label>
           <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
@@ -148,29 +153,28 @@ export function VendasDiario() {
         {msg
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando…</span>
-          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas por dia — só dias Processados no portão</span>}
+          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas por dia — só dias Processados{turnoSel !== 'Todos' ? ` · turno estimado por horário` : ''}</span>}
       </div>
 
       <div className="grid-wrap">
         <table>
           <thead>
             <tr>
-              <th>Loja</th>{detalheSel !== 'Consolidado' && <th>{detalheSel}</th>}<th>D. Movimento</th>
-              <th className="r">Comandas</th><th className="r">Cancel.</th><th className="r">Pessoas</th>
+              <th>Loja</th><th>Canal</th><th>D. Movimento</th>
+              <th className="r">Comandas</th><th className="r">Pessoas</th>
               <th className="r">Faturamento</th><th className="r">Desconto</th><th className="r">Taxa</th><th className="r">Couvert</th><th className="r">Ticket</th>
             </tr>
           </thead>
           <tbody>
             {!lista.length
-              ? <tr><td colSpan={11} className="empty">Nenhum dia processado no filtro. Clique em "Puxar do iComanda".</td></tr>
+              ? <tr><td colSpan={10} className="empty">Nenhum dia processado no filtro. Clique em "Puxar do iComanda".</td></tr>
               : <>
                 {lista.map((r) => (
                   <tr key={r.id}>
                     <td>{r.loja}</td>
-                    {detalheSel !== 'Consolidado' && <td>{r.seg}</td>}
+                    <td>{r.canal}</td>
                     <td>{r.dMovimento}</td>
                     <td className="r">{int(r.comandas)}</td>
-                    <td className="r">{int(r.canceladas)}</td>
                     <td className="r">{int(r.pessoas)}</td>
                     <td className="r">{brl(r.faturado)}</td>
                     <td className="r">{brl(r.desconto)}</td>
@@ -179,13 +183,13 @@ export function VendasDiario() {
                     <td className="r">{brl(r.ticket)}</td>
                   </tr>
                 ))}
-                <tr className="fill" aria-hidden="true"><td colSpan={11} /></tr>
+                <tr className="fill" aria-hidden="true"><td colSpan={10} /></tr>
               </>}
           </tbody>
           {lista.length > 0 && <tfoot>
             <tr>
-              <td>{lista.length} linhas</td>{detalheSel !== 'Consolidado' && <td />}<td />
-              <td className="r">{int(tot.comandas)}</td><td className="r">{int(tot.canceladas)}</td><td className="r">{int(tot.pessoas)}</td>
+              <td>{lista.length} linhas</td><td /><td />
+              <td className="r">{int(tot.comandas)}</td><td className="r">{int(tot.pessoas)}</td>
               <td className="r">{brl(tot.faturado)}</td><td className="r">{brl(tot.desconto)}</td><td className="r">{brl(tot.taxa)}</td><td className="r">{brl(tot.couvert)}</td><td className="r">{brl(ticketMedio)}</td>
             </tr>
           </tfoot>}
