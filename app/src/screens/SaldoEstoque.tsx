@@ -7,6 +7,11 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
+// Posição: opções do dropdown com busca (mapeia rótulo ↔ valor interno)
+const POS_OPTS = ['Posição Atual', 'Fim Mês Anterior', 'Data Específica']
+const POS_LBL: Record<string, string> = { atual: 'Posição Atual', mes_anterior: 'Fim Mês Anterior', especifica: 'Data Específica' }
+const POS_VAL: Record<string, string> = { 'Posição Atual': 'atual', 'Fim Mês Anterior': 'mes_anterior', 'Data Específica': 'especifica' }
+
 type Insumo = { id: string; nome: string; categoria?: string; tipo_item?: string; unidade_medida?: string; unidade_compra?: string; familia?: string; subgrupo?: string; participa_cmv?: string; minimo?: number }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number }
 type Mov = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_unitario?: number; criado_em?: string; created_at?: string }
@@ -154,20 +159,13 @@ export function SaldoEstoque() {
         <div className="ds-field">
           <label>Posição</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select className="field" style={{ minWidth: 150 }} value={posicao} onChange={(e) => onPosChange(e.target.value)}>
-              <option value="atual">Posição Atual</option>
-              <option value="mes_anterior">Fim Mês Anterior</option>
-              <option value="especifica">Data Específica</option>
-            </select>
+            <div style={{ minWidth: 160 }}><SearchSelect value={POS_LBL[posicao]} onChange={(l) => onPosChange(POS_VAL[l] || 'atual')} options={POS_OPTS} placeholder="Posição" /></div>
             {posicao === 'especifica' && <input type="date" className="field" value={dataBase} onChange={(e) => setDataBase(e.target.value)} />}
           </div>
         </div>
-        <div className="ds-field">
+        <div className="ds-field" style={{ minWidth: 190 }}>
           <label>Categoria</label>
-          <select className="field" style={{ minWidth: 170 }} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-            <option value="">Todas as categorias</option>
-            {cats.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <SearchSelect value={categoria} onChange={setCategoria} options={cats} placeholder="Todas as categorias" />
         </div>
         <div className="ds-field ds-grow">
           <label>Buscar</label>
