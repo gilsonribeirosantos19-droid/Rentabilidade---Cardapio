@@ -48,6 +48,7 @@ export function Movimentacao() {
   const d30 = new Date(); d30.setDate(d30.getDate() - 30)
   const [de, setDe] = useState(iso(d30))
   const [ate, setAte] = useState(iso(new Date()))
+  const [periodoSel, setPeriodoSel] = useState('Personalizado')
   const [catF, setCatF] = useState('')
   const [busca, setBusca] = useState('')
   const [comSaldo, setComSaldo] = useState(true)
@@ -156,11 +157,13 @@ export function Movimentacao() {
   const visible = (id: string) => !!cols[id]
   const visCols = MOV_COLS.filter((c) => visible(c.id))
 
-  const setPreset = (v: string) => {
+  const setPreset = (label: string) => {
+    const l = label || 'Personalizado'
+    setPeriodoSel(l)
     const now = new Date()
-    if (v === 'mes_atual') { setDe(iso(new Date(now.getFullYear(), now.getMonth(), 1))); setAte(iso(now)) }
-    else if (v === 'mes_anterior') { setDe(iso(new Date(now.getFullYear(), now.getMonth() - 1, 1))); setAte(iso(new Date(now.getFullYear(), now.getMonth(), 0))) }
-    else { setDe(''); setAte('') }
+    if (l === 'Mês Atual') { setDe(iso(new Date(now.getFullYear(), now.getMonth(), 1))); setAte(iso(now)) }
+    else if (l === 'Mês Anterior') { setDe(iso(new Date(now.getFullYear(), now.getMonth() - 1, 1))); setAte(iso(new Date(now.getFullYear(), now.getMonth(), 0))) }
+    // Personalizado → mantém as datas atuais
   }
   const limpar = () => { setCatF(''); setBusca(''); setTipo(''); setFamilia(''); setSubgrupo(''); setFornecedor(''); setUnidade(''); setCmvMode('todos'); setComSaldo(true); setSoCmv(false) }
 
@@ -224,15 +227,13 @@ export function Movimentacao() {
   return (
     <div className="est-screen">
       <div className="ds-filterbar">
-        <div className="ds-field"><label>Período</label>
-          <select className="field" style={{ minWidth: 130 }} defaultValue="periodo" onChange={(e) => setPreset(e.target.value)}>
-            <option value="periodo">Personalizado</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option>
-          </select>
+        <div className="ds-field" style={{ minWidth: 150 }}><label>Período</label>
+          <SearchSelect value={periodoSel} onChange={setPreset} options={['Personalizado', 'Mês Atual', 'Mês Anterior']} placeholder="Período" />
         </div>
-        <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => setDe(e.target.value)} /></div>
-        <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => setAte(e.target.value)} /></div>
-        <div className="ds-field"><label>Grupo</label>
-          <select className="field" style={{ width: 200 }} value={catF} onChange={(e) => setCatF(e.target.value)}><option value="">Todos os grupos</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+        <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field" style={{ minWidth: 190 }}><label>Grupo</label>
+          <SearchSelect value={catF} onChange={setCatF} options={cats} placeholder="Todos os grupos" />
         </div>
         <div className="ds-field ds-grow"><label>Buscar insumo</label><input className="field" style={{ width: '100%', minWidth: 200 }} placeholder="Digite o nome do insumo..." value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
         <div className="ds-actions">
