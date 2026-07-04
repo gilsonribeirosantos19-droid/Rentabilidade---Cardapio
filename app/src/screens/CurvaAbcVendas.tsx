@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useLoja } from '../lib/loja'
+import { useAuth } from '../lib/auth'
+import { supabase } from '../lib/supabase'
 import { SearchSelect } from '../components/SearchSelect'
 import './faturamento.css'
 
 // Curva ABC (PDV) — ranqueia os PRODUTOS por faturamento (V. Venda Líquida).
-// TELA MOCK: dados de exemplo. Quando o PDV estiver processando as vendas,
-// esta tela agrega por produto e classifica: A = até 80% do valor, B = 80-95%, C = resto.
+// Lê as vendas REAIS do iComanda (tabela icomanda_vendas, por competência/loja/produto).
+// Botão "Puxar do iComanda" chama a Edge Function icomanda-sync p/ atualizar a competência.
+// Agrega por produto e classifica: A = até 80% do valor, B = 80-95%, C = resto.
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
 
 type Prod = { id: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number }
@@ -39,33 +42,24 @@ function loadCols(): Record<string, boolean> {
   const d: Record<string, boolean> = {}; COLS.forEach((c) => { d[c.key] = !!c.def }); return d
 }
 
-const L = 'Sushi Ponta Negra'
-const MOCK: Prod[] = [
-  { id: '1', loja: L, item: '030 - COMBO HOT P', codigo: '3182', grupo: 'G-COMBINADOS', qVenda: 35, vBruta: 2376.50, vDesc: 236.28 },
-  { id: '2', loja: L, item: '032 - COMBO HOT G', codigo: '3183', grupo: 'G-COMBINADOS', qVenda: 19, vBruta: 2563.10, vDesc: 171.20 },
-  { id: '3', loja: L, item: '034 - COMBO PRIME', codigo: '3185', grupo: 'G-COMBINADOS', qVenda: 34, vBruta: 4586.60, vDesc: 155.59 },
-  { id: '4', loja: L, item: '035 - COMBO PHILADELFIA', codigo: '3187', grupo: 'G-COMBINADOS', qVenda: 20, vBruta: 1898.00, vDesc: 166.45 },
-  { id: '5', loja: L, item: '001 - HARUMAKI CAMARAO', codigo: '1870', grupo: 'G-ENTRADAS', qVenda: 35, vBruta: 836.50, vDesc: 93.49 },
-  { id: '6', loja: L, item: '002 - CAMARAO EMPANADO', codigo: '1871', grupo: 'G-ENTRADAS', qVenda: 22, vBruta: 789.80, vDesc: 64.21 },
-  { id: '7', loja: L, item: '005 - CEVICHE', codigo: '1874', grupo: 'G-ENTRADAS', qVenda: 3, vBruta: 134.70, vDesc: 0 },
-  { id: '8', loja: L, item: '010 - HOT BOLL', codigo: '2554', grupo: 'G-ENTRADAS', qVenda: 10.5, vBruta: 345.45, vDesc: 61.62 },
-  { id: '9', loja: L, item: '56 - HOT PHILADELFIA', codigo: '1928', grupo: 'G-HOT ROLL', qVenda: 70, vBruta: 2513.00, vDesc: 175.53 },
-  { id: '10', loja: L, item: '57 - HOT BUTTERFLY', codigo: '1929', grupo: 'G-HOT ROLL', qVenda: 12, vBruta: 406.60, vDesc: 9.31 },
-  { id: '11', loja: L, item: '169 - HOT SUSHIZAO', codigo: '2640', grupo: 'G-HOT ROLL', qVenda: 25.5, vBruta: 1170.45, vDesc: 35.50 },
-  { id: '12', loja: L, item: '074 - RODIZIO DO MAR', codigo: '3301', grupo: 'G-RODIZIO DO MAR', qVenda: 40, vBruta: 3200.00, vDesc: 0 },
-  { id: '13', loja: L, item: 'REFRI. COCA ZERO LATA', codigo: '1200', grupo: 'G-BEBIDAS', qVenda: 120, vBruta: 948.00, vDesc: 30.00 },
-  // itens de RODÍZIO com valor zerado (só aparecem com o filtro ligado)
-  { id: 'z1', loja: L, item: '(RS) 56 - HOT PHILADELFIA', codigo: '1928', grupo: 'G-RODIZIO DE SUSHI', qVenda: 68, vBruta: 0, vDesc: 0 },
-  { id: 'z2', loja: L, item: '(RS) 62 - HOT MORANGO NUT', codigo: '1934', grupo: 'G-RODIZIO DE SUSHI', qVenda: 15, vBruta: 0, vDesc: 0 },
-  { id: 'z3', loja: L, item: '(RDM) CAMAROES EMPANADOS', codigo: '3300', grupo: 'G-RODIZIO DO MAR', qVenda: 30, vBruta: 0, vDesc: 0 },
-]
-
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 
+// competências 'YYYY-MM' tocadas pelo intervalo de/ate (os dados do iComanda são por MÊS)
+function compsBetween(de: string, ate: string): string[] {
+  if (!de || !ate) return []
+  const [y1, m1] = de.slice(0, 7).split('-').map(Number)
+  const [y2, m2] = ate.slice(0, 7).split('-').map(Number)
+  const out: string[] = []
+  let y = y1, m = m1
+  while ((y < y2 || (y === y2 && m <= m2)) && out.length < 24) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++ } }
+  return out
+}
+
 export function CurvaAbcVendas() {
   const { lojas } = useLoja()
+  const { tenantId } = useAuth()
   const [de, setDe] = useState('2026-06-01')
   const [ate, setAte] = useState('2026-06-30')
   const [periodoSel, setPeriodoSel] = useState('Personalizado')
@@ -79,6 +73,63 @@ export function CurvaAbcVendas() {
   const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? [...lojaSet][0] : `${lojaSet.size} lojas`
   const toggleLoja = (n: string) => setLojaSet((p) => { const s = new Set(p); s.has(n) ? s.delete(n) : s.add(n); return s })
   const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.nome)))
+
+  // --- dados REAIS do iComanda (icomanda_vendas) ---
+  const [rows, setRows] = useState<Prod[]>([])
+  const [loading, setLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [msg, setMsg] = useState('')
+  const lojaNome = useMemo(() => { const m: Record<string, string> = {}; lojas.forEach((l) => { m[l.id] = l.nome }); return m }, [lojas])
+  // agrega as linhas (por loja+produto) somando qtd/faturado dos meses do intervalo
+  const buildRows = (data: Record<string, unknown>[]): Prod[] => {
+    const map = new Map<string, Prod>()
+    for (const r of data) {
+      const key = `${r.loja_id}|${r.produto_id}`
+      const ex = map.get(key)
+      if (ex) { ex.qVenda += Number(r.qtd) || 0; ex.vBruta += Number(r.faturado) || 0 }
+      else map.set(key, { id: key, loja: lojaNome[r.loja_id as string] || '—', item: String(r.produto_nome || ''), codigo: String(r.produto_id ?? ''), grupo: String(r.grupo || ''), qVenda: Number(r.qtd) || 0, vBruta: Number(r.faturado) || 0, vDesc: 0 })
+    }
+    return [...map.values()]
+  }
+  async function carregar(comps: string[]) {
+    const { data, error } = await supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps)
+    if (error) { setMsg('Erro ao carregar vendas: ' + error.message); setRows([]); return }
+    setRows(buildRows((data ?? []) as Record<string, unknown>[]))
+  }
+  useEffect(() => {
+    if (!tenantId) { setRows([]); return }
+    const comps = compsBetween(de, ate)
+    if (!comps.length) { setRows([]); return }
+    let alive = true
+    setLoading(true)
+    supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).then(({ data, error }) => {
+      if (!alive) return
+      setLoading(false)
+      if (error) { setMsg('Erro ao carregar vendas: ' + error.message); setRows([]); return }
+      setRows(buildRows((data ?? []) as Record<string, unknown>[]))
+    })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, de, ate, lojaNome])
+  async function puxar() {
+    if (!tenantId || syncing) return
+    const comps = compsBetween(de, ate)
+    if (!comps.length) { setMsg('Selecione um período.'); return }
+    setSyncing(true); setMsg('Puxando do iComanda… (pode levar ~1 min)')
+    try {
+      let casadas = 0, prods = 0
+      for (const competencia of comps) {
+        const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, competencia } })
+        if (error) throw error
+        if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
+        casadas = data.lojas_casadas; prods += data.produtos_gravados
+      }
+      setMsg(`✓ Atualizado: ${casadas} lojas, ${prods} produtos.`)
+      await carregar(comps)
+    } catch (e) {
+      setMsg('Erro ao puxar: ' + (e as Error).message)
+    } finally { setSyncing(false) }
+  }
 
   const [cols, setCols] = useState(loadCols)
   const [ddPos, setDdPos] = useState({ top: 0, left: 0 })
@@ -107,7 +158,7 @@ export function CurvaAbcVendas() {
   const enriched = useMemo(() => {
     const q = norm(busca.trim())
     const filtraLoja = lojaSet.size > 0 && !allSel
-    const base = MOCK.map((v) => ({ ...v, vLiquida: v.vBruta - v.vDesc })).filter((v) => {
+    const base = rows.map((v) => ({ ...v, vLiquida: v.vBruta - v.vDesc })).filter((v) => {
       if (!incluirZerado && v.vLiquida === 0) return false
       if (filtraLoja && !lojaSet.has(v.loja)) return false
       if (q && !norm([v.item, v.grupo, v.codigo].join(' ')).includes(q)) return false
@@ -116,7 +167,7 @@ export function CurvaAbcVendas() {
     const total = base.reduce((s, v) => s + v.vLiquida, 0) || 1
     let acum = 0
     return base.map((v, i) => { const pct = v.vLiquida / total * 100; acum += pct; const classe = acum <= 80 ? 'A' : acum <= 95 ? 'B' : 'C'; return { ...v, rank: i + 1, pct, acum, classe } as Row })
-  }, [busca, lojaSet, allSel, incluirZerado])
+  }, [rows, busca, lojaSet, allSel, incluirZerado])
 
   const cellVal = (v: Row, c: Col): string => {
     switch (c.key) {
@@ -171,12 +222,18 @@ export function CurvaAbcVendas() {
             Incluir itens com valor zerado
           </label>
         </div>
-        <div className="ds-actions"><button className="btn-ghost">↓ Exportar</button></div>
+        <div className="ds-actions">
+          <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
+          <button className="btn-ghost">↓ Exportar</button>
+        </div>
       </div>
 
       <div className="search-row">
         <input className="search" placeholder="Digite um texto para pesquisar..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <span className="mock-tag">⚑ Dados de exemplo — lê as vendas reais quando o PDV estiver processando</span>
+        {msg
+          ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
+          : loading ? <span className="mock-tag">Carregando vendas…</span>
+          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas reais do iComanda</span>}
       </div>
 
       <div className="grid-wrap">
