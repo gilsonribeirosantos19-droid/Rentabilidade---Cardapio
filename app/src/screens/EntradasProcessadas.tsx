@@ -38,7 +38,9 @@ export function EntradasProcessadas() {
     queryKey: ['ep-nfe', tenantId, periodo, de, ate, campoData], enabled: !!tenantId,
     queryFn: () => fetchAll<Nfe>((f, t) => {
       let q = supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).range(f, t)
-      if (periodo !== 'todos') { if (de) q = q.gte(campoData, de + 'T00:00:00'); if (ate) q = q.lte(campoData, ate + 'T23:59:59') }
+      // limites no fuso de Brasília (−03:00), o MESMO que o estoque usa p/ datar a entrada.
+      // Sem isso, a comparação sai em UTC e uma nota da virada de mês (ex.: 30/06 à noite) cai no mês errado.
+      if (periodo !== 'todos') { if (de) q = q.gte(campoData, de + 'T00:00:00-03:00'); if (ate) q = q.lte(campoData, ate + 'T23:59:59-03:00') }
       return q
     }),
   })
