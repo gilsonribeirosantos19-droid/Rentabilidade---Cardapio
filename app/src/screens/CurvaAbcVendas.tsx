@@ -234,6 +234,9 @@ export function CurvaAbcVendas() {
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando vendas…</span>
           : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas reais do iComanda</span>}
+        <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace', marginLeft: 8 }}>
+          [dbg] linhas={rows.length} · lojasApp={lojas.length} · nomesNasLinhas=[{[...new Set(rows.map((r) => r.loja))].slice(0, 4).join(', ')}] · sel=[{[...lojaSet].join(', ')}]
+        </span>
       </div>
 
       <div className="grid-wrap">
