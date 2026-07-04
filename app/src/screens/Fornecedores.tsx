@@ -9,8 +9,11 @@ import './fornecedores.css'
 type Fornecedor = {
   id: string; tenant_id?: string; codigo?: string
   razao_social?: string; nome_fantasia?: string; nome?: string; cnpj?: string
-  contato?: string; whatsapp?: string; email?: string
-  cidade?: string; estado?: string; status?: string; observacoes?: string | null; ativo?: boolean
+  inscricao_estadual?: string; categoria?: string
+  contato?: string; whatsapp?: string; email?: string; telefone?: string
+  cep?: string; logradouro?: string; numero?: string; bairro?: string; cidade?: string; estado?: string
+  prazo_entrega_dias?: number | string | null; pedido_minimo?: number | string | null; condicao_pagamento?: string
+  status?: string; observacoes?: string | null; ativo?: boolean
 }
 type Form = Partial<Fornecedor>
 
@@ -65,11 +68,18 @@ export function Fornecedores() {
       const razao = (form.razao_social || '').trim()
       if (!razao) throw new Error('Informe a Razão Social.')
       const fantasia = (form.nome_fantasia || '').trim()
+      const numOrNull = (v: unknown) => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null }
       const payload = {
         razao_social: razao, nome_fantasia: fantasia || null, nome: fantasia || razao,
-        cnpj: (form.cnpj || '').trim() || null, contato: (form.contato || '').trim() || null,
-        whatsapp: (form.whatsapp || '').trim() || null, email: (form.email || '').trim() || null,
+        cnpj: (form.cnpj || '').trim() || null, inscricao_estadual: (form.inscricao_estadual || '').trim() || null,
+        categoria: (form.categoria || '').trim() || null,
+        contato: (form.contato || '').trim() || null, whatsapp: (form.whatsapp || '').trim() || null,
+        email: (form.email || '').trim() || null, telefone: (form.telefone || '').trim() || null,
+        cep: (form.cep || '').trim() || null, logradouro: (form.logradouro || '').trim() || null,
+        numero: (form.numero || '').trim() || null, bairro: (form.bairro || '').trim() || null,
         cidade: (form.cidade || '').trim() || null, estado: (form.estado || '').trim().toUpperCase() || null,
+        prazo_entrega_dias: numOrNull(form.prazo_entrega_dias), pedido_minimo: numOrNull(form.pedido_minimo),
+        condicao_pagamento: (form.condicao_pagamento || '').trim() || null,
         status: form.status || 'ativo', observacoes: (form.observacoes || '').trim() || null,
         ativo: (form.status || 'ativo') !== 'inativo',
       }
@@ -166,34 +176,59 @@ function FornModal({ inicial, saving, onClose, onSave }: { inicial: Form; saving
         <div className="fm-body">
           <div className="form-section">
             <div className="form-section-title">Identificação</div>
-            <div className="form-grid">
-              <div className="form-group span2"><label className="form-label">Razão Social *</label><input className="form-input" value={form.razao_social || ''} onChange={(e) => set('razao_social', e.target.value)} placeholder="Ex: Distribuidora de Alimentos Ltda" autoFocus /></div>
-              <div className="form-group"><label className="form-label">Nome Fantasia</label><input className="form-input" value={form.nome_fantasia || ''} onChange={(e) => set('nome_fantasia', e.target.value)} placeholder="Ex: FrisFrios" /></div>
+            <div className="fg-1">
+              <div className="form-group"><label className="form-label">Razão Social *</label><input className="form-input" value={form.razao_social || ''} onChange={(e) => set('razao_social', e.target.value)} placeholder="Ex: SPN Restaurante, Lanchonete e Fornecimento de Alimentos Ltda" autoFocus /></div>
+            </div>
+            <div className="fg-ident">
+              <div className="form-group"><label className="form-label">Nome Fantasia</label><input className="form-input" value={form.nome_fantasia || ''} onChange={(e) => set('nome_fantasia', e.target.value)} placeholder="Ex: Sushi Ponta Negra Matriz" /></div>
               <div className="form-group"><label className="form-label">CNPJ</label><input className="form-input" maxLength={18} value={form.cnpj || ''} onChange={(e) => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" /></div>
+              <div className="form-group"><label className="form-label">Inscrição Estadual</label><input className="form-input" value={form.inscricao_estadual || ''} onChange={(e) => set('inscricao_estadual', e.target.value)} placeholder="12.345.678-9 / ISENTO" /></div>
+              <div className="form-group"><label className="form-label">Categoria</label>
+                <select className="form-select" value={form.categoria || ''} onChange={(e) => set('categoria', e.target.value)}>
+                  <option value="">Selecione...</option><option>Hortifruti</option><option>Proteína</option><option>Bebidas</option><option>Embalagens</option><option>Limpeza</option><option>Mercearia</option><option>Outros</option>
+                </select>
+              </div>
             </div>
           </div>
           <div className="form-section">
             <div className="form-section-title">Contato</div>
-            <div className="form-grid">
+            <div className="fg-contato">
               <div className="form-group"><label className="form-label">Nome do contato</label><input className="form-input" value={form.contato || ''} onChange={(e) => set('contato', e.target.value)} placeholder="Ex: João Silva" /></div>
               <div className="form-group"><label className="form-label">WhatsApp</label><input className="form-input" value={form.whatsapp || ''} onChange={(e) => set('whatsapp', e.target.value)} placeholder="(92) 9 9999-9999" /></div>
+              <div className="form-group"><label className="form-label">Telefone fixo</label><input className="form-input" value={form.telefone || ''} onChange={(e) => set('telefone', e.target.value)} placeholder="(92) 3xxx-xxxx" /></div>
               <div className="form-group"><label className="form-label">E-mail</label><input className="form-input" value={form.email || ''} onChange={(e) => set('email', e.target.value)} placeholder="contato@fornecedor.com" /></div>
             </div>
           </div>
           <div className="form-section">
             <div className="form-section-title">Localização</div>
-            <div className="form-grid-3">
-              <div className="form-group span2"><label className="form-label">Cidade</label><input className="form-input" value={form.cidade || ''} onChange={(e) => set('cidade', e.target.value)} placeholder="Ex: Manaus" /></div>
-              <div className="form-group"><label className="form-label">Estado (UF)</label><input className="form-input" maxLength={2} value={form.estado || ''} onChange={(e) => set('estado', e.target.value.toUpperCase())} placeholder="AM" /></div>
+            <div className="fg-loc">
+              <div className="form-group"><label className="form-label">CEP</label><input className="form-input" value={form.cep || ''} onChange={(e) => set('cep', e.target.value)} placeholder="69000-000" /></div>
+              <div className="form-group"><label className="form-label">Logradouro</label><input className="form-input" value={form.logradouro || ''} onChange={(e) => set('logradouro', e.target.value)} placeholder="Rua / Av." /></div>
+              <div className="form-group"><label className="form-label">Nº</label><input className="form-input" value={form.numero || ''} onChange={(e) => set('numero', e.target.value)} placeholder="123" /></div>
+              <div className="form-group"><label className="form-label">Bairro</label><input className="form-input" value={form.bairro || ''} onChange={(e) => set('bairro', e.target.value)} placeholder="Centro" /></div>
+              <div className="form-group"><label className="form-label">Cidade</label><input className="form-input" value={form.cidade || ''} onChange={(e) => set('cidade', e.target.value)} placeholder="Manaus" /></div>
+              <div className="form-group"><label className="form-label">UF</label><input className="form-input" maxLength={2} value={form.estado || ''} onChange={(e) => set('estado', e.target.value.toUpperCase())} placeholder="AM" /></div>
             </div>
           </div>
           <div className="form-section">
-            <div className="form-section-title">Configuração</div>
-            <div className="form-grid">
-              <div className="form-group"><label className="form-label">Status</label>
+            <div className="form-section-title">Condições comerciais</div>
+            <div className="fg-cond">
+              <div className="form-group"><label className="form-label">Prazo de entrega (dias)</label><input className="form-input" type="number" min="0" value={form.prazo_entrega_dias ?? ''} onChange={(e) => set('prazo_entrega_dias', e.target.value)} placeholder="Ex: 2" /><div className="fld-hint">Dias que o fornecedor leva pra entregar — usado no ponto de pedido / Sugestão de Compra.</div></div>
+              <div className="form-group"><label className="form-label">Pedido mínimo (R$)</label><input className="form-input" value={form.pedido_minimo ?? ''} onChange={(e) => set('pedido_minimo', e.target.value)} placeholder="300,00" /></div>
+              <div className="form-group"><label className="form-label">Condição de pagamento</label>
+                <select className="form-select" value={form.condicao_pagamento || ''} onChange={(e) => set('condicao_pagamento', e.target.value)}>
+                  <option value="">Selecione...</option><option>À vista</option><option>7 dias</option><option>14 dias</option><option>21 dias</option><option>28 dias</option><option>30 dias</option><option>Boleto / faturado</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="form-section">
+            <div className="form-section-title">Observações e situação</div>
+            <div className="fg-obs">
+              <div className="form-group"><label className="form-label">Observações</label><textarea className="form-input form-textarea" value={form.observacoes || ''} onChange={(e) => set('observacoes', e.target.value)} placeholder="Ex: entrega só de manhã, vendedor Carlos, aceita devolução..." /></div>
+              <div className="form-group"><label className="form-label">Situação</label>
                 <select className="form-select" value={form.status || 'ativo'} onChange={(e) => set('status', e.target.value)}><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select>
               </div>
-              <div className="form-group full"><label className="form-label">Observações</label><textarea className="form-input form-textarea" value={form.observacoes || ''} onChange={(e) => set('observacoes', e.target.value)} placeholder="Informações adicionais sobre o fornecedor..." /></div>
             </div>
           </div>
         </div>
