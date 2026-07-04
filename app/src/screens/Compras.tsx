@@ -260,26 +260,31 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
     const linhas: ({ nome: string; qty: number; un: string } | null)[] = Object.entries(itens).map(([nome, { qty, un }]) => ({ nome, qty, un }))
     while (linhas.length < 8) linhas.push(null)
     const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || '', hrManha = loja?.horario_manha || '-', hrTarde = loja?.horario_tarde || '-'
-    return `<div class="pagina"><table class="doc">
-      <tr><td class="cel-loja">${nomeLoja.toUpperCase()}</td><td class="cel-data-label">DATA:</td><td class="cel-data">${dataFormatada}</td></tr>
-      <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${razao}${cnpj ? ' CNPJ: ' + cnpj : ''}</td></tr>
-      <tr><td colspan="3" class="cel-info">ENDEREÇO: ${ende}</td></tr>
+    return `<div class="pagina">
+      <div class="brand">Aiko <span>· pedido de compra</span></div>
+      <table class="doc">
+      <tr><td class="cel-loja">${nomeLoja.toUpperCase()}</td><td class="cel-data-label">DATA</td><td class="cel-data">${dataFormatada}</td></tr>
+      <tr><td colspan="3" class="cel-info"><b>RAZÃO SOCIAL:</b> ${razao}${cnpj ? ' &nbsp;·&nbsp; <b>CNPJ:</b> ' + cnpj : ''}</td></tr>
+      <tr><td colspan="3" class="cel-info"><b>ENDEREÇO:</b> ${ende}</td></tr>
       ${fornecedor ? `<tr><td colspan="3" class="cel-forn">PEDIDO PARA O FORNECEDOR: ${fornecedor.toUpperCase()}</td></tr>` : ''}
-      <tr><td colspan="2" class="cel-th">ITENS</td><td class="cel-th" style="text-align:center">QUANTIDADE</td></tr>
+      <tr><td colspan="2" class="cel-th">ITENS</td><td class="cel-th cel-th-q">QUANTIDADE</td></tr>
       ${linhas.map((it) => it ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${fmtQtyDoc(it.qty)} ${it.un.toUpperCase()}</td></tr>` : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
-      <tr><td class="cel-footer">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
+      <tr><td class="cel-footer cel-footer-l">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
       <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">${hrTarde}</td></tr>
     </table></div>`
   }).join('')
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${fornecedor ? 'Pedido ' + fornecedor : 'Pedidos por Loja'} — ${dataFormatada}</title><style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}body{background:#fff}
-    .pagina{page-break-after:always;padding:20px;max-width:700px;margin:0 auto}.pagina:last-child{page-break-after:avoid}
-    .doc{width:100%;border-collapse:collapse;font-size:13px}.doc td{border:1px solid #000;padding:6px 8px;vertical-align:middle}
-    .cel-loja{font-weight:700;font-size:14px;width:55%}.cel-data-label{font-weight:700;width:15%;text-align:center}.cel-data{font-weight:700;font-size:14px;width:30%;text-align:right}
-    .cel-forn{background:#dbeafe;font-weight:700;font-size:12.5px}
-    .cel-info{background:#f4cccc;font-size:12px;line-height:1.5;height:36px}.cel-th{background:#ffff00;font-weight:700;font-size:13px;text-align:center;padding:8px}
-    .cel-item{height:28px;font-size:12px}.cel-qty{text-align:center;font-weight:600;font-size:12px}.cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
-    @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a}
+    .pagina{page-break-after:always;padding:22px;max-width:720px;margin:0 auto}.pagina:last-child{page-break-after:avoid}
+    .brand{font-weight:800;font-size:15px;color:#0f766e;margin-bottom:8px}.brand span{color:#94a3b8;font-weight:600;font-size:12px}
+    .doc{width:100%;border-collapse:collapse;font-size:13px}.doc td{border:1px solid #cbd5e1;padding:7px 10px;vertical-align:middle}
+    .cel-loja{font-weight:800;font-size:15px;width:55%}.cel-data-label{font-weight:600;color:#64748b;font-size:10px;letter-spacing:.05em;width:15%;text-align:center}.cel-data{font-weight:700;font-size:13px;width:30%;text-align:right}
+    .cel-info{background:#f1f5f9;color:#334155;font-size:11.5px;line-height:1.5;height:34px}
+    .cel-forn{background:#ccfbf1;color:#0f766e;font-weight:700;font-size:12.5px}
+    .cel-th{background:#334155;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;padding:8px 10px}.cel-th-q{text-align:center}
+    .cel-item{height:26px;font-size:12.5px}.cel-qty{text-align:center;font-weight:700;font-size:12.5px}
+    .cel-footer{background:#334155;color:#fff;font-weight:700;font-size:11px;text-align:center;padding:6px}.cel-footer-l{text-align:left}
+    @media print{body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pagina{padding:8px;max-width:100%}}
   </style></head><body>${paginas}<script>window.onload=function(){window.onafterprint=function(){window.close()};window.print();}<\/script></body></html>`
   const win = window.open('', '_blank'); if (!win) return
   win.document.write(html); win.document.close()
