@@ -316,16 +316,14 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     ? it.detalhe_lojas.map((d) => (lojaNomeMap[d.loja_id] || 'Sem loja') + ': ' + fmtQtyDoc(d.qtd)).join(', ')
     : (it.observacao || '—')
 
-  // "Baixar todos por loja": consolida os itens de TODOS os pedidos da lista atual, agrupando por loja
-  const imprimirTodos = () => {
-    if (!pedidos.length) { showToast('Nenhum pedido para imprimir.', 'err'); return }
+  // agrupa os itens dos pedidos por LOJA (usa detalhe_lojas estruturado; cai no texto p/ pedidos legados)
+  const agruparPorLoja = (peds: Pedido[]): PorLoja => {
     const porLoja: PorLoja = {}
-    const dataRef = pedidos[0]?.data_pedido || pedidos[0]?.created_at || hoje()
     const addItem = (nomeIns: string, un: string, key: string, loja: LojaFull, qty: number) => {
       (porLoja[key] = porLoja[key] || { loja, itens: {} })
       const prev = porLoja[key].itens[nomeIns]; porLoja[key].itens[nomeIns] = { qty: (prev?.qty || 0) + qty, un }
     }
-    pedidos.forEach((p) => {
+    peds.forEach((p) => {
       (itensMap[p.id] || []).forEach((it) => {
         const nomeIns = insMap[it.insumo_id]?.nome || it.insumo_id
         const un = it.unidade || 'un'
@@ -338,8 +336,15 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
         }
       })
     })
+    return porLoja
+  }
+
+  // "Baixar todos por loja": romaneio de TODOS os pedidos listados, 1 folha por loja
+  const imprimirTodos = () => {
+    if (!pedidos.length) { showToast('Nenhum pedido para imprimir.', 'err'); return }
+    const porLoja = agruparPorLoja(pedidos)
     if (!Object.keys(porLoja).length) { showToast('Sem itens para consolidar.', 'err'); return }
-    gerarImpressaoPorLoja(porLoja, dataRef)
+    gerarImpressaoPorLoja(porLoja, pedidos[0]?.data_pedido || pedidos[0]?.created_at || hoje())
   }
 
   const linhas = useMemo(() => {
@@ -375,12 +380,11 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     window.open(`https://wa.me/55${forn.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
     await mudarStatus(pedId, 'enviado')
   }
-  const imprimir = (fornNome: string, peds: Pedido[]) => {
-    const its = peds.flatMap((p) => itensMap[p.id] || [])
-    const rows = its.map((it) => { const det = porLojaText(it); return `<tr><td>${insMap[it.insumo_id]?.nome || it.insumo_id}</td><td style="text-align:right">${fmtQtyDoc(it.quantidade)}</td><td>${it.unidade || 'un'}</td><td style="font-size:11px;color:#666">${det === '—' ? '' : det}</td></tr>` }).join('')
-    const w = window.open('', '_blank'); if (!w) return
-    w.document.write(`<html><head><title>Pedido - ${fornNome}</title><style>body{font-family:Arial;padding:24px;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f1f5f9}</style></head><body><h1>Pedido de Compra — ${fornNome}</h1><div>Data: ${fmtData(hoje())}</div><table><thead><tr><th>Item</th><th style="text-align:right">Qtd</th><th>Un</th><th>Por loja</th></tr></thead><tbody>${rows}</tbody></table><script>window.print()</script></body></html>`)
-    w.document.close()
+  // PDF do fornecedor: 1 folha por loja (com dados da loja), só com os itens desse fornecedor — igual ao HTML antigo
+  const imprimir = (_fornNome: string, peds: Pedido[]) => {
+    const porLoja = agruparPorLoja(peds)
+    if (!Object.keys(porLoja).length) { showToast('Sem itens para imprimir.', 'err'); return }
+    gerarImpressaoPorLoja(porLoja, peds[0]?.data_pedido || peds[0]?.created_at || hoje())
   }
 
   return (
