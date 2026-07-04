@@ -17,17 +17,6 @@ const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${Str
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 
-// competências 'YYYY-MM' tocadas pelo intervalo de/ate (os dados do iComanda são por MÊS)
-function compsBetween(de: string, ate: string): string[] {
-  if (!de || !ate) return []
-  const [y1, m1] = de.slice(0, 7).split('-').map(Number)
-  const [y2, m2] = ate.slice(0, 7).split('-').map(Number)
-  const out: string[] = []
-  let y = y1, m = m1
-  while ((y < y2 || (y === y2 && m <= m2)) && out.length < 24) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++ } }
-  return out
-}
-
 type FatRow = { lojaId: string; loja: string; faturado: number; caixas: number }
 
 export function FaturamentoVendas() {
@@ -62,23 +51,21 @@ export function FaturamentoVendas() {
     }
     return [...map.values()]
   }
-  // fetchAll pagina de 1000 em 1000 (aqui são poucas linhas, mas mantém o padrão)
-  async function fetchFat(comps: string[]): Promise<FatRow[]> {
+  // lê o PORTÃO (icomanda_recebimento) — SÓ os dias 'processado' (regra: relatório só vê o aprovado)
+  async function fetchFat(): Promise<FatRow[]> {
     const data = await fetchAll<Record<string, unknown>>((f, t) =>
-      supabase.from('icomanda_faturamento').select('*').eq('tenant_id', tenantId).in('competencia', comps).range(f, t))
+      supabase.from('icomanda_recebimento').select('*').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).range(f, t))
     return buildRows(data)
   }
-  async function carregar(comps: string[]) {
-    try { setRows(await fetchFat(comps)) }
+  async function carregar() {
+    try { setRows(await fetchFat()) }
     catch (e) { setMsg('Erro ao carregar faturamento: ' + (e as Error).message); setRows([]) }
   }
   useEffect(() => {
-    if (!tenantId) { setRows([]); return }
-    const comps = compsBetween(de, ate)
-    if (!comps.length) { setRows([]); return }
+    if (!tenantId || !de || !ate) { setRows([]); return }
     let alive = true
     setLoading(true)
-    fetchFat(comps)
+    fetchFat()
       .then((r) => { if (alive) setRows(r) })
       .catch((e) => { if (alive) { setMsg('Erro ao carregar faturamento: ' + (e as Error).message); setRows([]) } })
       .finally(() => { if (alive) setLoading(false) })
@@ -86,20 +73,14 @@ export function FaturamentoVendas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, de, ate, lojaNome])
   async function puxar() {
-    if (!tenantId || syncing) return
-    const comps = compsBetween(de, ate)
-    if (!comps.length) { setMsg('Selecione um período.'); return }
-    setSyncing(true); setMsg('Puxando do iComanda… (pode levar ~1 min)')
+    if (!tenantId || syncing || !de || !ate) return
+    setSyncing(true); setMsg('Puxando do iComanda… (dia a dia, pode levar ~1 min)')
     try {
-      let casadas = 0, total = 0
-      for (const competencia of comps) {
-        const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, competencia } })
-        if (error) throw error
-        if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
-        casadas = data.lojas_casadas; total += data.faturamento_total || 0
-      }
-      setMsg(`✓ Atualizado: ${casadas} lojas, R$ ${brl(total)}.`)
-      await carregar(comps)
+      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate } })
+      if (error) throw error
+      if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
+      setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}.`)
+      await carregar()
     } catch (e) {
       setMsg('Erro ao puxar: ' + (e as Error).message)
     } finally { setSyncing(false) }
@@ -151,7 +132,7 @@ export function FaturamentoVendas() {
         {msg
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando faturamento…</span>
-          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Faturamento real do iComanda (número cheio: produtos + couvert + taxa)</span>}
+          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Faturamento real — só dias Processados na Recebimento de Vendas (número cheio)</span>}
       </div>
 
       <div className="grid-wrap">
