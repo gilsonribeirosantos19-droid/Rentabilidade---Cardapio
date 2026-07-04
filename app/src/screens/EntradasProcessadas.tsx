@@ -29,14 +29,21 @@ export function EntradasProcessadas() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
+  // Parâmetro Estoque › "Data de movimentação": filtra pela MESMA data que a entrada usa no estoque
+  // (emissão = padrão; processamento). Assim o mês da tela bate com o Fechamento/CMV.
+  const { data: critDataMov = 'emissao' } = useQuery({ queryKey: ['ep-param-datamov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'data_movimentacao').limit(1); return (data?.[0]?.valor as string) || 'emissao' } })
+  const campoData = critDataMov === 'processamento' ? 'processada_em' : 'data_emissao'
+
   const { data: nfes = [], isLoading } = useQuery({
-    queryKey: ['ep-nfe', tenantId, periodo, de, ate], enabled: !!tenantId,
+    queryKey: ['ep-nfe', tenantId, periodo, de, ate, campoData], enabled: !!tenantId,
     queryFn: () => fetchAll<Nfe>((f, t) => {
-      let q = supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).eq('status', 'processada').order('processada_em', { ascending: false }).range(f, t)
-      if (periodo !== 'todos') { if (de) q = q.gte('processada_em', de + 'T00:00:00'); if (ate) q = q.lte('processada_em', ate + 'T23:59:59') }
+      let q = supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).range(f, t)
+      if (periodo !== 'todos') { if (de) q = q.gte(campoData, de + 'T00:00:00'); if (ate) q = q.lte(campoData, ate + 'T23:59:59') }
       return q
     }),
   })
+  useEffect(() => { setSortField(campoData); setSortAsc(false) }, [campoData])
+
   const { data: itensCount = {} } = useQuery({
     queryKey: ['ep-itens-cnt', tenantId], enabled: !!tenantId,
     queryFn: async () => { const rows = await fetchAll<{ nfe_id: string }>((f, t) => supabase.from('nfe_itens').select('nfe_id').eq('tenant_id', tenantId).range(f, t)); const m: Record<string, number> = {}; rows.forEach((r) => { m[r.nfe_id] = (m[r.nfe_id] || 0) + 1 }); return m },
@@ -111,7 +118,7 @@ export function EntradasProcessadas() {
         <button className="btn-g" onClick={() => exportCSV(filtrada)}>↓ Exportar</button>
       </div>
 
-      <div className="summary"><span>{filtrada.length.toLocaleString('pt-BR')} registro{filtrada.length !== 1 ? 's' : ''} encontrado{filtrada.length !== 1 ? 's' : ''}</span><span>Valor total filtrado: <span className="sval">{brl(totalValor)}</span></span></div>
+      <div className="summary"><span>{filtrada.length.toLocaleString('pt-BR')} registro{filtrada.length !== 1 ? 's' : ''} encontrado{filtrada.length !== 1 ? 's' : ''} <span style={{ color: '#94a3b8', fontWeight: 400 }}>· filtrando por data de {campoData === 'processada_em' ? 'processamento' : 'emissão'}</span></span><span>Valor total filtrado: <span className="sval">{brl(totalValor)}</span></span></div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">
         <table className="tbl">
