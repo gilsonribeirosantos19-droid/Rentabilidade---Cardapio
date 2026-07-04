@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
-import { supabase } from '../lib/supabase'
+import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
 import './faturamento.css'
 
@@ -91,10 +91,15 @@ export function CurvaAbcVendas() {
     }
     return [...map.values()]
   }
+  // busca TODAS as vendas do período (fetchAll pagina de 1000 em 1000 — vence o teto do PostgREST)
+  async function fetchVendas(comps: string[]): Promise<Prod[]> {
+    const data = await fetchAll<Record<string, unknown>>((f, t) =>
+      supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).range(f, t))
+    return buildRows(data)
+  }
   async function carregar(comps: string[]) {
-    const { data, error } = await supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps)
-    if (error) { setMsg('Erro ao carregar vendas: ' + error.message); setRows([]); return }
-    setRows(buildRows((data ?? []) as Record<string, unknown>[]))
+    try { setRows(await fetchVendas(comps)) }
+    catch (e) { setMsg('Erro ao carregar vendas: ' + (e as Error).message); setRows([]) }
   }
   useEffect(() => {
     if (!tenantId) { setRows([]); return }
@@ -102,12 +107,10 @@ export function CurvaAbcVendas() {
     if (!comps.length) { setRows([]); return }
     let alive = true
     setLoading(true)
-    supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).then(({ data, error }) => {
-      if (!alive) return
-      setLoading(false)
-      if (error) { setMsg('Erro ao carregar vendas: ' + error.message); setRows([]); return }
-      setRows(buildRows((data ?? []) as Record<string, unknown>[]))
-    })
+    fetchVendas(comps)
+      .then((r) => { if (alive) setRows(r) })
+      .catch((e) => { if (alive) { setMsg('Erro ao carregar vendas: ' + (e as Error).message); setRows([]) } })
+      .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, de, ate, lojaNome])
@@ -234,9 +237,6 @@ export function CurvaAbcVendas() {
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando vendas…</span>
           : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas reais do iComanda</span>}
-        <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace', marginLeft: 8 }}>
-          [dbg] linhas={rows.length} · lojasApp={lojas.length} · nomesNasLinhas=[{[...new Set(rows.map((r) => r.loja))].slice(0, 4).join(', ')}] · sel=[{[...lojaSet].join(', ')}]
-        </span>
       </div>
 
       <div className="grid-wrap">
