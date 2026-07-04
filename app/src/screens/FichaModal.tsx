@@ -197,11 +197,11 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
           <div style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
             <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #eef1f5', borderRadius: 10, padding: '9px 14px' }}>
               <div style={{ fontSize: 10.5, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Custo {vincId ? 'por unidade (kg/L)' : 'unitário da receita'}</div>
-              <div style={{ fontSize: 19, fontWeight: 800, fontFamily: 'DM Mono, monospace', marginTop: 2 }}>{brl(custoUnit)}</div>
+              <div style={{ fontSize: 19, fontWeight: 400, fontFamily: 'DM Mono, monospace', marginTop: 2, color: '#1e293b' }}>{brl(custoUnit)}</div>
             </div>
             <div style={{ flex: 1, background: '#eef4ff', border: '1px solid #dbe6ff', borderRadius: 10, padding: '9px 14px' }}>
               <div style={{ fontSize: 10.5, color: '#3b5bdb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Custo total da receita</div>
-              <div style={{ fontSize: 19, fontWeight: 800, fontFamily: 'DM Mono, monospace', marginTop: 2, color: '#1d4ed8' }}>{brl(total)}</div>
+              <div style={{ fontSize: 19, fontWeight: 400, fontFamily: 'DM Mono, monospace', marginTop: 2, color: '#1e293b' }}>{brl(total)}</div>
             </div>
           </div>
 

@@ -110,15 +110,15 @@
 .fic-screen .ing-thead, .fic-screen .ing-trow { display: grid; grid-template-columns: 1fr 56px 108px 88px 118px 118px 60px; align-items: center; gap: 12px; padding: 0 16px; }
 .fic-screen .ing-thead { height: 40px; background: #f8fafc; border-bottom: 1px solid #eef1f5; }
 .fic-screen .ing-thead > div { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; }
-.fic-screen .ing-trow { min-height: 50px; border-bottom: 1px solid #f3f5f8; padding-top: 9px; padding-bottom: 9px; font-size: 13.5px; }
+.fic-screen .ing-trow { min-height: 38px; border-bottom: 1px solid #f3f5f8; padding-top: 5px; padding-bottom: 5px; font-size: 13.5px; color: #1e293b; }
 .fic-screen .ing-trow:last-of-type { border-bottom: none; }
 .fic-screen .ing-tbl .r { text-align: right; justify-self: end; }
 .fic-screen .ing-tbl .c { text-align: center; justify-self: center; }
 .fic-screen .ing-tbl .ins { font-weight: 600; color: #0f172a; }
 .fic-screen .ing-tbl .um { color: #64748b; }
-.fic-screen .ing-tbl .muted { color: #64748b; }
+.fic-screen .ing-tbl .muted { color: #1e293b; }
 .fic-screen .ing-tbl .mono { font-family: 'DM Mono', monospace; }
-.fic-screen .ing-tbl .bold { font-weight: 700; color: #0f172a; }
+.fic-screen .ing-tbl .bold { font-weight: 400; color: #1e293b; }
 .fic-screen .ing-count { text-align: center; font-size: 12px; color: #94a3b8; padding: 9px 0; }
 
 /* contador de caracteres nas abas modo de preparo/observações */
