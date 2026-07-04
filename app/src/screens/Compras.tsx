@@ -5,7 +5,8 @@ import { useAuth } from '../lib/auth'
 import './estoque.css'
 
 type Pedido = { id: string; loja_id?: string | null; status?: string; observacao?: string | null; data_pedido?: string; created_at?: string; fornecedor_id?: string | null }
-type ItemPedido = { id?: string; pedido_id: string; insumo_id: string; quantidade?: number; unidade?: string; preco_unitario?: number | null; observacao?: string | null }
+type LojaQtd = { loja_id: string; qtd: number }
+type ItemPedido = { id?: string; pedido_id: string; insumo_id: string; quantidade?: number; unidade?: string; preco_unitario?: number | null; observacao?: string | null; detalhe_lojas?: LojaQtd[] | null }
 type Loja = { id: string; nome: string }
 type Insumo = { id: string; nome: string; unidade_medida?: string; codigo_interno?: number | string; categoria?: string }
 type Forn = { id: string; nome: string; whatsapp?: string | null }
@@ -181,7 +182,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
         const obs = 'Lojas: ' + lojasResumo.join(', ')
         const { data: ped, error: e1 } = await supabase.from('pedidos_compra').insert({ tenant_id: tenantId, loja_id: null, fornecedor_id: fornId, status: statusInicial, data_pedido: hoje(), observacao: obs, solicitante_id: usuario?.id || null }).select('id').single()
         if (e1) throw e1
-        const itensPay = itensForn.map((it) => ({ pedido_id: ped!.id, insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario || null, observacao: it.lojas.map((l) => l.nome + ': ' + fmtQtyDoc(l.qty)).join(', ') }))
+        const itensPay = itensForn.map((it) => ({ pedido_id: ped!.id, insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario || null, observacao: it.lojas.map((l) => l.nome + ': ' + fmtQtyDoc(l.qty)).join(', '), detalhe_lojas: it.lojas.filter((l) => l.loja_id).map((l) => ({ loja_id: l.loja_id, qtd: l.qty })) }))
         const { error: e2 } = await supabase.from('itens_pedido').insert(itensPay); if (e2) throw e2
       }
       for (const s of sols) { await supabase.from('pedidos_compra').update({ status: 'processado' }).eq('id', s.id) }
@@ -265,7 +266,7 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string) {
 
 // ═══════════════════════ PEDIDOS GERADOS ═══════════════════════
 function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared }) {
-  const { insumos, fornecedores } = shared
+  const { insumos, fornecedores, lojas } = shared
   const qc = useQueryClient()
   const [statusF, setStatusF] = useState('ativos'); const [busca, setBusca] = useState(''); const [filData, setFilData] = useState(''); const [ordenar, setOrdenar] = useState('forn')
   const [verId, setVerId] = useState<string | null>(null)
@@ -290,28 +291,31 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
   const fornMap = useMemo(() => Object.fromEntries(fornecedores.map((f) => [f.id, f])) as Record<string, Forn>, [fornecedores])
   // lojas completas (razão/cnpj/endereço/horários) p/ o romaneio consolidado — select('*') evita zerar por coluna inexistente
   const { data: lojasFull = [] } = useQuery({ queryKey: ['cmp-lojas-full', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as LojaFull[] } })
+  const lojaNomeMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
+  // "Por loja" robusto: usa o detalhe ESTRUTURADO (loja_id → nome atual); cai no texto antigo só p/ pedidos legados
+  const porLojaText = (it: ItemPedido) => (it.detalhe_lojas?.length)
+    ? it.detalhe_lojas.map((d) => (lojaNomeMap[d.loja_id] || 'Sem loja') + ': ' + fmtQtyDoc(d.qtd)).join(', ')
+    : (it.observacao || '—')
 
   // "Baixar todos por loja": consolida os itens de TODOS os pedidos da lista atual, agrupando por loja
   const imprimirTodos = () => {
     if (!pedidos.length) { showToast('Nenhum pedido para imprimir.', 'err'); return }
     const porLoja: PorLoja = {}
     const dataRef = pedidos[0]?.data_pedido || pedidos[0]?.created_at || hoje()
+    const addItem = (nomeIns: string, un: string, key: string, loja: LojaFull, qty: number) => {
+      (porLoja[key] = porLoja[key] || { loja, itens: {} })
+      const prev = porLoja[key].itens[nomeIns]; porLoja[key].itens[nomeIns] = { qty: (prev?.qty || 0) + qty, un }
+    }
     pedidos.forEach((p) => {
       (itensMap[p.id] || []).forEach((it) => {
         const nomeIns = insMap[it.insumo_id]?.nome || it.insumo_id
         const un = it.unidade || 'un'
-        const obs = it.observacao || ''
-        if (!obs) {
-          const k = '__geral__'; (porLoja[k] = porLoja[k] || { loja: { nome: 'Geral' }, itens: {} })
-          const prev = porLoja[k].itens[nomeIns]; porLoja[k].itens[nomeIns] = { qty: (prev?.qty || 0) + (Number(it.quantidade) || 0), un }
+        if (it.detalhe_lojas?.length) { // estruturado: agrupa por loja_id (imune a renomear)
+          it.detalhe_lojas.forEach((d) => { const loja = lojasFull.find((l) => l.id === d.loja_id) || { id: d.loja_id, nome: lojaNomeMap[d.loja_id] || 'Sem loja' }; addItem(nomeIns, un, loja.id || d.loja_id || 'sem', loja, Number(d.qtd) || 0) })
+        } else if (it.observacao) { // legado: parse do texto (casa por nome)
+          it.observacao.split(', ').forEach((parte) => { const m = parte.match(/^(.+?):\s*([\d.]+)$/); if (!m) return; const nomeLoja = m[1].trim(), qty = parseFloat(m[2]) || 0; const loja = lojasFull.find((l) => (l.nome || '').toLowerCase() === nomeLoja.toLowerCase()) || { nome: nomeLoja }; addItem(nomeIns, un, loja.id || nomeLoja, loja, qty) })
         } else {
-          obs.split(', ').forEach((parte) => {
-            const m = parte.match(/^(.+?):\s*([\d.]+)$/); if (!m) return
-            const nomeLoja = m[1].trim(), qty = parseFloat(m[2]) || 0
-            const lojaObj = lojasFull.find((l) => (l.nome || '').toLowerCase() === nomeLoja.toLowerCase()) || { nome: nomeLoja }
-            const k = lojaObj.id || nomeLoja; (porLoja[k] = porLoja[k] || { loja: lojaObj, itens: {} })
-            const prev = porLoja[k].itens[nomeIns]; porLoja[k].itens[nomeIns] = { qty: (prev?.qty || 0) + qty, un }
-          })
+          addItem(nomeIns, un, '__geral__', { nome: 'Geral' }, Number(it.quantidade) || 0)
         }
       })
     })
@@ -325,7 +329,13 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     let rows = Object.entries(porForn).map(([fKey, peds]) => {
       const forn = fKey === '__sem__' ? null : fornMap[fKey]
       let nItens = 0, valor = 0; const lojasSet = new Set<string>()
-      peds.forEach((p) => { (itensMap[p.id] || []).forEach((it) => { nItens++; valor += (Number(it.quantidade) || 0) * (Number(it.preco_unitario) || 0) }); const m = (p.observacao || '').match(/Lojas:\s*(.+)/i); if (m) m[1].split(',').forEach((x) => { const t = x.trim(); if (t) lojasSet.add(t) }) })
+      peds.forEach((p) => {
+        (itensMap[p.id] || []).forEach((it) => {
+          nItens++; valor += (Number(it.quantidade) || 0) * (Number(it.preco_unitario) || 0)
+          if (it.detalhe_lojas?.length) it.detalhe_lojas.forEach((d) => { if (d.loja_id) lojasSet.add(d.loja_id) })
+          else if (it.observacao) it.observacao.split(', ').forEach((parte) => { const mm = parte.match(/^(.+?):\s*[\d.]+$/); if (mm) lojasSet.add(mm[1].trim()) }) // legado
+        })
+      })
       const st = peds.map((p) => p.status || '').sort((a, b) => (PED_ORDEM[a] ?? 9) - (PED_ORDEM[b] ?? 9))[0]
       return { fKey, fornNome: forn?.nome || 'Sem fornecedor', peds, primId: peds[0].id, nItens, valor, nLojas: lojasSet.size, st, data: peds[0].data_pedido || peds[0].created_at || '', whatsapp: forn?.whatsapp }
     })
@@ -342,15 +352,13 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     if (!forn?.whatsapp) { showToast('Fornecedor sem WhatsApp.', 'err'); return }
     const its = itensMap[pedId] || []
     let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`
-    its.forEach((it) => { msg += `• ${insMap[it.insumo_id]?.nome || '?'}: ${fmtQtyDoc(it.quantidade)} ${it.unidade || 'un'}\n`; if (it.observacao) it.observacao.split(', ').forEach((part) => { msg += `    → ${part}\n` }) })
-    const ped = pedidos.find((p) => p.id === pedId)
-    if (ped?.observacao) msg += `\n${ped.observacao}\n`
+    its.forEach((it) => { msg += `• ${insMap[it.insumo_id]?.nome || '?'}: ${fmtQtyDoc(it.quantidade)} ${it.unidade || 'un'}\n`; const det = porLojaText(it); if (det && det !== '—') det.split(', ').forEach((part) => { msg += `    → ${part}\n` }) })
     window.open(`https://wa.me/55${forn.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
     await mudarStatus(pedId, 'enviado')
   }
   const imprimir = (fornNome: string, peds: Pedido[]) => {
     const its = peds.flatMap((p) => itensMap[p.id] || [])
-    const rows = its.map((it) => `<tr><td>${insMap[it.insumo_id]?.nome || it.insumo_id}</td><td style="text-align:right">${fmtQtyDoc(it.quantidade)}</td><td>${it.unidade || 'un'}</td><td style="font-size:11px;color:#666">${it.observacao || ''}</td></tr>`).join('')
+    const rows = its.map((it) => { const det = porLojaText(it); return `<tr><td>${insMap[it.insumo_id]?.nome || it.insumo_id}</td><td style="text-align:right">${fmtQtyDoc(it.quantidade)}</td><td>${it.unidade || 'un'}</td><td style="font-size:11px;color:#666">${det === '—' ? '' : det}</td></tr>` }).join('')
     const w = window.open('', '_blank'); if (!w) return
     w.document.write(`<html><head><title>Pedido - ${fornNome}</title><style>body{font-family:Arial;padding:24px;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f1f5f9}</style></head><body><h1>Pedido de Compra — ${fornNome}</h1><div>Data: ${fmtData(hoje())}</div><table><thead><tr><th>Item</th><th style="text-align:right">Qtd</th><th>Un</th><th>Por loja</th></tr></thead><tbody>${rows}</tbody></table><script>window.print()</script></body></html>`)
     w.document.close()
@@ -389,13 +397,13 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
         </table>
       </div></div>
 
-      {verId && <VerPedido pedido={pedidos.find((p) => p.id === verId)!} itens={itensMap[verId] || []} forn={fornMap[pedidos.find((p) => p.id === verId)?.fornecedor_id || '']} insMap={insMap} onClose={() => setVerId(null)} onStatus={mudarStatus} onWhats={enviarWhats} onPrint={imprimir} />}
+      {verId && <VerPedido pedido={pedidos.find((p) => p.id === verId)!} itens={itensMap[verId] || []} forn={fornMap[pedidos.find((p) => p.id === verId)?.fornecedor_id || '']} insMap={insMap} porLoja={porLojaText} onClose={() => setVerId(null)} onStatus={mudarStatus} onWhats={enviarWhats} onPrint={imprimir} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </>
   )
 }
 
-function VerPedido({ pedido, itens, forn, insMap, onClose, onStatus, onWhats, onPrint }: { pedido: Pedido; itens: ItemPedido[]; forn?: Forn; insMap: Record<string, Insumo>; onClose: () => void; onStatus: (id: string, s: string) => void; onWhats: (id: string, f?: Forn | null) => void; onPrint: (nome: string, peds: Pedido[]) => void }) {
+function VerPedido({ pedido, itens, forn, insMap, porLoja, onClose, onStatus, onWhats, onPrint }: { pedido: Pedido; itens: ItemPedido[]; forn?: Forn; insMap: Record<string, Insumo>; porLoja: (it: ItemPedido) => string; onClose: () => void; onStatus: (id: string, s: string) => void; onWhats: (id: string, f?: Forn | null) => void; onPrint: (nome: string, peds: Pedido[]) => void }) {
   const si = PED_ST[pedido.status || ''] || { l: pedido.status || '', b: 'b-baixado' }
   return (
     <div className="ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -406,7 +414,7 @@ function VerPedido({ pedido, itens, forn, insMap, onClose, onStatus, onWhats, on
         </div>
         <div className="tbl-wrap"><table className="tbl">
           <thead><tr><th>Insumo</th><th>Código</th><th>Categoria</th><th className="r">Qtd</th><th>Un.</th><th>Por loja</th></tr></thead>
-          <tbody>{itens.map((it, i) => <tr key={i}><td style={{ fontWeight: 500 }}>{insMap[it.insumo_id]?.nome || it.insumo_id}</td><td className="mono" style={{ fontSize: 12, color: '#94a3b8' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td><td style={{ fontSize: 12, color: '#94a3b8' }}>{insMap[it.insumo_id]?.categoria || '—'}</td><td className="r mono">{fmtQtyDoc(it.quantidade)}</td><td>{it.unidade || 'un'}</td><td style={{ fontSize: 11, color: '#94a3b8' }}>{it.observacao || '—'}</td></tr>)}</tbody>
+          <tbody>{itens.map((it, i) => <tr key={i}><td style={{ fontWeight: 500 }}>{insMap[it.insumo_id]?.nome || it.insumo_id}</td><td className="mono" style={{ fontSize: 12, color: '#94a3b8' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td><td style={{ fontSize: 12, color: '#94a3b8' }}>{insMap[it.insumo_id]?.categoria || '—'}</td><td className="r mono">{fmtQtyDoc(it.quantidade)}</td><td>{it.unidade || 'un'}</td><td style={{ fontSize: 11, color: '#94a3b8' }}>{porLoja(it)}</td></tr>)}</tbody>
         </table></div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
           <button className="btn-ghost" onClick={() => onPrint(forn?.nome || '—', [pedido])}>🖨 Imprimir / PDF</button>
