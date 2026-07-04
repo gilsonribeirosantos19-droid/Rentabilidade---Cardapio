@@ -166,12 +166,12 @@ export function MonitorVendas() {
             <thead>
               <tr>
                 <th className="c" style={{ width: 34 }}><input type="checkbox" checked={allChecked} onChange={(e) => toggleAll(e.target.checked)} /></th>
-                <th className="c">Situação</th><th>Loja</th><th>D. Movimento</th><th className="r">Comandas</th><th className="r">Cancel.</th><th className="r">Faturamento</th><th className="r">Desconto</th><th className="r">Ticket</th><th>D. Integração</th>
+                <th className="c">Situação</th><th>Loja</th><th>Tipo</th><th>D. Movimento</th><th className="r">Venda</th><th>D. Integração</th>
               </tr>
             </thead>
             <tbody>
               {!lista.length
-                ? <tr><td colSpan={10} className="empty">{lojas.length ? 'Nenhum dia neste filtro.' : 'Carregando lojas…'}</td></tr>
+                ? <tr><td colSpan={7} className="empty">{lojas.length ? 'Nenhum dia neste filtro.' : 'Carregando lojas…'}</td></tr>
                 : lista.map((r) => {
                   const m = SIT_META[r.situacao]
                   const nr = r.situacao === 'nao_recebido'
@@ -180,12 +180,9 @@ export function MonitorVendas() {
                       <td className="c" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggleSel(r.id)} /></td>
                       <td className="c"><span className="sit-dot" style={{ background: m.dot }} title={m.nome} /></td>
                       <td>{r.loja}</td>
+                      <td>Venda</td>
                       <td>{r.dMovimento}</td>
-                      <td className="r">{nr ? '—' : r.comandas}</td>
-                      <td className="r">{nr ? '—' : r.canceladas}</td>
                       <td className="r">{nr ? '—' : brl(r.faturado)}</td>
-                      <td className="r">{nr ? '—' : brl(r.desconto)}</td>
-                      <td className="r">{nr ? '—' : brl(r.ticket)}</td>
                       <td>{r.dIntegracao}</td>
                     </tr>
                   )
