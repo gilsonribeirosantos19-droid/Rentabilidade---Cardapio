@@ -124,7 +124,8 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   const qc = useQueryClient()
   const [qComprar, setQComprar] = useState<Record<string, number>>({})
   const [fornSel, setFornSel] = useState<Record<string, string>>({})
-  const [verLojas, setVerLojas] = useState<{ nome: string; unidade: string; lojas: { nome: string; qty: number }[] } | null>(null)
+  const [detItem, setDetItem] = useState<string | null>(null)
+  const toggleDet = (id: string) => setDetItem((cur) => (cur === id ? null : id))
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
@@ -207,8 +208,8 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
           <tbody>
             {isLoading ? <tr><td colSpan={8} className="empty">Carregando…</td></tr>
               : consolidado.length === 0 ? <tr><td colSpan={8} className="empty">Nenhuma solicitação pendente</td></tr>
-              : consolidado.map((d) => <tr key={d.insId}>
-                <td>{d.nome}</td>
+              : consolidado.map((d) => <tr key={d.insId} className={detItem === d.insId ? 'sel' : ''}>
+                <td style={{ cursor: 'pointer', userSelect: 'none', fontWeight: detItem === d.insId ? 700 : undefined }} onClick={() => toggleDet(d.insId)} title="Clique para ver as lojas que pediram">{d.nome}</td>
                 <td className="r mono">{fmtQty(d.total)}</td>
                 <td className="r"><input type="number" className="field" style={{ width: 100, height: 30, textAlign: 'right' }} min="0" step="0.001" value={qComprar[d.insId] ?? d.total} onChange={(e) => setQComprar((p) => ({ ...p, [d.insId]: parseFloat(e.target.value) || 0 }))} /></td>
                 <td>{d.unidade}</td>
@@ -220,19 +221,31 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
                   const curName = opts.find((o) => o.id === fornSel[d.insId])?.nome || ''
                   return <SearchSelect value={curName} placeholder="— Sem fornecedor —" options={opts.map((o) => o.nome)} onChange={(nm) => setFornSel((p) => ({ ...p, [d.insId]: nameToId[nm] || '' }))} />
                 })()}</td>
-                <td className="c"><button className="btn-ghost" style={{ height: 28, padding: '0 10px' }} onClick={() => setVerLojas({ nome: d.nome, unidade: d.unidade, lojas: d.lojas })}>Ver lojas</button></td>
+                <td className="c"><button className="btn-ghost" style={{ height: 28, padding: '0 10px' }} onClick={() => toggleDet(d.insId)}>{detItem === d.insId ? 'Ocultar' : 'Ver lojas'}</button></td>
               </tr>)}
           </tbody>
         </table>
       </div></div>
-      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>ℹ O sistema sugere o fornecedor com base no último preço e histórico de compras. Altere se necessário.</div>
+      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>ℹ O sistema sugere o fornecedor com base no último preço e histórico de compras. Altere se necessário. Clique num item para ver as lojas que pediram.</div>
 
-      {verLojas && <div className="ov" onClick={(e) => { if (e.target === e.currentTarget) setVerLojas(null) }}>
-        <div className="modal" style={{ width: 'min(480px,95vw)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}><h2>{verLojas.nome}</h2><button className="icon-btn" onClick={() => setVerLojas(null)}>✕</button></div>
-          <div className="tbl-wrap"><table className="tbl"><thead><tr><th>Loja</th><th className="r">Quantidade</th><th>Un.</th></tr></thead><tbody>{verLojas.lojas.map((l, i) => <tr key={i}><td>{l.nome}</td><td className="r mono">{fmtQty(l.qty)}</td><td>{verLojas.unidade}</td></tr>)}</tbody></table></div>
-        </div>
-      </div>}
+      {detItem && (() => {
+        const d = consolidado.find((c) => c.insId === detItem)
+        if (!d) return null
+        return (
+          <div style={{ marginTop: 12, background: '#fff', border: '1px solid #e7ebf0', borderRadius: 10, padding: '12px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{d.nome} <span style={{ color: '#94a3b8', fontWeight: 400 }}>— solicitado por loja</span></div>
+              <button className="btn-ghost" style={{ height: 26, padding: '0 10px' }} onClick={() => setDetItem(null)}>✕ Fechar</button>
+            </div>
+            <div className="tbl-wrap"><table className="tbl">
+              <thead><tr><th>Loja</th><th className="r">Quantidade</th><th>Un.</th></tr></thead>
+              <tbody>{d.lojas.length ? d.lojas.map((l, i) => <tr key={i}><td>{l.nome}</td><td className="r mono">{fmtQty(l.qty)}</td><td>{d.unidade}</td></tr>) : <tr><td colSpan={3} className="empty">Sem detalhamento por loja.</td></tr>}</tbody>
+              <tfoot><tr style={{ fontWeight: 700, background: '#f8fafc' }}><td>Total</td><td className="r mono">{fmtQty(d.total)}</td><td>{d.unidade}</td></tr></tfoot>
+            </table></div>
+          </div>
+        )
+      })()}
+
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </>
   )
