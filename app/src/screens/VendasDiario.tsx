@@ -90,8 +90,9 @@ export function VendasDiario() {
       const propA = fa + fj > 0 ? fa / (fa + fj) : 0
       const alm = { comandas: Math.round(day.comandas * propA), canceladas: Math.round(day.canceladas * propA), pessoas: Math.round(day.pessoas * propA), faturado: +(day.faturado * propA).toFixed(2), desconto: +(day.desconto * propA).toFixed(2), taxa: +(day.taxa * propA).toFixed(2), couvert: +(day.couvert * propA).toFixed(2) }
       const jan = { comandas: day.comandas - alm.comandas, canceladas: day.canceladas - alm.canceladas, pessoas: day.pessoas - alm.pessoas, faturado: +(day.faturado - alm.faturado).toFixed(2), desconto: +(day.desconto - alm.desconto).toFixed(2), taxa: +(day.taxa - alm.taxa).toFixed(2), couvert: +(day.couvert - alm.couvert).toFixed(2) }
-      if (turnoSel !== 'Só Jantar') out.push(mkRow('Almoço', alm))
-      if (turnoSel !== 'Só Almoço') out.push(mkRow('Jantar', jan))
+      // só mostra a linha do turno que TEVE venda (loja sem almoço não gera linha vazia)
+      if (turnoSel !== 'Só Jantar' && alm.faturado > 0) out.push(mkRow('Almoço', alm))
+      if (turnoSel !== 'Só Almoço' && jan.faturado > 0) out.push(mkRow('Jantar', jan))
     }
     return out.sort((a, b) => b.data.localeCompare(a.data) || a.loja.localeCompare(b.loja) || a.turno.localeCompare(b.turno))
   }, [recebidos, lojaSet, allSel, lojaNome, turnoSel])
