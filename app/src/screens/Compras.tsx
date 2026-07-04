@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
 type Pedido = { id: string; loja_id?: string | null; status?: string; observacao?: string | null; data_pedido?: string; created_at?: string; fornecedor_id?: string | null }
@@ -213,7 +214,12 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
                 <td>{d.unidade}</td>
                 <td style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{ultCompra(d.insId)}</td>
                 <td style={{ fontSize: 12 }}>{d.fornecedorId ? <span style={{ color: '#16a34a', fontWeight: 600 }}>{fornMap[d.fornecedorId]}</span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
-                <td><select className="field" style={{ height: 30, minWidth: 160, borderColor: fornSel[d.insId] ? '#cbd5e1' : '#f59e0b' }} value={fornSel[d.insId] ?? ''} onChange={(e) => setFornSel((p) => ({ ...p, [d.insId]: e.target.value }))}><option value="">— Sem fornecedor —</option>{fornOptsDe(d.insId).map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}</select></td>
+                <td style={{ minWidth: 190 }}>{(() => {
+                  const opts = fornOptsDe(d.insId)
+                  const nameToId: Record<string, string> = {}; opts.forEach((o) => { nameToId[o.nome] = o.id })
+                  const curName = opts.find((o) => o.id === fornSel[d.insId])?.nome || ''
+                  return <SearchSelect value={curName} placeholder="— Sem fornecedor —" options={opts.map((o) => o.nome)} onChange={(nm) => setFornSel((p) => ({ ...p, [d.insId]: nameToId[nm] || '' }))} />
+                })()}</td>
                 <td className="c"><button className="btn-ghost" style={{ height: 28, padding: '0 10px' }} onClick={() => setVerLojas({ nome: d.nome, unidade: d.unidade, lojas: d.lojas })}>Ver lojas</button></td>
               </tr>)}
           </tbody>
