@@ -26,6 +26,8 @@ const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: 
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/\b(sushi|pn|mao|pvh|unidade|antig[oa]|matriz|lanchonete|restaurante)\b/g, ' ')
   .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
+// hora de corte entre almoço e jantar: vendas < 17h = almoço, >= 17h = jantar
+const CORTE_JANTAR = 17
 // palavras-chave do nome (ignora conectores/abreviações e tokens curtos)
 const STOP = new Set(['das', 'dos', 'de', 'do', 'da', 'pq', 'e', 'com'])
 const toks = (s: string) => norm(s).split(' ').filter((t) => t.length >= 3 && !STOP.has(t))
@@ -114,9 +116,16 @@ serve(async (req) => {
           const dados = await ico('faturamento.total', { data_ini: dia, data_fim: dia })
           const pf = (dados && Array.isArray((dados as { por_filial?: unknown }).por_filial) ? (dados as { por_filial: any[] }).por_filial : []) as any[]
           const byId = new Map<number, any>(pf.map((f) => [Number(f.filial_id), f]))
-          const linhas = mapa.map(({ loja, filial }) => {
+          const linhas = []
+          for (const { loja, filial } of mapa) {
             const f = byId.get(filial.id) || {}
-            return {
+            // TURNO: faturamento por hora → soma antes das 17h (almoço) e a partir das 17h (jantar)
+            let fatAlmoco = 0, fatJantar = 0
+            try {
+              const horas = asArray(await ico('faturamento.por_horario', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })) as any[]
+              for (const h of horas) { const hr = Number(h.hora); const v = Number(h.faturado) || 0; if (hr < CORTE_JANTAR) fatAlmoco += v; else fatJantar += v }
+            } catch { /* sem por_horario: turno fica 0/0 (a tela cai p/ consolidado) */ }
+            linhas.push({
               tenant_id, loja_id: loja.id, data: dia,
               faturado: Number(f.faturado_caixa_valores) || 0,
               subtotal: Number(f.subtotal) || 0,
@@ -128,9 +137,10 @@ serve(async (req) => {
               qtd_canceladas: Number(f.qtd_comandas_canceladas) || 0,
               pessoas: Number(f.pessoas) || 0,
               ticket_medio: Number(f.ticket_medio_comanda) || 0,
+              fat_almoco: +fatAlmoco.toFixed(2), fat_jantar: +fatJantar.toFixed(2),
               status: 'processado', erros: null, data_integracao: now, atualizado_em: now,
-            }
-          })
+            })
+          }
           const { error } = await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
           if (error) throw error
           processados += linhas.length
