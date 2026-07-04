@@ -8,6 +8,11 @@ import { mediaPonderada } from '../lib/cost'
 import { imprimirDanfe, gerarDanfeAiko } from '../lib/danfe'
 import './fiscal.css'
 
+// Período: rótulos do dropdown com busca ↔ valor interno
+const PER_OPTS = ['Todos', 'Mês Atual', 'Mês Anterior', 'Período']
+const PER_LBL: Record<string, string> = { todos: 'Todos', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior', periodo: 'Período' }
+const PER_VAL: Record<string, string> = { 'Todos': 'todos', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior', 'Período': 'periodo' }
+
 type Nfe = { id: string; numero?: string; serie?: string; chave_acesso?: string; cnpj_emitente?: string; nome_emitente?: string; data_emissao?: string; data_integracao?: string; valor_total?: number; valor_titulo?: number; data_vencimento?: string; portador?: string; status?: string; loja_id?: string | null }
 type Item = { id: string; nfe_id: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; vinculacao_id?: string | null }
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; codigo_interno?: string }
@@ -230,7 +235,7 @@ export function MonitorNfe() {
         </div>
         <div className="ds-field"><label>Período</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => setPreset(e.target.value)}><option value="todos">Todos</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="periodo">Período</option></select>
+            <div style={{ minWidth: 150 }}><SearchSelect value={PER_LBL[periodo] || 'Período'} options={PER_OPTS} placeholder="Período" onChange={(l) => setPreset(PER_VAL[l] || 'periodo')} /></div>
             <input type="date" className="field" title="De" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
             <span style={{ color: '#94a3b8', fontSize: 12 }}>até</span>
             <input type="date" className="field" title="Até" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} />

@@ -13,6 +13,10 @@ const brl = (v?: number | null) => (v == null || (v as any) === '') ? '—' : 'R
 const fmtDate = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
 const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''
 const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+// Período: rótulos do dropdown com busca ↔ valor interno
+const PER_OPTS = ['Mês Atual', 'Mês Anterior', 'Todos', 'Período']
+const PER_LBL: Record<string, string> = { mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior', todos: 'Todos', periodo: 'Período' }
+const PER_VAL: Record<string, string> = { 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior', 'Todos': 'todos', 'Período': 'periodo' }
 
 export function EntradasProcessadas() {
   const { tenantId } = useAuth()
@@ -112,7 +116,7 @@ export function EntradasProcessadas() {
       <div className="fl-bar">
         <SearchSelect value={fForn ? (fornNomeOf[fForn] || '') : ''} options={fornNomes} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : (fornByNome[nm] || '')); setPag(1) }} />
         <input className="field" style={{ width: 120 }} placeholder="Nº NF-e…" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />
-        <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => aplicarPeriodo(e.target.value)}><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="todos">Todos</option><option value="periodo">Período</option></select>
+        <div style={{ minWidth: 150 }}><SearchSelect value={PER_LBL[periodo] || 'Período'} options={PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(PER_VAL[l] || 'periodo')} /></div>
         <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
         <span style={{ fontSize: 12, color: '#94a3b8' }}>até</span>
         <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} />
