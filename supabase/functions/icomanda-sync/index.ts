@@ -49,6 +49,37 @@ async function ico(bloco: string, params: Record<string, string>) {
   return j?.blocos?.[bloco]?.dados
 }
 
+// casa loja(Aiko) ↔ filial(iComanda) por PALAVRA-CHAVE do nome (usado nos 2 modos: mensal e diário)
+function matchLojas(
+  lojas: { id: string; nome: string }[],
+  filiais: { id: number; nome: string; faturado?: number; qtd_caixas?: number }[],
+) {
+  const mapa: { loja: { id: string; nome: string }; filial: { id: number; nome: string; faturado: number; qtd_caixas: number } }[] = []
+  const naoCasadas: string[] = []
+  for (const loja of lojas) {
+    const tl = toks(loja.nome)
+    const cands = filiais.map((f) => {
+      const shared = toks(f.nome).filter((t) => tl.includes(t))
+      return { f, score: shared.reduce((a, t) => a + t.length, 0), distintivo: shared.some((t) => t.length >= 4) }
+    }).filter((x) => x.distintivo && x.score > 0)
+      .sort((a, b) =>
+        (((b.f.faturado || 0) > 0 ? 1 : 0) - ((a.f.faturado || 0) > 0 ? 1 : 0)) ||
+        (b.score - a.score) ||
+        ((b.f.faturado || 0) - (a.f.faturado || 0)))
+    if (cands[0]) mapa.push({ loja, filial: { id: cands[0].f.id, nome: cands[0].f.nome, faturado: Number(cands[0].f.faturado) || 0, qtd_caixas: Number(cands[0].f.qtd_caixas) || 0 } })
+    else naoCasadas.push(loja.nome)
+  }
+  return { mapa, naoCasadas }
+}
+
+// lista de dias 'YYYY-MM-DD' de ini a fim (inclusive) — trava de segurança em 62 dias
+function daysBetween(ini: string, fim: string): string[] {
+  const out: string[] = []
+  const d = new Date(ini + 'T00:00:00Z'); const end = new Date(fim + 'T00:00:00Z')
+  while (d <= end && out.length < 62) { out.push(d.toISOString().slice(0, 10)); d.setUTCDate(d.getUTCDate() + 1) }
+  return out
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return json({ status: 'erro', mensagem: 'Use POST.' }, 405)
@@ -57,45 +88,58 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({} as Record<string, unknown>))
     const tenant_id = String((body as Record<string, unknown>).tenant_id || '')
     const competencia = String((body as Record<string, unknown>).competencia || '')
+    const dDe = String((body as Record<string, unknown>).data_ini || '')
+    const dAte = String((body as Record<string, unknown>).data_fim || '')
     if (!tenant_id) throw new Error('Informe tenant_id.')
-    if (!/^\d{4}-\d{2}$/.test(competencia)) throw new Error('Informe competencia no formato YYYY-MM.')
-
-    const [y, m] = competencia.split('-').map(Number)
-    const data_ini = `${competencia}-01`
-    const data_fim = new Date(y, m, 0).toISOString().slice(0, 10)
 
     const sb = createClient(SB_URL, SB_SERVICE)
 
-    // 1) lojas do Aiko (deste tenant)
+    // lojas do Aiko (deste tenant) — usadas nos dois modos
     const { data: lojas, error: eL } = await sb.from('lojas').select('id,nome').eq('tenant_id', tenant_id).eq('ativo', true)
     if (eL) throw eL
     if (!lojas?.length) throw new Error('Nenhuma loja ativa neste tenant.')
 
-    // 2) filiais do iComanda no período (id, nome, faturado AUTORITATIVO = total cheio da loja, qtd_caixas)
-    const filiais = asArray(await ico('filiais.listar', { data_ini, data_fim })) as { id: number; nome: string; faturado?: number; qtd_caixas?: number }[]
-
-    // 3) casa filial ↔ loja por PALAVRA-CHAVE do nome (ex.: "Parque Laranjeiras" ↔ "PQ DAS LARANJEIRAS"
-    //    casam por "laranjeiras"). Pontua pela soma do tamanho dos tokens em comum; exige ao menos 1
-    //    token distintivo (≥4 letras) p/ evitar falso positivo.
-    //    ORDEM: 1º quem TEM venda no período (uma filial ativa vence sempre um cadastro "Antigo" zerado),
-    //    depois maior pontuação de nome, depois maior faturamento.
-    const mapa: { loja: { id: string; nome: string }; filial: { id: number; nome: string; faturado: number; qtd_caixas: number } }[] = []
-    const naoCasadas: string[] = []
-    for (const loja of lojas) {
-      const tl = toks(loja.nome)
-      const cands = filiais.map((f) => {
-        const shared = toks(f.nome).filter((t) => tl.includes(t))
-        return { f, score: shared.reduce((a, t) => a + t.length, 0), distintivo: shared.some((t) => t.length >= 4) }
-      }).filter((x) => x.distintivo && x.score > 0)
-        .sort((a, b) =>
-          (((b.f.faturado || 0) > 0 ? 1 : 0) - ((a.f.faturado || 0) > 0 ? 1 : 0)) ||
-          (b.score - a.score) ||
-          ((b.f.faturado || 0) - (a.f.faturado || 0)))
-      if (cands[0]) mapa.push({ loja, filial: { id: cands[0].f.id, nome: cands[0].f.nome, faturado: Number(cands[0].f.faturado) || 0, qtd_caixas: Number(cands[0].f.qtd_caixas) || 0 } })
-      else naoCasadas.push(loja.nome)
+    // ===== MODO DIÁRIO (portão "Recebimento de Vendas"): body {data_ini, data_fim} em YYYY-MM-DD =====
+    // Puxa dia a dia o FATURAMENTO por loja e grava em icomanda_recebimento com status.
+    // Puxada OK do dia → 'processado' (auto) → entra nos relatórios. Falha → 'com_erro' → bloqueado.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dDe) && /^\d{4}-\d{2}-\d{2}$/.test(dAte)) {
+      const filiaisRange = asArray(await ico('filiais.listar', { data_ini: dDe, data_fim: dAte })) as { id: number; nome: string; faturado?: number; qtd_caixas?: number }[]
+      const { mapa, naoCasadas } = matchLojas(lojas, filiaisRange)
+      const dias = daysBetween(dDe, dAte)
+      const now = new Date().toISOString()
+      let processados = 0, comErro = 0
+      for (const dia of dias) {
+        try {
+          const fils = asArray(await ico('filiais.listar', { data_ini: dia, data_fim: dia })) as { id: number; faturado?: number; qtd_caixas?: number }[]
+          const byId = new Map<number, { faturado?: number; qtd_caixas?: number }>(fils.map((f) => [Number(f.id), f]))
+          const linhas = mapa.map(({ loja, filial }) => {
+            const f = byId.get(filial.id)
+            return { tenant_id, loja_id: loja.id, data: dia, faturado: Number(f?.faturado) || 0, qtd_caixas: Number(f?.qtd_caixas) || 0, status: 'processado', erros: null, data_integracao: now, atualizado_em: now }
+          })
+          const { error } = await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
+          if (error) throw error
+          processados += linhas.length
+        } catch (e) {
+          // dia falhou → marca TODAS as lojas do dia como 'com_erro' (não entra em relatório nenhum)
+          const linhas = mapa.map(({ loja }) => ({ tenant_id, loja_id: loja.id, data: dia, status: 'com_erro', erros: String((e as Error).message).slice(0, 300), data_integracao: now, atualizado_em: now }))
+          await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
+          comErro += linhas.length
+        }
+      }
+      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro })
     }
 
-    // 4) por loja casada: (a) grava o FATURAMENTO CHEIO da loja (bloco filiais — inclui couvert/taxa),
+    // ===== MODO MENSAL (produtos p/ CMV + faturamento cheio): body {competencia} em YYYY-MM =====
+    if (!/^\d{4}-\d{2}$/.test(competencia)) throw new Error('Informe competencia (YYYY-MM) ou data_ini+data_fim (YYYY-MM-DD).')
+    const [y, m] = competencia.split('-').map(Number)
+    const data_ini = `${competencia}-01`
+    const data_fim = new Date(y, m, 0).toISOString().slice(0, 10)
+
+    // filiais do iComanda no período (id, nome, faturado AUTORITATIVO = total cheio da loja, qtd_caixas)
+    const filiais = asArray(await ico('filiais.listar', { data_ini, data_fim })) as { id: number; nome: string; faturado?: number; qtd_caixas?: number }[]
+    const { mapa, naoCasadas } = matchLojas(lojas, filiais)
+
+    // por loja casada: (a) grava o FATURAMENTO CHEIO da loja (bloco filiais — inclui couvert/taxa),
     //    (b) grava os PRODUTOS (top_vendidos) p/ ranking/CMV. A soma dos produtos NÃO bate com o total
     //    (top-500 + só produto) — por isso o faturamento vem do filiais.listar, não da soma.
     let totalProdutos = 0, totalFaturado = 0
