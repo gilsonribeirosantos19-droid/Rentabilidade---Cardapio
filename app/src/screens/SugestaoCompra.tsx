@@ -59,7 +59,9 @@ export function SugestaoCompra() {
   const desdeISO = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - periodoDias); return d.toISOString() }, [periodoDias])
 
   // fetchAll (paginação por range) — evita o cap silencioso de 1000 linhas do Supabase
-  const { data: insumos = [] } = useQuery({ queryKey: ['sug-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra,minimo').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  // select('*') de propósito: pedir uma coluna inexistente (ex.: `minimo`, que fica no saldo_estoque)
+  // ZERA a query silenciosamente e esvazia a tela. Ver project_portal_select_star.
+  const { data: insumos = [] } = useQuery({ queryKey: ['sug-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['sug-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
   const { data: saidas = [] } = useQuery({ queryKey: ['sug-saidas', tenantId, desdeISO], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', desdeISO).order('criado_em').range(f, t)) })
   // pedidos + seus itens: itens_pedido não tem tenant_id — busca pelos IDs dos pedidos do tenant
