@@ -79,6 +79,7 @@ export function CurvaAbcVendas() {
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [msg, setMsg] = useState('')
+  const [bloqueados, setBloqueados] = useState<string[]>([])
   const lojaNome = useMemo(() => { const m: Record<string, string> = {}; lojas.forEach((l) => { m[l.id] = l.nome }); return m }, [lojas])
   // agrega as linhas (por loja+produto) somando qtd/faturado dos meses do intervalo
   const buildRows = (data: Record<string, unknown>[]): Prod[] => {
@@ -91,11 +92,35 @@ export function CurvaAbcVendas() {
     }
     return [...map.values()]
   }
-  // busca TODAS as vendas do período (fetchAll pagina de 1000 em 1000 — vence o teto do PostgREST)
+  // busca produtos (icomanda_vendas) + PORTÃO (icomanda_recebimento). Regra: uma loja×mês só entra
+  // se estiver RECEBIDA e SEM nenhum dia com erro no portão (erro não entra). fetchAll vence o teto de 1000.
   async function fetchVendas(comps: string[]): Promise<Prod[]> {
-    const data = await fetchAll<Record<string, unknown>>((f, t) =>
-      supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).range(f, t))
-    return buildRows(data)
+    const gateDe = comps[0] + '-01'
+    const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
+    const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
+    const [vendas, gate] = await Promise.all([
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_recebimento').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
+    ])
+    // portão por loja×mês: recebido? tem erro?
+    const gk = new Map<string, { ok: boolean; erro: boolean }>()
+    for (const r of gate) {
+      const k = `${r.loja_id}|${String(r.data).slice(0, 7)}`
+      const g = gk.get(k) || { ok: false, erro: false }
+      if (r.status === 'processado') g.ok = true
+      if (r.status === 'com_erro') g.erro = true
+      gk.set(k, g)
+    }
+    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok && !g.erro }
+    const bloq = new Set<string>()
+    const okVendas = vendas.filter((r) => {
+      const lojaId = String(r.loja_id), comp = String(r.competencia)
+      if (liberado(lojaId, comp)) return true
+      bloq.add(`${lojaNome[lojaId] || lojaId} · ${comp}`)
+      return false
+    })
+    setBloqueados([...bloq])
+    return buildRows(okVendas)
   }
   async function carregar(comps: string[]) {
     try { setRows(await fetchVendas(comps)) }
@@ -118,16 +143,24 @@ export function CurvaAbcVendas() {
     if (!tenantId || syncing) return
     const comps = compsBetween(de, ate)
     if (!comps.length) { setMsg('Selecione um período.'); return }
-    setSyncing(true); setMsg('Puxando do iComanda… (pode levar ~1 min)')
+    const gateDe = comps[0] + '-01'
+    const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
+    const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
+    setSyncing(true); setMsg('Puxando do iComanda… (portão + produtos, pode levar ~1 min)')
     try {
-      let casadas = 0, prods = 0
+      // 1) portão diário (define o que fica liberado)
+      const d1 = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: gateDe, data_fim: gateAte } })
+      if (d1.error) throw d1.error
+      if (d1.data?.status !== 'ok') throw new Error(d1.data?.mensagem || 'erro no portão')
+      // 2) produtos do(s) mês(es)
+      let prods = 0
       for (const competencia of comps) {
         const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, competencia } })
         if (error) throw error
-        if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
-        casadas = data.lojas_casadas; prods += data.produtos_gravados
+        if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro nos produtos')
+        prods += data.produtos_gravados
       }
-      setMsg(`✓ Atualizado: ${casadas} lojas, ${prods} produtos.`)
+      setMsg(`✓ ${d1.data.processados} dias processados · ${prods} produtos.`)
       await carregar(comps)
     } catch (e) {
       setMsg('Erro ao puxar: ' + (e as Error).message)
@@ -236,7 +269,8 @@ export function CurvaAbcVendas() {
         {msg
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando vendas…</span>
-          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas reais do iComanda</span>}
+          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas reais — só meses Processados na Recebimento de Vendas</span>}
+        {bloqueados.length > 0 && <span className="mock-tag" style={{ background: '#fef2f2', color: '#b91c1c', borderColor: 'transparent' }} title={bloqueados.join(', ')}>⛔ {bloqueados.length} loja×mês bloqueado(s) por erro no portão — resolva na Recebimento de Vendas</span>}
       </div>
 
       <div className="grid-wrap">
