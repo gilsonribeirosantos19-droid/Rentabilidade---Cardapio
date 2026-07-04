@@ -16,6 +16,9 @@
 /* dropdown com busca em barras SEM rótulo (ex.: Compras) — 34px como os campos */
 .est-screen .fbar-ss { display: inline-block; }
 .est-screen .fbar-ss .ass-btn { height: 34px; }
+/* dropdown com busca em barras com rótulo .flbl (ex.: Consumo) */
+.est-screen .cons-ss .ass { width: 100%; }
+.est-screen .cons-ss .ass-btn { height: 32px; }
 .est-screen .ds-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .est-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
 .est-screen .field:focus { outline: none; border-color: #f97316; }

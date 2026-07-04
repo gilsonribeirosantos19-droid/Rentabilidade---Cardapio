@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number }
@@ -86,8 +87,8 @@ export function Inventario() {
       </div>
 
       <div className="ds-filterbar">
-        <div className="ds-field"><label>Loja</label><select className="field" value={fLoja} onChange={(e) => setFLoja(e.target.value)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>
-        <div className="ds-field"><label>Grupo Inventário</label><select className="field" value={fGrupo} onChange={(e) => setFGrupo(e.target.value)}><option value="">Todos os grupos</option>{grupos.map((g) => <option key={g.id} value={g.id}>{g.nome}</option>)}</select></div>
+        <div className="ds-field" style={{ minWidth: 160 }}><label>Loja</label><SearchSelect value={lojas.find((l) => l.id === fLoja)?.nome || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => setFLoja(lojas.find((l) => l.nome === nm)?.id || '')} /></div>
+        <div className="ds-field" style={{ minWidth: 180 }}><label>Grupo Inventário</label><SearchSelect value={grupos.find((g) => g.id === fGrupo)?.nome || ''} options={grupos.map((g) => g.nome)} placeholder="Todos os grupos" onChange={(nm) => setFGrupo(grupos.find((g) => g.nome === nm)?.id || '')} /></div>
         <div className="ds-field"><label>N. Inventário</label><input className="field" placeholder="[digite...]" value={fNum} onChange={(e) => setFNum(e.target.value)} /></div>
         <div className="ds-field"><label>D. Inicial</label><input type="date" className="field" value={fIni} onChange={(e) => setFIni(e.target.value)} /></div>
         <div className="ds-field"><label>D. Final</label><input type="date" className="field" value={fFim} onChange={(e) => setFFim(e.target.value)} /></div>
