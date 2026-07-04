@@ -71,15 +71,15 @@ serve(async (req) => {
     if (eL) throw eL
     if (!lojas?.length) throw new Error('Nenhuma loja ativa neste tenant.')
 
-    // 2) filiais do iComanda no período (id, nome, faturado)
-    const filiais = asArray(await ico('filiais.listar', { data_ini, data_fim })) as { id: number; nome: string; faturado?: number }[]
+    // 2) filiais do iComanda no período (id, nome, faturado AUTORITATIVO = total cheio da loja, qtd_caixas)
+    const filiais = asArray(await ico('filiais.listar', { data_ini, data_fim })) as { id: number; nome: string; faturado?: number; qtd_caixas?: number }[]
 
     // 3) casa filial ↔ loja por PALAVRA-CHAVE do nome (ex.: "Parque Laranjeiras" ↔ "PQ DAS LARANJEIRAS"
     //    casam por "laranjeiras"). Pontua pela soma do tamanho dos tokens em comum; exige ao menos 1
     //    token distintivo (≥4 letras) p/ evitar falso positivo.
     //    ORDEM: 1º quem TEM venda no período (uma filial ativa vence sempre um cadastro "Antigo" zerado),
     //    depois maior pontuação de nome, depois maior faturamento.
-    const mapa: { loja: { id: string; nome: string }; filial: { id: number; nome: string } }[] = []
+    const mapa: { loja: { id: string; nome: string }; filial: { id: number; nome: string; faturado: number; qtd_caixas: number } }[] = []
     const naoCasadas: string[] = []
     for (const loja of lojas) {
       const tl = toks(loja.nome)
@@ -91,13 +91,15 @@ serve(async (req) => {
           (((b.f.faturado || 0) > 0 ? 1 : 0) - ((a.f.faturado || 0) > 0 ? 1 : 0)) ||
           (b.score - a.score) ||
           ((b.f.faturado || 0) - (a.f.faturado || 0)))
-      if (cands[0]) mapa.push({ loja, filial: { id: cands[0].f.id, nome: cands[0].f.nome } })
+      if (cands[0]) mapa.push({ loja, filial: { id: cands[0].f.id, nome: cands[0].f.nome, faturado: Number(cands[0].f.faturado) || 0, qtd_caixas: Number(cands[0].f.qtd_caixas) || 0 } })
       else naoCasadas.push(loja.nome)
     }
 
-    // 4) puxa produtos por filial casada e grava (regrava a competência de cada loja)
+    // 4) por loja casada: (a) grava o FATURAMENTO CHEIO da loja (bloco filiais — inclui couvert/taxa),
+    //    (b) grava os PRODUTOS (top_vendidos) p/ ranking/CMV. A soma dos produtos NÃO bate com o total
+    //    (top-500 + só produto) — por isso o faturamento vem do filiais.listar, não da soma.
     let totalProdutos = 0, totalFaturado = 0
-    const detalhe: { loja: string; filial: string; produtos: number; faturado: number }[] = []
+    const detalhe: { loja: string; filial: string; produtos: number; faturado: number; faturado_produtos: number }[] = []
     for (const { loja, filial } of mapa) {
       const prods = asArray(await ico('produtos.top_vendidos', { data_ini, data_fim, filial_id: String(filial.id), limit: '1000', ordenar_por: 'faturado' })) as any[]
       const rows = prods
@@ -107,12 +109,19 @@ serve(async (req) => {
           produto_nome: String(p.nome || '').trim() || null, grupo: String(p.grupo || '').trim() || null,
           qtd: Number(p.qtd) || 0, faturado: Number(p.faturado) || 0, atualizado_em: new Date().toISOString(),
         }))
-      // regrava a competência dessa loja (remove o antigo p/ não sobrar produto que saiu)
+      // (b) regrava os produtos da competência dessa loja
       await sb.from('icomanda_vendas').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('competencia', competencia)
       if (rows.length) { const { error } = await sb.from('icomanda_vendas').insert(rows); if (error) throw error }
-      const fat = rows.reduce((a, r) => a + r.faturado, 0)
-      totalProdutos += rows.length; totalFaturado += fat
-      detalhe.push({ loja: loja.nome, filial: filial.nome, produtos: rows.length, faturado: +fat.toFixed(2) })
+      // (a) grava o faturamento AUTORITATIVO da loja (número cheio, do filiais.listar)
+      const { error: eF } = await sb.from('icomanda_faturamento').upsert({
+        tenant_id, loja_id: loja.id, competencia,
+        faturado: filial.faturado, qtd_caixas: filial.qtd_caixas, filial_nome: filial.nome,
+        atualizado_em: new Date().toISOString(),
+      }, { onConflict: 'tenant_id,loja_id,competencia' })
+      if (eF) throw eF
+      const fatProd = rows.reduce((a, r) => a + r.faturado, 0)
+      totalProdutos += rows.length; totalFaturado += filial.faturado
+      detalhe.push({ loja: loja.nome, filial: filial.nome, produtos: rows.length, faturado: +filial.faturado.toFixed(2), faturado_produtos: +fatProd.toFixed(2) })
     }
 
     return json({
