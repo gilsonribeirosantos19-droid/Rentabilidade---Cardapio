@@ -51,6 +51,11 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
     })
   )
 
+  // linha de adicionar (buscar insumo + quantidade → Adicionar)
+  const [addIns, setAddIns] = useState('')
+  const [addQtd, setAddQtd] = useState('')
+  const adicionar = () => { if (!addIns || !(Number(addQtd) > 0)) return; setItens((a) => [...a, { insumo_id: addIns, qtd: addQtd }]); setAddIns(''); setAddQtd('') }
+
   const ehProc = subj?.kind === 'insumo'
 
   const pickMap = useMemo(() => {
@@ -157,43 +162,46 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', marginTop: 18, marginBottom: 10 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700 }}>Ingredientes</h3>
-            <div style={{ flex: 1 }} />
-            <button className="fm-add" onClick={() => setItens((a) => [...a, { insumo_id: '', qtd: '' }])}>+ Adicionar</button>
+          <h3 style={{ fontSize: 15, fontWeight: 700, marginTop: 18, marginBottom: 12 }}>Ingredientes</h3>
+          <div className="ing-add">
+            <div className="ing-add-s"><SearchSelect value={addIns ? (insMap[addIns]?.nome || '') : ''} options={insNames} placeholder="Buscar insumo (código ou descrição)" onChange={(nm) => setAddIns(insByName.get(nm) || '')} /></div>
+            <div className="ing-add-f"><label>UM</label><div className="ing-um">{addIns ? umOf(insMap[addIns]) : '—'}</div></div>
+            <div className="ing-add-f"><label>Quantidade</label><input className="ing-qtd" type="number" step="any" value={addQtd} onChange={(e) => setAddQtd(e.target.value)} placeholder="Ex.: 0,100" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionar() } }} /></div>
+            <button className="ing-add-btn" onClick={adicionar} disabled={!addIns || !(Number(addQtd) > 0)}>Adicionar</button>
           </div>
-          <div className="ing2">
-            <div className="ing2-head">
-              <div>Insumo</div><div>UM</div><div className="r">Qtd</div><div className="r">% Aprov.</div><div className="r">Custo unit.</div><div className="r">Custo total</div><div />
-            </div>
-            {itens.length === 0 ? <div className="ing2-empty">Nenhum ingrediente — clique em "+ Adicionar".</div>
-              : itens.map((r, idx) => {
-                const ins = insMap[r.insumo_id]; const um = umOf(ins)
-                const qtdG = isW(um) ? (Number(r.qtd) || 0) * 1000 : (Number(r.qtd) || 0)
-                const ct = ins ? custoIng(ins, qtdG) : 0
-                const cu = ins ? custoIng(ins, isW(um) ? 1000 : 1) : 0
-                return (
-                  <div className="ing2-row" key={idx}>
-                    <SearchSelect value={ins?.nome || ''} options={insNames} placeholder="Selecione o insumo..." onChange={(nm) => { const id = insByName.get(nm) || ''; setItens((a) => a.map((x, i) => i === idx ? { ...x, insumo_id: id } : x)) }} />
-                    <div className="um">{ins ? um : '—'}</div>
-                    <div className="r"><input className="ing2-qtd" type="number" step="any" value={r.qtd} onChange={(e) => setItens((a) => a.map((x, i) => i === idx ? { ...x, qtd: e.target.value } : x))} /></div>
-                    <div className="r muted">{ins ? (ins.rendimento_pct || 100) + '%' : '—'}</div>
-                    <div className="r muted mono">{ins ? brl(cu) : '—'}</div>
-                    <div className="r bold mono">{ins ? brl(ct) : '—'}</div>
-                    <div className="r"><button className="ing2-del" onClick={() => setItens((a) => a.filter((_, i) => i !== idx))}>✕</button></div>
-                  </div>
-                )
-              })}
+          <div className="ing-tbl">
+            <div className="ing-thead"><div>Insumo</div><div>UM</div><div className="r">Quantidade</div><div className="r">% Aprov.</div><div className="r">Custo Unitário</div><div className="r">Custo Total</div><div className="c">Ações</div></div>
+            {itens.length === 0 ? <div className="ing2-empty">Nenhum ingrediente — busque acima e clique em "Adicionar".</div>
+              : <>
+                {itens.map((r, idx) => {
+                  const ins = insMap[r.insumo_id]; const um = umOf(ins)
+                  const qtdG = isW(um) ? (Number(r.qtd) || 0) * 1000 : (Number(r.qtd) || 0)
+                  const ct = ins ? custoIng(ins, qtdG) : 0
+                  const cu = ins ? custoIng(ins, isW(um) ? 1000 : 1) : 0
+                  return (
+                    <div className="ing-trow" key={idx}>
+                      <div className="ins">{ins?.nome || '—'}</div>
+                      <div className="um">{ins ? um : '—'}</div>
+                      <div className="r">{r.qtd || '0'}</div>
+                      <div className="r muted">{ins ? (ins.rendimento_pct || 100) + '%' : '—'}</div>
+                      <div className="r mono">{ins ? brl(cu) : '—'}</div>
+                      <div className="r bold mono">{ins ? brl(ct) : '—'}</div>
+                      <div className="c"><button className="ing2-del" title="Remover" onClick={() => setItens((a) => a.filter((_, i) => i !== idx))}>🗑</button></div>
+                    </div>
+                  )
+                })}
+                <div className="ing-count">{itens.length} {itens.length === 1 ? 'item' : 'itens'}</div>
+              </>}
           </div>
 
-          <div style={{ display: 'flex', gap: 12, marginTop: 16, marginBottom: 18 }}>
-            <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #eef1f5', borderRadius: 10, padding: '12px 16px' }}>
-              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>Custo {vincId ? 'por unidade (kg/L)' : 'unitário da receita'}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'DM Mono, monospace', marginTop: 4 }}>{brl(custoUnit)}</div>
+          <div style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
+            <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #eef1f5', borderRadius: 10, padding: '9px 14px' }}>
+              <div style={{ fontSize: 10.5, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Custo {vincId ? 'por unidade (kg/L)' : 'unitário da receita'}</div>
+              <div style={{ fontSize: 19, fontWeight: 800, fontFamily: 'DM Mono, monospace', marginTop: 2 }}>{brl(custoUnit)}</div>
             </div>
-            <div style={{ flex: 1, background: '#eef4ff', border: '1px solid #dbe6ff', borderRadius: 10, padding: '12px 16px' }}>
-              <div style={{ fontSize: 11, color: '#3b5bdb', fontWeight: 600, textTransform: 'uppercase' }}>Custo total da receita</div>
-              <div style={{ fontSize: 20, fontWeight: 800, fontFamily: 'DM Mono, monospace', marginTop: 4, color: '#1d4ed8' }}>{brl(total)}</div>
+            <div style={{ flex: 1, background: '#eef4ff', border: '1px solid #dbe6ff', borderRadius: 10, padding: '9px 14px' }}>
+              <div style={{ fontSize: 10.5, color: '#3b5bdb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Custo total da receita</div>
+              <div style={{ fontSize: 19, fontWeight: 800, fontFamily: 'DM Mono, monospace', marginTop: 2, color: '#1d4ed8' }}>{brl(total)}</div>
             </div>
           </div>
 
@@ -201,9 +209,12 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
             <button className={'fm-tab' + (aba === 'preparo' ? ' on' : '')} onClick={() => setAba('preparo')}>Modo de Preparo</button>
             <button className={'fm-tab' + (aba === 'obs' ? ' on' : '')} onClick={() => setAba('obs')}>Observações</button>
           </div>
-          {aba === 'preparo'
-            ? <textarea className="fm-ta" value={preparo} onChange={(e) => setPreparo(e.target.value)} placeholder="Descreva o processo..." />
-            : <textarea className="fm-ta" value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observações..." />}
+          <div className="fm-ta-wrap">
+            {aba === 'preparo'
+              ? <textarea className="fm-ta" maxLength={2000} value={preparo} onChange={(e) => setPreparo(e.target.value)} placeholder="Descreva o processo de preparo..." />
+              : <textarea className="fm-ta" maxLength={2000} value={obs} onChange={(e) => setObs(e.target.value)} placeholder="Observações..." />}
+            <span className="fm-ta-count">{(aba === 'preparo' ? preparo : obs).length} / 2000</span>
+          </div>
         </div>
       </div>
     </div>
