@@ -254,7 +254,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
 // romaneio consolidado: 1 página por loja (portado do HTML antigo)
 type LojaFull = { id?: string; nome?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string }
 type PorLoja = Record<string, { loja: LojaFull; itens: Record<string, { qty: number; un: string }> }>
-function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string) {
+function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: string) {
   const dataFormatada = new Date(dataRef.length === 10 ? dataRef + 'T12:00:00' : dataRef).toLocaleDateString('pt-BR')
   const paginas = Object.values(porLoja).map(({ loja, itens }) => {
     const linhas: ({ nome: string; qty: number; un: string } | null)[] = Object.entries(itens).map(([nome, { qty, un }]) => ({ nome, qty, un }))
@@ -264,17 +264,19 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string) {
       <tr><td class="cel-loja">${nomeLoja.toUpperCase()}</td><td class="cel-data-label">DATA:</td><td class="cel-data">${dataFormatada}</td></tr>
       <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${razao}${cnpj ? ' CNPJ: ' + cnpj : ''}</td></tr>
       <tr><td colspan="3" class="cel-info">ENDEREÇO: ${ende}</td></tr>
+      ${fornecedor ? `<tr><td colspan="3" class="cel-forn">PEDIDO PARA O FORNECEDOR: ${fornecedor.toUpperCase()}</td></tr>` : ''}
       <tr><td colspan="2" class="cel-th">ITENS</td><td class="cel-th" style="text-align:center">QUANTIDADE</td></tr>
       ${linhas.map((it) => it ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${fmtQtyDoc(it.qty)} ${it.un.toUpperCase()}</td></tr>` : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
       <tr><td class="cel-footer">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
       <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">${hrTarde}</td></tr>
     </table></div>`
   }).join('')
-  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Pedidos por Loja — ${dataFormatada}</title><style>
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${fornecedor ? 'Pedido ' + fornecedor : 'Pedidos por Loja'} — ${dataFormatada}</title><style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}body{background:#fff}
     .pagina{page-break-after:always;padding:20px;max-width:700px;margin:0 auto}.pagina:last-child{page-break-after:avoid}
     .doc{width:100%;border-collapse:collapse;font-size:13px}.doc td{border:1px solid #000;padding:6px 8px;vertical-align:middle}
     .cel-loja{font-weight:700;font-size:14px;width:55%}.cel-data-label{font-weight:700;width:15%;text-align:center}.cel-data{font-weight:700;font-size:14px;width:30%;text-align:right}
+    .cel-forn{background:#dbeafe;font-weight:700;font-size:12.5px}
     .cel-info{background:#f4cccc;font-size:12px;line-height:1.5;height:36px}.cel-th{background:#ffff00;font-weight:700;font-size:13px;text-align:center;padding:8px}
     .cel-item{height:28px;font-size:12px}.cel-qty{text-align:center;font-weight:600;font-size:12px}.cel-footer{background:#ffff00;font-weight:700;font-size:12px;text-align:center;padding:6px}
     @media print{body{margin:0}.pagina{padding:10px;max-width:100%}}
@@ -381,10 +383,10 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     await mudarStatus(pedId, 'enviado')
   }
   // PDF do fornecedor: 1 folha por loja (com dados da loja), só com os itens desse fornecedor — igual ao HTML antigo
-  const imprimir = (_fornNome: string, peds: Pedido[]) => {
+  const imprimir = (fornNome: string, peds: Pedido[]) => {
     const porLoja = agruparPorLoja(peds)
     if (!Object.keys(porLoja).length) { showToast('Sem itens para imprimir.', 'err'); return }
-    gerarImpressaoPorLoja(porLoja, peds[0]?.data_pedido || peds[0]?.created_at || hoje())
+    gerarImpressaoPorLoja(porLoja, peds[0]?.data_pedido || peds[0]?.created_at || hoje(), fornNome)
   }
 
   return (
