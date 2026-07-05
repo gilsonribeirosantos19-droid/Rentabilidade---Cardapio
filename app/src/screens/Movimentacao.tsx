@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo, type Mov } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string; tipo_item?: string; familia?: string; subgrupo?: string; unidade_medida?: string; unidade_compra?: string; participa_cmv?: string; preco_compra?: number }
@@ -190,10 +191,9 @@ export function Movimentacao() {
 
   const exportCSV = () => {
     if (!rows.length) return
-    const header = 'Descrição;Unidade;Grupo;Q.Anterior;V.Anterior;Q.Entradas;V.Entradas;Q.Consumo;V.Consumo;Q.Perdas;V.Perdas;Q.Final;V.Final;C.Médio\n'
-    const body = rows.map((r) => `${r.nome};${r.un};${r.cat};${r.qAnt.toFixed(3)};${r.vAnt.toFixed(2)};${r.qEnt.toFixed(3)};${r.vEnt.toFixed(2)};${r.qCon.toFixed(3)};${r.vCon.toFixed(2)};${r.qPerd.toFixed(3)};${r.vPerd.toFixed(2)};${r.qFin.toFixed(3)};${r.vFin.toFixed(2)};${r.cm.toFixed(4)}`).join('\n')
-    const blob = new Blob(['﻿' + header + body], { type: 'text/csv;charset=utf-8' })
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `movimentacao_${de}_${ate}.csv`; a.click(); URL.revokeObjectURL(a.href)
+    const head = ['Descrição', 'Unidade', 'Grupo', 'Q.Anterior', 'V.Anterior', 'Q.Entradas', 'V.Entradas', 'Q.Consumo', 'V.Consumo', 'Q.Perdas', 'V.Perdas', 'Q.Final', 'V.Final', 'C.Médio']
+    const linhas = rows.map((r) => [r.nome, r.un, r.cat, +r.qAnt.toFixed(3), +r.vAnt.toFixed(2), +r.qEnt.toFixed(3), +r.vEnt.toFixed(2), +r.qCon.toFixed(3), +r.vCon.toFixed(2), +r.qPerd.toFixed(3), +r.vPerd.toFixed(2), +r.qFin.toFixed(3), +r.vFin.toFixed(2), +r.cm.toFixed(4)])
+    downloadCsv(`movimentacao_${de}_${ate}.csv`, [head, ...linhas])
   }
 
   const cell = (id: string, r: Row) => {

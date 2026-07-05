@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './estoque.css'
 
 // dropdowns com busca (rótulo ↔ valor)
@@ -128,12 +129,12 @@ export function ConsumoInsumos() {
 
   const exportCSV = () => {
     if (!rows.length) return
-    const fmtN = (v: number) => (Number(v) || 0).toFixed(modo === 'valor' ? 2 : 3)
+    const dec = modo === 'valor' ? 2 : 3
+    const n = (v: number) => +(Number(v) || 0).toFixed(dec)
     let header = ['Insumo', 'UN', ...meses.map((m) => m.label), 'Media Mensal', 'Total']
     if (compara !== 'nenhuma') header = header.concat(['Total Comparado', 'Diferenca', 'Diferenca %'])
-    const body = rows.map((r) => { let c = [`"${r.ins.nome}"`, r.ins.unidade_medida || '', ...r.porMes.map(fmtN), fmtN(r.media), fmtN(r.total)]; if (compara !== 'nenhuma') c = c.concat([fmtN(r.cmpTotal || 0), fmtN(r.dif || 0), (r.difPct || 0).toFixed(0)]); return c.join(';') })
-    const csv = '﻿' + header.join(';') + '\n' + body.join('\n')
-    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = `consumo_insumos_${new Date().toISOString().split('T')[0]}.csv`; a.click()
+    const linhas = rows.map((r) => { let c: (string | number)[] = [r.ins.nome, r.ins.unidade_medida || '', ...r.porMes.map(n), n(r.media), n(r.total)]; if (compara !== 'nenhuma') c = c.concat([n(r.cmpTotal || 0), n(r.dif || 0), +(r.difPct || 0).toFixed(0)]); return c })
+    downloadCsv(`consumo_insumos_${new Date().toISOString().split('T')[0]}.csv`, [header, ...linhas])
   }
 
   // resumo

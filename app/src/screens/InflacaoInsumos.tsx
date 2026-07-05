@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './estoque.css'
 
 // Período (meses): rótulo do dropdown ↔ valor numérico
@@ -78,9 +79,9 @@ export function InflacaoInsumos() {
 
   const exportCSV = () => {
     if (!linhas.length) return
-    let csv = 'Insumo;UN;' + meses.join(';') + '\n'
-    linhas.forEach(({ ins, precos }) => { csv += `${ins.nome};${ins.unidade_medida || ins.unidade_compra || 'un'};` + precos.map((p) => p != null ? p.toFixed(2) : '').join(';') + '\n' })
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); a.download = 'inflacao.csv'; a.click(); URL.revokeObjectURL(a.href)
+    const head = ['Insumo', 'UN', ...meses]
+    const rows = linhas.map(({ ins, precos }) => [ins.nome, ins.unidade_medida || ins.unidade_compra || 'un', ...precos.map((p) => p != null ? +p.toFixed(2) : '')])
+    downloadCsv('inflacao.csv', [head, ...rows])
   }
 
   return (

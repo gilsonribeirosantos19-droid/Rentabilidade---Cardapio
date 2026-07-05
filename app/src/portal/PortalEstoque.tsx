@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { downloadCsv } from '../lib/csv'
 
 // Portal › Estoque — 3 sub-abas: Relatório (posição atual + estoque inicial da
 // última contagem), Movimentação (lança entrada/saída) e Histórico. Fiel ao loja.html.
@@ -144,9 +145,8 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const exportar = () => {
     if (!rows.length) return
     const head = ['Insumo', 'Un.', 'Estoque Inicial', 'Entradas', 'Saidas', 'Saldo Atual', 'Minimo', 'Maximo', 'Valor Estoque (R$)', 'Ultima Mov.']
-    const linhas = rows.map((r: any) => [r.ins.nome, un(r.ins), r.inicial ?? '', r.ent, r.sai, r.saldo, r.min ?? '', r.max ?? '', (r.saldo * r.cm).toFixed(2), r.ult ? fmtDataHora(r.ult) : ''])
-    const csv = '﻿' + [head, ...linhas].map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
-    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = `estoque_${hojeStr()}.csv`; a.click()
+    const linhas = rows.map((r: any) => [r.ins.nome, un(r.ins), r.inicial ?? '', r.ent, r.sai, r.saldo, r.min ?? '', r.max ?? '', +(r.saldo * r.cm).toFixed(2), r.ult ? fmtDataHora(r.ult) : ''])
+    downloadCsv(`estoque_${hojeStr()}.csv`, [head, ...linhas])
   }
 
   return (
@@ -386,9 +386,8 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
   const exportar = () => {
     if (!lista.length) return
     const head = ['Data/Hora', 'Tipo', 'Insumo', 'Grupo', 'Quantidade', 'Unidade', 'Responsavel', 'Observacao']
-    const linhas = lista.map((m: any) => { const ins = insMap[m.insumo_id]; const tp = _tipo(m); const sinal = m._lado === 'entrada' ? '' : '-'; return [fmtDataHora(m.criado_em || m.created_at), tp, ins?.nome || '', grupoNome(m.insumo_id), sinal + (m.quantidade || 0), un(ins), m.responsavel || '', (m.observacao || m.motivo || '')] })
-    const csv = '﻿' + [head, ...linhas].map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
-    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = `historico_movimentacoes_${hojeStr()}.csv`; a.click()
+    const linhas = lista.map((m: any) => { const ins = insMap[m.insumo_id]; const tp = _tipo(m); const qtd = (m._lado === 'entrada' ? 1 : -1) * (Number(m.quantidade) || 0); return [fmtDataHora(m.criado_em || m.created_at), tp, ins?.nome || '', grupoNome(m.insumo_id), qtd, un(ins), m.responsavel || '', (m.observacao || m.motivo || '')] })
+    downloadCsv(`historico_movimentacoes_${hojeStr()}.csv`, [head, ...linhas])
   }
 
   return (

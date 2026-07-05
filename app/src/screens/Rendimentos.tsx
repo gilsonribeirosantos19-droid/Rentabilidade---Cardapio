@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './estoque.css'
 
 type Insumo = { id: string; nome?: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; rendimento_pct?: number; ativo?: boolean }
@@ -133,20 +134,16 @@ export function Rendimentos() {
   const exportarCSV = () => {
     if (!filtrado.length) { showToast('Nenhum registro para exportar.', 'err'); return }
     const header = ['Insumo', 'Data', 'Peso Bruto (kg)', 'Peso Líquido (kg)', 'Rendimento (%)', 'Perda (kg)', 'Perda (%)', 'Custo Real/kg', 'Custo Total Perda']
-    const rows = filtrado.map((t) => {
+    const linhas = filtrado.map((t) => {
       const nome = insMap[t.insumo_id]?.nome || '—'
       const rend = t.rendimento_pct || 0, bruto = t.peso_bruto || 0, liquido = t.peso_liquido || 0
       const perdaKg = bruto - liquido, perdaPct = bruto > 0 ? perdaKg / bruto * 100 : 0
       const cmKg = custoKg(t.insumo_id)
       const custoReal = cmKg > 0 && rend > 0 ? cmKg / (rend / 100) : null
       const custoPerda = cmKg > 0 ? perdaKg * cmKg : null
-      return [`"${nome}"`, brDate(t.criado_em), bruto.toFixed(3), liquido.toFixed(3), rend.toFixed(1), perdaKg.toFixed(3), perdaPct.toFixed(1), custoReal != null ? custoReal.toFixed(2) : '', custoPerda != null ? custoPerda.toFixed(2) : ''].join(';')
+      return [nome, brDate(t.criado_em), +bruto.toFixed(3), +liquido.toFixed(3), +rend.toFixed(1), +perdaKg.toFixed(3), +perdaPct.toFixed(1), custoReal != null ? +custoReal.toFixed(2) : '', custoPerda != null ? +custoPerda.toFixed(2) : '']
     })
-    const csv = '﻿' + header.join(';') + '\n' + rows.join('\n')
-    const a = document.createElement('a')
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)
-    a.download = 'rendimento_' + new Date().toLocaleDateString('en-CA') + '.csv'
-    a.click()
+    downloadCsv('rendimento_' + new Date().toLocaleDateString('en-CA') + '.csv', [header, ...linhas])
     showToast('CSV exportado com sucesso.', 'ok')
   }
 

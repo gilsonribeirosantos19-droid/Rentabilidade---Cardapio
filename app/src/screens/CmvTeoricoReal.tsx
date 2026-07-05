@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './cmv.css'
 
 type Insumo = { id: string; nome?: string; categoria?: string; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
@@ -154,12 +155,9 @@ export function CmvTeoricoReal() {
 
   const exportCSV = () => {
     if (!calc) { showToast('Calcule primeiro.', 'err'); return }
-    let csv = 'Insumo;UN;Qtd Teo;Custo Teo;Qtd Real;Custo Real;Dif Qtd;Dif%;Impacto;Status\n'
-    calc.rows.forEach((r) => { csv += `${r.i.nome};${r.un};${r.qTeo.toFixed(3)};${r.cTeo.toFixed(2)};${r.qReal.toFixed(3)};${r.cReal.toFixed(2)};${r.dQtd.toFixed(3)};${r.dPct.toFixed(1)};${r.imp.toFixed(2)};${r.st}\n` })
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = `cmv_${de}_${ate}.csv`; a.click()
-    URL.revokeObjectURL(url)
+    const head = ['Insumo', 'UN', 'Qtd Teo', 'Custo Teo', 'Qtd Real', 'Custo Real', 'Dif Qtd', 'Dif%', 'Impacto', 'Status']
+    const linhas = calc.rows.map((r) => [r.i.nome ?? '', r.un, +r.qTeo.toFixed(3), +r.cTeo.toFixed(2), +r.qReal.toFixed(3), +r.cReal.toFixed(2), +r.dQtd.toFixed(3), +r.dPct.toFixed(1), +r.imp.toFixed(2), r.st])
+    downloadCsv(`cmv_${de}_${ate}.csv`, [head, ...linhas])
   }
 
   const ultimo = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleDateString('pt-BR') + ' ' + new Date(dataUpdatedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'

@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string }
@@ -49,9 +50,9 @@ export function CurvaABC() {
 
   const exportCSV = () => {
     if (!rows.length) return
-    let csv = '#;Insumo;Categoria;Classe;Valor;% Individual;% Acumulada\n'
-    rows.forEach((r) => { csv += `${r.idx};${r.nome};${r.cat};${r.cl};${r.val.toFixed(2)};${r.pct.toFixed(2)};${r.acum.toFixed(2)}\n` })
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); a.download = 'curva_abc.csv'; a.click(); URL.revokeObjectURL(a.href)
+    const head = ['#', 'Insumo', 'Categoria', 'Classe', 'Valor', '% Individual', '% Acumulada']
+    const linhas = rows.map((r) => [r.idx, r.nome, r.cat, r.cl, +r.val.toFixed(2), +r.pct.toFixed(2), +r.acum.toFixed(2)])
+    downloadCsv('curva_abc.csv', [head, ...linhas])
   }
 
   return (

@@ -7,6 +7,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { ChartBox } from '../components/ChartBox'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './sugestao.css'
 
 // dropdowns com busca da toolbar (rótulo ↔ valor)
@@ -141,10 +142,10 @@ export function SugestaoCompra() {
   const recalcular = () => { setIdeal({}); showToast('Sugestões recalculadas com base no consumo e estoque atuais.') }
   const exportar = () => {
     if (!rows.length) { showToast('Nada para exportar.'); return }
+    const n2 = (v: unknown) => +(Number(v) || 0).toFixed(2)
     const head = ['Código', 'Descrição', 'Grupo', 'Un', 'Estoque', 'Consumo/dia', 'Mínimo', 'Pedido Aberto', 'Em Trânsito', 'Sugestão', 'Compra Ideal', 'Custo', 'Valor']
-    const linhas = rows.map((r) => { const ci = idealNum(r); return [r.cod, r.desc, r.grp, r.un, q2(r.est), q2(r.cons), q2(r.min), q2(r.ab), q2(r.tr), q2(r.sug), q2(ci), r.custo.toFixed(2), (ci * r.custo).toFixed(2)] })
-    const csv = '﻿' + [head, ...linhas].map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
-    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv); a.download = `sugestao_compra_${new Date().toLocaleDateString('en-CA')}.csv`; a.click()
+    const linhas = rows.map((r) => { const ci = idealNum(r); return [r.cod, r.desc, r.grp, r.un, n2(r.est), n2(r.cons), n2(r.min), n2(r.ab), n2(r.tr), n2(r.sug), n2(ci), n2(r.custo), n2(ci * r.custo)] })
+    downloadCsv(`sugestao_compra_${new Date().toLocaleDateString('en-CA')}.csv`, [head, ...linhas])
   }
 
   const foot = useMemo(() => { let n = 0, qtd = 0, val = 0; rows.forEach((r) => { if (sel.has(r.insumoId)) { const q = idealNum(r); n++; qtd += q; val += q * r.custo } }); return { n, qtd, val } }, [rows, sel, ideal])

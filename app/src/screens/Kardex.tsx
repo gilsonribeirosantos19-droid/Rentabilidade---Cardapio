@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
@@ -81,10 +82,9 @@ export function Kardex() {
 
   const exportCSV = () => {
     if (!movs.length) return
-    const header = 'Data;Tipo;Descrição;Quantidade;Custo Unit.;V.Entrada;V.Saída;Saldo Qtd.;Saldo R$;C.Médio\n'
-    const body = movs.map((m) => `${fmtData(m.data)};${m.tipo === 'saida' ? 'Saída' : 'Entrada'};${m.desc};${(m.tipo === 'saida' ? -m.qMov : m.qMov).toFixed(3)};${m.vUnit.toFixed(4)};${m.vEntrada.toFixed(2)};${m.vSaida.toFixed(2)};${m.qAcum.toFixed(3)};${m.vAcum.toFixed(2)};${m.cmedio.toFixed(4)}`).join('\n')
-    const blob = new Blob(['﻿' + header + body], { type: 'text/csv;charset=utf-8' })
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `kardex_${insSel?.nome || 'insumo'}_${de}_${ate}.csv`; a.click(); URL.revokeObjectURL(a.href)
+    const head = ['Data', 'Tipo', 'Descrição', 'Quantidade', 'Custo Unit.', 'V.Entrada', 'V.Saída', 'Saldo Qtd.', 'Saldo R$', 'C.Médio']
+    const linhas = movs.map((m) => [fmtData(m.data), m.tipo === 'saida' ? 'Saída' : 'Entrada', m.desc, +(m.tipo === 'saida' ? -m.qMov : m.qMov).toFixed(3), +m.vUnit.toFixed(4), +m.vEntrada.toFixed(2), +m.vSaida.toFixed(2), +m.qAcum.toFixed(3), +m.vAcum.toFixed(2), +m.cmedio.toFixed(4)])
+    downloadCsv(`kardex_${insSel?.nome || 'insumo'}_${de}_${ate}.csv`, [head, ...linhas])
   }
 
   return (
