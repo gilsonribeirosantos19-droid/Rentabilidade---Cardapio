@@ -94,6 +94,22 @@ serve(async (req) => {
 
     const sb = createClient(SB_URL, SB_SERVICE)
 
+    // ---- AUTORIZAÇÃO (impede escrita/leitura cross-tenant) ----
+    // 1) CRON: header x-cron-secret == env CRON_SECRET.  2) usuário logado: JWT válido E tenant dele == tenant_id do body.
+    const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
+    const CRON_SECRET = Deno.env.get('CRON_SECRET') || ''
+    const cronHdr = req.headers.get('x-cron-secret') || ''
+    let autorizado = false
+    if (CRON_SECRET && cronHdr === CRON_SECRET) autorizado = true
+    else {
+      const { data: ud } = await sb.auth.getUser(jwt)
+      if (ud?.user) {
+        const { data: caller } = await sb.from('usuarios').select('tenant_id').eq('id', ud.user.id).maybeSingle()
+        if (caller?.tenant_id && caller.tenant_id === tenant_id) autorizado = true
+      }
+    }
+    if (!autorizado) return json({ status: 'erro', mensagem: 'Nao autorizado para este tenant.' }, 403)
+
     // lojas do Aiko (deste tenant) — usadas nos dois modos
     const { data: lojas, error: eL } = await sb.from('lojas').select('id,nome').eq('tenant_id', tenant_id).eq('ativo', true)
     if (eL) throw eL
@@ -125,7 +141,7 @@ serve(async (req) => {
               const cx = (dc && Array.isArray((dc as { caixas?: unknown }).caixas) ? (dc as { caixas: any[] }).caixas : []) as any[]
               for (const c of cx) {
                 const v = Number(c.faturado_caixa_valores) || 0
-                if (String(c.tipo_turno || '').toLowerCase().startsWith('almoc')) fatAlmoco += v; else fatJantar += v
+                if (String(c.tipo_turno || '').toLowerCase().startsWith('almo')) fatAlmoco += v; else fatJantar += v
               }
             } catch { /* sem caixas: turno fica 0/0 */ }
             // CANAL (salão/delivery/balcão): exato, do faturamento.por_tipo
@@ -135,7 +151,7 @@ serve(async (req) => {
               const tipos = (dt && Array.isArray((dt as { tipos?: unknown }).tipos) ? (dt as { tipos: any[] }).tipos : asArray(dt)) as any[]
               const acc: Record<string, any> = {}
               for (const t of tipos) {
-                const tc = String(t.tipo_comanda || '').toLowerCase()
+                const tc = String(t.tipo_comanda || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
                 const c = tc === 'mesa' ? 'Salão' : tc === 'delivery' ? 'Delivery' : tc === 'balcao' ? 'Balcão' : 'Outros'
                 const a = acc[c] || { canal: c, faturado: 0, comandas: 0, pessoas: 0, desconto: 0, taxa: 0, couvert: 0 }
                 a.faturado += Number(t.faturado) || 0; a.comandas += Number(t.qtd_comandas) || 0; a.pessoas += Number(t.pessoas) || 0
@@ -199,8 +215,11 @@ serve(async (req) => {
           qtd: Number(p.qtd) || 0, faturado: Number(p.faturado) || 0, atualizado_em: new Date().toISOString(),
         }))
       // (b) regrava os produtos da competência dessa loja
-      await sb.from('icomanda_vendas').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('competencia', competencia)
-      if (rows.length) { const { error } = await sb.from('icomanda_vendas').insert(rows); if (error) throw error }
+      // só regrava se veio produto (evita apagar tudo por uma resposta vazia transitória)
+      if (rows.length) {
+        await sb.from('icomanda_vendas').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('competencia', competencia)
+        const { error } = await sb.from('icomanda_vendas').insert(rows); if (error) throw error
+      }
       // (a) grava o faturamento AUTORITATIVO da loja (número cheio, do filiais.listar)
       const { error: eF } = await sb.from('icomanda_faturamento').upsert({
         tenant_id, loja_id: loja.id, competencia,

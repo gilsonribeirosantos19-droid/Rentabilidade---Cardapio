@@ -101,7 +101,13 @@ export function VendasDiario() {
       }
       const canais = [...agg.values()]
       // reconcilia os canais (base COMANDAS) com o faturamento do CAIXA (oficial)
-      const somaCanal = canais.reduce((a, c) => a + (Number(c.faturado) || 0), 0)
+      let somaCanal = canais.reduce((a, c) => a + (Number(c.faturado) || 0), 0)
+      // se os canais somam 0 mas o caixa faturou, NÃO perde o dia: 1 linha com o dia inteiro
+      if (somaCanal <= 0 && (Number(r.faturado) || 0) > 0) {
+        canais.length = 0
+        canais.push({ canal: isDelivLoja ? 'Delivery' : 'Salão', faturado: Number(r.faturado) || 0, comandas: Number(r.qtd_comandas) || 0, pessoas: Number(r.pessoas) || 0, desconto: Number(r.desconto) || 0, taxa: Number(r.taxa) || 0, couvert: Number(r.couvert) || 0 })
+        somaCanal = Number(r.faturado) || 0
+      }
       const escala = somaCanal > 0 ? (Number(r.faturado) || 0) / somaCanal : 1
       // proporção do turno (nível loja, pelos caixas): almoço vs jantar
       const fa = Number(r.fat_almoco) || 0, fj = Number(r.fat_jantar) || 0

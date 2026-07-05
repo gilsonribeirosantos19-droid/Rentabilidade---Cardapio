@@ -4,8 +4,8 @@
 // O app Aiko chama esta função; ela chama o iComanda com o Bearer token e devolve o JSON.
 //
 // Variáveis de ambiente (Supabase → Edge Functions → Secrets):
-//   ICOMANDA_TOKEN = apidash_sushi_249_...   (a chave do iComanda)
-//   ICOMANDA_BASE  = https://cloud.icomanda.com/sushipontanegra/apidashboard/v2
+//   ICOMANDA_TOKEN = (a chave do iComanda — fica só no servidor, nunca no repo)
+//   ICOMANDA_BASE  = (a URL base da API do iComanda)
 
 import { serve } from 'https://deno.land/std@0.203.0/http/server.ts'
 

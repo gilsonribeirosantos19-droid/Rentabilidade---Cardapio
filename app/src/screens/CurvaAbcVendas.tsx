@@ -111,7 +111,9 @@ export function CurvaAbcVendas() {
       if (r.status === 'com_erro') g.erro = true
       gk.set(k, g)
     }
-    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok && !g.erro }
+    // liberado = mês RECEBIDO no portão (tem ≥1 dia processado). Um dia com erro não bloqueia o mês inteiro
+    // (os produtos são um agregado mensal atômico; o faturamento diário é que exclui o dia com erro).
+    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok }
     const bloq = new Set<string>()
     const okVendas = vendas.filter((r) => {
       const lojaId = String(r.loja_id), comp = String(r.competencia)
@@ -270,7 +272,7 @@ export function CurvaAbcVendas() {
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando vendas…</span>
           : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas reais — só meses Processados na Recebimento de Vendas</span>}
-        {bloqueados.length > 0 && <span className="mock-tag" style={{ background: '#fef2f2', color: '#b91c1c', borderColor: 'transparent' }} title={bloqueados.join(', ')}>⛔ {bloqueados.length} loja×mês bloqueado(s) por erro no portão — resolva na Recebimento de Vendas</span>}
+        {bloqueados.length > 0 && <span className="mock-tag" style={{ background: '#fef2f2', color: '#b91c1c', borderColor: 'transparent' }} title={bloqueados.join(', ')}>⛔ {bloqueados.length} loja×mês ainda não recebido(s) no portão — puxe na Recebimento de Vendas</span>}
       </div>
 
       <div className="grid-wrap">

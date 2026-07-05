@@ -37,7 +37,7 @@ const COLS: Col[] = [
   { key: 'cmvTeo', label: 'V. CMV Teórico', cls: 'r', fmt: 'm', def: true, sum: true },
   { key: 'cmvAjust', label: 'V. CMV Ajustado', cls: 'r', fmt: 'm', def: false, sum: true },
   { key: 'pctCusto', label: '% Custo', cls: 'r', fmt: 'p', def: true },
-  { key: 'qMediaDia', label: 'Q. Média Dia', cls: 'r', fmt: 'p', def: true },
+  { key: 'qMediaDia', label: 'Q. Média Dia', cls: 'r', fmt: 'q', def: true },
   { key: 'pctMargem', label: '% Margem', cls: 'r', fmt: 'p', def: true },
 ]
 
@@ -116,7 +116,8 @@ export function EngenhariaCardapio() {
       if (r.status === 'com_erro') g.erro = true
       gk.set(k, g)
     }
-    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok && !g.erro }
+    // liberado = mês RECEBIDO no portão (≥1 dia processado). 1 dia com erro não bloqueia o mês de produtos.
+    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok }
     const bloq = new Set<string>()
     const okVendas = vendas.filter((r) => {
       if (liberado(String(r.loja_id), String(r.competencia))) return true
@@ -282,7 +283,7 @@ export function EngenhariaCardapio() {
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando vendas…</span>
           : <span className="mock-tag" style={{ background: '#fff7ed', color: '#9a3412', borderColor: 'transparent' }}>● Vendas reais — custo/margem em "—" até cadastrar a ficha do produto</span>}
-        {bloqueados.length > 0 && <span className="mock-tag" style={{ background: '#fef2f2', color: '#b91c1c', borderColor: 'transparent' }} title={bloqueados.join(', ')}>⛔ {bloqueados.length} loja×mês bloqueado(s) por erro no portão</span>}
+        {bloqueados.length > 0 && <span className="mock-tag" style={{ background: '#fef2f2', color: '#b91c1c', borderColor: 'transparent' }} title={bloqueados.join(', ')}>⛔ {bloqueados.length} loja×mês ainda não recebido(s) no portão</span>}
       </div>
 
       <div className="grid-wrap">
