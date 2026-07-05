@@ -128,6 +128,14 @@ export function Insumos() {
   })
 
   const editar = (item: Insumo) => { setCadForm(item); setTab('cadastro') }
+  // Duplicar: abre o cadastro com toda a classificação preenchida, SEM id/código (vira item novo).
+  // Agiliza cadastrar vários itens da mesma categoria — é só trocar o nome e salvar.
+  const duplicar = (item: Insumo) => {
+    const { id, codigo_interno, ...rest } = item
+    void id; void codigo_interno
+    setCadForm({ ...rest, nome: (item.nome || '') + ' (cópia)' })
+    setTab('cadastro')
+  }
   const setF = (k: keyof Form, v: string | boolean) => setCadForm((f) => ({ ...f, [k]: v }))
 
   return (
@@ -269,6 +277,7 @@ export function Insumos() {
       {menu && (
         <div style={{ position: 'fixed', top: menu.y + 4, left: menu.x - 120, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 9, boxShadow: '0 8px 24px rgba(0,0,0,.14)', zIndex: 1000, minWidth: 130, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
           <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) editar(ins); setMenu(null) }}>✎ Editar</button>
+          <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) duplicar(ins); setMenu(null) }}>⧉ Duplicar</button>
           <button style={{ ...menuItemStyle, color: '#ef4444' }} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins && confirm(`Desativar "${ins.nome}"?`)) delMut.mutate(ins.id); setMenu(null) }}>🗑 Desativar</button>
         </div>
       )}
