@@ -44,6 +44,7 @@ export function Insumos() {
   const [cadForm, setCadForm] = useState<Form>(novoForm())
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
+  const [dup, setDup] = useState<Insumo | null>(null); const [dupNome, setDupNome] = useState('')
   // filtros Produtos
   const [busca, setBusca] = useState(''); const [fTipo, setFTipo] = useState(''); const [fFam, setFFam] = useState('')
   const [fGrupo, setFGrupo] = useState(''); const [fSub, setFSub] = useState(''); const [fStatus, setFStatus] = useState('')
@@ -128,13 +129,15 @@ export function Insumos() {
   })
 
   const editar = (item: Insumo) => { setCadForm(item); setTab('cadastro') }
-  // Duplicar: abre o cadastro com toda a classificação preenchida, SEM id/código (vira item novo).
-  // Agiliza cadastrar vários itens da mesma categoria — é só trocar o nome e salvar.
-  const duplicar = (item: Insumo) => {
-    const { id, codigo_interno, ...rest } = item
-    void id; void codigo_interno
-    setCadForm({ ...rest, nome: (item.nome || '') + ' (cópia)' })
-    setTab('cadastro')
+  // Duplicar: abre um pop-up rápido só com o nome. A classificação toda é copiada do item
+  // de origem; ao salvar, cria um item NOVO (código gerado automático). Ágil p/ vários da mesma categoria.
+  const duplicar = (item: Insumo) => { setDup(item); setDupNome((item.nome || '') + ' (cópia)') }
+  const confirmarDup = () => {
+    if (!dup) return
+    const nome = dupNome.trim(); if (!nome) { showToast('Informe o nome.', 'err'); return }
+    const { id, codigo_interno, ...rest } = dup; void id; void codigo_interno
+    saveMut.mutate({ ...rest, nome })
+    setDup(null)
   }
   const setF = (k: keyof Form, v: string | boolean) => setCadForm((f) => ({ ...f, [k]: v }))
 
@@ -282,6 +285,24 @@ export function Insumos() {
         </div>
       )}
 
+      {dup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }} onClick={() => setDup(null)}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 'min(440px, 92vw)', boxShadow: '0 18px 48px rgba(0,0,0,.25)', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #eef1f5' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Duplicar item</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Copia a classificação de <b>{dup.nome}</b>. Só ajuste o nome.</div>
+            </div>
+            <div style={{ padding: '16px 20px' }}>
+              <label className="form-label">Nome do novo item *</label>
+              <input className="form-input" autoFocus value={dupNome} onChange={(e) => setDupNome(titleCase(e.target.value))} onKeyDown={(e) => { if (e.key === 'Enter') confirmarDup() }} placeholder="Ex: Abacate" />
+            </div>
+            <div style={{ padding: '12px 20px 18px', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="f-btn" onClick={() => setDup(null)}>Cancelar</button>
+              <button className="f-btn primary" disabled={saveMut.isPending} onClick={confirmarDup}>{saveMut.isPending ? 'Salvando…' : 'Duplicar'}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
