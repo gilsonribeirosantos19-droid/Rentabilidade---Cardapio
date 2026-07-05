@@ -20,7 +20,7 @@ const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.
 const fmtDia = (iso: string) => iso.split('-').reverse().join('/')
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 const TURNO_FILTRO = ['Todos', 'Almoço', 'Jantar']
-const CANAL_FILTRO = ['Todos', 'Salão', 'Delivery', 'Balcão']
+const CANAL_FILTRO = ['Todos', 'Salão', 'Delivery']
 
 export function VendasDiario() {
   const { lojas } = useLoja()
@@ -89,10 +89,20 @@ export function VendasDiario() {
       const fa = Number(r.fat_almoco) || 0, fj = Number(r.fat_jantar) || 0
       const propA = fa + fj > 0 ? fa / (fa + fj) : 0
       const factor = turnoSel === 'Almoço' ? propA : turnoSel === 'Jantar' ? (1 - propA) : 1
-      // quebra por canal (exato). Sem por_canal (dado antigo) → 1 linha "(sem canal)" com o dia.
-      const canais: Canal[] = Array.isArray(r.por_canal) && r.por_canal.length
+      // canais do dia — só Salão e Delivery. Balcão (e qualquer outro) entra no SALÃO (não perde faturamento).
+      const canalKey = (c: string) => c === 'Delivery' ? 'Delivery' : 'Salão'
+      const canaisRaw: Canal[] = Array.isArray(r.por_canal) && r.por_canal.length
         ? r.por_canal
-        : [{ canal: '(sem canal)', faturado: Number(r.faturado) || 0, comandas: Number(r.qtd_comandas) || 0, pessoas: Number(r.pessoas) || 0, desconto: Number(r.desconto) || 0, taxa: Number(r.taxa) || 0, couvert: Number(r.couvert) || 0 }]
+        : [{ canal: 'Salão', faturado: Number(r.faturado) || 0, comandas: Number(r.qtd_comandas) || 0, pessoas: Number(r.pessoas) || 0, desconto: Number(r.desconto) || 0, taxa: Number(r.taxa) || 0, couvert: Number(r.couvert) || 0 }]
+      const agg = new Map<string, Canal>()
+      for (const c of canaisRaw) {
+        const k = canalKey(c.canal)
+        const a = agg.get(k) || { canal: k, faturado: 0, comandas: 0, pessoas: 0, desconto: 0, taxa: 0, couvert: 0 }
+        a.faturado += Number(c.faturado) || 0; a.comandas += Number(c.comandas) || 0; a.pessoas += Number(c.pessoas) || 0
+        a.desconto += Number(c.desconto) || 0; a.taxa += Number(c.taxa) || 0; a.couvert += Number(c.couvert) || 0
+        agg.set(k, a)
+      }
+      const canais = [...agg.values()]
       for (const c of canais) {
         if (canalSel !== 'Todos' && c.canal !== canalSel) continue
         const faturado = +((Number(c.faturado) || 0) * factor).toFixed(2)
