@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { FichaModal } from './FichaModal'
 import './fichas.css'
@@ -55,7 +55,7 @@ export function FichasTecnicas() {
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
-    queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId); return (data ?? []) as Saldo[] },
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)),
   })
   const { data: lojas = [] } = useQuery({ queryKey: ['fic-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome?: string }[] } })
   useEffect(() => { if (!lojaSel && lojas.length) setLojaSel(lojas[0].id) }, [lojas, lojaSel])

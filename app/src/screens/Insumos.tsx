@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import './insumos.css'
 
@@ -64,10 +64,7 @@ export function Insumos() {
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data } = await supabase.from('saldo_estoque').select('insumo_id, custo_medio, quantidade').eq('tenant_id', tenantId)
-      return (data ?? []) as Saldo[]
-    },
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id, custo_medio, quantidade').eq('tenant_id', tenantId).range(f, t)),
   })
   const custoMedio = (id: string) => saldos.filter((s) => s.insumo_id === id && (s.custo_medio || 0) > 0).reduce((b, s) => Math.max(b, s.custo_medio || 0), 0)
 

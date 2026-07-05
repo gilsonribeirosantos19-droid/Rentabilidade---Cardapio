@@ -45,7 +45,8 @@ export function Kardex() {
     saidas.filter((s) => s.insumo_id === insId && (!lojaId || (s as any).loja_id === lojaId)).forEach((s) => {
       todos.push({ data: s.criado_em || '', tipo: 'saida', desc: cap(s.tipo || '') + (s.motivo ? ' · ' + s.motivo : ''), qMov: s.quantidade || 0, vUnit: 0 })
     })
-    todos.sort((a, b) => a.data < b.data ? -1 : 1)
+    // ordena por data; empate → entrada ANTES de saída (senão o custo médio acumulado sai errado)
+    todos.sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : (a.tipo === 'entrada' ? -1 : b.tipo === 'entrada' ? 1 : 0))
     let qAcum = 0, vAcum = 0, cmedio = 0
     const full: KxMov[] = todos.map((m) => {
       if (m.tipo === 'entrada') {

@@ -29,7 +29,7 @@ export function Divergencias() {
         fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('id,insumo_id,qtd_por_embalagem,embalagem_descricao').eq('tenant_id', tenantId).range(f, t)),
         fetchAll<NfeItem>((f, t) => supabase.from('nfe_itens').select('id,descricao_nfe,nfe_id').eq('tenant_id', tenantId).is('vinculacao_id', null).range(f, t)),
         fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('id,numero,status').eq('tenant_id', tenantId).range(f, t)),
-        supabase.from('vendas_item').select('produto_nome,quantidade').eq('tenant_id', tenantId).is('ficha_id', null).then((r) => (r.data ?? []) as Venda[], () => [] as Venda[]),
+        fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('produto_nome,quantidade').eq('tenant_id', tenantId).is('ficha_id', null).range(f, t)).catch(() => [] as Venda[]),
         supabase.from('nfe_recebidas').select('numero,serie,nome_emitente,valor_total,created_at').eq('tenant_id', tenantId).eq('status', 'em_transito').then((r) => (r.data ?? []) as Nfe[], () => [] as Nfe[]),
       ])
       return { insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas }

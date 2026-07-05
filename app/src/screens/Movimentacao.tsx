@@ -74,13 +74,13 @@ export function Movimentacao() {
     queryFn: async () => {
       let invIni: InvItem[] = []
       const inv = await supabase.from('inventarios').select('id').eq('tenant_id', tenantId).lt('criado_em', de).eq('status', 'encerrado').order('criado_em', { ascending: false }).limit(1)
-      if (inv.data?.length) { const it = await supabase.from('inventario_itens').select('*').eq('inventario_id', inv.data[0].id); invIni = (it.data ?? []) as InvItem[] }
+      if (inv.data?.length) { invIni = await fetchAll<InvItem>((f, t) => supabase.from('inventario_itens').select('*').eq('inventario_id', inv.data![0].id).range(f, t)) }
       const perdasMap: Record<string, number> = {}
       const perdas = await supabase.from('perdas').select('id').eq('tenant_id', tenantId).gte('data_perda', de).lte('data_perda', ate)
       if (perdas.data?.length) {
         const ids = perdas.data.map((p: any) => p.id)
-        const its = await supabase.from('perdas_itens').select('insumo_id,quantidade').in('perda_id', ids)
-        ;(its.data ?? []).forEach((it: any) => { perdasMap[it.insumo_id] = (perdasMap[it.insumo_id] || 0) + (Number(it.quantidade) || 0) })
+        const its = await fetchAll<{ insumo_id: string; quantidade?: number }>((f, t) => supabase.from('perdas_itens').select('insumo_id,quantidade').in('perda_id', ids).range(f, t))
+        its.forEach((it) => { perdasMap[it.insumo_id] = (perdasMap[it.insumo_id] || 0) + (Number(it.quantidade) || 0) })
       }
       return { invIni, perdasMap }
     },

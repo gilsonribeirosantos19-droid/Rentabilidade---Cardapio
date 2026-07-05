@@ -5,6 +5,3 @@ const SUPA_KEY = import.meta.env.VITE_SUPA_KEY as string
 
 // Cliente Supabase compartilhado (mesma base/RLS do app atual).
 export const supabase = createClient(SUPA_URL, SUPA_KEY)
-
-// Tenant do ambiente de testes (mesmo do app atual).
-export const TENANT_ID = '00000000-0000-0000-0000-000000000001'

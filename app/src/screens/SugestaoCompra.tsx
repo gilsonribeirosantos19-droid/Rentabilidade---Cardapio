@@ -154,7 +154,19 @@ export function SugestaoCompra() {
   const perLoja = useMemo(() => {
     const est2: Record<string, Record<string, number>> = {}, min2: Record<string, Record<string, number>> = {}, cons2: Record<string, Record<string, number>> = {}, ab2: Record<string, Record<string, number>> = {}, tr2: Record<string, Record<string, number>> = {}
     saldos.forEach((s) => { addNest(est2, s.insumo_id, s.loja_id || '?', Number(s.quantidade) || 0); addNest(min2, s.insumo_id, s.loja_id || '?', Number(s.minimo) || 0) })
-    saidas.forEach((s) => addNest(cons2, s.insumo_id, s.loja_id || '?', (Number(s.quantidade) || 0) / periodoDias))
+    // consumo/dia por (insumo, loja) = soma ÷ dias REAIS cobertos (igual ao agregado, não período cheio)
+    const somaIL: Record<string, Record<string, number>> = {}, primIL: Record<string, Record<string, string>> = {}
+    saidas.forEach((s) => {
+      const lj = s.loja_id || '?'
+      addNest(somaIL, s.insumo_id, lj, Number(s.quantidade) || 0)
+      const d = s.criado_em || ''
+      if (d) { (primIL[s.insumo_id] ||= {}); if (!primIL[s.insumo_id][lj] || d < primIL[s.insumo_id][lj]) primIL[s.insumo_id][lj] = d }
+    })
+    for (const il in somaIL) for (const lj in somaIL[il]) {
+      const p = primIL[il]?.[lj]
+      const cobertos = p ? Math.floor((Date.now() - new Date(p).getTime()) / 864e5) + 1 : periodoDias
+      ;(cons2[il] ||= {})[lj] = somaIL[il][lj] / Math.min(periodoDias, Math.max(1, cobertos))
+    }
     const pById = Object.fromEntries(ped.pedidos.map((p) => [p.id, p])) as Record<string, Pedido>
     ped.itens.forEach((it) => { const p = pById[it.pedido_id]; if (!p) return; const st = norm(p.status); if (RECEBIDO.includes(st)) return; addNest(TRANSITO.includes(st) ? tr2 : ab2, it.insumo_id, p.loja_id || '?', Number(it.quantidade) || 0) })
     return { est: est2, min: min2, cons: cons2, ab: ab2, tr: tr2 }

@@ -254,7 +254,7 @@ function NovoInvModal({ lojas, grupos, insumos, saldos, tenantId, onClose, onDon
       if (!invId) throw new Error('Falha ao criar inventário.')
       const insGrupo = grupo.itens.map((it) => insMap[it.insumo_id]).filter(Boolean).sort((a, b) => a.nome.localeCompare(b.nome))
       const sld = (insId: string): Saldo => saldos.find((s) => s.insumo_id === insId && s.loja_id === loja) || { insumo_id: insId, quantidade: 0, custo_medio: 0 }
-      const linhas = insGrupo.map((ins) => ({ inventario_id: invId, insumo_id: ins.id, qtd_sistema: sld(ins.id).quantidade || 0, qtd_contada: null, custo_medio: sld(ins.id).custo_medio || 0 }))
+      const linhas = insGrupo.map((ins) => ({ tenant_id: tenantId, inventario_id: invId, insumo_id: ins.id, qtd_sistema: sld(ins.id).quantidade || 0, qtd_contada: null, custo_medio: sld(ins.id).custo_medio || 0 }))
       const { error: e2 } = await supabase.from('inventario_itens').insert(linhas)
       if (e2) throw e2
       onDone()
