@@ -12,7 +12,7 @@ import './faturamento.css'
 // Agrega por produto e classifica: A = até 80% do valor, B = 80-95%, C = resto.
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
 
-type Prod = { id: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number }
+type Prod = { id: string; lojaId: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number }
 type Row = Prod & { rank: number; vLiquida: number; pct: number; acum: number; classe: 'A' | 'B' | 'C' }
 
 const m2 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -69,11 +69,11 @@ export function CurvaAbcVendas() {
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
   const [lojaOpen, setLojaOpen] = useState(false)
   const initRef = useRef(false)
-  useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.nome))) } }, [lojas])
+  useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.id))) } }, [lojas])
   const allSel = lojas.length > 0 && lojaSet.size === lojas.length
-  const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? [...lojaSet][0] : `${lojaSet.size} lojas`
-  const toggleLoja = (n: string) => setLojaSet((p) => { const s = new Set(p); s.has(n) ? s.delete(n) : s.add(n); return s })
-  const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.nome)))
+  const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? (lojas.find((l) => lojaSet.has(l.id))?.nome || '1 loja') : `${lojaSet.size} lojas`
+  const toggleLoja = (id: string) => setLojaSet((p) => { const s = new Set(p); s.has(id) ? s.delete(id) : s.add(id); return s })
+  const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.id)))
 
   // --- dados REAIS do iComanda (icomanda_vendas) ---
   const [rows, setRows] = useState<Prod[]>([])
@@ -89,7 +89,7 @@ export function CurvaAbcVendas() {
       const key = `${r.loja_id}|${r.produto_id}`
       const ex = map.get(key)
       if (ex) { ex.qVenda += Number(r.qtd) || 0; ex.vBruta += Number(r.faturado) || 0 }
-      else map.set(key, { id: key, loja: lojaNome[r.loja_id as string] || '—', item: String(r.produto_nome || ''), codigo: String(r.produto_id ?? ''), grupo: String(r.grupo || ''), qVenda: Number(r.qtd) || 0, vBruta: Number(r.faturado) || 0, vDesc: 0 })
+      else map.set(key, { id: key, lojaId: String(r.loja_id ?? ''), loja: lojaNome[r.loja_id as string] || '—', item: String(r.produto_nome || ''), codigo: String(r.produto_id ?? ''), grupo: String(r.grupo || ''), qVenda: Number(r.qtd) || 0, vBruta: Number(r.faturado) || 0, vDesc: 0 })
     }
     return [...map.values()]
   }
@@ -199,7 +199,7 @@ export function CurvaAbcVendas() {
     const filtraLoja = lojaSet.size > 0 && !allSel
     const base = rows.map((v) => ({ ...v, vLiquida: v.vBruta - v.vDesc })).filter((v) => {
       if (!incluirZerado && v.vLiquida === 0) return false
-      if (filtraLoja && !lojaSet.has(v.loja)) return false
+      if (filtraLoja && !lojaSet.has(v.lojaId)) return false
       if (q && !norm([v.item, v.grupo, v.codigo].join(' ')).includes(q)) return false
       return true
     }).sort((a, b) => b.vLiquida - a.vLiquida)
@@ -252,7 +252,7 @@ export function CurvaAbcVendas() {
               <div className="ms-pop">
                 <label className="ms-opt"><input type="checkbox" checked={allSel} onChange={toggleTodas} /><b>Todas as lojas</b></label>
                 <div className="ms-sep" />
-                {lojas.map((l) => <label key={l.id} className="ms-opt"><input type="checkbox" checked={lojaSet.has(l.nome)} onChange={() => toggleLoja(l.nome)} />{l.nome}</label>)}
+                {lojas.map((l) => <label key={l.id} className="ms-opt"><input type="checkbox" checked={lojaSet.has(l.id)} onChange={() => toggleLoja(l.id)} />{l.nome}</label>)}
               </div>
             </>}
           </div>

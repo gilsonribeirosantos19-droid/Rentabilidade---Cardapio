@@ -29,11 +29,11 @@ export function FaturamentoVendas() {
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
   const [lojaOpen, setLojaOpen] = useState(false)
   const initRef = useRef(false)
-  useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.nome))) } }, [lojas])
+  useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.id))) } }, [lojas])
   const allSel = lojas.length > 0 && lojaSet.size === lojas.length
-  const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? [...lojaSet][0] : `${lojaSet.size} lojas`
-  const toggleLoja = (n: string) => setLojaSet((p) => { const s = new Set(p); s.has(n) ? s.delete(n) : s.add(n); return s })
-  const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.nome)))
+  const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? (lojas.find((l) => lojaSet.has(l.id))?.nome || '1 loja') : `${lojaSet.size} lojas`
+  const toggleLoja = (id: string) => setLojaSet((p) => { const s = new Set(p); s.has(id) ? s.delete(id) : s.add(id); return s })
+  const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.id)))
 
   // --- dados REAIS do iComanda (icomanda_faturamento) ---
   const [rows, setRows] = useState<FatRow[]>([])
@@ -97,7 +97,7 @@ export function FaturamentoVendas() {
   // filtra por loja + ordena por faturamento desc
   const lista = useMemo(() => {
     const filtraLoja = lojaSet.size > 0 && !allSel
-    return rows.filter((r) => !filtraLoja || lojaSet.has(r.loja)).sort((a, b) => b.faturado - a.faturado)
+    return rows.filter((r) => !filtraLoja || lojaSet.has(r.lojaId)).sort((a, b) => b.faturado - a.faturado)
   }, [rows, lojaSet, allSel])
   const totFat = lista.reduce((a, r) => a + r.faturado, 0)
   const totCx = lista.reduce((a, r) => a + r.caixas, 0)
@@ -123,7 +123,7 @@ export function FaturamentoVendas() {
               <div className="ms-pop">
                 <label className="ms-opt"><input type="checkbox" checked={allSel} onChange={toggleTodas} /><b>Todas as lojas</b></label>
                 <div className="ms-sep" />
-                {lojas.map((l) => <label key={l.id} className="ms-opt"><input type="checkbox" checked={lojaSet.has(l.nome)} onChange={() => toggleLoja(l.nome)} />{l.nome}</label>)}
+                {lojas.map((l) => <label key={l.id} className="ms-opt"><input type="checkbox" checked={lojaSet.has(l.id)} onChange={() => toggleLoja(l.id)} />{l.nome}</label>)}
               </div>
             </>}
           </div>
