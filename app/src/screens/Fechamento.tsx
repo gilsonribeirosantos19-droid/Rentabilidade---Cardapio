@@ -115,11 +115,15 @@ export function Fechamento() {
       addInv(ini, 'ei'); addInv(fin, 'ef')
       entMes.filter((e) => e.loja_id === l.id && cmvSet.has(e.insumo_id)).forEach((e) => { const o = ens(e.insumo_id), v = (e.quantidade || 0) * (e.custo_unitario || 0); if (e.tipo === 'transferencia') o.entT += v; else o.compras += v })
       saiMes.filter((s) => s.loja_id === l.id && cmvSet.has(s.insumo_id)).forEach((s) => { const o = ens(s.insumo_id), v = (s.quantidade || 0) * cmFimL(s.insumo_id); if (s.tipo === 'consumo') o.consumo += v; else if (s.tipo === 'transferencia') o.saiT += v; else if (['perda', 'vencimento', 'descarte'].includes(s.tipo || '')) o.perdas += v })
-      const itens = Object.values(byIns).map((o) => ({ ...o, cmv: o.ei + o.compras + o.entT + o.perdas - o.ef }))
+      // CMV por inventário = EI + Compras + Ent.Transf − Saí.Transf − Estoque Final.
+      // (As perdas já entram naturalmente — o Estoque Final físico da contagem já as reflete;
+      // somá-las de novo seria contar em dobro. E as saídas de transferência PRECISAM ser
+      // subtraídas: o que foi mandado p/ outra loja não é CMV desta.)
+      const itens = Object.values(byIns).map((o) => ({ ...o, cmv: o.ei + o.compras + o.entT - o.saiT - o.ef }))
         .filter((o) => o.ei || o.compras || o.entT || o.consumo || o.perdas || o.saiT || o.ef)
         .sort((a, b) => b.cmv - a.cmv)
       const ag = itens.reduce((a, o) => { (['ei', 'compras', 'entT', 'consumo', 'perdas', 'saiT', 'ef'] as const).forEach((k) => { a[k] += o[k] }); return a }, { ei: 0, compras: 0, entT: 0, consumo: 0, perdas: 0, saiT: 0, ef: 0 })
-      return { itens, estoque_inicial: ag.ei, compras: ag.compras, entradas_transferencia: ag.entT, saidas_transferencia: ag.saiT, consumo: ag.consumo, perdas: ag.perdas, estoque_final: ag.ef, cmv: ag.ei + ag.compras + ag.entT + ag.perdas - ag.ef }
+      return { itens, estoque_inicial: ag.ei, compras: ag.compras, entradas_transferencia: ag.entT, saidas_transferencia: ag.saiT, consumo: ag.consumo, perdas: ag.perdas, estoque_final: ag.ef, cmv: ag.ei + ag.compras + ag.entT - ag.saiT - ag.ef }
     }
 
     return base.lojas.map((l) => {
@@ -312,7 +316,7 @@ export function Fechamento() {
       </div>
 
       <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 10, lineHeight: 1.6 }}>
-        <b>CMV</b> = Estoque Inicial + Compras + Entradas Transf. + Perdas − Estoque Final (mesma fórmula do CMV por inventário). Estoque Inicial/Final vêm das <b>contagens de inventário encerradas</b>. Ao <b>Fechar</b>, os valores do mês ficam congelados e a loja vira <b>FECHADO</b>.
+        <b>CMV</b> = Estoque Inicial + Compras + Entradas Transf. − Saídas Transf. − Estoque Final (CMV por inventário; as perdas já entram no Estoque Final da contagem). Estoque Inicial/Final vêm das <b>contagens de inventário encerradas</b>. Ao <b>Fechar</b>, os valores do mês ficam congelados e a loja vira <b>FECHADO</b>.
       </div>
 
       {det && (

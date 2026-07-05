@@ -106,7 +106,7 @@ export function Rendimentos() {
       const outros = testes.filter((t) => t.insumo_id === insumoId && t.id !== id)
       const soma = outros.reduce((s, t) => s + (t.rendimento_pct || 0), 0) + rendimento
       const media = parseFloat((soma / (outros.length + 1)).toFixed(2))
-      await supabase.from('insumos').update({ rendimento_pct: media }).eq('id', insumoId)
+      await supabase.from('insumos').update({ rendimento_pct: media }).eq('id', insumoId).eq('tenant_id', tenantId)
       return insumoId
     },
     onSuccess: (insumoId) => { qc.invalidateQueries({ queryKey: ['rend'] }); qc.invalidateQueries({ queryKey: ['insumos'] }); setModal(null); showToast(`Teste salvo · ${insMap[insumoId]?.nome || 'insumo'} atualizado`, 'ok') },
@@ -114,12 +114,21 @@ export function Rendimentos() {
   })
 
   const delMut = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from('testes_rendimento').delete().eq('id', id); if (error) throw error },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['rend'] }); showToast('Registro excluído.', 'ok') },
+    mutationFn: async ({ id, insumoId }: { id: string; insumoId: string }) => {
+      const { error } = await supabase.from('testes_rendimento').delete().eq('id', id); if (error) throw error
+      // recalcula o rendimento do insumo com os testes que SOBRARAM (senão fica média "fantasma"
+      // incluindo o teste apagado). Sem testes restantes → volta pro neutro (100%).
+      const restantes = testes.filter((t) => t.insumo_id === insumoId && t.id !== id)
+      const media = restantes.length
+        ? parseFloat((restantes.reduce((s, t) => s + (t.rendimento_pct || 0), 0) / restantes.length).toFixed(2))
+        : 100
+      await supabase.from('insumos').update({ rendimento_pct: media }).eq('id', insumoId).eq('tenant_id', tenantId)
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['rend'] }); qc.invalidateQueries({ queryKey: ['insumos'] }); showToast('Registro excluído · rendimento recalculado', 'ok') },
     onError: (e: Error) => showToast('Erro: ' + e.message, 'err'),
   })
 
-  const excluir = (id: string) => { if (window.confirm('Excluir este registro de teste?')) delMut.mutate(id) }
+  const excluir = (id: string, insumoId: string) => { if (window.confirm('Excluir este registro de teste?')) delMut.mutate({ id, insumoId }) }
 
   const exportarCSV = () => {
     if (!filtrado.length) { showToast('Nenhum registro para exportar.', 'err'); return }
@@ -216,7 +225,7 @@ export function Rendimentos() {
                         <td>
                           <div className="rd-act">
                             <button onClick={() => setModal({ id: t.id, form: { insumo_id: t.insumo_id, peso_bruto: String(bruto), peso_liquido: String(liquido), observacao: t.observacao || '' } })}>Editar</button>
-                            <button className="del" onClick={() => excluir(t.id)}>Excluir</button>
+                            <button className="del" onClick={() => excluir(t.id, t.insumo_id)}>Excluir</button>
                           </div>
                         </td>
                       </tr>
