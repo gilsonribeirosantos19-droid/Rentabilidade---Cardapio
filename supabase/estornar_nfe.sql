@@ -64,6 +64,13 @@ begin
   get diagnostics v_apagadas = row_count;
 
   -- 3) recalcula saldo + custo médio de cada par (reconstrói com o que sobrou)
+  -- LIMITAÇÃO CONHECIDA: o custo médio é reconstruído como média ponderada simples de
+  -- TODAS as entradas restantes. Entradas de "ajuste de custo médio" (quantidade = 0, que
+  -- no app REDEFINEM o custo — ver custoMedioNaData em cost.ts) não têm peso aqui e são
+  -- efetivamente ignoradas. Ou seja: se houver ajuste manual de custo (q=0) no mesmo
+  -- insumo/loja, o custo médio após o estorno pode divergir do que o histórico móvel daria.
+  -- Caso raro (ajuste manual + estorno de NF-e no mesmo par); aceito por ora para manter a
+  -- função atômica e simples. Se virar problema, replicar a ordenação de custoMedioNaData.
   for r in select insumo_id, loja_id from _estorno_pares loop
     select coalesce(sum(quantidade), 0),
            case when coalesce(sum(quantidade), 0) > 0
