@@ -108,17 +108,16 @@ export function Saidas() {
         if (destinoId === lojaId) throw new Error('A loja de destino deve ser diferente da origem.')
       }
       const dataStr = f.data || hojeStr()
-      const custoOrigem = s.custo_medio || 0
-      const { error: e1 } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: lojaId, quantidade: q, tipo: f.tipo, motivo: (f.motivo || '').trim() || null, responsavel: (f.responsavel || '').trim() || null, criado_em: dataStr + 'T12:00:00.000Z' })
-      if (e1) throw e1
-      await upsertSaldo(f.insumo_id, (s.quantidade || 0) - q, custoOrigem, lojaId)
       if (f.tipo === 'transferencia' && destinoId) {
-        const sd = saldos.find((x) => x.insumo_id === f.insumo_id && x.loja_id === destinoId) || { quantidade: 0, custo_medio: 0 }
-        const qd = sd.quantidade || 0, cmd = sd.custo_medio || 0, nq = qd + q
-        const ncm = nq > 0 ? (qd * cmd + q * custoOrigem) / nq : custoOrigem
-        const { error: e2 } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: destinoId, quantidade: q, custo_unitario: custoOrigem, tipo: 'transferencia', criado_em: dataStr + 'T12:00:00.000Z' })
-        if (e2) throw e2
-        await upsertSaldo(f.insumo_id, nq, ncm, destinoId)
+        // TRANSFERÊNCIA ATÔMICA (tudo-ou-nada no banco): saída origem + entrada destino + os 2 saldos.
+        // A função lê os saldos DENTRO da transação (resolve o cache velho e não perde estoque em falha parcial).
+        const { error } = await supabase.rpc('transferir_estoque', { p_tenant: tenantId, p_insumo: f.insumo_id, p_origem: lojaId, p_destino: destinoId, p_qtd: q, p_data: dataStr + 'T12:00:00.000Z', p_motivo: (f.motivo || '').trim() || null, p_responsavel: (f.responsavel || '').trim() || null })
+        if (error) throw error
+      } else {
+        // saída normal (manual/perda): registra a saída e debita o saldo (custo médio não muda)
+        const { error: e1 } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: lojaId, quantidade: q, tipo: f.tipo, motivo: (f.motivo || '').trim() || null, responsavel: (f.responsavel || '').trim() || null, criado_em: dataStr + 'T12:00:00.000Z' })
+        if (e1) throw e1
+        await upsertSaldo(f.insumo_id, (s.quantidade || 0) - q, s.custo_medio || 0, lojaId)
       }
       return f.tipo
     },

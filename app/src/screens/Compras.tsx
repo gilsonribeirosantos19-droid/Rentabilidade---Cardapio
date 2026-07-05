@@ -197,23 +197,24 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
       const statusInicial = exigirAprovacao ? 'aguardando_aprovacao' : 'pendente'
       const porForn: Record<string, typeof consolidado> = {}
       consolidado.forEach((d) => { const k = fornSel[d.insId] || '__sem__'; (porForn[k] = porForn[k] || []).push(d) })
-      for (const [fKey, itensForn] of Object.entries(porForn)) {
+      // Monta a carga (pedidos + itens) e gera TUDO numa função atômica no banco.
+      // Se falhar no meio, nada é gravado → as solicitações continuam "solicitado" e repetir NÃO duplica pedido.
+      const pedidos = Object.entries(porForn).map(([fKey, itensForn]) => {
         const fornId = fKey === '__sem__' ? null : fKey
         const lojasResumo = [...new Set(itensForn.flatMap((it) => it.lojas.map((l) => l.nome)))]
         const obs = 'Lojas: ' + lojasResumo.join(', ')
-        const { data: ped, error: e1 } = await supabase.from('pedidos_compra').insert({ tenant_id: tenantId, loja_id: null, fornecedor_id: fornId, status: statusInicial, data_pedido: hoje(), observacao: obs, solicitante_id: usuario?.id || null }).select('id').single()
-        if (e1) throw e1
-        const itensPay = itensForn.map((it) => {
+        const itens = itensForn.map((it) => {
           // se o comprador editou a "Q. Comprar" (ex.: lote), rateia por loja na mesma proporção → total = soma por loja
           const totalPed = it.lojas.reduce((a, l) => a + (Number(l.qty) || 0), 0)
           const fator = totalPed > 0 ? (qComprar[it.insId] || 0) / totalPed : 1
           const rateio = it.lojas.map((l) => ({ ...l, qc: +((Number(l.qty) || 0) * fator).toFixed(4) }))
-          return { pedido_id: ped!.id, insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario || null, observacao: rateio.map((l) => l.nome + ': ' + fmtQtyDoc(l.qc)).join(', '), detalhe_lojas: rateio.filter((l) => l.loja_id).map((l) => ({ loja_id: l.loja_id, qtd: l.qc })) }
+          return { insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario ?? null, observacao: rateio.map((l) => l.nome + ': ' + fmtQtyDoc(l.qc)).join(', '), detalhe_lojas: rateio.filter((l) => l.loja_id).map((l) => ({ loja_id: l.loja_id, qtd: l.qc })) }
         })
-        const { error: e2 } = await supabase.from('itens_pedido').insert(itensPay); if (e2) throw e2
-      }
-      for (const s of sols) { await supabase.from('pedidos_compra').update({ status: 'processado' }).eq('id', s.id) }
-      return Object.keys(porForn).length
+        return { fornecedor_id: fornId, status: statusInicial, observacao: obs, itens }
+      })
+      const { data: n, error } = await supabase.rpc('gerar_pedidos_compra', { p_tenant: tenantId, p_solicitante: usuario?.id || null, p_data: hoje(), p_pedidos: pedidos, p_sol_ids: sols.map((s) => s.id) })
+      if (error) throw error
+      return (n as number) ?? Object.keys(porForn).length
     },
     onSuccess: (n) => { showToast(`${n} pedido(s) gerado(s) com sucesso!`, 'ok'); qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && /^cmp-/.test(q.queryKey[0] as string) }); setTimeout(onGerado, 400) },
     onError: (e: Error) => showToast('Erro: ' + e.message, 'err'),
