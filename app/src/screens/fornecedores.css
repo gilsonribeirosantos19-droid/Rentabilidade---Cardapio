@@ -33,22 +33,30 @@
 
 /* modal */
 .forn-screen .overlay { position: fixed; inset: 0; background: rgba(15,23,42,.4); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
-.forn-screen .fm { background: #fff; border-radius: 14px; width: min(820px, 95vw); max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(15,23,42,.25); }
+.forn-screen .fm { background: #fff; border-radius: 14px; width: min(1060px, 96vw); max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(15,23,42,.25); }
 .forn-screen .fm-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid #e7ebf0; flex-shrink: 0; }
 .forn-screen .fm-head h2 { font-size: 18px; font-weight: 800; }
 .forn-screen .fm-body { padding: 18px 22px 22px; overflow-y: auto; flex: 1; }
-.forn-screen .form-section { margin-bottom: 22px; }
+.forn-screen .form-section { margin-bottom: 14px; }
 .forn-screen .form-section:last-child { margin-bottom: 0; }
-.forn-screen .form-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
-.forn-screen .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.forn-screen .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.forn-screen .form-section-title { font-size: 10.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+.forn-screen .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 12px; }
+.forn-screen .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px 12px; }
+/* layouts densos do cadastro (protótipo aprovado) */
+.forn-screen .fg-1 { display: grid; grid-template-columns: 1fr; gap: 9px 12px; margin-bottom: 9px; }
+.forn-screen .fg-ident { display: grid; grid-template-columns: 2fr 1.1fr 1.2fr 1.2fr; gap: 9px 12px; }
+.forn-screen .fg-contato { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.4fr; gap: 9px 12px; }
+.forn-screen .fg-loc { display: grid; grid-template-columns: .9fr 1.9fr .55fr 1.1fr 1.1fr .5fr; gap: 9px 12px; }
+.forn-screen .fg-cond { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px 12px; }
+.forn-screen .fg-obs { display: grid; grid-template-columns: 2.6fr 1fr; gap: 9px 12px; align-items: start; }
 .forn-screen .span2 { grid-column: span 2; }
 .forn-screen .full { grid-column: 1 / -1; }
-.forn-screen .form-group { display: flex; flex-direction: column; }
-.forn-screen .form-label { font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
-.forn-screen .form-input, .forn-screen .form-select { height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
-.forn-screen .form-input:focus, .forn-screen .form-select:focus { outline: none; border-color: #f97316; }
-.forn-screen .form-textarea { height: auto; min-height: 70px; padding: 10px 12px; resize: vertical; }
+.forn-screen .form-group { display: flex; flex-direction: column; min-width: 0; }
+.forn-screen .form-label { font-size: 11.5px; font-weight: 600; color: #475569; margin-bottom: 4px; white-space: nowrap; }
+.forn-screen .form-input, .forn-screen .form-select { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; width: 100%; }
+.forn-screen .form-input:focus, .forn-screen .form-select:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,.12); }
+.forn-screen .form-textarea { height: auto; min-height: 34px; padding: 7px 10px; resize: vertical; }
+.forn-screen .fld-hint { font-size: 10.5px; color: #94a3b8; margin-top: 4px; }
 .forn-screen .fm-btn { height: 38px; padding: 0 18px; border-radius: 9px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; border: 1px solid #e2e8f0; background: #fff; color: #475569; }
 .forn-screen .fm-btn.primary { background: #f97316; border-color: #f97316; color: #fff; }
 .forn-screen .fm-btn:disabled { opacity: .6; }

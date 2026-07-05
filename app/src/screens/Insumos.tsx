@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import './insumos.css'
 
@@ -44,6 +44,7 @@ export function Insumos() {
   const [cadForm, setCadForm] = useState<Form>(novoForm())
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
+  const [dup, setDup] = useState<Insumo | null>(null); const [dupNome, setDupNome] = useState('')
   // filtros Produtos
   const [busca, setBusca] = useState(''); const [fTipo, setFTipo] = useState(''); const [fFam, setFFam] = useState('')
   const [fGrupo, setFGrupo] = useState(''); const [fSub, setFSub] = useState(''); const [fStatus, setFStatus] = useState('')
@@ -56,18 +57,12 @@ export function Insumos() {
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['insumos', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('insumos').select('*').eq('tenant_id', tenantId).order('nome')
-      if (error) throw error
-      return data as Insumo[]
-    },
+    // fetchAll: vence o teto de 1000 do PostgREST (senão itens somem da tela silenciosamente)
+    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).order('nome').range(f, t)),
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data } = await supabase.from('saldo_estoque').select('insumo_id, custo_medio, quantidade').eq('tenant_id', tenantId)
-      return (data ?? []) as Saldo[]
-    },
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id, custo_medio, quantidade').eq('tenant_id', tenantId).range(f, t)),
   })
   const custoMedio = (id: string) => saldos.filter((s) => s.insumo_id === id && (s.custo_medio || 0) > 0).reduce((b, s) => Math.max(b, s.custo_medio || 0), 0)
 
@@ -117,7 +112,10 @@ export function Insumos() {
       if (f.id) {
         const { error } = await supabase.from('insumos').update(payload).eq('id', f.id); if (error) throw error
       } else {
-        const prox = lista.reduce((m, i) => Math.max(m, Number(i.codigo_interno) || 0), 0) + 1
+        // próximo código = maior do banco + 1 (busca FRESCA, não da lista em memória, que poderia
+        // estar capada ou desatualizada → evita gerar código duplicado). codigo_interno é inteiro.
+        const { data: mx } = await supabase.from('insumos').select('codigo_interno').eq('tenant_id', tenantId).order('codigo_interno', { ascending: false }).limit(1)
+        const prox = (Number(mx?.[0]?.codigo_interno) || 0) + 1
         const { error } = await supabase.from('insumos').insert({ ...payload, tenant_id: tenantId, preco_compra: 0, rendimento_pct: 100, codigo_interno: prox }); if (error) throw error
       }
     },
@@ -131,6 +129,16 @@ export function Insumos() {
   })
 
   const editar = (item: Insumo) => { setCadForm(item); setTab('cadastro') }
+  // Duplicar: abre um pop-up rápido só com o nome. A classificação toda é copiada do item
+  // de origem; ao salvar, cria um item NOVO (código gerado automático). Ágil p/ vários da mesma categoria.
+  const duplicar = (item: Insumo) => { setDup(item); setDupNome((item.nome || '') + ' (cópia)') }
+  const confirmarDup = () => {
+    if (!dup) return
+    const nome = dupNome.trim(); if (!nome) { showToast('Informe o nome.', 'err'); return }
+    const { id, codigo_interno, ...rest } = dup; void id; void codigo_interno
+    saveMut.mutate({ ...rest, nome })
+    setDup(null)
+  }
   const setF = (k: keyof Form, v: string | boolean) => setCadForm((f) => ({ ...f, [k]: v }))
 
   return (
@@ -272,10 +280,29 @@ export function Insumos() {
       {menu && (
         <div style={{ position: 'fixed', top: menu.y + 4, left: menu.x - 120, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 9, boxShadow: '0 8px 24px rgba(0,0,0,.14)', zIndex: 1000, minWidth: 130, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
           <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) editar(ins); setMenu(null) }}>✎ Editar</button>
+          <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) duplicar(ins); setMenu(null) }}>⧉ Duplicar</button>
           <button style={{ ...menuItemStyle, color: '#ef4444' }} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins && confirm(`Desativar "${ins.nome}"?`)) delMut.mutate(ins.id); setMenu(null) }}>🗑 Desativar</button>
         </div>
       )}
 
+      {dup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }} onClick={() => setDup(null)}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 'min(440px, 92vw)', boxShadow: '0 18px 48px rgba(0,0,0,.25)', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #eef1f5' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Duplicar item</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Copia a classificação de <b>{dup.nome}</b>. Só ajuste o nome.</div>
+            </div>
+            <div style={{ padding: '16px 20px' }}>
+              <label className="form-label">Nome do novo item *</label>
+              <input className="form-input" autoFocus value={dupNome} onChange={(e) => setDupNome(titleCase(e.target.value))} onKeyDown={(e) => { if (e.key === 'Enter') confirmarDup() }} placeholder="Ex: Abacate" />
+            </div>
+            <div style={{ padding: '12px 20px 18px', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="f-btn" onClick={() => setDup(null)}>Cancelar</button>
+              <button className="f-btn primary" disabled={saveMut.isPending} onClick={confirmarDup}>{saveMut.isPending ? 'Salvando…' : 'Duplicar'}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )

@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useLoja } from '../lib/loja'
+import { useAuth } from '../lib/auth'
+import { supabase, fetchAll } from '../lib/db'
+import { SearchSelect } from '../components/SearchSelect'
 import './faturamento.css'
 
 // Curva ABC (PDV) — ranqueia os PRODUTOS por faturamento (V. Venda Líquida).
-// TELA MOCK: dados de exemplo. Quando o PDV estiver processando as vendas,
-// esta tela agrega por produto e classifica: A = até 80% do valor, B = 80-95%, C = resto.
+// Lê as vendas REAIS do iComanda (tabela icomanda_vendas, por competência/loja/produto).
+// Botão "Puxar do iComanda" chama a Edge Function icomanda-sync p/ atualizar a competência.
+// Agrega por produto e classifica: A = até 80% do valor, B = 80-95%, C = resto.
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
 
 type Prod = { id: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number }
@@ -38,34 +42,27 @@ function loadCols(): Record<string, boolean> {
   const d: Record<string, boolean> = {}; COLS.forEach((c) => { d[c.key] = !!c.def }); return d
 }
 
-const L = 'Sushi Ponta Negra'
-const MOCK: Prod[] = [
-  { id: '1', loja: L, item: '030 - COMBO HOT P', codigo: '3182', grupo: 'G-COMBINADOS', qVenda: 35, vBruta: 2376.50, vDesc: 236.28 },
-  { id: '2', loja: L, item: '032 - COMBO HOT G', codigo: '3183', grupo: 'G-COMBINADOS', qVenda: 19, vBruta: 2563.10, vDesc: 171.20 },
-  { id: '3', loja: L, item: '034 - COMBO PRIME', codigo: '3185', grupo: 'G-COMBINADOS', qVenda: 34, vBruta: 4586.60, vDesc: 155.59 },
-  { id: '4', loja: L, item: '035 - COMBO PHILADELFIA', codigo: '3187', grupo: 'G-COMBINADOS', qVenda: 20, vBruta: 1898.00, vDesc: 166.45 },
-  { id: '5', loja: L, item: '001 - HARUMAKI CAMARAO', codigo: '1870', grupo: 'G-ENTRADAS', qVenda: 35, vBruta: 836.50, vDesc: 93.49 },
-  { id: '6', loja: L, item: '002 - CAMARAO EMPANADO', codigo: '1871', grupo: 'G-ENTRADAS', qVenda: 22, vBruta: 789.80, vDesc: 64.21 },
-  { id: '7', loja: L, item: '005 - CEVICHE', codigo: '1874', grupo: 'G-ENTRADAS', qVenda: 3, vBruta: 134.70, vDesc: 0 },
-  { id: '8', loja: L, item: '010 - HOT BOLL', codigo: '2554', grupo: 'G-ENTRADAS', qVenda: 10.5, vBruta: 345.45, vDesc: 61.62 },
-  { id: '9', loja: L, item: '56 - HOT PHILADELFIA', codigo: '1928', grupo: 'G-HOT ROLL', qVenda: 70, vBruta: 2513.00, vDesc: 175.53 },
-  { id: '10', loja: L, item: '57 - HOT BUTTERFLY', codigo: '1929', grupo: 'G-HOT ROLL', qVenda: 12, vBruta: 406.60, vDesc: 9.31 },
-  { id: '11', loja: L, item: '169 - HOT SUSHIZAO', codigo: '2640', grupo: 'G-HOT ROLL', qVenda: 25.5, vBruta: 1170.45, vDesc: 35.50 },
-  { id: '12', loja: L, item: '074 - RODIZIO DO MAR', codigo: '3301', grupo: 'G-RODIZIO DO MAR', qVenda: 40, vBruta: 3200.00, vDesc: 0 },
-  { id: '13', loja: L, item: 'REFRI. COCA ZERO LATA', codigo: '1200', grupo: 'G-BEBIDAS', qVenda: 120, vBruta: 948.00, vDesc: 30.00 },
-  // itens de RODÍZIO com valor zerado (só aparecem com o filtro ligado)
-  { id: 'z1', loja: L, item: '(RS) 56 - HOT PHILADELFIA', codigo: '1928', grupo: 'G-RODIZIO DE SUSHI', qVenda: 68, vBruta: 0, vDesc: 0 },
-  { id: 'z2', loja: L, item: '(RS) 62 - HOT MORANGO NUT', codigo: '1934', grupo: 'G-RODIZIO DE SUSHI', qVenda: 15, vBruta: 0, vDesc: 0 },
-  { id: 'z3', loja: L, item: '(RDM) CAMAROES EMPANADOS', codigo: '3300', grupo: 'G-RODIZIO DO MAR', qVenda: 30, vBruta: 0, vDesc: 0 },
-]
-
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
+const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
+
+// competências 'YYYY-MM' tocadas pelo intervalo de/ate (os dados do iComanda são por MÊS)
+function compsBetween(de: string, ate: string): string[] {
+  if (!de || !ate) return []
+  const [y1, m1] = de.slice(0, 7).split('-').map(Number)
+  const [y2, m2] = ate.slice(0, 7).split('-').map(Number)
+  const out: string[] = []
+  let y = y1, m = m1
+  while ((y < y2 || (y === y2 && m <= m2)) && out.length < 24) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++ } }
+  return out
+}
 
 export function CurvaAbcVendas() {
   const { lojas } = useLoja()
+  const { tenantId } = useAuth()
   const [de, setDe] = useState('2026-06-01')
   const [ate, setAte] = useState('2026-06-30')
+  const [periodoSel, setPeriodoSel] = useState('Personalizado')
   const [busca, setBusca] = useState('')
   const [incluirZerado, setIncluirZerado] = useState(false)
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
@@ -76,6 +73,101 @@ export function CurvaAbcVendas() {
   const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma' : lojaSet.size === 1 ? [...lojaSet][0] : `${lojaSet.size} lojas`
   const toggleLoja = (n: string) => setLojaSet((p) => { const s = new Set(p); s.has(n) ? s.delete(n) : s.add(n); return s })
   const toggleTodas = () => setLojaSet(allSel ? new Set() : new Set(lojas.map((l) => l.nome)))
+
+  // --- dados REAIS do iComanda (icomanda_vendas) ---
+  const [rows, setRows] = useState<Prod[]>([])
+  const [loading, setLoading] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [bloqueados, setBloqueados] = useState<string[]>([])
+  const lojaNome = useMemo(() => { const m: Record<string, string> = {}; lojas.forEach((l) => { m[l.id] = l.nome }); return m }, [lojas])
+  // agrega as linhas (por loja+produto) somando qtd/faturado dos meses do intervalo
+  const buildRows = (data: Record<string, unknown>[]): Prod[] => {
+    const map = new Map<string, Prod>()
+    for (const r of data) {
+      const key = `${r.loja_id}|${r.produto_id}`
+      const ex = map.get(key)
+      if (ex) { ex.qVenda += Number(r.qtd) || 0; ex.vBruta += Number(r.faturado) || 0 }
+      else map.set(key, { id: key, loja: lojaNome[r.loja_id as string] || '—', item: String(r.produto_nome || ''), codigo: String(r.produto_id ?? ''), grupo: String(r.grupo || ''), qVenda: Number(r.qtd) || 0, vBruta: Number(r.faturado) || 0, vDesc: 0 })
+    }
+    return [...map.values()]
+  }
+  // busca produtos (icomanda_vendas) + PORTÃO (icomanda_recebimento). Regra: uma loja×mês só entra
+  // se estiver RECEBIDA e SEM nenhum dia com erro no portão (erro não entra). fetchAll vence o teto de 1000.
+  async function fetchVendas(comps: string[]): Promise<Prod[]> {
+    const gateDe = comps[0] + '-01'
+    const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
+    const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
+    const [vendas, gate] = await Promise.all([
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_recebimento').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
+    ])
+    // portão por loja×mês: recebido? tem erro?
+    const gk = new Map<string, { ok: boolean; erro: boolean }>()
+    for (const r of gate) {
+      const k = `${r.loja_id}|${String(r.data).slice(0, 7)}`
+      const g = gk.get(k) || { ok: false, erro: false }
+      if (r.status === 'processado') g.ok = true
+      if (r.status === 'com_erro') g.erro = true
+      gk.set(k, g)
+    }
+    // liberado = mês RECEBIDO no portão (tem ≥1 dia processado). Um dia com erro não bloqueia o mês inteiro
+    // (os produtos são um agregado mensal atômico; o faturamento diário é que exclui o dia com erro).
+    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok }
+    const bloq = new Set<string>()
+    const okVendas = vendas.filter((r) => {
+      const lojaId = String(r.loja_id), comp = String(r.competencia)
+      if (liberado(lojaId, comp)) return true
+      bloq.add(`${lojaNome[lojaId] || lojaId} · ${comp}`)
+      return false
+    })
+    setBloqueados([...bloq])
+    return buildRows(okVendas)
+  }
+  async function carregar(comps: string[]) {
+    try { setRows(await fetchVendas(comps)) }
+    catch (e) { setMsg('Erro ao carregar vendas: ' + (e as Error).message); setRows([]) }
+  }
+  useEffect(() => {
+    if (!tenantId) { setRows([]); return }
+    const comps = compsBetween(de, ate)
+    if (!comps.length) { setRows([]); return }
+    let alive = true
+    setLoading(true)
+    fetchVendas(comps)
+      .then((r) => { if (alive) setRows(r) })
+      .catch((e) => { if (alive) { setMsg('Erro ao carregar vendas: ' + (e as Error).message); setRows([]) } })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, de, ate, lojaNome])
+  async function puxar() {
+    if (!tenantId || syncing) return
+    const comps = compsBetween(de, ate)
+    if (!comps.length) { setMsg('Selecione um período.'); return }
+    const gateDe = comps[0] + '-01'
+    const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
+    const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
+    setSyncing(true); setMsg('Puxando do iComanda… (portão + produtos, pode levar ~1 min)')
+    try {
+      // 1) portão diário (define o que fica liberado)
+      const d1 = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: gateDe, data_fim: gateAte } })
+      if (d1.error) throw d1.error
+      if (d1.data?.status !== 'ok') throw new Error(d1.data?.mensagem || 'erro no portão')
+      // 2) produtos do(s) mês(es)
+      let prods = 0
+      for (const competencia of comps) {
+        const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, competencia } })
+        if (error) throw error
+        if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro nos produtos')
+        prods += data.produtos_gravados
+      }
+      setMsg(`✓ ${d1.data.processados} dias processados · ${prods} produtos.`)
+      await carregar(comps)
+    } catch (e) {
+      setMsg('Erro ao puxar: ' + (e as Error).message)
+    } finally { setSyncing(false) }
+  }
 
   const [cols, setCols] = useState(loadCols)
   const [ddPos, setDdPos] = useState({ top: 0, left: 0 })
@@ -93,10 +185,10 @@ export function CurvaAbcVendas() {
     else { setColsOpen(false); setFiltCol((c) => c === which ? null : which) }
   }
 
-  const setPeriodo = (tipo: string) => {
-    const d = new Date()
-    if (tipo === 'mes_atual') { setDe(mesInicio()); setAte(mesFim()) }
-    else if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
+  const setPeriodo = (label: string) => {
+    const lb = label || 'Personalizado'; setPeriodoSel(lb); const d = new Date()
+    if (lb === 'Mês Atual') { setDe(mesInicio()); setAte(mesFim()) }
+    else if (lb === 'Mês Anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); setDe(`${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`); setAte(l.toLocaleDateString('en-CA')) }
     else { setDe(''); setAte('') }
   }
 
@@ -104,7 +196,7 @@ export function CurvaAbcVendas() {
   const enriched = useMemo(() => {
     const q = norm(busca.trim())
     const filtraLoja = lojaSet.size > 0 && !allSel
-    const base = MOCK.map((v) => ({ ...v, vLiquida: v.vBruta - v.vDesc })).filter((v) => {
+    const base = rows.map((v) => ({ ...v, vLiquida: v.vBruta - v.vDesc })).filter((v) => {
       if (!incluirZerado && v.vLiquida === 0) return false
       if (filtraLoja && !lojaSet.has(v.loja)) return false
       if (q && !norm([v.item, v.grupo, v.codigo].join(' ')).includes(q)) return false
@@ -113,7 +205,7 @@ export function CurvaAbcVendas() {
     const total = base.reduce((s, v) => s + v.vLiquida, 0) || 1
     let acum = 0
     return base.map((v, i) => { const pct = v.vLiquida / total * 100; acum += pct; const classe = acum <= 80 ? 'A' : acum <= 95 ? 'B' : 'C'; return { ...v, rank: i + 1, pct, acum, classe } as Row })
-  }, [busca, lojaSet, allSel, incluirZerado])
+  }, [rows, busca, lojaSet, allSel, incluirZerado])
 
   const cellVal = (v: Row, c: Col): string => {
     switch (c.key) {
@@ -157,27 +249,30 @@ export function CurvaAbcVendas() {
             </>}
           </div>
         </div>
-        <div className="ds-field"><label>Período</label>
-          <select className="field" defaultValue="periodo" onChange={(e) => setPeriodo(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="periodo">Personalizado</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
+        <div className="ds-field" style={{ minWidth: 130 }}><label>Período</label>
+          <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
-        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
-        <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-field"><label>&nbsp;</label>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 34, fontSize: 13, color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             <input type="checkbox" checked={incluirZerado} onChange={(e) => setIncluirZerado(e.target.checked)} style={{ width: 15, height: 15, accentColor: '#f97316' }} />
             Incluir itens com valor zerado
           </label>
         </div>
-        <div className="ds-actions"><button className="btn-ghost">↓ Exportar</button></div>
+        <div className="ds-actions">
+          <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
+          <button className="btn-ghost">↓ Exportar</button>
+        </div>
       </div>
 
       <div className="search-row">
         <input className="search" placeholder="Digite um texto para pesquisar..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <span className="mock-tag">⚑ Dados de exemplo — lê as vendas reais quando o PDV estiver processando</span>
+        {msg
+          ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
+          : loading ? <span className="mock-tag">Carregando vendas…</span>
+          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas reais — só meses Processados na Recebimento de Vendas</span>}
+        {bloqueados.length > 0 && <span className="mock-tag" style={{ background: '#fef2f2', color: '#b91c1c', borderColor: 'transparent' }} title={bloqueados.join(', ')}>⛔ {bloqueados.length} loja×mês ainda não recebido(s) no portão — puxe na Recebimento de Vendas</span>}
       </div>
 
       <div className="grid-wrap">

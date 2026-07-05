@@ -1,10 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
+
+// Posição: opções do dropdown com busca (mapeia rótulo ↔ valor interno)
+const POS_OPTS = ['Posição Atual', 'Fim Mês Anterior', 'Data Específica']
+const POS_LBL: Record<string, string> = { atual: 'Posição Atual', mes_anterior: 'Fim Mês Anterior', especifica: 'Data Específica' }
+const POS_VAL: Record<string, string> = { 'Posição Atual': 'atual', 'Fim Mês Anterior': 'mes_anterior', 'Data Específica': 'especifica' }
 
 type Insumo = { id: string; nome: string; categoria?: string; tipo_item?: string; unidade_medida?: string; unidade_compra?: string; familia?: string; subgrupo?: string; participa_cmv?: string; minimo?: number }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number }
@@ -15,19 +21,6 @@ const brl = (v?: number | null) => (v == null || v === 0) ? '—' : 'R$ ' + Numb
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean).map((v) => ('' + v).trim()).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'pt'))
-
-// busca paginada (equivalente ao apiAll do utils.js — vence o limite de 1000 do PostgREST)
-async function fetchAll<T>(build: (from: number, to: number) => any): Promise<T[]> {
-  const out: T[] = []; let from = 0; const size = 1000
-  for (;;) {
-    const { data, error } = await build(from, from + size - 1)
-    if (error) throw error
-    const rows = (data ?? []) as T[]; out.push(...rows)
-    if (rows.length < size) break
-    from += size
-  }
-  return out
-}
 
 export function SaldoEstoque() {
   const { tenantId } = useAuth()
@@ -166,20 +159,13 @@ export function SaldoEstoque() {
         <div className="ds-field">
           <label>Posição</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select className="field" style={{ minWidth: 150 }} value={posicao} onChange={(e) => onPosChange(e.target.value)}>
-              <option value="atual">Posição Atual</option>
-              <option value="mes_anterior">Fim Mês Anterior</option>
-              <option value="especifica">Data Específica</option>
-            </select>
+            <div style={{ minWidth: 160 }}><SearchSelect value={POS_LBL[posicao]} onChange={(l) => onPosChange(POS_VAL[l] || 'atual')} options={POS_OPTS} placeholder="Posição" /></div>
             {posicao === 'especifica' && <input type="date" className="field" value={dataBase} onChange={(e) => setDataBase(e.target.value)} />}
           </div>
         </div>
-        <div className="ds-field">
+        <div className="ds-field" style={{ minWidth: 190 }}>
           <label>Categoria</label>
-          <select className="field" style={{ minWidth: 170 }} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-            <option value="">Todas as categorias</option>
-            {cats.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <SearchSelect value={categoria} onChange={setCategoria} options={cats} placeholder="Todas as categorias" />
         </div>
         <div className="ds-field ds-grow">
           <label>Buscar</label>

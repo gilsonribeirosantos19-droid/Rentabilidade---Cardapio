@@ -3,7 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
+
+// Período (meses): rótulo do dropdown ↔ valor numérico
+const NM_OPTS = ['Últimos 3 meses', 'Últimos 6 meses', 'Últimos 12 meses']
+const NM_LBL: Record<number, string> = { 3: 'Últimos 3 meses', 6: 'Últimos 6 meses', 12: 'Últimos 12 meses' }
+const NM_VAL: Record<string, number> = { 'Últimos 3 meses': 3, 'Últimos 6 meses': 6, 'Últimos 12 meses': 12 }
 
 type Insumo = { id: string; nome: string; categoria?: string; unidade_medida?: string; unidade_compra?: string }
 type Ent = { insumo_id: string; criado_em?: string; custo_unitario?: number | null; fornecedor_id?: string | null; fornecedor_nome?: string | null; tipo?: string }
@@ -80,10 +86,10 @@ export function InflacaoInsumos() {
   return (
     <div className="est-screen">
       <div className="ds-filterbar">
-        <div className="ds-field"><label>Período</label><select className="field" style={{ minWidth: 150 }} value={nMeses} onChange={(e) => { setNMeses(Number(e.target.value)); setPag(1) }}><option value={3}>Últimos 3 meses</option><option value={6}>Últimos 6 meses</option><option value={12}>Últimos 12 meses</option></select></div>
+        <div className="ds-field" style={{ minWidth: 160 }}><label>Período</label><SearchSelect value={NM_LBL[nMeses]} options={NM_OPTS} placeholder="Período" onChange={(l) => { setNMeses(NM_VAL[l] || 3); setPag(1) }} /></div>
         <div className="ds-field ds-grow"><label>Buscar</label><input className="field" style={{ width: '100%', minWidth: 220 }} placeholder="Filtrar insumo, categoria..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} /></div>
-        <div className="ds-field"><label>Categoria</label><select className="field" value={cat} onChange={(e) => { setCat(e.target.value); setPag(1) }}><option value="">Todas</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
-        <div className="ds-field"><label>Fornecedor</label><select className="field" value={fornF} onChange={(e) => { setFornF(e.target.value); setPag(1) }}><option value="">Todos</option>{forns.map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}</select></div>
+        <div className="ds-field" style={{ minWidth: 150 }}><label>Categoria</label><SearchSelect value={cat} options={cats} placeholder="Todas" onChange={(v) => { setCat(v); setPag(1) }} /></div>
+        <div className="ds-field" style={{ minWidth: 170 }}><label>Fornecedor</label><SearchSelect value={forns.find(([id]) => id === fornF)?.[1] || ''} options={forns.map(([, nome]) => nome)} placeholder="Todos" onChange={(nm) => { setFornF(forns.find(([, n]) => n === nm)?.[0] || ''); setPag(1) }} /></div>
         <div className="ds-actions"><button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button></div>
       </div>
 

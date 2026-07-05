@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { DetailModal } from '../components/DetailModal'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
@@ -16,6 +17,12 @@ const brl = (v?: number | null) => (v == null || v === 0) ? '—' : 'R$ ' + Numb
 const fmtDH = (iso?: string) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const hojeStr = () => new Date().toISOString().split('T')[0]
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+// dropdowns com busca da toolbar (rótulo ↔ valor)
+const SPER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
+const SPER_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+const STIPO_OPTS = ['Consumo', 'Perda', 'Vencimento', 'Transferência', 'Descarte', 'Ajuste']
+const STIPO_LBL: Record<string, string> = { consumo: 'Consumo', perda: 'Perda', vencimento: 'Vencimento', transferencia: 'Transferência', descarte: 'Descarte', ajuste: 'Ajuste' }
+const STIPO_VAL: Record<string, string> = { 'Consumo': 'consumo', 'Perda': 'perda', 'Vencimento': 'vencimento', 'Transferência': 'transferencia', 'Descarte': 'descarte', 'Ajuste': 'ajuste' }
 
 const TIPO_BADGE: Record<string, { label: string; color: string; bg: string }> = {
   consumo: { label: 'Consumo', color: '#f97316', bg: '#fff7ed' },
@@ -34,21 +41,30 @@ export function Saidas() {
   const [busca, setBusca] = useState('')
   const [fTipo, setFTipo] = useState('')
   const [fResp, setFResp] = useState('')
+  const [fMotivo, setFMotivo] = useState('')
   const [de, setDe] = useState(iso(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(iso(now))
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [pag, setPag] = useState(1)
   const [porPag, setPorPag] = useState(10)
   const [modal, setModal] = useState(false)
+  const [detalhe, setDetalhe] = useState<Saida | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2800) }
 
   const { data: insumos = [] } = useQuery({ queryKey: ['sai-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['sai-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
   const { data: saidas = [], isLoading } = useQuery({ queryKey: ['sai-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)) })
+  // Parâmetro Estoque › "Permitir estoque negativo": se 'nao', bloqueia saída que supera o saldo (default = permite, como no HTML)
+  const { data: params = [] } = useQuery({ queryKey: ['sai-params', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'estoque'); return (data ?? []) as { chave: string; valor: string }[] } })
+  const permiteNeg = useMemo(() => (params.find((p) => p.chave === 'permitir_negativo')?.valor) !== 'nao', [params])
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const getSaldo = (insId: string): Saldo => saldos.find((s) => s.insumo_id === insId && (!lojaId || s.loja_id === lojaId)) || { insumo_id: insId, quantidade: 0, custo_medio: 0 }
   const resps = useMemo(() => [...new Set(saidas.map((s) => s.responsavel).filter(Boolean) as string[])].sort(), [saidas])
+
+  const saidasL = useMemo(() => lojaId ? saidas.filter((s) => (s.loja_id || null) === lojaId) : saidas, [saidas, lojaId])
+  const motivos = useMemo(() => [...new Set(saidasL.map((s) => s.motivo).filter(Boolean) as string[])].sort(), [saidasL])
 
   const filtrada = useMemo(() => {
     const b = busca.toLowerCase().trim()
@@ -56,10 +72,11 @@ export function Saidas() {
     if (b) rows = rows.filter((s) => (insMap[s.insumo_id]?.nome || '').toLowerCase().includes(b))
     if (fTipo) rows = rows.filter((s) => s.tipo === fTipo)
     if (fResp) rows = rows.filter((s) => s.responsavel === fResp)
+    if (fMotivo) rows = rows.filter((s) => (s.motivo || '') === fMotivo)
     if (de) rows = rows.filter((s) => (s.criado_em || '') >= de)
     if (ate) rows = rows.filter((s) => (s.criado_em || '') <= ate + 'T23:59:59')
     return rows
-  }, [saidas, lojaId, busca, fTipo, fResp, de, ate, insMap])
+  }, [saidas, lojaId, busca, fTipo, fResp, fMotivo, de, ate, insMap])
 
   const total = filtrada.length
   const totalPags = Math.max(1, Math.ceil(total / porPag))
@@ -80,7 +97,10 @@ export function Saidas() {
       const q = parseFloat(f.quantidade) || 0
       if (q <= 0) throw new Error('Informe a quantidade.')
       const s = getSaldo(f.insumo_id)
-      if (q > (s.quantidade || 0)) { if (!confirm(`Quantidade (${qtd(q)}) supera o saldo (${qtd(s.quantidade || 0)}). Continuar?`)) throw new Error('__cancel__') }
+      if (q > (s.quantidade || 0)) {
+        if (!permiteNeg) throw new Error(`Saldo insuficiente: a saída de ${qtd(q)} supera o saldo (${qtd(s.quantidade || 0)}). Estoque negativo está bloqueado nos Parâmetros (Configurações › Parâmetros › Estoque).`)
+        if (!confirm(`Quantidade (${qtd(q)}) supera o saldo (${qtd(s.quantidade || 0)}). Continuar?`)) throw new Error('__cancel__')
+      }
       let destinoId: string | null = null
       if (f.tipo === 'transferencia') {
         destinoId = f.destino || null
@@ -88,17 +108,16 @@ export function Saidas() {
         if (destinoId === lojaId) throw new Error('A loja de destino deve ser diferente da origem.')
       }
       const dataStr = f.data || hojeStr()
-      const custoOrigem = s.custo_medio || 0
-      const { error: e1 } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: lojaId, quantidade: q, tipo: f.tipo, motivo: (f.motivo || '').trim() || null, responsavel: (f.responsavel || '').trim() || null, criado_em: dataStr + 'T12:00:00.000Z' })
-      if (e1) throw e1
-      await upsertSaldo(f.insumo_id, (s.quantidade || 0) - q, custoOrigem, lojaId)
       if (f.tipo === 'transferencia' && destinoId) {
-        const sd = saldos.find((x) => x.insumo_id === f.insumo_id && x.loja_id === destinoId) || { quantidade: 0, custo_medio: 0 }
-        const qd = sd.quantidade || 0, cmd = sd.custo_medio || 0, nq = qd + q
-        const ncm = nq > 0 ? (qd * cmd + q * custoOrigem) / nq : custoOrigem
-        const { error: e2 } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: destinoId, quantidade: q, custo_unitario: custoOrigem, tipo: 'transferencia', criado_em: dataStr + 'T12:00:00.000Z' })
-        if (e2) throw e2
-        await upsertSaldo(f.insumo_id, nq, ncm, destinoId)
+        // TRANSFERÊNCIA ATÔMICA (tudo-ou-nada no banco): saída origem + entrada destino + os 2 saldos.
+        // A função lê os saldos DENTRO da transação (resolve o cache velho e não perde estoque em falha parcial).
+        const { error } = await supabase.rpc('transferir_estoque', { p_tenant: tenantId, p_insumo: f.insumo_id, p_origem: lojaId, p_destino: destinoId, p_qtd: q, p_data: dataStr + 'T12:00:00.000Z', p_motivo: (f.motivo || '').trim() || null, p_responsavel: (f.responsavel || '').trim() || null })
+        if (error) throw error
+      } else {
+        // saída normal (manual/perda): registra a saída e debita o saldo (custo médio não muda)
+        const { error: e1 } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: lojaId, quantidade: q, tipo: f.tipo, motivo: (f.motivo || '').trim() || null, responsavel: (f.responsavel || '').trim() || null, criado_em: dataStr + 'T12:00:00.000Z' })
+        if (e1) throw e1
+        await upsertSaldo(f.insumo_id, (s.quantidade || 0) - q, s.custo_medio || 0, lojaId)
       }
       return f.tipo
     },
@@ -110,12 +129,12 @@ export function Saidas() {
     onError: (e: Error) => { if (e.message !== '__cancel__') showToast(e.message, 'err') },
   })
 
-  const verSaida = (s: Saida) => { const ins = insMap[s.insumo_id]; const u = ins?.unidade_medida || ins?.unidade_compra || 'un'; alert(`Saída\n\nInsumo: ${ins?.nome || '—'}\nQuantidade: ${qtd(s.quantidade)} ${u}\nTipo: ${s.tipo}\nMotivo: ${s.motivo || '—'}\nResponsável: ${s.responsavel || '—'}\nData: ${fmtDH(s.criado_em)}`) }
-  const setPreset = (v: string) => {
+  const detRows = (s: Saida): [string, string][] => { const ins = insMap[s.insumo_id]; const u = ins?.unidade_medida || ins?.unidade_compra || 'un'; return [['Insumo', ins?.nome || '—'], ['Quantidade', `${qtd(s.quantidade)} ${u}`], ['Tipo', s.tipo || '—'], ['Motivo', s.motivo || '—'], ['Responsável', s.responsavel || '—'], ['Data', fmtDH(s.criado_em)]] }
+  const setPreset = (label: string) => {
+    const l = label || 'Período'; setPeriodoSel(l)
     const n = new Date()
-    if (v === 'mes_atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
-    else if (v === 'mes_anterior') { setDe(iso(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(iso(new Date(n.getFullYear(), n.getMonth(), 0))) }
-    else { setDe(''); setAte('') }
+    if (l === 'Mês Atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
+    else if (l === 'Mês Anterior') { setDe(iso(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(iso(new Date(n.getFullYear(), n.getMonth(), 0))) }
     setPag(1)
   }
 
@@ -130,21 +149,14 @@ export function Saidas() {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
         </div>
-        <select className="field" value={fTipo} onChange={(e) => { setFTipo(e.target.value); setPag(1) }}>
-          <option value="">Tipo: Todos</option><option value="consumo">Consumo</option><option value="perda">Perda</option><option value="vencimento">Vencimento</option><option value="transferencia">Transferência</option><option value="descarte">Descarte</option><option value="ajuste">Ajuste</option>
-        </select>
-        <select className="field" value={fResp} onChange={(e) => { setFResp(e.target.value); setPag(1) }}>
-          <option value="">Responsável: Todos</option>{resps.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
+        <div className="fbar-ss" style={{ minWidth: 155 }}><SearchSelect value={STIPO_LBL[fTipo] || ''} options={STIPO_OPTS} placeholder="Tipo: Todos" onChange={(l) => { setFTipo(STIPO_VAL[l] || ''); setPag(1) }} /></div>
+        <div className="fbar-ss" style={{ minWidth: 160 }}><SearchSelect value={fResp} options={resps} placeholder="Responsável: Todos" onChange={(v) => { setFResp(v); setPag(1) }} /></div>
+        <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={fMotivo} options={motivos} placeholder="Motivo: Todos" onChange={(v) => { setFMotivo(v); setPag(1) }} /></div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}>
-            <option value="periodo">Período</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
-          <input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} />
+          <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={periodoSel} options={SPER_OPTS} placeholder="Período" onChange={(l) => setPreset(SPER_VAL[l] ? l : 'Período')} /></div>
+          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} />
           <span style={{ color: '#94a3b8' }}>–</span>
-          <input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} />
+          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} />
         </div>
       </div>
 
@@ -166,7 +178,7 @@ export function Saidas() {
                     <td className="r mono">{qtd(s.quantidade)}</td>
                     <td style={{ color: '#64748b' }}>{u}</td>
                     <td style={{ color: '#64748b' }}>{s.responsavel || '—'}</td>
-                    <td className="c"><button className="icon-btn" title="Ver detalhes" onClick={() => verSaida(s)}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button></td>
+                    <td className="c"><button className="icon-btn" title="Ver detalhes" onClick={() => setDetalhe(s)}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button></td>
                   </tr>
                 )
               })}
@@ -187,6 +199,7 @@ export function Saidas() {
       </div>
 
       {modal && <SaidaModal insumos={insumos} lojas={lojas.filter((l) => l.id !== lojaId)} getSaldo={getSaldo} saving={saveMut.isPending} onClose={() => setModal(false)} onSave={(f) => saveMut.mutate(f)} />}
+      {detalhe && <DetailModal title="Saída" rows={detRows(detalhe)} onClose={() => setDetalhe(null)} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )

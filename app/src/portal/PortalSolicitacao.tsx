@@ -58,7 +58,9 @@ export function PortalSolicitacao() {
     setSel((s) => { const n = new Set(s); on ? n.add(id) : n.delete(id); return n })
     if (on) { setQty((q) => (q[id] ? q : { ...q, [id]: '1' })); setUn((u) => (u[id] ? u : { ...u, [id]: defUn(insMap[id]) })) }
   }
-  const onQty = (id: string, v: string) => { setQty((q) => ({ ...q, [id]: v })); setSel((s) => { const n = new Set(s); num(v) > 0 ? n.add(id) : n.delete(id); return n }); setUn((u) => (u[id] ? u : { ...u, [id]: defUn(insMap[id]) })) }
+  // NÃO mexer na seleção ao editar a quantidade — senão limpar o campo remove a linha.
+  // Quantidade vazia/zero é barrada no envio (ver enviarMut).
+  const onQty = (id: string, v: string) => { setQty((q) => ({ ...q, [id]: v })); setUn((u) => (u[id] ? u : { ...u, [id]: defUn(insMap[id]) })) }
 
   const selIds = [...sel]
   const nSel = selIds.length
@@ -153,7 +155,7 @@ export function PortalSolicitacao() {
                       <td style={{ color: '#64748b' }}>{fmtV(saldoMap[id])}</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td style={{ color: '#64748b' }}>—</td>
-                      <td className="r"><input type="number" min="0" step="0.001" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 90, height: 24, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12 }} /></td>
+                      <td className="r"><input type="text" inputMode="decimal" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 96, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5, color: '#0f172a', background: '#fff' }} /></td>
                       <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{UNIDADES.map((x) => <option key={x} value={x}>{x}</option>)}</select></td>
                     </tr>
                   ) })}

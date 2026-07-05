@@ -24,6 +24,7 @@ export function Kardex() {
   const [insId, setInsId] = useState('')
   const [de, setDe] = useState(iso(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(iso(now))
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
 
   const { data: insumos = [] } = useQuery({ queryKey: ['kx-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: entradas = [] } = useQuery({ queryKey: ['kx-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)) })
@@ -44,7 +45,8 @@ export function Kardex() {
     saidas.filter((s) => s.insumo_id === insId && (!lojaId || (s as any).loja_id === lojaId)).forEach((s) => {
       todos.push({ data: s.criado_em || '', tipo: 'saida', desc: cap(s.tipo || '') + (s.motivo ? ' · ' + s.motivo : ''), qMov: s.quantidade || 0, vUnit: 0 })
     })
-    todos.sort((a, b) => a.data < b.data ? -1 : 1)
+    // ordena por data; empate → entrada ANTES de saída (senão o custo médio acumulado sai errado)
+    todos.sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : (a.tipo === 'entrada' ? -1 : b.tipo === 'entrada' ? 1 : 0))
     let qAcum = 0, vAcum = 0, cmedio = 0
     const full: KxMov[] = todos.map((m) => {
       if (m.tipo === 'entrada') {
@@ -68,11 +70,13 @@ export function Kardex() {
   const totSai = movs.filter((m) => m.tipo === 'saida').reduce((s, m) => s + m.vSaida, 0)
   const ultimo = movs[movs.length - 1]
 
-  const setPreset = (v: string) => {
+  const PER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
+  const PER_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+  const setPreset = (label: string) => {
+    const l = label || 'Período'; setPeriodoSel(l)
     const n = new Date()
-    if (v === 'mes_atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
-    else if (v === 'mes_anterior') { setDe(iso(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(iso(new Date(n.getFullYear(), n.getMonth(), 0))) }
-    else { setDe(''); setAte('') }
+    if (l === 'Mês Atual') { setDe(iso(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(iso(n)) }
+    else if (l === 'Mês Anterior') { setDe(iso(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(iso(new Date(n.getFullYear(), n.getMonth(), 0))) }
   }
 
   const exportCSV = () => {
@@ -89,13 +93,11 @@ export function Kardex() {
         <div className="ds-field" style={{ width: 240 }}><label>Insumo</label>
           <SearchSelect value={insSel?.nome || ''} onChange={(nm) => setInsId(insByName.get(nm) || '')} options={insOptions} placeholder="Selecione um insumo..." />
         </div>
-        <div className="ds-field"><label>Período</label>
-          <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}>
-            <option value="periodo">Período</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option>
-          </select>
+        <div className="ds-field" style={{ minWidth: 140 }}><label>Período</label>
+          <SearchSelect value={periodoSel} options={PER_OPTS} placeholder="Período" onChange={(l) => setPreset(PER_VAL[l] ? l : 'Período')} />
         </div>
-        <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => setDe(e.target.value)} /></div>
-        <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => setAte(e.target.value)} /></div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} /></div>
         <div className="ds-actions">
           <button className="btn-ghost" onClick={exportCSV}>↓ CSV</button>
           {insId && <span style={{ fontSize: 12, color: '#94a3b8' }}>{movs.length} movimentação(ões)</span>}

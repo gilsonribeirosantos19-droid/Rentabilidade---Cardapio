@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { mediaPonderada } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
+import { DetailModal } from '../components/DetailModal'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string; unidade_medida?: string; unidade_compra?: string }
@@ -21,9 +23,16 @@ const fmtDate = (d?: string | null) => d ? new Date(d + 'T12:00:00').toLocaleDat
 const hojeStr = () => new Date().toISOString().split('T')[0]
 const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const uniq = (a: (string | null | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
+// dropdowns com busca da toolbar (rótulo ↔ valor)
+const PER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
+const PER_LBL: Record<string, string> = { periodo: 'Período', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior' }
+const PER_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+const TIPO_OPTS = ['Manual', 'NF-e', 'Ajuste']
+const TIPO_LBL: Record<string, string> = { manual: 'Manual', nfe: 'NF-e', ajuste: 'Ajuste' }
+const TIPO_VAL: Record<string, string> = { 'Manual': 'manual', 'NF-e': 'nfe', 'Ajuste': 'ajuste' }
 
 export function Entradas() {
-  const { tenantId } = useAuth()
+  const { tenantId, usuario } = useAuth()
   const { lojaId } = useLoja()
   const qc = useQueryClient()
   const now = new Date()
@@ -31,9 +40,11 @@ export function Entradas() {
   const [fCat, setFCat] = useState(''); const [fTipo, setFTipo] = useState(''); const [fForn, setFForn] = useState('')
   const [de, setDe] = useState(isoD(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(isoD(now))
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [pag, setPag] = useState(1); const [porPag, setPorPag] = useState(20)
   const [modal, setModal] = useState(false)
   const [dup, setDup] = useState<EntForm | null>(null)
+  const [detalhe, setDetalhe] = useState<Entrada | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2800) }
 
@@ -42,22 +53,15 @@ export function Entradas() {
   const { data: entradas = [], isLoading } = useQuery({ queryKey: ['ent-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)) })
   const { data: saidas = [] } = useQuery({ queryKey: ['ent-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,loja_id').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['ent-forns', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Forn[] } })
+  // Parâmetro Estoque › "Obrigar lote": se 'sim', exige lote na entrada manual
+  const { data: params = [] } = useQuery({ queryKey: ['ent-params', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'estoque'); return (data ?? []) as { chave: string; valor: string }[] } })
+  const obrigarLote = useMemo(() => params.find((p) => p.chave === 'obrigar_lote')?.valor === 'sim', [params])
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const getSaldo = (insId: string): Saldo => saldos.find((s) => s.insumo_id === insId && (!lojaId || s.loja_id === lojaId)) || { insumo_id: insId, quantidade: 0, custo_medio: 0 }
   const entradasL = useMemo(() => lojaId ? entradas.filter((e) => (e.loja_id || null) === lojaId) : entradas, [entradas, lojaId])
   const cats = useMemo(() => uniq(insumos.map((i) => i.categoria)), [insumos])
   const fornNomes = useMemo(() => uniq(entradasL.map((e) => e.fornecedor_nome)), [entradasL])
-
-  // KPIs
-  const hojeS = hojeStr()
-  const hojeEnts = entradasL.filter((e) => e.criado_em?.startsWith(hojeS))
-  const valorHoje = hojeEnts.reduce((s, e) => s + (e.custo_total || 0), 0)
-  const nfeCount = entradasL.filter((e) => e.tipo === 'nfe' || e.tipo === 'nfe_importada').length
-  const manualCount = entradasL.filter((e) => e.tipo === 'manual').length
-  const ultima = entradasL.length ? entradasL.reduce((a, b) => (a.criado_em || '') > (b.criado_em || '') ? a : b) : null
-  const pendCount = entradasL.filter((e) => !e.custo_unitario || !insMap[e.insumo_id]).length
-  const valorPeriodo = entradasL.reduce((s, e) => s + (e.custo_total || 0), 0)
 
   const filtrada = useMemo(() => {
     const b = busca.toLowerCase().trim()
@@ -89,6 +93,7 @@ export function Entradas() {
       const qtd_ = parseFloat(f.qtd) || 0, fator = parseFloat(f.fator) || 1, custo = parseFloat(f.custo) || 0
       if (qtd_ <= 0) throw new Error('Informe a quantidade.')
       if (custo <= 0) throw new Error('Informe o custo unitário.')
+      if (obrigarLote && !f.lote.trim()) throw new Error('Informe o lote — obrigatório nos Parâmetros (Configurações › Parâmetros › Estoque).')
       const qtdEst = +(qtd_ * fator).toFixed(4)
       const custoUnit = +(custo / fator).toFixed(6)
       const fornNome = f.fornecedor_id ? (fornecedores.find((x) => x.id === f.fornecedor_id)?.nome || null) : null
@@ -99,13 +104,14 @@ export function Entradas() {
         quantidade: qtdEst, quantidade_fornecedor: qtd_, unidade_compra: f.unidade.trim() || null,
         fator_conversao: fator, custo_unitario: custoUnit, lote: f.lote.trim() || null,
         validade: f.validade || null, tipo: 'manual', observacao: f.obs.trim() || null,
+        responsavel: usuario?.nome || null,
         criado_em: dataStr + 'T12:00:00.000Z',
       })
       if (e1) throw e1
-      // custo médio ponderado
+      // custo médio ponderado (fonte única: lib/cost.ts)
       const s = getSaldo(f.insumo_id)
       const qA = s.quantidade || 0, cmA = s.custo_medio || 0, qN = qA + qtdEst
-      const cmN = qN > 0 ? (qA * cmA + qtdEst * custoUnit) / qN : custoUnit
+      const cmN = mediaPonderada(qA, cmA, qtdEst, custoUnit)
       await upsertSaldo(f.insumo_id, qN, +cmN.toFixed(6), lojaId)
       // histórico de custo (best-effort)
       try {
@@ -136,9 +142,9 @@ export function Entradas() {
     onError: (e: Error) => { if (e.message !== '__cancel__') showToast(e.message, 'err') },
   })
 
-  const verEntrada = (e: Entrada) => { const ins = insMap[e.insumo_id]; alert(`Entrada\n\nInsumo: ${ins?.nome || '—'}\nFornecedor: ${e.fornecedor_nome || '—'}\nQuantidade: ${qtd(e.quantidade)}\nCusto unit.: ${brl(e.custo_unitario)}\nCusto total: ${brl(e.custo_total)}\nLote: ${e.lote || '—'}\nValidade: ${fmtDate(e.validade)}\nTipo: ${e.tipo}\nData: ${fmtDH(e.criado_em)}`) }
+  const detRows = (e: Entrada): [string, string][] => { const ins = insMap[e.insumo_id]; return [['Insumo', ins?.nome || '—'], ['Fornecedor', e.fornecedor_nome || '—'], ['Quantidade', qtd(e.quantidade)], ['Custo unit.', brl(e.custo_unitario)], ['Custo total', brl(e.custo_total)], ['Lote', e.lote || '—'], ['Validade', fmtDate(e.validade)], ['Tipo', e.tipo || '—'], ['Data', fmtDH(e.criado_em)]] }
   const duplicar = (e: Entrada) => { setDup({ insumo_id: e.insumo_id, fornecedor_id: e.fornecedor_id || '', data: hojeStr(), qtd: String(e.quantidade_fornecedor || e.quantidade || ''), unidade: e.unidade_compra || '', fator: String(e.fator_conversao || 1), custo: String(e.custo_unitario || ''), lote: e.lote || '', validade: '', obs: '' }); setModal(true) }
-  const setPreset = (v: string) => { const n = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(isoD(n)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(isoD(new Date(n.getFullYear(), n.getMonth(), 0))) } else { setDe(''); setAte('') } setPag(1) }
+  const setPreset = (label: string) => { const l = label || 'Período'; setPeriodoSel(l); const n = new Date(); if (l === 'Mês Atual') { setDe(isoD(new Date(n.getFullYear(), n.getMonth(), 1))); setAte(isoD(n)) } else if (l === 'Mês Anterior') { setDe(isoD(new Date(n.getFullYear(), n.getMonth() - 1, 1))); setAte(isoD(new Date(n.getFullYear(), n.getMonth(), 0))) } setPag(1) }
 
   return (
     <div className="est-screen">
@@ -151,25 +157,15 @@ export function Entradas() {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
         </div>
-        <select className="field" value={fCat} onChange={(e) => { setFCat(e.target.value); setPag(1) }}><option value="">Grupo: Todos</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select>
-        <select className="field" value={fTipo} onChange={(e) => { setFTipo(e.target.value); setPag(1) }}><option value="">Tipo: Todos</option><option value="manual">Manual</option><option value="nfe">NF-e</option><option value="ajuste">Ajuste</option></select>
-        <select className="field" value={fForn} onChange={(e) => { setFForn(e.target.value); setPag(1) }}><option value="">Fornecedor: Todos</option>{fornNomes.map((f) => <option key={f} value={f}>{f}</option>)}</select>
+        <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={fCat} options={cats} placeholder="Grupo: Todos" onChange={(v) => { setFCat(v); setPag(1) }} /></div>
+        <div className="fbar-ss" style={{ minWidth: 140 }}><SearchSelect value={TIPO_LBL[fTipo] || ''} options={TIPO_OPTS} placeholder="Tipo: Todos" onChange={(l) => { setFTipo(TIPO_VAL[l] || ''); setPag(1) }} /></div>
+        <div className="fbar-ss" style={{ minWidth: 160 }}><SearchSelect value={fForn} options={fornNomes} placeholder="Fornecedor: Todos" onChange={(v) => { setFForn(v); setPag(1) }} /></div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <select className="field" style={{ minWidth: 130 }} defaultValue="mes_atual" onChange={(e) => setPreset(e.target.value)}><option value="periodo">Período</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option></select>
-          <input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} />
+          <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={periodoSel} options={PER_OPTS} placeholder="Período" onChange={(l) => setPreset(PER_VAL[l] ? l : 'Período')} /></div>
+          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} />
           <span style={{ color: '#94a3b8' }}>–</span>
-          <input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} />
+          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} />
         </div>
-      </div>
-
-      <div className="kpi-bar">
-        <div className="kpi-cell"><div className="l">Entradas hoje</div><div className="v">{hojeEnts.length || 0}</div></div>
-        <div className="kpi-cell"><div className="l">Valor hoje</div><div className="v">{brl0(valorHoje)}</div></div>
-        <div className="kpi-cell"><div className="l">NF-es</div><div className="v">{nfeCount}</div></div>
-        <div className="kpi-cell"><div className="l">Manuais</div><div className="v">{manualCount}</div></div>
-        <div className="kpi-cell"><div className="l">Pendências</div><div className="v red">{pendCount}</div></div>
-        <div className="kpi-cell"><div className="l">Última entrada</div><div className="v sm">{ultima ? fmtDH(ultima.criado_em) : '—'}</div></div>
-        <div className="kpi-cell" style={{ flex: 1 }}><div className="l">Valor no período</div><div className="v">{brl0(valorPeriodo)}</div></div>
       </div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">
@@ -197,7 +193,7 @@ export function Entradas() {
                     <td style={{ color: '#94a3b8', fontSize: 12 }}>{e.lote || '—'}</td>
                     <td style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(e.validade)}</td>
                     <td className="c"><div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
-                      <button className="icon-btn" title="Ver detalhes" onClick={() => verEntrada(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
+                      <button className="icon-btn" title="Ver detalhes" onClick={() => setDetalhe(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
                       <button className="icon-btn" title="Duplicar" onClick={() => duplicar(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button>
                       {podeExcluir && <button className="icon-btn" title="Excluir entrada (insumo sem saída)" onClick={() => delMut.mutate(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg></button>}
                     </div></td>
@@ -219,6 +215,7 @@ export function Entradas() {
       </div>
 
       {modal && <EntradaModal insumos={insumos} fornecedores={fornecedores} getSaldo={getSaldo} inicial={dup} saving={saveMut.isPending} onClose={() => { setModal(false); setDup(null) }} onSave={(f) => saveMut.mutate(f)} />}
+      {detalhe && <DetailModal title="Entrada" rows={detRows(detalhe)} onClose={() => setDetalhe(null)} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )

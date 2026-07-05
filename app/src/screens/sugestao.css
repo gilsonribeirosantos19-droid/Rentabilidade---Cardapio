@@ -8,6 +8,9 @@
 .sug-screen .fld { display: flex; flex-direction: column; gap: 2px; }
 .sug-screen .fld label { font-size: 10px; color: #64748b; font-weight: 500; }
 .sug-screen .fld select, .sug-screen .fld input { height: 32px; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0 10px; font-size: 12.5px; background: #fff; color: #0f172a; font-family: inherit; min-width: 130px; }
+/* dropdown com busca na toolbar: mesma altura/largura dos campos */
+.sug-screen .fld .ass { min-width: 150px; }
+.sug-screen .fld .ass-btn { height: 32px; border-radius: 7px; }
 .sug-screen .grow { margin-left: auto; }
 .sug-screen .btn { height: 32px; border-radius: 7px; padding: 0 13px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; color: #0f172a; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .sug-screen .btn:hover { background: #f1f5f9; }

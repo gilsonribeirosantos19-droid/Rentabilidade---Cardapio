@@ -1,13 +1,24 @@
 // DANFE — portado FIEL do utils.js (imprimirDanfe via Focus + gerarDanfeAiko/abrirDanfeAiko interno).
+import { supabase } from './supabase'
+
 const NFE_WEBHOOK = 'https://trczpnjidqfippbfxtpe.supabase.co/functions/v1/nfe-webhook'
 const esc = (s: any) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+// Cabeçalhos p/ o webhook: envia o token de login (o webhook confirma, via RLS, que a
+// chave é do tenant do usuário antes de devolver a nota completa/DANFE). Sem isto o modo
+// completa/danfe responde 401.
+async function webhookHeaders(): Promise<Record<string, string>> {
+  const h: Record<string, string> = { 'Content-Type': 'application/json' }
+  try { const { data } = await supabase.auth.getSession(); const tk = data.session?.access_token; if (tk) h['Authorization'] = 'Bearer ' + tk } catch { /* sem sessão */ }
+  return h
+}
 
 // "Imprimir DANFE" — PDF oficial do Focus
 export async function imprimirDanfe(chave: string, onMsg: (m: string, t?: 'ok' | 'err') => void) {
   if (!chave) { onMsg('Nota sem chave de acesso.', 'err'); return }
   onMsg('Gerando DANFE…', 'ok')
   try {
-    const r = await fetch(NFE_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ danfe: true, chave }) })
+    const r = await fetch(NFE_WEBHOOK, { method: 'POST', headers: await webhookHeaders(), body: JSON.stringify({ danfe: true, chave }) })
     const j = await r.json()
     if (j && j.ok && j.url) window.open(j.url, '_blank')
     else onMsg('DANFE indisponível para esta nota (o Focus não tem o PDF dela).', 'err')
@@ -19,7 +30,7 @@ export async function gerarDanfeAiko(chave: string, onMsg: (m: string, t?: 'ok' 
   if (!chave) { onMsg('Nota sem chave de acesso.', 'err'); return }
   onMsg('Gerando…', 'ok')
   try {
-    const r = await fetch(NFE_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completa: true, chave }) })
+    const r = await fetch(NFE_WEBHOOK, { method: 'POST', headers: await webhookHeaders(), body: JSON.stringify({ completa: true, chave }) })
     const j = await r.json()
     if (j && j.ok && j.nota && j.nota.requisicao_nota_fiscal) abrirDanfeAiko(j.nota, onMsg)
     else onMsg('Nota completa indisponível no Focus para gerar o DANFE.', 'err')

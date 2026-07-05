@@ -4,8 +4,14 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { mediaPonderada } from '../lib/cost'
 import { imprimirDanfe, gerarDanfeAiko } from '../lib/danfe'
 import './fiscal.css'
+
+// Período: rótulos do dropdown com busca ↔ valor interno
+const PER_OPTS = ['Todos', 'Mês Atual', 'Mês Anterior', 'Período']
+const PER_LBL: Record<string, string> = { todos: 'Todos', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior', periodo: 'Período' }
+const PER_VAL: Record<string, string> = { 'Todos': 'todos', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior', 'Período': 'periodo' }
 
 type Nfe = { id: string; numero?: string; serie?: string; chave_acesso?: string; cnpj_emitente?: string; nome_emitente?: string; data_emissao?: string; data_integracao?: string; valor_total?: number; valor_titulo?: number; data_vencimento?: string; portador?: string; status?: string; loja_id?: string | null }
 type Item = { id: string; nfe_id: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; vinculacao_id?: string | null }
@@ -72,6 +78,8 @@ export function MonitorNfe() {
 
   const { data: nfes = [], isLoading } = useQuery({ queryKey: ['mon-nfe', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).order('data_emissao', { ascending: false }).range(f, t)) })
   const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  // Parâmetro Estoque › "Data de movimentação" (emissao | processamento | manual): em que data a entrada afeta o estoque/CMV
+  const { data: critDataMov = 'emissao' } = useQuery({ queryKey: ['mon-param-datamov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'data_movimentacao').limit(1); return (data?.[0]?.valor as string) || 'emissao' } })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['mon-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome,cnpj,codigo').eq('tenant_id', tenantId); return (data ?? []) as Forn[] } })
   const { data: ifv = [] } = useQuery({ queryKey: ['mon-ifv', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<IFV>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).range(f, t)) })
   const { data: vinculos = [] } = useQuery({ queryKey: ['mon-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('*').eq('tenant_id', tenantId).range(f, t)) })
@@ -147,9 +155,9 @@ export function MonitorNfe() {
     if (error) throw error
     const { data: sd } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('insumo_id', insId).eq('loja_id', loja).limit(1)
     const qA = sd?.[0]?.quantidade || 0, cmA = sd?.[0]?.custo_medio || 0, qN = qA + dados.quantidade
-    const cmN = (qA > 0 && qN > 0) ? (qA * cmA + dados.quantidade * dados.custo_unitario) / qN : dados.custo_unitario
+    const cmN = mediaPonderada(qA, cmA, dados.quantidade, dados.custo_unitario)
     await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, quantidade: +qN.toFixed(4), custo_medio: +cmN.toFixed(6), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
-    try { await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, saldo_anterior: +qA.toFixed(4), custo_medio_anterior: +cmA.toFixed(4), qtd_entrada: +dados.quantidade.toFixed(4), custo_entrada: +dados.custo_unitario.toFixed(4), novo_custo_medio: +cmN.toFixed(4), impacto_pct: cmA > 0 ? +(((cmN - cmA) / cmA) * 100).toFixed(4) : null, origem: 'nfe' }) } catch { /* opcional */ }
+    try { await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, saldo_anterior: +qA.toFixed(4), custo_medio_anterior: +cmA.toFixed(4), qtd_entrada: +dados.quantidade.toFixed(4), custo_entrada: +dados.custo_unitario.toFixed(4), novo_custo_medio: +cmN.toFixed(4), impacto_pct: cmA > 0 ? +(((cmN - cmA) / cmA) * 100).toFixed(4) : null, origem: 'nfe', documento_ref: dados.nfe_numero || null }) } catch { /* opcional */ }
     if (fornId) { try { await supabase.from('insumo_fornecedores').update({ preco_unitario: +dados.custo_unitario.toFixed(6) }).eq('insumo_id', insId).eq('fornecedor_id', fornId) } catch { /* opcional */ } }
   }
 
@@ -167,7 +175,9 @@ export function MonitorNfe() {
     else dup = await supabase.from('entradas_estoque').select('id').eq('tenant_id', tenantId).eq('tipo', 'nfe').eq('nfe_numero', `${n.numero}/${n.serie}`).limit(1)
     if (dup.data && dup.data.length) { await supabase.from('nfe_recebidas').update({ status: 'processada', processada_em: new Date().toISOString() }).eq('id', n.id); return { ok: true, msg: `NF-e ${n.numero}: já estava no estoque (marcada processada).` } }
     const f = fornByCnpj(n.cnpj_emitente); const fornId = f?.id || null, fornNome = f?.nome || n.nome_emitente
-    const dataStr = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : new Date().toISOString().split('T')[0]
+    // data que a entrada usa no estoque, conforme o parâmetro (emissão = padrão; processamento = hoje)
+    const dataEmis = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : new Date().toISOString().split('T')[0]
+    const dataStr = critDataMov === 'processamento' ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : dataEmis
     let okItens = 0
     for (const it of items) {
       const v = resolveVinc(it, fornId)
@@ -225,7 +235,7 @@ export function MonitorNfe() {
         </div>
         <div className="ds-field"><label>Período</label>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => setPreset(e.target.value)}><option value="todos">Todos</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="periodo">Período</option></select>
+            <div style={{ minWidth: 150 }}><SearchSelect value={PER_LBL[periodo] || 'Período'} options={PER_OPTS} placeholder="Período" onChange={(l) => setPreset(PER_VAL[l] || 'periodo')} /></div>
             <input type="date" className="field" title="De" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
             <span style={{ color: '#94a3b8', fontSize: 12 }}>até</span>
             <input type="date" className="field" title="Até" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} />

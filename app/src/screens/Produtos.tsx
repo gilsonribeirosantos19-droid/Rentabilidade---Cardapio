@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
 import './produtos.css'
@@ -55,11 +56,8 @@ export function Produtos() {
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['produtos', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('produtos').select('*').eq('tenant_id', tenantId).order('nome')
-      if (error) throw error
-      return data as Produto[]
-    },
+    // fetchAll: vence o teto de 1000 do PostgREST (senão produtos somem da tela silenciosamente)
+    queryFn: () => fetchAll<Produto>((f, t) => supabase.from('produtos').select('*').eq('tenant_id', tenantId).order('nome').range(f, t)),
   })
 
   const opts = useMemo(() => ({
@@ -81,6 +79,12 @@ export function Produtos() {
     mutationFn: async (f: Form) => {
       const nome = (f.nome || '').trim()
       if (!nome) throw new Error('Informe o nome do produto.')
+      // código Saipos único (evita ambiguidade no de-para de vendas do PDV)
+      const codPdv = (f.codigo_pdv || '').trim()
+      if (codPdv) {
+        const dup = lista.find((x) => x.id !== f.id && (x.codigo_pdv || '').trim() === codPdv)
+        if (dup) throw new Error(`Código Saipos "${codPdv}" já está em "${dup.nome}".`)
+      }
       const grupo = f.grupo || null
       const payload = {
         codigo_pdv: f.codigo_pdv || null, nome, descricao_reduzida: f.descricao_reduzida || null,

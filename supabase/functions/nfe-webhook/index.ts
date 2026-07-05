@@ -12,6 +12,52 @@ const FOCUS_URL   = 'https://api.focusnfe.com.br'
 // FocusNFe usa HTTP Basic Auth: token como usuário, senha vazia → base64("token:")
 const FOCUS_AUTH = 'Basic ' + btoa(FOCUS_TOKEN + ':')
 
+// ── SEGURANÇA ──────────────────────────────────────────────────────────────
+// Segredo compartilhado que protege APENAS os modos administrativos (pull/backfill/
+// reprocessar/amostra) e o cron. A INGESTÃO do Focus NÃO usa o secret (o Focus não
+// deixa editar a URL do webhook, então não tem como ele mandar ?secret=). Sem
+// WEBHOOK_SECRET setado, o gate fica desligado (compat). O vazamento de dados
+// (completa/danfe) é fechado pelo token de login + RLS, não pelo secret.
+const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_SECRET') || ''
+// Chave PUBLISHABLE (mesma do front) p/ validar o token de login nos modos de leitura
+// (completa/danfe). Preferir APP_PUBLISHABLE_KEY; cai pra SUPABASE_ANON_KEY se não setada.
+const APP_PUBLISHABLE_KEY = Deno.env.get('APP_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || ''
+
+// Confere o segredo (query ?secret=, header x-webhook-secret ou body.secret).
+// Sem WEBHOOK_SECRET configurado → retorna true (compat, não quebra nada).
+function secretOk(req: Request, body: any): boolean {
+  if (!WEBHOOK_SECRET) return true
+  const provided = new URL(req.url).searchParams.get('secret')
+    || req.headers.get('x-webhook-secret')
+    || (body && body.secret) || ''
+  return provided === WEBHOOK_SECRET
+}
+
+// Valida que o token de login (Authorization: Bearer <jwt>) pertence a um usuário
+// cujo TENANT é dono da chave informada. Usa um cliente escopado pelo usuário —
+// a RLS (get_my_tenant_id) faz o isolamento por tenant automaticamente.
+// Fecha o vazamento: sem isto, qualquer um puxaria a nota completa de qualquer chave.
+async function tenantOwnsChave(authHeader: string | null, chave: string): Promise<boolean> {
+  if (!authHeader || !APP_PUBLISHABLE_KEY || !chave) return false
+  const jwt = authHeader.replace(/^Bearer\s+/i, '').trim()
+  if (!jwt) return false
+  try {
+    const uc = createClient(Deno.env.get('SUPABASE_URL')!, APP_PUBLISHABLE_KEY, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+    // 1) token tem que ser de um usuário válido
+    const { data: { user }, error: uErr } = await uc.auth.getUser(jwt)
+    if (uErr || !user) return false
+    // 2) a chave tem que existir NO TENANT do usuário (RLS get_my_tenant_id faz o corte)
+    const { data } = await uc.from('nfe_recebidas').select('id').eq('chave_acesso', chave).limit(1)
+    return !!(data && data.length)
+  } catch (e) {
+    console.error('tenantOwnsChave erro:', (e as Error).message)
+    return false
+  }
+}
+
 // Manifesta CIÊNCIA da operação na nota recebida.
 // Sem isso, a SEFAZ NÃO libera o XML completo com os itens (só o resumo).
 // É idempotente do nosso lado: se já estiver manifestada, o Focus retorna erro
@@ -56,6 +102,13 @@ async function fetchNfeCompleta(chave: string) {
   }
 }
 
+// valor_total do item: usa o valor_bruto da NF-e (vProd); se vier ausente/zerado,
+// cai pra quantidade × valor unitário (nunca grava 0 por falta do campo).
+function valTotalItem(item: any): number {
+  return parseFloat(item.valor_bruto || '0')
+    || (parseFloat(item.quantidade_comercial || '0') * parseFloat(item.valor_unitario_comercial || '0'))
+}
+
 // Extrai a data de vencimento + valor do título das duplicatas da nota completa do Focus.
 // duplicatas: 1 parcela vem como objeto; várias vêm como array. Pega a parcela de vencimento mais próximo.
 function extrairVencimento(completa: any) {
@@ -67,7 +120,9 @@ function extrairVencimento(completa: any) {
   if (!dups.length) return { data_vencimento: null, valor_titulo: null }
   dups.sort((a: any, b: any) => String(a.data_vencimento).localeCompare(String(b.data_vencimento)))
   const primeira = dups[0]
-  const valor = parseFloat(req.valor_liquido_fatura || primeira.valor || '0')
+  // valor DO TÍTULO = valor da parcela de vencimento mais próximo (não o total da fatura);
+  // em nota parcelada, casar o valor com a data faz o financeiro bater. Fallback: líquido da fatura.
+  const valor = parseFloat(primeira.valor || req.valor_liquido_fatura || '0')
   return { data_vencimento: primeira.data_vencimento || null, valor_titulo: valor || null }
 }
 
@@ -212,7 +267,7 @@ async function rodarReprocessar(tenant?: string) {
           quantidade: parseFloat(item.quantidade_comercial || '0'),
           unidade_nfe: String(item.unidade_comercial || 'UN').toUpperCase(),
           valor_unitario: parseFloat(item.valor_unitario_comercial || '0'),
-          valor_total: parseFloat(item.valor_bruto || '0'),
+          valor_total: valTotalItem(item),
           vinculacao_id: vinc?.id || null,
         }
       })
@@ -316,7 +371,7 @@ async function rodarPullFocus(tenant: string) {
               quantidade: parseFloat(item.quantidade_comercial || '0'),
               unidade_nfe: String(item.unidade_comercial || 'UN').toUpperCase(),
               valor_unitario: parseFloat(item.valor_unitario_comercial || '0'),
-              valor_total: parseFloat(item.valor_bruto || '0'),
+              valor_total: valTotalItem(item),
               vinculacao_id: fornNotaId ? ((vinc || []).find((v: any) => v.codigo_fornecedor === String(item.codigo_produto || '') && v.fornecedor_id === fornNotaId)?.id || null) : null,
             }))
             const { error: itErr } = await supabase.from('nfe_itens').insert(batch)
@@ -365,6 +420,16 @@ Deno.serve(async (req) => {
     const body = await req.json()
     console.log('Webhook recebido:', JSON.stringify(body).substring(0, 500))
 
+    // Modos administrativos (mexem em massa no Focus/banco de um ou de TODOS os tenants):
+    // exigem o segredo compartilhado. Sem WEBHOOK_SECRET configurado, secretOk() é true (compat).
+    const _adminMode = body.backfill === true || body.pull === true
+      || body.backfill_venc === true || body.reprocessar === true || body.amostra === true
+    if (_adminMode && !secretOk(req, body)) {
+      return new Response(JSON.stringify({ error: 'não autorizado (segredo inválido)' }), {
+        status: 401, headers: { 'Content-Type': 'application/json', ...CORS },
+      })
+    }
+
     // Modo BACKFILL (manual): { "backfill": true, "tenant": "<uuid>" } → carimba loja nas notas antigas
     if (body.backfill === true) {
       return await rodarBackfillLoja(body.tenant || TENANT_ID)
@@ -403,6 +468,10 @@ Deno.serve(async (req) => {
     // (requisicao_nota_fiscal + itens) p/ gerar o "DANFE padrão Aiko" com todos os campos.
     if (body.completa === true && body.chave) {
       const ch = String(body.chave).replace(/\D/g, '')
+      // Só devolve a nota completa se o usuário logado for do tenant dono da chave (RLS).
+      if (!(await tenantOwnsChave(req.headers.get('Authorization'), ch))) {
+        return new Response(JSON.stringify({ ok: false, msg: 'não autorizado' }), { status: 401, headers: { 'Content-Type': 'application/json', ...CORS } })
+      }
       const c = await fetchNfeCompleta(ch)
       if (c) return new Response(JSON.stringify({ ok: true, nota: c }), { headers: { 'Content-Type': 'application/json', ...CORS } })
       return new Response(JSON.stringify({ ok: false, msg: 'nota completa indisponível no Focus' }), { status: 200, headers: { 'Content-Type': 'application/json', ...CORS } })
@@ -412,6 +481,10 @@ Deno.serve(async (req) => {
     // O Focus responde 302 com a URL pré-assinada no header Location; repassamos pro navegador abrir/imprimir.
     if (body.danfe === true && body.chave) {
       const ch = String(body.chave).replace(/\D/g, '')
+      // Mesma proteção do modo completa: exige token de login do tenant dono da chave.
+      if (!(await tenantOwnsChave(req.headers.get('Authorization'), ch))) {
+        return new Response(JSON.stringify({ ok: false, msg: 'não autorizado' }), { status: 401, headers: { 'Content-Type': 'application/json', ...CORS } })
+      }
       try {
         const res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas/${ch}.pdf`, {
           method: 'GET', headers: { 'Authorization': FOCUS_AUTH }, redirect: 'manual',
@@ -423,6 +496,12 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ ok: false, msg: String(e) }), { status: 500, headers: { 'Content-Type': 'application/json', ...CORS } })
       }
     }
+
+    // Ingestão (o Focus chama esta rota). NÃO exige segredo: o Focus não permite editar
+    // a URL do webhook (não dá pra ele mandar ?secret=), e o payload é dele. O secret
+    // protege só os modos admin (pull/backfill/reprocessar) e o cron, que nós controlamos.
+    // Risco residual da ingestão aberta: injeção de "nota fantasma" (sem item, inofensiva) —
+    // o vazamento de dados (completa/danfe) já está fechado pelo token de login + RLS.
 
     const cnpjEmitente = (body.documento_emitente || '').replace(/\D/g, '')
     const nomeEmitente = body.nome_emitente || ''
@@ -570,7 +649,7 @@ Deno.serve(async (req) => {
           quantidade:             parseFloat(item.quantidade_comercial || '0'),
           unidade_nfe:            String(item.unidade_comercial || 'UN').toUpperCase(),
           valor_unitario:         parseFloat(item.valor_unitario_comercial || '0'),
-          valor_total:            parseFloat(item.valor_bruto || '0'),
+          valor_total:            valTotalItem(item),
           vinculacao_id:          vinc?.id || null,
         }
       })

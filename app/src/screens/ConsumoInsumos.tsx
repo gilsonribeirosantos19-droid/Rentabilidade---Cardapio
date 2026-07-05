@@ -3,12 +3,23 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
+
+// dropdowns com busca (rótulo ↔ valor)
+const TV_OPTS = ['Ano', 'Período personalizado']
+const TV_LBL: Record<string, string> = { ano: 'Ano', custom: 'Período personalizado' }
+const TV_VAL: Record<string, string> = { 'Ano': 'ano', 'Período personalizado': 'custom' }
+const CMP_OPTS = ['Nenhuma comparação', 'Período anterior', 'Mesmo período do ano anterior']
+const CMP_LBL: Record<string, string> = { nenhuma: 'Nenhuma comparação', anterior: 'Período anterior', ano_anterior: 'Mesmo período do ano anterior' }
+const CMP_VAL: Record<string, string> = { 'Nenhuma comparação': 'nenhuma', 'Período anterior': 'anterior', 'Mesmo período do ano anterior': 'ano_anterior' }
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; categoria?: string; preco_compra?: number; ativo?: boolean }
 type Saida = { insumo_id: string; quantidade?: number; criado_em?: string }
 type Saldo = { insumo_id: string; custo_medio?: number }
 type Forn = { id: string; nome: string }
+// 1º dia do mês SEGUINTE a 'YYYY-MM' — pra filtrar com "< proxMes" (evita datas inválidas tipo 2026-04-31)
+const proxMes1 = (comp: string) => { const [y, m] = comp.split('-').map(Number); return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10) }
 type Vinc = { insumo_id: string; fornecedor_id: string }
 
 const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -62,11 +73,11 @@ export function ConsumoInsumos() {
   const { data: vincs = [] } = useQuery({ queryKey: ['ci-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).range(f, t)) })
   const { data: saidas = [], isLoading } = useQuery({
     queryKey: ['ci-sai', tenantId, lojaId, periodo.de, periodo.ate], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', periodo.de + '-01').lte('criado_em', periodo.ate + '-31T23:59:59'); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
+    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', periodo.de + '-01').lt('criado_em', proxMes1(periodo.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
   })
   const { data: saidasCmp = [] } = useQuery({
     queryKey: ['ci-saiC', tenantId, lojaId, cmpP?.de, cmpP?.ate], enabled: !!tenantId && !!cmpP,
-    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lte('criado_em', cmpP!.ate + '-31T23:59:59'); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
+    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lt('criado_em', proxMes1(cmpP!.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
   })
 
   const custo = (insId: string) => { const s = saldos.find((x) => x.insumo_id === insId); if (s && s.custo_medio) return Number(s.custo_medio) || 0; const i = insumos.find((x) => x.id === insId); return Number(i?.preco_compra) || 0 }
@@ -138,13 +149,13 @@ export function ConsumoInsumos() {
     <div className="est-screen">
       <div className="ds-filterbar" style={{ alignItems: 'flex-end' }}>
         <div><div className="flbl">Tipo de visualização</div>
-          <select className="field" style={{ width: 190 }} value={tipoVis} onChange={(e) => setTipoVis(e.target.value as 'ano' | 'custom')}><option value="ano">Ano</option><option value="custom">Período personalizado</option></select>
+          <div className="cons-ss" style={{ width: 190 }}><SearchSelect value={TV_LBL[tipoVis]} options={TV_OPTS} placeholder="Tipo" onChange={(l) => setTipoVis((TV_VAL[l] || 'ano') as 'ano' | 'custom')} /></div>
         </div>
         {tipoVis === 'ano'
-          ? <div><div className="flbl">Ano</div><select className="field" style={{ width: 120 }} value={ano} onChange={(e) => setAno(e.target.value)}>{Array.from({ length: 5 }, (_, i) => nowYear - i).map((y) => <option key={y} value={y}>{y}</option>)}</select></div>
+          ? <div><div className="flbl">Ano</div><div className="cons-ss" style={{ width: 120 }}><SearchSelect value={ano} options={Array.from({ length: 5 }, (_, i) => String(nowYear - i))} placeholder="Ano" onChange={setAno} /></div></div>
           : <div><div className="flbl">Período</div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="month" className="field" style={{ width: 140 }} value={mDe} onChange={(e) => setMDe(e.target.value)} /><span style={{ color: '#94a3b8' }}>—</span><input type="month" className="field" style={{ width: 140 }} value={mAte} onChange={(e) => setMAte(e.target.value)} /></div></div>}
         <div style={{ width: 220 }}><div className="flbl">Comparar com</div>
-          <select className="field" style={{ width: '100%' }} value={compara} onChange={(e) => setCompara(e.target.value)}><option value="nenhuma">Nenhuma comparação</option><option value="anterior">Período anterior</option><option value="ano_anterior">Mesmo período do ano anterior</option></select>
+          <div className="cons-ss" style={{ width: '100%' }}><SearchSelect value={CMP_LBL[compara] || 'Nenhuma comparação'} options={CMP_OPTS} placeholder="Comparar" onChange={(l) => setCompara(CMP_VAL[l] || 'nenhuma')} /></div>
         </div>
         <div style={{ width: 200 }}><div className="flbl">Insumo</div><input className="field" style={{ width: '100%' }} placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} /></div>
         <div><div className="flbl">Visualizar</div><div className="seg"><button className={seg(modo === 'qtd')} onClick={() => setModo('qtd')}>Quantidade</button><button className={seg(modo === 'valor')} onClick={() => setModo('valor')}>Valor (R$)</button></div></div>
@@ -153,8 +164,8 @@ export function ConsumoInsumos() {
       </div>
 
       {maisFiltros && <div className="ds-filterbar" style={{ marginTop: -6 }}>
-        <div style={{ width: 220 }}><div className="flbl">Grupo de insumos</div><select className="field" style={{ width: '100%' }} value={grupo} onChange={(e) => setGrupo(e.target.value)}><option value="">Todos</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
-        <div style={{ width: 240 }}><div className="flbl">Fornecedor</div><select className="field" style={{ width: '100%' }} value={forn} onChange={(e) => setForn(e.target.value)}><option value="">Todos</option>{fornecedores.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</select></div>
+        <div style={{ width: 220 }}><div className="flbl">Grupo de insumos</div><div className="cons-ss" style={{ width: '100%' }}><SearchSelect value={grupo} options={cats} placeholder="Todos" onChange={setGrupo} /></div></div>
+        <div style={{ width: 240 }}><div className="flbl">Fornecedor</div><div className="cons-ss" style={{ width: '100%' }}><SearchSelect value={fornecedores.find((f) => f.id === forn)?.nome || ''} options={fornecedores.map((f) => f.nome)} placeholder="Todos" onChange={(nm) => setForn(fornecedores.find((f) => f.nome === nm)?.id || '')} /></div></div>
       </div>}
 
       {cmpP && <div className="ci-banner" style={{ margin: '4px 0 12px' }}><span style={{ opacity: .7 }}>Comparando</span> <b>{labelMes(periodo.de)} a {labelMes(periodo.ate)}</b> <span style={{ opacity: .7 }}>com</span> <b>{labelMes(cmpP.de)} a {labelMes(cmpP.ate)}</b>.</div>}

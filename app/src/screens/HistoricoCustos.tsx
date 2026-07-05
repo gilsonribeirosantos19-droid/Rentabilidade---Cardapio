@@ -15,6 +15,11 @@ const q3 = (v?: number | null) => (v == null) ? '—' : Number(v).toLocaleString
 const fmtDH = (iso?: string) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const ORIGEM_LBL: Record<string, string> = { entrada_manual: 'Entrada Manual', nfe: 'XML / NF-e', nfe_importada: 'XML / NF-e', ajuste: 'Ajuste', manual: 'Entrada Manual' }
+const ORIGEM_OPTS = ['Entrada Manual', 'XML / NF-e', 'Ajuste']
+const ORIGEM_VAL: Record<string, string> = { 'Entrada Manual': 'entrada_manual', 'XML / NF-e': 'nfe', 'Ajuste': 'ajuste' }
+const PERIODO_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
+const PERIODO_LBL: Record<string, string> = { periodo: 'Período', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior' }
+const PERIODO_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
 
 export function HistoricoCustos() {
   const { tenantId } = useAuth()
@@ -57,11 +62,11 @@ export function HistoricoCustos() {
         <div className="ds-field" style={{ width: 200 }}><label>Insumo</label>
           <SearchSelect value={insF ? (insMap[insF] || '') : ''} options={insumos.map((i) => i.nome)} placeholder="Todos os insumos" onChange={(nm) => setInsF(nm === 'Todos os insumos' ? '' : (insByNome[nm] || ''))} />
         </div>
-        <div className="ds-field"><label>Origem</label>
-          <select className="field" value={origem} onChange={(e) => setOrigem(e.target.value)}><option value="">Todas as origens</option><option value="entrada_manual">Entrada Manual</option><option value="nfe">XML / NF-e</option><option value="ajuste">Ajuste</option></select>
+        <div className="ds-field" style={{ minWidth: 150 }}><label>Origem</label>
+          <SearchSelect value={origem ? (ORIGEM_LBL[origem] || '') : ''} options={ORIGEM_OPTS} placeholder="Todas as origens" onChange={(l) => setOrigem(ORIGEM_VAL[l] || '')} />
         </div>
-        <div className="ds-field"><label>Período</label>
-          <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => aplicarPeriodo(e.target.value)}><option value="periodo">Período</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option></select>
+        <div className="ds-field" style={{ minWidth: 130 }}><label>Período</label>
+          <SearchSelect value={PERIODO_LBL[periodo] || 'Período'} options={PERIODO_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(PERIODO_VAL[l] || 'periodo')} />
         </div>
         <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} /></div>
         <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} /></div>

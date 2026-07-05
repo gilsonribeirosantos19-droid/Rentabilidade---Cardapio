@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
+import { SearchSelect } from '../components/SearchSelect'
 import './cmv.css'
 
 type Insumo = { id: string; nome?: string; categoria?: string; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
@@ -29,12 +30,16 @@ function periodoRange(tipo: string): { de: string; ate: string } | null {
   return null
 }
 
+const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
+const PERIODO_TIPO: Record<string, string> = { 'Personalizado': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+
 export function CmvTeoricoReal() {
   const { tenantId } = useAuth()
   const { lojaId } = useLoja()
   const ini = periodoRange('mes_atual')!
   const [de, setDe] = useState(ini.de)
   const [ate, setAte] = useState(ini.ate)
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [cat, setCat] = useState('')
   const [apenasDiv, setApenasDiv] = useState(false)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
@@ -59,8 +64,11 @@ export function CmvTeoricoReal() {
         fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
         fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').range(f, t)),
         fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').range(f, t)),
-        fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', de).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Mov[]),
-        fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', de).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
+        // entradas/saídas do HISTÓRICO todo até "ate" (não só do período): o custo médio na data
+        // precisa da reconstrução completa (senão ignora o estoque/compras antes do "De"). O recorte
+        // por período do consumo REAL é feito depois, em JS (realMap).
+        fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Mov[]),
+        fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
       ])
       const ids = fichas.map((f) => f.id)
       const itensFicha = ids.length
@@ -79,7 +87,11 @@ export function CmvTeoricoReal() {
     const saldos = byLoja(data.saldos)
     const { insumos, fichas, itensFicha, fats } = data
 
-    const totalFat = fats.reduce((s, f) => s + (f.valor ?? f.total ?? f.valor_total ?? 0), 0) + vendas.reduce((s, v) => s + (v.valor_total || 0), 0)
+    // Faturamento: usa a tabela `faturamento` (total diário) quando houver; senão, cai pro
+    // somatório das vendas por item. Antes somava os dois → duplicava quando havia as 2 fontes.
+    const fatSum = fats.reduce((s, f) => s + (f.valor ?? f.total ?? f.valor_total ?? 0), 0)
+    const vendaFat = vendas.reduce((s, v) => s + (v.valor_total || 0), 0)
+    const totalFat = fatSum > 0 ? fatSum : vendaFat
 
     const teoMap: Record<string, number> = {}
     vendas.forEach((v) => {
@@ -88,8 +100,11 @@ export function CmvTeoricoReal() {
       const por = f.rendimento_porcoes || 1
       itensFicha.filter((i) => i.ficha_id === fid).forEach((it) => { teoMap[it.insumo_id] = (teoMap[it.insumo_id] || 0) + (it.quantidade_g || 0) / por * (v.quantidade || 0) })
     })
+    // consumo REAL = saídas de consumo/produção DENTRO do período (as saídas vêm do histórico
+    // todo p/ o custo médio; aqui recorta só [de, ate]).
+    const inPer = (m: { criado_em?: string }) => { const d = (m.criado_em || '').slice(0, 10); return d >= de && d <= ate }
     const realMap: Record<string, number> = {}
-    saidas.filter((s) => ['consumo', 'producao'].includes(s.tipo || '')).forEach((s) => { realMap[s.insumo_id] = (realMap[s.insumo_id] || 0) + (s.quantidade || 0) })
+    saidas.filter((s) => ['consumo', 'producao'].includes(s.tipo || '') && inPer(s)).forEach((s) => { realMap[s.insumo_id] = (realMap[s.insumo_id] || 0) + (s.quantidade || 0) })
 
     const ctx = { saldos, insumos, entradas, saidas, dataLimite: ate }
     const rows = insumos.filter((i) => teoMap[i.id] || realMap[i.id]).map((i) => {
@@ -113,7 +128,7 @@ export function CmvTeoricoReal() {
     const insAll = rows.length
     const comDiv = rows.filter((r) => r.qTeo > 0 && Math.abs(r.dPct) > 5).length
     return { totalFat, totalTeo, totalReal, dif, divPct, insAll, comDiv, rows }
-  }, [data, lojaId, ate])
+  }, [data, lojaId, de, ate])
 
   const rows = useMemo(() => {
     if (!calc) return []
@@ -135,7 +150,7 @@ export function CmvTeoricoReal() {
     return { tTeo, tReal, tDQ, tPct, tImp, crit, okC, atenC }
   }, [rows])
 
-  const setPeriodo = (tipo: string) => { const p = periodoRange(tipo); if (p) { setDe(p.de); setAte(p.ate) } else { setDe(''); setAte('') } }
+  const setPeriodo = (label: string) => { const l = label || 'Personalizado'; setPeriodoSel(l); const p = periodoRange(PERIODO_TIPO[l]); if (p) { setDe(p.de); setAte(p.ate) } else { setDe(''); setAte('') } }
 
   const exportCSV = () => {
     if (!calc) { showToast('Calcule primeiro.', 'err'); return }
@@ -152,22 +167,15 @@ export function CmvTeoricoReal() {
   return (
     <div className="cmv-screen">
       <div className="ds-filterbar">
-        <div className="ds-field">
+        <div className="ds-field" style={{ minWidth: 130 }}>
           <label>Período</label>
-          <select className="field" defaultValue="mes_atual" onChange={(e) => setPeriodo(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="periodo">Personalizado</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
+          <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
-        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => setDe(e.target.value)} /></div>
-        <div className="ds-field"><label>Até</label><input type="date" className="field" value={ate} onChange={(e) => setAte(e.target.value)} /></div>
-        <div className="ds-field">
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field" style={{ minWidth: 130 }}>
           <label>Grupo</label>
-          <select className="field" value={cat} onChange={(e) => setCat(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="">Todos os grupos</option>
-            {grupos.map((g) => <option key={g} value={g}>{g}</option>)}
-          </select>
+          <SearchSelect value={cat} options={grupos} placeholder="Todos os grupos" onChange={(v) => setCat(v)} />
         </div>
         <div className="ds-field">
           <label>Mostrar</label>

@@ -20,6 +20,7 @@ export function AjusteCustoMedio() {
   const [insumoId, setInsumoId] = useState('')
   const [data, setData] = useState(isoD(new Date()))
   const [novo, setNovo] = useState('')
+  const [motivo, setMotivo] = useState('')
   const [busca, setBusca] = useState('')
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [logDe, setLogDe] = useState(isoD(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
@@ -30,7 +31,9 @@ export function AjusteCustoMedio() {
   const { data: insumos = [] } = useQuery({ queryKey: ['cm-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['cm-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Loja[] } })
   const { data: saldos = [] } = useQuery({ queryKey: ['cm-sld', tenantId, insumoId], enabled: !!tenantId && !!insumoId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).eq('insumo_id', insumoId); return (data ?? []) as Saldo[] } })
-  const { data: logs = [] } = useQuery({ queryKey: ['cm-log', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('ajustes_custo_medio').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).limit(50); return (data ?? []) as Log[] } })
+  // Histórico REAL: os ajustes de custo médio são gravados como movimento em entradas_estoque
+  // (tipo 'ajuste', quantidade 0, custo_unitario = novo custo). A tabela ajustes_custo_medio não é usada.
+  const { data: logs = [] } = useQuery({ queryKey: ['cm-log', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('entradas_estoque').select('insumo_id,loja_id,custo_unitario,criado_em').eq('tenant_id', tenantId).eq('tipo', 'ajuste').eq('quantidade', 0).order('criado_em', { ascending: false }).limit(100); return ((data ?? []) as { insumo_id?: string; loja_id?: string; custo_unitario?: number; criado_em?: string }[]).map((e) => ({ insumo_id: e.insumo_id, loja_id: e.loja_id, custo_novo: e.custo_unitario, custo_anterior: undefined, criado_em: e.criado_em })) as Log[] } })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i.nome])) as Record<string, string>, [insumos])
   const insByNome = useMemo(() => { const m: Record<string, string> = {}; insumos.forEach((i) => { m[i.nome] = i.id }); return m }, [insumos])
@@ -44,7 +47,7 @@ export function AjusteCustoMedio() {
   const trocarInsumo = (id: string) => { setInsumoId(id); setSel(new Set()) }
   const toggleLoja = (id: string, on: boolean) => setSel((prev) => { const n = new Set(prev); on ? n.add(id) : n.delete(id); return n })
   const toggleTodas = (on: boolean) => setSel(on ? new Set(lojas.map((l) => l.id)) : new Set())
-  const limpar = () => { setInsumoId(''); setNovo(''); setBusca(''); setSel(new Set()) }
+  const limpar = () => { setInsumoId(''); setNovo(''); setMotivo(''); setBusca(''); setSel(new Set()) }
 
   const salvarMut = useMutation({
     mutationFn: async () => {
@@ -55,7 +58,8 @@ export function AjusteCustoMedio() {
       for (const lId of selecionadas) {
         const s = saldoDe(lId)
         const { error: e1 } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lId, quantidade: +Number(s.quantidade || 0).toFixed(4), custo_medio: +novoNum.toFixed(6), atualizado_em: agora }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (e1) throw e1
-        const { error: e2 } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lId, quantidade: 0, custo_unitario: +novoNum.toFixed(6), tipo: 'ajuste', observacao: 'Ajuste de custo médio', criado_em: agora }); if (e2) throw e2
+        const obs = motivo.trim() ? ('Ajuste de custo médio — ' + motivo.trim()) : 'Ajuste de custo médio'
+        const { error: e2 } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lId, quantidade: 0, custo_unitario: +novoNum.toFixed(6), tipo: 'ajuste', observacao: obs, criado_em: agora }); if (e2) throw e2
       }
       return selecionadas.length
     },
@@ -76,6 +80,7 @@ export function AjusteCustoMedio() {
           <div className="adj-fg"><label>Insumo *</label><SearchSelect value={insumoId ? (insMap[insumoId] || '') : ''} options={['Selecione um insumo...', ...insumos.map((i) => i.nome)]} placeholder="Selecione um insumo..." onChange={(nm) => trocarInsumo(nm === 'Selecione um insumo...' ? '' : (insByNome[nm] || ''))} /></div>
           <div className="adj-fg"><label>Data do Ajuste *</label><input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
           <div className="adj-fg"><label>Novo Custo Médio (R$/KG) *</label><input type="number" min="0.01" step="0.01" placeholder="0,00" value={novo} onChange={(e) => setNovo(e.target.value)} /></div>
+          <div className="adj-fg"><label>Motivo / observação</label><input placeholder="Ex.: correção de nota, contagem…" value={motivo} onChange={(e) => setMotivo(e.target.value)} /></div>
         </div>
 
         <div style={{ marginTop: 18 }}>

@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
 type Pedido = { id: string; loja_id?: string | null; status?: string; observacao?: string | null; data_pedido?: string; created_at?: string; fornecedor_id?: string | null }
-type ItemPedido = { id?: string; pedido_id: string; insumo_id: string; quantidade?: number; unidade?: string; preco_unitario?: number | null; observacao?: string | null }
+type LojaQtd = { loja_id: string; qtd: number }
+type ItemPedido = { id?: string; pedido_id: string; insumo_id: string; quantidade?: number; unidade?: string; preco_unitario?: number | null; observacao?: string | null; detalhe_lojas?: LojaQtd[] | null }
 type Loja = { id: string; nome: string }
 type Insumo = { id: string; nome: string; unidade_medida?: string; codigo_interno?: number | string; categoria?: string }
 type Forn = { id: string; nome: string; whatsapp?: string | null }
@@ -25,6 +27,23 @@ const BADGE: Record<string, string> = { solicitado: 'b-solicitado', processado: 
 const LABEL: Record<string, string> = { solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado', pendente: 'Pendente' }
 const PED_ST: Record<string, { l: string; b: string }> = { pendente: { l: 'Aguardando envio', b: 'b-pendente' }, enviado: { l: 'Enviado', b: 'b-enviado' }, baixado: { l: 'Baixado', b: 'b-baixado' }, cancelado: { l: 'Cancelado', b: 'b-cancelado' }, aguardando_aprovacao: { l: 'Aguard. aprovação', b: 'b-solicitado' }, aprovado: { l: 'Aprovado', b: 'b-processado' } }
 const PED_ORDEM: Record<string, number> = { aguardando_aprovacao: 0, pendente: 1, enviado: 2, aprovado: 3, baixado: 4, cancelado: 5 }
+
+// dropdowns com busca da aba Compras (rótulo ↔ valor interno)
+const CMP_PER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
+const CMP_PER_LBL: Record<string, string> = { periodo: 'Período', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior' }
+const CMP_PER_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+const SOL_ST_OPTS = ['Todos os status', 'Aguardando', 'Processado', 'Cancelado']
+const SOL_ST_LBL: Record<string, string> = { '': 'Todos os status', solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
+const SOL_ST_VAL: Record<string, string> = { 'Todos os status': '', 'Aguardando': 'solicitado', 'Processado': 'processado', 'Cancelado': 'cancelado' }
+const PG_ST_OPTS = ['Ativos (a enviar / enviados)', 'Aguardando aprovação', 'Aguardando envio', 'Enviado', 'Baixados', 'Cancelados', 'Todos']
+const PG_ST_LBL: Record<string, string> = { ativos: 'Ativos (a enviar / enviados)', aguardando_aprovacao: 'Aguardando aprovação', pendente: 'Aguardando envio', enviado: 'Enviado', baixado: 'Baixados', cancelado: 'Cancelados', todos: 'Todos' }
+const PG_ST_VAL: Record<string, string> = { 'Ativos (a enviar / enviados)': 'ativos', 'Aguardando aprovação': 'aguardando_aprovacao', 'Aguardando envio': 'pendente', 'Enviado': 'enviado', 'Baixados': 'baixado', 'Cancelados': 'cancelado', 'Todos': 'todos' }
+const PG_DT_OPTS = ['Qualquer data', 'Hoje', 'Últimos 7 dias', 'Últimos 30 dias']
+const PG_DT_LBL: Record<string, string> = { '': 'Qualquer data', hoje: 'Hoje', '7': 'Últimos 7 dias', '30': 'Últimos 30 dias' }
+const PG_DT_VAL: Record<string, string> = { 'Qualquer data': '', 'Hoje': 'hoje', 'Últimos 7 dias': '7', 'Últimos 30 dias': '30' }
+const PG_ORD_OPTS = ['Fornecedor (A-Z)', 'Data (mais recente)', 'Valor (maior)']
+const PG_ORD_LBL: Record<string, string> = { forn: 'Fornecedor (A-Z)', data: 'Data (mais recente)', valor: 'Valor (maior)' }
+const PG_ORD_VAL: Record<string, string> = { 'Fornecedor (A-Z)': 'forn', 'Data (mais recente)': 'data', 'Valor (maior)': 'valor' }
 
 // dados compartilhados (leves) usados por várias abas
 function useCompras(tenantId: string) {
@@ -65,12 +84,14 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
 
   const { data: pedidos = [], isLoading } = useQuery({
     queryKey: ['cmp-sol', tenantId, lojaF, statusF, de, ate], enabled: !!tenantId,
-    queryFn: async () => {
-      let q = supabase.from('pedidos_compra').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false })
-      if (statusF) q = q.eq('status', statusF); else q = q.in('status', ['solicitado', 'processado', 'cancelado', 'pendente'])
+    queryFn: () => fetchAll<Pedido>((f, t) => {
+      // Solicitações = pedidos que vieram das LOJAS (têm loja_id). Os pedidos GERADOS na aba
+      // Processar têm loja_id null → não entram aqui (senão "voltam" pra Solicitações).
+      let q = supabase.from('pedidos_compra').select('*').eq('tenant_id', tenantId).not('loja_id', 'is', null).order('created_at', { ascending: false })
+      if (statusF) q = q.eq('status', statusF); else q = q.in('status', ['solicitado', 'processado', 'cancelado'])
       if (lojaF) q = q.eq('loja_id', lojaF); if (de) q = q.gte('data_pedido', de); if (ate) q = q.lte('data_pedido', ate)
-      const { data } = await q; return (data ?? []) as Pedido[]
-    },
+      return q.range(f, t)
+    }),
   })
   const { data: countMap = {} } = useQuery({
     queryKey: ['cmp-solcount', tenantId, pedidos.map((p) => p.id).join(',')], enabled: !!tenantId && pedidos.length > 0,
@@ -86,10 +107,10 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
         <div><div style={{ fontSize: 13, fontWeight: 700 }}>1. SOLICITAÇÕES</div><div style={{ fontSize: 12, color: '#94a3b8' }}>Lista de solicitações enviadas pelas lojas</div></div>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
-          <select className="field" style={{ minWidth: 150 }} value={lojaF} onChange={(e) => { setLojaF(e.target.value); setPag(1) }}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
-          <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => aplicarPeriodo(e.target.value)}><option value="periodo">Período</option><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option></select>
+          <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={lojaMap[lojaF] || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => { setLojaF(lojas.find((l) => l.nome === nm)?.id || ''); setPag(1) }} /></div>
+          <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={CMP_PER_LBL[periodo] || 'Período'} options={CMP_PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(CMP_PER_VAL[l] || 'periodo')} /></div>
           <input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo'); setPag(1) }} /><span style={{ fontSize: 12, color: '#94a3b8' }}>até</span><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo'); setPag(1) }} />
-          <select className="field" value={statusF} onChange={(e) => { setStatusF(e.target.value); setPag(1) }}><option value="">Todos os status</option><option value="solicitado">Aguardando</option><option value="processado">Processado</option><option value="pendente">Pendente</option><option value="cancelado">Cancelado</option></select>
+          <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={SOL_ST_LBL[statusF] || 'Todos os status'} options={SOL_ST_OPTS} placeholder="Todos os status" onChange={(l) => { setStatusF(SOL_ST_VAL[l] || ''); setPag(1) }} /></div>
         </div>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
@@ -122,12 +143,17 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   const qc = useQueryClient()
   const [qComprar, setQComprar] = useState<Record<string, number>>({})
   const [fornSel, setFornSel] = useState<Record<string, string>>({})
-  const [verLojas, setVerLojas] = useState<{ nome: string; unidade: string; lojas: { nome: string; qty: number }[] } | null>(null)
+  const [detItem, setDetItem] = useState<string | null>(null)
+  const toggleDet = (id: string) => setDetItem((cur) => (cur === id ? null : id))
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
-  const { data: sols = [], isLoading, refetch, isFetching } = useQuery({ queryKey: ['cmp-cons-sols', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('pedidos_compra').select('id,loja_id').eq('tenant_id', tenantId).eq('status', 'solicitado').order('created_at'); return (data ?? []) as Pedido[] } })
+  const { data: sols = [], isLoading, refetch, isFetching } = useQuery({ queryKey: ['cmp-cons-sols', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Pedido>((f, t) => supabase.from('pedidos_compra').select('id,loja_id').eq('tenant_id', tenantId).eq('status', 'solicitado').order('created_at').range(f, t)) })
   const { data: itensSol = [] } = useQuery({ queryKey: ['cmp-cons-itens', tenantId, sols.map((s) => s.id).join(',')], enabled: !!tenantId && sols.length > 0, queryFn: async () => { const rows = await fetchAll<ItemPedido>((f, t) => supabase.from('itens_pedido').select('*').in('pedido_id', sols.map((s) => s.id)).range(f, t)); return rows } })
+  // Parâmetros de Compras (Configurações › Parâmetros › Compras)
+  const { data: params = [] } = useQuery({ queryKey: ['cmp-params', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'compras'); return (data ?? []) as { chave: string; valor: string }[] } })
+  const permitirSemForn = useMemo(() => (params.find((p) => p.chave === 'permitir_sem_fornecedor')?.valor ?? 'sim') !== 'nao', [params])
+  const exigirAprovacao = useMemo(() => params.find((p) => p.chave === 'exigir_aprovacao')?.valor === 'sim', [params])
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
@@ -165,19 +191,30 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
     mutationFn: async () => {
       if (!consolidado.length) throw new Error('Nada para gerar.')
       for (const d of consolidado) { if (!(qComprar[d.insId] > 0)) throw new Error('Informe Q. Comprar para todos os itens.') }
+      // Parâmetro: fornecedor obrigatório
+      if (!permitirSemForn) { const semForn = consolidado.filter((d) => !fornSel[d.insId]); if (semForn.length) throw new Error(`${semForn.length} item(ns) sem fornecedor. Obrigatório (Parâmetros › Compras).`) }
+      // Parâmetro: exigir aprovação → pedido nasce "aguardando aprovação"
+      const statusInicial = exigirAprovacao ? 'aguardando_aprovacao' : 'pendente'
       const porForn: Record<string, typeof consolidado> = {}
       consolidado.forEach((d) => { const k = fornSel[d.insId] || '__sem__'; (porForn[k] = porForn[k] || []).push(d) })
-      for (const [fKey, itensForn] of Object.entries(porForn)) {
+      // Monta a carga (pedidos + itens) e gera TUDO numa função atômica no banco.
+      // Se falhar no meio, nada é gravado → as solicitações continuam "solicitado" e repetir NÃO duplica pedido.
+      const pedidos = Object.entries(porForn).map(([fKey, itensForn]) => {
         const fornId = fKey === '__sem__' ? null : fKey
         const lojasResumo = [...new Set(itensForn.flatMap((it) => it.lojas.map((l) => l.nome)))]
         const obs = 'Lojas: ' + lojasResumo.join(', ')
-        const { data: ped, error: e1 } = await supabase.from('pedidos_compra').insert({ tenant_id: tenantId, loja_id: null, fornecedor_id: fornId, status: 'pendente', data_pedido: hoje(), observacao: obs, solicitante_id: usuario?.id || null }).select('id').single()
-        if (e1) throw e1
-        const itensPay = itensForn.map((it) => ({ pedido_id: ped!.id, insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario || null, observacao: it.lojas.map((l) => l.nome + ': ' + fmtQtyDoc(l.qty)).join(', ') }))
-        const { error: e2 } = await supabase.from('itens_pedido').insert(itensPay); if (e2) throw e2
-      }
-      for (const s of sols) { await supabase.from('pedidos_compra').update({ status: 'processado' }).eq('id', s.id) }
-      return Object.keys(porForn).length
+        const itens = itensForn.map((it) => {
+          // se o comprador editou a "Q. Comprar" (ex.: lote), rateia por loja na mesma proporção → total = soma por loja
+          const totalPed = it.lojas.reduce((a, l) => a + (Number(l.qty) || 0), 0)
+          const fator = totalPed > 0 ? (qComprar[it.insId] || 0) / totalPed : 1
+          const rateio = it.lojas.map((l) => ({ ...l, qc: +((Number(l.qty) || 0) * fator).toFixed(4) }))
+          return { insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario ?? null, observacao: rateio.map((l) => l.nome + ': ' + fmtQtyDoc(l.qc)).join(', '), detalhe_lojas: rateio.filter((l) => l.loja_id).map((l) => ({ loja_id: l.loja_id, qtd: l.qc })) }
+        })
+        return { fornecedor_id: fornId, status: statusInicial, observacao: obs, itens }
+      })
+      const { data: n, error } = await supabase.rpc('gerar_pedidos_compra', { p_tenant: tenantId, p_solicitante: usuario?.id || null, p_data: hoje(), p_pedidos: pedidos, p_sol_ids: sols.map((s) => s.id) })
+      if (error) throw error
+      return (n as number) ?? Object.keys(porForn).length
     },
     onSuccess: (n) => { showToast(`${n} pedido(s) gerado(s) com sucesso!`, 'ok'); qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && /^cmp-/.test(q.queryKey[0] as string) }); setTimeout(onGerado, 400) },
     onError: (e: Error) => showToast('Erro: ' + e.message, 'err'),
@@ -197,35 +234,91 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
           <tbody>
             {isLoading ? <tr><td colSpan={8} className="empty">Carregando…</td></tr>
               : consolidado.length === 0 ? <tr><td colSpan={8} className="empty">Nenhuma solicitação pendente</td></tr>
-              : consolidado.map((d) => <tr key={d.insId}>
-                <td>{d.nome}</td>
+              : consolidado.map((d) => <tr key={d.insId} className={detItem === d.insId ? 'sel' : ''}>
+                <td style={{ cursor: 'pointer', userSelect: 'none', fontWeight: detItem === d.insId ? 700 : undefined }} onClick={() => toggleDet(d.insId)} title="Clique para ver as lojas que pediram">{d.nome}</td>
                 <td className="r mono">{fmtQty(d.total)}</td>
                 <td className="r"><input type="number" className="field" style={{ width: 100, height: 30, textAlign: 'right' }} min="0" step="0.001" value={qComprar[d.insId] ?? d.total} onChange={(e) => setQComprar((p) => ({ ...p, [d.insId]: parseFloat(e.target.value) || 0 }))} /></td>
                 <td>{d.unidade}</td>
                 <td style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{ultCompra(d.insId)}</td>
                 <td style={{ fontSize: 12 }}>{d.fornecedorId ? <span style={{ color: '#16a34a', fontWeight: 600 }}>{fornMap[d.fornecedorId]}</span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
-                <td><select className="field" style={{ height: 30, minWidth: 160, borderColor: fornSel[d.insId] ? '#cbd5e1' : '#f59e0b' }} value={fornSel[d.insId] ?? ''} onChange={(e) => setFornSel((p) => ({ ...p, [d.insId]: e.target.value }))}><option value="">— Sem fornecedor —</option>{fornOptsDe(d.insId).map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}</select></td>
-                <td className="c"><button className="btn-ghost" style={{ height: 28, padding: '0 10px' }} onClick={() => setVerLojas({ nome: d.nome, unidade: d.unidade, lojas: d.lojas })}>Ver lojas</button></td>
+                <td style={{ minWidth: 190 }}>{(() => {
+                  const opts = fornOptsDe(d.insId)
+                  const nameToId: Record<string, string> = {}; opts.forEach((o) => { nameToId[o.nome] = o.id })
+                  const curName = opts.find((o) => o.id === fornSel[d.insId])?.nome || ''
+                  return <SearchSelect value={curName} placeholder="— Sem fornecedor —" options={opts.map((o) => o.nome)} onChange={(nm) => setFornSel((p) => ({ ...p, [d.insId]: nameToId[nm] || '' }))} />
+                })()}</td>
+                <td className="c"><button className="btn-ghost" style={{ height: 28, padding: '0 10px' }} onClick={() => toggleDet(d.insId)}>{detItem === d.insId ? 'Ocultar' : 'Ver lojas'}</button></td>
               </tr>)}
           </tbody>
         </table>
       </div></div>
-      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>ℹ O sistema sugere o fornecedor com base no último preço e histórico de compras. Altere se necessário.</div>
+      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>ℹ O sistema sugere o fornecedor com base no último preço e histórico de compras. Altere se necessário. Clique num item para ver as lojas que pediram.</div>
 
-      {verLojas && <div className="ov" onClick={(e) => { if (e.target === e.currentTarget) setVerLojas(null) }}>
-        <div className="modal" style={{ width: 'min(480px,95vw)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}><h2>{verLojas.nome}</h2><button className="icon-btn" onClick={() => setVerLojas(null)}>✕</button></div>
-          <div className="tbl-wrap"><table className="tbl"><thead><tr><th>Loja</th><th className="r">Quantidade</th><th>Un.</th></tr></thead><tbody>{verLojas.lojas.map((l, i) => <tr key={i}><td>{l.nome}</td><td className="r mono">{fmtQty(l.qty)}</td><td>{verLojas.unidade}</td></tr>)}</tbody></table></div>
-        </div>
-      </div>}
+      {detItem && (() => {
+        const d = consolidado.find((c) => c.insId === detItem)
+        if (!d) return null
+        return (
+          <div style={{ marginTop: 12, background: '#fff', border: '1px solid #e7ebf0', borderRadius: 10, padding: '12px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{d.nome} <span style={{ color: '#94a3b8', fontWeight: 400 }}>— solicitado por loja</span></div>
+              <button className="btn-ghost" style={{ height: 26, padding: '0 10px' }} onClick={() => setDetItem(null)}>✕ Fechar</button>
+            </div>
+            <div className="tbl-wrap"><table className="tbl">
+              <thead><tr><th>Loja</th><th className="r">Quantidade</th><th>Un.</th></tr></thead>
+              <tbody>{d.lojas.length ? d.lojas.map((l, i) => <tr key={i}><td>{l.nome}</td><td className="r mono">{fmtQty(l.qty)}</td><td>{d.unidade}</td></tr>) : <tr><td colSpan={3} className="empty">Sem detalhamento por loja.</td></tr>}</tbody>
+              <tfoot><tr style={{ fontWeight: 700, background: '#f8fafc' }}><td>Total</td><td className="r mono">{fmtQty(d.total)}</td><td>{d.unidade}</td></tr></tfoot>
+            </table></div>
+          </div>
+        )
+      })()}
+
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </>
   )
 }
 
+// romaneio consolidado: 1 página por loja (portado do HTML antigo)
+type LojaFull = { id?: string; nome?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string }
+type PorLoja = Record<string, { loja: LojaFull; itens: Record<string, { qty: number; un: string }> }>
+function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: string) {
+  const dataFormatada = new Date(dataRef.length === 10 ? dataRef + 'T12:00:00' : dataRef).toLocaleDateString('pt-BR')
+  const paginas = Object.values(porLoja).map(({ loja, itens }) => {
+    const linhas: ({ nome: string; qty: number; un: string } | null)[] = Object.entries(itens).map(([nome, { qty, un }]) => ({ nome, qty, un }))
+    while (linhas.length < 8) linhas.push(null)
+    const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || '', hrManha = loja?.horario_manha || '-', hrTarde = loja?.horario_tarde || '-'
+    return `<div class="pagina">
+      <div class="brand">Aiko <span>· pedido de compra</span></div>
+      <table class="doc">
+      <tr><td class="cel-loja">${nomeLoja.toUpperCase()}</td><td class="cel-data-label">DATA</td><td class="cel-data">${dataFormatada}</td></tr>
+      <tr><td colspan="3" class="cel-info"><b>RAZÃO SOCIAL:</b> ${razao}${cnpj ? ' &nbsp;·&nbsp; <b>CNPJ:</b> ' + cnpj : ''}</td></tr>
+      <tr><td colspan="3" class="cel-info"><b>ENDEREÇO:</b> ${ende}</td></tr>
+      ${fornecedor ? `<tr><td colspan="3" class="cel-forn">PEDIDO PARA O FORNECEDOR: ${fornecedor.toUpperCase()}</td></tr>` : ''}
+      <tr><td colspan="2" class="cel-th">ITENS</td><td class="cel-th cel-th-q">QUANTIDADE</td></tr>
+      ${linhas.map((it) => it ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${fmtQtyDoc(it.qty)} ${it.un.toUpperCase()}</td></tr>` : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
+      <tr><td class="cel-footer cel-footer-l">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
+      <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">${hrTarde}</td></tr>
+    </table></div>`
+  }).join('')
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${fornecedor ? 'Pedido ' + fornecedor : 'Pedidos por Loja'} — ${dataFormatada}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a}
+    .pagina{page-break-after:always;padding:22px;max-width:720px;margin:0 auto}.pagina:last-child{page-break-after:avoid}
+    .brand{font-weight:800;font-size:16px;color:#00b890;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #00d4aa}.brand span{color:#94a3b8;font-weight:600;font-size:12px}
+    .doc{width:100%;border-collapse:collapse;font-size:13px}.doc td{border:1px solid #cbd5e1;padding:7px 10px;vertical-align:middle}
+    .cel-loja{font-weight:800;font-size:15px;width:55%;color:#1e2030}.cel-data-label{font-weight:600;color:#64748b;font-size:10px;letter-spacing:.05em;width:15%;text-align:center}.cel-data{font-weight:700;font-size:13px;width:30%;text-align:right}
+    .cel-info{background:#f1f5f9;color:#334155;font-size:11.5px;line-height:1.5;height:34px}
+    .cel-forn{background:#d6f7ee;color:#00806a;font-weight:700;font-size:12.5px}
+    .cel-th{background:#1e2030;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;padding:8px 10px}.cel-th-q{text-align:center}
+    .cel-item{height:26px;font-size:12.5px}.cel-qty{text-align:center;font-weight:700;font-size:12.5px}
+    .cel-footer{background:#1e2030;color:#fff;font-weight:700;font-size:11px;text-align:center;padding:6px}.cel-footer-l{text-align:left}
+    @media print{body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pagina{padding:8px;max-width:100%}}
+  </style></head><body>${paginas}<script>window.onload=function(){window.onafterprint=function(){window.close()};window.print();}<\/script></body></html>`
+  const win = window.open('', '_blank'); if (!win) return
+  win.document.write(html); win.document.close()
+}
+
 // ═══════════════════════ PEDIDOS GERADOS ═══════════════════════
 function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared }) {
-  const { insumos, fornecedores } = shared
+  const { insumos, fornecedores, lojas } = shared
   const qc = useQueryClient()
   const [statusF, setStatusF] = useState('ativos'); const [busca, setBusca] = useState(''); const [filData, setFilData] = useState(''); const [ordenar, setOrdenar] = useState('forn')
   const [verId, setVerId] = useState<string | null>(null)
@@ -234,13 +327,13 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
 
   const { data: pedidos = [], isLoading } = useQuery({
     queryKey: ['cmp-ped', tenantId, statusF], enabled: !!tenantId,
-    queryFn: async () => {
+    queryFn: () => fetchAll<Pedido>((f, t) => {
       let q = supabase.from('pedidos_compra').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false })
-      if (statusF === 'ativos' || statusF === '') q = q.in('status', ['pendente', 'enviado'])
+      if (statusF === 'ativos' || statusF === '') q = q.in('status', ['aguardando_aprovacao', 'pendente', 'enviado'])
       else if (statusF === 'todos') q = q.in('status', ['pendente', 'enviado', 'baixado', 'cancelado', 'aguardando_aprovacao', 'aprovado'])
       else q = q.eq('status', statusF)
-      const { data } = await q; return (data ?? []) as Pedido[]
-    },
+      return q.range(f, t)
+    }),
   })
   const { data: itensMap = {} } = useQuery({
     queryKey: ['cmp-peditens', tenantId, pedidos.map((p) => p.id).join(',')], enabled: !!tenantId && pedidos.length > 0,
@@ -248,6 +341,44 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
   })
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const fornMap = useMemo(() => Object.fromEntries(fornecedores.map((f) => [f.id, f])) as Record<string, Forn>, [fornecedores])
+  // lojas completas (razão/cnpj/endereço/horários) p/ o romaneio consolidado — select('*') evita zerar por coluna inexistente
+  const { data: lojasFull = [] } = useQuery({ queryKey: ['cmp-lojas-full', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as LojaFull[] } })
+  const lojaNomeMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
+  // "Por loja" robusto: usa o detalhe ESTRUTURADO (loja_id → nome atual); cai no texto antigo só p/ pedidos legados
+  const porLojaText = (it: ItemPedido) => (it.detalhe_lojas?.length)
+    ? it.detalhe_lojas.map((d) => (lojaNomeMap[d.loja_id] || 'Sem loja') + ': ' + fmtQtyDoc(d.qtd)).join(', ')
+    : (it.observacao || '—')
+
+  // agrupa os itens dos pedidos por LOJA (usa detalhe_lojas estruturado; cai no texto p/ pedidos legados)
+  const agruparPorLoja = (peds: Pedido[]): PorLoja => {
+    const porLoja: PorLoja = {}
+    const addItem = (nomeIns: string, un: string, key: string, loja: LojaFull, qty: number) => {
+      (porLoja[key] = porLoja[key] || { loja, itens: {} })
+      const prev = porLoja[key].itens[nomeIns]; porLoja[key].itens[nomeIns] = { qty: (prev?.qty || 0) + qty, un }
+    }
+    peds.forEach((p) => {
+      (itensMap[p.id] || []).forEach((it) => {
+        const nomeIns = insMap[it.insumo_id]?.nome || it.insumo_id
+        const un = it.unidade || 'un'
+        if (it.detalhe_lojas?.length) { // estruturado: agrupa por loja_id (imune a renomear)
+          it.detalhe_lojas.forEach((d) => { const loja = lojasFull.find((l) => l.id === d.loja_id) || { id: d.loja_id, nome: lojaNomeMap[d.loja_id] || 'Sem loja' }; addItem(nomeIns, un, loja.id || d.loja_id || 'sem', loja, Number(d.qtd) || 0) })
+        } else if (it.observacao) { // legado: parse do texto (casa por nome)
+          it.observacao.split(', ').forEach((parte) => { const m = parte.match(/^(.+?):\s*([\d.]+)$/); if (!m) return; const nomeLoja = m[1].trim(), qty = parseFloat(m[2]) || 0; const loja = lojasFull.find((l) => (l.nome || '').toLowerCase() === nomeLoja.toLowerCase()) || { nome: nomeLoja }; addItem(nomeIns, un, loja.id || nomeLoja, loja, qty) })
+        } else {
+          addItem(nomeIns, un, '__geral__', { nome: 'Geral' }, Number(it.quantidade) || 0)
+        }
+      })
+    })
+    return porLoja
+  }
+
+  // "Baixar todos por loja": romaneio de TODOS os pedidos listados, 1 folha por loja
+  const imprimirTodos = () => {
+    if (!pedidos.length) { showToast('Nenhum pedido para imprimir.', 'err'); return }
+    const porLoja = agruparPorLoja(pedidos)
+    if (!Object.keys(porLoja).length) { showToast('Sem itens para consolidar.', 'err'); return }
+    gerarImpressaoPorLoja(porLoja, pedidos[0]?.data_pedido || pedidos[0]?.created_at || hoje())
+  }
 
   const linhas = useMemo(() => {
     const porForn: Record<string, Pedido[]> = {}
@@ -255,7 +386,13 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     let rows = Object.entries(porForn).map(([fKey, peds]) => {
       const forn = fKey === '__sem__' ? null : fornMap[fKey]
       let nItens = 0, valor = 0; const lojasSet = new Set<string>()
-      peds.forEach((p) => { (itensMap[p.id] || []).forEach((it) => { nItens++; valor += (Number(it.quantidade) || 0) * (Number(it.preco_unitario) || 0) }); const m = (p.observacao || '').match(/Lojas:\s*(.+)/i); if (m) m[1].split(',').forEach((x) => { const t = x.trim(); if (t) lojasSet.add(t) }) })
+      peds.forEach((p) => {
+        (itensMap[p.id] || []).forEach((it) => {
+          nItens++; valor += (Number(it.quantidade) || 0) * (Number(it.preco_unitario) || 0)
+          if (it.detalhe_lojas?.length) it.detalhe_lojas.forEach((d) => { if (d.loja_id) lojasSet.add(d.loja_id) })
+          else if (it.observacao) it.observacao.split(', ').forEach((parte) => { const mm = parte.match(/^(.+?):\s*[\d.]+$/); if (mm) lojasSet.add(mm[1].trim()) }) // legado
+        })
+      })
       const st = peds.map((p) => p.status || '').sort((a, b) => (PED_ORDEM[a] ?? 9) - (PED_ORDEM[b] ?? 9))[0]
       return { fKey, fornNome: forn?.nome || 'Sem fornecedor', peds, primId: peds[0].id, nItens, valor, nLojas: lojasSet.size, st, data: peds[0].data_pedido || peds[0].created_at || '', whatsapp: forn?.whatsapp }
     })
@@ -272,26 +409,26 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     if (!forn?.whatsapp) { showToast('Fornecedor sem WhatsApp.', 'err'); return }
     const its = itensMap[pedId] || []
     let msg = `*Pedido de Compra — Aiko*\nData: ${fmtData(hoje())}\n\n*Itens:*\n`
-    its.forEach((it) => { msg += `• ${insMap[it.insumo_id]?.nome || '?'}: ${fmtQtyDoc(it.quantidade)} ${it.unidade || 'un'}\n`; if (it.observacao) it.observacao.split(', ').forEach((part) => { msg += `    → ${part}\n` }) })
+    its.forEach((it) => { msg += `• ${insMap[it.insumo_id]?.nome || '?'}: ${fmtQtyDoc(it.quantidade)} ${it.unidade || 'un'}\n`; const det = porLojaText(it); if (det && det !== '—') det.split(', ').forEach((part) => { msg += `    → ${part}\n` }) })
     window.open(`https://wa.me/55${forn.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank')
     await mudarStatus(pedId, 'enviado')
   }
+  // PDF do fornecedor: 1 folha por loja (com dados da loja), só com os itens desse fornecedor — igual ao HTML antigo
   const imprimir = (fornNome: string, peds: Pedido[]) => {
-    const its = peds.flatMap((p) => itensMap[p.id] || [])
-    const rows = its.map((it) => `<tr><td>${insMap[it.insumo_id]?.nome || it.insumo_id}</td><td style="text-align:right">${fmtQtyDoc(it.quantidade)}</td><td>${it.unidade || 'un'}</td><td style="font-size:11px;color:#666">${it.observacao || ''}</td></tr>`).join('')
-    const w = window.open('', '_blank'); if (!w) return
-    w.document.write(`<html><head><title>Pedido - ${fornNome}</title><style>body{font-family:Arial;padding:24px;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f1f5f9}</style></head><body><h1>Pedido de Compra — ${fornNome}</h1><div>Data: ${fmtData(hoje())}</div><table><thead><tr><th>Item</th><th style="text-align:right">Qtd</th><th>Un</th><th>Por loja</th></tr></thead><tbody>${rows}</tbody></table><script>window.print()</script></body></html>`)
-    w.document.close()
+    const porLoja = agruparPorLoja(peds)
+    if (!Object.keys(porLoja).length) { showToast('Sem itens para imprimir.', 'err'); return }
+    gerarImpressaoPorLoja(porLoja, peds[0]?.data_pedido || peds[0]?.created_at || hoje(), fornNome)
   }
 
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '4px 0 12px' }}>
         <input className="field" style={{ minWidth: 200 }} placeholder="Buscar fornecedor..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <select className="field" value={statusF} onChange={(e) => setStatusF(e.target.value)}><option value="ativos">Ativos (a enviar / enviados)</option><option value="pendente">Aguardando envio</option><option value="enviado">Enviado</option><option value="baixado">Baixados</option><option value="cancelado">Cancelados</option><option value="todos">Todos</option></select>
-        <select className="field" value={filData} onChange={(e) => setFilData(e.target.value)}><option value="">Qualquer data</option><option value="hoje">Hoje</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option></select>
-        <select className="field" value={ordenar} onChange={(e) => setOrdenar(e.target.value)}><option value="forn">Fornecedor (A-Z)</option><option value="data">Data (mais recente)</option><option value="valor">Valor (maior)</option></select>
+        <div className="fbar-ss" style={{ minWidth: 200 }}><SearchSelect value={PG_ST_LBL[statusF] || 'Ativos (a enviar / enviados)'} options={PG_ST_OPTS} placeholder="Status" onChange={(l) => setStatusF(PG_ST_VAL[l] || 'ativos')} /></div>
+        <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={PG_DT_LBL[filData] || 'Qualquer data'} options={PG_DT_OPTS} placeholder="Qualquer data" onChange={(l) => setFilData(PG_DT_VAL[l] ?? '')} /></div>
+        <div className="fbar-ss" style={{ minWidth: 170 }}><SearchSelect value={PG_ORD_LBL[ordenar] || 'Fornecedor (A-Z)'} options={PG_ORD_OPTS} placeholder="Ordenar" onChange={(l) => setOrdenar(PG_ORD_VAL[l] || 'forn')} /></div>
         <button className="btn-ghost" onClick={() => { setStatusF('ativos'); setBusca(''); setFilData(''); setOrdenar('forn') }}>Limpar filtros</button>
+        <button className="btn-ghost" style={{ marginLeft: 'auto' }} title="Imprime 1 folha por loja com todos os itens consolidados dos pedidos listados" onClick={imprimirTodos}>🖨 Baixar todos (por loja)</button>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
         <table className="tbl"><thead><tr><th>Fornecedor</th><th className="r">Itens</th><th className="r">Valor Total</th><th className="r">Lojas</th><th>Data</th><th>Status</th><th className="c">Ações</th></tr></thead>
@@ -316,13 +453,13 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
         </table>
       </div></div>
 
-      {verId && <VerPedido pedido={pedidos.find((p) => p.id === verId)!} itens={itensMap[verId] || []} forn={fornMap[pedidos.find((p) => p.id === verId)?.fornecedor_id || '']} insMap={insMap} onClose={() => setVerId(null)} onStatus={mudarStatus} onWhats={enviarWhats} onPrint={imprimir} />}
+      {verId && <VerPedido pedido={pedidos.find((p) => p.id === verId)!} itens={itensMap[verId] || []} forn={fornMap[pedidos.find((p) => p.id === verId)?.fornecedor_id || '']} insMap={insMap} porLoja={porLojaText} onClose={() => setVerId(null)} onStatus={mudarStatus} onWhats={enviarWhats} onPrint={imprimir} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </>
   )
 }
 
-function VerPedido({ pedido, itens, forn, insMap, onClose, onStatus, onWhats, onPrint }: { pedido: Pedido; itens: ItemPedido[]; forn?: Forn; insMap: Record<string, Insumo>; onClose: () => void; onStatus: (id: string, s: string) => void; onWhats: (id: string, f?: Forn | null) => void; onPrint: (nome: string, peds: Pedido[]) => void }) {
+function VerPedido({ pedido, itens, forn, insMap, porLoja, onClose, onStatus, onWhats, onPrint }: { pedido: Pedido; itens: ItemPedido[]; forn?: Forn; insMap: Record<string, Insumo>; porLoja: (it: ItemPedido) => string; onClose: () => void; onStatus: (id: string, s: string) => void; onWhats: (id: string, f?: Forn | null) => void; onPrint: (nome: string, peds: Pedido[]) => void }) {
   const si = PED_ST[pedido.status || ''] || { l: pedido.status || '', b: 'b-baixado' }
   return (
     <div className="ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -333,10 +470,14 @@ function VerPedido({ pedido, itens, forn, insMap, onClose, onStatus, onWhats, on
         </div>
         <div className="tbl-wrap"><table className="tbl">
           <thead><tr><th>Insumo</th><th>Código</th><th>Categoria</th><th className="r">Qtd</th><th>Un.</th><th>Por loja</th></tr></thead>
-          <tbody>{itens.map((it, i) => <tr key={i}><td style={{ fontWeight: 500 }}>{insMap[it.insumo_id]?.nome || it.insumo_id}</td><td className="mono" style={{ fontSize: 12, color: '#94a3b8' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td><td style={{ fontSize: 12, color: '#94a3b8' }}>{insMap[it.insumo_id]?.categoria || '—'}</td><td className="r mono">{fmtQtyDoc(it.quantidade)}</td><td>{it.unidade || 'un'}</td><td style={{ fontSize: 11, color: '#94a3b8' }}>{it.observacao || '—'}</td></tr>)}</tbody>
+          <tbody>{itens.map((it, i) => <tr key={i}><td style={{ fontWeight: 500 }}>{insMap[it.insumo_id]?.nome || it.insumo_id}</td><td className="mono" style={{ fontSize: 12, color: '#94a3b8' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td><td style={{ fontSize: 12, color: '#94a3b8' }}>{insMap[it.insumo_id]?.categoria || '—'}</td><td className="r mono">{fmtQtyDoc(it.quantidade)}</td><td>{it.unidade || 'un'}</td><td style={{ fontSize: 11, color: '#94a3b8' }}>{porLoja(it)}</td></tr>)}</tbody>
         </table></div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
           <button className="btn-ghost" onClick={() => onPrint(forn?.nome || '—', [pedido])}>🖨 Imprimir / PDF</button>
+          {pedido.status === 'aguardando_aprovacao' && <>
+            <button className="btn-primary" style={{ background: '#16a34a' }} onClick={() => onStatus(pedido.id, 'pendente')}>✓ Aprovar</button>
+            <button className="btn-ghost" style={{ color: '#e11d48' }} onClick={() => onStatus(pedido.id, 'cancelado')}>✕ Cancelar</button>
+          </>}
           {pedido.status === 'pendente' && <>
             <button className="btn-primary" style={{ background: '#16a34a' }} onClick={() => onStatus(pedido.id, 'enviado')}>📤 Marcar como Enviado</button>
             <button className="btn-ghost" style={{ color: '#e11d48' }} onClick={() => onStatus(pedido.id, 'cancelado')}>✕ Cancelar</button>

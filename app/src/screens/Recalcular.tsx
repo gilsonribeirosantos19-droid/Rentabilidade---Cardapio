@@ -36,15 +36,25 @@ export function Recalcular() {
       let totCM = 0, totFicha = 0
       for (const lId of lojaIds) {
         if (doCM) {
-          const [ents, sais] = await Promise.all([
-            fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,criado_em').eq('tenant_id', tenantId).eq('loja_id', lId).range(f, t)),
-            fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).eq('loja_id', lId).range(f, t)),
-          ])
-          const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map((e) => e.insumo_id), ...sais.map((s) => s.insumo_id)])].filter(Boolean)
-          const agora = new Date().toISOString()
-          const payloads = insIds.map((insId) => { const r = custoMedioNaData(insId, null, { entradas: ents, saidas: sais }); return { tenant_id: tenantId, insumo_id: insId, loja_id: lId, quantidade: +(r.quantidade || 0).toFixed(4), custo_medio: +(r.custo || 0).toFixed(6), atualizado_em: agora } })
-          for (let i = 0; i < payloads.length; i += 200) { const { error } = await supabase.from('saldo_estoque').upsert(payloads.slice(i, i + 200), { onConflict: 'tenant_id,insumo_id,loja_id' }); if (error) throw error }
-          totCM += payloads.length
+          // Fonte única: tenta a função do banco (RPC recalc_custo_medio). Se ainda não existe,
+          // cai no cálculo no cliente (mesma regra) — assim nada quebra antes de rodar o SQL.
+          let feitoRpc = false
+          try {
+            const { data: n, error } = await supabase.rpc('recalc_custo_medio', { p_loja: lId, p_insumos: alvoIns ? [alvoIns] : null })
+            if (error) throw error
+            totCM += Number(n) || 0; feitoRpc = true
+          } catch { /* RPC ausente → fallback */ }
+          if (!feitoRpc) {
+            const [ents, sais] = await Promise.all([
+              fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,criado_em').eq('tenant_id', tenantId).eq('loja_id', lId).range(f, t)),
+              fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).eq('loja_id', lId).range(f, t)),
+            ])
+            const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map((e) => e.insumo_id), ...sais.map((s) => s.insumo_id)])].filter(Boolean)
+            const agora = new Date().toISOString()
+            const payloads = insIds.map((insId) => { const r = custoMedioNaData(insId, null, { entradas: ents, saidas: sais }); return { tenant_id: tenantId, insumo_id: insId, loja_id: lId, quantidade: +(r.quantidade || 0).toFixed(4), custo_medio: +(r.custo || 0).toFixed(6), atualizado_em: agora } })
+            for (let i = 0; i < payloads.length; i += 200) { const { error } = await supabase.from('saldo_estoque').upsert(payloads.slice(i, i + 200), { onConflict: 'tenant_id,insumo_id,loja_id' }); if (error) throw error }
+            totCM += payloads.length
+          }
         }
         if (doFicha) totFicha += await recalcularFichas(lId)
       }

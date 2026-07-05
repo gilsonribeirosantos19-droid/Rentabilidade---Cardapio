@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { FichaModal } from './FichaModal'
 import './fichas.css'
@@ -13,7 +13,7 @@ type Ficha = {
 }
 type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
 type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string }
-type Saldo = { insumo_id: string; custo_medio?: number }
+type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -27,16 +27,14 @@ export function FichasTecnicas() {
   const [fCmv, setFCmv] = useState('')
   const [ver, setVer] = useState<Ficha | null>(null)
   const [editing, setEditing] = useState<Ficha | 'new' | null>(null)
+  const [lojaSel, setLojaSel] = useState('')
 
   const { data: fichas = [], isLoading } = useQuery({
     queryKey: ['fichas', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('fichas_tecnicas')
-        .select('*, itens_ficha(id,insumo_id,produto_id,quantidade_g,ordem)')
-        .eq('tenant_id', tenantId).order('nome')
-      if (error) throw error
-      return data as Ficha[]
-    },
+    // fetchAll: vence o teto de 1000 do PostgREST (o range vale pra ficha; o embed dos itens vem junto)
+    queryFn: () => fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas')
+      .select('*, itens_ficha(id,insumo_id,produto_id,quantidade_g,ordem)')
+      .eq('tenant_id', tenantId).order('nome').range(f, t)),
   })
   const { data: insumos = [] } = useQuery({
     queryKey: ['insumos-min', tenantId], enabled: !!tenantId,
@@ -54,19 +52,27 @@ export function FichasTecnicas() {
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
-    queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,custo_medio').eq('tenant_id', tenantId); return (data ?? []) as Saldo[] },
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)),
   })
+  const { data: lojas = [] } = useQuery({ queryKey: ['fic-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome?: string }[] } })
+  useEffect(() => { if (!lojaSel && lojas.length) setLojaSel(lojas[0].id) }, [lojas, lojaSel])
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])), [insumos])
-  const cmMap = useMemo(() => {
-    const m: Record<string, number> = {}
-    saldos.forEach((s) => { if ((s.custo_medio || 0) > (m[s.insumo_id] || 0)) m[s.insumo_id] = s.custo_medio || 0 })
+  // custo médio POR LOJA (não mistura entre lojas) — a ficha reflete a loja selecionada
+  const cmByLoja = useMemo(() => {
+    const m: Record<string, Record<string, number>> = {}
+    saldos.forEach((s) => { if (s.loja_id) (m[s.insumo_id] ||= {})[s.loja_id] = s.custo_medio || 0 })
     return m
   }, [saldos])
   const fichaByProduto = useMemo(() => Object.fromEntries(fichas.filter((f) => f.produto_id).map((f) => [f.produto_id!, f])), [fichas])
 
   // ── custo ──
-  const custoBase = (ins: Insumo) => (cmMap[ins.id] > 0 ? cmMap[ins.id] : ins.preco_compra || 0)
+  const custoBase = (ins: Insumo) => {
+    const porLoja = cmByLoja[ins.id] || {}
+    if (lojaSel) { const c = porLoja[lojaSel] || 0; return c > 0 ? c : (ins.preco_compra || 0) }
+    const mx = Math.max(0, ...Object.values(porLoja))
+    return mx > 0 ? mx : (ins.preco_compra || 0)
+  }
   const custoIngrediente = (ins: Insumo, qtdG: number) => {
     const cb = custoBase(ins)
     const um = ins.unidade_medida || ins.unidade_compra || 'g'
@@ -133,6 +139,12 @@ export function FichasTecnicas() {
         <div className="fic-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar ficha..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+        </div>
+        <div className="fic-field"><span className="fic-label">Loja (custo)</span>
+          <select className="fic-sel" value={lojaSel} onChange={(e) => setLojaSel(e.target.value)}>
+            <option value="">Custo geral (maior)</option>
+            {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+          </select>
         </div>
         <div className="fic-field"><span className="fic-label">Categoria</span>
           <select className="fic-sel" value={fCat} onChange={(e) => setFCat(e.target.value)}>

@@ -5,6 +5,8 @@
 .fatv-screen .ds-filterbar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 10px; padding: 7px 12px; margin-bottom: 7px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .fatv-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
 .fatv-screen .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; }
+.fatv-screen .ds-field .ass { width: 100%; }
+.fatv-screen .ds-field .ass-btn { height: 30px; }
 .fatv-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #334155; background: #fff; }
 .fatv-screen .field:focus { outline: none; border-color: #f97316; }
 .fatv-screen select.field { cursor: pointer; }

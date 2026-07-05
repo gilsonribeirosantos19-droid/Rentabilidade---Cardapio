@@ -67,8 +67,13 @@ Deno.serve(async (_req) => {
 
   const { data: vincExist } = await supabase
     .from('insumo_fornecedores')
-    .select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem')
+    .select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id')
     .eq('tenant_id', TENANT_ID)
+
+  // Fornecedores do tenant (p/ casar o emitente da nota pelo CNPJ) — evita o mis-link:
+  // código sozinho (ex.: genéricos 2000000000xxx) colide entre fornecedores. Só auto-vincula
+  // se o vínculo for DO fornecedor da nota (mesma regra do nfe-webhook).
+  const { data: fornAll } = await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', TENANT_ID)
 
   let completadas = 0
 
@@ -93,9 +98,14 @@ Deno.serve(async (_req) => {
       continue
     }
 
+    // fornecedor da nota pelo CNPJ do emitente (posições 6-20 da chave)
+    const cnpjEmit  = String(nfe.chave_acesso || '').substring(6, 20)
+    const fornNotaId = (fornAll || []).find((f: any) => String(f.cnpj || '').replace(/\D/g, '') === cnpjEmit)?.id || null
+
     const itensBatch = itensNfe.map((item: any) => {
       const codigo = String(item.codigo_produto || '')
-      const vinc   = vincExist?.find(v => v.codigo_fornecedor === codigo)
+      // SÓ auto-vincula se o vínculo for do fornecedor DESTA nota (casa código + fornecedor_id)
+      const vinc   = fornNotaId ? vincExist?.find(v => v.codigo_fornecedor === codigo && v.fornecedor_id === fornNotaId) : null
       return {
         nfe_id:                 nfe.id,
         tenant_id:              TENANT_ID,
@@ -104,7 +114,7 @@ Deno.serve(async (_req) => {
         quantidade:             parseFloat(item.quantidade_comercial || '0'),
         unidade_nfe:            String(item.unidade_comercial || 'UN').toUpperCase(),
         valor_unitario:         parseFloat(item.valor_unitario_comercial || '0'),
-        valor_total:            parseFloat(item.valor_bruto || '0'),
+        valor_total:            parseFloat(item.valor_bruto || '0') || (parseFloat(item.quantidade_comercial || '0') * parseFloat(item.valor_unitario_comercial || '0')),
         vinculacao_id:          vinc?.id || null,
       }
     })

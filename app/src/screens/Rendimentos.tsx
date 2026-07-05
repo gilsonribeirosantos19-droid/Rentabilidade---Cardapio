@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
@@ -26,13 +27,18 @@ function periodoRange(tipo: string): { de: string; ate: string } | null {
 type Form = { insumo_id: string; peso_bruto: string; peso_liquido: string; observacao: string }
 const novoForm = (): Form => ({ insumo_id: '', peso_bruto: '', peso_liquido: '', observacao: '' })
 
+const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
+const PERIODO_TIPO: Record<string, string> = { 'Personalizado': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+
 export function Rendimentos() {
   const { tenantId } = useAuth()
+  const { lojaId } = useLoja()
   const qc = useQueryClient()
   const [fInsumo, setFInsumo] = useState('')
   const ini = periodoRange('mes_atual')!
   const [de, setDe] = useState(ini.de)
   const [ate, setAte] = useState(ini.ate)
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [pag, setPag] = useState(1)
   const [porPag, setPorPag] = useState(10)
   const [modal, setModal] = useState<{ id: string | null; form: Form } | null>(null)
@@ -55,8 +61,8 @@ export function Rendimentos() {
   const insumos = data?.insumos ?? []
   const testes = data?.testes ?? []
   const insMap = useMemo(() => { const m: Record<string, Insumo> = {}; insumos.forEach((i) => { m[i.id] = i }); return m }, [insumos])
-  // custo por kg — custo médio do saldo, fallback preço de compra (mesma fonte do HTML)
-  const custoKg = (id: string) => custoDoInsumo(id, null, { saldos: data?.saldos, insumos, vinculos: data?.vinc })
+  // custo por kg — custo médio da LOJA selecionada (topo), fallback qualquer loja/preço de compra
+  const custoKg = (id: string) => custoDoInsumo(id, lojaId, { saldos: data?.saldos, insumos, vinculos: data?.vinc })
 
   // selects: só insumos ATIVOS (a lista inclui inativos só p/ resolver nome de testes antigos)
   const ativos = useMemo(() => insumos.filter((i) => i.ativo !== false), [insumos])
@@ -76,7 +82,7 @@ export function Rendimentos() {
   const pagAtual = Math.min(pag, totalPags)
   const slice = filtrado.slice((pagAtual - 1) * porPag, (pagAtual - 1) * porPag + porPag)
 
-  const setPeriodo = (tipo: string) => { const r = periodoRange(tipo); if (r) { setDe(r.de); setAte(r.ate); setPag(1) } else { setDe(''); setAte(''); setPag(1) } }
+  const setPeriodo = (label: string) => { const l = label || 'Personalizado'; setPeriodoSel(l); const r = periodoRange(PERIODO_TIPO[l]); if (r) { setDe(r.de); setAte(r.ate); setPag(1) } else { setDe(''); setAte(''); setPag(1) } }
 
   const saveMut = useMutation({
     mutationFn: async ({ id, form }: { id: string | null; form: Form }) => {
@@ -100,7 +106,7 @@ export function Rendimentos() {
       const outros = testes.filter((t) => t.insumo_id === insumoId && t.id !== id)
       const soma = outros.reduce((s, t) => s + (t.rendimento_pct || 0), 0) + rendimento
       const media = parseFloat((soma / (outros.length + 1)).toFixed(2))
-      await supabase.from('insumos').update({ rendimento_pct: media }).eq('id', insumoId)
+      await supabase.from('insumos').update({ rendimento_pct: media }).eq('id', insumoId).eq('tenant_id', tenantId)
       return insumoId
     },
     onSuccess: (insumoId) => { qc.invalidateQueries({ queryKey: ['rend'] }); qc.invalidateQueries({ queryKey: ['insumos'] }); setModal(null); showToast(`Teste salvo · ${insMap[insumoId]?.nome || 'insumo'} atualizado`, 'ok') },
@@ -108,12 +114,21 @@ export function Rendimentos() {
   })
 
   const delMut = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from('testes_rendimento').delete().eq('id', id); if (error) throw error },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['rend'] }); showToast('Registro excluído.', 'ok') },
+    mutationFn: async ({ id, insumoId }: { id: string; insumoId: string }) => {
+      const { error } = await supabase.from('testes_rendimento').delete().eq('id', id); if (error) throw error
+      // recalcula o rendimento do insumo com os testes que SOBRARAM (senão fica média "fantasma"
+      // incluindo o teste apagado). Sem testes restantes → volta pro neutro (100%).
+      const restantes = testes.filter((t) => t.insumo_id === insumoId && t.id !== id)
+      const media = restantes.length
+        ? parseFloat((restantes.reduce((s, t) => s + (t.rendimento_pct || 0), 0) / restantes.length).toFixed(2))
+        : 100
+      await supabase.from('insumos').update({ rendimento_pct: media }).eq('id', insumoId).eq('tenant_id', tenantId)
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['rend'] }); qc.invalidateQueries({ queryKey: ['insumos'] }); showToast('Registro excluído · rendimento recalculado', 'ok') },
     onError: (e: Error) => showToast('Erro: ' + e.message, 'err'),
   })
 
-  const excluir = (id: string) => { if (window.confirm('Excluir este registro de teste?')) delMut.mutate(id) }
+  const excluir = (id: string, insumoId: string) => { if (window.confirm('Excluir este registro de teste?')) delMut.mutate({ id, insumoId }) }
 
   const exportarCSV = () => {
     if (!filtrado.length) { showToast('Nenhum registro para exportar.', 'err'); return }
@@ -156,21 +171,17 @@ export function Rendimentos() {
           <label>Insumo</label>
           <SearchSelect value={fInsumo ? (idToNome[fInsumo] || '') : ''} onChange={(n) => { setFInsumo(n ? (nomeToId[n] || '') : ''); setPag(1) }} options={nomes} placeholder="Todos os insumos" />
         </div>
-        <div className="ds-field">
+        <div className="ds-field" style={{ minWidth: 130 }}>
           <label>Período</label>
-          <select className="field" defaultValue="mes_atual" onChange={(e) => setPeriodo(e.target.value)} style={{ minWidth: 130 }}>
-            <option value="periodo">Personalizado</option>
-            <option value="mes_atual">Mês Atual</option>
-            <option value="mes_anterior">Mês Anterior</option>
-          </select>
+          <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
         <div className="ds-field">
           <label>De</label>
-          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPag(1) }} />
+          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPag(1); setPeriodoSel('Personalizado') }} />
         </div>
         <div className="ds-field">
           <label>Até</label>
-          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPag(1) }} />
+          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPag(1); setPeriodoSel('Personalizado') }} />
         </div>
         <div className="ds-actions">
           <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>{filtrado.length} registro{filtrado.length !== 1 ? 's' : ''}</span>
@@ -214,7 +225,7 @@ export function Rendimentos() {
                         <td>
                           <div className="rd-act">
                             <button onClick={() => setModal({ id: t.id, form: { insumo_id: t.insumo_id, peso_bruto: String(bruto), peso_liquido: String(liquido), observacao: t.observacao || '' } })}>Editar</button>
-                            <button className="del" onClick={() => excluir(t.id)}>Excluir</button>
+                            <button className="del" onClick={() => excluir(t.id, t.insumo_id)}>Excluir</button>
                           </div>
                         </td>
                       </tr>

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { custoDoInsumo } from '../lib/cost'
+import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
 type Loja = { id: string; nome?: string; cnpj?: string; razao_social?: string }
@@ -18,6 +19,9 @@ type Row = { loja: Loja; situacao: 'aberto' | 'fechado'; itens: ItemRow[]; fatur
 const brl = (v?: number) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const dataOf = (m: Mov) => (m.criado_em || m.created_at || '').slice(0, 10)
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+const ACAO_OPTS = ['Fechar', 'Abrir (reabrir)']
+const ACAO_LBL: Record<string, string> = { fechar: 'Fechar', abrir: 'Abrir (reabrir)' }
+const ACAO_VAL: Record<string, 'fechar' | 'abrir'> = { 'Fechar': 'fechar', 'Abrir (reabrir)': 'abrir' }
 
 function monthBounds(comp: string) {
   const [y, m] = comp.split('-').map(Number)
@@ -96,24 +100,30 @@ export function Fechamento() {
     const { de, ate } = monthBounds(comp)
     const cmvSet = new Set(base.insumos.filter((i) => i.participa_cmv !== 'nao').map((i) => i.id))
     const insMap: Record<string, Insumo> = {}; base.insumos.forEach((i) => { insMap[i.id] = i })
-    const cmFim: Record<string, number> = {}
-    base.insumos.forEach((ins) => { try { cmFim[ins.id] = custoDoInsumo(ins.id, null, { entradas: base.entradas, saidas: base.saidas, insumos: base.insumos, saldos: base.saldos, dataLimite: ate }) } catch { cmFim[ins.id] = 0 } })
     const entMes = base.entradas.filter((e) => { const d = dataOf(e); return d >= de && d <= ate })
     const saiMes = base.saidas.filter((s) => { const d = dataOf(s); return d >= de && d <= ate })
 
     const compoLoja = (l: Loja) => {
       const { ini, fin } = invMap[l.id] || { ini: null, fin: null }
+      // custo médio de fim de mês POR LOJA (entradas/saídas + saldo daquela loja)
+      const ctxL = { entradas: base.entradas.filter((e) => e.loja_id === l.id), saidas: base.saidas.filter((s) => s.loja_id === l.id), insumos: base.insumos, saldos: base.saldos, dataLimite: ate }
+      const cmCache: Record<string, number> = {}
+      const cmFimL = (id: string) => { if (cmCache[id] == null) { try { cmCache[id] = custoDoInsumo(id, l.id, ctxL) } catch { cmCache[id] = 0 } } return cmCache[id] }
       const byIns: Record<string, ItemRow> = {}
       const ens = (id: string) => byIns[id] || (byIns[id] = { id, nome: insMap[id]?.nome || '—', un: insMap[id]?.unidade_medida || '', ei: 0, compras: 0, entT: 0, saiT: 0, consumo: 0, perdas: 0, ef: 0, cmv: 0 })
       const addInv = (inv: Inv | null, campo: 'ei' | 'ef') => { (inv && itensByInv[inv.id] || []).forEach((it) => { if (cmvSet.has(it.insumo_id)) ens(it.insumo_id)[campo] += (it.qtd_contada || 0) * (it.custo_medio || 0) }) }
       addInv(ini, 'ei'); addInv(fin, 'ef')
       entMes.filter((e) => e.loja_id === l.id && cmvSet.has(e.insumo_id)).forEach((e) => { const o = ens(e.insumo_id), v = (e.quantidade || 0) * (e.custo_unitario || 0); if (e.tipo === 'transferencia') o.entT += v; else o.compras += v })
-      saiMes.filter((s) => s.loja_id === l.id && cmvSet.has(s.insumo_id)).forEach((s) => { const o = ens(s.insumo_id), v = (s.quantidade || 0) * (cmFim[s.insumo_id] || 0); if (s.tipo === 'consumo') o.consumo += v; else if (s.tipo === 'transferencia') o.saiT += v; else if (['perda', 'vencimento', 'descarte'].includes(s.tipo || '')) o.perdas += v })
-      const itens = Object.values(byIns).map((o) => ({ ...o, cmv: o.ei + o.compras + o.entT + o.perdas - o.ef }))
+      saiMes.filter((s) => s.loja_id === l.id && cmvSet.has(s.insumo_id)).forEach((s) => { const o = ens(s.insumo_id), v = (s.quantidade || 0) * cmFimL(s.insumo_id); if (s.tipo === 'consumo') o.consumo += v; else if (s.tipo === 'transferencia') o.saiT += v; else if (['perda', 'vencimento', 'descarte'].includes(s.tipo || '')) o.perdas += v })
+      // CMV por inventário = EI + Compras + Ent.Transf − Saí.Transf − Estoque Final.
+      // (As perdas já entram naturalmente — o Estoque Final físico da contagem já as reflete;
+      // somá-las de novo seria contar em dobro. E as saídas de transferência PRECISAM ser
+      // subtraídas: o que foi mandado p/ outra loja não é CMV desta.)
+      const itens = Object.values(byIns).map((o) => ({ ...o, cmv: o.ei + o.compras + o.entT - o.saiT - o.ef }))
         .filter((o) => o.ei || o.compras || o.entT || o.consumo || o.perdas || o.saiT || o.ef)
         .sort((a, b) => b.cmv - a.cmv)
       const ag = itens.reduce((a, o) => { (['ei', 'compras', 'entT', 'consumo', 'perdas', 'saiT', 'ef'] as const).forEach((k) => { a[k] += o[k] }); return a }, { ei: 0, compras: 0, entT: 0, consumo: 0, perdas: 0, saiT: 0, ef: 0 })
-      return { itens, estoque_inicial: ag.ei, compras: ag.compras, entradas_transferencia: ag.entT, saidas_transferencia: ag.saiT, consumo: ag.consumo, perdas: ag.perdas, estoque_final: ag.ef, cmv: ag.ei + ag.compras + ag.entT + ag.perdas - ag.ef }
+      return { itens, estoque_inicial: ag.ei, compras: ag.compras, entradas_transferencia: ag.entT, saidas_transferencia: ag.saiT, consumo: ag.consumo, perdas: ag.perdas, estoque_final: ag.ef, cmv: ag.ei + ag.compras + ag.entT - ag.saiT - ag.ef }
     }
 
     return base.lojas.map((l) => {
@@ -143,6 +153,18 @@ export function Fechamento() {
       if (acao === 'fechar') {
         const fechar = alvo.filter((r) => r.situacao === 'aberto')
         if (!fechar.length) throw new Error('Selecione lojas ABERTAS para fechar.')
+        // Regra SEQUENCIAL (Everest): só fecha o mês se o anterior já estiver fechado
+        // (a menos que seja o 1º fechamento da loja). Fecha em ordem: Jan → Fev → Mar…
+        const [ay, am] = comp.split('-').map(Number)
+        const pd = new Date(ay, am - 2, 1)
+        const prevComp = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}`
+        const fechadas = base?.fechamentos.filter((f) => f.situacao === 'fechado') || []
+        const bloqueadas = fechar.filter((r) => {
+          const prevOk = fechadas.some((f) => f.loja_id === r.loja.id && f.competencia === prevComp)
+          if (prevOk) return false
+          return fechadas.some((f) => f.loja_id === r.loja.id && (f.competencia || '') < comp) // tem mês fechado antes → é pulo
+        })
+        if (bloqueadas.length) throw new Error(`Fechamento é sequencial: feche antes o mês ${prevComp}. Pendente(s): ${bloqueadas.map((r) => r.loja.nome).join(', ')}`)
         const payload = fechar.map((r) => ({ tenant_id: tenantId, loja_id: r.loja.id, competencia: comp, situacao: 'fechado', estoque_inicial: r.estoque_inicial, compras: r.compras, entradas_transferencia: r.entradas_transferencia, saidas_transferencia: r.saidas_transferencia, consumo: r.consumo, perdas: r.perdas, estoque_final: r.estoque_final, cmv: r.cmv, faturamento: r.faturamento || 0, fechado_por: usuario?.id || null }))
         const { error } = await supabase.from('fechamento_custo').upsert(payload, { onConflict: 'tenant_id,loja_id,competencia' })
         if (error) throw error
@@ -150,6 +172,18 @@ export function Fechamento() {
       } else {
         const abrir = alvo.filter((r) => r.situacao === 'fechado')
         if (!abrir.length) throw new Error('Selecione lojas FECHADAS para reabrir.')
+        // Regra SEQUENCIAL AO CONTRÁRIO (Everest): só reabre o mês mais recente fechado da loja.
+        // Se existe um mês FECHADO DEPOIS deste, ele foi calculado em cima do fechamento deste →
+        // é preciso reabrir o(s) mês(es) mais novo(s) primeiro (senão o mais novo fica "pendurado"
+        // num mês que mudou). Reabre na ordem inversa: Jul → Jun → Mai.
+        const fechadas = base?.fechamentos.filter((f) => f.situacao === 'fechado') || []
+        const bloqueadas = abrir.map((r) => {
+          const proxFechado = fechadas
+            .filter((f) => f.loja_id === r.loja.id && (f.competencia || '') > comp)
+            .sort((a, b) => (a.competencia || '').localeCompare(b.competencia || ''))[0]
+          return proxFechado ? { nome: r.loja.nome, prox: proxFechado.competencia } : null
+        }).filter(Boolean) as { nome?: string; prox?: string }[]
+        if (bloqueadas.length) throw new Error(`Reabertura é sequencial (do mês mais recente para o mais antigo): reabra antes o mês ${bloqueadas[0].prox}. Pendente(s): ${bloqueadas.map((b) => b.nome).join(', ')}`)
         const { error } = await supabase.from('fechamento_custo').delete().eq('tenant_id', tenantId).eq('competencia', comp).in('loja_id', abrir.map((r) => r.loja.id))
         if (error) throw error
         return `${abrir.length} loja(s) reaberta(s).`
@@ -199,17 +233,11 @@ export function Fechamento() {
             {anos.map((y) => <option key={y} value={String(y)}>{y}</option>)}
           </select>
         </div>
-        <div className="ds-field"><label>Loja</label>
-          <select className="field" value={lojaFiltro} onChange={(e) => setLojaFiltro(e.target.value)} style={{ minWidth: 180 }}>
-            <option value="">Todas as lojas</option>
-            {(base?.lojas || []).map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-          </select>
+        <div className="ds-field" style={{ minWidth: 180 }}><label>Loja</label>
+          <SearchSelect value={(base?.lojas || []).find((l) => l.id === lojaFiltro)?.nome || ''} options={(base?.lojas || []).map((l) => l.nome || '')} placeholder="Todas as lojas" onChange={(nm) => setLojaFiltro((base?.lojas || []).find((l) => l.nome === nm)?.id || '')} />
         </div>
-        <div className="ds-field"><label>Ação</label>
-          <select className="field" value={acao} onChange={(e) => setAcao(e.target.value as 'fechar' | 'abrir')} style={{ minWidth: 140 }}>
-            <option value="fechar">Fechar</option>
-            <option value="abrir">Abrir (reabrir)</option>
-          </select>
+        <div className="ds-field" style={{ minWidth: 140 }}><label>Ação</label>
+          <SearchSelect value={ACAO_LBL[acao] || 'Fechar'} options={ACAO_OPTS} placeholder="Fechar" onChange={(l) => setAcao(ACAO_VAL[l] || 'fechar')} />
         </div>
         <div className="ds-actions">
           <button className="btn-pri" disabled={aplicarMut.isPending || !sel.size} onClick={aplicar}>{acao === 'fechar' ? 'Fechar' : 'Reabrir'} ({sel.size})</button>
@@ -288,7 +316,7 @@ export function Fechamento() {
       </div>
 
       <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 10, lineHeight: 1.6 }}>
-        <b>CMV</b> = Estoque Inicial + Compras + Entradas Transf. + Perdas − Estoque Final (mesma fórmula do CMV por inventário). Estoque Inicial/Final vêm das <b>contagens de inventário encerradas</b>. Ao <b>Fechar</b>, os valores do mês ficam congelados e a loja vira <b>FECHADO</b>.
+        <b>CMV</b> = Estoque Inicial + Compras + Entradas Transf. − Saídas Transf. − Estoque Final (CMV por inventário; as perdas já entram no Estoque Final da contagem). Estoque Inicial/Final vêm das <b>contagens de inventário encerradas</b>. Ao <b>Fechar</b>, os valores do mês ficam congelados e a loja vira <b>FECHADO</b>.
       </div>
 
       {det && (

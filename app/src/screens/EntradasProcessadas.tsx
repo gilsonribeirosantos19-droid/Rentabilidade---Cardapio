@@ -13,6 +13,10 @@ const brl = (v?: number | null) => (v == null || (v as any) === '') ? '—' : 'R
 const fmtDate = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
 const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''
 const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+// Período: rótulos do dropdown com busca ↔ valor interno
+const PER_OPTS = ['Mês Atual', 'Mês Anterior', 'Todos', 'Período']
+const PER_LBL: Record<string, string> = { mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior', todos: 'Todos', periodo: 'Período' }
+const PER_VAL: Record<string, string> = { 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior', 'Todos': 'todos', 'Período': 'periodo' }
 
 export function EntradasProcessadas() {
   const { tenantId } = useAuth()
@@ -29,14 +33,23 @@ export function EntradasProcessadas() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
+  // Parâmetro Estoque › "Data de movimentação": filtra pela MESMA data que a entrada usa no estoque
+  // (emissão = padrão; processamento). Assim o mês da tela bate com o Fechamento/CMV.
+  const { data: critDataMov = 'emissao' } = useQuery({ queryKey: ['ep-param-datamov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'data_movimentacao').limit(1); return (data?.[0]?.valor as string) || 'emissao' } })
+  const campoData = critDataMov === 'processamento' ? 'processada_em' : 'data_emissao'
+
   const { data: nfes = [], isLoading } = useQuery({
-    queryKey: ['ep-nfe', tenantId, periodo, de, ate], enabled: !!tenantId,
+    queryKey: ['ep-nfe', tenantId, periodo, de, ate, campoData], enabled: !!tenantId,
     queryFn: () => fetchAll<Nfe>((f, t) => {
-      let q = supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).eq('status', 'processada').order('processada_em', { ascending: false }).range(f, t)
-      if (periodo !== 'todos') { if (de) q = q.gte('processada_em', de + 'T00:00:00'); if (ate) q = q.lte('processada_em', ate + 'T23:59:59') }
+      let q = supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).range(f, t)
+      // limites no fuso de Brasília (−03:00), o MESMO que o estoque usa p/ datar a entrada.
+      // Sem isso, a comparação sai em UTC e uma nota da virada de mês (ex.: 30/06 à noite) cai no mês errado.
+      if (periodo !== 'todos') { if (de) q = q.gte(campoData, de + 'T00:00:00-03:00'); if (ate) q = q.lte(campoData, ate + 'T23:59:59-03:00') }
       return q
     }),
   })
+  useEffect(() => { setSortField(campoData); setSortAsc(false) }, [campoData])
+
   const { data: itensCount = {} } = useQuery({
     queryKey: ['ep-itens-cnt', tenantId], enabled: !!tenantId,
     queryFn: async () => { const rows = await fetchAll<{ nfe_id: string }>((f, t) => supabase.from('nfe_itens').select('nfe_id').eq('tenant_id', tenantId).range(f, t)); const m: Record<string, number> = {}; rows.forEach((r) => { m[r.nfe_id] = (m[r.nfe_id] || 0) + 1 }); return m },
@@ -103,7 +116,7 @@ export function EntradasProcessadas() {
       <div className="fl-bar">
         <SearchSelect value={fForn ? (fornNomeOf[fForn] || '') : ''} options={fornNomes} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : (fornByNome[nm] || '')); setPag(1) }} />
         <input className="field" style={{ width: 120 }} placeholder="Nº NF-e…" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />
-        <select className="field" style={{ minWidth: 130 }} value={periodo} onChange={(e) => aplicarPeriodo(e.target.value)}><option value="mes_atual">Mês Atual</option><option value="mes_anterior">Mês Anterior</option><option value="todos">Todos</option><option value="periodo">Período</option></select>
+        <div style={{ minWidth: 150 }}><SearchSelect value={PER_LBL[periodo] || 'Período'} options={PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(PER_VAL[l] || 'periodo')} /></div>
         <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
         <span style={{ fontSize: 12, color: '#94a3b8' }}>até</span>
         <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} />
@@ -111,7 +124,7 @@ export function EntradasProcessadas() {
         <button className="btn-g" onClick={() => exportCSV(filtrada)}>↓ Exportar</button>
       </div>
 
-      <div className="summary"><span>{filtrada.length.toLocaleString('pt-BR')} registro{filtrada.length !== 1 ? 's' : ''} encontrado{filtrada.length !== 1 ? 's' : ''}</span><span>Valor total filtrado: <span className="sval">{brl(totalValor)}</span></span></div>
+      <div className="summary"><span>{filtrada.length.toLocaleString('pt-BR')} registro{filtrada.length !== 1 ? 's' : ''} encontrado{filtrada.length !== 1 ? 's' : ''} <span style={{ color: '#94a3b8', fontWeight: 400 }}>· filtrando por data de {campoData === 'processada_em' ? 'processamento' : 'emissão'}</span></span><span>Valor total filtrado: <span className="sval">{brl(totalValor)}</span></span></div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">
         <table className="tbl">

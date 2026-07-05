@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string }
@@ -56,7 +57,7 @@ export function CurvaABC() {
   return (
     <div className="est-screen">
       <div className="ds-filterbar">
-        <div className="ds-field"><label>Categoria</label><select className="field" style={{ minWidth: 140 }} value={cat} onChange={(e) => { setCat(e.target.value); setPag(1) }}><option value="">Todas</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+        <div className="ds-field" style={{ minWidth: 140 }}><label>Categoria</label><SearchSelect value={cat} options={cats} placeholder="Todas" onChange={(v) => { setCat(v); setPag(1) }} /></div>
         <div className="ds-field ds-grow"><label>Buscar</label><div className="srch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg><input className="field" style={{ width: '100%' }} placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} /></div></div>
         <div className="ds-actions"><button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button></div>
       </div>

@@ -6,7 +6,7 @@ import { useAuth } from '../lib/auth'
 // Portal › Estoque — 3 sub-abas: Relatório (posição atual + estoque inicial da
 // última contagem), Movimentação (lança entrada/saída) e Histórico. Fiel ao loja.html.
 
-type Insumo = { id: string; nome?: string; categoria?: string; ativo?: boolean; participa_cmv?: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number }
+type Insumo = { id: string; nome?: string; categoria?: string; ativo?: boolean; participa_cmv?: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; minimo?: number }
 type Grupo = { id: string; nome?: string; ativo?: boolean }
 type GI = { grupo_id: string; insumo_id: string }
 type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number; minimo?: number | null; maximo?: number | null }
@@ -134,7 +134,8 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
       const saldo = Number(s?.quantidade) || 0
       const inicial = inicialMap[ins.id]
       if (!ent && !sai && !saldo && inicial == null) return null
-      return { ins, ent, sai, saldo, cm: Number(s?.custo_medio) || 0, min: s?.minimo != null ? Number(s.minimo) : null, max: s?.maximo != null ? Number(s.maximo) : null, inicial: inicial == null ? null : Number(inicial), ult: ult[ins.id] }
+      const min = (s?.minimo != null && Number(s.minimo) > 0) ? Number(s.minimo) : (Number(ins.minimo) > 0 ? Number(ins.minimo) : null)
+      return { ins, ent, sai, saldo, cm: Number(s?.custo_medio) || 0, min, max: s?.maximo != null ? Number(s.maximo) : null, inicial: inicial == null ? null : Number(inicial), ult: ult[ins.id] }
     }).filter(Boolean).sort((a: any, b: any) => a.ins.nome.localeCompare(b.ins.nome, 'pt-BR')) as any[]
   }, [movs, insumos, grupo, gruposItens, soCmv, busca, saldoMap, inicialMap])
 
