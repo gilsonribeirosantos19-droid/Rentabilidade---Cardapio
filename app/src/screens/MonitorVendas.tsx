@@ -30,9 +30,11 @@ const fmtDia = (iso: string) => iso.split('-').reverse().join('/')
 const fmtTs = (ts?: string | null) => ts ? new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'
 function diasPeriodo(de: string, ate: string): string[] {
   const out: string[] = []
-  let d = new Date(de + 'T12:00:00'); const end = new Date(ate + 'T12:00:00')
+  const hoje = new Date().toLocaleDateString('en-CA')
+  const fim = ate > hoje ? hoje : ate  // nunca mostra dias FUTUROS (só até hoje)
+  let d = new Date(fim + 'T12:00:00'); const start = new Date(de + 'T12:00:00')
   let guard = 0
-  while (d <= end && guard++ < 400) { out.push(d.toLocaleDateString('en-CA')); d = new Date(d.getTime() + 86400000) }
+  while (d >= start && guard++ < 400) { out.push(d.toLocaleDateString('en-CA')); d = new Date(d.getTime() - 86400000) }
   return out
 }
 const mapSit = (s: string): Situacao => s === 'processado' ? 'processado' : 'com_erros'
