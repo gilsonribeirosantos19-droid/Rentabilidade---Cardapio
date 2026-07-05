@@ -17,7 +17,7 @@ const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${Str
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 
-type FatRow = { lojaId: string; loja: string; faturado: number; caixas: number }
+type FatRow = { lojaId: string; loja: string; faturado: number; caixas: number; comissao: number; pessoas: number; comandas: number }
 
 export function FaturamentoVendas() {
   const { lojas } = useLoja()
@@ -40,14 +40,14 @@ export function FaturamentoVendas() {
   const [syncing, setSyncing] = useState(false)
   const [msg, setMsg] = useState('')
   const lojaNome = useMemo(() => { const m: Record<string, string> = {}; lojas.forEach((l) => { m[l.id] = l.nome }); return m }, [lojas])
-  // agrega por loja somando faturado/caixas dos meses do intervalo
+  // agrega por loja somando faturado/caixas/comissão(taxa)/pessoas/comandas dos dias do intervalo
   const buildRows = (data: Record<string, unknown>[]): FatRow[] => {
     const map = new Map<string, FatRow>()
     for (const r of data) {
       const key = String(r.loja_id)
       const ex = map.get(key)
-      if (ex) { ex.faturado += Number(r.faturado) || 0; ex.caixas += Number(r.qtd_caixas) || 0 }
-      else map.set(key, { lojaId: key, loja: lojaNome[key] || String(r.filial_nome || '—'), faturado: Number(r.faturado) || 0, caixas: Number(r.qtd_caixas) || 0 })
+      if (ex) { ex.faturado += Number(r.faturado) || 0; ex.caixas += Number(r.qtd_caixas) || 0; ex.comissao += Number(r.taxa) || 0; ex.pessoas += Number(r.pessoas) || 0; ex.comandas += Number(r.qtd_comandas) || 0 }
+      else map.set(key, { lojaId: key, loja: lojaNome[key] || String(r.filial_nome || '—'), faturado: Number(r.faturado) || 0, caixas: Number(r.qtd_caixas) || 0, comissao: Number(r.taxa) || 0, pessoas: Number(r.pessoas) || 0, comandas: Number(r.qtd_comandas) || 0 })
     }
     return [...map.values()]
   }
@@ -100,6 +100,9 @@ export function FaturamentoVendas() {
   }, [rows, lojaSet, allSel])
   const totFat = lista.reduce((a, r) => a + r.faturado, 0)
   const totCx = lista.reduce((a, r) => a + r.caixas, 0)
+  const totCom = lista.reduce((a, r) => a + r.comissao, 0)
+  const totPes = lista.reduce((a, r) => a + r.pessoas, 0)
+  const totCmd = lista.reduce((a, r) => a + r.comandas, 0)
 
   return (
     <div className="fatv-screen">
@@ -141,14 +144,17 @@ export function FaturamentoVendas() {
             <tr>
               <th className="c">#</th>
               <th>Fantasia</th>
+              <th className="r">Comandas</th>
+              <th className="r">Pessoas</th>
               <th className="r">Nº de Caixas</th>
               <th className="r">Faturamento</th>
+              <th className="r">Comissão</th>
               <th className="r">% Participação</th>
             </tr>
           </thead>
           <tbody>
             {!lista.length
-              ? <tr><td colSpan={5} className="empty">Nenhum faturamento no filtro. Clique em "Puxar do iComanda".</td></tr>
+              ? <tr><td colSpan={8} className="empty">Nenhum faturamento no filtro. Clique em "Puxar do iComanda".</td></tr>
               : <>
                 {lista.map((r, i) => {
                   const pct = totFat > 0 ? r.faturado / totFat * 100 : 0
@@ -156,8 +162,11 @@ export function FaturamentoVendas() {
                     <tr key={r.lojaId}>
                       <td className="c">{i + 1}</td>
                       <td>{r.loja}</td>
+                      <td className="r">{int(r.comandas)}</td>
+                      <td className="r">{int(r.pessoas)}</td>
                       <td className="r">{int(r.caixas)}</td>
                       <td className="r">{brl(r.faturado)}</td>
+                      <td className="r">{brl(r.comissao)}</td>
                       <td className="r">
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, justifyContent: 'flex-end' }}>
                           <span style={{ width: 54, height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
@@ -169,15 +178,18 @@ export function FaturamentoVendas() {
                     </tr>
                   )
                 })}
-                <tr className="fill" aria-hidden="true"><td colSpan={5} /></tr>
+                <tr className="fill" aria-hidden="true"><td colSpan={8} /></tr>
               </>}
           </tbody>
           {lista.length > 0 && <tfoot>
             <tr>
               <td className="c" />
               <td>{lista.length} lojas</td>
+              <td className="r">{int(totCmd)}</td>
+              <td className="r">{int(totPes)}</td>
               <td className="r">{int(totCx)}</td>
               <td className="r">{brl(totFat)}</td>
+              <td className="r">{brl(totCom)}</td>
               <td className="r">100,0%</td>
             </tr>
           </tfoot>}
