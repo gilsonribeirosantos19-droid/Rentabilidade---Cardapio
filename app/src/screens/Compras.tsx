@@ -203,7 +203,13 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
         const obs = 'Lojas: ' + lojasResumo.join(', ')
         const { data: ped, error: e1 } = await supabase.from('pedidos_compra').insert({ tenant_id: tenantId, loja_id: null, fornecedor_id: fornId, status: statusInicial, data_pedido: hoje(), observacao: obs, solicitante_id: usuario?.id || null }).select('id').single()
         if (e1) throw e1
-        const itensPay = itensForn.map((it) => ({ pedido_id: ped!.id, insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario || null, observacao: it.lojas.map((l) => l.nome + ': ' + fmtQtyDoc(l.qty)).join(', '), detalhe_lojas: it.lojas.filter((l) => l.loja_id).map((l) => ({ loja_id: l.loja_id, qtd: l.qty })) }))
+        const itensPay = itensForn.map((it) => {
+          // se o comprador editou a "Q. Comprar" (ex.: lote), rateia por loja na mesma proporção → total = soma por loja
+          const totalPed = it.lojas.reduce((a, l) => a + (Number(l.qty) || 0), 0)
+          const fator = totalPed > 0 ? (qComprar[it.insId] || 0) / totalPed : 1
+          const rateio = it.lojas.map((l) => ({ ...l, qc: +((Number(l.qty) || 0) * fator).toFixed(4) }))
+          return { pedido_id: ped!.id, insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario || null, observacao: rateio.map((l) => l.nome + ': ' + fmtQtyDoc(l.qc)).join(', '), detalhe_lojas: rateio.filter((l) => l.loja_id).map((l) => ({ loja_id: l.loja_id, qtd: l.qc })) }
+        })
         const { error: e2 } = await supabase.from('itens_pedido').insert(itensPay); if (e2) throw e2
       }
       for (const s of sols) { await supabase.from('pedidos_compra').update({ status: 'processado' }).eq('id', s.id) }

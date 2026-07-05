@@ -18,6 +18,8 @@ type Insumo = { id: string; nome: string; unidade_medida?: string; categoria?: s
 type Saida = { insumo_id: string; quantidade?: number; criado_em?: string }
 type Saldo = { insumo_id: string; custo_medio?: number }
 type Forn = { id: string; nome: string }
+// 1º dia do mês SEGUINTE a 'YYYY-MM' — pra filtrar com "< proxMes" (evita datas inválidas tipo 2026-04-31)
+const proxMes1 = (comp: string) => { const [y, m] = comp.split('-').map(Number); return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10) }
 type Vinc = { insumo_id: string; fornecedor_id: string }
 
 const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -71,11 +73,11 @@ export function ConsumoInsumos() {
   const { data: vincs = [] } = useQuery({ queryKey: ['ci-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).range(f, t)) })
   const { data: saidas = [], isLoading } = useQuery({
     queryKey: ['ci-sai', tenantId, lojaId, periodo.de, periodo.ate], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', periodo.de + '-01').lte('criado_em', periodo.ate + '-31T23:59:59'); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
+    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', periodo.de + '-01').lt('criado_em', proxMes1(periodo.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
   })
   const { data: saidasCmp = [] } = useQuery({
     queryKey: ['ci-saiC', tenantId, lojaId, cmpP?.de, cmpP?.ate], enabled: !!tenantId && !!cmpP,
-    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lte('criado_em', cmpP!.ate + '-31T23:59:59'); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
+    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lt('criado_em', proxMes1(cmpP!.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
   })
 
   const custo = (insId: string) => { const s = saldos.find((x) => x.insumo_id === insId); if (s && s.custo_medio) return Number(s.custo_medio) || 0; const i = insumos.find((x) => x.id === insId); return Number(i?.preco_compra) || 0 }

@@ -18,10 +18,11 @@ export function ResumoEstoque() {
   const { data: saldosRaw = [], isLoading } = useQuery({ queryKey: ['res-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).range(f, t)) })
 
   const saldos = useMemo(() => {
-    const m: Record<string, { quantidade: number; custo_medio: number; n: number }> = {}
-    saldosRaw.filter((s) => !lojaId || s.loja_id === lojaId).forEach((s) => { const e = (m[s.insumo_id] ||= { quantidade: 0, custo_medio: 0, n: 0 }); e.quantidade += Number(s.quantidade) || 0; e.custo_medio += Number(s.custo_medio) || 0; e.n++ })
-    Object.values(m).forEach((e) => { if (e.n > 1) e.custo_medio /= e.n })
-    return Object.entries(m).map(([insumo_id, e]) => ({ insumo_id, quantidade: e.quantidade, custo_medio: e.custo_medio }))
+    // consolida "Todas as lojas" com custo médio PONDERADO pela quantidade (valor total ÷ qtd total),
+    // NÃO média simples — senão o valor total do estoque sai errado no multi-loja.
+    const m: Record<string, { quantidade: number; valor: number }> = {}
+    saldosRaw.filter((s) => !lojaId || s.loja_id === lojaId).forEach((s) => { const e = (m[s.insumo_id] ||= { quantidade: 0, valor: 0 }); const q = Number(s.quantidade) || 0; e.quantidade += q; e.valor += q * (Number(s.custo_medio) || 0) })
+    return Object.entries(m).map(([insumo_id, e]) => ({ insumo_id, quantidade: e.quantidade, custo_medio: e.quantidade > 0 ? e.valor / e.quantidade : 0 }))
   }, [saldosRaw, lojaId])
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
