@@ -30,9 +30,9 @@ const fmtDia = (iso: string) => iso.split('-').reverse().join('/')
 const fmtTs = (ts?: string | null) => ts ? new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'
 function diasPeriodo(de: string, ate: string): string[] {
   const out: string[] = []
-  let d = new Date(ate + 'T12:00:00'); const start = new Date(de + 'T12:00:00')
+  let d = new Date(de + 'T12:00:00'); const end = new Date(ate + 'T12:00:00')
   let guard = 0
-  while (d >= start && guard++ < 400) { out.push(d.toLocaleDateString('en-CA')); d = new Date(d.getTime() - 86400000) }
+  while (d <= end && guard++ < 400) { out.push(d.toLocaleDateString('en-CA')); d = new Date(d.getTime() + 86400000) }
   return out
 }
 const mapSit = (s: string): Situacao => s === 'processado' ? 'processado' : 'com_erros'
@@ -48,7 +48,14 @@ export function MonitorVendas() {
   const [syncing, setSyncing] = useState(false)
   const [msg, setMsg] = useState('')
   const initRef = useRef(false)
-  useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.id))) } }, [lojas])
+  // padrão: só UMA loja ativa (Ponta Negra). Usuário troca pra outra ou "Todas" no filtro.
+  useEffect(() => {
+    if (!initRef.current && lojas.length) {
+      initRef.current = true
+      const pn = lojas.find((l) => /ponta\s*negra/i.test(l.nome)) || lojas[0]
+      setLojaSet(new Set([pn.id]))
+    }
+  }, [lojas])
   const allSel = lojas.length > 0 && lojaSet.size === lojas.length
   const lojaLabel = allSel ? 'Todas as lojas' : lojaSet.size === 0 ? 'Nenhuma loja' : lojaSet.size === 1 ? (lojas.find((l) => lojaSet.has(l.id))?.nome || '1 loja') : `${lojaSet.size} lojas`
   const toggleLoja = (id: string) => setLojaSet((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })
