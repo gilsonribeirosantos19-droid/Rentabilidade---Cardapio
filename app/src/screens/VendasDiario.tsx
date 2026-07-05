@@ -90,7 +90,9 @@ export function VendasDiario() {
       const propA = fa + fj > 0 ? fa / (fa + fj) : 0
       const factor = turnoSel === 'Almoço' ? propA : turnoSel === 'Jantar' ? (1 - propA) : 1
       // canais do dia — só Salão e Delivery. Balcão (e qualquer outro) entra no SALÃO (não perde faturamento).
-      const canalKey = (c: string) => c === 'Delivery' ? 'Delivery' : 'Salão'
+      // Loja de DELIVERY (nome contém "delivery") não tem salão → tudo vira Delivery.
+      const isDelivLoja = /delivery/i.test(loja)
+      const canalKey = (c: string) => (isDelivLoja || c === 'Delivery') ? 'Delivery' : 'Salão'
       const canaisRaw: Canal[] = Array.isArray(r.por_canal) && r.por_canal.length
         ? r.por_canal
         : [{ canal: 'Salão', faturado: Number(r.faturado) || 0, comandas: Number(r.qtd_comandas) || 0, pessoas: Number(r.pessoas) || 0, desconto: Number(r.desconto) || 0, taxa: Number(r.taxa) || 0, couvert: Number(r.couvert) || 0 }]
