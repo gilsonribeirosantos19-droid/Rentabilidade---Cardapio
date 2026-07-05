@@ -56,11 +56,8 @@ export function Insumos() {
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['insumos', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('insumos').select('*').eq('tenant_id', tenantId).order('nome')
-      if (error) throw error
-      return data as Insumo[]
-    },
+    // fetchAll: vence o teto de 1000 do PostgREST (senão itens somem da tela silenciosamente)
+    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).order('nome').range(f, t)),
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
@@ -114,7 +111,10 @@ export function Insumos() {
       if (f.id) {
         const { error } = await supabase.from('insumos').update(payload).eq('id', f.id); if (error) throw error
       } else {
-        const prox = lista.reduce((m, i) => Math.max(m, Number(i.codigo_interno) || 0), 0) + 1
+        // próximo código = maior do banco + 1 (busca FRESCA, não da lista em memória, que poderia
+        // estar capada ou desatualizada → evita gerar código duplicado). codigo_interno é inteiro.
+        const { data: mx } = await supabase.from('insumos').select('codigo_interno').eq('tenant_id', tenantId).order('codigo_interno', { ascending: false }).limit(1)
+        const prox = (Number(mx?.[0]?.codigo_interno) || 0) + 1
         const { error } = await supabase.from('insumos').insert({ ...payload, tenant_id: tenantId, preco_compra: 0, rendimento_pct: 100, codigo_interno: prox }); if (error) throw error
       }
     },

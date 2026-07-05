@@ -31,13 +31,10 @@ export function FichasTecnicas() {
 
   const { data: fichas = [], isLoading } = useQuery({
     queryKey: ['fichas', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('fichas_tecnicas')
-        .select('*, itens_ficha(id,insumo_id,produto_id,quantidade_g,ordem)')
-        .eq('tenant_id', tenantId).order('nome')
-      if (error) throw error
-      return data as Ficha[]
-    },
+    // fetchAll: vence o teto de 1000 do PostgREST (o range vale pra ficha; o embed dos itens vem junto)
+    queryFn: () => fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas')
+      .select('*, itens_ficha(id,insumo_id,produto_id,quantidade_g,ordem)')
+      .eq('tenant_id', tenantId).order('nome').range(f, t)),
   })
   const { data: insumos = [] } = useQuery({
     queryKey: ['insumos-min', tenantId], enabled: !!tenantId,

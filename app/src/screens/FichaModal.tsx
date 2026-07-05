@@ -60,8 +60,11 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
 
   const pickMap = useMemo(() => {
     const m = new Map<string, { kind: 'produto' | 'insumo'; id: string; nome: string; categoria: string }>()
-    produtos.forEach((p) => m.set((p.nome || ''), { kind: 'produto', id: p.id, nome: p.nome || '', categoria: p.grupo || p.categoria || '' }))
-    insumos.forEach((i) => m.set((i.nome || '') + ' (insumo)', { kind: 'insumo', id: i.id, nome: i.nome || '', categoria: i.categoria || '' }))
+    // rótulo único: se dois produtos/insumos tiverem o MESMO nome, acrescenta " (2)", " (3)"…
+    // (senão o Map colapsa os homônimos e a ficha vincularia ao registro errado)
+    const uniqLabel = (base: string) => { let l = base, n = 2; while (m.has(l)) l = `${base} (${n++})`; return l }
+    produtos.forEach((p) => m.set(uniqLabel(p.nome || '(sem nome)'), { kind: 'produto', id: p.id, nome: p.nome || '', categoria: p.grupo || p.categoria || '' }))
+    insumos.forEach((i) => m.set(uniqLabel((i.nome || '') + ' (insumo)'), { kind: 'insumo', id: i.id, nome: i.nome || '', categoria: i.categoria || '' }))
     return m
   }, [produtos, insumos])
   const pickLabel = useMemo(() => {
@@ -103,7 +106,6 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
       if (fid) {
         const r1 = await supabase.from('fichas_tecnicas').update({ ...payload, atualizado_em: new Date().toISOString() }).eq('id', fid)
         if (r1.error) throw r1.error
-        await supabase.from('itens_ficha').delete().eq('ficha_id', fid)
       } else {
         const r2 = await supabase.from('fichas_tecnicas').insert({ ...payload, tenant_id: tenantId }).select('id').single()
         if (r2.error) throw r2.error
@@ -111,13 +113,16 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
       }
       const rows = itens.filter((r) => r.insumo_id && Number(r.qtd) > 0).map((r, i) => {
         const ins = insMap[r.insumo_id]; const qtdG = isW(umOf(ins)) ? Number(r.qtd) * 1000 : Number(r.qtd)
-        return { ficha_id: fid, insumo_id: r.insumo_id, quantidade_g: qtdG, ordem: i }
+        return { insumo_id: r.insumo_id, quantidade_g: qtdG, ordem: i }
       })
-      if (rows.length) { const r3 = await supabase.from('itens_ficha').insert(rows); if (r3.error) throw r3.error }
+      // troca os ingredientes de forma ATÔMICA (delete + insert numa transação no banco):
+      // se falhar, a ficha NÃO fica sem ingredientes (antes o delete/insert era separado)
+      const r3 = await supabase.rpc('replace_itens_ficha', { p_ficha_id: fid, p_itens: rows })
+      if (r3.error) throw r3.error
       if (vincId && rendReceitaG && rendReceitaG > 0) {
         const tot = rows.reduce((a, r) => { const ins = insMap[r.insumo_id]; return a + (ins ? custoIng(ins, r.quantidade_g) : 0) }, 0)
         const custoKg = tot / (rendReceitaG / 1000)
-        await supabase.from('insumos').update({ preco_compra: Number(custoKg.toFixed(4)) }).eq('id', vincId)
+        await supabase.from('insumos').update({ preco_compra: Number(custoKg.toFixed(4)) }).eq('id', vincId).eq('tenant_id', tenantId)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['fichas'] }); qc.invalidateQueries({ queryKey: ['insumos'] }); onSaved() },

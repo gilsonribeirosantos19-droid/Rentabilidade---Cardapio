@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
 import { VinculosPane } from './VinculosPane'
@@ -33,16 +34,14 @@ export function Fornecedores() {
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['fornecedores', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('fornecedores').select('*').eq('tenant_id', tenantId).order('razao_social')
-      if (error) throw error
-      return data as Fornecedor[]
-    },
+    // fetchAll: vence o teto de 1000 do PostgREST
+    queryFn: () => fetchAll<Fornecedor>((f, t) => supabase.from('fornecedores').select('*').eq('tenant_id', tenantId).order('razao_social').range(f, t)),
   })
   const { data: vinculos = [] } = useQuery({
     queryKey: ['insumo-forn', tenantId], enabled: !!tenantId,
     queryFn: async () => {
-      const { data } = await supabase.from('insumo_fornecedores').select('fornecedor_id')
+      // filtra por tenant explicitamente (não depende só da RLS), igual às demais queries
+      const { data } = await supabase.from('insumo_fornecedores').select('fornecedor_id').eq('tenant_id', tenantId)
       return (data ?? []) as { fornecedor_id: string }[]
     },
   })
@@ -67,6 +66,12 @@ export function Fornecedores() {
     mutationFn: async (form: Form) => {
       const razao = (form.razao_social || '').trim()
       if (!razao) throw new Error('Informe a Razão Social.')
+      // CNPJ único (evita auto-vínculo ambíguo da NF-e por CNPJ do emitente)
+      const cnpjDigits = (form.cnpj || '').replace(/\D/g, '')
+      if (cnpjDigits) {
+        const dup = lista.find((x) => x.id !== form.id && (x.cnpj || '').replace(/\D/g, '') === cnpjDigits)
+        if (dup) throw new Error(`CNPJ já cadastrado em "${dup.nome_fantasia || dup.nome || dup.razao_social}".`)
+      }
       const fantasia = (form.nome_fantasia || '').trim()
       const numOrNull = (v: unknown) => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) ? n : null }
       const payload = {
@@ -86,8 +91,11 @@ export function Fornecedores() {
       if (form.id) {
         const { error } = await supabase.from('fornecedores').update(payload).eq('id', form.id); if (error) throw error
       } else {
-        const { data: mx } = await supabase.from('fornecedores').select('codigo').eq('tenant_id', tenantId).not('codigo', 'is', null).order('codigo', { ascending: false }).limit(1)
-        const cod = String(Math.max(parseInt(mx?.[0]?.codigo) || 1000, 1000) + 1)
+        // maior código NUMÉRICO (o codigo é texto — ordenar por texto quebra: "999" > "1000").
+        // Fornecedores são poucos, então buscar todos e calcular o max em JS é barato e correto.
+        const { data: cods } = await supabase.from('fornecedores').select('codigo').eq('tenant_id', tenantId).not('codigo', 'is', null)
+        const maxNum = (cods ?? []).reduce((m, r: { codigo?: string }) => Math.max(m, parseInt(String(r.codigo)) || 0), 1000)
+        const cod = String(maxNum + 1)
         const { error } = await supabase.from('fornecedores').insert({ ...payload, tenant_id: tenantId, codigo: cod }); if (error) throw error
       }
     },
