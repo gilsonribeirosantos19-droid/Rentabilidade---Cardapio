@@ -103,15 +103,18 @@ export function VendasDiario() {
         agg.set(k, a)
       }
       const canais = [...agg.values()]
+      // reconcilia os canais (base COMANDAS) com o faturamento do CAIXA (oficial), pra bater com o iComanda
+      const somaCanal = canais.reduce((a, c) => a + (Number(c.faturado) || 0), 0)
+      const escala = somaCanal > 0 ? (Number(r.faturado) || 0) / somaCanal : 1
       for (const c of canais) {
         if (canalSel !== 'Todos' && c.canal !== canalSel) continue
-        const faturado = +((Number(c.faturado) || 0) * factor).toFixed(2)
+        const faturado = +((Number(c.faturado) || 0) * escala * factor).toFixed(2)
         if (!(faturado > 0)) continue
         const comandas = Math.round((Number(c.comandas) || 0) * factor)
         out.push({
           id: `${r.loja_id}|${r.data}|${c.canal}`, loja, data: r.data, canal: c.canal, dMovimento: fmtDia(r.data),
           comandas, pessoas: Math.round((Number(c.pessoas) || 0) * factor), faturado,
-          desconto: +((Number(c.desconto) || 0) * factor).toFixed(2), taxa: +((Number(c.taxa) || 0) * factor).toFixed(2), couvert: +((Number(c.couvert) || 0) * factor).toFixed(2),
+          desconto: +((Number(c.desconto) || 0) * escala * factor).toFixed(2), taxa: +((Number(c.taxa) || 0) * escala * factor).toFixed(2), couvert: +((Number(c.couvert) || 0) * escala * factor).toFixed(2),
           ticket: comandas ? faturado / comandas : 0,
         })
       }
