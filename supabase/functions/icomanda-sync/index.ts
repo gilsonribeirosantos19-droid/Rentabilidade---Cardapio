@@ -56,9 +56,10 @@ function matchLojas(
 ) {
   const mapa: { loja: { id: string; nome: string }; filial: { id: number; nome: string; faturado: number; qtd_caixas: number } }[] = []
   const naoCasadas: string[] = []
+  const usados = new Set<number>() // filial já usada não pode casar 2x (evita faturamento duplicado)
   for (const loja of lojas) {
     const tl = toks(loja.nome)
-    const cands = filiais.map((f) => {
+    const cands = filiais.filter((f) => !usados.has(Number(f.id))).map((f) => {
       const shared = toks(f.nome).filter((t) => tl.includes(t))
       return { f, score: shared.reduce((a, t) => a + t.length, 0), distintivo: shared.some((t) => t.length >= 4) }
     }).filter((x) => x.distintivo && x.score > 0)
@@ -66,7 +67,7 @@ function matchLojas(
         (((b.f.faturado || 0) > 0 ? 1 : 0) - ((a.f.faturado || 0) > 0 ? 1 : 0)) ||
         (b.score - a.score) ||
         ((b.f.faturado || 0) - (a.f.faturado || 0)))
-    if (cands[0]) mapa.push({ loja, filial: { id: cands[0].f.id, nome: cands[0].f.nome, faturado: Number(cands[0].f.faturado) || 0, qtd_caixas: Number(cands[0].f.qtd_caixas) || 0 } })
+    if (cands[0]) { usados.add(Number(cands[0].f.id)); mapa.push({ loja, filial: { id: cands[0].f.id, nome: cands[0].f.nome, faturado: Number(cands[0].f.faturado) || 0, qtd_caixas: Number(cands[0].f.qtd_caixas) || 0 } }) }
     else naoCasadas.push(loja.nome)
   }
   return { mapa, naoCasadas }
@@ -122,6 +123,9 @@ serve(async (req) => {
       const filiaisRange = asArray(await ico('filiais.listar', { data_ini: dDe, data_fim: dAte })) as { id: number; nome: string; faturado?: number; qtd_caixas?: number }[]
       const { mapa, naoCasadas } = matchLojas(lojas, filiaisRange)
       const dias = daysBetween(dDe, dAte)
+      // avisa se o range pedido foi cortado no limite de segurança (62 dias)
+      const pedidos = Math.round((new Date(dAte + 'T00:00:00Z').getTime() - new Date(dDe + 'T00:00:00Z').getTime()) / 86400000) + 1
+      const aviso = pedidos > dias.length ? `Atencao: pedido de ${pedidos} dias foi cortado no limite de ${dias.length}. Puxe em pedacos.` : undefined
       const now = new Date().toISOString()
       let processados = 0, comErro = 0
       for (const dia of dias) {
@@ -181,13 +185,15 @@ serve(async (req) => {
           if (error) throw error
           processados += linhas.length
         } catch (e) {
-          // dia falhou → marca TODAS as lojas do dia como 'com_erro' (não entra em relatório nenhum)
-          const linhas = mapa.map(({ loja }) => ({ tenant_id, loja_id: loja.id, data: dia, status: 'com_erro', erros: String((e as Error).message).slice(0, 300), data_integracao: now, atualizado_em: now }))
-          await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
+          // dia falhou → marca 'com_erro', MAS NÃO rebaixa loja×dia que já estava 'processado' (dado bom)
+          const { data: jaOk } = await sb.from('icomanda_recebimento').select('loja_id').eq('tenant_id', tenant_id).eq('data', dia).eq('status', 'processado')
+          const okSet = new Set((jaOk || []).map((r: { loja_id: string }) => r.loja_id))
+          const linhas = mapa.filter(({ loja }) => !okSet.has(loja.id)).map(({ loja }) => ({ tenant_id, loja_id: loja.id, data: dia, status: 'com_erro', erros: String((e as Error).message).slice(0, 300), data_integracao: now, atualizado_em: now }))
+          if (linhas.length) await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
           comErro += linhas.length
         }
       }
-      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro })
+      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro, aviso })
     }
 
     // ===== MODO MENSAL (produtos p/ CMV + faturamento cheio): body {competencia} em YYYY-MM =====
