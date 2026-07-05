@@ -3,6 +3,7 @@ import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './faturamento.css'
 
 // Faturamento por Loja (mensal) — lê a tabela icomanda_faturamento (número CHEIO,
@@ -22,9 +23,9 @@ type FatRow = { lojaId: string; loja: string; faturado: number; caixas: number; 
 export function FaturamentoVendas() {
   const { lojas } = useLoja()
   const { tenantId } = useAuth()
-  const [de, setDe] = useState('2026-06-01')
-  const [ate, setAte] = useState('2026-06-30')
-  const [periodoSel, setPeriodoSel] = useState('Personalizado')
+  const [de, setDe] = useState(mesInicio())
+  const [ate, setAte] = useState(mesFim())
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
   const [lojaOpen, setLojaOpen] = useState(false)
   const initRef = useRef(false)
@@ -104,6 +105,13 @@ export function FaturamentoVendas() {
   const totPes = lista.reduce((a, r) => a + r.pessoas, 0)
   const totCmd = lista.reduce((a, r) => a + r.comandas, 0)
 
+  const exportCSV = () => {
+    if (!lista.length) { setMsg('Nada para exportar.'); return }
+    const head = ['#', 'Fantasia', 'Comandas', 'Pessoas', 'Nº de Caixas', 'Faturamento', 'Comissão', '% Participação']
+    const linhas = lista.map((r, i) => [i + 1, r.loja, r.comandas, r.pessoas, r.caixas, +r.faturado.toFixed(2), +r.comissao.toFixed(2), +(totFat > 0 ? r.faturado / totFat * 100 : 0).toFixed(1)])
+    downloadCsv(`faturamento_${de}_${ate}.csv`, [head, ...linhas])
+  }
+
   return (
     <div className="fatv-screen">
       <div className="ds-filterbar">
@@ -127,7 +135,7 @@ export function FaturamentoVendas() {
         <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-actions">
           <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
-          <button className="btn-ghost">↓ Exportar</button>
+          <button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button>
         </div>
       </div>
 

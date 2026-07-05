@@ -3,6 +3,7 @@ import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './faturamento.css'
 
 // Vendas por Dia — detalhado por loja × DIA (lê o portão icomanda_recebimento, só 'processado').
@@ -25,9 +26,9 @@ const CANAL_FILTRO = ['Todos', 'Salão', 'Delivery']
 export function VendasDiario() {
   const { lojas } = useLoja()
   const { tenantId } = useAuth()
-  const [de, setDe] = useState('2026-06-01')
-  const [ate, setAte] = useState('2026-06-30')
-  const [periodoSel, setPeriodoSel] = useState('Personalizado')
+  const [de, setDe] = useState(mesInicio())
+  const [ate, setAte] = useState(mesFim())
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
   const [lojaOpen, setLojaOpen] = useState(false)
   const [turnoSel, setTurnoSel] = useState('Almoço + Jantar')
@@ -141,6 +142,13 @@ export function VendasDiario() {
   const showTurno = turnoSel !== 'Consolidado'
   const nCols = showTurno ? 11 : 10
 
+  const exportCSV = () => {
+    if (!lista.length) { setMsg('Nada para exportar.'); return }
+    const head = ['Loja', 'Canal', ...(showTurno ? ['Turno'] : []), 'D. Movimento', 'Comandas', 'Pessoas', 'Faturamento', 'Desconto', 'Taxa', 'Couvert', 'Ticket']
+    const linhas = lista.map((r) => [r.loja, r.canal, ...(showTurno ? [r.turno] : []), r.dMovimento, r.comandas, r.pessoas, +r.faturado.toFixed(2), +r.desconto.toFixed(2), +r.taxa.toFixed(2), +r.couvert.toFixed(2), +r.ticket.toFixed(2)])
+    downloadCsv(`vendas_por_dia_${de}_${ate}.csv`, [head, ...linhas])
+  }
+
   return (
     <div className="fatv-screen">
       <div className="ds-filterbar">
@@ -170,7 +178,7 @@ export function VendasDiario() {
         <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-actions">
           <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
-          <button className="btn-ghost">↓ Exportar</button>
+          <button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button>
         </div>
       </div>
 

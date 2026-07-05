@@ -3,6 +3,7 @@ import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './faturamento.css'
 
 // Curva ABC (PDV) — ranqueia os PRODUTOS por faturamento (V. Venda Líquida).
@@ -60,9 +61,9 @@ function compsBetween(de: string, ate: string): string[] {
 export function CurvaAbcVendas() {
   const { lojas } = useLoja()
   const { tenantId } = useAuth()
-  const [de, setDe] = useState('2026-06-01')
-  const [ate, setAte] = useState('2026-06-30')
-  const [periodoSel, setPeriodoSel] = useState('Personalizado')
+  const [de, setDe] = useState(mesInicio())
+  const [ate, setAte] = useState(mesFim())
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [busca, setBusca] = useState('')
   const [incluirZerado, setIncluirZerado] = useState(false)
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
@@ -233,6 +234,13 @@ export function CurvaAbcVendas() {
   const tot = useMemo(() => { const t: Record<string, number> = {}; COLS.filter((c) => c.sum).forEach((c) => { t[c.key] = lista.reduce((a, v) => a + num(v, c.key), 0) }); return t }, [lista])
   const nA = lista.filter((r) => r.classe === 'A').length, nB = lista.filter((r) => r.classe === 'B').length, nC = lista.filter((r) => r.classe === 'C').length
 
+  const exportCSV = () => {
+    if (!lista.length) { setMsg('Nada para exportar.'); return }
+    const head = ['#', 'Fantasia', 'Descrição Item', 'Item', 'Grupo', 'Q. Venda', 'V. Venda Líquida', '% Participação', '% Acumulado', 'Classe']
+    const linhas = lista.map((v) => [v.rank, v.loja, titleCase(v.item), v.codigo, titleCase(v.grupo), +v.qVenda.toFixed(4), +v.vLiquida.toFixed(2), +v.pct.toFixed(1), +v.acum.toFixed(1), v.classe])
+    downloadCsv(`curva_abc_${de}_${ate}.csv`, [head, ...linhas])
+  }
+
   return (
     <div className="fatv-screen">
       <div className="ds-filterbar">
@@ -262,7 +270,7 @@ export function CurvaAbcVendas() {
         </div>
         <div className="ds-actions">
           <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
-          <button className="btn-ghost">↓ Exportar</button>
+          <button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button>
         </div>
       </div>
 

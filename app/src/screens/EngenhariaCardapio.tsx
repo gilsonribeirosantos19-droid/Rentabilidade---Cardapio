@@ -3,6 +3,7 @@ import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
+import { downloadCsv } from '../lib/csv'
 import './faturamento.css'
 
 // Engenharia de Cardápio — análise POR PRODUTO (modelo Everest).
@@ -68,9 +69,9 @@ const COST_KEYS = new Set<ColKey>(['vCustoMedio', 'cmvTeo', 'cmvAjust', 'pctCust
 export function EngenhariaCardapio() {
   const { lojas } = useLoja()
   const { tenantId } = useAuth()
-  const [de, setDe] = useState('2026-06-01')
-  const [ate, setAte] = useState('2026-06-30')
-  const [periodoSel, setPeriodoSel] = useState('Personalizado')
+  const [de, setDe] = useState(mesInicio())
+  const [ate, setAte] = useState(mesFim())
+  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [busca, setBusca] = useState('')
   const [incluirZerado, setIncluirZerado] = useState(false)
   const [lojaSet, setLojaSet] = useState<Set<string>>(new Set())
@@ -244,6 +245,20 @@ export function EngenhariaCardapio() {
 
   const tot = useMemo(() => { const t: Record<string, number> = {}; COLS.filter((c) => c.sum).forEach((c) => { t[c.key] = lista.reduce((a, v) => a + num(v, c.key), 0) }); return t }, [lista, dias])
 
+  const exportCSV = () => {
+    if (!lista.length) { setMsg('Nada para exportar.'); return }
+    const head = visCols.map((c) => c.label)
+    const linhas = lista.map((v) => visCols.map((c) => {
+      if (c.key === 'loja') return v.loja
+      if (c.key === 'item') return titleCase(v.item)
+      if (c.key === 'codigo') return v.codigo
+      if (c.key === 'grupo') return titleCase(v.grupo)
+      if (COST_KEYS.has(c.key) && !v.vCustoMedio) return '—'
+      return +num(v, c.key).toFixed(4)
+    }))
+    downloadCsv(`engenharia_cardapio_${de}_${ate}.csv`, [head, ...linhas])
+  }
+
   return (
     <div className="fatv-screen">
       <div className="ds-filterbar">
@@ -273,7 +288,7 @@ export function EngenhariaCardapio() {
         </div>
         <div className="ds-actions">
           <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
-          <button className="btn-ghost">↓ Exportar</button>
+          <button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button>
         </div>
       </div>
 
