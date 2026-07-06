@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { downloadCsv } from '../lib/csv'
+import { SearchSelect } from '../components/SearchSelect'
 
 // Portal › Estoque — 3 sub-abas: Relatório (posição atual + estoque inicial da
 // última contagem), Movimentação (lança entrada/saída) e Histórico. Fiel ao loja.html.
@@ -158,7 +159,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
         <div className="pf-fld"><label>Período</label><select className="p-field" value={periodo} onChange={(e) => onPeriodo(e.target.value)}><option value="contagem">Desde a última contagem</option><option value="atual">Mês atual</option><option value="anterior">Mês anterior</option><option value="personalizado">Personalizado</option></select></div>
         <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('personalizado') }} /></div>
         <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('personalizado') }} /></div>
-        <div className="pf-fld"><label>Grupo</label><select className="p-field" value={grupo} onChange={(e) => setGrupo(e.target.value)}><option value="">Todos os grupos</option>{categorias.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+        <div className="pf-fld"><label>Grupo</label><div style={{ minWidth: 180 }}><SearchSelect value={grupo} onChange={setGrupo} options={categorias} placeholder="Todos os grupos" /></div></div>
         <div className="pf-fld"><label>Buscar item</label><input className="p-field" style={{ minWidth: 200 }} placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
         <label className="pf-chk"><input type="checkbox" checked={soCmv} onChange={(e) => setSoCmv(e.target.checked)} />Só CMV</label>
         <button className="p-btn p-btn-pri" onClick={aplicar}>Atualizar</button>
