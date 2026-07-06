@@ -49,6 +49,11 @@ Deno.serve(async (req) => {
 
     if (body.action === 'update_password') {
       if (!body.userId || !body.password) return json({ error: 'userId e senha sao obrigatorios' }, 400)
+      // o usuario-alvo TEM que ser do mesmo tenant do admin que chamou (senao um admin de um
+      // cliente resetaria a senha de usuario de outro cliente)
+      const { data: alvo } = await admin.from('usuarios').select('tenant_id').eq('id', body.userId).maybeSingle()
+      if (!alvo || alvo.tenant_id !== caller?.tenant_id)
+        return json({ error: 'Usuario nao pertence ao seu tenant' }, 403)
       const { error } = await admin.auth.admin.updateUserById(body.userId, { password: body.password })
       if (error) return json({ error: error.message }, 400)
       return json({ ok: true })

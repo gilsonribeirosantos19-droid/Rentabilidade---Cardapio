@@ -89,8 +89,13 @@ export function ConfigPermissoes() {
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
   const grupoDelMut = useMutation({
-    mutationFn: async () => { if (!selId) return; const { error } = await supabase.from('grupos_acesso').delete().eq('id', selId); if (error) throw error },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-grupos'] }); fechar(); showToast('Grupo excluído.') },
+    mutationFn: async () => {
+      if (!selId || !grp) return
+      // tira o perfil dos usuários deste grupo (senão ficam com role = nome de um grupo apagado)
+      await supabase.from('usuarios').update({ role: null }).eq('tenant_id', tenantId).eq('role', grp.nome)
+      const { error } = await supabase.from('grupos_acesso').delete().eq('id', selId); if (error) throw error
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-grupos'] }); qc.invalidateQueries({ queryKey: ['cfg-perm-usuarios'] }); fechar(); showToast('Grupo excluído.') },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
   const [delAsk, setDelAsk] = useState(false)
