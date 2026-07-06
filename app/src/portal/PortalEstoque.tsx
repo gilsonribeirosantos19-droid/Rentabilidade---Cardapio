@@ -92,6 +92,8 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const [soCmv, setSoCmv] = useState(false)
   const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: anchorDe(), ate: hojeStr() })
   const [periodo, setPeriodo] = useState('contagem')
+  // filtro "Grupo" = categoria do insumo (o Portal tinha só 1 grupo de compra, então o filtro não servia)
+  const categorias = useMemo(() => [...new Set((insumos as Insumo[]).map((i) => i.categoria).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'pt-BR')), [insumos])
 
   // Enquanto no modo "contagem", ancora o início do período no dia SEGUINTE à última
   // contagem encerrada (o que veio antes/na contagem já está no Estoque Inicial).
@@ -111,9 +113,10 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const { data: movs, isFetching } = useQuery({
     queryKey: ['pest-rel', tenantId, lojaId, aplicado?.de, aplicado?.ate], enabled: !!tenantId && !!lojaId && !!aplicado,
     queryFn: async () => {
+      // select('*') p/ resiliência: pedir coluna inexistente (ex: created_at) faz o Supabase ERRAR e zerar o resultado
       const [e, s] = await Promise.all([
-        supabase.from('entradas_estoque').select('insumo_id,quantidade,criado_em,created_at,tipo').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59'),
-        supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em,created_at,tipo').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59'),
+        supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59'),
+        supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).eq('loja_id', lojaId).gte('criado_em', aplicado!.de + 'T00:00:00').lte('criado_em', aplicado!.ate + 'T23:59:59'),
       ])
       return { entradas: (e.data ?? []) as Mov[], saidas: (s.data ?? []) as Mov[] }
     },
@@ -124,7 +127,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
     const ult: Record<string, string> = {}
     ;[...movs.entradas, ...movs.saidas].forEach((m) => { const dt = m.criado_em || m.created_at; if (dt && (!ult[m.insumo_id] || dt > ult[m.insumo_id])) ult[m.insumo_id] = dt })
     let lista = (insumos as Insumo[]).filter((i) => i.ativo !== false)
-    if (grupo) { const ids = gruposItens[grupo] || []; lista = lista.filter((i) => ids.includes(i.id)) }
+    if (grupo) lista = lista.filter((i) => (i.categoria || '') === grupo)
     if (soCmv) lista = lista.filter((i) => i.participa_cmv !== 'nao')
     const b = busca.toLowerCase().trim()
     if (b) lista = lista.filter((i) => (i.nome || '').toLowerCase().includes(b))
@@ -155,7 +158,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
         <div className="pf-fld"><label>Período</label><select className="p-field" value={periodo} onChange={(e) => onPeriodo(e.target.value)}><option value="contagem">Desde a última contagem</option><option value="atual">Mês atual</option><option value="anterior">Mês anterior</option><option value="personalizado">Personalizado</option></select></div>
         <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('personalizado') }} /></div>
         <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('personalizado') }} /></div>
-        <div className="pf-fld"><label>Grupo</label><select className="p-field" value={grupo} onChange={(e) => setGrupo(e.target.value)}><option value="">Todos os grupos</option>{grupos.filter((g: Grupo) => (gruposItens[g.id] || []).length).map((g: Grupo) => <option key={g.id} value={g.id}>{g.nome}</option>)}</select></div>
+        <div className="pf-fld"><label>Grupo</label><select className="p-field" value={grupo} onChange={(e) => setGrupo(e.target.value)}><option value="">Todos os grupos</option>{categorias.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
         <div className="pf-fld"><label>Buscar item</label><input className="p-field" style={{ minWidth: 200 }} placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
         <label className="pf-chk"><input type="checkbox" checked={soCmv} onChange={(e) => setSoCmv(e.target.checked)} />Só CMV</label>
         <button className="p-btn p-btn-pri" onClick={aplicar}>Atualizar</button>
