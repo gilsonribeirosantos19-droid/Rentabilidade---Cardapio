@@ -447,7 +447,9 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
         if (empSel.size > 0 && empSel.size < lojasFull.length) await supabase.from('insumo_fornecedor_lojas').insert([...empSel].map((loja_id) => ({ tenant_id: tenantId, vinculacao_id: vincId, loja_id })))
       } catch { /* tabela ainda não criada */ }
       onToast(editId ? 'Vínculo atualizado.' : 'Vínculo incluído e item vinculado!', 'ok')
-      await refetch(); onRefresh(); reset()
+      onRefresh()
+      if (editId) { await refetch(); reset() } // editando: mantém a tela aberta pra continuar
+      else onClose()                           // novo vínculo: item já corrigido → fecha a tela
     } catch (e: any) { onToast('Erro: ' + e.message, 'err') } finally { setSaving(false) }
   }
 
