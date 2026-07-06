@@ -7,7 +7,7 @@
 .fatv-screen .ds-field > label { font-size: 11px; font-weight: 500; color: #64748b; }
 .fatv-screen .ds-field .ass { width: 100%; }
 .fatv-screen .ds-field .ass-btn { height: 30px; }
-.fatv-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #334155; background: #fff; }
+.fatv-screen .field { height: 30px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #334155; background: #fff; }
 .fatv-screen .field:focus { outline: none; border-color: #f97316; }
 .fatv-screen select.field { cursor: pointer; }
 .fatv-screen .ds-actions { margin-left: auto; display: flex; gap: 8px; }
