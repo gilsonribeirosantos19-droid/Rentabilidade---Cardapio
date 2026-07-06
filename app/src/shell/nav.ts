@@ -7,7 +7,7 @@ export type Section = Leaf | { group: string; items: Leaf[] }
 export type Module = { id: string; label: string; icon: string; home?: boolean; sections?: Section[] }
 
 export const MODULES: Module[] = [
-  { id: 'inicio', label: 'Início', icon: 'home', home: true },
+  { id: 'inicio', label: 'Visão geral', icon: 'home', home: true },
   {
     id: 'estoque', label: 'Estoque', icon: 'box',
     sections: [

@@ -139,7 +139,7 @@ export function Shell() {
     })
   }
 
-  const crumbSection = active === '__home' ? 'Início' : labelForKey(active)
+  const crumbSection = active === '__home' ? 'Visão geral' : labelForKey(active)
   const crumbLong = active === '__home' ? '' : titleForKey(active)
   const hasLong = !!crumbLong && crumbLong !== crumbSection
   // telas que abrem em TELA CHEIA (sem topbar/abas do workspace) — têm cabeçalho próprio e precisam de espaço
@@ -172,7 +172,7 @@ export function Shell() {
         </div>}
 
         {!isFull && <div className="tabs">
-          <div className={'tab' + (active === '__home' ? ' on' : '')} onClick={() => setActive('__home')} title="Início">
+          <div className={'tab' + (active === '__home' ? ' on' : '')} onClick={() => setActive('__home')} title="Visão geral">
             🏠
           </div>
           {openTabs.map((t) => (
