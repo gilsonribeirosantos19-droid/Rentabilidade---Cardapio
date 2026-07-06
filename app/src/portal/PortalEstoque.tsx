@@ -91,6 +91,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
   const [grupo, setGrupo] = useState('')
   const [busca, setBusca] = useState('')
   const [soCmv, setSoCmv] = useState(false)
+  const [soSaldo, setSoSaldo] = useState(false)
   const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: anchorDe(), ate: hojeStr() })
   const [periodo, setPeriodo] = useState('contagem')
   // filtro "Grupo" = categoria do insumo (o Portal tinha só 1 grupo de compra, então o filtro não servia)
@@ -138,11 +139,12 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
       const s = saldoMap[ins.id]
       const saldo = Number(s?.quantidade) || 0
       const inicial = inicialMap[ins.id]
+      if (soSaldo && saldo <= 0) return null
       if (!ent && !sai && !saldo && inicial == null) return null
       const min = (s?.minimo != null && Number(s.minimo) > 0) ? Number(s.minimo) : (Number(ins.minimo) > 0 ? Number(ins.minimo) : null)
       return { ins, ent, sai, saldo, cm: Number(s?.custo_medio) || 0, min, max: s?.maximo != null ? Number(s.maximo) : null, inicial: inicial == null ? null : Number(inicial), ult: ult[ins.id] }
     }).filter(Boolean).sort((a: any, b: any) => a.ins.nome.localeCompare(b.ins.nome, 'pt-BR')) as any[]
-  }, [movs, insumos, grupo, gruposItens, soCmv, busca, saldoMap, inicialMap])
+  }, [movs, insumos, grupo, gruposItens, soCmv, soSaldo, busca, saldoMap, inicialMap])
 
   const aplicar = () => { if (!de || !ate) return; setAplicado({ de, ate }) }
 
@@ -161,6 +163,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
         <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('personalizado') }} /></div>
         <div className="pf-fld"><label>Grupo</label><div style={{ minWidth: 180 }}><SearchSelect value={grupo} onChange={setGrupo} options={categorias} placeholder="Todos os grupos" /></div></div>
         <div className="pf-fld"><label>Buscar item</label><input className="p-field" style={{ minWidth: 200 }} placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
+        <label className="pf-chk"><input type="checkbox" checked={soSaldo} onChange={(e) => setSoSaldo(e.target.checked)} />Somente com saldo</label>
         <label className="pf-chk"><input type="checkbox" checked={soCmv} onChange={(e) => setSoCmv(e.target.checked)} />Só CMV</label>
         <button className="p-btn p-btn-pri" onClick={aplicar}>Atualizar</button>
         <button className="p-btn" onClick={exportar} style={{ marginLeft: 'auto' }}>Exportar CSV</button>
