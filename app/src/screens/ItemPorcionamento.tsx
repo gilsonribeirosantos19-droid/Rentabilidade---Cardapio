@@ -53,9 +53,14 @@ export function ItemPorcionamento() {
       let itemId = fm.id
       if (itemId) { const { error } = await supabase.from('itens_porcionamento').update(body).eq('id', itemId); if (error) throw error }
       else { const { data, error } = await supabase.from('itens_porcionamento').insert({ ...body, tenant_id: tenantId }).select('id').single(); if (error) throw error; itemId = (data as { id: string }).id }
-      await supabase.from('itens_porcionamento_derivados').delete().eq('item_porcionamento_id', itemId)
       const rows = ders.map((d) => ({ tenant_id: tenantId, item_porcionamento_id: itemId, insumo_id: d.insumoId, rendimento_pct: parseFloat(d.rend.replace(',', '.')) || 0 }))
-      const { error } = await supabase.from('itens_porcionamento_derivados').insert(rows); if (error) throw error
+      // insere os NOVOS antes de apagar os antigos: se o insert falhar, os derivados existentes
+      // não são perdidos. Depois apaga todos os antigos (tudo desse item, menos os recém-inseridos).
+      const { data: ins, error } = await supabase.from('itens_porcionamento_derivados').insert(rows).select('id'); if (error) throw error
+      const novos = (ins ?? []).map((r: { id: string }) => r.id)
+      let delQ = supabase.from('itens_porcionamento_derivados').delete().eq('item_porcionamento_id', itemId)
+      if (novos.length) delQ = delQ.not('id', 'in', '(' + novos.join(',') + ')')
+      const { error: delErr } = await delQ; if (delErr) throw delErr
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['ip-itens'] }); qc.invalidateQueries({ queryKey: ['ip-derivados'] }); setForm(null); showToast('Item de porcionamento salvo.') },
     onError: (e: Error) => { console.error('[ItemPorcionamento]', e); showToast('Erro: ' + e.message, true) },

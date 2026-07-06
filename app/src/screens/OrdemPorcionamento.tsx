@@ -71,7 +71,8 @@ export function OrdemPorcionamento({ lojaFixa }: { lojaFixa?: string } = {}) {
       if (error) throw error
       const ordemId = (ord as { id: string }).id
       const rows = linhas.filter((l) => l.insumoId).map((l) => ({ tenant_id: tenantId, ordem_id: ordemId, insumo_id: l.insumoId, quantidade: num(l.qtd), peso: num(l.peso), peso_medio: num(l.qtd) ? num(l.peso) / num(l.qtd) : 0 }))
-      if (rows.length) { const { error: e2 } = await supabase.from('ordens_porcionamento_itens').insert(rows); if (e2) throw e2 }
+      // se os itens falharem, desfaz a ordem (não deixa cabeçalho órfão sem linhas)
+      if (rows.length) { const { error: e2 } = await supabase.from('ordens_porcionamento_itens').insert(rows); if (e2) { await supabase.from('ordens_porcionamento').delete().eq('id', ordemId); throw e2 } }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['op-ordens'] }); showToast('Apontamento salvo.'); novaOrdem() },
     onError: (e: Error) => { console.error('[OrdemPorcionamento]', e); showToast('Erro: ' + e.message, true) },

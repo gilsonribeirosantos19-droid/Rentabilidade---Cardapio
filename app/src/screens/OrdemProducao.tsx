@@ -14,7 +14,7 @@ import './config.css'
 type ItemFicha = { insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number }
 type Ficha = { id: string; nome?: string; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens_ficha?: ItemFicha[] }
 type Insumo = { id: string; nome?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string }
-type Saldo = { insumo_id: string; custo_medio?: number }
+type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
 
 const nowLocal = () => { const d = new Date(); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}` }
 const num = (v: string) => parseFloat((v || '0').replace(',', '.')) || 0
@@ -35,10 +35,15 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
 
   const { data: fichas = [] } = useQuery({ queryKey: ['prod-fichas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fichas_tecnicas').select('id,nome,insumo_vinculado_id,rendimento_receita_g, itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).not('insumo_vinculado_id', 'is', null).order('nome'); return (data ?? []) as Ficha[] } })
   const { data: insumos = [] } = useQuery({ queryKey: ['prod-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,preco_compra,rendimento_pct,unidade_medida').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })
-  const { data: saldos = [] } = useQuery({ queryKey: ['prod-saldos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,custo_medio').eq('tenant_id', tenantId); return (data ?? []) as Saldo[] } })
+  const { data: saldos = [] } = useQuery({ queryKey: ['prod-saldos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId); return (data ?? []) as Saldo[] } })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
-  const cmMap = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if ((s.custo_medio || 0) > (m[s.insumo_id] || 0)) m[s.insumo_id] = s.custo_medio || 0 }); return m }, [saldos])
+  // custo médio da LOJA selecionada; se não houver saldo nessa loja, cai pro maior de qualquer loja
+  const cmMap = useMemo(() => {
+    const byLoja: Record<string, number> = {}, byAny: Record<string, number> = {}
+    saldos.forEach((s) => { const c = Number(s.custo_medio) || 0; if (c > (byAny[s.insumo_id] || 0)) byAny[s.insumo_id] = c; if (loja && s.loja_id === loja && c > 0) byLoja[s.insumo_id] = c })
+    const m: Record<string, number> = {}; saldos.forEach((s) => { m[s.insumo_id] = byLoja[s.insumo_id] || byAny[s.insumo_id] || 0 }); return m
+  }, [saldos, loja])
   const custoBase = (ins?: Insumo) => (ins ? (cmMap[ins.id] > 0 ? cmMap[ins.id] : ins.preco_compra || 0) : 0)
   const custoIngG = (ins: Insumo, qtdG: number) => custoBase(ins) / ((ins.rendimento_pct || 100) / 100) / 1000 * qtdG
 
@@ -70,7 +75,8 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
       if (error) throw error
       const ordemId = (ord as { id: string }).id
       const rows = linhas.filter((l) => l.ins).map((l) => ({ tenant_id: tenantId, ordem_id: ordemId, insumo_id: l.ins!.id, quantidade: l.baixarKg, custo: l.custo }))
-      if (rows.length) { const { error: e2 } = await supabase.from('ordens_producao_itens').insert(rows); if (e2) throw e2 }
+      // se os itens falharem, desfaz a ordem (não deixa cabeçalho órfão sem linhas)
+      if (rows.length) { const { error: e2 } = await supabase.from('ordens_producao_itens').insert(rows); if (e2) { await supabase.from('ordens_producao').delete().eq('id', ordemId); throw e2 } }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['prod-ordens'] }); showToast('Ordem de produção salva.'); nova() },
     onError: (e: Error) => { console.error('[OrdemProducao]', e); showToast('Erro: ' + e.message, true) },

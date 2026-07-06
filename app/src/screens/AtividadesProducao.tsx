@@ -31,9 +31,13 @@ export function AtividadesProducao() {
 
   const salvar = async () => {
     if (!insumoId) { showToast('Selecione o item.', true); return }
-    await supabase.from('atividades_producao').delete().eq('tenant_id', tenantId).eq('insumo_id', insumoId)
     const rows = linhas.filter((l) => l.descricao.trim()).map((l, i) => ({ tenant_id: tenantId, insumo_id: insumoId, ordem: i + 1, descricao: l.descricao.trim(), tempo_min: l.tempo ? num(l.tempo) : null }))
-    if (rows.length) { const { error } = await supabase.from('atividades_producao').insert(rows); if (error) { showToast('Erro: ' + error.message, true); return } }
+    // insere as NOVAS antes de apagar as antigas (se o insert falhar, não perde o que já existia)
+    let novos: string[] = []
+    if (rows.length) { const { data: ins, error } = await supabase.from('atividades_producao').insert(rows).select('id'); if (error) { showToast('Erro: ' + error.message, true); return } novos = (ins ?? []).map((r: { id: string }) => r.id) }
+    let delQ = supabase.from('atividades_producao').delete().eq('tenant_id', tenantId).eq('insumo_id', insumoId)
+    if (novos.length) delQ = delQ.not('id', 'in', '(' + novos.join(',') + ')')
+    const { error: delErr } = await delQ; if (delErr) { showToast('Erro ao limpar antigas: ' + delErr.message, true); return }
     showToast('Atividades salvas.')
   }
 
