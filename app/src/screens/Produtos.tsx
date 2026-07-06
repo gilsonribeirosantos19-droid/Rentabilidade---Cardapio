@@ -60,11 +60,20 @@ export function Produtos() {
     queryFn: () => fetchAll<Produto>((f, t) => supabase.from('produtos').select('*').eq('tenant_id', tenantId).order('nome').range(f, t)),
   })
 
-  const opts = useMemo(() => ({
-    grupos: uniq(lista.map((p) => p.grupo || p.categoria)),
-    familias: uniq(lista.map((p) => p.familia)),
-    subgrupos: uniq(lista.map((p) => p.subgrupo)),
-  }), [lista])
+  // grupos/famílias/subgrupos vêm do CADASTRO (Config → Geral → Classificação) —
+  // mesma lista de insumos e produtos — unidos aos valores já usados nos produtos (nada some).
+  const { data: clsf = [] } = useQuery({
+    queryKey: ['produtos-clsf', tenantId], enabled: !!tenantId,
+    queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome,tipo').eq('tenant_id', tenantId); return (data ?? []) as { nome: string; tipo: string }[] },
+  })
+  const opts = useMemo(() => {
+    const cad = (tipo: string) => clsf.filter((c) => c.tipo === tipo).map((c) => c.nome)
+    return {
+      grupos: uniq([...cad('grupo'), ...lista.map((p) => p.grupo || p.categoria)]),
+      familias: uniq([...cad('familia'), ...lista.map((p) => p.familia)]),
+      subgrupos: uniq([...cad('subgrupo'), ...lista.map((p) => p.subgrupo)]),
+    }
+  }, [lista, clsf])
 
   const filtrada = useMemo(() => {
     const q = norm(busca.trim())
