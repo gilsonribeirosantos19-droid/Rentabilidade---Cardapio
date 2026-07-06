@@ -73,7 +73,8 @@ export function ConfigUsuarios() {
     onError: (e: Error) => { console.error('[ConfigUsuarios]', e); showToast('Erro: ' + e.message, true) },
   })
   const delMut = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from('usuarios').delete().eq('id', id); if (error) throw error },
+    // apaga o perfil E a conta de login (via Edge Function, com a chave admin no servidor)
+    mutationFn: async (id: string) => { await invokeAdmin({ action: 'delete', userId: id }) },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-usuarios'] }); setDel(null); showToast('Usuário removido.') },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })

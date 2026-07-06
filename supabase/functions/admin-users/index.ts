@@ -59,6 +59,20 @@ Deno.serve(async (req) => {
       return json({ ok: true })
     }
 
+    if (body.action === 'delete') {
+      if (!body.userId) return json({ error: 'userId obrigatorio' }, 400)
+      if (body.userId === ud.user.id) return json({ error: 'Voce nao pode remover a si mesmo' }, 400)
+      // o alvo tem que ser do mesmo tenant do admin que chamou
+      const { data: alvo } = await admin.from('usuarios').select('tenant_id').eq('id', body.userId).maybeSingle()
+      if (!alvo || alvo.tenant_id !== caller?.tenant_id)
+        return json({ error: 'Usuario nao pertence ao seu tenant' }, 403)
+      // apaga o PERFIL e a CONTA DE LOGIN (senao a conta de auth fica orfa)
+      await admin.from('usuarios').delete().eq('id', body.userId)
+      const { error } = await admin.auth.admin.deleteUser(body.userId)
+      if (error) return json({ error: error.message }, 400)
+      return json({ ok: true })
+    }
+
     return json({ error: 'Acao desconhecida' }, 400)
   } catch (e) {
     return json({ error: (e as Error).message }, 500)
