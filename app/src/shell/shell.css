@@ -40,7 +40,7 @@
 .sback b { font-size: 16px; font-weight: 800; }
 .sitem { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; margin: 3px 9px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 13px; font-weight: 500; }
 .sitem:hover { background: rgba(255,255,255,.07); color: #fff; }
-.sitem.on { background: rgba(249,115,22,.2); color: #fff; font-weight: 600; }
+.sitem.on { background: rgba(249,115,22,.15); color: #f97316; font-weight: 600; }
 .sdot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .5; flex: none; }
 .sgrp { margin-top: 6px; }
 .sgrp-h { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 8px; cursor: pointer; color: rgba(255,255,255,.6); font-size: 12.5px; font-weight: 600; }
