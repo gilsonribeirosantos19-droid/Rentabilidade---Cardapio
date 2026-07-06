@@ -60,6 +60,7 @@
 .portal .p-btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
 .portal .p-field { height: 34px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; background: #fff; color: #0f172a; }
 .portal .p-field:focus { outline: none; border-color: #f97316; }
+.portal .ass-btn { height: 34px; border-radius: 8px; }
 .portal .pf-bar { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
 .portal .pf-fld { display: flex; flex-direction: column; gap: 3px; }
 .portal .pf-fld label { font-size: 11px; color: #64748b; font-weight: 500; }
