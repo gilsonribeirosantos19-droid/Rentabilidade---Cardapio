@@ -2,7 +2,7 @@
 .pdv-screen { padding: 14px 24px; }
 .pdv-screen .db-filter { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); flex-wrap: wrap; }
 .pdv-screen .date-range { display: flex; align-items: center; gap: 8px; }
-.pdv-screen .field { height: 34px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
+.pdv-screen .field { height: 34px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; }
 .pdv-screen .field:focus { outline: none; border-color: #f97316; }
 .pdv-screen select.field { cursor: pointer; }
 .pdv-screen .btn-pri { height: 34px; padding: 0 16px; border: none; border-radius: 8px; background: #f97316; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }

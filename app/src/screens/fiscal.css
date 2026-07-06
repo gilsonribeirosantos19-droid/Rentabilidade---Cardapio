@@ -9,7 +9,7 @@
 .fiscal-screen .fl-bar .ass-btn { height: 34px; }
 .fiscal-screen .fl-bar .field { height: 34px; }
 .fiscal-screen .f1 .field { height: 34px; }
-.fiscal-screen .field { height: 30px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
+.fiscal-screen .field { height: 30px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: #0f172a; background: #fff; }
 .fiscal-screen .field:focus { outline: none; border-color: #f97316; }
 .fiscal-screen select.field { cursor: pointer; }
 .fiscal-screen .btn-g { height: 36px; padding: 0 13px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #475569; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
