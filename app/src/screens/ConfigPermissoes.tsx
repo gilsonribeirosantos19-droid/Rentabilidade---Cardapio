@@ -135,7 +135,10 @@ export function ConfigPermissoes() {
 
   return (
     <div className="cfg-screen">
-      <div style={{ fontSize: 13, color: '#64748b', margin: '12px 0 14px' }}>Gerencie grupos de acesso e defina o que cada grupo pode fazer no sistema.</div>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '11px 14px', margin: '12px 0 14px', fontSize: 12.5, color: '#92400e', lineHeight: 1.5 }}>
+        <span style={{ fontSize: 16, flexShrink: 0 }}>🚧</span>
+        <div><b>Controle fino de permissões — em breve.</b> Hoje o sistema tem <b>2 níveis</b>: <b>Administrador</b> (acesso total) e <b>Gerente</b> (só a loja dele, pelo Portal). A matriz abaixo <b>ainda não bloqueia</b> os módulos — criar um grupo personalizado <b>não limita</b> o acesso por enquanto (o usuário veria o app completo). Será ativado numa próxima fase.</div>
+      </div>
 
       <div className="perm-wrap">
         {/* ESQUERDA: grupos */}
