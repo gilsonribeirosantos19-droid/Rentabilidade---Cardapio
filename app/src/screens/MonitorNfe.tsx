@@ -66,6 +66,7 @@ export function MonitorNfe() {
   const qc = useQueryClient()
   const now = new Date()
   const [fForn, setFForn] = useState('')
+  const [busca, setBusca] = useState('')
   const [periodo, setPeriodo] = useState('todos'); const [de, setDe] = useState(''); const [ate, setAte] = useState('')
   const [chkPend, setChkPend] = useState(true), [chkProc, setChkProc] = useState(true), [chkErro, setChkErro] = useState(true), [chkCanc, setChkCanc] = useState(false)
   const [tab, setTab] = useState<'nfe' | 'itens' | 'erros'>('nfe')
@@ -117,8 +118,17 @@ export function MonitorNfe() {
     if (lojaId && (n.loja_id || null) !== lojaId) return false
     if (fForn && n.cnpj_emitente !== fForn) return false
     if (periodo !== 'todos') { const d = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA') : ''; if (de && d && d < de) return false; if (ate && d && d > ate) return false }
+    // busca livre: nº da NF, valor (com ponto ou vírgula) e nome do fornecedor (emitente ou cadastro)
+    if (busca.trim()) {
+      const q = norm(busca)
+      const fornCad = fornByCnpj(n.cnpj_emitente)?.nome || ''
+      const valBr = n.valor_total != null ? Number(n.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''
+      const hay = norm([n.numero, n.serie, n.nome_emitente, fornCad, String(n.valor_total ?? ''), valBr].filter(Boolean).join(' '))
+      if (!hay.includes(q) && !hay.includes(q.replace(',', '.')) && !hay.includes(q.replace('.', ','))) return false
+    }
     return true
-  }), [nfes, lojaId, fForn, periodo, de, ate])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [nfes, lojaId, fForn, periodo, de, ate, busca, fornecedores])
   const cnt = useMemo(() => ({
     pend: baseFiltered.filter((n) => inGroup(effStatus(n), G_PEND)).length,
     proc: baseFiltered.filter((n) => inGroup(effStatus(n), G_PROC)).length,
@@ -138,7 +148,7 @@ export function MonitorNfe() {
   const nErros = sel ? erros.length : lista.filter((n) => inGroup(effStatus(n), G_ERRO)).length
 
   const setPreset = (v: string) => { setPeriodo(v); const d = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(d.getFullYear(), d.getMonth(), 1))); setAte(isoD(d)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(d.getFullYear(), d.getMonth() - 1, 1))); setAte(isoD(new Date(d.getFullYear(), d.getMonth(), 0))) } else { setDe(''); setAte('') } }
-  const limpar = () => { setFForn(''); setPreset('todos'); setChkPend(true); setChkProc(true); setChkErro(true); setChkCanc(false) }
+  const limpar = () => { setFForn(''); setBusca(''); setPreset('todos'); setChkPend(true); setChkProc(true); setChkErro(true); setChkCanc(false) }
   const toggleAll = (on: boolean) => setPicked(on ? new Set(lista.map((n) => n.id)) : new Set())
   const togglePick = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
   const nSel = picked.size
@@ -240,6 +250,9 @@ export function MonitorNfe() {
             <span style={{ color: '#94a3b8', fontSize: 12 }}>até</span>
             <input type="date" className="field" title="Até" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo') }} />
           </div>
+        </div>
+        <div className="ds-field"><label>Buscar</label>
+          <input className="field" style={{ minWidth: 240 }} placeholder="Nº da NF, valor ou fornecedor…" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
         <div style={{ marginLeft: 'auto' }}><button className="btn-g" onClick={limpar}>▽ Limpar filtros</button></div>
       </div>
