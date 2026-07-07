@@ -14,6 +14,7 @@ type Venda = { produto_nome?: string; quantidade?: number }
 type Forn = { id: string; cnpj?: string }
 
 const num = (v?: number) => (+((v ?? 0)) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
+const fmtHa = (h: number | null) => (h == null ? 'sem notas' : h < 1 ? 'agora há pouco' : h < 24 ? `há ${Math.floor(h)}h` : `há ${Math.floor(h / 24)}d`)
 type Check = { key: string; titulo: string; cols: [string, string]; rows: { a: string; b: string }[] }
 
 export function Divergencias() {
@@ -37,6 +38,38 @@ export function Divergencias() {
       return { insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas, fornecedores }
     },
   })
+
+  // ── Saúde da NF-e: recebimento por loja (última nota, volume) — detecta loja que "parou" ──
+  const { data: saude } = useQuery({
+    queryKey: ['dv-saude', tenantId], enabled: !!tenantId,
+    queryFn: async () => {
+      const desde = new Date(Date.now() - 30 * 86400000).toISOString()
+      const [lojasR, nfesR] = await Promise.all([
+        supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'),
+        fetchAll<{ loja_id?: string | null; created_at?: string }>((f, t) => supabase.from('nfe_recebidas').select('loja_id,created_at').eq('tenant_id', tenantId).gte('created_at', desde).range(f, t)),
+      ])
+      return { lojas: (lojasR.data ?? []) as { id: string; nome: string }[], nfes: nfesR }
+    },
+  })
+
+  const saudeLojas = useMemo(() => {
+    if (!saude) return [] as { nome: string; horas: number | null; hoje: number; d7: number; status: string }[]
+    const agora = Date.now(), hojeStr = new Date().toLocaleDateString('en-CA'), seteDias = agora - 7 * 86400000
+    const porLoja: Record<string, { ultima: number; hoje: number; d7: number }> = {}
+    for (const n of saude.nfes) {
+      const p = (porLoja[n.loja_id || 'sem'] ||= { ultima: 0, hoje: 0, d7: 0 })
+      const t = n.created_at ? new Date(n.created_at).getTime() : 0
+      if (t > p.ultima) p.ultima = t
+      if (n.created_at && new Date(n.created_at).toLocaleDateString('en-CA') === hojeStr) p.hoje++
+      if (t >= seteDias) p.d7++
+    }
+    return saude.lojas.map((l) => {
+      const p = porLoja[l.id] || { ultima: 0, hoje: 0, d7: 0 }
+      const horas = p.ultima ? (agora - p.ultima) / 3600000 : null
+      const status = horas == null ? 'cinza' : horas < 24 ? 'ok' : horas < 48 ? 'warn' : 'bad'
+      return { nome: l.nome, horas, hoje: p.hoje, d7: p.d7, status }
+    })
+  }, [saude])
 
   const checks = useMemo<Check[]>(() => {
     if (!data) return []
@@ -73,6 +106,30 @@ export function Divergencias() {
 
   return (
     <div className="est-screen">
+      {saudeLojas.length > 0 && (
+        <div className="dv-sec" style={{ marginBottom: 14 }}>
+          <div className="dv-sec-h" style={{ cursor: 'default' }}>
+            <span style={{ fontSize: 15 }}>📡</span> Saúde da NF-e — recebimento por loja
+          </div>
+          <div className="tbl-scroll">
+            <table className="tbl">
+              <thead><tr><th>Loja</th><th>Última nota</th><th style={{ textAlign: 'right' }}>Hoje</th><th style={{ textAlign: 'right' }}>7 dias</th><th style={{ textAlign: 'center' }}>Status</th></tr></thead>
+              <tbody>
+                {saudeLojas.map((s, i) => (
+                  <tr key={i}>
+                    <td>{s.nome}</td>
+                    <td style={{ fontWeight: 600, color: s.status === 'bad' ? '#dc2626' : s.status === 'warn' ? '#d97706' : s.status === 'cinza' ? '#94a3b8' : '#475569' }}>{fmtHa(s.horas)}</td>
+                    <td style={{ textAlign: 'right' }}>{s.hoje}</td>
+                    <td style={{ textAlign: 'right' }}>{s.d7}</td>
+                    <td style={{ textAlign: 'center', fontSize: 15 }}>{s.status === 'ok' ? '🟢' : s.status === 'warn' ? '🟡' : s.status === 'bad' ? '🔴' : '⚪'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ padding: '7px 12px', fontSize: 11, color: '#94a3b8' }}>🟢 recebeu &lt;24h · 🟡 24–48h · 🔴 +48h sem nota · ⚪ nenhuma nota em 30 dias. Fins de semana são naturalmente mais quietos.</div>
+        </div>
+      )}
       <div className="dv-kpis">
         {checks.map((c) => <div key={c.key} className={'dv-kpi ' + (c.rows.length ? 'warn' : 'ok')} onClick={() => abrirSec(c.key)}><div className="l">{c.titulo}</div><div className="v">{c.rows.length}</div></div>)}
       </div>
