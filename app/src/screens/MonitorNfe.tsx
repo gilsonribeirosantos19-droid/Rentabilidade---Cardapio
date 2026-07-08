@@ -77,7 +77,7 @@ export function MonitorNfe() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
 
-  const { data: nfes = [], isLoading } = useQuery({ queryKey: ['mon-nfe', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).order('data_emissao', { ascending: false }).range(f, t)) })
+  const { data: nfes = [], isLoading } = useQuery({ queryKey: ['mon-nfe', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).is('excluida_em', null).order('data_emissao', { ascending: false }).range(f, t)) })
   const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   // Parâmetro Estoque › "Data de movimentação" (emissao | processamento | manual): em que data a entrada afeta o estoque/CMV
   const { data: critDataMov = 'emissao' } = useQuery({ queryKey: ['mon-param-datamov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'data_movimentacao').limit(1); return (data?.[0]?.valor as string) || 'emissao' } })
@@ -219,11 +219,14 @@ export function MonitorNfe() {
     if (msgs.length) console.warn('Monitor:\n' + msgs.join('\n'))
   }
 
+  // Soft-delete: não apaga de vez — move p/ a lixeira (aba Fiscal › Excluídas), onde
+  // fica 30 dias (some sozinha) ou o usuário apaga definitivo antes. Os itens ficam
+  // intactos p/ permitir restaurar. Não estorna o que já foi processado no estoque.
   const excluirSel = async () => {
     if (!nSel) return
-    if (!confirm(`Excluir ${nSel} nota(s) do Monitor? (não estorna o que já foi processado)`)) return
+    if (!confirm(`Mover ${nSel} nota(s) para a lixeira (Fiscal › Excluídas)? Ficam lá 30 dias e podem ser restauradas.`)) return
     setBusy(true)
-    try { for (const id of picked) { await supabase.from('nfe_itens').delete().eq('nfe_id', id); await supabase.from('nfe_recebidas').delete().eq('id', id) } setPicked(new Set()); await invalidarTudo(); showToast(`${nSel} nota(s) excluída(s).`, 'ok') } catch (e: any) { showToast('Erro: ' + e.message, 'err') } finally { setBusy(false) }
+    try { const { error } = await supabase.from('nfe_recebidas').update({ excluida_em: new Date().toISOString() }).in('id', Array.from(picked)); if (error) throw error; setPicked(new Set()); await invalidarTudo(); showToast(`${nSel} nota(s) movida(s) para Excluídas.`, 'ok') } catch (e: any) { showToast('Erro: ' + e.message, 'err') } finally { setBusy(false) }
   }
   void now
 

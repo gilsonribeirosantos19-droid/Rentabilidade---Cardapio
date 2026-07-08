@@ -2,7 +2,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  // SECRET nova (APP_SERVICE_KEY) — bypassa RLS. A legacy service_role foi revogada e,
+  // após ligar o RLS em nfe_recebidas (05/07), ela parou de conseguir gravar as notas.
+  Deno.env.get('APP_SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
 const MORI_TENANT_ID = '33e81daf-662f-43d1-8684-0702e959c4f9'  // default p/ compat: webhook do Mori não passa ?tenant
@@ -151,7 +153,7 @@ async function rodarBackfillLoja(tenant: string) {
   const inicio = Date.now()
   let processadas = 0, fixadas = 0, semXml = 0, semMatch = 0
   for (const n of notas || []) {
-    if (Date.now() - inicio > 110000) break  // orçamento de tempo
+    if (Date.now() - inicio > 40000) break  // orçamento de tempo
     processadas++
     await manifestarCiencia(n.chave_acesso)
     const completa = await fetchNfeCompleta(n.chave_acesso)
@@ -190,7 +192,7 @@ async function rodarBackfillVenc(tenant: string) {
   const inicio = Date.now()
   let processadas = 0, fixadas = 0, semXml = 0, semVenc = 0
   for (const n of notas || []) {
-    if (Date.now() - inicio > 110000) break
+    if (Date.now() - inicio > 40000) break
     processadas++
     const completa = await fetchNfeCompleta(n.chave_acesso)
     if (!completa) { semXml++; continue }
@@ -229,7 +231,7 @@ async function rodarReprocessar(tenant?: string) {
   let processadas = 0, completadas = 0, semXml = 0, erros = 0
 
   for (const n of notas || []) {
-    if (Date.now() - inicio > 110000) break
+    if (Date.now() - inicio > 40000) break
     processadas++
     try {
       await manifestarCiencia(n.chave_acesso)
@@ -292,7 +294,7 @@ async function rodarReprocessar(tenant?: string) {
 
 // ── PULL: busca no Focus as notas recebidas de cada filial e importa as que faltam no banco ──
 // Diagnóstico embutido: devolve amostra da resposta do Focus (lista e completa) pra ajustar se preciso.
-async function rodarPullFocus(tenant: string) {
+async function rodarPullFocus(tenant: string, lojaFiltro?: string) {
   const json = (obj: unknown, status = 200) =>
     new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } })
   const _uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -304,19 +306,36 @@ async function rodarPullFocus(tenant: string) {
     .filter((l: any) => l.cnpj.length === 14)
   if (!lojasCnpj.length) return json({ error: 'pull: nenhuma loja com CNPJ cadastrado' }, 400)
 
+  // filtro opcional de loja (body.loja): puxa UMA loja por vez p/ não estourar o tempo da plataforma
+  const lojasAlvo = lojaFiltro
+    ? lojasCnpj.filter((l: any) => String(l.nome || '').toLowerCase().includes(lojaFiltro.toLowerCase()))
+    : lojasCnpj
+  if (!lojasAlvo.length) return json({ error: `pull: nenhuma loja bateu com "${lojaFiltro}"` }, 400)
+
+  // pré-carrega as chaves já existentes do tenant (evita 1 query por nota — o gargalo que estourava o tempo)
+  const jaExistem = new Set<string>()
+  for (let off = 0; off < 100000; off += 1000) {
+    const { data: chs } = await supabase.from('nfe_recebidas').select('chave_acesso').eq('tenant_id', tenant).range(off, off + 999)
+    if (!chs || !chs.length) break
+    for (const r of chs) jaExistem.add((r as any).chave_acesso)
+    if (chs.length < 1000) break
+  }
+
   const inicio = Date.now()
   const diag: any[] = []
   let amostraLista: any = null, amostraCompleta: any = null
   let encontradas = 0, novas = 0, importadas = 0, erros = 0
+  let primeiroErro: string | null = null   // 1ª mensagem de erro real (diagnóstico)
 
-  for (const loja of lojasCnpj) {
-    if (Date.now() - inicio > 115000) { diag.push({ loja: loja.nome, status: 'pulado-tempo' }); continue }
+  for (const loja of lojasAlvo) {
+    if (Date.now() - inicio > 120000) { diag.push({ loja: loja.nome, status: 'pulado-tempo' }); continue }
+    try {
     // PAGINAÇÃO: o Focus retorna no máx 100 notas por página; pra pegar as próximas
     // passa-se ?versao=<X-Max-Version> (header) até cobrir o X-Total-Count.
     let versao = '', totalFocus = 0, paginas = 0, noFocusLoja = 0, guard = 0
     paginar: while (guard < 100) {
       guard++
-      if (Date.now() - inicio > 110000) { diag.push({ loja: loja.nome, status: 'parou-tempo', paginas }); break }
+      if (Date.now() - inicio > 118000) { diag.push({ loja: loja.nome, status: 'parou-tempo', paginas }); break }
       let res: Response
       try {
         res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas?cnpj=${loja.cnpj}${versao ? `&versao=${versao}` : ''}`, { headers: { 'Authorization': FOCUS_AUTH } })
@@ -332,57 +351,32 @@ async function rodarPullFocus(tenant: string) {
       const tc = parseInt(res.headers.get('x-total-count') || '0'); if (tc) totalFocus = tc
 
       for (const it of arr) {
-        if (Date.now() - inicio > 110000) break paginar
+        if (Date.now() - inicio > 118000) break paginar
         const chave = String(it.chave_nfe || it.chave || it.chave_acesso || it.chave_acesso_nfe || '')
         if (chave.length !== 44) continue
         encontradas++
-        const { count } = await supabase.from('nfe_recebidas').select('id', { count: 'exact', head: true }).eq('chave_acesso', chave)
-        if (count && count > 0) continue
+        if (jaExistem.has(chave)) continue
         novas++
         try {
-          await manifestarCiencia(chave)
-          const completa = await fetchNfeCompleta(chave)
-          if (!amostraCompleta && completa) amostraCompleta = JSON.stringify(completa).substring(0, 700)
-          const raw = completa ? JSON.stringify(completa) : ''
-          const lojaMatch = lojasCnpj.find((l: any) => raw.includes(l.cnpj))
-          const req: any = completa?.requisicao_nota_fiscal || {}
-          const itensNfe: any[] = req.itens || []
+          // RÁPIDO: grava só o CABEÇALHO (acha a loja pelo cnpj_destinatario que já vem na lista —
+          // sem baixar a nota completa). Os ITENS ficam pro REPROCESSAR (cron) completar depois.
+          // Assim o pull não estoura o tempo em tenants com muitas lojas (ex.: Sushi PN, 8 lojas).
+          const cnpjDest = String(it.cnpj_destinatario || '').replace(/\D/g, '')
+          const lojaMatch = lojasCnpj.find((l: any) => l.cnpj === cnpjDest)
           const numero = chave.substring(25, 34).replace(/^0+/, '') || '0'
           const serie  = chave.substring(22, 25)
           const cnpjEmit = chave.substring(6, 20)
-          const { data: nova, error: insErr } = await supabase.from('nfe_recebidas').insert({
+          const { error: insErr } = await supabase.from('nfe_recebidas').insert({
             tenant_id: tenant, loja_id: lojaMatch?.id || null, numero, serie, chave_acesso: chave,
-            cnpj_emitente: cnpjEmit, nome_emitente: String(req.nome_emitente || it.nome_emitente || ''),
-            data_emissao: req.data_emissao || it.data_emissao || new Date().toISOString(),
-            valor_total: parseFloat(req.valor_total || it.valor_total || '0'),
-            status: itensNfe.length > 0 ? 'aguard_vinculacao' : 'em_transito', fonte: 'pull',
-          }).select('id').single()
-          if (insErr) { erros++; continue }
-          if (itensNfe.length > 0 && nova) {
-            const { data: vinc } = await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor,fornecedor_id').eq('tenant_id', tenant)
-            // Fornecedor da nota (CNPJ do emitente). SÓ auto-vincula se o vínculo for DESSE fornecedor
-            // (código sozinho colide entre fornecedores — códigos genéricos 2000000000xxx).
-            const { data: fpull } = await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', tenant)
-            const fornNotaId = (fpull || []).find((f: any) => String(f.cnpj || '').replace(/\D/g, '') === cnpjEmit)?.id || null
-            const batch = itensNfe.map((item: any) => ({
-              nfe_id: nova.id, tenant_id: tenant,
-              descricao_nfe: String(item.descricao || '').toUpperCase(),
-              codigo_item_fornecedor: String(item.codigo_produto || ''),
-              quantidade: parseFloat(item.quantidade_comercial || '0'),
-              unidade_nfe: String(item.unidade_comercial || 'UN').toUpperCase(),
-              valor_unitario: parseFloat(item.valor_unitario_comercial || '0'),
-              valor_total: valTotalItem(item),
-              vinculacao_id: fornNotaId ? ((vinc || []).find((v: any) => v.codigo_fornecedor === String(item.codigo_produto || '') && v.fornecedor_id === fornNotaId)?.id || null) : null,
-            }))
-            const { error: itErr } = await supabase.from('nfe_itens').insert(batch)
-            // Se os itens não foram gravados (e não foi duplicata), não deixa a nota presa em
-            // 'aguard_vinculacao' sem item: volta para 'em_transito' (Pendente, reprocessável).
-            if (itErr && itErr.code !== '23505') {
-              await supabase.from('nfe_recebidas').update({ status: 'em_transito' }).eq('id', nova.id)
-            }
-          }
+            cnpj_emitente: cnpjEmit, nome_emitente: String(it.nome_emitente || ''),
+            data_emissao: it.data_emissao || new Date().toISOString(),
+            valor_total: parseFloat(it.valor_total || '0'),
+            status: 'em_transito', fonte: 'pull',
+          })
+          if (insErr) { if (insErr.code === '23505') continue; erros++; if (!primeiroErro) primeiroErro = 'INSERT nfe_recebidas: ' + (insErr.message || insErr.code || JSON.stringify(insErr)); continue }
+          jaExistem.add(chave)
           importadas++
-        } catch (e) { erros++; console.error('pull item erro:', (e as Error).message) }
+        } catch (e) { erros++; if (!primeiroErro) primeiroErro = 'EXCEPTION item: ' + (e as Error).message; console.error('pull item erro:', (e as Error).message) }
       }
 
       // próxima página: usa X-Max-Version (ou o maior "versao" do lote como fallback)
@@ -395,10 +389,47 @@ async function rodarPullFocus(tenant: string) {
       if (totalFocus && noFocusLoja >= totalFocus) break
     }
     diag.push({ loja: loja.nome, noFocus: noFocusLoja, totalFocus, paginas })
+    } catch (e) { diag.push({ loja: loja.nome, crash: (e as Error).message }); if (!primeiroErro) primeiroErro = 'LOJA ' + loja.nome + ': ' + (e as Error).message }
   }
 
-  console.log('Pull:', { encontradas, novas, importadas, erros })
-  return json({ ok: true, encontradas, novas, importadas, erros, amostraLista, amostraCompleta, diag })
+  console.log('Pull:', { encontradas, novas, importadas, erros, primeiroErro })
+  return json({ ok: true, encontradas, novas, importadas, erros, primeiroErro, amostraLista, amostraCompleta, diag })
+}
+
+// ── VERIFICAR SITUAÇÃO: consulta a situação real (autorizada/cancelada/denegada) das notas presas ──
+// { "verificar_situacao": true, "tenant": "<uuid>" } — marca as canceladas/denegadas p/ saírem da lista de presas.
+async function rodarVerificarSituacao(tenant: string) {
+  const json = (obj: unknown, status = 200) =>
+    new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } })
+  const _uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!_uuid.test(tenant)) return json({ error: 'verificar_situacao: informe "tenant" (uuid)' }, 400)
+
+  const { data: notas } = await supabase.from('nfe_recebidas')
+    .select('id,chave_acesso').eq('tenant_id', tenant).eq('status', 'em_transito').limit(300)
+
+  const inicio = Date.now()
+  let verificadas = 0, canceladas = 0, denegadas = 0, autorizadas = 0, indefinidas = 0, erros = 0
+  const contagem: Record<string, number> = {}   // diagnóstico: conta cada "situacao" encontrada
+  let amostraResposta: any = null
+  for (const n of notas || []) {
+    if (Date.now() - inicio > 45000) break
+    verificadas++
+    try {
+      const res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas/${n.chave_acesso}.json`, { headers: { 'Authorization': FOCUS_AUTH } })
+      const data = await res.json().catch(() => null)
+      if (!amostraResposta && data) amostraResposta = JSON.stringify(data).substring(0, 600)
+      const sit = String(data?.situacao || data?.status || data?.requisicao_nota_fiscal?.situacao || '').toLowerCase()
+      contagem[sit || '(sem situacao)'] = (contagem[sit || '(sem situacao)'] || 0) + 1
+      if (sit.includes('cancel')) { await supabase.from('nfe_recebidas').update({ status: 'cancelada' }).eq('id', n.id); canceladas++ }
+      else if (sit.includes('deneg')) { await supabase.from('nfe_recebidas').update({ status: 'recusada' }).eq('id', n.id); denegadas++ }
+      else if (sit.includes('autoriz')) { autorizadas++ }
+      else { indefinidas++ }
+    } catch (e) { erros++; console.error('verificar_situacao erro:', (e as Error).message) }
+  }
+  const { count: restantes } = await supabase.from('nfe_recebidas')
+    .select('id', { count: 'exact', head: true }).eq('tenant_id', tenant).eq('status', 'em_transito')
+  console.log('VerificarSituacao:', { verificadas, canceladas, denegadas, autorizadas, indefinidas, erros, restantes })
+  return json({ ok: true, verificadas, canceladas, denegadas, autorizadas, indefinidas, erros, restantes, contagem, amostraResposta })
 }
 
 Deno.serve(async (req) => {
@@ -424,6 +455,7 @@ Deno.serve(async (req) => {
     // exigem o segredo compartilhado. Sem WEBHOOK_SECRET configurado, secretOk() é true (compat).
     const _adminMode = body.backfill === true || body.pull === true
       || body.backfill_venc === true || body.reprocessar === true || body.amostra === true
+      || body.verificar_situacao === true
     if (_adminMode && !secretOk(req, body)) {
       return new Response(JSON.stringify({ error: 'não autorizado (segredo inválido)' }), {
         status: 401, headers: { 'Content-Type': 'application/json', ...CORS },
@@ -435,9 +467,10 @@ Deno.serve(async (req) => {
       return await rodarBackfillLoja(body.tenant || TENANT_ID)
     }
 
-    // Modo PULL (manual): { "pull": true, "tenant": "<uuid>" } → busca no Focus e importa as notas que faltam
+    // Modo PULL (manual): { "pull": true, "tenant": "<uuid>", "loja": "<nome parcial>" }
+    // busca no Focus e importa as notas que faltam. body.loja (opcional) puxa UMA loja por vez.
     if (body.pull === true) {
-      return await rodarPullFocus(body.tenant || TENANT_ID)
+      return await rodarPullFocus(body.tenant || TENANT_ID, body.loja)
     }
 
     // Modo BACKFILL VENCIMENTO (manual): { "backfill_venc": true, "tenant": "<uuid>" } → preenche data de vencimento das notas antigas
@@ -449,6 +482,12 @@ Deno.serve(async (req) => {
     // tenant é OPCIONAL aqui (sem tenant = todos os tenants); o cron chama assim, sem chave.
     if (body.reprocessar === true) {
       return await rodarReprocessar(body.tenant)
+    }
+
+    // Modo VERIFICAR SITUAÇÃO: { "verificar_situacao": true, "tenant": "<uuid>" }
+    // consulta a situação real das em_transito no Focus e marca canceladas/denegadas.
+    if (body.verificar_situacao === true) {
+      return await rodarVerificarSituacao(body.tenant || TENANT_ID)
     }
 
     // Modo AMOSTRA (diagnóstico): { "amostra": true, "tenant": "<uuid>" } → devolve UMA nota completa do Focus
