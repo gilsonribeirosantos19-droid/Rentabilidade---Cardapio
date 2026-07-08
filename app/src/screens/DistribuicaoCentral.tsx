@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import './fiscal.css'
 import './distribuicao.css'
+import { Romaneio } from './Romaneio'
 
 // Distribuição › Central de Distribuição — o CD (matriz) atende as requisições das
 // filiais: separa, gera romaneio e confirma o envio (dispara transferir_estoque CD→filial).
@@ -211,37 +212,14 @@ export function DistribuicaoCentral() {
         </aside>
       </>}
 
-      {/* ROMANEIO */}
-      {sel && rom && <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(15,23,42,.4)', overflow: 'auto', padding: '28px 16px' }} onClick={(e) => { if (e.target === e.currentTarget) setRom(false) }}>
-        <div style={{ maxWidth: 660, margin: '0 auto 12px', display: 'flex', gap: 9, justifyContent: 'flex-end' }}>
-          <button className="btn-g" onClick={() => setRom(false)}>Fechar</button>
-          <button className="btn-g" style={{ background: '#0f172a', color: '#fff', borderColor: '#0f172a' }} onClick={() => window.print()}>🖨 Imprimir</button>
-        </div>
-        <div style={{ maxWidth: 660, margin: '0 auto', background: '#fff', borderRadius: 10, padding: '26px 30px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #0f172a', paddingBottom: 12, marginBottom: 14 }}>
-            <div><div style={{ fontSize: 22, fontWeight: 800 }}>AIKO</div><div style={{ color: '#64748b', fontSize: 11 }}>Romaneio de Separação / Entrega</div></div>
-            <div style={{ textAlign: 'right', fontSize: 11.5, color: '#64748b' }}><b>{reqNo(sel.numero)}</b><br />Emissão: {fmtD(new Date().toISOString())}</div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 20px', fontSize: 12, marginBottom: 16 }}>
-            <div><span style={{ color: '#94a3b8', fontSize: 10.5, textTransform: 'uppercase' }}>Origem (CD)</span><br />{cd?.nome || '—'}</div>
-            <div><span style={{ color: '#94a3b8', fontSize: 10.5, textTransform: 'uppercase' }}>Destino (Filial)</span><br />{filial?.nome || '—'}</div>
-            <div><span style={{ color: '#94a3b8', fontSize: 10.5, textTransform: 'uppercase' }}>CNPJ Origem</span><br /><span className="mono">{cd?.cnpj || '—'}</span></div>
-            <div><span style={{ color: '#94a3b8', fontSize: 10.5, textTransform: 'uppercase' }}>CNPJ Destino</span><br /><span className="mono">{filial?.cnpj || '—'}</span></div>
-          </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead><tr><th style={{ width: 34, textAlign: 'center', background: '#f1f5f9', padding: '6px 9px', border: '1px solid #e2e8f0', fontSize: 10, textTransform: 'uppercase', color: '#475569' }}>#</th><th style={{ textAlign: 'left', background: '#f1f5f9', padding: '6px 9px', border: '1px solid #e2e8f0', fontSize: 10, textTransform: 'uppercase', color: '#475569' }}>Item</th><th style={{ textAlign: 'center', background: '#f1f5f9', padding: '6px 9px', border: '1px solid #e2e8f0', fontSize: 10, textTransform: 'uppercase', color: '#475569' }}>Un.</th><th style={{ textAlign: 'right', background: '#f1f5f9', padding: '6px 9px', border: '1px solid #e2e8f0', fontSize: 10, textTransform: 'uppercase', color: '#475569' }}>Qtd enviada</th><th style={{ textAlign: 'center', background: '#f1f5f9', padding: '6px 9px', border: '1px solid #e2e8f0', fontSize: 10, textTransform: 'uppercase', color: '#475569' }}>Conf.</th></tr></thead>
-            <tbody>
-              {itens.filter((it) => num(atend[it.id]) > 0).map((it, i) => (
-                <tr key={it.id}><td style={{ textAlign: 'center', padding: '6px 9px', border: '1px solid #eef2f6' }}>{i + 1}</td><td style={{ padding: '6px 9px', border: '1px solid #eef2f6' }}>{insMap[it.insumo_id]?.nome || '—'}</td><td style={{ textAlign: 'center', padding: '6px 9px', border: '1px solid #eef2f6' }}>{it.unidade || '—'}</td><td style={{ textAlign: 'right', padding: '6px 9px', border: '1px solid #eef2f6', fontFamily: 'DM Mono, monospace' }}>{fmtQ(num(atend[it.id]))}</td><td style={{ textAlign: 'center', padding: '6px 9px', border: '1px solid #eef2f6' }}>☐</td></tr>
-              ))}
-            </tbody>
-          </table>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 34, fontSize: 11.5, color: '#64748b' }}>
-            <div>Total: <b>{resumo.itensAt} itens</b></div>
-            <div style={{ borderTop: '1px solid #94a3b8', paddingTop: 5, width: 230, textAlign: 'center' }}>Recebido por / Data</div>
-          </div>
-        </div>
-      </div>}
+      {/* ROMANEIO (componente compartilhado) */}
+      {sel && rom && <Romaneio
+        numeroLabel={reqNo(sel.numero)}
+        dataLabel={fmtD(new Date().toISOString())}
+        cd={cd} filial={filial}
+        linhas={itens.filter((it) => num(atend[it.id]) > 0).map((it) => ({ nome: insMap[it.insumo_id]?.nome || '—', unidade: it.unidade || insMap[it.insumo_id]?.unidade_medida, qtd: num(atend[it.id]) }))}
+        onClose={() => setRom(false)}
+      />}
 
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
