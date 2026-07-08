@@ -19,6 +19,10 @@ import { EntradasProcessadas } from '../screens/EntradasProcessadas'
 import { MonitorNfe } from '../screens/MonitorNfe'
 import { AuditoriaConversao } from '../screens/AuditoriaConversao'
 import { NfeExcluidas } from '../screens/NfeExcluidas'
+import { DistribuicaoCentral } from '../screens/DistribuicaoCentral'
+import { DistribuicaoNovaRequisicao } from '../screens/DistribuicaoNovaRequisicao'
+import { DistribuicaoRomaneios } from '../screens/DistribuicaoRomaneios'
+import { DistribuicaoEmBreve } from '../screens/DistribuicaoEmBreve'
 import { HistoricoEntradas } from '../screens/HistoricoEntradas'
 import { ConsumoInsumos } from '../screens/ConsumoInsumos'
 import { HistoricoCustos } from '../screens/HistoricoCustos'
@@ -70,6 +74,10 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'fiscal/monitor') return <MonitorNfe />
   if (k === 'fiscal/auditoria') return <AuditoriaConversao />
   if (k === 'fiscal/excluidas') return <NfeExcluidas />
+  if (k === 'distribuicao/central') return <DistribuicaoCentral />
+  if (k === 'distribuicao/nova') return <DistribuicaoNovaRequisicao />
+  if (k === 'distribuicao/romaneios') return <DistribuicaoRomaneios />
+  if (k === 'distribuicao/nfe') return <DistribuicaoEmBreve titulo="NF-e de Transferência" sub="Notas fiscais de transferência CD → filiais" fase="Fase 3" texto="Aqui o CD vai emitir a NF-e de transferência (CFOP 5152) para cada envio às filiais, direto na SIEG. A nota cairá automaticamente no recebimento da filial. Depende da ativação da conta SIEG." />
   if (k === 'estoque/rel-entradas') return <HistoricoEntradas />
   if (k === 'estoque/rel-consumo') return <ConsumoInsumos />
   if (k === 'estoque/rel-custos') return <HistoricoCustos />

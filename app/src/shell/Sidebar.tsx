@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { MODULES, type Module } from './nav'
 import { ICONS } from './icons'
 import { useAuth } from '../lib/auth'
+import { supabase } from '../lib/db'
 
 const Chevron = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -26,8 +28,12 @@ export function Sidebar({
   dived: string | null
   setDived: (id: string | null) => void
 }) {
-  const { usuario, signOut } = useAuth()
+  const { usuario, signOut, tenantId } = useAuth()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+
+  // Módulos com requiresCd (ex.: Distribuição) só aparecem se o tenant tiver um CD configurado
+  const { data: temCd = false } = useQuery({ queryKey: ['sidebar-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
+  const modules = MODULES.filter((m) => !m.requiresCd || temCd)
 
   const active = MODULES.find((m) => m.id === dived)
   const nome = usuario?.nome || usuario?.email || '—'
@@ -49,7 +55,7 @@ export function Sidebar({
           </div>
         </div>
 
-        {MODULES.map((m) => {
+        {modules.map((m) => {
           const on = m.id === dived || (m.home && activeKey === '__home')
           return (
             <div

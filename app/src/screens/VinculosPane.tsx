@@ -191,10 +191,7 @@ export function VinculosPane({ fornecedores }: { fornecedores: Fornecedor[] }) {
             <div className="form-section-title">Embalagem e Conversão</div>
             <div className="form-grid">
               <div className="form-group"><label className="form-label">Embalagem fornecedor</label>
-                <select className="form-select" style={{ fontFamily: 'DM Mono, monospace' }} value={form.embalagem_descricao || ''} onChange={(e) => onEmbChange(e.target.value)}>
-                  <option value="">Selecione a embalagem...</option>
-                  {embOpcoes.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
+                <SearchSelect value={form.embalagem_descricao || ''} options={embOpcoes} placeholder="Selecione a embalagem..." onChange={(v) => onEmbChange(v)} />
               </div>
               <div className="form-group"><label className="form-label">Qt. na Embalagem (un. estoque)</label><input className="form-input" style={{ fontFamily: 'DM Mono, monospace' }} type="number" step="0.001" min="0" placeholder="Auto" value={form.qtd_por_embalagem ?? ''} onChange={(e) => setF('qtd_por_embalagem', e.target.value)} /></div>
             </div>

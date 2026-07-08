@@ -8,7 +8,7 @@ import './config.css'
 // item_classificacoes (tipo_item/familia/grupo/subgrupo/embalagem), unidades_medida,
 // categorias (ficha), grupos_compra (+ grupos_compra_itens) e lojas.
 
-type Row = { id: string; nome?: string; created_at?: string; abreviacao?: string; tipo?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string }
+type Row = { id: string; nome?: string; created_at?: string; abreviacao?: string; tipo?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string; is_cd?: boolean }
 type CadKey = 'tipo_item' | 'familia' | 'grupo' | 'subgrupo' | 'embalagem' | 'unidade' | 'cat_ficha' | 'grupo_compra' | 'loja'
 
 type Cad = { key: CadKey; label: string; table: string; clsfTipo?: string; special?: 'unidade' | 'loja' | 'grupo_compra' }
@@ -25,7 +25,7 @@ const CADS: Cad[] = [
 ]
 
 const fmtData = (d?: string) => (d ? new Date(d).toLocaleDateString('pt-BR') : '—')
-type Modal = { key: CadKey; id?: string; nome: string; abrev: string; razao: string; cnpj: string; ende: string; hm: string; ht: string }
+type Modal = { key: CadKey; id?: string; nome: string; abrev: string; razao: string; cnpj: string; ende: string; hm: string; ht: string; isCd: boolean }
 type GModal = { id?: string; nome: string; sel: Set<string> }
 
 export function ConfigGeral() {
@@ -89,7 +89,7 @@ export function ConfigGeral() {
       if (!nome) throw new Error('Informe o nome.')
       const body: Record<string, unknown> = { nome }
       if (c.special === 'unidade') body.abreviacao = m.abrev.trim() || null
-      if (c.special === 'loja') { body.razao_social = m.razao.trim() || null; body.cnpj = m.cnpj.trim() || null; body.endereco = m.ende.trim() || null; body.horario_manha = m.hm.trim() || null; body.horario_tarde = m.ht.trim() || null }
+      if (c.special === 'loja') { body.razao_social = m.razao.trim() || null; body.cnpj = m.cnpj.trim() || null; body.endereco = m.ende.trim() || null; body.horario_manha = m.hm.trim() || null; body.horario_tarde = m.ht.trim() || null; body.is_cd = m.isCd }
       if (m.id) {
         const { error } = await supabase.from(c.table).update(body).eq('id', m.id); if (error) throw error
       } else {
@@ -132,14 +132,14 @@ export function ConfigGeral() {
 
   const novo = (c: Cad) => {
     if (c.special === 'grupo_compra') { setGModal({ nome: '', sel: new Set() }); setInsBusca(''); return }
-    setModal({ key: c.key, nome: '', abrev: '', razao: '', cnpj: '', ende: '', hm: '', ht: '' })
+    setModal({ key: c.key, nome: '', abrev: '', razao: '', cnpj: '', ende: '', hm: '', ht: '', isCd: false })
   }
   const editar = (c: Cad, r: Row) => {
     if (c.special === 'grupo_compra') {
       const sel = new Set((gcItens.data ?? []).filter((x) => x.grupo_id === r.id).map((x) => x.insumo_id))
       setGModal({ id: r.id, nome: r.nome ?? '', sel }); setInsBusca(''); return
     }
-    setModal({ key: c.key, id: r.id, nome: r.nome ?? '', abrev: r.abreviacao ?? '', razao: r.razao_social ?? '', cnpj: r.cnpj ?? '', ende: r.endereco ?? '', hm: r.horario_manha ?? '', ht: r.horario_tarde ?? '' })
+    setModal({ key: c.key, id: r.id, nome: r.nome ?? '', abrev: r.abreviacao ?? '', razao: r.razao_social ?? '', cnpj: r.cnpj ?? '', ende: r.endereco ?? '', hm: r.horario_manha ?? '', ht: r.horario_tarde ?? '', isCd: !!r.is_cd })
   }
 
   // ---- verifica se o cadastro está em uso antes de permitir excluir ----
@@ -210,7 +210,7 @@ export function ConfigGeral() {
                       <tbody>
                         {rows.map((r) => (
                           <tr key={r.id}>
-                            <td>{r.nome}{c.special === 'unidade' && r.abreviacao ? <span className="muted"> ({r.abreviacao})</span> : null}{c.special === 'loja' && r.cnpj ? <span className="muted mono"> · {r.cnpj}</span> : null}</td>
+                            <td>{r.nome}{c.special === 'unidade' && r.abreviacao ? <span className="muted"> ({r.abreviacao})</span> : null}{c.special === 'loja' && r.cnpj ? <span className="muted mono"> · {r.cnpj}</span> : null}{c.special === 'loja' && r.is_cd ? <span style={{ marginLeft: 7, fontSize: 9, fontWeight: 700, letterSpacing: '.03em', background: '#0d9488', color: '#fff', padding: '1px 6px', borderRadius: 20 }}>CD</span> : null}</td>
                             <td className="muted">{fmtData(r.created_at)}</td>
                             <td className="r">
                               <button className="act" onClick={() => editar(c, r)}>Editar</button>
@@ -246,6 +246,10 @@ export function ConfigGeral() {
                   <div><label>Horário manhã</label><input value={modal.hm} onChange={(e) => setModal({ ...modal, hm: e.target.value })} placeholder="ex: 08:00 - 12:00" /></div>
                   <div><label>Horário tarde</label><input value={modal.ht} onChange={(e) => setModal({ ...modal, ht: e.target.value })} placeholder="ex: 14:00 - 18:00" /></div>
                 </div>
+                <label className="cfg-fg" style={{ flexDirection: 'row', alignItems: 'center', gap: 9, cursor: 'pointer', background: modal.isCd ? '#f0fdfa' : '#f8fafc', border: '1px solid ' + (modal.isCd ? '#99f6e4' : '#e2e8f0'), borderRadius: 8, padding: '10px 12px' }}>
+                  <input type="checkbox" style={{ width: 17, height: 17, accentColor: '#0d9488' }} checked={modal.isCd} onChange={(e) => setModal({ ...modal, isCd: e.target.checked })} />
+                  <span><b style={{ fontWeight: 600 }}>Esta loja é um Centro de Distribuição (CD)</b><br /><span className="muted" style={{ fontSize: 12 }}>O estoque central fica aqui; as filiais requisitam e o CD atende. Habilita o módulo Distribuição.</span></span>
+                </label>
               </>}
             </div>
             <div className="mf">
