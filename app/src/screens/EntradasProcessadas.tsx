@@ -6,7 +6,7 @@ import { imprimirDanfe, gerarDanfeAiko } from '../lib/danfe'
 import { SearchSelect } from '../components/SearchSelect'
 import './fiscal.css'
 
-type Nfe = { id: string; numero?: string; serie?: string; data_emissao?: string; processada_em?: string; nome_emitente?: string; cnpj_emitente?: string; valor_total?: number; chave_acesso?: string }
+type Nfe = { id: string; numero?: string; serie?: string; data_emissao?: string; processada_em?: string; nome_emitente?: string; cnpj_emitente?: string; valor_total?: number; chave_acesso?: string; loja_id?: string | null }
 type NfeItem = { id?: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; valor_total?: number }
 
 const brl = (v?: number | null) => (v == null || (v as any) === '') ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -25,7 +25,7 @@ export function EntradasProcessadas() {
   const [periodo, setPeriodo] = useState('mes_atual')
   const [de, setDe] = useState(isoD(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(isoD(now))
-  const [fForn, setFForn] = useState(''); const [fNum, setFNum] = useState('')
+  const [fForn, setFForn] = useState(''); const [fNum, setFNum] = useState(''); const [fLoja, setFLoja] = useState('')
   const [sortField, setSortField] = useState('processada_em'); const [sortAsc, setSortAsc] = useState(false)
   const [pag, setPag] = useState(1); const [pageSize, setPageSize] = useState(20)
   const [detNfe, setDetNfe] = useState<Nfe | null>(null)
@@ -55,6 +55,10 @@ export function EntradasProcessadas() {
     queryFn: async () => { const rows = await fetchAll<{ nfe_id: string }>((f, t) => supabase.from('nfe_itens').select('nfe_id').eq('tenant_id', tenantId).range(f, t)); const m: Record<string, number> = {}; rows.forEach((r) => { m[r.nfe_id] = (m[r.nfe_id] || 0) + 1 }); return m },
   })
 
+  const { data: lojas = [] } = useQuery({ queryKey: ['ep-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome: string }[] } })
+  const lojaNome = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
+  const lojaByNome = useMemo(() => Object.fromEntries(lojas.map((l) => [l.nome, l.id])) as Record<string, string>, [lojas])
+
   const fornecedores = useMemo(() => { const m: Record<string, string> = {}; nfes.forEach((n) => { if (n.cnpj_emitente && n.nome_emitente) m[n.cnpj_emitente] = n.nome_emitente }); return Object.entries(m).sort((a, b) => a[1].localeCompare(b[1])) }, [nfes])
   const fornNomes = useMemo(() => fornecedores.map(([, n]) => n), [fornecedores])
   const fornByNome = useMemo(() => Object.fromEntries(fornecedores.map(([c, n]) => [n, c])) as Record<string, string>, [fornecedores])
@@ -62,14 +66,14 @@ export function EntradasProcessadas() {
 
   const filtrada = useMemo(() => {
     const num = fNum.replace(/\D/g, '')
-    let r = nfes.filter((n) => { if (fForn && n.cnpj_emitente !== fForn) return false; if (num && !(n.numero || '').replace(/\D/g, '').includes(num)) return false; return true })
+    let r = nfes.filter((n) => { if (fForn && n.cnpj_emitente !== fForn) return false; if (fLoja && (n.loja_id || '') !== fLoja) return false; if (num && !(n.numero || '').replace(/\D/g, '').includes(num)) return false; return true })
     r = [...r].sort((a, b) => {
       let va: any = (a as any)[sortField] || '', vb: any = (b as any)[sortField] || ''
       if (sortField === 'valor_total') { va = Number(va) || 0; vb = Number(vb) || 0 }
       if (va < vb) return sortAsc ? -1 : 1; if (va > vb) return sortAsc ? 1 : -1; return 0
     })
     return r
-  }, [nfes, fForn, fNum, sortField, sortAsc])
+  }, [nfes, fForn, fLoja, fNum, sortField, sortAsc])
 
   const totalValor = filtrada.reduce((s, n) => s + (Number(n.valor_total) || 0), 0)
   const totalPags = Math.max(1, Math.ceil(filtrada.length / pageSize))
@@ -84,7 +88,7 @@ export function EntradasProcessadas() {
     else { setDe(''); setAte('') }
     setPag(1)
   }
-  const limpar = () => { setFForn(''); setFNum(''); aplicarPeriodo('mes_atual') }
+  const limpar = () => { setFForn(''); setFNum(''); setFLoja(''); aplicarPeriodo('mes_atual') }
 
   const estornarMut = useMutation({
     mutationFn: async (n: Nfe) => {
@@ -99,8 +103,8 @@ export function EntradasProcessadas() {
 
   const exportCSV = (rows: Nfe[]) => {
     if (!rows.length) { showToast('Nenhum dado para exportar.', 'err'); return }
-    const head = ['NF-e', 'Série', 'D. Emissão', 'D. Processamento', 'Fornecedor', 'CNPJ', 'V. Total', 'Itens']
-    const body = rows.map((n) => [n.numero || '', n.serie || '1', fmtDate(n.data_emissao), fmtDate(n.processada_em), n.nome_emitente || '', n.cnpj_emitente || '', (n.valor_total || 0).toFixed(2).replace('.', ','), itensCount[n.id] || 0])
+    const head = ['NF-e', 'Série', 'D. Emissão', 'D. Processamento', 'Fornecedor', 'CNPJ', 'Loja', 'V. Total', 'Itens']
+    const body = rows.map((n) => [n.numero || '', n.serie || '1', fmtDate(n.data_emissao), fmtDate(n.processada_em), n.nome_emitente || '', n.cnpj_emitente || '', lojaNome[n.loja_id || ''] || '', (n.valor_total || 0).toFixed(2).replace('.', ','), itensCount[n.id] || 0])
     const csv = [head, ...body].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `entradas_processadas_${isoD(new Date())}.csv`; a.click(); URL.revokeObjectURL(a.href)
@@ -115,6 +119,7 @@ export function EntradasProcessadas() {
       <div className="fh-sub">Histórico de NF-e confirmadas no estoque</div>
       <div className="fl-bar">
         <SearchSelect value={fForn ? (fornNomeOf[fForn] || '') : ''} options={fornNomes} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : (fornByNome[nm] || '')); setPag(1) }} />
+        {lojas.length > 1 && <div style={{ minWidth: 150 }}><SearchSelect value={fLoja ? (lojaNome[fLoja] || '') : ''} options={lojas.map((l) => l.nome)} placeholder="Loja: Todas" onChange={(nm) => { setFLoja(lojaByNome[nm] || ''); setPag(1) }} /></div>}
         <input className="field" style={{ width: 120 }} placeholder="Nº NF-e…" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />
         <div style={{ minWidth: 150 }}><SearchSelect value={PER_LBL[periodo] || 'Período'} options={PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(PER_VAL[l] || 'periodo')} /></div>
         <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
@@ -134,22 +139,23 @@ export function EntradasProcessadas() {
             <th className="sortable" onClick={() => sortBy('data_emissao')}>D. Emissão{arrow('data_emissao')}</th>
             <th className="sortable" onClick={() => sortBy('processada_em')}>D. Processamento{arrow('processada_em')}</th>
             <th>Fornecedor / Razão Social</th>
+            <th>Loja</th>
             <th className="r sortable" onClick={() => sortBy('valor_total')}>V. Total{arrow('valor_total')}</th>
-            <th className="c">Itens</th><th className="c">Status</th><th className="c">Ações</th>
+            <th className="c">Itens</th><th className="c">Ações</th>
           </tr></thead>
           <tbody>
             {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
               : page.length === 0 ? <tr><td colSpan={9} className="empty">Nenhuma NF-e processada encontrada.</td></tr>
               : page.map((n) => (
                 <tr key={n.id}>
-                  <td><span className="nfe-link" title={n.chave_acesso || ''}>{n.numero || '—'}</span><div style={{ fontSize: 10, color: '#94a3b8' }} className="mono">{(n.chave_acesso || '').substring(0, 22)}{n.chave_acesso ? '…' : ''}</div></td>
+                  <td><span className="nfe-link" title={n.chave_acesso || ''}>{n.numero || '—'}</span></td>
                   <td className="c mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
-                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.data_emissao)}</span><br /><span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(n.data_emissao)}</span></td>
-                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.processada_em)}</span><br /><span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(n.processada_em)}</span></td>
-                  <td className="fornec"><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div><div style={{ fontSize: 10, color: '#94a3b8' }} className="mono">{n.cnpj_emitente || ''}</div></td>
+                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.data_emissao)}</span></td>
+                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.processada_em)}</span></td>
+                  <td className="fornec"><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div></td>
+                  <td style={{ fontSize: 12, color: '#475569', whiteSpace: 'nowrap' }}>{lojaNome[n.loja_id || ''] || '—'}</td>
                   <td className="r mono" style={{ fontWeight: 600 }}>{brl(n.valor_total)}</td>
                   <td className="c" style={{ fontWeight: 600 }}>{itensCount[n.id] || '—'}</td>
-                  <td className="c"><span className="badge b-proc"><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />Processada</span></td>
                   <td className="c"><div style={{ display: 'flex', gap: 4, justifyContent: 'center', alignItems: 'center' }}>
                     <button className="lnk-btn" onClick={() => setDetNfe(n)}>Ver detalhes</button>
                     <button className="kebab" onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenu({ nfe: n, top: r.bottom + 4, left: r.left - 130 }) }}>⋮</button>
