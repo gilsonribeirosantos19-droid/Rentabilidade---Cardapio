@@ -141,11 +141,11 @@ export function EntradasProcessadas() {
             <th>Fornecedor / Razão Social</th>
             <th>Loja</th>
             <th className="r sortable" onClick={() => sortBy('valor_total')}>V. Total{arrow('valor_total')}</th>
-            <th className="c">Itens</th><th className="c">Status</th><th className="c">Ações</th>
+            <th className="c">Itens</th><th className="c">Ações</th>
           </tr></thead>
           <tbody>
-            {isLoading ? <tr><td colSpan={10} className="empty">Carregando…</td></tr>
-              : page.length === 0 ? <tr><td colSpan={10} className="empty">Nenhuma NF-e processada encontrada.</td></tr>
+            {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
+              : page.length === 0 ? <tr><td colSpan={9} className="empty">Nenhuma NF-e processada encontrada.</td></tr>
               : page.map((n) => (
                 <tr key={n.id}>
                   <td><span className="nfe-link" title={n.chave_acesso || ''}>{n.numero || '—'}</span></td>
@@ -156,7 +156,6 @@ export function EntradasProcessadas() {
                   <td style={{ fontSize: 12, color: '#475569', whiteSpace: 'nowrap' }}>{lojaNome[n.loja_id || ''] || '—'}</td>
                   <td className="r mono" style={{ fontWeight: 600 }}>{brl(n.valor_total)}</td>
                   <td className="c" style={{ fontWeight: 600 }}>{itensCount[n.id] || '—'}</td>
-                  <td className="c"><span className="badge b-proc"><span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />Processada</span></td>
                   <td className="c"><div style={{ display: 'flex', gap: 4, justifyContent: 'center', alignItems: 'center' }}>
                     <button className="lnk-btn" onClick={() => setDetNfe(n)}>Ver detalhes</button>
                     <button className="kebab" onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenu({ nfe: n, top: r.bottom + 4, left: r.left - 130 }) }}>⋮</button>
