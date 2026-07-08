@@ -51,6 +51,7 @@ export const MODULES: Module[] = [
       { label: 'Monitor NF-e', key: 'fiscal/monitor' },
       { label: 'Entradas Processadas', key: 'fiscal/entradas' },
       { label: 'Auditoria de Conversão', key: 'fiscal/auditoria' },
+      { label: 'Excluídas', key: 'fiscal/excluidas' },
     ],
   },
   {
@@ -136,6 +137,7 @@ const TITLE_OVERRIDES: Record<string, string> = {
   'fiscal/monitor': 'Notas fiscais recebidas',
   'fiscal/entradas': 'Histórico de NF-e confirmadas no estoque',
   'fiscal/auditoria': 'Fator de conversão nas entradas de NF-e',
+  'fiscal/excluidas': 'NF-e removidas do Monitor (lixeira · 30 dias)',
 }
 export function titleForKey(key: string): string {
   return TITLE_OVERRIDES[key] ?? labelForKey(key)

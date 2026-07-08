@@ -2,7 +2,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  // SECRET nova (APP_SERVICE_KEY) — bypassa RLS. A legacy service_role foi revogada.
+  Deno.env.get('APP_SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
 const TENANT_ID   = '33e81daf-662f-43d1-8684-0702e959c4f9'

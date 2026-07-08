@@ -18,6 +18,7 @@ import { Inicio } from '../screens/Inicio'
 import { EntradasProcessadas } from '../screens/EntradasProcessadas'
 import { MonitorNfe } from '../screens/MonitorNfe'
 import { AuditoriaConversao } from '../screens/AuditoriaConversao'
+import { NfeExcluidas } from '../screens/NfeExcluidas'
 import { HistoricoEntradas } from '../screens/HistoricoEntradas'
 import { ConsumoInsumos } from '../screens/ConsumoInsumos'
 import { HistoricoCustos } from '../screens/HistoricoCustos'
@@ -68,6 +69,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'fiscal/entradas') return <EntradasProcessadas />
   if (k === 'fiscal/monitor') return <MonitorNfe />
   if (k === 'fiscal/auditoria') return <AuditoriaConversao />
+  if (k === 'fiscal/excluidas') return <NfeExcluidas />
   if (k === 'estoque/rel-entradas') return <HistoricoEntradas />
   if (k === 'estoque/rel-consumo') return <ConsumoInsumos />
   if (k === 'estoque/rel-custos') return <HistoricoCustos />
