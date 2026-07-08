@@ -52,6 +52,14 @@ export const ICONS: Record<string, ReactNode> = {
       <line x1="14" y1="1" x2="14" y2="4" />
     </>
   ),
+  truck: wrap(
+    <>
+      <rect x="1" y="3" width="15" height="13" />
+      <path d="M16 8h4l3 3v5h-7z" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
+    </>
+  ),
   gear: wrap(
     <>
       <circle cx="12" cy="12" r="3" />

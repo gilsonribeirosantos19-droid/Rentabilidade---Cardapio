@@ -1,0 +1,13 @@
+/* Distribuição — Central de Distribuição (drawer de separação + selos de situação) */
+.fiscal-screen .backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.32); z-index: 50; }
+.fiscal-screen .drawer { position: fixed; top: 0; right: 0; height: 100vh; background: #fff; box-shadow: -8px 0 30px rgba(0,0,0,.15); z-index: 60; display: flex; flex-direction: column; max-width: 96vw; }
+.fiscal-screen .dr-head { padding: 14px 18px; border-bottom: 1px solid #e5e9f0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.fiscal-screen .dr-close { border: 1px solid #e5e9f0; background: #fff; width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 14px; color: #475569; flex-shrink: 0; }
+.fiscal-screen .dr-body { flex: 1; overflow-y: auto; padding: 14px 18px 20px; }
+
+.dist-chip { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; white-space: nowrap; display: inline-block; }
+.dist-chip.d-nova { background: #fff7ed; color: #c2410c; }
+.dist-chip.d-sep  { background: #eff6ff; color: #1d4ed8; }
+.dist-chip.d-env  { background: #f0fdfa; color: #0f766e; }
+.dist-chip.d-rec  { background: #f0fdf4; color: #15803d; }
+.dist-chip.d-can  { background: #f1f5f9; color: #64748b; }
