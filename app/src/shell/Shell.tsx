@@ -20,6 +20,8 @@ import { MonitorNfe } from '../screens/MonitorNfe'
 import { AuditoriaConversao } from '../screens/AuditoriaConversao'
 import { NfeExcluidas } from '../screens/NfeExcluidas'
 import { DistribuicaoCentral } from '../screens/DistribuicaoCentral'
+import { DistribuicaoNovaRequisicao } from '../screens/DistribuicaoNovaRequisicao'
+import { DistribuicaoEmBreve } from '../screens/DistribuicaoEmBreve'
 import { HistoricoEntradas } from '../screens/HistoricoEntradas'
 import { ConsumoInsumos } from '../screens/ConsumoInsumos'
 import { HistoricoCustos } from '../screens/HistoricoCustos'
@@ -72,6 +74,9 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'fiscal/auditoria') return <AuditoriaConversao />
   if (k === 'fiscal/excluidas') return <NfeExcluidas />
   if (k === 'distribuicao/central') return <DistribuicaoCentral />
+  if (k === 'distribuicao/nova') return <DistribuicaoNovaRequisicao />
+  if (k === 'distribuicao/romaneios') return <DistribuicaoEmBreve titulo="Romaneios" sub="Romaneios de separação e entrega" fase="Fase 2" texto="Aqui vai ficar a lista de todos os romaneios gerados (por data, filial e requisição), com reimpressão. Por enquanto, o romaneio é gerado dentro da Central de Distribuição, ao atender uma requisição." />
+  if (k === 'distribuicao/nfe') return <DistribuicaoEmBreve titulo="NF-e de Transferência" sub="Notas fiscais de transferência CD → filiais" fase="Fase 3" texto="Aqui o CD vai emitir a NF-e de transferência (CFOP 5152) para cada envio às filiais, direto na SIEG. A nota cairá automaticamente no recebimento da filial. Depende da ativação da conta SIEG." />
   if (k === 'estoque/rel-entradas') return <HistoricoEntradas />
   if (k === 'estoque/rel-consumo') return <ConsumoInsumos />
   if (k === 'estoque/rel-custos') return <HistoricoCustos />

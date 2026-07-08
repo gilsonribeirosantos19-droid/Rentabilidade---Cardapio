@@ -49,6 +49,9 @@ export const MODULES: Module[] = [
     id: 'distribuicao', label: 'Distribuição', icon: 'truck', requiresCd: true,
     sections: [
       { label: 'Central de Distribuição', key: 'distribuicao/central' },
+      { label: 'Nova Requisição', key: 'distribuicao/nova' },
+      { label: 'Romaneios', key: 'distribuicao/romaneios' },
+      { label: 'NF-e de Transferência', key: 'distribuicao/nfe' },
     ],
   },
   {
@@ -145,6 +148,9 @@ const TITLE_OVERRIDES: Record<string, string> = {
   'fiscal/auditoria': 'Fator de conversão nas entradas de NF-e',
   'fiscal/excluidas': 'NF-e removidas do Monitor (lixeira · 30 dias)',
   'distribuicao/central': 'Requisições das filiais ao Centro de Distribuição',
+  'distribuicao/nova': 'Criar uma requisição de uma filial ao CD',
+  'distribuicao/romaneios': 'Romaneios de separação e entrega',
+  'distribuicao/nfe': 'NF-e de transferência entre CD e filiais',
 }
 export function titleForKey(key: string): string {
   return TITLE_OVERRIDES[key] ?? labelForKey(key)

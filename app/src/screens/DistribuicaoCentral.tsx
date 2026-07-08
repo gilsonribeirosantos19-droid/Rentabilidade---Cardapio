@@ -29,6 +29,7 @@ export function DistribuicaoCentral() {
   const { tenantId, usuario } = useAuth()
   const qc = useQueryClient()
   const [fStatus, setFStatus] = useState('ativas')
+  const [fLoja, setFLoja] = useState('')
   const [busca, setBusca] = useState('')
   const [sel, setSel] = useState<Req | null>(null)
   const [atend, setAtend] = useState<Record<string, string>>({})
@@ -53,6 +54,7 @@ export function DistribuicaoCentral() {
     novas: reqs.filter((r) => r.status === 'enviada').length,
     sep: reqs.filter((r) => r.status === 'em_separacao').length,
     env: reqs.filter((r) => r.status === 'a_caminho').length,
+    rec: reqs.filter((r) => r.status === 'recebida').length,
   }), [reqs])
 
   const lista = useMemo(() => {
@@ -61,10 +63,11 @@ export function DistribuicaoCentral() {
       if (fStatus === 'ativas' && !['enviada', 'em_separacao'].includes(r.status || '')) return false
       if (fStatus === 'transito' && r.status !== 'a_caminho') return false
       if (fStatus === 'concluidas' && r.status !== 'recebida') return false
+      if (fLoja && r.loja_id !== fLoja) return false
       if (b) { const nome = (lojaMap[r.loja_id || '']?.nome || '').toLowerCase(); if (!reqNo(r.numero).toLowerCase().includes(b) && !nome.includes(b)) return false }
       return true
     })
-  }, [reqs, fStatus, busca, lojaMap])
+  }, [reqs, fStatus, fLoja, busca, lojaMap])
 
   const abrir = (r: Req) => { setSel(r); setAtend({}) }
 
@@ -120,21 +123,27 @@ export function DistribuicaoCentral() {
         <div><div className="fh-title">Central de Distribuição</div><div className="fh-sub">Atenda as requisições das filiais — separe, gere o romaneio e confirme o envio</div></div>
       </div>
 
+      <div className="dist-kpis">
+        <div className="dist-kpi"><div className="lb">Novas</div><div className="vl a">{cnt.novas}</div></div>
+        <div className="dist-kpi"><div className="lb">Em separação</div><div className="vl b">{cnt.sep}</div></div>
+        <div className="dist-kpi"><div className="lb">Em trânsito</div><div className="vl p">{cnt.env}</div></div>
+        <div className="dist-kpi"><div className="lb">Recebidas</div><div className="vl g">{cnt.rec}</div></div>
+      </div>
+
+      <div className="dist-tabs">
+        <button className={fStatus === 'ativas' ? 'on' : ''} onClick={() => setFStatus('ativas')}>Requisições</button>
+        <button className={fStatus === 'transito' ? 'on' : ''} onClick={() => setFStatus('transito')}>Em trânsito</button>
+        <button className={fStatus === 'concluidas' ? 'on' : ''} onClick={() => setFStatus('concluidas')}>Concluídas</button>
+      </div>
+
       <div className="f1">
-        <div className="ds-field"><label>Situação</label>
-          <select className="field" value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={{ minWidth: 170 }}>
-            <option value="ativas">A atender (novas + em separação)</option>
-            <option value="transito">Em trânsito</option>
-            <option value="concluidas">Concluídas</option>
-            <option value="todas">Todas</option>
+        <div className="ds-field"><label>Filial</label>
+          <select className="field" value={fLoja} onChange={(e) => setFLoja(e.target.value)} style={{ minWidth: 170 }}>
+            <option value="">Todas as filiais</option>
+            {lojas.filter((l) => !l.is_cd).map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
           </select>
         </div>
         <div className="ds-field"><label>Buscar</label><input className="field" style={{ minWidth: 220 }} placeholder="Nº da requisição ou filial…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 18, alignItems: 'center', fontSize: 13 }}>
-          <span style={{ color: '#c2410c', fontWeight: 600 }}>● {cnt.novas} novas</span>
-          <span style={{ color: '#1d4ed8', fontWeight: 600 }}>● {cnt.sep} em separação</span>
-          <span style={{ color: '#0f766e', fontWeight: 600 }}>● {cnt.env} em trânsito</span>
-        </div>
       </div>
 
       <div className="tbl-wrap" style={{ marginTop: 12 }}><div className="tbl-scroll">
@@ -147,7 +156,7 @@ export function DistribuicaoCentral() {
                   <tr key={r.id} onClick={() => abrir(r)} style={{ cursor: 'pointer' }}>
                     <td className="mono">{reqNo(r.numero)}</td>
                     <td style={{ fontWeight: 600 }}>{lojaMap[r.loja_id || '']?.nome || '—'}</td>
-                    <td style={{ color: '#64748b', fontSize: 12 }}>{r.origem === 'sugestao' ? 'Sugestão' : 'Portal'}</td>
+                    <td style={{ color: '#64748b', fontSize: 12 }}>{r.origem === 'sugestao' ? 'Sugestão' : r.origem === 'app' ? 'Manual' : 'Portal'}</td>
                     <td className="c" style={{ color: '#64748b' }}>{fmtD(r.created_at)}</td>
                     <td className="r mono">{n}</td>
                     <td className="r mono">{brl(r.valor_total)}</td>
