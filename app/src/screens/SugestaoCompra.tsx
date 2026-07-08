@@ -63,6 +63,8 @@ export function SugestaoCompra() {
   const [ideal, setIdeal] = useState<Record<string, string>>({})
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [drawer, setDrawer] = useState<string | null>(null)
+  const [reqOpen, setReqOpen] = useState(false)
+  const [reqQty, setReqQty] = useState<Record<string, string>>({})
   const [toast, setToast] = useState<string | null>(null)
   const showToast = (m: string) => { setToast(m); window.setTimeout(() => setToast(null), 2600) }
 
@@ -197,21 +199,29 @@ export function SugestaoCompra() {
     setPedItems(items); setView('pedido')
   }
 
-  // Fase 1.5 — cria uma requisição ao CD com os itens selecionados (em vez de comprar do fornecedor).
-  // Exige uma LOJA no filtro (a requisição é de uma filial → CD). Cai na Central de Distribuição.
-  const requisitarCd = async () => {
+  // Fase 1.5 — abre a tela de conferência da requisição ao CD (revisar itens/qtd antes de enviar).
+  // Exige uma LOJA no filtro (a requisição é de uma filial → CD).
+  const abrirReqCd = () => {
     if (!cdLojaId) { showToast('Nenhum Centro de Distribuição configurado.'); return }
     if (!lojaFil) { showToast('Escolha uma loja no filtro para requisitar do CD.'); return }
     if (lojaFil === cdLojaId) { showToast('A loja do filtro é o próprio CD — escolha uma filial.'); return }
     const items = rows.filter((r) => sel.has(r.insumoId))
     if (!items.length) { showToast('Selecione itens para requisitar do CD.'); return }
+    const init: Record<string, string> = {}
+    items.forEach((r) => { init[r.insumoId] = q2(idealNum(r)) })
+    setReqQty(init); setReqOpen(true)
+  }
+  // Envia a requisição (após a conferência). Cai na Central de Distribuição (origem='sugestao').
+  const enviarReqCd = async () => {
+    const items = rows.filter((r) => sel.has(r.insumoId))
+    if (!items.length || !cdLojaId || !lojaFil) { setReqOpen(false); return }
     try {
       const { data: req, error } = await supabase.from('requisicoes').insert({ tenant_id: tenantId, loja_id: lojaFil, cd_loja_id: cdLojaId, status: 'enviada', origem: 'sugestao', modo: 'transferencia' }).select('id').single()
       if (error) throw error
       const reqId = (req as { id: string }).id
-      const linhas = items.map((r) => ({ requisicao_id: reqId, tenant_id: tenantId, insumo_id: r.insumoId, qtd_pedida: idealNum(r), unidade: r.un, custo_unitario: r.custo }))
+      const linhas = items.map((r) => ({ requisicao_id: reqId, tenant_id: tenantId, insumo_id: r.insumoId, qtd_pedida: parseNum(reqQty[r.insumoId] ?? '') || idealNum(r), unidade: r.un, custo_unitario: r.custo }))
       const { error: e2 } = await supabase.from('requisicao_itens').insert(linhas); if (e2) throw e2
-      setSel(new Set()); showToast(`Requisição ao CD enviada (${items.length} ${items.length === 1 ? 'item' : 'itens'}).`)
+      setSel(new Set()); setReqOpen(false); showToast(`Requisição ao CD enviada (${items.length} ${items.length === 1 ? 'item' : 'itens'}).`)
     } catch (e) { showToast('Erro: ' + (e as Error).message) }
   }
 
@@ -322,7 +332,7 @@ export function SugestaoCompra() {
         <span className="info">Valor total da compra: <b>{brl(foot.val)}</b></span>
         <div className="grow" />
         <button className="btn" onClick={() => toggleAll(false)}>Limpar seleção</button>
-        {temCd && <button className="btn" onClick={requisitarCd} title={lojaFil ? 'Requisitar os itens selecionados ao Centro de Distribuição' : 'Escolha uma loja no filtro para requisitar do CD'}>📦 Requisitar do CD</button>}
+        {temCd && <button className="btn" onClick={abrirReqCd} title={lojaFil ? 'Requisitar os itens selecionados ao Centro de Distribuição' : 'Escolha uma loja no filtro para requisitar do CD'}>📦 Requisitar do CD</button>}
         <button className="btn btn-solid" onClick={gerarPedido}>Gerar Pedido de Compra →</button>
       </div>
 
@@ -354,6 +364,43 @@ export function SugestaoCompra() {
                 <div className="chartbox"><div className="ct">Consumo por mês ({dr.un})</div><div style={{ height: 130 }}><ChartBox config={chMes} style={{ maxHeight: 130 }} /></div></div>
                 <div className="chartbox"><div className="ct">Evolução do custo (R$/{dr.un})</div><div style={{ height: 130 }}><ChartBox config={chPreco} style={{ maxHeight: 130 }} /></div></div>
                 <div className="chartbox"><div className="ct">Evolução do estoque ({dr.un})</div><div style={{ height: 130 }}><ChartBox config={chEstoque} style={{ maxHeight: 130 }} /></div></div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {reqOpen && (
+        <>
+          <div className="backdrop" onClick={() => setReqOpen(false)} />
+          <div className="sug-drawer">
+            <div className="dr-head">
+              <div><h2>Requisitar ao CD</h2><div className="sub">Filial: {lojas.find((l) => l.id === lojaFil)?.nome || '—'} · {[...sel].length} {[...sel].length === 1 ? 'item' : 'itens'}</div></div>
+              <button className="dr-close" onClick={() => setReqOpen(false)}>✕</button>
+            </div>
+            <div className="dr-body">
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+                <thead><tr>
+                  <th style={{ textAlign: 'left', color: '#64748b', fontSize: 10, textTransform: 'uppercase', padding: '6px 8px', borderBottom: '1px solid #e5e9f0' }}>Item</th>
+                  <th style={{ textAlign: 'center', color: '#64748b', fontSize: 10, textTransform: 'uppercase', padding: '6px 8px', borderBottom: '1px solid #e5e9f0' }}>Un</th>
+                  <th style={{ textAlign: 'right', color: '#64748b', fontSize: 10, textTransform: 'uppercase', padding: '6px 8px', borderBottom: '1px solid #e5e9f0' }}>No CD</th>
+                  <th style={{ textAlign: 'right', color: '#64748b', fontSize: 10, textTransform: 'uppercase', padding: '6px 8px', borderBottom: '1px solid #e5e9f0' }}>Qtd que peço</th>
+                </tr></thead>
+                <tbody>
+                  {rows.filter((r) => sel.has(r.insumoId)).map((r) => { const cd = cdSaldoMap[r.insumoId] || 0; const qv = parseNum(reqQty[r.insumoId] ?? ''); const falta = qv > cd; return (
+                    <tr key={r.insumoId}>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #f1f5f9', fontWeight: 600 }}>{r.desc}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #f1f5f9', textAlign: 'center', color: '#94a3b8' }}>{r.un}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #f1f5f9', textAlign: 'right', fontFamily: 'DM Mono, monospace', color: cd > 0 ? '#0f766e' : '#dc2626' }}>{cd > 0 ? q2(cd) : '—'}</td>
+                      <td style={{ padding: '6px 8px', borderBottom: '1px solid #f1f5f9', textAlign: 'right' }}><input value={reqQty[r.insumoId] ?? ''} onChange={(e) => setReqQty((p) => ({ ...p, [r.insumoId]: e.target.value }))} style={{ width: 90, height: 28, border: '1px solid ' + (falta ? '#fca5a5' : '#cbd5e1'), borderRadius: 5, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12, background: falta ? '#fef2f2' : '#fff' }} /></td>
+                    </tr>
+                  ) })}
+                </tbody>
+              </table>
+              <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 10 }}>Itens sem estoque no CD entram na requisição, mas o CD só envia o que tiver disponível.</div>
+              <div style={{ display: 'flex', gap: 9, marginTop: 16 }}>
+                <button className="btn" style={{ flex: 1 }} onClick={() => setReqOpen(false)}>Voltar</button>
+                <button className="btn btn-solid" style={{ flex: 1 }} onClick={enviarReqCd}>📦 Enviar ao CD</button>
               </div>
             </div>
           </div>
