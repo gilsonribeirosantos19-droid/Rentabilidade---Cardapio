@@ -148,11 +148,11 @@ export function EntradasProcessadas() {
               : page.length === 0 ? <tr><td colSpan={10} className="empty">Nenhuma NF-e processada encontrada.</td></tr>
               : page.map((n) => (
                 <tr key={n.id}>
-                  <td><span className="nfe-link" title={n.chave_acesso || ''}>{n.numero || '—'}</span><div style={{ fontSize: 10, color: '#94a3b8' }} className="mono">{(n.chave_acesso || '').substring(0, 22)}{n.chave_acesso ? '…' : ''}</div></td>
+                  <td><span className="nfe-link" title={n.chave_acesso || ''}>{n.numero || '—'}</span></td>
                   <td className="c mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
-                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.data_emissao)}</span><br /><span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(n.data_emissao)}</span></td>
-                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.processada_em)}</span><br /><span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(n.processada_em)}</span></td>
-                  <td className="fornec"><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div><div style={{ fontSize: 10, color: '#94a3b8' }} className="mono">{n.cnpj_emitente || ''}</div></td>
+                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.data_emissao)}</span></td>
+                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.processada_em)}</span></td>
+                  <td className="fornec"><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div></td>
                   <td style={{ fontSize: 12, color: '#475569', whiteSpace: 'nowrap' }}>{lojaNome[n.loja_id || ''] || '—'}</td>
                   <td className="r mono" style={{ fontWeight: 600 }}>{brl(n.valor_total)}</td>
                   <td className="c" style={{ fontWeight: 600 }}>{itensCount[n.id] || '—'}</td>
