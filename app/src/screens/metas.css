@@ -20,10 +20,12 @@
 .metas-screen .mc .vl { font-size: 20px; font-weight: 800; margin-top: 3px; font-family: 'DM Mono', monospace; }
 .metas-screen .pos { color: #15803d; } .metas-screen .neg { color: #b91c1c; }
 
-.metas-screen table.d { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e9f0; border-radius: 12px; overflow: hidden; font-size: 13px; }
-.metas-screen table.d thead th { background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 9px 14px; text-align: right; }
+.metas-screen table.d { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #d6dce6; border-radius: 12px; overflow: hidden; font-size: 13px; }
+.metas-screen table.d thead th { background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 9px 14px; text-align: right; border-bottom: 1px solid #d6dce6; }
 .metas-screen table.d thead th:first-child { text-align: left; }
-.metas-screen table.d td { padding: 8px 14px; text-align: right; border-top: 1px solid #eef2f6; font-family: 'DM Mono', monospace; }
+.metas-screen table.d td { padding: 8px 14px; text-align: right; border-top: 1px solid #e8edf3; font-family: 'DM Mono', monospace; }
+.metas-screen table.d th, .metas-screen table.d td { border-right: 1px solid #e8edf3; }
+.metas-screen table.d th:last-child, .metas-screen table.d td:last-child { border-right: none; }
 .metas-screen table.d td:first-child { text-align: left; color: #64748b; font-family: inherit; }
 .metas-screen table.d tr.today { background: #eff6ff; } .metas-screen table.d tr.today td:first-child { font-weight: 700; color: #0f172a; }
 .metas-screen table.d tr:hover td { background: #f8fafc; } .metas-screen table.d tr.today:hover td { background: #e3edfd; }

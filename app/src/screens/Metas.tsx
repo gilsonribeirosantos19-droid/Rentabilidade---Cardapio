@@ -38,12 +38,14 @@ export function Metas() {
 
   const { data: metaSem = [] } = useQuery({ queryKey: ['metas-sem', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('metas_semana').select('loja_id,dia_semana,valor').eq('tenant_id', tenantId); return (data ?? []) as MetaSem[] } })
   const { data: metaExc = [] } = useQuery({ queryKey: ['metas-exc', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('metas_excecao').select('id,loja_id,data,valor,motivo').eq('tenant_id', tenantId); return (data ?? []) as MetaExc[] } })
-  const { data: ticketMeta = 0 } = useQuery({ queryKey: ['metas-ticket', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'metas').eq('chave', 'ticket_medio').limit(1); return parseNum(data?.[0]?.valor) } })
+  const { data: lojaMeta = [] } = useQuery({ queryKey: ['metas-lojaticket', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,meta_ticket').eq('tenant_id', tenantId); return (data ?? []) as { id: string; meta_ticket?: number }[] } })
   const { data: rec = [] } = useQuery({ queryKey: ['metas-rec', tenantId, mes], enabled: !!tenantId, queryFn: () => fetchAll<Rec>((f, t) => supabase.from('icomanda_recebimento').select('loja_id,data,faturado,ticket_medio,pessoas,status').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', ini).lte('data', fim).range(f, t)) })
 
   const semMap = useMemo(() => { const m: Record<string, number> = {}; metaSem.forEach((s) => { m[`${s.loja_id}|${s.dia_semana}`] = Number(s.valor) || 0 }); return m }, [metaSem])
   const excMap = useMemo(() => { const m: Record<string, number> = {}; metaExc.forEach((e) => { m[`${e.loja_id}|${e.data}`] = Number(e.valor) || 0 }); return m }, [metaExc])
   const recMap = useMemo(() => { const m: Record<string, Rec> = {}; rec.forEach((r) => { m[`${r.loja_id}|${r.data}`] = r }); return m }, [rec])
+  const metaTkMap = useMemo(() => { const m: Record<string, number> = {}; lojaMeta.forEach((l) => { m[l.id] = Number(l.meta_ticket) || 0 }); return m }, [lojaMeta])
+  const metaTkAtual = lojaSel && lojaSel !== 'todas' ? (metaTkMap[lojaSel] || 0) : 0
 
   const metaDia = (lojaId: string, ds: string, dow: number) => (excMap[`${lojaId}|${ds}`] ?? semMap[`${lojaId}|${dow}`] ?? 0)
 
@@ -73,26 +75,23 @@ export function Metas() {
 
   // ---- config (modal) ----
   const [sem, setSem] = useState<Record<string, Record<number, string>>>({})
-  const [ticket, setTicket] = useState('')
+  const [metaTk, setMetaTk] = useState<Record<string, string>>({})
   const [excs, setExcs] = useState<MetaExc[]>([])
   const openCfg = () => {
-    const s: Record<string, Record<number, string>> = {}
-    lojas.forEach((l) => { s[l.id] = {}; for (let dow = 0; dow <= 6; dow++) { const v = semMap[`${l.id}|${dow}`]; s[l.id][dow] = v ? String(v) : '' } })
-    setSem(s); setTicket(ticketMeta ? String(ticketMeta) : ''); setExcs(metaExc.map((e) => ({ ...e }))); setCfgOpen(true)
+    const s: Record<string, Record<number, string>> = {}, mt: Record<string, string> = {}
+    lojas.forEach((l) => { s[l.id] = {}; for (let dow = 0; dow <= 6; dow++) { const v = semMap[`${l.id}|${dow}`]; s[l.id][dow] = v ? String(v) : '' }; const t = metaTkMap[l.id]; mt[l.id] = t ? String(t) : '' })
+    setSem(s); setMetaTk(mt); setExcs(metaExc.map((e) => ({ ...e }))); setCfgOpen(true)
   }
   const salvar = useMutation({
     mutationFn: async () => {
       const rowsSem = lojas.flatMap((l) => Array.from({ length: 7 }, (_, dow) => ({ tenant_id: tenantId, loja_id: l.id, dia_semana: dow, valor: parseNum(sem[l.id]?.[dow]) })))
       const { error: e1 } = await supabase.from('metas_semana').upsert(rowsSem, { onConflict: 'tenant_id,loja_id,dia_semana' }); if (e1) throw e1
-      const tv = String(parseNum(ticket))
-      const { data: ex } = await supabase.from('parametros').select('id').eq('tenant_id', tenantId).eq('modulo', 'metas').eq('chave', 'ticket_medio').limit(1)
-      if (ex?.length) { const { error } = await supabase.from('parametros').update({ valor: tv }).eq('id', (ex[0] as { id: string }).id); if (error) throw error }
-      else { const { error } = await supabase.from('parametros').insert({ tenant_id: tenantId, modulo: 'metas', chave: 'ticket_medio', valor: tv }); if (error) throw error }
+      for (const l of lojas) { const { error } = await supabase.from('lojas').update({ meta_ticket: parseNum(metaTk[l.id]) }).eq('id', l.id); if (error) throw error }
       await supabase.from('metas_excecao').delete().eq('tenant_id', tenantId)
       const rowsExc = excs.filter((e) => e.loja_id && e.data).map((e) => ({ tenant_id: tenantId, loja_id: e.loja_id, data: e.data, valor: parseNum(e.valor), motivo: (e.motivo || '').trim() || null }))
       if (rowsExc.length) { const { error } = await supabase.from('metas_excecao').insert(rowsExc); if (error) throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['metas-sem'] }); qc.invalidateQueries({ queryKey: ['metas-exc'] }); qc.invalidateQueries({ queryKey: ['metas-ticket'] }); setCfgOpen(false); showToast('Metas salvas!') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['metas-sem'] }); qc.invalidateQueries({ queryKey: ['metas-exc'] }); qc.invalidateQueries({ queryKey: ['metas-lojaticket'] }); setCfgOpen(false); showToast('Metas salvas!') },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
 
@@ -123,7 +122,7 @@ export function Metas() {
         <div className="mc"><div className="lb">Realizado</div><div className="vl">{brl(resumo.real)}</div></div>
         <div className="mc"><div className="lb">Diferença acumulada</div><div className={'vl ' + difCls(resumo.dif)}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif)).replace('R$ ', 'R$ ')}</div></div>
         <div className="mc"><div className="lb">Dias que bateram</div><div className="vl">{resumo.bat} / {resumo.comReal}</div></div>
-        <div className="mc"><div className="lb">Ticket médio do mês</div><div className="vl">{resumo.ticket ? brl(resumo.ticket) : '—'}{ticketMeta ? <span className="pct"> / meta {brl(ticketMeta)}</span> : null}</div></div>
+        <div className="mc"><div className="lb">Ticket médio do mês</div><div className="vl">{resumo.ticket ? brl(resumo.ticket) : '—'}{metaTkAtual ? <span className="pct"> / meta {brl(metaTkAtual)}</span> : null}</div></div>
       </div>
 
       <table className="d">
@@ -132,7 +131,7 @@ export function Metas() {
           {!rows.length ? <tr><td colSpan={6} className="empty">Sem dias no período (ou metas ainda não cadastradas — clique em “Configurar metas”).</td></tr>
             : rows.map((r) => {
               const hoje = r.ds === `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-              const tkCls = ticketMeta && r.ticket != null ? (r.ticket >= ticketMeta ? 'tk-ok' : 'tk-low') : ''
+              const tkCls = metaTkAtual && r.ticket != null ? (r.ticket >= metaTkAtual ? 'tk-ok' : 'tk-low') : ''
               return (
                 <tr key={r.ds} className={hoje ? 'today' : ''}>
                   <td>{DOW[r.dow].toLowerCase()}, {pad(r.d)}/{pad(am)}{hoje ? ' · hoje' : ''}</td>
@@ -156,24 +155,21 @@ export function Metas() {
           <div className="modal">
             <div className="mh"><h2>⚙️ Configurar metas</h2><button className="mx" onClick={() => setCfgOpen(false)}>✕</button></div>
             <div className="mb">
-              <div className="cfg-lb">Meta por dia da semana (R$)</div>
+              <div className="cfg-lb">Meta por dia da semana (R$) + meta de ticket médio <span style={{ fontWeight: 400, textTransform: 'none', color: '#94a3b8' }}>— cada loja tem a sua</span></div>
               <div style={{ overflowX: 'auto' }}>
                 <table className="mgrid">
-                  <thead><tr><th>Loja</th>{DOW.map((d) => <th key={d}>{d}</th>)}</tr></thead>
+                  <thead><tr><th>Loja</th>{DOW.map((d) => <th key={d}>{d}</th>)}<th style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}>🎫 Ticket</th></tr></thead>
                   <tbody>
                     {lojas.map((l) => (
                       <tr key={l.id}><td>{l.nome}</td>
                         {Array.from({ length: 7 }, (_, dow) => (
                           <td key={dow}><input className="minp" value={sem[l.id]?.[dow] ?? ''} onChange={(e) => setSem((s) => ({ ...s, [l.id]: { ...(s[l.id] || {}), [dow]: e.target.value } }))} placeholder="0" /></td>
                         ))}
+                        <td style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}><input className="minp" value={metaTk[l.id] ?? ''} onChange={(e) => setMetaTk((m) => ({ ...m, [l.id]: e.target.value }))} placeholder="0,00" /></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
-
-              <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', margin: '16px 0', alignItems: 'flex-end' }}>
-                <div className="fld"><label>Meta de ticket médio (mesma pra todas as lojas)</label><input className="minp" style={{ width: 120 }} value={ticket} onChange={(e) => setTicket(e.target.value)} placeholder="0,00" /></div>
               </div>
 
               <div className="cfg-lb">Exceções por data <span style={{ fontWeight: 400, textTransform: 'none', color: '#94a3b8' }}>(feriado / evento — sobrescreve só aquele dia)</span></div>
