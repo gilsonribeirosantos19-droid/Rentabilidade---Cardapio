@@ -29,7 +29,7 @@
 .fiscal-screen .aud-scroll { max-height: calc(100vh - 300px); overflow: auto; }
 .fiscal-screen .aud-scroll thead th { position: sticky; top: 0; z-index: 3; }
 /* cabeçalho fixo ao rolar (genérico): o container rola internamente e o thead trava no topo */
-.fiscal-screen .tbl-sticky { max-height: calc(100vh - 320px); overflow: auto; }
+.fiscal-screen .tbl-sticky { max-height: calc(100vh - 236px); overflow: auto; }
 .fiscal-screen .tbl-sticky thead th { position: sticky; top: 0; z-index: 3; }
 .fiscal-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
 .fiscal-screen .tbl tbody td, .fiscal-screen .tbl tbody td * { font-weight: 400 !important; }
