@@ -1,0 +1,61 @@
+/* Metas — acompanhamento diário (porta o visual do protótipo _exemplo_metas.html) */
+.metas-screen { font-size: 13px; color: #0f172a; }
+.metas-screen .m-head { margin-bottom: 6px; }
+.metas-screen .m-head h1 { font-size: 18px; font-weight: 700; }
+.metas-screen .m-head p { color: #64748b; font-size: 12.5px; margin-top: 1px; }
+
+.metas-screen .m-toolbar { display: flex; gap: 10px; align-items: flex-end; margin: 12px 0; flex-wrap: wrap; }
+.metas-screen .fld { display: flex; flex-direction: column; gap: 2px; }
+.metas-screen .fld label { font-size: 10px; color: #64748b; font-weight: 500; }
+.metas-screen .fld select, .metas-screen .fld input { height: 32px; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0 10px; font-size: 12.5px; background: #fff; color: #0f172a; font-family: inherit; }
+.metas-screen .grow { margin-left: auto; }
+.metas-screen .cbtn { height: 32px; border: 1px solid #cbd5e1; background: #fff; border-radius: 7px; padding: 0 13px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.metas-screen .cbtn:hover { background: #f8fafc; }
+.metas-screen .cbtn.solid { background: #0d9488; color: #fff; border-color: #0d9488; }
+.metas-screen .cbtn.solid:hover { background: #0f766e; }
+
+.metas-screen .month { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.metas-screen .mc { background: #fff; border: 1px solid #e5e9f0; border-radius: 11px; padding: 11px 15px; min-width: 150px; flex: 1; }
+.metas-screen .mc .lb { font-size: 10.5px; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+.metas-screen .mc .vl { font-size: 20px; font-weight: 800; margin-top: 3px; font-family: 'DM Mono', monospace; }
+.metas-screen .pos { color: #15803d; } .metas-screen .neg { color: #b91c1c; }
+
+.metas-screen table.d { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e9f0; border-radius: 12px; overflow: hidden; font-size: 13px; }
+.metas-screen table.d thead th { background: #f1f5f9; color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 9px 14px; text-align: right; }
+.metas-screen table.d thead th:first-child { text-align: left; }
+.metas-screen table.d td { padding: 8px 14px; text-align: right; border-top: 1px solid #eef2f6; font-family: 'DM Mono', monospace; }
+.metas-screen table.d td:first-child { text-align: left; color: #64748b; font-family: inherit; }
+.metas-screen table.d tr.today { background: #eff6ff; } .metas-screen table.d tr.today td:first-child { font-weight: 700; color: #0f172a; }
+.metas-screen table.d tr:hover td { background: #f8fafc; } .metas-screen table.d tr.today:hover td { background: #e3edfd; }
+.metas-screen table.d tfoot td { font-weight: 800; border-top: 2px solid #e2e8f0; background: #fbfcfe; }
+.metas-screen .chip-dif { display: inline-block; padding: 2px 9px; border-radius: 6px; font-weight: 700; font-family: 'DM Mono', monospace; }
+.metas-screen .chip-dif.pos { background: #dcfce7; color: #15803d; } .metas-screen .chip-dif.neg { background: #fee2e2; color: #b91c1c; }
+.metas-screen .pct { color: #94a3b8; font-family: 'DM Mono', monospace; font-size: 12px; }
+.metas-screen .tk-ok { color: #15803d; } .metas-screen .tk-low { color: #b91c1c; }
+.metas-screen .empty { text-align: center; color: #94a3b8; padding: 30px; }
+.metas-screen .gtag { display: inline-block; font-size: 9.5px; font-weight: 700; background: #eff6ff; color: #1d4ed8; padding: 1px 7px; border-radius: 20px; margin-left: 8px; }
+
+/* modal de configuração */
+.metas-screen .ov { position: fixed; inset: 0; z-index: 70; background: rgba(15,23,42,.4); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.metas-screen .modal { background: #fff; border-radius: 14px; width: min(840px, 96vw); max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+.metas-screen .modal .mh { padding: 14px 18px; border-bottom: 1px solid #e5e9f0; display: flex; justify-content: space-between; align-items: center; }
+.metas-screen .modal .mh h2 { font-size: 16px; font-weight: 700; }
+.metas-screen .modal .mb { padding: 14px 18px; overflow: auto; }
+.metas-screen .modal .mf { padding: 12px 18px; border-top: 1px solid #e5e9f0; display: flex; justify-content: flex-end; gap: 9px; }
+.metas-screen .mx { border: none; background: #f1f5f9; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 15px; color: #475569; }
+.metas-screen .cfg-lb { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px; }
+.metas-screen .mgrid { border-collapse: collapse; font-size: 12.5px; }
+.metas-screen .mgrid th { text-align: center; font-size: 10px; text-transform: uppercase; color: #64748b; padding: 4px 6px; font-weight: 700; }
+.metas-screen .mgrid th:first-child { text-align: left; }
+.metas-screen .mgrid td { padding: 3px 4px; } .metas-screen .mgrid td:first-child { font-weight: 600; padding-right: 10px; white-space: nowrap; }
+.metas-screen .minp { width: 80px; height: 28px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: right; padding: 0 7px; font-family: 'DM Mono', monospace; font-size: 12px; background: #fff; color: #0f172a; }
+.metas-screen .minp:focus { outline: 2px solid #bfdbfe; }
+.metas-screen .exc { border-collapse: collapse; width: 100%; font-size: 12.5px; border: 1px solid #e5e9f0; border-radius: 8px; overflow: hidden; }
+.metas-screen .exc th { text-align: left; font-size: 10px; text-transform: uppercase; color: #64748b; padding: 6px 8px; background: #f8fafc; }
+.metas-screen .exc td { padding: 5px 8px; border-top: 1px solid #f1f5f9; }
+.metas-screen .exc input, .metas-screen .exc select { height: 28px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 7px; font-size: 12px; font-family: inherit; background: #fff; }
+.metas-screen .addbtn { margin-top: 8px; height: 30px; border: 1px dashed #cbd5e1; background: #fff; border-radius: 7px; padding: 0 12px; font-size: 12px; color: #64748b; cursor: pointer; }
+.metas-screen .x { border: none; background: none; color: #94a3b8; cursor: pointer; font-size: 14px; }
+.metas-screen .x:hover { color: #dc2626; }
+.metas-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 11px 18px; border-radius: 9px; font-size: 13px; z-index: 90; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+.metas-screen .toast.err { background: #b91c1c; }
