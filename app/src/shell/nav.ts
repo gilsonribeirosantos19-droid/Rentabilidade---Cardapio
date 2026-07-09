@@ -75,6 +75,7 @@ export const MODULES: Module[] = [
   {
     id: 'gestao', label: 'Gestão', icon: 'chart',
     sections: [
+      { label: 'Metas', key: 'gestao/metas' },
       { label: 'CMV Teórico × Real', key: 'gestao/cmv' },
       { label: 'Rendimentos', key: 'gestao/rendimentos' },
       { label: 'Divergências', key: 'gestao/divergencias' },
@@ -147,6 +148,7 @@ const TITLE_OVERRIDES: Record<string, string> = {
   'fiscal/entradas': 'Histórico de NF-e confirmadas no estoque',
   'fiscal/auditoria': 'Fator de conversão nas entradas de NF-e',
   'fiscal/excluidas': 'NF-e removidas do Monitor (lixeira · 30 dias)',
+  'gestao/metas': 'Meta × realizado, dia a dia, por loja',
   'distribuicao/central': 'Requisições das filiais ao Centro de Distribuição',
   'distribuicao/nova': 'Criar uma requisição de uma filial ao CD',
   'distribuicao/romaneios': 'Romaneios de separação e entrega',

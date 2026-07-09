@@ -278,7 +278,7 @@ export function MonitorNfe() {
       </div>
 
       {tab === 'nfe' && (
-        <div className="tbl-wrap" style={{ marginTop: 12 }}><div className="tbl-scroll">
+        <div className="tbl-wrap" style={{ marginTop: 12 }}><div className="tbl-scroll tbl-sticky">
           <table className="tbl">
             <thead><tr>
               <th style={{ width: 36, textAlign: 'center' }}><input type="checkbox" className="chk" checked={lista.length > 0 && nSel === lista.length} onChange={(e) => toggleAll(e.target.checked)} /></th>

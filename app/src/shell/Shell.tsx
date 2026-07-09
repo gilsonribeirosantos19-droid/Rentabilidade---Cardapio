@@ -20,6 +20,7 @@ import { MonitorNfe } from '../screens/MonitorNfe'
 import { AuditoriaConversao } from '../screens/AuditoriaConversao'
 import { NfeExcluidas } from '../screens/NfeExcluidas'
 import { DistribuicaoCentral } from '../screens/DistribuicaoCentral'
+import { Metas } from '../screens/Metas'
 import { DistribuicaoNovaRequisicao } from '../screens/DistribuicaoNovaRequisicao'
 import { DistribuicaoRomaneios } from '../screens/DistribuicaoRomaneios'
 import { DistribuicaoEmBreve } from '../screens/DistribuicaoEmBreve'
@@ -101,6 +102,7 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'pcp/planejamento') return <PlanejamentoProducao />
   if (k === 'pcp/calendario') return <CalendarioProducao />
   if (k === 'pcp/atividades') return <AtividadesProducao />
+  if (k === 'gestao/metas') return <Metas />
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
