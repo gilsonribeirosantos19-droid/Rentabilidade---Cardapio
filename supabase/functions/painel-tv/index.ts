@@ -109,20 +109,29 @@ Deno.serve(async (req) => {
       const filiais: Filial[] = (filData.filiais || []).map((f: any) => ({ id: Number(f.id), nome: String(f.nome || ''), faturado: Number(f.faturado) || 0 }))
       const filial = matchFilial((loja as any).nome, filiais)
       if (filial) {
+        // usa garcons.ticket_medio: traz faturado, comandas, ticket (=faturado÷comandas) e os TIPOS de comanda.
         const [dDia, dMes] = await Promise.all([
-          ico('garcons.ranking', { data_ini: hoje, data_fim: hoje, filial_id: String(filial.id) }),
-          ico('garcons.ranking', { data_ini: ini, data_fim: hoje, filial_id: String(filial.id) }),
+          ico('garcons.ticket_medio', { data_ini: hoje, data_fim: hoje, filial_id: String(filial.id) }),
+          ico('garcons.ticket_medio', { data_ini: ini, data_fim: hoje, filial_id: String(filial.id) }),
         ])
         const diaMap: Record<string, any> = {}
-        for (const g of (dDia.ranking || [])) diaMap[g.usuario_id] = g
-        // ticket do garçom = (produto + taxa − desconto) ÷ comandas (mesma conta do "Analisar Atendentes")
-        const tkg = (g: any) => { const c = Number(g?.qtd_comandas) || 0; return c ? ((Number(g.subtotal) || 0) + (Number(g.tax) || 0) - (Number(g.desconto) || 0)) / c : 0 }
-        const lista = (dMes.ranking || []).map((g: any) => ({
-          nome: String(g.nome || '').trim(),
-          tkMes: tkg(g),
-          tkDia: tkg(diaMap[g.usuario_id]),
-          comDia: Number(diaMap[g.usuario_id]?.qtd_comandas) || 0,
-        }))
+        for (const g of (dDia.atendentes || [])) diaMap[g.usuario_id] = g
+        // atendente de DELIVERY = mais de 50% das comandas do mês são delivery → fica FORA (igual o dash)
+        const isDelivery = (g: any) => {
+          const tot = Number(g?.total_comandas) || 0
+          const del = (g?.tipos || []).filter((t: any) => /deliver/i.test(t.tipo_comanda || '')).reduce((a: number, t: any) => a + (Number(t.qtd_comandas) || 0), 0)
+          return tot > 0 && del / tot > 0.5
+        }
+        // ticket do garçom = faturado ÷ comandas (o iComanda já entrega em ticket_medio_comanda)
+        const tkg = (g: any) => Number(g?.ticket_medio_comanda) || 0
+        const lista = (dMes.atendentes || [])
+          .filter((g: any) => !isDelivery(g))   // só equipe de salão
+          .map((g: any) => ({
+            nome: String(g.nome || '').trim(),
+            tkMes: tkg(g),
+            tkDia: tkg(diaMap[g.usuario_id]),
+            comDia: Number(diaMap[g.usuario_id]?.total_comandas) || 0,
+          }))
         // ranking do DIA: quem atendeu hoje, ordenado por ticket do dia (sem mínimo).
         const ativosHoje = lista.filter((g) => g.comDia > 0).sort((a, b) => b.tkDia - a.tkDia)
         // se ninguém atendeu ainda hoje, mostra o ranking do mês por ticket do mês
