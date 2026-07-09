@@ -148,7 +148,7 @@ export function Metas() {
         {rows.length > 0 && <tfoot><tr><td>Acumulado</td><td>{brl(resumo.meta)}</td><td>{brl(resumo.real)}</td><td className={difCls(resumo.dif)}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif))}</td><td className="pct">{resumo.meta > 0 ? Math.round((resumo.real / resumo.meta) * 100) + '%' : '—'}</td><td>{resumo.ticket ? brl(resumo.ticket) : '—'}</td></tr></tfoot>}
       </table>
 
-      <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 14 }}>🎫 Ticket médio <b>por garçom</b> (quem está abaixo da meta) entra na <span className="gtag">FASE B</span> — precisa puxar a venda por garçom do iComanda.</p>
+      <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 14 }}>🎫 A coluna <b>Ticket</b> é o ticket médio <b>de cada loja</b> no dia, comparado à meta (verde ≥ meta, vermelho abaixo). Ver o ticket <b>por garçom</b> dentro da loja (quem puxa a média pra baixo) é opcional — entra na <span className="gtag">FASE B</span> (precisa puxar do iComanda).</p>
 
       {/* ===== MODAL CONFIG ===== */}
       {cfgOpen && (
@@ -173,7 +173,7 @@ export function Metas() {
               </div>
 
               <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', margin: '16px 0', alignItems: 'flex-end' }}>
-                <div className="fld"><label>Meta de ticket médio (todos os garçons)</label><input className="minp" style={{ width: 120 }} value={ticket} onChange={(e) => setTicket(e.target.value)} placeholder="0,00" /></div>
+                <div className="fld"><label>Meta de ticket médio (mesma pra todas as lojas)</label><input className="minp" style={{ width: 120 }} value={ticket} onChange={(e) => setTicket(e.target.value)} placeholder="0,00" /></div>
               </div>
 
               <div className="cfg-lb">Exceções por data <span style={{ fontWeight: 400, textTransform: 'none', color: '#94a3b8' }}>(feriado / evento — sobrescreve só aquele dia)</span></div>
