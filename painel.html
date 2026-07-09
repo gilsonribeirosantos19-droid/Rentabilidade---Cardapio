@@ -29,15 +29,15 @@
   .fase{font-size:10px;font-weight:700;background:rgba(100,116,139,.18);color:var(--accent2);padding:2px 8px;border-radius:20px;}
 
   .cards{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:11px;}
-  .sq{position:relative;background:var(--sqbg);border:1px solid var(--line);border-radius:14px;padding:13px;display:flex;flex-direction:column;overflow:hidden;}
-  .sq::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--ac,var(--accent));}
+  .sq{position:relative;background:var(--sqbg);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;overflow:hidden;}
+  .sq::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:var(--ac,var(--accent));}
   .sq.g{--ac:var(--green);} .sq.a{--ac:var(--amber);} .sq.r{--ac:var(--red);} .sq.n{--ac:var(--accent);}
-  .sq .nm{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--t2);}
-  .sq .tag{position:absolute;right:11px;top:11px;font-size:8px;font-weight:700;color:var(--t3);letter-spacing:.05em;}
-  .sq .vl{font-size:30px;font-weight:800;margin:auto 0 2px;line-height:1;white-space:nowrap;}
+  .sq .nm{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--t2);}
+  .sq .tag{position:absolute;right:13px;top:13px;font-size:9px;font-weight:700;color:var(--t3);letter-spacing:.05em;}
+  .sq .vl{font-size:46px;font-weight:800;margin:auto 0 4px;line-height:1;white-space:nowrap;}
   .sq .vl.g{color:var(--green);} .sq .vl.a{color:var(--amber);} .sq .vl.r{color:var(--red);} .sq .vl.n{color:var(--accent2);}
-  .sq .mt{font-size:15px;color:var(--t2);font-weight:600;margin-top:2px;}
-  .sq .bar{height:7px;background:var(--barbg);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-top:8px;}
+  .sq .mt{font-size:18px;color:var(--t2);font-weight:600;margin-top:3px;}
+  .sq .bar{height:10px;background:var(--barbg);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:11px;}
   .sq .bar>i{display:block;height:100%;background:var(--ac);}
 
   .placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--t3);gap:8px;}
