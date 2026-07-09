@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -30,14 +30,10 @@ export function Metas() {
   const qc = useQueryClient()
   const now = new Date()
   const [mes, setMes] = useState(`${now.getFullYear()}-${pad(now.getMonth() + 1)}`)
-  const [lojaFil, setLojaFil] = useState('')            // '' até as lojas carregarem; senão id ou 'todas'
-  const [canalFil, setCanalFil] = useState('total')     // filtro de canal (só aparece p/ loja que separa)
+  const [lojaFil, setLojaFil] = useState('')            // unidade selecionada: `${lojaId}::${canal}` ou 'todas'
   const [cfgOpen, setCfgOpen] = useState(false)
   const [toast, setToast] = useState<{ m: string; err?: boolean } | null>(null)
   const showToast = (m: string, err = false) => { setToast({ m, err }); window.setTimeout(() => setToast(null), err ? 5000 : 3000) }
-
-  // default de loja = primeira, quando carregar
-  const lojaSel = lojaFil || (lojas[0]?.id ?? '')
 
   const ini = `${mes}-01`
   const [ay, am] = mes.split('-').map(Number)
@@ -52,36 +48,44 @@ export function Metas() {
   const excMap = useMemo(() => { const m: Record<string, number> = {}; metaExc.forEach((e) => { m[`${e.loja_id}|${e.data}`] = Number(e.valor) || 0 }); return m }, [metaExc])
   const recMap = useMemo(() => { const m: Record<string, Rec> = {}; rec.forEach((r) => { m[`${r.loja_id}|${r.data}`] = r }); return m }, [rec])
   const metaTkMap = useMemo(() => { const m: Record<string, number> = {}; lojaMeta.forEach((l) => { m[l.id] = Number(l.meta_ticket) || 0 }); return m }, [lojaMeta])
-  const metaTkAtual = lojaSel && lojaSel !== 'todas' ? (metaTkMap[lojaSel] || 0) : 0
 
-  // Canais que cada loja separa (só aparece se tiver meta > 0 num canal != total). Só a Cidade Nova, na prática.
+  // Canais que cada loja separa (só se tiver meta > 0 num canal != total). Na prática, só a Cidade Nova.
   const lojaCanais = useMemo(() => { const m: Record<string, string[]> = {}; metaSem.forEach((s) => { const c = s.canal || 'total'; if (c !== 'total' && (Number(s.valor) || 0) > 0) { (m[s.loja_id] ||= []); if (!m[s.loja_id].includes(c)) m[s.loja_id].push(c) } }); for (const k in m) m[k].sort((a, b) => CANAIS.indexOf(a) - CANAIS.indexOf(b)); return m }, [metaSem])
-  const splitCanais = lojaSel && lojaSel !== 'todas' ? (lojaCanais[lojaSel] || []) : []
-  const isSplit = splitCanais.length > 0
-  const canalEff = isSplit ? (splitCanais.includes(canalFil) ? canalFil : splitCanais[0]) : 'total'
+  // Unidades da lista: loja normal = 1 linha (Total); loja que separa = 1 linha por canal (Cidade Nova · Salão / · Delivery).
+  const units = useMemo(() => { const out: { value: string; lojaId: string; canal: string; label: string }[] = []; lojas.forEach((l) => { const cs = lojaCanais[l.id]; if (cs && cs.length) cs.forEach((c) => out.push({ value: `${l.id}::${c}`, lojaId: l.id, canal: c, label: `${l.nome} · ${c}` })); else out.push({ value: `${l.id}::total`, lojaId: l.id, canal: 'total', label: l.nome }) }); return out }, [lojas, lojaCanais])
+  const selUnit = lojaFil || units[0]?.value || ''
+  const isTodas = selUnit === 'todas'
+  const selLoja = isTodas ? 'todas' : (selUnit.split('::')[0] || '')
+  const selCanal = isTodas ? 'total' : (selUnit.split('::')[1] || 'total')
+  const metaTkAtual = !isTodas && selLoja ? (metaTkMap[selLoja] || 0) : 0
 
   const metaDia = (lojaId: string, ds: string, dow: number, canal: string) => (canal === 'total' ? (excMap[`${lojaId}|${ds}`] ?? semMap[`${lojaId}|${dow}|total`] ?? 0) : (semMap[`${lojaId}|${dow}|${canal}`] ?? 0))
   // realizado + pessoas de um dia, no canal (total = faturado da loja; senão vem do por_canal)
   const realCanal = (r: Rec | undefined, canal: string) => { if (!r) return { fat: 0, pes: 0 }; if (canal === 'total') return { fat: Number(r.faturado) || 0, pes: Number(r.pessoas) || 0 }; const c = (r.por_canal || []).find((x) => norm(x.canal) === norm(canal)); return { fat: Number(c?.faturado) || 0, pes: Number(c?.pessoas) || 0 } }
 
   const rows = useMemo(() => {
-    if (!lojaSel) return []
+    if (!selLoja) return []
     const last = new Date(ay, am, 0).getDate()
     const isCur = now.getFullYear() === ay && now.getMonth() + 1 === am
     const upto = isCur ? now.getDate() : last
-    const lojasCalc = lojaSel === 'todas' ? lojas : lojas.filter((l) => l.id === lojaSel)
-    const canalUse = lojaSel === 'todas' ? 'total' : canalEff
+    const lojasCalc = isTodas ? lojas : lojas.filter((l) => l.id === selLoja)
+    const canalUse = isTodas ? 'total' : selCanal
     const out = []
     for (let d = 1; d <= upto; d++) {
       const ds = `${mes}-${pad(d)}`
       const dow = new Date(ay, am - 1, d).getDay()
       let meta = 0, real = 0, pes = 0
-      for (const l of lojasCalc) { meta += metaDia(l.id, ds, dow, canalUse); const { fat, pes: p } = realCanal(recMap[`${l.id}|${ds}`], canalUse); real += fat; pes += p }
+      for (const l of lojasCalc) {
+        // no "Rede (todas)", a meta de uma loja que separa = soma dos canais dela
+        if (isTodas) { const cs = lojaCanais[l.id]; meta += cs && cs.length ? cs.reduce((s, c) => s + metaDia(l.id, ds, dow, c), 0) : metaDia(l.id, ds, dow, 'total') }
+        else meta += metaDia(l.id, ds, dow, selCanal)
+        const { fat, pes: p } = realCanal(recMap[`${l.id}|${ds}`], canalUse); real += fat; pes += p
+      }
       const ticket = pes > 0 ? real / pes : null
       out.push({ d, ds, dow, meta, real, pes, dif: real - meta, pct: meta > 0 ? (real / meta) * 100 : null, ticket })
     }
     return out
-  }, [lojaSel, canalEff, mes, lojas, semMap, excMap, recMap])
+  }, [selLoja, selCanal, isTodas, mes, lojas, lojaCanais, semMap, excMap, recMap])
 
   const resumo = useMemo(() => {
     let meta = 0, real = 0, pes = 0, bat = 0, comReal = 0
@@ -89,19 +93,20 @@ export function Metas() {
     return { meta, real, dif: real - meta, bat, comReal, ticket: pes > 0 ? real / pes : 0 }
   }, [rows])
 
-  // ---- config (modal) ---- sem é indexado por `${loja}|${canal}`
+  // ---- config (modal) ---- sem é indexado por `${loja}|${canal}`; split = loja que separa canais
   const [sem, setSem] = useState<Record<string, Record<number, string>>>({})
-  const [cfgCanal, setCfgCanal] = useState('total')
+  const [split, setSplit] = useState<Record<string, boolean>>({})
   const [metaTk, setMetaTk] = useState<Record<string, string>>({})
   const [excs, setExcs] = useState<MetaExc[]>([])
   const openCfg = () => {
-    const s: Record<string, Record<number, string>> = {}, mt: Record<string, string> = {}
-    lojas.forEach((l) => { CANAIS.forEach((canal) => { const key = `${l.id}|${canal}`; s[key] = {}; for (let dow = 0; dow <= 6; dow++) { const v = semMap[`${l.id}|${dow}|${canal}`]; s[key][dow] = v ? String(v) : '' } }); const t = metaTkMap[l.id]; mt[l.id] = t ? String(t) : '' })
-    setSem(s); setCfgCanal('total'); setMetaTk(mt); setExcs(metaExc.map((e) => ({ ...e }))); setCfgOpen(true)
+    const s: Record<string, Record<number, string>> = {}, mt: Record<string, string> = {}, sp: Record<string, boolean> = {}
+    lojas.forEach((l) => { CANAIS.forEach((canal) => { const key = `${l.id}|${canal}`; s[key] = {}; for (let dow = 0; dow <= 6; dow++) { const v = semMap[`${l.id}|${dow}|${canal}`]; s[key][dow] = v ? String(v) : '' } }); const t = metaTkMap[l.id]; mt[l.id] = t ? String(t) : ''; sp[l.id] = (lojaCanais[l.id]?.length || 0) > 0 })
+    setSem(s); setSplit(sp); setMetaTk(mt); setExcs(metaExc.map((e) => ({ ...e }))); setCfgOpen(true)
   }
   const salvar = useMutation({
     mutationFn: async () => {
-      const rowsSem = lojas.flatMap((l) => CANAIS.flatMap((canal) => Array.from({ length: 7 }, (_, dow) => ({ tenant_id: tenantId, loja_id: l.id, dia_semana: dow, canal, valor: parseNum(sem[`${l.id}|${canal}`]?.[dow]) }))))
+      // loja que separa: grava só os canais (total = 0); loja normal: grava só o total (canais = 0)
+      const rowsSem = lojas.flatMap((l) => { const isSp = !!split[l.id]; return CANAIS.flatMap((canal) => Array.from({ length: 7 }, (_, dow) => { const use = isSp ? canal !== 'total' : canal === 'total'; return { tenant_id: tenantId, loja_id: l.id, dia_semana: dow, canal, valor: use ? parseNum(sem[`${l.id}|${canal}`]?.[dow]) : 0 } })) })
       const { error: e1 } = await supabase.from('metas_semana').upsert(rowsSem, { onConflict: 'tenant_id,loja_id,dia_semana,canal' }); if (e1) throw e1
       for (const l of lojas) { const { error } = await supabase.from('lojas').update({ meta_ticket: parseNum(metaTk[l.id]) }).eq('id', l.id); if (error) throw error }
       await supabase.from('metas_excecao').delete().eq('tenant_id', tenantId)
@@ -124,15 +129,12 @@ export function Metas() {
 
       <div className="m-toolbar">
         <div className="fld"><label>Loja</label>
-          <select value={lojaSel} onChange={(e) => setLojaFil(e.target.value)}>
-            {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+          <select value={selUnit} onChange={(e) => setLojaFil(e.target.value)} style={{ minWidth: 200 }}>
+            {units.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
             <option value="todas">Rede (todas)</option>
           </select>
         </div>
         <div className="fld"><label>Mês</label><input type="month" value={mes} onChange={(e) => setMes(e.target.value)} /></div>
-        {isSplit && <div className="fld"><label>Canal</label>
-          <select value={canalEff} onChange={(e) => setCanalFil(e.target.value)}>{splitCanais.map((c) => <option key={c} value={c}>{c}</option>)}</select>
-        </div>}
         <div className="grow" />
         <button className="cbtn" onClick={openCfg}>⚙️ Configurar metas</button>
       </div>
@@ -175,26 +177,32 @@ export function Metas() {
           <div className="modal">
             <div className="mh"><h2>⚙️ Configurar metas</h2><button className="mx" onClick={() => setCfgOpen(false)}>✕</button></div>
             <div className="mb">
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
-                <div className="fld"><label>Canal</label>
-                  <select value={cfgCanal} onChange={(e) => setCfgCanal(e.target.value)} style={{ height: 32, border: '1px solid #cbd5e1', borderRadius: 7, padding: '0 10px', fontSize: 12.5, background: '#fff' }}>
-                    {CANAIS.map((c) => <option key={c} value={c}>{CANAL_LB[c]}</option>)}
-                  </select>
-                </div>
-                <span style={{ color: '#94a3b8', fontSize: 12, paddingBottom: 6 }}>Preencha o <b>Total</b> pra quase todas as lojas. Só quem separa (ex.: Cidade Nova) preenche <b>Salão</b> e <b>Delivery</b> (deixando o Total em branco).</span>
-              </div>
-              <div className="cfg-lb">Meta por dia da semana (R$) — <b>{CANAL_LB[cfgCanal]}</b>{cfgCanal === 'total' ? ' + meta de ticket médio' : ''}</div>
+              <div className="cfg-lb">Meta por dia da semana (R$) + meta de ticket <span style={{ fontWeight: 400, textTransform: 'none', color: '#94a3b8' }}>— marque ☑ na loja que separa Salão/Delivery (ex.: Cidade Nova)</span></div>
               <div style={{ overflowX: 'auto' }}>
                 <table className="mgrid">
-                  <thead><tr><th>Loja</th>{DOW.map((d) => <th key={d}>{d}</th>)}{cfgCanal === 'total' && <th style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}>🎫 Ticket</th>}</tr></thead>
+                  <thead><tr><th style={{ width: 26, textAlign: 'center' }} title="Separar por canal">🔀</th><th>Loja</th>{DOW.map((d) => <th key={d}>{d}</th>)}<th style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}>🎫 Ticket</th></tr></thead>
                   <tbody>
-                    {lojas.map((l) => { const key = `${l.id}|${cfgCanal}`; return (
-                      <tr key={l.id}><td>{l.nome}</td>
-                        {Array.from({ length: 7 }, (_, dow) => (
-                          <td key={dow}><input className="minp" value={sem[key]?.[dow] ?? ''} onChange={(e) => setSem((s) => ({ ...s, [key]: { ...(s[key] || {}), [dow]: e.target.value } }))} placeholder="0" /></td>
-                        ))}
-                        {cfgCanal === 'total' && <td style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}><input className="minp" value={metaTk[l.id] ?? ''} onChange={(e) => setMetaTk((m) => ({ ...m, [l.id]: e.target.value }))} placeholder="0,00" /></td>}
-                      </tr>
+                    {lojas.map((l) => { const isSp = !!split[l.id]; const tk = `${l.id}|total`; return (
+                      <Fragment key={l.id}>
+                        <tr>
+                          <td style={{ textAlign: 'center' }}><input type="checkbox" checked={isSp} title="Separar Salão/Delivery" onChange={(e) => setSplit((s) => ({ ...s, [l.id]: e.target.checked }))} /></td>
+                          <td>{l.nome}{isSp && <span style={{ color: '#94a3b8', fontSize: 11 }}> · por canal ↓</span>}</td>
+                          {isSp ? DOW.map((_, i) => <td key={i} style={{ background: '#f8fafc' }} />) : Array.from({ length: 7 }, (_, dow) => (
+                            <td key={dow}><input className="minp" value={sem[tk]?.[dow] ?? ''} onChange={(e) => setSem((s) => ({ ...s, [tk]: { ...(s[tk] || {}), [dow]: e.target.value } }))} placeholder="0" /></td>
+                          ))}
+                          <td style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}><input className="minp" value={metaTk[l.id] ?? ''} onChange={(e) => setMetaTk((m) => ({ ...m, [l.id]: e.target.value }))} placeholder="0,00" /></td>
+                        </tr>
+                        {isSp && ['Salão', 'Delivery', 'Balcão'].map((canal) => { const key = `${l.id}|${canal}`; return (
+                          <tr key={canal}>
+                            <td />
+                            <td style={{ paddingLeft: 22, color: '#475569', fontWeight: 400 }}>· {canal}</td>
+                            {Array.from({ length: 7 }, (_, dow) => (
+                              <td key={dow}><input className="minp" value={sem[key]?.[dow] ?? ''} onChange={(e) => setSem((s) => ({ ...s, [key]: { ...(s[key] || {}), [dow]: e.target.value } }))} placeholder="0" /></td>
+                            ))}
+                            <td style={{ borderLeft: '2px solid #e5e9f0' }} />
+                          </tr>
+                        ) })}
+                      </Fragment>
                     ) })}
                   </tbody>
                 </table>
