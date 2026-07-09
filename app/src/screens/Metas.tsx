@@ -11,8 +11,8 @@ import './metas.css'
 
 type MetaSem = { loja_id: string; dia_semana: number; valor?: number; canal?: string }
 type MetaExc = { id?: string; loja_id: string; data: string; valor?: number; motivo?: string | null }
-type Canal = { canal?: string; faturado?: number; pessoas?: number }
-type Rec = { loja_id: string; data: string; faturado?: number; ticket_medio?: number; pessoas?: number; status?: string; por_canal?: Canal[] }
+type Canal = { canal?: string; faturado?: number; pessoas?: number; comandas?: number }
+type Rec = { loja_id: string; data: string; faturado?: number; ticket_medio?: number; pessoas?: number; qtd_comandas?: number; status?: string; por_canal?: Canal[] }
 
 const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 // Canais de venda (o iComanda separa; o sync grava em icomanda_recebimento.por_canal).
@@ -42,7 +42,7 @@ export function Metas() {
   const { data: metaSem = [] } = useQuery({ queryKey: ['metas-sem', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('metas_semana').select('loja_id,dia_semana,valor,canal').eq('tenant_id', tenantId); return (data ?? []) as MetaSem[] } })
   const { data: metaExc = [] } = useQuery({ queryKey: ['metas-exc', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('metas_excecao').select('id,loja_id,data,valor,motivo').eq('tenant_id', tenantId); return (data ?? []) as MetaExc[] } })
   const { data: lojaMeta = [] } = useQuery({ queryKey: ['metas-lojaticket', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,meta_ticket').eq('tenant_id', tenantId); return (data ?? []) as { id: string; meta_ticket?: number }[] } })
-  const { data: rec = [] } = useQuery({ queryKey: ['metas-rec', tenantId, mes], enabled: !!tenantId, queryFn: () => fetchAll<Rec>((f, t) => supabase.from('icomanda_recebimento').select('loja_id,data,faturado,ticket_medio,pessoas,status,por_canal').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', ini).lte('data', fim).range(f, t)) })
+  const { data: rec = [] } = useQuery({ queryKey: ['metas-rec', tenantId, mes], enabled: !!tenantId, queryFn: () => fetchAll<Rec>((f, t) => supabase.from('icomanda_recebimento').select('loja_id,data,faturado,ticket_medio,pessoas,qtd_comandas,status,por_canal').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', ini).lte('data', fim).range(f, t)) })
 
   const semMap = useMemo(() => { const m: Record<string, number> = {}; metaSem.forEach((s) => { m[`${s.loja_id}|${s.dia_semana}|${s.canal || 'total'}`] = Number(s.valor) || 0 }); return m }, [metaSem])
   const excMap = useMemo(() => { const m: Record<string, number> = {}; metaExc.forEach((e) => { m[`${e.loja_id}|${e.data}`] = Number(e.valor) || 0 }); return m }, [metaExc])
@@ -64,13 +64,13 @@ export function Metas() {
   // realizado + pessoas de um dia, no canal. total = faturado da loja; Delivery = por_canal;
   // Salão = total − Delivery (inclui balcão e o que mais não for delivery).
   const realCanal = (r: Rec | undefined, canal: string) => {
-    if (!r) return { fat: 0, pes: 0 }
-    const tot = { fat: Number(r.faturado) || 0, pes: Number(r.pessoas) || 0 }
+    if (!r) return { fat: 0, pes: 0, com: 0 }
+    const tot = { fat: Number(r.faturado) || 0, pes: Number(r.pessoas) || 0, com: Number(r.qtd_comandas) || 0 }
     if (canal === 'total') return tot
     const d = (r.por_canal || []).find((x) => norm(x.canal) === norm('Delivery'))
-    const del = { fat: Number(d?.faturado) || 0, pes: Number(d?.pessoas) || 0 }
+    const del = { fat: Number(d?.faturado) || 0, pes: Number(d?.pessoas) || 0, com: Number(d?.comandas) || 0 }
     if (norm(canal) === norm('Delivery')) return del
-    return { fat: Math.max(0, tot.fat - del.fat), pes: Math.max(0, tot.pes - del.pes) }  // Salão
+    return { fat: Math.max(0, tot.fat - del.fat), pes: Math.max(0, tot.pes - del.pes), com: Math.max(0, tot.com - del.com) }  // Salão
   }
 
   const rows = useMemo(() => {
@@ -84,15 +84,15 @@ export function Metas() {
     for (let d = 1; d <= upto; d++) {
       const ds = `${mes}-${pad(d)}`
       const dow = new Date(ay, am - 1, d).getDay()
-      let meta = 0, real = 0, pes = 0
+      let meta = 0, real = 0, pes = 0, com = 0
       for (const l of lojasCalc) {
         // no "Rede (todas)", a meta de uma loja que separa = soma dos canais dela
         if (isTodas) { const cs = lojaCanais[l.id]; meta += cs && cs.length ? cs.reduce((s, c) => s + metaDia(l.id, ds, dow, c), 0) : metaDia(l.id, ds, dow, 'total') }
         else meta += metaDia(l.id, ds, dow, selCanal)
-        const { fat, pes: p } = realCanal(recMap[`${l.id}|${ds}`], canalUse); real += fat; pes += p
+        const { fat, pes: p, com: c } = realCanal(recMap[`${l.id}|${ds}`], canalUse); real += fat; pes += p; com += c
       }
-      const ticket = pes > 0 ? real / pes : null
-      out.push({ d, ds, dow, meta, real, pes, dif: real - meta, pct: meta > 0 ? (real / meta) * 100 : null, ticket })
+      const ticket = com > 0 ? real / com : null   // ticket médio = faturado ÷ comandas (por mesa/pedido)
+      out.push({ d, ds, dow, meta, real, pes, com, dif: real - meta, pct: meta > 0 ? (real / meta) * 100 : null, ticket })
     }
     return out
   }, [selLoja, selCanal, isTodas, mes, lojas, lojaCanais, semMap, excMap, recMap])
@@ -113,9 +113,9 @@ export function Metas() {
   const rowsView = useMemo(() => { if (!semana) return rows; const wk = semanas.find((w) => w.n === semana); return wk ? rows.filter((r) => r.d >= wk.ini && r.d <= wk.fim) : rows }, [rows, semana, semanas])
 
   const resumo = useMemo(() => {
-    let real = 0, pes = 0, bat = 0, comReal = 0, metaAteHoje = 0
-    rowsView.forEach((r) => { metaAteHoje += r.meta; real += r.real; pes += r.pes; if (r.real > 0) { comReal++; if (r.dif >= 0) bat++ } })
-    return { meta: metaAteHoje, real, dif: real - metaAteHoje, bat, comReal, ticket: pes > 0 ? real / pes : 0 }
+    let real = 0, pes = 0, com = 0, bat = 0, comReal = 0, metaAteHoje = 0
+    rowsView.forEach((r) => { metaAteHoje += r.meta; real += r.real; pes += r.pes; com += r.com; if (r.real > 0) { comReal++; if (r.dif >= 0) bat++ } })
+    return { meta: metaAteHoje, real, dif: real - metaAteHoje, bat, comReal, ticket: com > 0 ? real / com : 0 }
   }, [rowsView])
 
   // ---- config (modal) ---- sem é indexado por `${loja}|${canal}`; split = loja que separa canais
@@ -200,7 +200,7 @@ export function Metas() {
         {rowsView.length > 0 && <tfoot><tr><td>Acumulado</td><td>{brl(resumo.meta)}</td><td>{brl(resumo.real)}</td><td className={difCls(resumo.dif)}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif))}</td><td className="pct">{resumo.meta > 0 ? Math.round((resumo.real / resumo.meta) * 100) + '%' : '—'}</td><td>{resumo.ticket ? brl(resumo.ticket) : '—'}</td></tr></tfoot>}
       </table>
 
-      <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 14 }}>🎫 A coluna <b>Ticket</b> é o ticket médio <b>de cada loja</b> no dia, comparado à meta (verde ≥ meta, vermelho abaixo). Ver o ticket <b>por garçom</b> dentro da loja (quem puxa a média pra baixo) é opcional — entra na <span className="gtag">FASE B</span> (precisa puxar do iComanda).</p>
+      <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 14 }}>🎫 A coluna <b>Ticket</b> é o ticket médio <b>por comanda</b> (faturado ÷ comandas, por mesa/pedido) de cada loja no dia, comparado à meta (verde ≥ meta, vermelho abaixo). Ver o ticket <b>por garçom</b> dentro da loja (quem puxa a média pra baixo) é opcional — entra na <span className="gtag">FASE B</span> (precisa puxar do iComanda).</p>
 
       {/* ===== MODAL CONFIG ===== */}
       {cfgOpen && (
