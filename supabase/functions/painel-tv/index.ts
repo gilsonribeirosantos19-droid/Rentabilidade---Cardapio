@@ -68,14 +68,14 @@ Deno.serve(async (req) => {
 
   const { data: metaSem } = await supabase.from('metas_semana').select('dia_semana,valor,canal').eq('tenant_id', tenant).eq('loja_id', lojaId)
   const { data: metaExc } = await supabase.from('metas_excecao').select('data,valor').eq('tenant_id', tenant).eq('loja_id', lojaId).gte('data', ini).lte('data', hoje)
-  const { data: rec } = await supabase.from('icomanda_recebimento').select('data,faturado,pessoas,ticket_medio').eq('tenant_id', tenant).eq('loja_id', lojaId).eq('status', 'processado').gte('data', ini).lte('data', hoje)
+  const { data: rec } = await supabase.from('icomanda_recebimento').select('data,faturado,pessoas,qtd_comandas').eq('tenant_id', tenant).eq('loja_id', lojaId).eq('status', 'processado').gte('data', ini).lte('data', hoje)
   const { data: inds } = await supabase.from('painel_indicadores').select('indicador,valor,meta').eq('tenant_id', tenant).eq('loja_id', lojaId)
 
   const semMap: Record<string, number> = {}; const canais: string[] = []
   for (const s of metaSem || []) { const c = (s as any).canal || 'total'; semMap[`${(s as any).dia_semana}|${c}`] = Number((s as any).valor) || 0; if (c !== 'total' && (Number((s as any).valor) || 0) > 0 && !canais.includes(c)) canais.push(c) }
   const excMap: Record<string, number> = {}; for (const e of metaExc || []) excMap[(e as any).data] = Number((e as any).valor) || 0
-  const recMap: Record<string, { fat: number; pes: number; tk: number }> = {}
-  for (const r of rec || []) recMap[(r as any).data] = { fat: Number((r as any).faturado) || 0, pes: Number((r as any).pessoas) || 0, tk: Number((r as any).ticket_medio) || 0 }
+  const recMap: Record<string, { fat: number; pes: number; com: number }> = {}
+  for (const r of rec || []) recMap[(r as any).data] = { fat: Number((r as any).faturado) || 0, pes: Number((r as any).pessoas) || 0, com: Number((r as any).qtd_comandas) || 0 }
 
   const metaDoDia = (ds: string, dow: number) => canais.length ? canais.reduce((a, c) => a + (semMap[`${dow}|${c}`] ?? 0), 0) : (excMap[ds] ?? semMap[`${dow}|total`] ?? 0)
 
@@ -93,8 +93,8 @@ Deno.serve(async (req) => {
   const sem = somar(wkIni, wkFim)
   // mês (inteiro)
   const mes = somar(1, lastDay)
-  // ticket de hoje
-  const tk = recMap[hoje]?.tk || (recMap[hoje]?.pes ? recMap[hoje].fat / recMap[hoje].pes : 0)
+  // ticket GERAL da loja = Total Faturado ÷ Comandas (regra do iComanda pro ticket da loja)
+  const tk = recMap[hoje]?.com ? recMap[hoje].fat / recMap[hoje].com : 0
 
   const indMap: Record<string, { valor: number | null; meta: number | null }> = {}
   for (const i of inds || []) indMap[(i as any).indicador] = { valor: (i as any).valor, meta: (i as any).meta }
@@ -115,10 +115,12 @@ Deno.serve(async (req) => {
         ])
         const diaMap: Record<string, any> = {}
         for (const g of (dDia.ranking || [])) diaMap[g.usuario_id] = g
+        // ticket do garçom = (produto + taxa − desconto) ÷ comandas (mesma conta do "Analisar Atendentes")
+        const tkg = (g: any) => { const c = Number(g?.qtd_comandas) || 0; return c ? ((Number(g.subtotal) || 0) + (Number(g.tax) || 0) - (Number(g.desconto) || 0)) / c : 0 }
         const lista = (dMes.ranking || []).map((g: any) => ({
           nome: String(g.nome || '').trim(),
-          tkMes: Number(g.ticket_medio_comanda) || 0,
-          tkDia: Number(diaMap[g.usuario_id]?.ticket_medio_comanda) || 0,
+          tkMes: tkg(g),
+          tkDia: tkg(diaMap[g.usuario_id]),
           comDia: Number(diaMap[g.usuario_id]?.qtd_comandas) || 0,
         }))
         // ranking do DIA: quem atendeu hoje, ordenado por ticket do dia (sem mínimo).
