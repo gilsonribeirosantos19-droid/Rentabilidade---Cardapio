@@ -1,5 +1,5 @@
 /* Metas — acompanhamento diário (porta o visual do protótipo _exemplo_metas.html) */
-.metas-screen { font-size: 13px; color: #0f172a; }
+.metas-screen { font-size: 13px; color: #0f172a; padding: 10px 18px 24px; }
 .metas-screen .m-head { margin-bottom: 6px; }
 .metas-screen .m-head h1 { font-size: 18px; font-weight: 700; }
 .metas-screen .m-head p { color: #64748b; font-size: 12.5px; margin-top: 1px; }
