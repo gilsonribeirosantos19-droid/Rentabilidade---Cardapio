@@ -51,7 +51,8 @@ export function Metas() {
   // Canais que cada loja separa (só se tiver meta > 0 num canal != total). Na prática, só a Cidade Nova.
   const lojaCanais = useMemo(() => { const m: Record<string, string[]> = {}; metaSem.forEach((s) => { const c = s.canal || 'total'; if (c !== 'total' && (Number(s.valor) || 0) > 0) { (m[s.loja_id] ||= []); if (!m[s.loja_id].includes(c)) m[s.loja_id].push(c) } }); for (const k in m) m[k].sort((a, b) => CANAIS.indexOf(a) - CANAIS.indexOf(b)); return m }, [metaSem])
   // Unidades da lista: loja normal = 1 linha (Total); loja que separa = 1 linha por canal (Cidade Nova · Salão / · Delivery).
-  const units = useMemo(() => { const out: { value: string; lojaId: string; canal: string; label: string }[] = []; lojas.forEach((l) => { const cs = lojaCanais[l.id]; if (cs && cs.length) cs.forEach((c) => out.push({ value: `${l.id}::${c}`, lojaId: l.id, canal: c, label: `${l.nome} · ${c}` })); else out.push({ value: `${l.id}::total`, lojaId: l.id, canal: 'total', label: l.nome }) }); return out }, [lojas, lojaCanais])
+  // Salão = a própria loja (nome puro); Delivery = "loja" independente ("Nome Delivery").
+  const units = useMemo(() => { const out: { value: string; lojaId: string; canal: string; label: string }[] = []; lojas.forEach((l) => { const cs = lojaCanais[l.id]; if (cs && cs.length) cs.forEach((c) => out.push({ value: `${l.id}::${c}`, lojaId: l.id, canal: c, label: c === 'Salão' ? l.nome : `${l.nome} ${c}` })); else out.push({ value: `${l.id}::total`, lojaId: l.id, canal: 'total', label: l.nome }) }); return out }, [lojas, lojaCanais])
   const selUnit = lojaFil || units[0]?.value || ''
   const isTodas = selUnit === 'todas'
   const selLoja = isTodas ? 'todas' : (selUnit.split('::')[0] || '')
