@@ -30,6 +30,7 @@ export function Metas() {
   const now = new Date()
   const [mes, setMes] = useState(`${now.getFullYear()}-${pad(now.getMonth() + 1)}`)
   const [lojaFil, setLojaFil] = useState('')            // unidade selecionada: `${lojaId}::${canal}` ou 'todas'
+  const [semana, setSemana] = useState(0)               // 0 = mês inteiro; 1..N = semana (bloco de 7 dias)
   const [cfgOpen, setCfgOpen] = useState(false)
   const [toast, setToast] = useState<{ m: string; err?: boolean } | null>(null)
   const showToast = (m: string, err = false) => { setToast({ m, err }); window.setTimeout(() => setToast(null), err ? 5000 : 3000) }
@@ -96,11 +97,26 @@ export function Metas() {
     return out
   }, [selLoja, selCanal, isTodas, mes, lojas, lojaCanais, semMap, excMap, recMap])
 
+  // Semanas do mês (blocos de 7 dias) — pro filtro de acompanhamento semanal
+  const semanas = useMemo(() => { const last = new Date(ay, am, 0).getDate(); const out: { n: number; ini: number; fim: number }[] = []; for (let s = 1; s <= last; s += 7) out.push({ n: out.length + 1, ini: s, fim: Math.min(s + 6, last) }); return out }, [mes])
+  // Meta TOTAL do período selecionado (todos os dias do mês OU da semana — não só até hoje)
+  const metaPeriodoTotal = useMemo(() => {
+    const last = new Date(ay, am, 0).getDate()
+    const wk = semana ? semanas.find((w) => w.n === semana) : null
+    const d1 = wk ? wk.ini : 1, d2 = wk ? wk.fim : last
+    const lojasCalc = isTodas ? lojas : lojas.filter((l) => l.id === selLoja)
+    let t = 0
+    for (let d = d1; d <= d2; d++) { const ds = `${mes}-${pad(d)}`; const dow = new Date(ay, am - 1, d).getDay(); for (const l of lojasCalc) { if (isTodas) { const cs = lojaCanais[l.id]; t += cs && cs.length ? cs.reduce((s, c) => s + metaDia(l.id, ds, dow, c), 0) : metaDia(l.id, ds, dow, 'total') } else t += metaDia(l.id, ds, dow, selCanal) } }
+    return t
+  }, [semana, semanas, selLoja, selCanal, isTodas, mes, lojas, lojaCanais, semMap, excMap])
+  // linhas do período (aplica o filtro de semana)
+  const rowsView = useMemo(() => { if (!semana) return rows; const wk = semanas.find((w) => w.n === semana); return wk ? rows.filter((r) => r.d >= wk.ini && r.d <= wk.fim) : rows }, [rows, semana, semanas])
+
   const resumo = useMemo(() => {
-    let meta = 0, real = 0, pes = 0, bat = 0, comReal = 0
-    rows.forEach((r) => { meta += r.meta; real += r.real; pes += r.pes; if (r.real > 0) { comReal++; if (r.dif >= 0) bat++ } })
-    return { meta, real, dif: real - meta, bat, comReal, ticket: pes > 0 ? real / pes : 0 }
-  }, [rows])
+    let real = 0, pes = 0, bat = 0, comReal = 0, metaAteHoje = 0
+    rowsView.forEach((r) => { metaAteHoje += r.meta; real += r.real; pes += r.pes; if (r.real > 0) { comReal++; if (r.dif >= 0) bat++ } })
+    return { meta: metaAteHoje, real, dif: real - metaAteHoje, bat, comReal, ticket: pes > 0 ? real / pes : 0 }
+  }, [rowsView])
 
   // ---- config (modal) ---- sem é indexado por `${loja}|${canal}`; split = loja que separa canais
   const [sem, setSem] = useState<Record<string, Record<number, string>>>({})
@@ -143,24 +159,30 @@ export function Metas() {
             <option value="todas">Rede (todas)</option>
           </select>
         </div>
-        <div className="fld"><label>Mês</label><input type="month" value={mes} onChange={(e) => setMes(e.target.value)} /></div>
+        <div className="fld"><label>Mês</label><input type="month" value={mes} onChange={(e) => { setMes(e.target.value); setSemana(0) }} /></div>
+        <div className="fld"><label>Semana</label>
+          <select value={semana} onChange={(e) => setSemana(Number(e.target.value))}>
+            <option value={0}>Mês inteiro</option>
+            {semanas.map((w) => <option key={w.n} value={w.n}>Semana {w.n} ({pad(w.ini)}–{pad(w.fim)}/{pad(am)})</option>)}
+          </select>
+        </div>
         <div className="grow" />
         <button className="cbtn" onClick={openCfg}>⚙️ Configurar metas</button>
       </div>
 
       <div className="month">
-        <div className="mc"><div className="lb">Meta do mês</div><div className="vl">{brl(resumo.meta)}</div></div>
-        <div className="mc"><div className="lb">Realizado</div><div className="vl">{brl(resumo.real)}</div></div>
-        <div className="mc"><div className="lb">Diferença acumulada</div><div className={'vl ' + difCls(resumo.dif)}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif)).replace('R$ ', 'R$ ')}</div></div>
+        <div className="mc"><div className="lb">Meta {semana ? 'da semana' : 'do mês'} (total)</div><div className="vl">{brl(metaPeriodoTotal)}</div></div>
+        <div className="mc"><div className="lb">Realizado {semana ? 'na semana' : 'até agora'}</div><div className="vl">{brl(resumo.real)}</div></div>
+        <div className="mc"><div className="lb">Diferença acumulada</div><div className={'vl ' + difCls(resumo.dif)}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif))}</div></div>
         <div className="mc"><div className="lb">Dias que bateram</div><div className="vl">{resumo.bat} / {resumo.comReal}</div></div>
-        <div className="mc"><div className="lb">Ticket médio do mês</div><div className="vl">{resumo.ticket ? brl(resumo.ticket) : '—'}{metaTkAtual ? <span className="pct"> / meta {brl(metaTkAtual)}</span> : null}</div></div>
+        <div className="mc"><div className="lb">Ticket médio</div><div className="vl">{resumo.ticket ? brl(resumo.ticket) : '—'}{metaTkAtual ? <span className="pct"> / meta {brl(metaTkAtual)}</span> : null}</div></div>
       </div>
 
       <table className="d">
         <thead><tr><th>Data</th><th>Meta</th><th>Realizado</th><th>Diferença</th><th>% da meta</th><th>Ticket</th></tr></thead>
         <tbody>
-          {!rows.length ? <tr><td colSpan={6} className="empty">Sem dias no período (ou metas ainda não cadastradas — clique em “Configurar metas”).</td></tr>
-            : rows.map((r) => {
+          {!rowsView.length ? <tr><td colSpan={6} className="empty">Sem dias no período (ou metas ainda não cadastradas — clique em “Configurar metas”).</td></tr>
+            : rowsView.map((r) => {
               const hoje = r.ds === `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
               const tkCls = metaTkAtual && r.ticket != null ? (r.ticket >= metaTkAtual ? 'tk-ok' : 'tk-low') : ''
               return (
@@ -175,7 +197,7 @@ export function Metas() {
               )
             })}
         </tbody>
-        {rows.length > 0 && <tfoot><tr><td>Acumulado</td><td>{brl(resumo.meta)}</td><td>{brl(resumo.real)}</td><td className={difCls(resumo.dif)}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif))}</td><td className="pct">{resumo.meta > 0 ? Math.round((resumo.real / resumo.meta) * 100) + '%' : '—'}</td><td>{resumo.ticket ? brl(resumo.ticket) : '—'}</td></tr></tfoot>}
+        {rowsView.length > 0 && <tfoot><tr><td>Acumulado</td><td>{brl(resumo.meta)}</td><td>{brl(resumo.real)}</td><td className={difCls(resumo.dif)}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif))}</td><td className="pct">{resumo.meta > 0 ? Math.round((resumo.real / resumo.meta) * 100) + '%' : '—'}</td><td>{resumo.ticket ? brl(resumo.ticket) : '—'}</td></tr></tfoot>}
       </table>
 
       <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 14 }}>🎫 A coluna <b>Ticket</b> é o ticket médio <b>de cada loja</b> no dia, comparado à meta (verde ≥ meta, vermelho abaixo). Ver o ticket <b>por garçom</b> dentro da loja (quem puxa a média pra baixo) é opcional — entra na <span className="gtag">FASE B</span> (precisa puxar do iComanda).</p>
