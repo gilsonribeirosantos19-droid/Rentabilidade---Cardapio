@@ -17,8 +17,7 @@ type Rec = { loja_id: string; data: string; faturado?: number; ticket_medio?: nu
 const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 // Canais de venda (o iComanda separa; o sync grava em icomanda_recebimento.por_canal).
 // 'total' = a loja inteira (padrão de quase todas). Só quem separa (ex.: Cidade Nova) usa Salão/Delivery.
-const CANAIS = ['total', 'Salão', 'Delivery', 'Balcão']
-const CANAL_LB: Record<string, string> = { total: 'Total (loja toda)', 'Salão': 'Salão', 'Delivery': 'Delivery', 'Balcão': 'Balcão' }
+const CANAIS = ['total', 'Salão', 'Delivery']  // Balcão entra no Salão (não é canal separado)
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const brl = (n: number) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const parseNum = (v: unknown) => parseFloat(String(v ?? '').replace(/\./g, '').replace(',', '.')) || 0
@@ -60,8 +59,17 @@ export function Metas() {
   const metaTkAtual = !isTodas && selLoja ? (metaTkMap[selLoja] || 0) : 0
 
   const metaDia = (lojaId: string, ds: string, dow: number, canal: string) => (canal === 'total' ? (excMap[`${lojaId}|${ds}`] ?? semMap[`${lojaId}|${dow}|total`] ?? 0) : (semMap[`${lojaId}|${dow}|${canal}`] ?? 0))
-  // realizado + pessoas de um dia, no canal (total = faturado da loja; senão vem do por_canal)
-  const realCanal = (r: Rec | undefined, canal: string) => { if (!r) return { fat: 0, pes: 0 }; if (canal === 'total') return { fat: Number(r.faturado) || 0, pes: Number(r.pessoas) || 0 }; const c = (r.por_canal || []).find((x) => norm(x.canal) === norm(canal)); return { fat: Number(c?.faturado) || 0, pes: Number(c?.pessoas) || 0 } }
+  // realizado + pessoas de um dia, no canal. total = faturado da loja; Delivery = por_canal;
+  // Salão = total − Delivery (inclui balcão e o que mais não for delivery).
+  const realCanal = (r: Rec | undefined, canal: string) => {
+    if (!r) return { fat: 0, pes: 0 }
+    const tot = { fat: Number(r.faturado) || 0, pes: Number(r.pessoas) || 0 }
+    if (canal === 'total') return tot
+    const d = (r.por_canal || []).find((x) => norm(x.canal) === norm('Delivery'))
+    const del = { fat: Number(d?.faturado) || 0, pes: Number(d?.pessoas) || 0 }
+    if (norm(canal) === norm('Delivery')) return del
+    return { fat: Math.max(0, tot.fat - del.fat), pes: Math.max(0, tot.pes - del.pes) }  // Salão
+  }
 
   const rows = useMemo(() => {
     if (!selLoja) return []
@@ -192,7 +200,7 @@ export function Metas() {
                           ))}
                           <td style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}><input className="minp" value={metaTk[l.id] ?? ''} onChange={(e) => setMetaTk((m) => ({ ...m, [l.id]: e.target.value }))} placeholder="0,00" /></td>
                         </tr>
-                        {isSp && ['Salão', 'Delivery', 'Balcão'].map((canal) => { const key = `${l.id}|${canal}`; return (
+                        {isSp && ['Salão', 'Delivery'].map((canal) => { const key = `${l.id}|${canal}`; return (
                           <tr key={canal}>
                             <td />
                             <td style={{ paddingLeft: 22, color: '#475569', fontWeight: 400 }}>· {canal}</td>
