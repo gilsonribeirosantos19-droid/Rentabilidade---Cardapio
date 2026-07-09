@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIKO — Painel de Metas</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  :root { /* Grafite */
+    --bg:#0a0a0c; --bg2:#191b22; --card:#141519; --card2:#1b1d24; --line:#2c2f3a;
+    --sqbg:#101116; --barbg:#0a0b0f; --t1:#f1f3f9; --t2:#a1a7b5; --t3:#6b7180;
+    --accent:#64748b; --accent2:#cbd5e1; --brand:#2dd4bf;
+    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; }
+  html,body{height:100%;}
+  body{font-family:'Segoe UI',Inter,system-ui,sans-serif;color:var(--t1);overflow:hidden;background:radial-gradient(1100px 550px at 30% -10%,var(--bg2) 0%,var(--bg) 60%);}
+  .mono{font-family:'DM Mono',Consolas,monospace;}
+  .wrap{height:100vh;display:flex;flex-direction:column;padding:20px 24px;gap:14px;}
+  .top{display:flex;align-items:center;gap:16px;}
+  .logo{font-size:28px;font-weight:800;} .logo span{color:var(--brand);}
+  .uni{font-size:16px;color:var(--t2);font-weight:600;border-left:2px solid var(--line);padding-left:16px;}
+  .uni b{color:var(--t1);}
+  .right{margin-left:auto;text-align:right;} .clock{font-size:24px;font-weight:700;} .date{font-size:12px;color:var(--t2);}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--green);}
+  .live .d{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);}
+
+  .body{flex:1;display:grid;grid-template-columns:1.4fr 1fr;gap:16px;min-height:0;}
+  .col{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;min-height:0;}
+  .col h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--t2);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .fase{font-size:10px;font-weight:700;background:rgba(100,116,139,.18);color:var(--accent2);padding:2px 8px;border-radius:20px;}
+
+  .cards{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
+  .sq{position:relative;background:var(--sqbg);border:1px solid var(--line);border-radius:14px;padding:13px;display:flex;flex-direction:column;overflow:hidden;}
+  .sq::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--ac,var(--accent));}
+  .sq.g{--ac:var(--green);} .sq.a{--ac:var(--amber);} .sq.r{--ac:var(--red);} .sq.n{--ac:var(--accent);}
+  .sq .nm{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--t2);}
+  .sq .tag{position:absolute;right:11px;top:11px;font-size:8px;font-weight:700;color:var(--t3);letter-spacing:.05em;}
+  .sq .vl{font-size:30px;font-weight:800;margin:auto 0 2px;line-height:1;white-space:nowrap;}
+  .sq .vl.g{color:var(--green);} .sq .vl.a{color:var(--amber);} .sq .vl.r{color:var(--red);} .sq .vl.n{color:var(--accent2);}
+  .sq .mt{font-size:15px;color:var(--t2);font-weight:600;margin-top:2px;}
+  .sq .bar{height:7px;background:var(--barbg);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-top:8px;}
+  .sq .bar>i{display:block;height:100%;background:var(--ac);}
+
+  .placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--t3);gap:8px;}
+  .placeholder .big{font-size:38px;}
+  .err{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:18px;text-align:center;padding:40px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+  const FN = 'https://trczpnjidqfippbfxtpe.supabase.co/functions/v1/painel-tv';
+  const PUB = 'sb_publishable_GJqQ_qWVg5Y8GWaKy1qe7w_VvZiIQ3i';
+  const q = new URLSearchParams(location.search);
+  const loja = q.get('loja'), chave = q.get('chave');
+
+  const brl = n => 'R$ ' + Math.round(n||0).toLocaleString('pt-BR');
+  const pctOf = (r,m) => (m>0 ? Math.round((r/m)*100) : null);
+  const nn = v => v==null ? '—' : v;
+
+  // status pra metas onde MAIOR é melhor
+  function stHi(pct){ if(pct==null) return 'n'; if(pct>=100) return 'g'; if(pct>=85) return 'a'; return 'r'; }
+
+  function card({cls,tag,nm,vl,mt,bar}){
+    return `<div class="sq ${cls}"><span class="tag">${tag}</span><div class="nm">${nm}</div>
+      <div class="vl ${cls} mono">${vl}</div><div class="mt">${mt}</div>
+      <div class="bar"><i style="width:${Math.max(0,Math.min(100,bar||0))}%"></i></div></div>`;
+  }
+
+  function render(d){
+    const M=d.metas, I=d.indicadores;
+    const cards=[];
+    // AUTO
+    const mkMeta=(nm,o)=>{ const p=pctOf(o.real,o.meta); return card({cls:stHi(p),tag:'AUTO',nm,vl:brl(o.real),mt:`meta ${brl(o.meta)}${p!=null?' · '+p+'%':''}`,bar:p||0}); };
+    cards.push(mkMeta('Meta Dia',M.dia));
+    cards.push(mkMeta('Meta Semana',M.semana));
+    cards.push(mkMeta('Meta Mês',M.mes));
+    { const o=M.ticket, on=o.real>=o.meta&&o.meta>0; cards.push(card({cls:o.meta?(on?'g':'r'):'n',tag:'AUTO',nm:'Ticket Médio',vl:brl(o.real),mt:`meta ${brl(o.meta)}`,bar:o.meta?Math.min(100,(o.real/o.meta)*100):0})); }
+    // Clube (meta auto)
+    { const o=I.clube, p=pctOf(o.valor,o.meta); cards.push(card({cls:stHi(o.valor!=null?p:null),tag:'MANUAL',nm:'Clube Sushi',vl:o.valor!=null?brl(o.valor):'—',mt:`meta ${brl(o.meta)}${o.valor!=null&&p!=null?' · '+p+'%':''}`,bar:p||0})); }
+    // CMV (menor é melhor)
+    { const o=I.cmv, cls=o.valor==null?'n':(o.meta==null?'n':(o.valor<=o.meta?'g':(o.valor<=o.meta*1.05?'a':'r'))); cards.push(card({cls,tag:'MANUAL',nm:'CMV',vl:o.valor!=null?o.valor+'%':'—',mt:o.meta!=null?`meta ≤ ${o.meta}%`:'sem meta',bar:o.valor?Math.min(100,o.valor*2):0})); }
+    // NPS
+    { const o=I.nps, p=pctOf(o.valor,o.meta); cards.push(card({cls:stHi(o.valor!=null?p:null),tag:'MANUAL',nm:'NPS',vl:nn(o.valor),mt:o.meta!=null?`meta ${o.meta}`:'sem meta',bar:p||0})); }
+    // Google nota
+    { const o=I.google_nota, p=pctOf(o.valor,o.meta); const av=I.google_avaliacoes.valor; cards.push(card({cls:stHi(o.valor!=null?p:null),tag:'MANUAL',nm:'Google',vl:o.valor!=null?(String(o.valor).replace('.',',')+'★'):'—',mt:(av!=null?av+' aval.':'')+(o.meta!=null?' · meta '+String(o.meta).replace('.',','):''),bar:p||0})); }
+    // Peixe / Camarão
+    { const o=I.peixe, p=pctOf(o.valor,o.meta); cards.push(card({cls:stHi(o.valor!=null?p:null),tag:'MANUAL',nm:'R$ / Peixe',vl:o.valor!=null?brl(o.valor):'—',mt:o.meta!=null?`meta ${brl(o.meta)}`:'sem meta',bar:p||0})); }
+    { const o=I.camarao, p=pctOf(o.valor,o.meta); cards.push(card({cls:stHi(o.valor!=null?p:null),tag:'MANUAL',nm:'R$ / kg Camarão',vl:o.valor!=null?brl(o.valor):'—',mt:o.meta!=null?`meta ${brl(o.meta)}`:'sem meta',bar:p||0})); }
+
+    const now=new Date();
+    document.getElementById('root').innerHTML = `<div class="wrap">
+      <div class="top"><div class="logo">AI<span>KO</span></div>
+        <div class="uni">${d.loja||'—'} · <b>PAINEL DE METAS</b></div>
+        <div class="right"><div class="clock mono" id="clock"></div><div class="date">${now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})}</div><div class="live"><span class="d"></span>ao vivo · iComanda</div></div>
+      </div>
+      <div class="body">
+        <div class="col"><h3>Metas da Unidade</h3><div class="cards">${cards.join('')}</div></div>
+        <div class="col"><h3>🏆 Ranking de Garçons — Hoje <span class="fase">EM BREVE · FASE B</span></h3>
+          <div class="placeholder"><div class="big">🏆</div><div>O ranking dos garçons (ticket + suco)<br>entra quando ligarmos a venda por garçom do iComanda.</div></div>
+        </div>
+      </div></div>`;
+    tickClock();
+  }
+
+  function tickClock(){ const el=document.getElementById('clock'); if(el){ const d=new Date(); el.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); } }
+
+  async function load(){
+    if(!loja||!chave){ document.getElementById('root').innerHTML='<div class="err">Link inválido. Use ...painel.html?loja=ID&chave=CHAVE</div>'; return; }
+    try{
+      const res = await fetch(`${FN}?loja=${encodeURIComponent(loja)}&chave=${encodeURIComponent(chave)}`, { headers:{ apikey:PUB, Authorization:'Bearer '+PUB } });
+      if(res.status===401){ document.getElementById('root').innerHTML='<div class="err">Chave inválida para esta loja.</div>'; return; }
+      const d = await res.json();
+      if(d.error){ document.getElementById('root').innerHTML='<div class="err">'+d.error+'</div>'; return; }
+      render(d);
+    }catch(e){ /* mantém a tela anterior se falhar */ console.error(e); }
+  }
+  load();
+  setInterval(load, 3*60*1000);   // recarrega os dados a cada 3 min
+  setInterval(tickClock, 10000);
+</script>
+</body>
+</html>
