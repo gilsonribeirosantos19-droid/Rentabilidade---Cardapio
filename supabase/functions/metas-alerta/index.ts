@@ -15,7 +15,7 @@ const ZAPI_CLIENT   = 'F612a663424164fa3bcc571452911217fS'
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
 const brl = (n: number) => 'R$ ' + Math.round(n).toLocaleString('pt-BR')
-const kfmt = (n: number) => String(Math.round(n))
+const kfmt = (n: number) => Math.round(n).toLocaleString('pt-BR')   // 23.999 (ponto de milhar)
 
 function dataManaus(offsetDays = 0) {
   const dt = new Date(Date.now() - 4 * 3600 * 1000 + offsetDays * 86400000)
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
   const T = rows.reduce((a, r) => ({ meta: a.meta + r.meta, real: a.real + r.real, com: a.com + r.com }), { meta: 0, real: 0, com: 0 })
   const pct = (real: number, meta: number) => meta > 0 ? Math.round((real / meta) * 100) : null
 
-  const W = { nome: 11, meta: 6, real: 6, dif: 7 }
+  const W = { nome: 11, meta: 7, real: 7, dif: 8 }
   const L = (s: string, n: number) => s.length > n ? s.slice(0, n) : s.padEnd(n)
   const Rp = (s: string, n: number) => s.padStart(n)
   const head = L('Loja', W.nome) + Rp('Meta', W.meta) + Rp('Real', W.real) + Rp('Dif', W.dif)
