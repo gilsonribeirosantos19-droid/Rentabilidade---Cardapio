@@ -141,7 +141,7 @@ async function gerarPdf(d: any): Promise<Uint8Array> {
   for (const [k, v, c] of resumo) { need(20); txt(k, M + 6, 11, F, CL.dark); txt(v, M + 230, 11, FB, c); nl(16) }
 
   sec('Desempenho das Lojas')
-  const cols = [M + 6, M + 150, M + 235, M + 330, M + 415, M + 470]
+  const cols = [M + 6, M + 145, M + 215, M + 290, M + 375, M + 420]
   const rowH = 18
   need(rowH); page.drawRectangle({ x: M, y: y - rowH + 6, width: W - 2 * M, height: rowH, color: CL.head })
   ;['Loja', 'Meta', 'Real', 'Diferença', '% Meta', 'Status'].forEach((h, i) => txt(h, cols[i], 9.5, FB, CL.dark, y - 8))
