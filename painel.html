@@ -40,6 +40,15 @@
   .sq .bar{height:10px;background:var(--barbg);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:11px;}
   .sq .bar>i{display:block;height:100%;background:var(--ac);}
 
+  .rk{width:100%;border-collapse:collapse;}
+  .rk th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--t3);text-align:right;padding:6px 10px 10px;border-bottom:1px solid var(--line);font-weight:700;}
+  .rk th:nth-child(1){text-align:center;width:46px;} .rk th:nth-child(2){text-align:left;}
+  .rk td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.045);font-size:19px;}
+  .rk td.pos{text-align:center;color:var(--t3);font-weight:800;font-size:20px;}
+  .rk td.nm{text-align:left;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;}
+  .rk td.d{text-align:right;color:var(--accent2);font-weight:800;}
+  .rk td.m{text-align:right;color:var(--t2);font-weight:600;}
+  .rk tr:nth-child(1) td.pos{color:#f5c451;} .rk tr:nth-child(2) td.pos{color:#cbd5e1;} .rk tr:nth-child(3) td.pos{color:#d9925b;}
   .placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--t3);gap:8px;}
   .placeholder .big{font-size:38px;}
   .err{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:18px;text-align:center;padding:40px;}
@@ -64,6 +73,13 @@
     return `<div class="sq ${cls}"><span class="tag">${tag}</span><div class="nm">${nm}</div>
       <div class="vl ${cls} mono">${vl}</div><div class="mt">${mt}</div>
       <div class="bar"><i style="width:${Math.max(0,Math.min(100,bar||0))}%"></i></div></div>`;
+  }
+
+  const esc = s => String(s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function garconsHtml(list){
+    if(!list||!list.length) return `<div class="placeholder"><div class="big">🏆</div><div>Sem atendimentos ainda hoje.<br>O ranking acende assim que rolarem as primeiras comandas.</div></div>`;
+    const rows = list.map((g,i)=>`<tr><td class="pos">${i+1}</td><td class="nm">${esc(g.nome)}</td><td class="d mono">${g.tkDia?brl(g.tkDia):'—'}</td><td class="m mono">${g.tkMes?brl(g.tkMes):'—'}</td></tr>`).join('');
+    return `<table class="rk"><thead><tr><th>#</th><th>Garçom</th><th>Ticket Dia</th><th>Ticket Mês</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function render(d){
@@ -95,8 +111,8 @@
       </div>
       <div class="body">
         <div class="col"><h3>Metas da Unidade</h3><div class="cards">${cards.join('')}</div></div>
-        <div class="col"><h3>🏆 Ranking de Garçons — Hoje <span class="fase">EM BREVE · FASE B</span></h3>
-          <div class="placeholder"><div class="big">🏆</div><div>O ranking dos garçons (ticket + suco)<br>entra quando ligarmos a venda por garçom do iComanda.</div></div>
+        <div class="col"><h3>🏆 Ranking de Garçons — Hoje <span class="fase">TICKET MÉDIO · AO VIVO</span></h3>
+          ${garconsHtml(d.garcons)}
         </div>
       </div></div>`;
     tickClock();
