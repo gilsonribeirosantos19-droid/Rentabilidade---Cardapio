@@ -31,7 +31,7 @@ const BLOCOS_OK = new Set([
 ])
 
 // Parâmetros que repassamos ao iComanda (whitelist — nada além disso).
-const PARAMS_OK = ['data_ini', 'data_fim', 'filial_id', 'limit', 'ordenar_por', 'severidade_min', 'max_alertas', 'cliente_id']
+const PARAMS_OK = ['data_ini', 'data_fim', 'filial_id', 'limit', 'ordenar_por', 'severidade_min', 'max_alertas', 'cliente_id', 'usuario_id', 'produto_id', 'grupo_id']
 
 const json = (obj: unknown, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
