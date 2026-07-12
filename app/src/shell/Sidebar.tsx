@@ -98,13 +98,14 @@ export function Sidebar({
 
           {(active.sections ?? []).map((s, i) => {
             if ('group' in s) {
-              const isCol = collapsed[active.id + i] ?? false
+              const isCol = collapsed[active.id + i] ?? !s.items.some((it) => it.key === activeKey)
               return (
                 <div key={i} className={'sgrp' + (isCol ? ' col' : '')}>
                   <div
                     className="sgrp-h"
                     onClick={() => setCollapsed((c) => ({ ...c, [active.id + i]: !isCol }))}
                   >
+                    <span className="sdot" />
                     <span>{s.group}</span>
                     <Chevron />
                   </div>
