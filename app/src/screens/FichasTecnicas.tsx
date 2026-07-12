@@ -146,6 +146,9 @@ export function FichasTecnicas() {
 
   return (
     <div className="fic-screen">
+      {ver ? (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
+        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
+      ) })() : (<>
       <div className="fic-toolbar">
         <div className="fic-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
@@ -181,8 +184,6 @@ export function FichasTecnicas() {
         <button className="fic-nova" onClick={() => setEditing('new')}>+ Nova ficha</button>
       </div>
 
-      <div className="fic-body">
-      <div className="fic-left">
       <div className="tbl-card"><div className="tbl-scroll">
         <table>
           <thead><tr>
@@ -217,12 +218,7 @@ export function FichasTecnicas() {
       </div></div>
 
       <div className="fic-foot">{filtrada.length} fichas</div>
-      </div>
-
-      {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
-        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
-      ) })()}
-      </div>
+      </>)}
       {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={produtos} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
     </div>
   )
@@ -240,7 +236,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
   onClose: () => void
   onEdit: () => void
 }) {
-  const [tab, setTab] = useState<'resumo' | 'ingredientes' | 'financeiro' | 'historico'>('resumo')
+  const [tab, setTab] = useState<'resumo' | 'financeiro' | 'historico'>('resumo')
   const itens = [...(ficha.itens_ficha || [])].sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
   const custo = m.custo                                   // custo por unidade/porção
   const custoTot = itens.reduce((s, it) => s + custoItem(it), 0)  // custo total da receita
@@ -255,6 +251,13 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
   const margDeliv = pvDel > 0 && custo > 0 ? ((pvDel - custo - pvDel * (txDel + txImp) / 100) / pvDel) * 100 : null
   const corMarg = (v: number | null) => (v === null ? '#64748b' : v < margMin ? '#e11d48' : '#16a34a')
   const cmvColor = cmv === null ? '#64748b' : cmv <= 30 ? '#16a34a' : cmv <= 38 ? '#f59e0b' : '#e11d48'
+  // composição da venda (salão): custo + impostos/taxas + lucro líquido
+  const temPreco = pv > 0
+  const taxasSalao = temPreco ? (pv * (txCar + txImp)) / 100 : 0
+  const lucroSalao = temPreco && custo > 0 ? pv - custo - taxasSalao : 0
+  const pctCusto = temPreco ? (custo / pv) * 100 : 0
+  const pctTax = txCar + txImp
+  const pctLucro = temPreco ? (lucroSalao / pv) * 100 : 0
 
   const insIds = itens.map((it) => it.insumo_id).filter(Boolean) as string[]
   const { data: hist = [] } = useQuery({
@@ -272,154 +275,165 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
     return um === 'kg' || um === 'litro' ? (q / 1000).toFixed(3) + ' ' + um : q + ' ' + um
   }
 
-  const finCards = (
-    <div className="fin-grid">
-      <div className="fin-card"><div className="l">Custo/un</div><div className="v">{custo > 0 ? brl(custo) : '—'}</div></div>
-      <div className="fin-card"><div className="l">Preço de venda</div><div className="v">{pv > 0 ? brl(pv) : '—'}</div></div>
-      <div className="fin-card"><div className="l">CMV%</div><div className="v" style={{ color: cmvColor }}>{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</div></div>
-      <div className="fin-card"><div className="l">Margem (R$)</div><div className="v">{margemRs !== null ? brl(margemRs) : '—'}</div></div>
-      <div className="fin-card"><div className="l">Margem%</div><div className="v">{margemPct !== null ? margemPct.toFixed(1) + '%' : '—'}</div></div>
-      <div className="fin-card"><div className="l">Markup</div><div className="v">{markup !== null ? markup.toFixed(2) + 'x' : '—'}</div></div>
-      <div className="fin-card salao"><div className="l">Margem Salão</div><div className="v" style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</div></div>
-      <div className="fin-card deliv"><div className="l">Margem Delivery</div><div className="v" style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</div></div>
-    </div>
-  )
-
   return (
-    <aside className="dp">
-        <div className="dp-hdr">
-          <h2>{ficha.nome}</h2>
-          <span className="dp-badge" style={{ background: st.bg, color: st.c }}>{st.t}</span>
-          <button className="dp-x" onClick={onClose}>✕</button>
+    <div className="fd">
+      <div className="fd-top">
+        <button className="fd-back" onClick={onClose}>‹ Voltar à lista</button>
+        <button className="fd-edit" onClick={onEdit}>✎ Editar ficha</button>
+      </div>
+      <div className="fd-sheet">
+        <div className="fd-head">
+          <div>
+            <div className="fd-cat">{ficha.categoria || '—'}</div>
+            <div className="fd-title">{ficha.nome}</div>
+            <div className="fd-meta"><span className="fd-dot" style={{ background: st.c }} /> {st.t} · rende {ficha.rendimento_porcoes || 1} porção(ões)</div>
+          </div>
+          <div className="fd-price">
+            <div className="v mono">{pv > 0 ? brl(pv) : '—'}</div>
+            <div className="l">preço salão</div>
+          </div>
         </div>
-        <div className="dp-tabs">
-          <button className={'dp-tab' + (tab === 'resumo' ? ' on' : '')} onClick={() => setTab('resumo')}>Visão geral</button>
-          <button className={'dp-tab' + (tab === 'ingredientes' ? ' on' : '')} onClick={() => setTab('ingredientes')}>Ingredientes</button>
-          <button className={'dp-tab' + (tab === 'financeiro' ? ' on' : '')} onClick={() => setTab('financeiro')}>Preços e custos</button>
-          <button className={'dp-tab' + (tab === 'historico' ? ' on' : '')} onClick={() => setTab('historico')}>Histórico</button>
+
+        <div className="fd-tabs">
+          <button className={'fd-tab' + (tab === 'resumo' ? ' on' : '')} onClick={() => setTab('resumo')}>Visão geral</button>
+          <button className={'fd-tab' + (tab === 'financeiro' ? ' on' : '')} onClick={() => setTab('financeiro')}>Preços e custos</button>
+          <button className={'fd-tab' + (tab === 'historico' ? ' on' : '')} onClick={() => setTab('historico')}>Histórico</button>
         </div>
-        <div className="dp-body">
-          {tab === 'resumo' && (
-            <>
-              <div className="dp-sec">Ingredientes (rendimento: {ficha.rendimento_porcoes || 1} un)</div>
-              <table className="vg-tbl">
-                <thead><tr><th>Ingrediente</th><th>Categoria</th><th className="r">Qtd. utilizada</th><th className="r">Custo (R$)</th><th className="r">% do custo</th></tr></thead>
-                <tbody>
-                  {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
-                    : itens.map((it, idx) => {
-                      const ins = insMap[it.insumo_id || '']
-                      const sub = custoItem(it)
-                      const pct = custoTot > 0 ? (sub / custoTot) * 100 : 0
-                      return (
-                        <tr key={it.id || idx}>
-                          <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
-                          <td style={{ color: '#64748b', fontSize: 11 }}>{ins?.categoria || '—'}</td>
-                          <td className="r">{qtdFmt(it, ins)}</td>
-                          <td className="r">{brl(sub)}</td>
-                          <td className="r" style={{ color: '#94a3b8' }}>{pct.toFixed(1)}%</td>
-                        </tr>
-                      )
-                    })}
-                </tbody>
-                <tfoot><tr><td colSpan={2}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r">{brl(custoTot)}</td><td className="r">100%</td></tr></tfoot>
-              </table>
-              <div className="dp-sec">Resumo financeiro</div>
-              {finCards}
-              {ficha.observacoes && <><div className="dp-sec">Observações</div><div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{ficha.observacoes}</div></>}
-            </>
-          )}
-          {tab === 'ingredientes' && (
-            <table className="vg-tbl">
-              <thead><tr><th>Ingrediente</th><th>Un.</th><th className="r">Qtd</th><th className="r">Custo/kg</th><th className="r">Subtotal</th></tr></thead>
-              <tbody>
-                {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente cadastrado</td></tr>
-                  : itens.map((it, idx) => {
-                    const ins = insMap[it.insumo_id || '']
-                    const um = ins ? ins.unidade_medida || ins.unidade_compra || 'g' : 'g'
-                    const isUnit = um === 'un' || um === 'pct' || um === 'cx'
-                    const cb = ins ? custoBase(ins) : 0
-                    const ckg = ins ? (isUnit ? cb : cb / ((ins.rendimento_pct || 100) / 100)) : 0
-                    return (
-                      <tr key={it.id || idx}>
-                        <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
-                        <td style={{ color: '#64748b' }}>{um}</td>
-                        <td className="r">{qtdFmt(it, ins)}</td>
-                        <td className="r">{brl(ckg)}</td>
-                        <td className="r" style={{ color: '#00b890' }}>{brl(custoItem(it))}</td>
-                      </tr>
-                    )
-                  })}
-              </tbody>
-              <tfoot><tr><td colSpan={4}>Custo total</td><td className="r">{brl(custoTot)}</td></tr></tfoot>
-            </table>
-          )}
-          {tab === 'financeiro' && (
-            <>
-              <div className="dp-sec">Custos</div>
+
+        {tab === 'resumo' && (
+          <>
+            {temPreco && custo > 0 ? (
+              <>
+                <div className="fd-sec">Composição da venda — pra onde vai cada R$ da venda (salão)</div>
+                <div className="fd-bar">
+                  <div className="b-custo" style={{ width: pctCusto + '%' }}>{pctCusto >= 9 ? pctCusto.toFixed(0) + '%' : ''}</div>
+                  <div className="b-tax" style={{ width: pctTax + '%' }}>{pctTax >= 9 ? pctTax.toFixed(0) + '%' : ''}</div>
+                  <div className="b-lucro" style={{ width: Math.max(0, pctLucro) + '%' }}>{pctLucro >= 14 ? 'Lucro ' + pctLucro.toFixed(0) + '%' : ''}</div>
+                </div>
+                <div className="fd-barleg">
+                  <div><span className="k" style={{ background: '#64748b' }} />Custo do prato <b className="mono">{brl(custo)}</b> <span className="p">· {pctCusto.toFixed(1)}%</span></div>
+                  <div><span className="k" style={{ background: '#d9a441' }} />Impostos + cartão <b className="mono">{brl(taxasSalao)}</b> <span className="p">· {pctTax.toFixed(1)}%</span></div>
+                  <div><span className="k" style={{ background: '#3f9e6b' }} />Lucro líquido <b className="mono">{brl(lucroSalao)}</b> <span className="p">· {pctLucro.toFixed(1)}%</span></div>
+                </div>
+              </>
+            ) : (
+              <div className="fd-nobar">{!temPreco ? 'Ficha sem preço de venda — defina o preço pra ver a composição e as margens.' : 'Ingredientes sem custo cadastrado nesta loja — sem custo, não dá pra calcular CMV e margens.'}</div>
+            )}
+
+            <div className="fd-cols">
+              <div>
+                <div className="fd-sec">Ingredientes</div>
+                <table className="vg-tbl">
+                  <thead><tr><th>Ingrediente</th><th>Categoria</th><th className="r">Qtd</th><th className="r">Custo</th><th className="r">% custo</th></tr></thead>
+                  <tbody>
+                    {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
+                      : itens.map((it, idx) => {
+                        const ins = insMap[it.insumo_id || '']
+                        const sub = custoItem(it)
+                        const pct = custoTot > 0 ? (sub / custoTot) * 100 : 0
+                        return (
+                          <tr key={it.id || idx}>
+                            <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
+                            <td style={{ color: '#64748b', fontSize: 11.5 }}>{ins?.categoria || '—'}</td>
+                            <td className="r">{qtdFmt(it, ins)}</td>
+                            <td className="r">{brl(sub)}</td>
+                            <td className="r" style={{ color: '#94a3b8' }}>{pct.toFixed(0)}%</td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                  <tfoot><tr><td colSpan={2}>Total · {(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td></td><td className="r">{brl(custoTot)}</td><td className="r">100%</td></tr></tfoot>
+                </table>
+              </div>
+              <div>
+                <div className="fd-sec">Resumo financeiro</div>
+                <div className="fd-dl">
+                  <div className="r"><span className="k">Custo / un</span><span className="v mono">{custo > 0 ? brl(custo) : '—'}</span></div>
+                  <div className="r"><span className="k">Preço de venda</span><span className="v mono">{pv > 0 ? brl(pv) : '—'}</span></div>
+                  <div className="r"><span className="k">CMV</span><span className="v mono">{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</span></div>
+                  <div className="r"><span className="k">Lucro bruto</span><span className="v mono">{margemRs !== null ? brl(margemRs) : '—'}</span></div>
+                  <div className="r"><span className="k">Margem bruta</span><span className="v mono">{margemPct !== null ? margemPct.toFixed(1) + '%' : '—'}</span></div>
+                  <div className="r"><span className="k">Markup</span><span className="v mono">{markup !== null ? markup.toFixed(2) + '×' : '—'}</span></div>
+                  <div className="r"><span className="k">Margem real · salão</span><span className="v mono" style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</span></div>
+                  <div className="r"><span className="k">Margem real · delivery</span><span className="v mono" style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</span></div>
+                </div>
+              </div>
+            </div>
+            {ficha.observacoes && <><div className="fd-sec">Observações</div><div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>{ficha.observacoes}</div></>}
+          </>
+        )}
+
+        {tab === 'financeiro' && (
+          <div className="fd-cols">
+            <div>
+              <div className="fd-sec">Custos</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Custo total da receita</span><b>{brl(custoTot)}</b></div>
                 <div className="fin-row"><span>Rendimento</span><b>{ficha.rendimento_porcoes || 1} un</b></div>
                 <div className="fin-row"><span>Custo por unidade</span><b>{custo > 0 ? brl(custo) : '—'}</b></div>
               </div>
-              <div className="dp-sec">Preços</div>
+              <div className="fd-sec">Preços</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Preço salão</span><b>{pv > 0 ? brl(pv) : '—'}</b></div>
                 <div className="fin-row"><span>Preço delivery</span><b>{Number(ficha.preco_delivery) > 0 ? brl(Number(ficha.preco_delivery)) : <span style={{ color: '#94a3b8', fontWeight: 400 }}>igual ao salão</span>}</b></div>
               </div>
-              <div className="dp-sec">Taxas aplicadas (parâmetros)</div>
+            </div>
+            <div>
+              <div className="fd-sec">Taxas aplicadas (parâmetros)</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Cartão (salão)</span><b>{txCar}%</b></div>
                 <div className="fin-row"><span>Delivery / iFood</span><b>{txDel}%</b></div>
                 <div className="fin-row"><span>Imposto sobre venda</span><b>{txImp}%</b></div>
                 <div className="fin-row"><span>Margem mínima alvo</span><b>{margMin}%</b></div>
               </div>
-              <div className="dp-sec">Resultado</div>
-              {finCards}
-            </>
-          )}
-          {tab === 'historico' && (
-            <>
-              <div className="dp-sec">Dados da ficha</div>
+              <div className="fd-sec">Resultado (margem real)</div>
               <div className="fin-rows">
-                <div className="fin-row"><span>Criada em</span><b>{dt(ficha.created_at)}</b></div>
-                <div className="fin-row"><span>Última atualização</span><b>{dth(ficha.atualizado_em)}</b></div>
-                <div className="fin-row"><span>Preço salão atual</span><b>{pv > 0 ? brl(pv) : '—'}</b></div>
-                <div className="fin-row"><span>Preço delivery atual</span><b>{Number(ficha.preco_delivery) > 0 ? brl(Number(ficha.preco_delivery)) : '—'}</b></div>
-                <div className="fin-row"><span>Custo por unidade atual</span><b>{custo > 0 ? brl(custo) : '—'}</b></div>
+                <div className="fin-row"><span>Margem · salão</span><b style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</b></div>
+                <div className="fin-row"><span>Margem · delivery</span><b style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</b></div>
               </div>
-              <div className="dp-sec">Histórico de custo dos ingredientes</div>
-              {hist.length === 0 ? (
-                <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>Sem eventos de custo registrados para os ingredientes desta ficha.</div>
-              ) : (
-                <table className="vg-tbl">
-                  <thead><tr><th>Data</th><th>Ingrediente</th><th className="r">Custo ant.</th><th className="r">Novo custo</th><th className="r">Impacto</th></tr></thead>
-                  <tbody>
-                    {hist.map((h, i) => {
-                      const ins = insMap[(h.insumo_id as string) || '']
-                      const imp = (h.impacto_pct as number | null) ?? null
-                      const ca = h.custo_medio_anterior as number | null
-                      const cn = h.novo_custo_medio as number | null
-                      return (
-                        <tr key={i}>
-                          <td style={{ color: '#64748b', fontSize: 11 }}>{dt(h.created_at as string)}</td>
-                          <td>{ins?.nome || '—'}</td>
-                          <td className="r">{ca != null ? brl(Number(ca)) : '—'}</td>
-                          <td className="r">{cn != null ? brl(Number(cn)) : '—'}</td>
-                          <td className="r" style={{ color: imp == null ? '#94a3b8' : imp > 0 ? '#e11d48' : '#16a34a' }}>{imp != null ? (imp > 0 ? '+' : '') + imp.toFixed(1) + '%' : '—'}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              )}
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 10, lineHeight: 1.5 }}>O histórico de custo vem das entradas de NF-e/estoque dos ingredientes. O histórico de <b>preço de venda</b> da própria ficha passa a ser registrado quando ligarmos o log de alterações (posso ativar quando quiser).</div>
-            </>
-          )}
-        </div>
-        <div className="dp-ftr">
-          <button className="dp-edit" onClick={onEdit}>✎ Editar ficha</button>
-          <button className="dp-close" onClick={onClose}>Fechar</button>
-        </div>
-    </aside>
+            </div>
+          </div>
+        )}
+
+        {tab === 'historico' && (
+          <>
+            <div className="fd-sec">Dados da ficha</div>
+            <div className="fin-rows" style={{ maxWidth: 520 }}>
+              <div className="fin-row"><span>Criada em</span><b>{dt(ficha.created_at)}</b></div>
+              <div className="fin-row"><span>Última atualização</span><b>{dth(ficha.atualizado_em)}</b></div>
+              <div className="fin-row"><span>Preço salão atual</span><b>{pv > 0 ? brl(pv) : '—'}</b></div>
+              <div className="fin-row"><span>Preço delivery atual</span><b>{Number(ficha.preco_delivery) > 0 ? brl(Number(ficha.preco_delivery)) : '—'}</b></div>
+              <div className="fin-row"><span>Custo por unidade atual</span><b>{custo > 0 ? brl(custo) : '—'}</b></div>
+            </div>
+            <div className="fd-sec">Histórico de custo dos ingredientes</div>
+            {hist.length === 0 ? (
+              <div style={{ fontSize: 13, color: '#94a3b8', padding: '8px 0' }}>Sem eventos de custo registrados para os ingredientes desta ficha.</div>
+            ) : (
+              <table className="vg-tbl" style={{ maxWidth: 760 }}>
+                <thead><tr><th>Data</th><th>Ingrediente</th><th className="r">Custo ant.</th><th className="r">Novo custo</th><th className="r">Impacto</th></tr></thead>
+                <tbody>
+                  {hist.map((h, i) => {
+                    const ins = insMap[(h.insumo_id as string) || '']
+                    const imp = (h.impacto_pct as number | null) ?? null
+                    const ca = h.custo_medio_anterior as number | null
+                    const cn = h.novo_custo_medio as number | null
+                    return (
+                      <tr key={i}>
+                        <td style={{ color: '#64748b', fontSize: 11.5 }}>{dt(h.created_at as string)}</td>
+                        <td>{ins?.nome || '—'}</td>
+                        <td className="r">{ca != null ? brl(Number(ca)) : '—'}</td>
+                        <td className="r">{cn != null ? brl(Number(cn)) : '—'}</td>
+                        <td className="r" style={{ color: imp == null ? '#94a3b8' : imp > 0 ? '#e11d48' : '#16a34a' }}>{imp != null ? (imp > 0 ? '+' : '') + imp.toFixed(1) + '%' : '—'}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            )}
+            <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 10, lineHeight: 1.5, maxWidth: 760 }}>O histórico de custo vem das entradas de NF-e/estoque dos ingredientes. O histórico de <b>preço de venda</b> da própria ficha passa a ser registrado quando ligarmos o log de alterações.</div>
+          </>
+        )}
+      </div>
+    </div>
   )
 }
