@@ -294,10 +294,6 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
             <div className="fd-title">{ficha.nome}</div>
             <div className="fd-meta"><span className="fd-dot" style={{ background: st.c }} /> {st.t} · rende {ficha.rendimento_porcoes || 1} porção(ões)</div>
           </div>
-          <div className="fd-price">
-            <div className="v mono">{pv > 0 ? brl(pv) : '—'}</div>
-            <div className="l">preço salão</div>
-          </div>
         </div>
 
         <div className="fd-tabs">
