@@ -9,8 +9,10 @@ type Item = { id?: string; insumo_id?: string | null; produto_id?: string | null
 type Ficha = {
   id: string; nome?: string; categoria?: string; rendimento_porcoes?: number; preco_venda?: number | null
   status?: string; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; produto_id?: string | null
+  preco_delivery?: number | null; observacoes?: string | null; created_at?: string; atualizado_em?: string
   itens_ficha?: Item[]
 }
+type PrecoParams = { txDel: number; txCar: number; txImp: number; margMin: number }
 type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
 type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string }
 type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
@@ -56,6 +58,16 @@ export function FichasTecnicas() {
   })
   const { data: lojas = [] } = useQuery({ queryKey: ['fic-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome?: string }[] } })
   useEffect(() => { if (!lojaSel && lojas.length) setLojaSel(lojas[0].id) }, [lojas, lojaSel])
+  // parâmetros de precificação (taxas que saem da venda) — pra Margem Salão/Delivery
+  const { data: precoParams } = useQuery({
+    queryKey: ['fic-precparams', tenantId], enabled: !!tenantId,
+    queryFn: async () => {
+      const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'precificacao')
+      const mp = Object.fromEntries((data ?? []).map((r: { chave: string; valor: string }) => [r.chave, parseFloat(r.valor)]))
+      return { txDel: mp.taxa_delivery ?? 27, txCar: mp.taxa_cartao ?? 3, txImp: mp.imposto ?? 6, margMin: mp.margem_minima ?? 20 } as PrecoParams
+    },
+  })
+  const params: PrecoParams = precoParams ?? { txDel: 27, txCar: 3, txImp: 6, margMin: 20 }
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])), [insumos])
   // custo médio POR LOJA (não mistura entre lojas) — a ficha reflete a loja selecionada
@@ -205,53 +217,206 @@ export function FichasTecnicas() {
 
       <div className="fic-foot">{filtrada.length} fichas</div>
 
-      {ver && <VerFicha ficha={ver} m={metricas(ver)} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} cmvCls={cmvCls} onClose={() => setVer(null)} />}
+      {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
+        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
+      ) })()}
       {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={produtos} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
     </div>
   )
 }
 
-function VerFicha({ ficha, m, insMap, custoItem, cmvCls, onClose }: {
+function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId, onClose, onEdit }: {
   ficha: Ficha
   m: { custo: number; pv: number; cmv: number | null; margem: number | null }
+  st: { t: string; bg: string; c: string }
   insMap: Record<string, Insumo>
   custoItem: (it: Item) => number
-  cmvCls: (cmv: number | null) => string
+  custoBase: (ins: Insumo) => number
+  params: PrecoParams
+  tenantId?: string | null
   onClose: () => void
+  onEdit: () => void
 }) {
+  const [tab, setTab] = useState<'resumo' | 'ingredientes' | 'financeiro' | 'historico'>('resumo')
   const itens = [...(ficha.itens_ficha || [])].sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+  const custo = m.custo                                   // custo por unidade/porção
+  const custoTot = itens.reduce((s, it) => s + custoItem(it), 0)  // custo total da receita
+  const pv = m.pv
+  const pvDel = Number(ficha.preco_delivery) > 0 ? Number(ficha.preco_delivery) : pv
+  const cmv = m.cmv
+  const markup = custo > 0 && pv > 0 ? pv / custo : null
+  const margemRs = pv > 0 && custo > 0 ? pv - custo : null
+  const margemPct = m.margem
+  const { txDel, txCar, txImp, margMin } = params
+  const margSalao = pv > 0 && custo > 0 ? ((pv - custo - pv * (txCar + txImp) / 100) / pv) * 100 : null
+  const margDeliv = pvDel > 0 && custo > 0 ? ((pvDel - custo - pvDel * (txDel + txImp) / 100) / pvDel) * 100 : null
+  const corMarg = (v: number | null) => (v === null ? '#64748b' : v < margMin ? '#e11d48' : '#16a34a')
+  const cmvColor = cmv === null ? '#64748b' : cmv <= 30 ? '#16a34a' : cmv <= 38 ? '#f59e0b' : '#e11d48'
+
+  const insIds = itens.map((it) => it.insumo_id).filter(Boolean) as string[]
+  const { data: hist = [] } = useQuery({
+    queryKey: ['fic-hist', ficha.id, insIds.join(',')], enabled: !!tenantId && tab === 'historico' && insIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from('historico_custo').select('*').eq('tenant_id', tenantId).in('insumo_id', insIds).order('created_at', { ascending: false }).limit(20)
+      return (data ?? []) as Record<string, unknown>[]
+    },
+  })
+  const dt = (s?: string) => (s ? new Date(s).toLocaleDateString('pt-BR') : '—')
+  const dth = (s?: string) => (s ? new Date(s).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—')
+  const qtdFmt = (it: Item, ins?: Insumo) => {
+    const um = ins ? ins.unidade_medida || ins.unidade_compra || 'g' : 'g'
+    const q = Number(it.quantidade_g) || 0
+    return um === 'kg' || um === 'litro' ? (q / 1000).toFixed(3) + ' ' + um : q + ' ' + um
+  }
+
+  const finCards = (
+    <div className="fin-grid">
+      <div className="fin-card"><div className="l">Custo/un</div><div className="v">{custo > 0 ? brl(custo) : '—'}</div></div>
+      <div className="fin-card"><div className="l">Preço de venda</div><div className="v">{pv > 0 ? brl(pv) : '—'}</div></div>
+      <div className="fin-card"><div className="l">CMV%</div><div className="v" style={{ color: cmvColor }}>{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</div></div>
+      <div className="fin-card"><div className="l">Margem (R$)</div><div className="v">{margemRs !== null ? brl(margemRs) : '—'}</div></div>
+      <div className="fin-card"><div className="l">Margem%</div><div className="v">{margemPct !== null ? margemPct.toFixed(1) + '%' : '—'}</div></div>
+      <div className="fin-card"><div className="l">Markup</div><div className="v">{markup !== null ? markup.toFixed(2) + 'x' : '—'}</div></div>
+      <div className="fin-card salao"><div className="l">Margem Salão</div><div className="v" style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</div></div>
+      <div className="fin-card deliv"><div className="l">Margem Delivery</div><div className="v" style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</div></div>
+    </div>
+  )
+
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="vm" onClick={(e) => e.stopPropagation()}>
-        <div className="vm-head">
-          <div><h2>{ficha.nome}</h2><div className="cat">{ficha.categoria || '—'} · rende {ficha.rendimento_porcoes || 1} porção(ões)</div></div>
-          <button className="vm-x" onClick={onClose}>✕</button>
+    <div className="dp-overlay" onClick={onClose}>
+      <div className="dp" onClick={(e) => e.stopPropagation()}>
+        <div className="dp-hdr">
+          <h2>{ficha.nome}</h2>
+          <span className="dp-badge" style={{ background: st.bg, color: st.c }}>{st.t}</span>
+          <button className="dp-x" onClick={onClose}>✕</button>
         </div>
-        <div className="vm-body">
-          <div className="kpis">
-            <div className="kpi"><div className="l">Custo</div><div className="v">{m.custo > 0 ? brl(m.custo) : '—'}</div></div>
-            <div className="kpi"><div className="l">Preço Venda</div><div className="v">{m.pv > 0 ? brl(m.pv) : '—'}</div></div>
-            <div className="kpi"><div className="l">CMV</div><div className={'v ' + cmvCls(m.cmv)}>{m.cmv !== null ? m.cmv.toFixed(1) + '%' : '—'}</div></div>
-            <div className="kpi"><div className="l">Margem</div><div className="v" style={{ color: m.margem !== null && m.margem > 0 ? '#16a34a' : '#e11d48' }}>{m.margem !== null ? m.margem.toFixed(1) + '%' : '—'}</div></div>
-          </div>
-          <table className="ing-tbl">
-            <thead><tr><th>Ingrediente</th><th>UM</th><th className="r">Qtd</th><th className="r">Custo total</th></tr></thead>
-            <tbody>
-              {itens.length === 0 ? <tr><td colSpan={4} style={{ padding: 16, textAlign: 'center', color: '#94a3b8' }}>Sem ingredientes</td></tr>
-                : itens.map((it, idx) => {
-                  const ins = insMap[it.insumo_id || '']
-                  const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : '—'
-                  return (
-                    <tr key={it.id || idx}>
-                      <td>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
-                      <td>{um}</td>
-                      <td className="r">{Number(it.quantidade_g) || 0}</td>
-                      <td className="r">{brl(custoItem(it))}</td>
-                    </tr>
-                  )
-                })}
-            </tbody>
-          </table>
+        <div className="dp-tabs">
+          <button className={'dp-tab' + (tab === 'resumo' ? ' on' : '')} onClick={() => setTab('resumo')}>Visão geral</button>
+          <button className={'dp-tab' + (tab === 'ingredientes' ? ' on' : '')} onClick={() => setTab('ingredientes')}>Ingredientes</button>
+          <button className={'dp-tab' + (tab === 'financeiro' ? ' on' : '')} onClick={() => setTab('financeiro')}>Preços e custos</button>
+          <button className={'dp-tab' + (tab === 'historico' ? ' on' : '')} onClick={() => setTab('historico')}>Histórico</button>
+        </div>
+        <div className="dp-body">
+          {tab === 'resumo' && (
+            <>
+              <div className="dp-sec">Ingredientes (rendimento: {ficha.rendimento_porcoes || 1} un)</div>
+              <table className="vg-tbl">
+                <thead><tr><th>Ingrediente</th><th>Categoria</th><th className="r">Qtd. utilizada</th><th className="r">Custo (R$)</th><th className="r">% do custo</th></tr></thead>
+                <tbody>
+                  {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
+                    : itens.map((it, idx) => {
+                      const ins = insMap[it.insumo_id || '']
+                      const sub = custoItem(it)
+                      const pct = custoTot > 0 ? (sub / custoTot) * 100 : 0
+                      return (
+                        <tr key={it.id || idx}>
+                          <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
+                          <td style={{ color: '#64748b', fontSize: 11 }}>{ins?.categoria || '—'}</td>
+                          <td className="r">{qtdFmt(it, ins)}</td>
+                          <td className="r">{brl(sub)}</td>
+                          <td className="r" style={{ color: '#94a3b8' }}>{pct.toFixed(1)}%</td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+                <tfoot><tr><td colSpan={2}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r">{brl(custoTot)}</td><td className="r">100%</td></tr></tfoot>
+              </table>
+              <div className="dp-sec">Resumo financeiro</div>
+              {finCards}
+              {ficha.observacoes && <><div className="dp-sec">Observações</div><div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{ficha.observacoes}</div></>}
+            </>
+          )}
+          {tab === 'ingredientes' && (
+            <table className="vg-tbl">
+              <thead><tr><th>Ingrediente</th><th>Un.</th><th className="r">Qtd</th><th className="r">Custo/kg</th><th className="r">Subtotal</th></tr></thead>
+              <tbody>
+                {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente cadastrado</td></tr>
+                  : itens.map((it, idx) => {
+                    const ins = insMap[it.insumo_id || '']
+                    const um = ins ? ins.unidade_medida || ins.unidade_compra || 'g' : 'g'
+                    const isUnit = um === 'un' || um === 'pct' || um === 'cx'
+                    const cb = ins ? custoBase(ins) : 0
+                    const ckg = ins ? (isUnit ? cb : cb / ((ins.rendimento_pct || 100) / 100)) : 0
+                    return (
+                      <tr key={it.id || idx}>
+                        <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
+                        <td style={{ color: '#64748b' }}>{um}</td>
+                        <td className="r">{qtdFmt(it, ins)}</td>
+                        <td className="r">{brl(ckg)}</td>
+                        <td className="r" style={{ color: '#00b890' }}>{brl(custoItem(it))}</td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+              <tfoot><tr><td colSpan={4}>Custo total</td><td className="r">{brl(custoTot)}</td></tr></tfoot>
+            </table>
+          )}
+          {tab === 'financeiro' && (
+            <>
+              <div className="dp-sec">Custos</div>
+              <div className="fin-rows">
+                <div className="fin-row"><span>Custo total da receita</span><b>{brl(custoTot)}</b></div>
+                <div className="fin-row"><span>Rendimento</span><b>{ficha.rendimento_porcoes || 1} un</b></div>
+                <div className="fin-row"><span>Custo por unidade</span><b>{custo > 0 ? brl(custo) : '—'}</b></div>
+              </div>
+              <div className="dp-sec">Preços</div>
+              <div className="fin-rows">
+                <div className="fin-row"><span>Preço salão</span><b>{pv > 0 ? brl(pv) : '—'}</b></div>
+                <div className="fin-row"><span>Preço delivery</span><b>{Number(ficha.preco_delivery) > 0 ? brl(Number(ficha.preco_delivery)) : <span style={{ color: '#94a3b8', fontWeight: 400 }}>igual ao salão</span>}</b></div>
+              </div>
+              <div className="dp-sec">Taxas aplicadas (parâmetros)</div>
+              <div className="fin-rows">
+                <div className="fin-row"><span>Cartão (salão)</span><b>{txCar}%</b></div>
+                <div className="fin-row"><span>Delivery / iFood</span><b>{txDel}%</b></div>
+                <div className="fin-row"><span>Imposto sobre venda</span><b>{txImp}%</b></div>
+                <div className="fin-row"><span>Margem mínima alvo</span><b>{margMin}%</b></div>
+              </div>
+              <div className="dp-sec">Resultado</div>
+              {finCards}
+            </>
+          )}
+          {tab === 'historico' && (
+            <>
+              <div className="dp-sec">Dados da ficha</div>
+              <div className="fin-rows">
+                <div className="fin-row"><span>Criada em</span><b>{dt(ficha.created_at)}</b></div>
+                <div className="fin-row"><span>Última atualização</span><b>{dth(ficha.atualizado_em)}</b></div>
+                <div className="fin-row"><span>Preço salão atual</span><b>{pv > 0 ? brl(pv) : '—'}</b></div>
+                <div className="fin-row"><span>Preço delivery atual</span><b>{Number(ficha.preco_delivery) > 0 ? brl(Number(ficha.preco_delivery)) : '—'}</b></div>
+                <div className="fin-row"><span>Custo por unidade atual</span><b>{custo > 0 ? brl(custo) : '—'}</b></div>
+              </div>
+              <div className="dp-sec">Histórico de custo dos ingredientes</div>
+              {hist.length === 0 ? (
+                <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>Sem eventos de custo registrados para os ingredientes desta ficha.</div>
+              ) : (
+                <table className="vg-tbl">
+                  <thead><tr><th>Data</th><th>Ingrediente</th><th className="r">Custo ant.</th><th className="r">Novo custo</th><th className="r">Impacto</th></tr></thead>
+                  <tbody>
+                    {hist.map((h, i) => {
+                      const ins = insMap[(h.insumo_id as string) || '']
+                      const imp = (h.impacto_pct as number | null) ?? null
+                      const ca = h.custo_medio_anterior as number | null
+                      const cn = h.novo_custo_medio as number | null
+                      return (
+                        <tr key={i}>
+                          <td style={{ color: '#64748b', fontSize: 11 }}>{dt(h.created_at as string)}</td>
+                          <td>{ins?.nome || '—'}</td>
+                          <td className="r">{ca != null ? brl(Number(ca)) : '—'}</td>
+                          <td className="r">{cn != null ? brl(Number(cn)) : '—'}</td>
+                          <td className="r" style={{ color: imp == null ? '#94a3b8' : imp > 0 ? '#e11d48' : '#16a34a' }}>{imp != null ? (imp > 0 ? '+' : '') + imp.toFixed(1) + '%' : '—'}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              )}
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 10, lineHeight: 1.5 }}>O histórico de custo vem das entradas de NF-e/estoque dos ingredientes. O histórico de <b>preço de venda</b> da própria ficha passa a ser registrado quando ligarmos o log de alterações (posso ativar quando quiser).</div>
+            </>
+          )}
+        </div>
+        <div className="dp-ftr">
+          <button className="dp-edit" onClick={onEdit}>✎ Editar ficha</button>
+          <button className="dp-close" onClick={onClose}>Fechar</button>
         </div>
       </div>
     </div>
