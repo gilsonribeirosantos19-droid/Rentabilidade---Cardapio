@@ -117,7 +117,6 @@ export function FichasTecnicas() {
     const margem = custo > 0 && pv > 0 ? ((pv - custo) / pv) * 100 : null
     return { custo, pv, cmv, margem }
   }
-  const cmvCls = (cmv: number | null) => (cmv === null ? '' : cmv <= 30 ? 'cmv-ok' : cmv <= 38 ? 'cmv-warn' : 'cmv-bad')
   const statusPill = (f: Ficha, cmv: number | null, pv: number) => {
     if (f.status === 'rascunho') return { t: 'Rascunho', bg: '#f1f5f9', c: '#64748b' }
     if (f.status === 'arquivada') return { t: 'Arquivada', bg: '#f1f5f9', c: '#94a3b8' }
@@ -198,14 +197,14 @@ export function FichasTecnicas() {
                 const st = statusPill(f, cmv, pv)
                 return (
                   <tr key={f.id} onClick={() => setVer(f)}>
-                    <td>{f.nome}</td>
-                    <td style={{ color: '#475569' }}>{f.categoria || '—'}</td>
+                    <td style={{ textTransform: 'lowercase' }}>{f.nome}</td>
+                    <td style={{ color: '#475569', textTransform: 'lowercase' }}>{f.categoria || '—'}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{f.rendimento_porcoes || 1} un</td>
                     <td className="r mono">{custo > 0 ? brl(custo) : '—'}</td>
                     <td className="r mono">{pv > 0 ? brl(pv) : '—'}</td>
-                    <td className="r"><b className={cmvCls(cmv)}>{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</b></td>
-                    <td className="r"><b style={{ color: margem !== null && margem > 0 ? '#16a34a' : '#e11d48' }}>{margem !== null ? margem.toFixed(1) + '%' : '—'}</b></td>
-                    <td><span className="st-pill" style={{ background: st.bg, color: st.c }}>{st.t}</span></td>
+                    <td className="r mono" style={{ color: '#334155' }}>{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</td>
+                    <td className="r mono" style={{ color: '#334155' }}>{margem !== null ? margem.toFixed(1) + '%' : '—'}</td>
+                    <td style={{ color: '#64748b' }}>{st.t}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
                       <button className="ed-btn" onClick={(e) => { e.stopPropagation(); setEditing(f) }}>✎ Editar</button>
                       <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setVer(f) }}>👁 Ver</button>
