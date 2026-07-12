@@ -124,3 +124,41 @@
 /* contador de caracteres nas abas modo de preparo/observações */
 .fic-screen .fm-ta-wrap { position: relative; }
 .fic-screen .fm-ta-count { position: absolute; right: 12px; bottom: 10px; font-size: 11px; color: #94a3b8; }
+
+/* ===== painel lateral de visualização (drawer) ===== */
+.fic-screen .dp-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.18); z-index: 100; display: flex; justify-content: flex-end; }
+.fic-screen .dp { width: 560px; max-width: 96vw; background: #fff; height: 100%; box-shadow: -12px 0 40px rgba(15,23,42,.2); display: flex; flex-direction: column; }
+.fic-screen .dp-hdr { padding: 18px 22px 14px; display: flex; align-items: center; gap: 10px; }
+.fic-screen .dp-hdr h2 { font-size: 18px; font-weight: 800; color: #0f172a; }
+.fic-screen .dp-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+.fic-screen .dp-x { margin-left: auto; border: none; background: #f1f5f9; border-radius: 8px; width: 30px; height: 30px; cursor: pointer; color: #64748b; font-size: 14px; }
+.fic-screen .dp-x:hover { background: #e2e8f0; }
+.fic-screen .dp-tabs { display: flex; gap: 18px; padding: 0 22px; border-bottom: 1px solid #e7ebf0; }
+.fic-screen .dp-tab { background: none; border: none; font-family: inherit; font-size: 13px; font-weight: 600; color: #94a3b8; padding: 9px 2px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.fic-screen .dp-tab:hover { color: #475569; }
+.fic-screen .dp-tab.on { color: #f97316; border-bottom-color: #f97316; }
+.fic-screen .dp-body { flex: 1; overflow-y: auto; padding: 16px 22px; }
+.fic-screen .dp-ftr { padding: 14px 22px; border-top: 1px solid #e7ebf0; display: flex; gap: 10px; }
+.fic-screen .dp-edit { flex: 1.4; height: 40px; border: none; border-radius: 9px; background: #0f2547; color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.fic-screen .dp-edit:hover { background: #163157; }
+.fic-screen .dp-close { flex: 1; height: 40px; border: 1px solid #e2e8f0; border-radius: 9px; background: #fff; color: #475569; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
+.fic-screen .dp-close:hover { background: #f8fafc; }
+.fic-screen .dp-sec { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .07em; margin: 16px 0 8px; }
+.fic-screen .dp-sec:first-child { margin-top: 0; }
+.fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.fic-screen .vg-tbl th { text-align: left; padding: 6px 4px; font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; white-space: nowrap; }
+.fic-screen .vg-tbl th.r { text-align: right; }
+.fic-screen .vg-tbl td { padding: 7px 4px; font-size: 12px; border-bottom: 1px solid #f5f7fa; color: #0f172a; }
+.fic-screen .vg-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
+.fic-screen .vg-tbl tfoot td { border-top: 2px solid #f1f5f9; border-bottom: none; font-weight: 700; color: #00b890; }
+.fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.fic-screen .fin-card { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 12px; }
+.fic-screen .fin-card .l { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.fic-screen .fin-card .v { font-size: 14px; font-weight: 700; font-family: 'DM Mono', monospace; color: #0f172a; }
+.fic-screen .fin-card.salao { background: #fff7ed; border-color: #fed7aa; }
+.fic-screen .fin-card.salao .l { color: #9a3412; }
+.fic-screen .fin-card.deliv { background: #fef2f2; border-color: #fecaca; }
+.fic-screen .fin-card.deliv .l { color: #991b1b; }
+.fic-screen .fin-rows { display: flex; flex-direction: column; gap: 1px; background: #eef1f5; border: 1px solid #eef1f5; border-radius: 8px; overflow: hidden; }
+.fic-screen .fin-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; background: #fff; font-size: 12.5px; color: #475569; }
+.fic-screen .fin-row b { font-family: 'DM Mono', monospace; color: #0f172a; font-weight: 700; }
