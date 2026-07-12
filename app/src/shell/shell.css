@@ -43,7 +43,7 @@
 .sitem.on { background: rgba(249,115,22,.15); color: #f97316; font-weight: 600; }
 .sdot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .5; flex: none; }
 .sgrp { margin-top: 6px; }
-.sgrp-h { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 8px; cursor: pointer; color: rgba(255,255,255,.6); font-size: 12.5px; font-weight: 600; }
+.sgrp-h { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 8px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 13px; font-weight: 600; }
 .sgrp-h:hover { color: #fff; }
 .sgrp-h svg { width: 12px; height: 12px; transition: transform .15s; }
 .sgrp.col .sgrp-h svg { transform: rotate(-90deg); }

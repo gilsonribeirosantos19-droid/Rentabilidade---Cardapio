@@ -1,6 +1,7 @@
 // painel-tv — entrega os números do Painel de TV de UMA loja, em JSON, SEM login.
 // Protegido pela chave da loja (lojas.painel_chave). Junta metas automáticas
-// (dia/semana/mês/ticket, do iComanda) + os indicadores manuais (painel_indicadores).
+// (dia/semana/mês/ticket, do iComanda) + os indicadores manuais (painel_indicadores)
+// + o RANKING DE GARÇONS (ticket do dia e acumulado do mês, ao vivo do iComanda).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const supabase = createClient(
@@ -8,14 +9,46 @@ const supabase = createClient(
   Deno.env.get('APP_SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 )
 
+// iComanda (mesmos secrets do icomanda-sync/proxy) — pro ranking de garçons
+const ICO_BASE = (Deno.env.get('ICOMANDA_BASE') ?? '').replace(/\/+$/, '')
+const ICO_TOKEN = Deno.env.get('ICOMANDA_TOKEN') ?? ''
+
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, content-type, apikey', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' }
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json', ...CORS } })
 const pad2 = (n: number) => String(n).padStart(2, '0')
-const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 function manaus(offset = 0) {
   const d = new Date(Date.now() - 4 * 3600 * 1000 + offset * 86400000)
   return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), dow: d.getUTCDay() }
+}
+
+// ---- casamento loja Aiko ↔ filial iComanda (mesma lógica do icomanda-sync) ----
+const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/\b(sushi|pn|mao|pvh|unidade|antig[oa]|matriz|lanchonete|restaurante)\b/g, ' ')
+  .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
+const STOP = new Set(['das', 'dos', 'de', 'do', 'da', 'pq', 'e', 'com'])
+const toks = (s: string) => norm(s).split(' ').filter((t) => t.length >= 3 && !STOP.has(t))
+
+type Filial = { id: number; nome: string; faturado: number }
+function matchFilial(lojaNome: string, filiais: Filial[]): Filial | null {
+  const lt = toks(lojaNome)
+  let best: Filial | null = null, bestScore = -1
+  for (const f of filiais) {
+    const ft = toks(f.nome)
+    const common = lt.filter((t) => ft.includes(t))
+    const score = common.reduce((a, t) => a + t.length, 0)
+    if (!common.some((t) => t.length >= 4)) continue
+    const bF = best ? (best.faturado > 0 ? 1 : 0) : -1, cF = f.faturado > 0 ? 1 : 0
+    if (cF > bF || (cF === bF && (score > bestScore || (score === bestScore && f.faturado > (best?.faturado || 0))))) { best = f; bestScore = score }
+  }
+  return best
+}
+
+async function ico(bloco: string, params: Record<string, string>): Promise<any> {
+  const q = new URLSearchParams({ bloco, ...params })
+  const r = await fetch(`${ICO_BASE}/?${q}`, { headers: { Authorization: `Bearer ${ICO_TOKEN}` } })
+  const j = await r.json()
+  return j?.blocos?.[bloco]?.dados || {}
 }
 
 Deno.serve(async (req) => {
@@ -35,14 +68,14 @@ Deno.serve(async (req) => {
 
   const { data: metaSem } = await supabase.from('metas_semana').select('dia_semana,valor,canal').eq('tenant_id', tenant).eq('loja_id', lojaId)
   const { data: metaExc } = await supabase.from('metas_excecao').select('data,valor').eq('tenant_id', tenant).eq('loja_id', lojaId).gte('data', ini).lte('data', hoje)
-  const { data: rec } = await supabase.from('icomanda_recebimento').select('data,faturado,pessoas,ticket_medio').eq('tenant_id', tenant).eq('loja_id', lojaId).eq('status', 'processado').gte('data', ini).lte('data', hoje)
+  const { data: rec } = await supabase.from('icomanda_recebimento').select('data,faturado,pessoas,qtd_comandas').eq('tenant_id', tenant).eq('loja_id', lojaId).eq('status', 'processado').gte('data', ini).lte('data', hoje)
   const { data: inds } = await supabase.from('painel_indicadores').select('indicador,valor,meta').eq('tenant_id', tenant).eq('loja_id', lojaId)
 
   const semMap: Record<string, number> = {}; const canais: string[] = []
   for (const s of metaSem || []) { const c = (s as any).canal || 'total'; semMap[`${(s as any).dia_semana}|${c}`] = Number((s as any).valor) || 0; if (c !== 'total' && (Number((s as any).valor) || 0) > 0 && !canais.includes(c)) canais.push(c) }
   const excMap: Record<string, number> = {}; for (const e of metaExc || []) excMap[(e as any).data] = Number((e as any).valor) || 0
-  const recMap: Record<string, { fat: number; pes: number; tk: number }> = {}
-  for (const r of rec || []) recMap[(r as any).data] = { fat: Number((r as any).faturado) || 0, pes: Number((r as any).pessoas) || 0, tk: Number((r as any).ticket_medio) || 0 }
+  const recMap: Record<string, { fat: number; pes: number; com: number }> = {}
+  for (const r of rec || []) recMap[(r as any).data] = { fat: Number((r as any).faturado) || 0, pes: Number((r as any).pessoas) || 0, com: Number((r as any).qtd_comandas) || 0 }
 
   const metaDoDia = (ds: string, dow: number) => canais.length ? canais.reduce((a, c) => a + (semMap[`${dow}|${c}`] ?? 0), 0) : (excMap[ds] ?? semMap[`${dow}|total`] ?? 0)
 
@@ -60,12 +93,52 @@ Deno.serve(async (req) => {
   const sem = somar(wkIni, wkFim)
   // mês (inteiro)
   const mes = somar(1, lastDay)
-  // ticket de hoje
-  const tk = recMap[hoje]?.tk || (recMap[hoje]?.pes ? recMap[hoje].fat / recMap[hoje].pes : 0)
+  // ticket GERAL da loja = Total Faturado ÷ Comandas (regra do iComanda pro ticket da loja)
+  const tk = recMap[hoje]?.com ? recMap[hoje].fat / recMap[hoje].com : 0
 
   const indMap: Record<string, { valor: number | null; meta: number | null }> = {}
   for (const i of inds || []) indMap[(i as any).indicador] = { valor: (i as any).valor, meta: (i as any).meta }
   const clubeMetaAuto = mes.meta * 0.5   // meta do clube = 50% da meta de faturamento do mês
+
+  // ---- RANKING DE GARÇONS (ao vivo do iComanda) — ticket do dia + acumulado do mês ----
+  // Se o iComanda falhar ou não casar a filial, devolve lista vazia (o painel mostra "em breve").
+  let garcons: { nome: string; tkDia: number; tkMes: number; comDia: number }[] = []
+  try {
+    if (ICO_BASE && ICO_TOKEN) {
+      const filData = await ico('filiais.listar', { data_ini: ini, data_fim: hoje })
+      const filiais: Filial[] = (filData.filiais || []).map((f: any) => ({ id: Number(f.id), nome: String(f.nome || ''), faturado: Number(f.faturado) || 0 }))
+      const filial = matchFilial((loja as any).nome, filiais)
+      if (filial) {
+        // usa garcons.ticket_medio: traz faturado, comandas, ticket (=faturado÷comandas) e os TIPOS de comanda.
+        const [dDia, dMes] = await Promise.all([
+          ico('garcons.ticket_medio', { data_ini: hoje, data_fim: hoje, filial_id: String(filial.id) }),
+          ico('garcons.ticket_medio', { data_ini: ini, data_fim: hoje, filial_id: String(filial.id) }),
+        ])
+        const diaMap: Record<string, any> = {}
+        for (const g of (dDia.atendentes || [])) diaMap[g.usuario_id] = g
+        // atendente de DELIVERY = mais de 50% das comandas do mês são delivery → fica FORA (igual o dash)
+        const isDelivery = (g: any) => {
+          const tot = Number(g?.total_comandas) || 0
+          const del = (g?.tipos || []).filter((t: any) => /deliver/i.test(t.tipo_comanda || '')).reduce((a: number, t: any) => a + (Number(t.qtd_comandas) || 0), 0)
+          return tot > 0 && del / tot > 0.5
+        }
+        // ticket do garçom = faturado ÷ comandas (o iComanda já entrega em ticket_medio_comanda)
+        const tkg = (g: any) => Number(g?.ticket_medio_comanda) || 0
+        const lista = (dMes.atendentes || [])
+          .filter((g: any) => !isDelivery(g))   // só equipe de salão
+          .map((g: any) => ({
+            nome: String(g.nome || '').trim(),
+            tkMes: tkg(g),
+            tkDia: tkg(diaMap[g.usuario_id]),
+            comDia: Number(diaMap[g.usuario_id]?.total_comandas) || 0,
+          }))
+        // ranking do DIA: quem atendeu hoje, ordenado por ticket do dia (sem mínimo).
+        const ativosHoje = lista.filter((g) => g.comDia > 0).sort((a, b) => b.tkDia - a.tkDia)
+        // se ninguém atendeu ainda hoje, mostra o ranking do mês por ticket do mês
+        garcons = (ativosHoje.length ? ativosHoje : lista.sort((a, b) => b.tkMes - a.tkMes)).slice(0, 12)
+      }
+    }
+  } catch (_e) { garcons = [] }
 
   return json({
     loja: (loja as any).nome,
@@ -85,5 +158,6 @@ Deno.serve(async (req) => {
       peixe: indMap.peixe || { valor: null, meta: null },
       camarao: indMap.camarao || { valor: null, meta: null },
     },
+    garcons,
   })
 })

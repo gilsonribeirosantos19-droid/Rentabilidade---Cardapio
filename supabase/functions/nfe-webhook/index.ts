@@ -258,7 +258,14 @@ async function rodarReprocessar(tenant?: string) {
       if (venc.data_vencimento) { upd.data_vencimento = venc.data_vencimento; upd.valor_titulo = venc.valor_titulo }
       if (Object.keys(upd).length) await supabase.from('nfe_recebidas').update(upd).eq('id', n.id)
 
-      // grava itens (mesma lógica do fluxo normal; índice único protege duplicata)
+      // ⚠️ IDEMPOTENTE (CORREÇÃO 2026-07-12): apaga os itens antigos da nota ANTES de regravar.
+      // Sem isto, cada reprocessamento (nota que volta pra 'em_transito' por estorno/re-processo)
+      // RE-INSERIA os itens e DUPLICAVA (2x/3x/5x = nº de reprocessamentos). O índice único
+      // sozinho não barrou. Agora sempre reconstrói do zero → 1 cópia só, não importa quantas
+      // vezes rode. (Nota em 'em_transito' ainda não tem vínculo manual, então apagar é seguro.)
+      await supabase.from('nfe_itens').delete().eq('nfe_id', n.id)
+
+      // grava itens (mesma lógica do fluxo normal)
       const batch = itensNfe.map((item: any) => {
         const codigo = String(item.codigo_produto || '')
         const vinc = _fornNotaId ? vincCache[n.tenant_id].find((v: any) => v.codigo_fornecedor === codigo && v.fornecedor_id === _fornNotaId) : null
@@ -663,6 +670,11 @@ Deno.serve(async (req) => {
     console.log('Itens encontrados:', itensNfe.length)
 
     if (itensNfe.length > 0) {
+      // ⚠️ IDEMPOTENTE (CORREÇÃO 2026-07-12): mesmo o check acima já barrando, apaga qualquer
+      // resíduo antes de gravar (proteção extra contra corrida entre 2 disparos do webhook que
+      // passem o check de itensExistentes ao mesmo tempo, sem o índice único a barrar).
+      await supabase.from('nfe_itens').delete().eq('nfe_id', nfe.id)
+
       const { data: vincExist } = await supabase
         .from('insumo_fornecedores')
         .select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id')
