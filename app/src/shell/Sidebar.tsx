@@ -98,7 +98,7 @@ export function Sidebar({
 
           {(active.sections ?? []).map((s, i) => {
             if ('group' in s) {
-              const isCol = collapsed[active.id + i] ?? !s.items.some((it) => it.key === activeKey)
+              const isCol = collapsed[active.id + i] ?? false
               return (
                 <div key={i} className={'sgrp' + (isCol ? ' col' : '')}>
                   <div
