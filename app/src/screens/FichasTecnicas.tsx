@@ -236,7 +236,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
   onClose: () => void
   onEdit: () => void
 }) {
-  const [tab, setTab] = useState<'resumo' | 'financeiro' | 'historico'>('resumo')
+  const [tab, setTab] = useState<'resumo' | 'ingredientes' | 'financeiro' | 'historico'>('resumo')
   const itens = [...(ficha.itens_ficha || [])].sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
   const custo = m.custo                                   // custo por unidade/porção
   const custoTot = itens.reduce((s, it) => s + custoItem(it), 0)  // custo total da receita
@@ -251,13 +251,6 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
   const margDeliv = pvDel > 0 && custo > 0 ? ((pvDel - custo - pvDel * (txDel + txImp) / 100) / pvDel) * 100 : null
   const corMarg = (v: number | null) => (v === null ? '#64748b' : v < margMin ? '#e11d48' : '#16a34a')
   const cmvColor = cmv === null ? '#64748b' : cmv <= 30 ? '#16a34a' : cmv <= 38 ? '#f59e0b' : '#e11d48'
-  // composição da venda (salão): custo + impostos/taxas + lucro líquido
-  const temPreco = pv > 0
-  const taxasSalao = temPreco ? (pv * (txCar + txImp)) / 100 : 0
-  const lucroSalao = temPreco && custo > 0 ? pv - custo - taxasSalao : 0
-  const pctCusto = temPreco ? (custo / pv) * 100 : 0
-  const pctTax = txCar + txImp
-  const pctLucro = temPreco ? (lucroSalao / pv) * 100 : 0
 
   const insIds = itens.map((it) => it.insumo_id).filter(Boolean) as string[]
   const { data: hist = [] } = useQuery({
@@ -274,6 +267,19 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
     const q = Number(it.quantidade_g) || 0
     return um === 'kg' || um === 'litro' ? (q / 1000).toFixed(3) + ' ' + um : q + ' ' + um
   }
+
+  const finCards = (
+    <div className="fin-grid">
+      <div className="fin-card"><div className="l">Custo/un</div><div className="v">{custo > 0 ? brl(custo) : '—'}</div></div>
+      <div className="fin-card"><div className="l">Preço de venda</div><div className="v">{pv > 0 ? brl(pv) : '—'}</div></div>
+      <div className="fin-card"><div className="l">CMV%</div><div className="v" style={{ color: cmvColor }}>{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</div></div>
+      <div className="fin-card"><div className="l">Margem (R$)</div><div className="v">{margemRs !== null ? brl(margemRs) : '—'}</div></div>
+      <div className="fin-card"><div className="l">Margem%</div><div className="v">{margemPct !== null ? margemPct.toFixed(1) + '%' : '—'}</div></div>
+      <div className="fin-card"><div className="l">Markup</div><div className="v">{markup !== null ? markup.toFixed(2) + 'x' : '—'}</div></div>
+      <div className="fin-card salao"><div className="l">Margem Salão</div><div className="v" style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</div></div>
+      <div className="fin-card deliv"><div className="l">Margem Delivery</div><div className="v" style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</div></div>
+    </div>
+  )
 
   return (
     <div className="fd">
@@ -296,71 +302,65 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
 
         <div className="fd-tabs">
           <button className={'fd-tab' + (tab === 'resumo' ? ' on' : '')} onClick={() => setTab('resumo')}>Visão geral</button>
+          <button className={'fd-tab' + (tab === 'ingredientes' ? ' on' : '')} onClick={() => setTab('ingredientes')}>Ingredientes</button>
           <button className={'fd-tab' + (tab === 'financeiro' ? ' on' : '')} onClick={() => setTab('financeiro')}>Preços e custos</button>
           <button className={'fd-tab' + (tab === 'historico' ? ' on' : '')} onClick={() => setTab('historico')}>Histórico</button>
         </div>
 
         {tab === 'resumo' && (
           <>
-            {temPreco && custo > 0 ? (
-              <>
-                <div className="fd-sec">Composição da venda — pra onde vai cada R$ da venda (salão)</div>
-                <div className="fd-bar">
-                  <div className="b-custo" style={{ width: pctCusto + '%' }}>{pctCusto >= 9 ? pctCusto.toFixed(0) + '%' : ''}</div>
-                  <div className="b-tax" style={{ width: pctTax + '%' }}>{pctTax >= 9 ? pctTax.toFixed(0) + '%' : ''}</div>
-                  <div className="b-lucro" style={{ width: Math.max(0, pctLucro) + '%' }}>{pctLucro >= 14 ? 'Lucro ' + pctLucro.toFixed(0) + '%' : ''}</div>
-                </div>
-                <div className="fd-barleg">
-                  <div><span className="k" style={{ background: '#64748b' }} />Custo do prato <b className="mono">{brl(custo)}</b> <span className="p">· {pctCusto.toFixed(1)}%</span></div>
-                  <div><span className="k" style={{ background: '#d9a441' }} />Impostos + cartão <b className="mono">{brl(taxasSalao)}</b> <span className="p">· {pctTax.toFixed(1)}%</span></div>
-                  <div><span className="k" style={{ background: '#3f9e6b' }} />Lucro líquido <b className="mono">{brl(lucroSalao)}</b> <span className="p">· {pctLucro.toFixed(1)}%</span></div>
-                </div>
-              </>
-            ) : (
-              <div className="fd-nobar">{!temPreco ? 'Ficha sem preço de venda — defina o preço pra ver a composição e as margens.' : 'Ingredientes sem custo cadastrado nesta loja — sem custo, não dá pra calcular CMV e margens.'}</div>
-            )}
-
-            <div className="fd-cols">
-              <div>
-                <div className="fd-sec">Ingredientes</div>
-                <table className="vg-tbl">
-                  <thead><tr><th>Ingrediente</th><th>Categoria</th><th className="r">Qtd</th><th className="r">Custo</th><th className="r">% custo</th></tr></thead>
-                  <tbody>
-                    {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
-                      : itens.map((it, idx) => {
-                        const ins = insMap[it.insumo_id || '']
-                        const sub = custoItem(it)
-                        const pct = custoTot > 0 ? (sub / custoTot) * 100 : 0
-                        return (
-                          <tr key={it.id || idx}>
-                            <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
-                            <td style={{ color: '#64748b', fontSize: 11.5 }}>{ins?.categoria || '—'}</td>
-                            <td className="r">{qtdFmt(it, ins)}</td>
-                            <td className="r">{brl(sub)}</td>
-                            <td className="r" style={{ color: '#94a3b8' }}>{pct.toFixed(0)}%</td>
-                          </tr>
-                        )
-                      })}
-                  </tbody>
-                  <tfoot><tr><td colSpan={2}>Total · {(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td></td><td className="r">{brl(custoTot)}</td><td className="r">100%</td></tr></tfoot>
-                </table>
-              </div>
-              <div>
-                <div className="fd-sec">Resumo financeiro</div>
-                <div className="fd-dl">
-                  <div className="r"><span className="k">Custo / un</span><span className="v mono">{custo > 0 ? brl(custo) : '—'}</span></div>
-                  <div className="r"><span className="k">Preço de venda</span><span className="v mono">{pv > 0 ? brl(pv) : '—'}</span></div>
-                  <div className="r"><span className="k">CMV</span><span className="v mono">{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</span></div>
-                  <div className="r"><span className="k">Lucro bruto</span><span className="v mono">{margemRs !== null ? brl(margemRs) : '—'}</span></div>
-                  <div className="r"><span className="k">Margem bruta</span><span className="v mono">{margemPct !== null ? margemPct.toFixed(1) + '%' : '—'}</span></div>
-                  <div className="r"><span className="k">Markup</span><span className="v mono">{markup !== null ? markup.toFixed(2) + '×' : '—'}</span></div>
-                  <div className="r"><span className="k">Margem real · salão</span><span className="v mono" style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</span></div>
-                  <div className="r"><span className="k">Margem real · delivery</span><span className="v mono" style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</span></div>
-                </div>
-              </div>
-            </div>
+            <div className="fd-sec">Ingredientes (rendimento: {ficha.rendimento_porcoes || 1} un)</div>
+            <table className="vg-tbl">
+              <thead><tr><th>Ingrediente</th><th>Categoria</th><th className="r">Qtd. utilizada</th><th className="r">Custo (R$)</th><th className="r">% do custo</th></tr></thead>
+              <tbody>
+                {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
+                  : itens.map((it, idx) => {
+                    const ins = insMap[it.insumo_id || '']
+                    const sub = custoItem(it)
+                    const pct = custoTot > 0 ? (sub / custoTot) * 100 : 0
+                    return (
+                      <tr key={it.id || idx}>
+                        <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
+                        <td style={{ color: '#64748b', fontSize: 11.5 }}>{ins?.categoria || '—'}</td>
+                        <td className="r">{qtdFmt(it, ins)}</td>
+                        <td className="r">{brl(sub)}</td>
+                        <td className="r" style={{ color: '#94a3b8' }}>{pct.toFixed(1)}%</td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+              <tfoot><tr><td colSpan={2}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r">{brl(custoTot)}</td><td className="r">100%</td></tr></tfoot>
+            </table>
+            <div className="fd-sec">Resumo financeiro</div>
+            {finCards}
             {ficha.observacoes && <><div className="fd-sec">Observações</div><div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>{ficha.observacoes}</div></>}
           </>
+        )}
+
+        {tab === 'ingredientes' && (
+          <table className="vg-tbl">
+            <thead><tr><th>Ingrediente</th><th>Un.</th><th className="r">Qtd</th><th className="r">Custo/kg</th><th className="r">Subtotal</th></tr></thead>
+            <tbody>
+              {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente cadastrado</td></tr>
+                : itens.map((it, idx) => {
+                  const ins = insMap[it.insumo_id || '']
+                  const um = ins ? ins.unidade_medida || ins.unidade_compra || 'g' : 'g'
+                  const isUnit = um === 'un' || um === 'pct' || um === 'cx'
+                  const cb = ins ? custoBase(ins) : 0
+                  const ckg = ins ? (isUnit ? cb : cb / ((ins.rendimento_pct || 100) / 100)) : 0
+                  return (
+                    <tr key={it.id || idx}>
+                      <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
+                      <td style={{ color: '#64748b' }}>{um}</td>
+                      <td className="r">{qtdFmt(it, ins)}</td>
+                      <td className="r">{brl(ckg)}</td>
+                      <td className="r" style={{ color: '#00b890' }}>{brl(custoItem(it))}</td>
+                    </tr>
+                  )
+                })}
+            </tbody>
+            <tfoot><tr><td colSpan={4}>Custo total</td><td className="r">{brl(custoTot)}</td></tr></tfoot>
+          </table>
         )}
 
         {tab === 'financeiro' && (

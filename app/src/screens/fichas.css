@@ -152,7 +152,7 @@
 .fic-screen .vg-tbl td { padding: 11px 6px; font-size: 12.5px; border-bottom: 1px solid #f5f7fa; color: #0f172a; }
 .fic-screen .vg-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
 .fic-screen .vg-tbl tfoot td { border-top: 2px solid #f1f5f9; border-bottom: none; font-weight: 700; color: #00b890; }
-.fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.fic-screen .fin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; max-width: 1000px; }
 .fic-screen .fin-card { background: #f8fafc; border: 1px solid #eef1f5; border-radius: 9px; padding: 13px 14px; }
 .fic-screen .fin-card .l { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
 .fic-screen .fin-card .v { font-size: 16px; font-weight: 700; font-family: 'DM Mono', monospace; color: #0f172a; }
