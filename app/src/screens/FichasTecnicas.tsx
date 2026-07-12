@@ -182,6 +182,8 @@ export function FichasTecnicas() {
         <button className="fic-nova" onClick={() => setEditing('new')}>+ Nova ficha</button>
       </div>
 
+      <div className="fic-body">
+      <div className="fic-left">
       <div className="tbl-card"><div className="tbl-scroll">
         <table>
           <thead><tr>
@@ -216,10 +218,12 @@ export function FichasTecnicas() {
       </div></div>
 
       <div className="fic-foot">{filtrada.length} fichas</div>
+      </div>
 
       {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
         <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
       ) })()}
+      </div>
       {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={produtos} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
     </div>
   )
@@ -283,8 +287,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
   )
 
   return (
-    <div className="dp-overlay" onClick={onClose}>
-      <div className="dp" onClick={(e) => e.stopPropagation()}>
+    <aside className="dp">
         <div className="dp-hdr">
           <h2>{ficha.nome}</h2>
           <span className="dp-badge" style={{ background: st.bg, color: st.c }}>{st.t}</span>
@@ -418,7 +421,6 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
           <button className="dp-edit" onClick={onEdit}>✎ Editar ficha</button>
           <button className="dp-close" onClick={onClose}>Fechar</button>
         </div>
-      </div>
-    </div>
+    </aside>
   )
 }
