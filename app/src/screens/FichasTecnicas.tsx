@@ -146,9 +146,6 @@ export function FichasTecnicas() {
 
   return (
     <div className="fic-screen">
-      {ver ? (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
-        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
-      ) })() : (<>
       <div className="fic-toolbar">
         <div className="fic-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
@@ -218,7 +215,10 @@ export function FichasTecnicas() {
       </div></div>
 
       <div className="fic-foot">{filtrada.length} fichas</div>
-      </>)}
+
+      {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
+        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
+      ) })()}
       {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={produtos} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
     </div>
   )
@@ -282,30 +282,23 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
   )
 
   return (
-    <div className="fd">
-      <div className="fd-top">
-        <button className="fd-back" onClick={onClose}>‹ Voltar à lista</button>
-        <button className="fd-edit" onClick={onEdit}>✎ Editar ficha</button>
-      </div>
-      <div className="fd-sheet">
-        <div className="fd-head">
-          <div>
-            <div className="fd-cat">{ficha.categoria || '—'}</div>
-            <div className="fd-title">{ficha.nome}</div>
-            <div className="fd-meta"><span className="fd-dot" style={{ background: st.c }} /> {st.t} · rende {ficha.rendimento_porcoes || 1} porção(ões)</div>
-          </div>
+    <div className="dp-overlay" onClick={onClose}>
+      <div className="dp" onClick={(e) => e.stopPropagation()}>
+        <div className="dp-hdr">
+          <h2>{ficha.nome}</h2>
+          <span className="dp-badge" style={{ background: st.bg, color: st.c }}>{st.t}</span>
+          <button className="dp-x" onClick={onClose}>✕</button>
         </div>
-
-        <div className="fd-tabs">
-          <button className={'fd-tab' + (tab === 'resumo' ? ' on' : '')} onClick={() => setTab('resumo')}>Visão geral</button>
-          <button className={'fd-tab' + (tab === 'ingredientes' ? ' on' : '')} onClick={() => setTab('ingredientes')}>Ingredientes</button>
-          <button className={'fd-tab' + (tab === 'financeiro' ? ' on' : '')} onClick={() => setTab('financeiro')}>Preços e custos</button>
-          <button className={'fd-tab' + (tab === 'historico' ? ' on' : '')} onClick={() => setTab('historico')}>Histórico</button>
+        <div className="dp-tabs">
+          <button className={'dp-tab' + (tab === 'resumo' ? ' on' : '')} onClick={() => setTab('resumo')}>Visão geral</button>
+          <button className={'dp-tab' + (tab === 'ingredientes' ? ' on' : '')} onClick={() => setTab('ingredientes')}>Ingredientes</button>
+          <button className={'dp-tab' + (tab === 'financeiro' ? ' on' : '')} onClick={() => setTab('financeiro')}>Preços e custos</button>
+          <button className={'dp-tab' + (tab === 'historico' ? ' on' : '')} onClick={() => setTab('historico')}>Histórico</button>
         </div>
-
+        <div className="dp-body">
         {tab === 'resumo' && (
           <>
-            <div className="fd-sec">Ingredientes (rendimento: {ficha.rendimento_porcoes || 1} un)</div>
+            <div className="dp-sec">Ingredientes (rendimento: {ficha.rendimento_porcoes || 1} un)</div>
             <table className="vg-tbl">
               <thead><tr><th>Ingrediente</th><th>Categoria</th><th className="r">Qtd. utilizada</th><th className="r">Custo (R$)</th><th className="r">% do custo</th></tr></thead>
               <tbody>
@@ -327,9 +320,9 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
               </tbody>
               <tfoot><tr><td colSpan={2}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r">{brl(custoTot)}</td><td className="r">100%</td></tr></tfoot>
             </table>
-            <div className="fd-sec">Resumo financeiro</div>
+            <div className="dp-sec">Resumo financeiro</div>
             {finCards}
-            {ficha.observacoes && <><div className="fd-sec">Observações</div><div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>{ficha.observacoes}</div></>}
+            {ficha.observacoes && <><div className="dp-sec">Observações</div><div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>{ficha.observacoes}</div></>}
           </>
         )}
 
@@ -362,27 +355,27 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
         {tab === 'financeiro' && (
           <div className="fd-cols">
             <div>
-              <div className="fd-sec">Custos</div>
+              <div className="dp-sec">Custos</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Custo total da receita</span><b>{brl(custoTot)}</b></div>
                 <div className="fin-row"><span>Rendimento</span><b>{ficha.rendimento_porcoes || 1} un</b></div>
                 <div className="fin-row"><span>Custo por unidade</span><b>{custo > 0 ? brl(custo) : '—'}</b></div>
               </div>
-              <div className="fd-sec">Preços</div>
+              <div className="dp-sec">Preços</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Preço salão</span><b>{pv > 0 ? brl(pv) : '—'}</b></div>
                 <div className="fin-row"><span>Preço delivery</span><b>{Number(ficha.preco_delivery) > 0 ? brl(Number(ficha.preco_delivery)) : <span style={{ color: '#94a3b8', fontWeight: 400 }}>igual ao salão</span>}</b></div>
               </div>
             </div>
             <div>
-              <div className="fd-sec">Taxas aplicadas (parâmetros)</div>
+              <div className="dp-sec">Taxas aplicadas (parâmetros)</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Cartão (salão)</span><b>{txCar}%</b></div>
                 <div className="fin-row"><span>Delivery / iFood</span><b>{txDel}%</b></div>
                 <div className="fin-row"><span>Imposto sobre venda</span><b>{txImp}%</b></div>
                 <div className="fin-row"><span>Margem mínima alvo</span><b>{margMin}%</b></div>
               </div>
-              <div className="fd-sec">Resultado (margem real)</div>
+              <div className="dp-sec">Resultado (margem real)</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Margem · salão</span><b style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</b></div>
                 <div className="fin-row"><span>Margem · delivery</span><b style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</b></div>
@@ -393,7 +386,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
 
         {tab === 'historico' && (
           <>
-            <div className="fd-sec">Dados da ficha</div>
+            <div className="dp-sec">Dados da ficha</div>
             <div className="fin-rows" style={{ maxWidth: 520 }}>
               <div className="fin-row"><span>Criada em</span><b>{dt(ficha.created_at)}</b></div>
               <div className="fin-row"><span>Última atualização</span><b>{dth(ficha.atualizado_em)}</b></div>
@@ -401,7 +394,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
               <div className="fin-row"><span>Preço delivery atual</span><b>{Number(ficha.preco_delivery) > 0 ? brl(Number(ficha.preco_delivery)) : '—'}</b></div>
               <div className="fin-row"><span>Custo por unidade atual</span><b>{custo > 0 ? brl(custo) : '—'}</b></div>
             </div>
-            <div className="fd-sec">Histórico de custo dos ingredientes</div>
+            <div className="dp-sec">Histórico de custo dos ingredientes</div>
             {hist.length === 0 ? (
               <div style={{ fontSize: 13, color: '#94a3b8', padding: '8px 0' }}>Sem eventos de custo registrados para os ingredientes desta ficha.</div>
             ) : (
@@ -429,6 +422,11 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
             <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 10, lineHeight: 1.5, maxWidth: 760 }}>O histórico de custo vem das entradas de NF-e/estoque dos ingredientes. O histórico de <b>preço de venda</b> da própria ficha passa a ser registrado quando ligarmos o log de alterações.</div>
           </>
         )}
+        </div>
+        <div className="dp-ftr">
+          <button className="dp-edit" onClick={onEdit}>✎ Editar ficha</button>
+          <button className="dp-close" onClick={onClose}>Fechar</button>
+        </div>
       </div>
     </div>
   )
