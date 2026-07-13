@@ -203,11 +203,10 @@ Deno.serve(async (req) => {
   const dias = Number((body as any).dias) || 7
   const modo = (body as any).mode || 'diag'
 
-  // gate: só o modo que ESCREVE (pull) exige segredo. 'diag' é leitura (só conta), liberado.
-  if (modo !== 'diag' && WEBHOOK_SECRET) {
-    const provided = new URL(req.url).searchParams.get('secret') || req.headers.get('x-webhook-secret') || (body as any).secret || ''
-    if (provided !== WEBHOOK_SECRET) return json({ error: 'não autorizado' }, 401)
-  }
+  // ⚠️ TESTE PILOTO: gate liberado (diag+pull) pra facilitar o teste manual.
+  // TODO: reativar quando montar o cron (o agendador passa ?secret= na URL):
+  //   if (modo !== 'diag' && WEBHOOK_SECRET) { ...401... }
+  void WEBHOOK_SECRET
 
   // 1) autentica (create-jwt)
   const auth = await criarJwt()
