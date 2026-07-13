@@ -99,7 +99,7 @@ function parseNfe(xml: string) {
   const ide = inf.ide || {}, emit = inf.emit || {}, total = inf.total?.ICMSTot || {}
   return {
     chave,
-    numero: String(ide.nNF ?? chave.substring(25, 34).replace(/^0+/, '') || '0'),
+    numero: String(ide.nNF ?? (chave.substring(25, 34).replace(/^0+/, '') || '0')),
     serie: String(ide.serie ?? chave.substring(22, 25)),
     cnpjEmit: onlyDigits(emit.CNPJ),
     nomeEmit: String(emit.xNome ?? ''),
