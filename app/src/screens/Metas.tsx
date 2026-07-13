@@ -170,12 +170,16 @@ export function Metas() {
         <button className="cbtn" onClick={openCfg}>⚙️ Configurar metas</button>
       </div>
 
-      <div className="month">
-        <div className="mc"><div className="lb">Meta {semana ? 'da semana' : 'do mês'} (total)</div><div className="vl">{brl(metaPeriodoTotal)}</div></div>
-        <div className="mc"><div className="lb">Realizado {semana ? 'na semana' : 'até agora'}</div><div className="vl">{brl(resumo.real)}</div></div>
-        <div className="mc"><div className="lb">Diferença acumulada</div><div className={'vl ' + difCls(resumo.dif)}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif))}</div></div>
-        <div className="mc"><div className="lb">Dias que bateram</div><div className="vl">{resumo.bat} / {resumo.comReal}</div></div>
-        <div className="mc"><div className="lb">Ticket médio</div><div className="vl">{resumo.ticket ? brl(resumo.ticket) : '—'}{metaTkAtual ? <span className="pct"> / meta {brl(metaTkAtual)}</span> : null}</div></div>
+      <div className="msum">
+        <span className="lb">Meta {semana ? 'da semana' : 'do mês'}</span> <b>{brl(metaPeriodoTotal)}</b>
+        <span className="sep">·</span>
+        <span className="lb">Realizado {semana ? 'na semana' : 'até agora'}</span> <b>{brl(resumo.real)}</b>
+        <span className="sep">·</span>
+        <span className="lb">Diferença</span> <b style={{ color: resumo.dif >= 0 ? '#16a34a' : '#dc2626' }}>{resumo.dif >= 0 ? '+' : '−'}{brl(Math.abs(resumo.dif))}</b> <span className="lb">({resumo.meta > 0 ? Math.round((resumo.real / resumo.meta) * 100) : 0}% da meta)</span>
+        <span className="sep">·</span>
+        <span className="lb">D.bateram</span> <b>{resumo.bat}/{resumo.comReal}</b>
+        <span className="sep">·</span>
+        <span className="lb">Ticket Médio</span> <b>{resumo.ticket ? brl(resumo.ticket) : '—'}</b>{metaTkAtual ? <span className="lb"> / meta {brl(metaTkAtual)}</span> : null}
       </div>
 
       <table className="d">
