@@ -190,16 +190,17 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('OK', { status: 200 })
   const body = await req.json().catch(() => ({}))
 
-  // gate (mesmo segredo dos modos admin do nfe-webhook)
-  if (WEBHOOK_SECRET) {
-    const provided = new URL(req.url).searchParams.get('secret') || req.headers.get('x-webhook-secret') || (body as any).secret || ''
-    if (provided !== WEBHOOK_SECRET) return json({ error: 'não autorizado' }, 401)
-  }
   if (!SIEG_CLIENT_ID || !SIEG_SECRET_KEY) return json({ error: 'faltam secrets SIEG_CLIENT_ID / SIEG_SECRET_KEY' }, 400)
 
   const tenant = (body as any).tenant || TENANT_DEFAULT
   const dias = Number((body as any).dias) || 7
   const modo = (body as any).mode || 'diag'
+
+  // gate: só o modo que ESCREVE (pull) exige segredo. 'diag' é leitura (só conta), liberado.
+  if (modo !== 'diag' && WEBHOOK_SECRET) {
+    const provided = new URL(req.url).searchParams.get('secret') || req.headers.get('x-webhook-secret') || (body as any).secret || ''
+    if (provided !== WEBHOOK_SECRET) return json({ error: 'não autorizado' }, 401)
+  }
 
   // 1) autentica (create-jwt)
   const auth = await criarJwt()
