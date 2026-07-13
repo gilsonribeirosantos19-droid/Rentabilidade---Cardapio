@@ -63,17 +63,20 @@ function authHeaders(jwt: string): Record<string, string> {
   return h
 }
 
-// ── contar-xmls: quantas notas tem no período (teste seguro, não baixa) ───────
-async function contarXmls(jwt: string, dataIni: string, dataFim: string): Promise<{ status: number; raw: string }> {
-  const body = { XmlType: XML_TYPE_NFE, DataEmissaoInicio: dataIni, DataEmissaoFim: dataFim }
+// ── contar-xmls: quantas notas tem no período p/ um CNPJ (teste seguro) ───────
+// Filtro por CnpjDest = notas recebidas (entrada) pela loja. Precisa de JWT + X-Api-Key.
+async function contarXmls(jwt: string, cnpj: string, dataIni: string, dataFim: string): Promise<{ status: number; nfe: number | null; raw: string }> {
+  const body = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, DataEmissaoInicio: dataIni, DataEmissaoFim: dataFim }
   const res = await fetch(`${SIEG_BASE}/api/v1/contar-xmls`, { method: 'POST', headers: authHeaders(jwt), body: JSON.stringify(body) })
   const raw = await res.text()
-  return { status: res.status, raw: raw.substring(0, 600) }
+  let nfe: number | null = null
+  try { const j = JSON.parse(raw); nfe = j?.Data?.NFe ?? null } catch { /* ignore */ }
+  return { status: res.status, nfe, raw: raw.substring(0, 300) }
 }
 
-// ── baixar-xmls: traz os XMLs em lote (Take/Skip). Retorna lista de XML strings ─
-async function baixarXmls(jwt: string, dataIni: string, dataFim: string, skip: number, take = 50): Promise<{ status: number; xmls: string[]; rawHead: string }> {
-  const body = { XmlType: XML_TYPE_NFE, Take: take, Skip: skip, DataEmissaoInicio: dataIni, DataEmissaoFim: dataFim, Downloadevent: false }
+// ── baixar-xmls: traz os XMLs em lote (Take/Skip) p/ um CNPJ. Lista de XML strings ─
+async function baixarXmls(jwt: string, cnpj: string, dataIni: string, dataFim: string, skip: number, take = 50): Promise<{ status: number; xmls: string[]; rawHead: string }> {
+  const body = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: take, Skip: skip, DataEmissaoInicio: dataIni, DataEmissaoFim: dataFim, Downloadevent: false }
   const res = await fetch(`${SIEG_BASE}/api/v1/baixar-xmls`, { method: 'POST', headers: authHeaders(jwt), body: JSON.stringify(body) })
   const raw = await res.text()
   if (!res.ok) return { status: res.status, xmls: [], rawHead: raw.substring(0, 400) }
@@ -140,12 +143,14 @@ async function rodarPull(tenant: string, dias: number, jwt: string) {
   const fim = new Date().toISOString().substring(0, 19)
   const ini = new Date(Date.now() - dias * 86400000).toISOString().substring(0, 19)
 
+  const cnpjs = Object.keys(lojaByCnpj) // um pull por CNPJ de loja (CnpjDest)
   const inicio = Date.now()
   let baixados = 0, novas = 0, itensGravados = 0, erros = 0
   let ultimoStatus = 0, ultimoRaw = ''
-  for (let skip = 0; skip < 5000; skip += 50) {
+  for (const cnpj of cnpjs) {
+   for (let skip = 0; skip < 5000; skip += 50) {
     if (Date.now() - inicio > 40000) break
-    const r = await baixarXmls(jwt, ini, fim, skip, 50)
+    const r = await baixarXmls(jwt, cnpj, ini, fim, skip, 50)
     ultimoStatus = r.status; ultimoRaw = r.rawHead
     if (!r.xmls.length) break
     baixados += r.xmls.length
@@ -179,6 +184,8 @@ async function rodarPull(tenant: string, dias: number, jwt: string) {
       } catch (e) { console.error('sieg ingest erro:', (e as Error).message); erros++ }
     }
     if (r.xmls.length < 50) break
+   }
+   if (Date.now() - inicio > 40000) break
   }
 
   console.log('SIEG pull:', { baixados, novas, itensGravados, erros })
@@ -211,8 +218,18 @@ Deno.serve(async (req) => {
 
   // 2) DIAG: só conta (não baixa nem grava)
   if (modo === 'diag') {
-    const c = await contarXmls(auth.jwt!, ini, fim)
-    return json({ modo: 'diag', jwt_ok: true, jwt_status: auth.status, periodo: { ini, fim }, contar_status: c.status, contar_raw: c.raw })
+    const { data: lojas } = await supabase.from('lojas').select('cnpj,nome').eq('tenant_id', tenant)
+    const nomes: Record<string, string> = {}
+    for (const l of lojas || []) { const c = onlyDigits((l as any).cnpj); if (c.length === 14) nomes[c] = (l as any).nome }
+    const cnpjs = Object.keys(nomes)
+    const contagens = []
+    let totalNfe = 0
+    for (const cnpj of cnpjs) {
+      const c = await contarXmls(auth.jwt!, cnpj, ini, fim)
+      if (c.nfe) totalNfe += c.nfe
+      contagens.push({ loja: nomes[cnpj], cnpj, status: c.status, nfe: c.nfe, ...(c.nfe == null ? { raw: c.raw } : {}) })
+    }
+    return json({ modo: 'diag', jwt_ok: true, periodo: { ini, fim }, lojas: cnpjs.length, totalNfe, contagens })
   }
 
   // 3) PULL: baixa e grava
