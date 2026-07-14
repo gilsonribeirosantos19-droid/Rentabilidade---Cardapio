@@ -46,15 +46,10 @@ export function Login() {
       {/* MARCA */}
       <div className="lg-brand">
         <div className="lg-btop">
-          <div className="lg-mk">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="1,21 8,6 13,13 17,8 23,21" />
-              <line x1="1" y1="21" x2="23" y2="21" />
-            </svg>
-          </div>
+          <img className="lg-img" src="/aiko_marca.png" alt="AIKO" />
           <div>
-            <b>Aiko</b>
-            <small>sistema</small>
+            <b>AIKO</b>
+            <span className="lg-uline" />
           </div>
         </div>
 
