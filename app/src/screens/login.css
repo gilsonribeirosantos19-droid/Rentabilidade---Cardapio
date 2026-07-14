@@ -1,7 +1,7 @@
 .lg-wrap { height: 100%; display: flex; background: #fff; color: #0f172a; }
 
 /* ===== LADO ESQUERDO (marca) ===== */
-.lg-brand { flex: 1.1; position: relative; overflow: hidden; background: linear-gradient(150deg, #1e293b 0%, #0f172a 60%, #0b1220 100%); color: #fff; display: flex; flex-direction: column; justify-content: space-between; padding: 42px 52px; }
+.lg-brand { flex: 1.1; position: relative; overflow: hidden; background: linear-gradient(160deg, #173a6c 0%, #12315d 45%, #0c2547 100%); color: #fff; display: flex; flex-direction: column; justify-content: space-between; padding: 42px 52px; }
 .lg-brand::before { content: ''; position: absolute; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(249,115,22,.32), transparent 65%); top: -160px; right: -140px; filter: blur(10px); }
 .lg-brand::after { content: ''; position: absolute; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, rgba(0,180,255,.10), transparent 65%); bottom: -120px; left: -80px; }
 .lg-btop { display: flex; align-items: center; gap: 12px; position: relative; z-index: 2; }
