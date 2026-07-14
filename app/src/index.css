@@ -3,8 +3,8 @@
   --orange: #f97316;
   --orange-2: #ea6a0a;
   --orange-dim: #fff3e9;
-  --nav: #14315F;      /* sidebar 1 (rail) — azul profundo (aprovado). TESTE (voltar #1e293b) */
-  --nav-deep: #0F2A52; /* sidebar 2 (painel) — mesmo tom, mais escuro. TESTE (voltar #0f1a2e) */
+  --nav: #14315F;      /* sidebar 1 (rail) — azul profundo AIKO (antes: navy #1e293b) */
+  --nav-deep: #0F2A52; /* sidebar 2 (painel) — azul profundo + escuro (antes: #0f1a2e) */
 
   /* Superfícies / texto */
   --bg: #eef1f4;
