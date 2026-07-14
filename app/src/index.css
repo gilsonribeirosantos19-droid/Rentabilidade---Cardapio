@@ -3,8 +3,8 @@
   --orange: #f97316;
   --orange-2: #ea6a0a;
   --orange-dim: #fff3e9;
-  --nav: #1e293b;
-  --nav-deep: #0f1a2e;
+  --nav: #0B3D91;      /* sidebar 1 (rail) — azul escuro. TESTE (voltar #1e293b se não gostar) */
+  --nav-deep: #124BB0; /* sidebar 2 (painel) — azul primário fundo. TESTE (voltar #0f1a2e) */
 
   /* Superfícies / texto */
   --bg: #eef1f4;
