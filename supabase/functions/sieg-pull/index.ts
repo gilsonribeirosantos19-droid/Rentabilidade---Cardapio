@@ -251,6 +251,35 @@ Deno.serve(async (req) => {
   const auth = await criarJwt()
   if (!auth.ok) return json({ etapa: 'create-jwt', ok: false, status: auth.status, raw: auth.raw, dica: 'se status=401/403 revisar ClientId/SecretKey; se "Invalid IP" a trava de IP ainda existe' }, 200)
 
+  // 1.5) PROBE: dispara o "baixar" em várias variações de parâmetro e devolve o cru
+  // de cada uma. Serve pra descobrir se o 404 é parâmetro ou XML indisponível no SIEG.
+  if (modo === 'probe') {
+    const iniD = ymd(new Date(Date.now() - dias * 86400000)), fimD = ymd(new Date())
+    let cnpj = onlyDigits((body as any).cnpj)
+    if (cnpj.length !== 14) {
+      const { data: lojas } = await supabase.from('lojas').select('cnpj').eq('tenant_id', tenant)
+      for (const l of lojas || []) { const c = onlyDigits((l as any).cnpj); if (c.length === 14) { cnpj = c; break } }
+    }
+    const email = String((body as any).email || '')
+    const base = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD }
+    const variantes: Array<{ nome: string; body: Record<string, unknown> }> = [
+      { nome: 'base (Downloadevent:false)', body: { ...base, Downloadevent: false } },
+      { nome: 'Downloadevent:true', body: { ...base, Downloadevent: true } },
+      { nome: 'sem filtro de data', body: { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, Downloadevent: false } },
+      { nome: 'com Email', body: { ...base, Downloadevent: false, Email: email } },
+      { nome: 'CnpjDestinatario (nome alt)', body: { XmlType: XML_TYPE_NFE, CnpjDestinatario: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
+      { nome: 'CnpjEmit (emitente)', body: { XmlType: XML_TYPE_NFE, CnpjEmit: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
+    ]
+    const resultados = []
+    for (const v of variantes) {
+      const r = await siegFetch(`${SIEG_BASE}/api/v1/baixar-xmls`, v.body, auth.jwt!)
+      const achou = r.status === 200 && !/nenhum arquivo/i.test(r.raw)
+      resultados.push({ variante: v.nome, status: r.status, achou, raw: r.raw.substring(0, 200) })
+      await sleep(2500) // respiro (429)
+    }
+    return json({ modo: 'probe', tenant, cnpj, periodo: { ini: iniD, fim: fimD }, resultados })
+  }
+
   // 2) DIAG: só conta (não baixa nem grava) — uma contagem por CNPJ no período todo
   if (modo === 'diag') {
     const iniD = ymd(new Date(Date.now() - dias * 86400000)), fimD = ymd(new Date())
