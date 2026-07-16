@@ -65,8 +65,23 @@ export function EntradasProcessadas() {
   const fornNomeOf = useMemo(() => Object.fromEntries(fornecedores.map(([c, n]) => [c, n])) as Record<string, string>, [fornecedores])
 
   const filtrada = useMemo(() => {
-    const num = fNum.replace(/\D/g, '')
-    let r = nfes.filter((n) => { if (fForn && n.cnpj_emitente !== fForn) return false; if (fLoja && (n.loja_id || '') !== fLoja) return false; if (num && !(n.numero || '').replace(/\D/g, '').includes(num)) return false; return true })
+    const q = fNum.trim()
+    const qDigits = q.replace(/\D/g, '')
+    let r = nfes.filter((n) => {
+      if (fForn && n.cnpj_emitente !== fForn) return false
+      if (fLoja && (n.loja_id || '') !== fLoja) return false
+      if (q) {
+        // campo livre: casa pelo Nº da NF-e OU pelo valor da nota (ex.: "1250", "1.250,50", "1250.50")
+        const numeroDigits = (n.numero || '').replace(/\D/g, '')
+        const v = Number(n.valor_total) || 0
+        const vComma = v.toFixed(2).replace('.', ',')                                              // 1250,50
+        const vThousand = v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) // 1.250,50
+        const okNum = qDigits.length > 0 && numeroDigits.includes(qDigits)
+        const okVal = vComma.includes(q) || vThousand.includes(q) || vComma.replace(',', '.').includes(q)
+        if (!okNum && !okVal) return false
+      }
+      return true
+    })
     r = [...r].sort((a, b) => {
       let va: any = (a as any)[sortField] || '', vb: any = (b as any)[sortField] || ''
       if (sortField === 'valor_total') { va = Number(va) || 0; vb = Number(vb) || 0 }
@@ -120,7 +135,7 @@ export function EntradasProcessadas() {
       <div className="fl-bar">
         <SearchSelect value={fForn ? (fornNomeOf[fForn] || '') : ''} options={fornNomes} placeholder="Fornecedor: Todos" onChange={(nm) => { setFForn(nm === 'Todos os fornecedores' ? '' : (fornByNome[nm] || '')); setPag(1) }} />
         {lojas.length > 1 && <div style={{ minWidth: 150 }}><SearchSelect value={fLoja ? (lojaNome[fLoja] || '') : ''} options={lojas.map((l) => l.nome)} placeholder="Loja: Todas" onChange={(nm) => { setFLoja(lojaByNome[nm] || ''); setPag(1) }} /></div>}
-        <input className="field" style={{ width: 120 }} placeholder="Nº NF-e…" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />
+        <input className="field" style={{ width: 150 }} placeholder="Nº ou valor da NF-e…" title="Busca pelo número da NF-e ou pelo valor da nota (ex.: 1250 ou 1.250,50)" value={fNum} onChange={(e) => { setFNum(e.target.value); setPag(1) }} />
         <div style={{ minWidth: 150 }}><SearchSelect value={PER_LBL[periodo] || 'Período'} options={PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(PER_VAL[l] || 'periodo')} /></div>
         <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo') }} />
         <span style={{ fontSize: 12, color: '#94a3b8' }}>até</span>
