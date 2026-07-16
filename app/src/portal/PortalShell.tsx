@@ -51,7 +51,7 @@ export function PortalShell() {
     <div className="portal">
       {open && <div className="p-backdrop" onClick={() => setOpen(false)} />}
       <aside className={'p-sidebar' + (open ? ' open' : '')}>
-        <div className="p-logo"><div className="b">Aiko</div><div className="s">Portal do Gerente</div></div>
+        <div className="p-logo"><div className="p-brand"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /><div className="p-wm"><b>AIKO</b><span className="p-uline" /></div></div><div className="s">Portal do Gerente</div></div>
         <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>{lojaNome}</div>
         <nav className="p-nav">
           <div>
