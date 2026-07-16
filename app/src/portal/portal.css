@@ -2,10 +2,14 @@
 .portal { display: flex; height: 100vh; background: #f8fafc; color: #0f172a; font-family: Inter, 'Segoe UI', system-ui, sans-serif; font-size: 13px; }
 
 /* ===== SIDEBAR ===== */
-.portal .p-sidebar { width: 220px; background: #1e293b; color: #cbd5e1; flex-shrink: 0; display: flex; flex-direction: column; }
-.portal .p-logo { padding: 16px 18px 4px; }
-.portal .p-logo .b { font-size: 19px; font-weight: 800; color: #fff; letter-spacing: .3px; }
-.portal .p-logo .s { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+.portal .p-sidebar { width: 220px; background: var(--nav, #14315F); color: #cbd5e1; flex-shrink: 0; display: flex; flex-direction: column; }
+.portal .p-logo { padding: 16px 18px 6px; }
+.portal .p-brand { display: flex; align-items: center; gap: 10px; }
+.portal .p-mk { height: 34px; width: auto; flex: none; }
+.portal .p-wm { display: flex; flex-direction: column; gap: 4px; }
+.portal .p-wm b { font-size: 19px; font-weight: 800; color: #fff; letter-spacing: .1em; line-height: .9; }
+.portal .p-uline { display: block; width: 24px; height: 3px; background: var(--orange, #f97316); border-radius: 3px; }
+.portal .p-logo .s { font-size: 11px; color: #94a3b8; margin-top: 8px; }
 .portal .p-loja { margin: 8px 12px 6px; padding: 8px 10px; background: rgba(249,115,22,.12); border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #f97316; display: flex; align-items: center; gap: 7px; }
 .portal .p-nav { flex: 1; padding: 6px 8px; overflow-y: auto; }
 .portal .p-navlabel { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .07em; padding: 12px 10px 4px; }
