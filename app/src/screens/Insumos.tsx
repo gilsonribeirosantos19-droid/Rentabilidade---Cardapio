@@ -66,11 +66,21 @@ export function Insumos() {
   })
   const custoMedio = (id: string) => saldos.filter((s) => s.insumo_id === id && (s.custo_medio || 0) > 0).reduce((b, s) => Math.max(b, s.custo_medio || 0), 0)
 
-  const opts = useMemo(() => ({
-    tipos: uniq(lista.map((i) => i.tipo_item)), familias: uniq(lista.map((i) => i.familia)),
-    grupos: uniq(lista.map((i) => i.categoria)), subgrupos: uniq(lista.map((i) => i.subgrupo)),
-    unidades: uniq(lista.map((i) => i.unidade_medida)),
-  }), [lista])
+  // classificações do CADASTRO (Config › Geral) — pra grupos/famílias/subgrupos NOVOS aparecerem
+  // no filtro/select mesmo antes de algum insumo usar (senão só apareciam os já em uso).
+  const { data: clsf = [] } = useQuery({
+    queryKey: ['insumos-clsf', tenantId], enabled: !!tenantId,
+    queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome,tipo').eq('tenant_id', tenantId); return (data ?? []) as { nome: string; tipo: string }[] },
+  })
+
+  const opts = useMemo(() => {
+    const cad = (tipo: string) => clsf.filter((c) => c.tipo === tipo).map((c) => c.nome)
+    return {
+      tipos: uniq(lista.map((i) => i.tipo_item)), familias: uniq([...cad('familia'), ...lista.map((i) => i.familia)]),
+      grupos: uniq([...cad('grupo'), ...lista.map((i) => i.categoria)]), subgrupos: uniq([...cad('subgrupo'), ...lista.map((i) => i.subgrupo)]),
+      unidades: uniq(lista.map((i) => i.unidade_medida)),
+    }
+  }, [lista, clsf])
 
   const produtos = useMemo(() => {
     const q = norm(busca.trim())
