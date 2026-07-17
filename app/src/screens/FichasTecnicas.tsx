@@ -14,7 +14,7 @@ type Ficha = {
 }
 type PrecoParams = { txDel: number; txCar: number; txImp: number; margMin: number }
 type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
-type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string }
+type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string; situacao?: string; ativo?: boolean }
 type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -48,7 +48,7 @@ export function FichasTecnicas() {
   const { data: produtos = [] } = useQuery({
     queryKey: ['produtos-min', tenantId], enabled: !!tenantId,
     queryFn: async () => {
-      const { data } = await supabase.from('produtos').select('id,nome,grupo,categoria').eq('tenant_id', tenantId).order('nome')
+      const { data } = await supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo').eq('tenant_id', tenantId).order('nome')
       return (data ?? []) as ProdutoMin[]
     },
   })
@@ -219,7 +219,13 @@ export function FichasTecnicas() {
       {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
         <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
       ) })()}
-      {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={produtos} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
+      {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={(() => {
+        // só produtos ATIVOS no seletor; mantém o produto da ficha em edição (mesmo inativo)
+        const ativos = produtos.filter((p) => (p.situacao || (p.ativo !== false ? 'ativo' : 'inativo')) !== 'inativo')
+        const pid = editing !== 'new' ? editing.produto_id : null
+        if (pid && !ativos.some((p) => p.id === pid)) { const ex = produtos.find((p) => p.id === pid); if (ex) return [...ativos, ex] }
+        return ativos
+      })()} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
     </div>
   )
 }
