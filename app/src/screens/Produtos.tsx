@@ -45,11 +45,18 @@ function sitBadge(p: Produto) {
   return <span className="badge b-inativo">Inativo</span>
 }
 
+// filtro de situação (rótulo ↔ valor); "Ativos" = tudo que NÃO está inativo (inclui em desenv.)
+const SIT_OPTS = ['Ativos', 'Inativos', 'Todos']
+const SIT_TO_VAL: Record<string, string> = { 'Ativos': 'ativos', 'Inativos': 'inativos', 'Todos': 'todos' }
+const SIT_TO_LBL: Record<string, string> = { ativos: 'Ativos', inativos: 'Inativos', todos: 'Todos' }
+const sitEfetiva = (p: Produto) => p.situacao || (p.ativo !== false ? 'ativo' : 'inativo')
+
 export function Produtos() {
   const { tenantId } = useAuth()
   const qc = useQueryClient()
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
+  const [fSit, setFSit] = useState('ativos')
   const [editing, setEditing] = useState<Form | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2600) }
@@ -80,9 +87,12 @@ export function Produtos() {
     return lista.filter((p) => {
       if (q && !norm([p.nome, p.codigo_pdv].filter(Boolean).join(' ')).includes(q)) return false
       if (fGrupo && (p.grupo || p.categoria || '') !== fGrupo) return false
+      const inativo = sitEfetiva(p) === 'inativo'
+      if (fSit === 'ativos' && inativo) return false      // esconde inativos (padrão)
+      if (fSit === 'inativos' && !inativo) return false    // só inativos
       return true
     })
-  }, [lista, busca, fGrupo])
+  }, [lista, busca, fGrupo, fSit])
 
   const saveMut = useMutation({
     mutationFn: async (f: Form) => {
@@ -126,6 +136,7 @@ export function Produtos() {
           <input placeholder="Buscar por nome ou código..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
         <div className="pr-grupo"><SearchSelect value={fGrupo} onChange={setFGrupo} options={opts.grupos} placeholder="Todos os grupos" /></div>
+        <div className="pr-grupo" style={{ minWidth: 150 }}><SearchSelect value={SIT_TO_LBL[fSit]} onChange={(l) => setFSit(SIT_TO_VAL[l] || 'ativos')} options={SIT_OPTS} placeholder="Situação" /></div>
         <button className="pr-novo" onClick={() => setEditing(novo())}>+ Novo Produto</button>
       </div>
 
