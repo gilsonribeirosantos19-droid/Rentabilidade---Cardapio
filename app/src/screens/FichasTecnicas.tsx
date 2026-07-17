@@ -14,8 +14,8 @@ type Ficha = {
   itens_ficha?: Item[]
 }
 type PrecoParams = { txDel: number; txCar: number; txImp: number; margMin: number }
-type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
-type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string; situacao?: string; ativo?: boolean }
+type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string; codigo_interno?: number }
+type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string; situacao?: string; ativo?: boolean; codigo_pdv?: string }
 type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -52,14 +52,14 @@ export function FichasTecnicas() {
   const { data: insumos = [] } = useQuery({
     queryKey: ['insumos-min', tenantId], enabled: !!tenantId,
     queryFn: async () => {
-      const { data } = await supabase.from('insumos').select('id,nome,categoria,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome')
+      const { data } = await supabase.from('insumos').select('id,nome,categoria,preco_compra,rendimento_pct,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome')
       return (data ?? []) as Insumo[]
     },
   })
   const { data: produtos = [] } = useQuery({
     queryKey: ['produtos-min', tenantId], enabled: !!tenantId,
     queryFn: async () => {
-      const { data } = await supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo').eq('tenant_id', tenantId).order('nome')
+      const { data } = await supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo,codigo_pdv').eq('tenant_id', tenantId).order('nome')
       return (data ?? []) as ProdutoMin[]
     },
   })
@@ -79,6 +79,13 @@ export function FichasTecnicas() {
   const params: PrecoParams = precoParams ?? { txDel: 27, txCar: 3, txImp: 6, margMin: 20 }
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])), [insumos])
+  const produtoById = useMemo(() => Object.fromEntries(produtos.map((p) => [p.id, p])) as Record<string, ProdutoMin>, [produtos])
+  // código do item da ficha: produto → código PDV; processado (insumo vinculado) → código interno do insumo
+  const fichaCodigo = (f: Ficha): string => {
+    if (f.produto_id) return produtoById[f.produto_id]?.codigo_pdv || '—'
+    const ci = f.insumo_vinculado_id ? insMap[f.insumo_vinculado_id]?.codigo_interno : undefined
+    return ci != null ? String(ci).padStart(6, '0') : '—'
+  }
   // custo médio POR LOJA (não mistura entre lojas) — a ficha reflete a loja selecionada
   const cmByLoja = useMemo(() => {
     const m: Record<string, Record<string, number>> = {}
@@ -194,18 +201,19 @@ export function FichasTecnicas() {
       <div className="tbl-card"><div className="tbl-scroll">
         <table>
           <thead><tr>
-            <th>Nome da Ficha</th><th>Categoria</th><th>Rendimento</th>
+            <th>Nome da Ficha</th><th>Código</th><th>Categoria</th><th>Rendimento</th>
             <th className="r">Custo</th><th className="r">Preço Venda</th><th className="r">CMV%</th><th className="r">Margem%</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody>
-            {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
-              : filtrada.length === 0 ? <tr><td colSpan={9} className="empty" style={{ height: 70 }}>Nenhuma ficha encontrada</td></tr>
+            {isLoading ? <tr><td colSpan={10} className="empty">Carregando…</td></tr>
+              : filtrada.length === 0 ? <tr><td colSpan={10} className="empty" style={{ height: 70 }}>Nenhuma ficha encontrada</td></tr>
               : filtrada.map((f) => {
                 const { custo, pv, cmv, margem } = metricas(f)
                 const st = statusPill(f, cmv, pv)
                 return (
                   <tr key={f.id} onClick={() => setVer(f)}>
                     <td style={{ textTransform: 'lowercase' }}>{f.nome}</td>
+                    <td className="mono" style={{ color: '#64748b', fontSize: 12 }}>{fichaCodigo(f)}</td>
                     <td style={{ color: '#475569', textTransform: 'lowercase' }}>{f.categoria || '—'}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{f.rendimento_porcoes || 1} un</td>
                     <td className="r mono">{custo > 0 ? brl(custo) : '—'}</td>
