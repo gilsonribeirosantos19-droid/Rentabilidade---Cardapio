@@ -31,7 +31,11 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
   const [nome, setNome] = useState(ficha?.nome || '')
   const [categoria, setCategoria] = useState(ficha?.categoria || '')
   const [subj, setSubj] = useState<{ kind: 'produto' | 'insumo'; id: string } | null>(
-    ficha?.produto_id ? { kind: 'produto', id: ficha.produto_id } : null
+    // produto → assunto é o produto; senão, se for processado (tem insumo vinculado) → assunto é esse insumo.
+    // Sem isto, ao reabrir um processado o seletor vinha VAZIO (o assunto-insumo não é gravado à parte).
+    ficha?.produto_id ? { kind: 'produto', id: ficha.produto_id }
+      : ficha?.insumo_vinculado_id ? { kind: 'insumo', id: ficha.insumo_vinculado_id }
+        : null
   )
   const [porcoes, setPorcoes] = useState(String(ficha?.rendimento_porcoes || 1))
   const [preco, setPreco] = useState(ficha?.preco_venda != null ? String(ficha.preco_venda) : '')
