@@ -6,7 +6,7 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
-type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number }
+type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; participa_cmv?: string }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number }
 type Inv = { id: string; loja_id?: string; grupo_id?: string; status?: string; tipo?: string; data_inicial?: string; data_final?: string; criado_em?: string }
 type InvItem = { id: string; inventario_id: string; insumo_id: string; qtd_sistema?: number; qtd_contada?: number | null; custo_medio?: number }
@@ -33,7 +33,7 @@ export function Inventario() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2800) }
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['inv-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['inv-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra,participa_cmv').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['inv-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
   const { data: invs = [], isLoading } = useQuery({ queryKey: ['inv-list', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Inv>((f, t) => supabase.from('inventarios').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)) })
   // contador "X/Y contados" por inventário (itens com qtd_contada preenchida / total)
@@ -326,9 +326,13 @@ function GrupoEditModal({ grupo, insumos, tenantId, onClose, onSaved, showToast 
   const [tipo, setTipo] = useState(grupo?.tipo || 'mensal')
   const [sel, setSel] = useState<Set<string>>(new Set((grupo?.itens || []).map((i) => i.insumo_id)))
   const [busca, setBusca] = useState('')
+  const [soCmv, setSoCmv] = useState(false)
   const [saving, setSaving] = useState(false)
-  const filtrados = insumos.filter((i) => i.nome.toLowerCase().includes(busca.toLowerCase().trim()))
+  const filtrados = insumos.filter((i) => i.nome.toLowerCase().includes(busca.toLowerCase().trim()) && (!soCmv || i.participa_cmv !== 'nao'))
   const toggle = (id: string) => setSel((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  // "marcar todos" opera sobre a lista JÁ filtrada (busca + CMV) — assim dá pra filtrar só CMV e marcar tudo
+  const allSel = filtrados.length > 0 && filtrados.every((i) => sel.has(i.id))
+  const toggleAll = () => setSel((s) => { const n = new Set(s); if (allSel) filtrados.forEach((i) => n.delete(i.id)); else filtrados.forEach((i) => n.add(i.id)); return n })
 
   const salvar = async () => {
     if (!nome.trim()) return showToast('Informe o nome do grupo.', 'err')
@@ -357,9 +361,14 @@ function GrupoEditModal({ grupo, insumos, tenantId, onClose, onSaved, showToast 
           <div className="fg" style={{ margin: 0 }}><label>Nome *</label><input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Geladeira" /></div>
           <div className="fg" style={{ margin: 0 }}><label>Tipo</label><select value={tipo} onChange={(e) => setTipo(e.target.value)}><option value="mensal">Mensal</option><option value="quinzenal">Quinzenal</option><option value="semanal">Semanal</option><option value="avulso">Avulso</option></select></div>
         </div>
-        <div className="fg"><label>Insumos ({sel.size} selecionados)</label><input placeholder="Buscar insumo..." value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
-        <div style={{ maxHeight: '38vh', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 9, padding: 8 }}>
-          {filtrados.map((i) => <label key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" style={{ accentColor: '#f97316' }} checked={sel.has(i.id)} onChange={() => toggle(i.id)} /> {i.nome}</label>)}
+        <div className="fg" style={{ marginBottom: 6 }}><label>Insumos ({sel.size} selecionados)</label><input placeholder="Buscar insumo..." value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '0 2px 8px', flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, color: '#475569', cursor: 'pointer' }}><input type="checkbox" style={{ accentColor: '#f97316' }} checked={soCmv} onChange={(e) => setSoCmv(e.target.checked)} /> Somente participam do CMV</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: '#334155', cursor: 'pointer' }}><input type="checkbox" style={{ accentColor: '#f97316' }} checked={allSel} onChange={toggleAll} /> Marcar todos ({filtrados.length})</label>
+        </div>
+        <div style={{ maxHeight: '34vh', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 9, padding: 8 }}>
+          {filtrados.length === 0 ? <div style={{ padding: 12, fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>Nenhum insumo encontrado.</div>
+            : filtrados.map((i) => <label key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" style={{ accentColor: '#f97316' }} checked={sel.has(i.id)} onChange={() => toggle(i.id)} /> {i.nome}</label>)}
         </div>
         <div className="modal-foot" style={{ marginTop: 14 }}>
           <button className="btn-sec" onClick={onClose}>Cancelar</button>
