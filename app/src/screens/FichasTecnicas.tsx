@@ -24,7 +24,10 @@ const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as str
 
 export function FichasTecnicas() {
   const { tenantId } = useAuth()
-  const { lojaId } = useLoja()   // usa o seletor GLOBAL de loja (topo do app) p/ o custo da ficha
+  const { lojas, lojaId } = useLoja()
+  // custo da ficha: usa a loja GLOBAL selecionada; se estiver em "Todas", usa a Ponta Negra
+  // (só a Ficha abre na Ponta Negra — o resto do app fica em "Todas", pedido do dono).
+  const lojaCusto = useMemo(() => lojaId || (lojas.find((l) => (l.nome || '').toLowerCase().includes('ponta negra'))?.id ?? ''), [lojaId, lojas])
   const qc = useQueryClient()
   // arquivar (desativar) / reativar uma ficha — muda só o status
   const statusMut = useMutation({
@@ -93,8 +96,8 @@ export function FichasTecnicas() {
   const custoBase = (ins: Insumo) => {
     const porLoja = cmByLoja[ins.id] || {}
     const reserva = processadoIds.has(ins.id) ? (ins.preco_compra || 0) : 0
-    if (lojaId) { const c = porLoja[lojaId] || 0; return c > 0 ? c : reserva }
-    const mx = Math.max(0, ...Object.values(porLoja))   // "Todas as lojas": maior entre as lojas
+    if (lojaCusto) { const c = porLoja[lojaCusto] || 0; return c > 0 ? c : reserva }
+    const mx = Math.max(0, ...Object.values(porLoja))   // fallback (sem loja definida): maior entre as lojas
     return mx > 0 ? mx : reserva
   }
   const custoIngrediente = (ins: Insumo, qtdG: number) => {
