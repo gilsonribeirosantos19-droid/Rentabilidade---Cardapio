@@ -76,14 +76,19 @@ export function FichasTecnicas() {
     return m
   }, [saldos])
   const fichaByProduto = useMemo(() => Object.fromEntries(fichas.filter((f) => f.produto_id).map((f) => [f.produto_id!, f])), [fichas])
+  // insumos que são PROCESSADOS (saída de uma ficha de processado) — o custo deles mora no
+  // preco_compra (setado pela ficha de processado). Só ESSES usam preco_compra de reserva.
+  const processadoIds = useMemo(() => new Set(fichas.map((f) => f.insumo_vinculado_id).filter(Boolean) as string[]), [fichas])
 
-  // ── custo ── custo médio da LOJA selecionada; se a loja não tem custo do insumo, fica ZERO
-  // (por design: cada loja tem o seu custo, sem média/custo geral entre lojas).
+  // ── custo ── custo médio da LOJA selecionada; se a loja não tem custo:
+  //   • insumo PROCESSADO → usa o custo da ficha de processado (preco_compra)
+  //   • insumo CRU → fica ZERO (regra do dono: cada loja tem o seu custo, SEM média geral entre lojas)
   const custoBase = (ins: Insumo) => {
     const porLoja = cmByLoja[ins.id] || {}
-    if (lojaId) return porLoja[lojaId] || 0
+    const reserva = processadoIds.has(ins.id) ? (ins.preco_compra || 0) : 0
+    if (lojaId) { const c = porLoja[lojaId] || 0; return c > 0 ? c : reserva }
     const mx = Math.max(0, ...Object.values(porLoja))   // "Todas as lojas": maior entre as lojas
-    return mx > 0 ? mx : 0
+    return mx > 0 ? mx : reserva
   }
   const custoIngrediente = (ins: Insumo, qtdG: number) => {
     const cb = custoBase(ins)
