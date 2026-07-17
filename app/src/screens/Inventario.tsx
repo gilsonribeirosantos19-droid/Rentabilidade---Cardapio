@@ -355,7 +355,7 @@ function GrupoEditModal({ grupo, insumos, tenantId, onClose, onSaved, showToast 
 
   return (
     <div className="ov" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(560px, 95vw)' }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(860px, 95vw)' }}>
         <h2>{grupo ? 'Editar Grupo' : 'Novo Grupo'}</h2>
         <div className="row2" style={{ marginBottom: 14 }}>
           <div className="fg" style={{ margin: 0 }}><label>Nome *</label><input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Geladeira" /></div>
@@ -366,9 +366,9 @@ function GrupoEditModal({ grupo, insumos, tenantId, onClose, onSaved, showToast 
           <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, color: '#475569', cursor: 'pointer' }}><input type="checkbox" style={{ accentColor: '#f97316' }} checked={soCmv} onChange={(e) => setSoCmv(e.target.checked)} /> Somente participam do CMV</label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: '#334155', cursor: 'pointer' }}><input type="checkbox" style={{ accentColor: '#f97316' }} checked={allSel} onChange={toggleAll} /> Marcar todos ({filtrados.length})</label>
         </div>
-        <div style={{ maxHeight: '34vh', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 9, padding: 8 }}>
-          {filtrados.length === 0 ? <div style={{ padding: 12, fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>Nenhum insumo encontrado.</div>
-            : filtrados.map((i) => <label key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" style={{ accentColor: '#f97316' }} checked={sel.has(i.id)} onChange={() => toggle(i.id)} /> {i.nome}</label>)}
+        <div style={{ maxHeight: '52vh', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 9, padding: 8, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '1px 14px', alignContent: 'start' }}>
+          {filtrados.length === 0 ? <div style={{ gridColumn: '1 / -1', padding: 12, fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>Nenhum insumo encontrado.</div>
+            : filtrados.map((i) => <label key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" style={{ accentColor: '#f97316', flex: 'none' }} checked={sel.has(i.id)} onChange={() => toggle(i.id)} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.nome}</span></label>)}
         </div>
         <div className="modal-foot" style={{ marginTop: 14 }}>
           <button className="btn-sec" onClick={onClose}>Cancelar</button>
