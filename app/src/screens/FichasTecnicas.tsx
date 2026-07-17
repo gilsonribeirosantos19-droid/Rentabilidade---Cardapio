@@ -75,14 +75,21 @@ export function FichasTecnicas() {
     saldos.forEach((s) => { if (s.loja_id) (m[s.insumo_id] ||= {})[s.loja_id] = s.custo_medio || 0 })
     return m
   }, [saldos])
+  // custo GERAL do insumo = maior custo médio entre TODOS os saldos (INCLUSIVE o sem loja) —
+  // mesma base da tela "Base de Custos". Reserva quando a loja selecionada não tem custo próprio.
+  const cmGeral = useMemo(() => {
+    const m: Record<string, number> = {}
+    saldos.forEach((s) => { const c = s.custo_medio || 0; if (c > (m[s.insumo_id] || 0)) m[s.insumo_id] = c })
+    return m
+  }, [saldos])
   const fichaByProduto = useMemo(() => Object.fromEntries(fichas.filter((f) => f.produto_id).map((f) => [f.produto_id!, f])), [fichas])
 
   // ── custo ──
   const custoBase = (ins: Insumo) => {
     const porLoja = cmByLoja[ins.id] || {}
-    if (lojaId) { const c = porLoja[lojaId] || 0; return c > 0 ? c : (ins.preco_compra || 0) }
-    const mx = Math.max(0, ...Object.values(porLoja))
-    return mx > 0 ? mx : (ins.preco_compra || 0)
+    const geral = cmGeral[ins.id] || 0          // reserva: custo geral (Base de Custos) / sem loja
+    if (lojaId) { const c = porLoja[lojaId] || 0; return c > 0 ? c : (geral > 0 ? geral : (ins.preco_compra || 0)) }
+    return geral > 0 ? geral : (ins.preco_compra || 0)
   }
   const custoIngrediente = (ins: Insumo, qtdG: number) => {
     const cb = custoBase(ins)
