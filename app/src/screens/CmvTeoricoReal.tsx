@@ -54,6 +54,7 @@ export function CmvTeoricoReal() {
   const [ate, setAte] = useState(ini.ate)
   const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [cat, setCat] = useState('')
+  const [buscaIns, setBuscaIns] = useState('')
   const [apenasDiv, setApenasDiv] = useState(false)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
@@ -161,8 +162,10 @@ export function CmvTeoricoReal() {
     if (!calc) return []
     let r = calc.rows
     if (apenasDiv) r = r.filter((x) => Math.abs(x.dPct) > 5)
+    const q = buscaIns.trim().toLowerCase()
+    if (q) r = r.filter((x) => (x.i.nome || '').toLowerCase().includes(q))
     return [...r].sort((a, b) => Math.abs(b.dPct) - Math.abs(a.dPct))
-  }, [calc, apenasDiv])
+  }, [calc, apenasDiv, buscaIns])
 
   const foot = useMemo(() => {
     const tTeo = rows.reduce((s, r) => s + r.cTeo, 0)
@@ -201,6 +204,7 @@ export function CmvTeoricoReal() {
           <label>Grupo</label>
           <SearchSelect value={cat} options={grupos} placeholder="Todos os grupos" onChange={(v) => setCat(v)} />
         </div>
+        <div className="ds-field" style={{ minWidth: 160 }}><label>Insumo</label><input className="field" placeholder="Buscar insumo..." value={buscaIns} onChange={(e) => setBuscaIns(e.target.value)} /></div>
         <div className="ds-field">
           <label>Mostrar</label>
           <div className="tog-wrap">
