@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
@@ -25,6 +25,13 @@ const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as str
 export function FichasTecnicas() {
   const { tenantId } = useAuth()
   const { lojaId } = useLoja()   // usa o seletor GLOBAL de loja (topo do app) p/ o custo da ficha
+  const qc = useQueryClient()
+  // arquivar (desativar) / reativar uma ficha — muda só o status
+  const statusMut = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => { const { error } = await supabase.from('fichas_tecnicas').update({ status }).eq('id', id); if (error) throw error },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fichas'] }),
+    onError: (e: Error) => alert('Erro: ' + e.message),
+  })
   const [busca, setBusca] = useState('')
   const [fCat, setFCat] = useState('')
   const [fStatus, setFStatus] = useState('')
@@ -137,7 +144,8 @@ export function FichasTecnicas() {
     return fichas.filter((f) => {
       if (q && !norm(f.nome || '').includes(q)) return false
       if (fCat && (f.categoria || '') !== fCat) return false
-      if (fStatus && (f.status || 'ativa') !== fStatus) return false
+      if (fStatus) { if ((f.status || 'ativa') !== fStatus) return false }
+      else if ((f.status || 'ativa') === 'arquivada') return false   // sem filtro: esconde as arquivadas
       if (fCmv) {
         const { cmv, pv } = metricas(f)
         if (fCmv === 'sem' && pv) return false
@@ -205,6 +213,9 @@ export function FichasTecnicas() {
                     <td style={{ whiteSpace: 'nowrap' }}>
                       <button className="ed-btn" onClick={(e) => { e.stopPropagation(); setEditing(f) }}>✎ Editar</button>
                       <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setVer(f) }}>👁 Ver</button>
+                      {(f.status || 'ativa') === 'arquivada'
+                        ? <button className="ver-btn" onClick={(e) => { e.stopPropagation(); statusMut.mutate({ id: f.id, status: 'ativa' }) }}>↺ Reativar</button>
+                        : <button className="ver-btn" style={{ color: '#b45309' }} onClick={(e) => { e.stopPropagation(); if (confirm(`Arquivar (desativar) a ficha "${f.nome}"?`)) statusMut.mutate({ id: f.id, status: 'arquivada' }) }}>🗄 Arquivar</button>}
                     </td>
                   </tr>
                 )
