@@ -20,8 +20,10 @@ export function LojaProvider({ children }: { children: ReactNode }) {
       if (!alive) return
       const ls = (data ?? []) as Loja[]
       setLojas(ls)
-      // 1 loja → auto-seleciona; várias → "Todas" (null), igual ao original
-      setLojaId(ls.length === 1 ? ls[0].id : null)
+      // padrão de abertura: 1 loja → ela; várias → se existir "Ponta Negra", abre nela
+      // (pedido do dono do Sushi PN); senão mantém "Todas" (null), como antes.
+      const pn = ls.find((l) => (l.nome || '').toLowerCase().includes('ponta negra'))
+      setLojaId(ls.length === 1 ? ls[0].id : (pn ? pn.id : null))
     })
     return () => { alive = false }
   }, [tenantId])
