@@ -7,6 +7,13 @@
 //  Reusa: destino nfe_recebidas+nfe_itens (fonte='sieg'), roteamento por CNPJ do
 //  destinatário (acha a loja), auto-vínculo por CNPJ emitente + código (= nfe-webhook),
 //  idempotente por chave. Gate por WEBHOOK_SECRET.
+//
+//  ⚠️ Detalhes da API do SIEG aprendidos na prática:
+//   - baixar-xmls quer a data em formato SÓ-DATA (yyyy-MM-dd, sem a hora) e aceita
+//     no máx ~31 dias por consulta → por isso quebramos em janelas de 30 dias.
+//   - 404 "Nenhum arquivo XML localizado" = janela vazia (NÃO é erro).
+//   - SIEG limita chamadas por minuto → 429. Retry com espera + respiro entre lojas.
+//   - Multi-tenant: passe body.tenant p/ puxar Joya/Mori/Sushi PN separadamente.
 // ════════════════════════════════════════════════════════════════════════════
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { XMLParser } from 'https://esm.sh/fast-xml-parser@4'
@@ -24,11 +31,28 @@ const SIEG_SECRET_KEY = Deno.env.get('SIEG_SECRET_KEY') || ''
 const SIEG_API_KEY = Deno.env.get('SIEG_API_KEY') || '' // Chave API (Pxvw) — hedge, caso o baixar peça
 
 const XML_TYPE_NFE = 1 // 1 = NF-e (confirmar códigos de NFC-e/NFS-e/eventos na doc)
+const JANELA_DIAS = 30 // baixar-xmls aceita ~31 dias por consulta → quebra em janelas
+const BUDGET_MS = 110000 // teto de tempo por invocação (o resto pega no próximo pull; é idempotente)
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_', parseTagValue: false })
 const arr = <T>(x: T | T[] | undefined): T[] => (x == null ? [] : Array.isArray(x) ? x : [x])
 const onlyDigits = (s: unknown) => String(s ?? '').replace(/\D/g, '')
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json' } })
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const ymd = (d: Date) => d.toISOString().substring(0, 10) // SÓ-DATA (yyyy-MM-dd)
+
+// janelas de <= JANELA_DIAS dias cobrindo os últimos `dias` (formato só-data)
+function janelas(dias: number): Array<{ ini: string; fim: string }> {
+  const out: Array<{ ini: string; fim: string }> = []
+  const fimTotal = Date.now()
+  let cur = fimTotal - dias * 86400000
+  while (cur <= fimTotal) {
+    const jf = Math.min(cur + JANELA_DIAS * 86400000, fimTotal)
+    out.push({ ini: ymd(new Date(cur)), fim: ymd(new Date(jf)) })
+    cur = jf + 86400000 // próximo dia
+  }
+  return out
+}
 
 // ── 1) create-jwt: troca ClientId+SecretKey por um JWT (vale 24h) ─────────────
 async function criarJwt(): Promise<{ ok: boolean; jwt?: string; status: number; raw: string }> {
@@ -63,33 +87,44 @@ function authHeaders(jwt: string): Record<string, string> {
   return h
 }
 
+// ── fetch ao SIEG com retry no 429 (ele limita chamadas por minuto) ──────────
+async function siegFetch(url: string, body: unknown, jwt: string): Promise<{ status: number; raw: string }> {
+  for (let tent = 0; tent < 4; tent++) {
+    const res = await fetch(url, { method: 'POST', headers: authHeaders(jwt), body: JSON.stringify(body) })
+    const raw = await res.text()
+    if (res.status !== 429) return { status: res.status, raw }
+    await sleep(4000 * (tent + 1)) // espera 4s, 8s, 12s e tenta de novo
+  }
+  return { status: 429, raw: 'Too Many Requests (esgotou as tentativas)' }
+}
+
 // ── contar-xmls: quantas notas tem no período p/ um CNPJ (teste seguro) ───────
-// Filtro por CnpjDest = notas recebidas (entrada) pela loja. Precisa de JWT + X-Api-Key.
-async function contarXmls(jwt: string, cnpj: string, dataIni: string, dataFim: string): Promise<{ status: number; nfe: number | null; raw: string }> {
-  const body = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, DataEmissaoInicio: dataIni, DataEmissaoFim: dataFim }
-  const res = await fetch(`${SIEG_BASE}/api/v1/contar-xmls`, { method: 'POST', headers: authHeaders(jwt), body: JSON.stringify(body) })
-  const raw = await res.text()
+// Filtro por CnpjDest = notas recebidas (entrada) pela loja.
+async function contarXmls(jwt: string, cnpj: string, ini: string, fim: string): Promise<{ status: number; nfe: number | null; raw: string }> {
+  const body = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, DataEmissaoInicio: ini, DataEmissaoFim: fim }
+  const { status, raw } = await siegFetch(`${SIEG_BASE}/api/v1/contar-xmls`, body, jwt)
   let nfe: number | null = null
   try { const j = JSON.parse(raw); nfe = j?.Data?.NFe ?? null } catch { /* ignore */ }
-  return { status: res.status, nfe, raw: raw.substring(0, 300) }
+  return { status, nfe, raw: raw.substring(0, 300) }
 }
 
 // ── baixar-xmls: traz os XMLs em lote (Take/Skip) p/ um CNPJ. Lista de XML strings ─
-async function baixarXmls(jwt: string, cnpj: string, dataIni: string, dataFim: string, skip: number, take = 50): Promise<{ status: number; xmls: string[]; rawHead: string }> {
-  const body = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: take, Skip: skip, DataEmissaoInicio: dataIni, DataEmissaoFim: dataFim, Downloadevent: false }
-  const res = await fetch(`${SIEG_BASE}/api/v1/baixar-xmls`, { method: 'POST', headers: authHeaders(jwt), body: JSON.stringify(body) })
-  const raw = await res.text()
-  if (!res.ok) return { status: res.status, xmls: [], rawHead: raw.substring(0, 400) }
+// datas em SÓ-DATA (yyyy-MM-dd); 404 "Nenhum arquivo" = janela vazia (não é erro).
+async function baixarXmls(jwt: string, cnpj: string, ini: string, fim: string, skip: number, take = 50): Promise<{ status: number; xmls: string[]; rawHead: string }> {
+  const body = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: take, Skip: skip, DataEmissaoInicio: ini, DataEmissaoFim: fim, Downloadevent: false }
+  const { status, raw } = await siegFetch(`${SIEG_BASE}/api/v1/baixar-xmls`, body, jwt)
+  if (status === 404) return { status, xmls: [], rawHead: raw.substring(0, 200) } // janela vazia
+  if (status !== 200) return { status, xmls: [], rawHead: raw.substring(0, 400) }
   // formato pode ser: array de XML strings, array base64, ou envelope {xmls:[...]}
   let data: unknown
-  try { data = JSON.parse(raw) } catch { return { status: res.status, xmls: [], rawHead: raw.substring(0, 400) } }
+  try { data = JSON.parse(raw) } catch { return { status, xmls: [], rawHead: raw.substring(0, 400) } }
   const lista = Array.isArray(data) ? data : ((data as any)?.xmls ?? (data as any)?.Xmls ?? (data as any)?.xmlS ?? [])
   const xmls = (lista as string[]).map((x) => {
     const s = String(x || '')
     if (s.trimStart().startsWith('<')) return s
     try { return atob(s) } catch { return s }
   }).filter(Boolean)
-  return { status: res.status, xmls, rawHead: raw.substring(0, 200) }
+  return { status, xmls, rawHead: raw.substring(0, 200) }
 }
 
 // ── parse do XML da NF-e ─────────────────────────────────────────────────────
@@ -140,56 +175,60 @@ async function rodarPull(tenant: string, dias: number, jwt: string) {
     if (chs.length < 1000) break
   }
 
-  const fim = new Date().toISOString().substring(0, 19)
-  const ini = new Date(Date.now() - dias * 86400000).toISOString().substring(0, 19)
-
+  const wins = janelas(dias)
   const cnpjs = Object.keys(lojaByCnpj) // um pull por CNPJ de loja (CnpjDest)
   const inicio = Date.now()
   let baixados = 0, novas = 0, itensGravados = 0, erros = 0
   let ultimoStatus = 0, ultimoRaw = ''
   for (const cnpj of cnpjs) {
-   for (let skip = 0; skip < 5000; skip += 50) {
-    if (Date.now() - inicio > 40000) break
-    const r = await baixarXmls(jwt, cnpj, ini, fim, skip, 50)
-    ultimoStatus = r.status; ultimoRaw = r.rawHead
-    if (!r.xmls.length) break
-    baixados += r.xmls.length
+   for (const w of wins) {
+    for (let skip = 0; skip < 5000; skip += 50) {
+      if (Date.now() - inicio > BUDGET_MS) break
+      const r = await baixarXmls(jwt, cnpj, w.ini, w.fim, skip, 50)
+      ultimoStatus = r.status; ultimoRaw = r.rawHead
+      if (!r.xmls.length) break
+      baixados += r.xmls.length
 
-    for (const xml of r.xmls) {
-      try {
-        const nf = parseNfe(xml); if (!nf) continue
-        if (jaExistem.has(nf.chave)) continue
-        const lojaId = lojaByCnpj[nf.cnpjDest] || null
-        const { data: nova, error } = await supabase.from('nfe_recebidas').insert({
-          tenant_id: tenant, loja_id: lojaId, numero: nf.numero, serie: nf.serie, chave_acesso: nf.chave,
-          cnpj_emitente: nf.cnpjEmit, nome_emitente: nf.nomeEmit, data_emissao: nf.dataEmissao,
-          valor_total: nf.valorTotal, status: 'aguard_vinculacao', fonte: 'sieg',
-        }).select('id').single()
-        if (error) { if ((error as any).code === '23505') { jaExistem.add(nf.chave); continue } erros++; continue }
-        jaExistem.add(nf.chave); novas++
-        const nfeId = (nova as any).id
+      for (const xml of r.xmls) {
+        try {
+          const nf = parseNfe(xml); if (!nf) continue
+          if (jaExistem.has(nf.chave)) continue
+          const lojaId = lojaByCnpj[nf.cnpjDest] || null
+          const { data: nova, error } = await supabase.from('nfe_recebidas').insert({
+            tenant_id: tenant, loja_id: lojaId, numero: nf.numero, serie: nf.serie, chave_acesso: nf.chave,
+            cnpj_emitente: nf.cnpjEmit, nome_emitente: nf.nomeEmit, data_emissao: nf.dataEmissao,
+            valor_total: nf.valorTotal, status: 'aguard_vinculacao', fonte: 'sieg',
+          }).select('id').single()
+          if (error) { if ((error as any).code === '23505') { jaExistem.add(nf.chave); continue } erros++; continue }
+          jaExistem.add(nf.chave); novas++
+          const nfeId = (nova as any).id
 
-        const fornId = (fornAll || []).find((f: any) => onlyDigits(f.cnpj) === nf.cnpjEmit)?.id || null
-        const batch = nf.itens.map((it) => {
-          const vinc = fornId ? (vincAll || []).find((v: any) => v.codigo_fornecedor === it.codigo && v.fornecedor_id === fornId) : null
-          return {
-            nfe_id: nfeId, tenant_id: tenant, descricao_nfe: it.descricao, codigo_item_fornecedor: it.codigo,
-            quantidade: it.quantidade, unidade_nfe: it.unidade, valor_unitario: it.valorUnit,
-            valor_total: it.valorTotal, vinculacao_id: (vinc as any)?.id || null,
-          }
-        })
-        if (batch.length) { const { error: e2 } = await supabase.from('nfe_itens').insert(batch); if (!e2) itensGravados += batch.length }
-        const semVinc = batch.filter((b) => !b.vinculacao_id).length
-        await supabase.from('nfe_recebidas').update({ status: semVinc === 0 ? 'pronta' : 'aguard_vinculacao' }).eq('id', nfeId)
-      } catch (e) { console.error('sieg ingest erro:', (e as Error).message); erros++ }
+          const fornId = (fornAll || []).find((f: any) => onlyDigits(f.cnpj) === nf.cnpjEmit)?.id || null
+          const batch = nf.itens.map((it) => {
+            const vinc = fornId ? (vincAll || []).find((v: any) => v.codigo_fornecedor === it.codigo && v.fornecedor_id === fornId) : null
+            return {
+              nfe_id: nfeId, tenant_id: tenant, descricao_nfe: it.descricao, codigo_item_fornecedor: it.codigo,
+              quantidade: it.quantidade, unidade_nfe: it.unidade, valor_unitario: it.valorUnit,
+              valor_total: it.valorTotal, vinculacao_id: (vinc as any)?.id || null,
+            }
+          })
+          if (batch.length) { const { error: e2 } = await supabase.from('nfe_itens').insert(batch); if (!e2) itensGravados += batch.length }
+          const semVinc = batch.filter((b) => !b.vinculacao_id).length
+          await supabase.from('nfe_recebidas').update({ status: semVinc === 0 ? 'pronta' : 'aguard_vinculacao' }).eq('id', nfeId)
+        } catch (e) { console.error('sieg ingest erro:', (e as Error).message); erros++ }
+      }
+      if (r.xmls.length < 50) break
+      await sleep(800) // respiro entre páginas
     }
-    if (r.xmls.length < 50) break
+    if (Date.now() - inicio > BUDGET_MS) break
+    await sleep(1500) // respiro entre janelas
    }
-   if (Date.now() - inicio > 40000) break
+   if (Date.now() - inicio > BUDGET_MS) break
+   await sleep(2500) // respiro entre lojas (evita o 429)
   }
 
-  console.log('SIEG pull:', { baixados, novas, itensGravados, erros })
-  return json({ ok: true, modo: 'pull', periodo: { ini, fim }, baixados, novas, itensGravados, erros, ultimoStatus, ultimoRaw })
+  console.log('SIEG pull:', { tenant, baixados, novas, itensGravados, erros })
+  return json({ ok: true, modo: 'pull', tenant, janelas: wins.length, baixados, novas, itensGravados, erros, ultimoStatus, ultimoRaw })
 }
 
 // ── HTTP ─────────────────────────────────────────────────────────────────────
@@ -212,11 +251,38 @@ Deno.serve(async (req) => {
   const auth = await criarJwt()
   if (!auth.ok) return json({ etapa: 'create-jwt', ok: false, status: auth.status, raw: auth.raw, dica: 'se status=401/403 revisar ClientId/SecretKey; se "Invalid IP" a trava de IP ainda existe' }, 200)
 
-  const fim = new Date().toISOString().substring(0, 19)
-  const ini = new Date(Date.now() - dias * 86400000).toISOString().substring(0, 19)
+  // 1.5) PROBE: dispara o "baixar" em várias variações de parâmetro e devolve o cru
+  // de cada uma. Serve pra descobrir se o 404 é parâmetro ou XML indisponível no SIEG.
+  if (modo === 'probe') {
+    const iniD = ymd(new Date(Date.now() - dias * 86400000)), fimD = ymd(new Date())
+    let cnpj = onlyDigits((body as any).cnpj)
+    if (cnpj.length !== 14) {
+      const { data: lojas } = await supabase.from('lojas').select('cnpj').eq('tenant_id', tenant)
+      for (const l of lojas || []) { const c = onlyDigits((l as any).cnpj); if (c.length === 14) { cnpj = c; break } }
+    }
+    const email = String((body as any).email || '')
+    const base = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD }
+    const variantes: Array<{ nome: string; body: Record<string, unknown> }> = [
+      { nome: 'base (Downloadevent:false)', body: { ...base, Downloadevent: false } },
+      { nome: 'Downloadevent:true', body: { ...base, Downloadevent: true } },
+      { nome: 'sem filtro de data', body: { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, Downloadevent: false } },
+      { nome: 'com Email', body: { ...base, Downloadevent: false, Email: email } },
+      { nome: 'CnpjDestinatario (nome alt)', body: { XmlType: XML_TYPE_NFE, CnpjDestinatario: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
+      { nome: 'CnpjEmit (emitente)', body: { XmlType: XML_TYPE_NFE, CnpjEmit: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
+    ]
+    const resultados = []
+    for (const v of variantes) {
+      const r = await siegFetch(`${SIEG_BASE}/api/v1/baixar-xmls`, v.body, auth.jwt!)
+      const achou = r.status === 200 && !/nenhum arquivo/i.test(r.raw)
+      resultados.push({ variante: v.nome, status: r.status, achou, raw: r.raw.substring(0, 200) })
+      await sleep(2500) // respiro (429)
+    }
+    return json({ modo: 'probe', tenant, cnpj, periodo: { ini: iniD, fim: fimD }, resultados })
+  }
 
-  // 2) DIAG: só conta (não baixa nem grava)
+  // 2) DIAG: só conta (não baixa nem grava) — uma contagem por CNPJ no período todo
   if (modo === 'diag') {
+    const iniD = ymd(new Date(Date.now() - dias * 86400000)), fimD = ymd(new Date())
     const { data: lojas } = await supabase.from('lojas').select('cnpj,nome').eq('tenant_id', tenant)
     const nomes: Record<string, string> = {}
     for (const l of lojas || []) { const c = onlyDigits((l as any).cnpj); if (c.length === 14) nomes[c] = (l as any).nome }
@@ -224,11 +290,12 @@ Deno.serve(async (req) => {
     const contagens = []
     let totalNfe = 0
     for (const cnpj of cnpjs) {
-      const c = await contarXmls(auth.jwt!, cnpj, ini, fim)
+      const c = await contarXmls(auth.jwt!, cnpj, iniD, fimD)
       if (c.nfe) totalNfe += c.nfe
       contagens.push({ loja: nomes[cnpj], cnpj, status: c.status, nfe: c.nfe, ...(c.nfe == null ? { raw: c.raw } : {}) })
+      if (cnpjs.length > 1) await sleep(2500) // respiro entre lojas (evita o 429)
     }
-    return json({ modo: 'diag', jwt_ok: true, periodo: { ini, fim }, lojas: cnpjs.length, totalNfe, contagens })
+    return json({ modo: 'diag', jwt_ok: true, tenant, periodo: { ini: iniD, fim: fimD }, lojas: cnpjs.length, totalNfe, contagens })
   }
 
   // 3) PULL: baixa e grava
