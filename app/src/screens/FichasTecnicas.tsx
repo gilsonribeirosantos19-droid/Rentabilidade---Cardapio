@@ -201,7 +201,7 @@ export function FichasTecnicas() {
       <div className="tbl-card"><div className="tbl-scroll">
         <table>
           <thead><tr>
-            <th>Nome da Ficha</th><th>Código</th><th>Categoria</th><th>Rendimento</th>
+            <th>Código</th><th>Nome da Ficha</th><th>Categoria</th><th>Rendimento</th>
             <th className="r">Custo</th><th className="r">Preço Venda</th><th className="r">CMV%</th><th className="r">Margem%</th><th>Status</th><th>Ações</th>
           </tr></thead>
           <tbody>
@@ -212,8 +212,8 @@ export function FichasTecnicas() {
                 const st = statusPill(f, cmv, pv)
                 return (
                   <tr key={f.id} onClick={() => setVer(f)}>
-                    <td style={{ textTransform: 'lowercase' }}>{f.nome}</td>
                     <td className="mono" style={{ color: '#64748b', fontSize: 12 }}>{fichaCodigo(f)}</td>
+                    <td style={{ textTransform: 'lowercase' }}>{f.nome}</td>
                     <td style={{ color: '#475569', textTransform: 'lowercase' }}>{f.categoria || '—'}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{f.rendimento_porcoes || 1} un</td>
                     <td className="r mono">{custo > 0 ? brl(custo) : '—'}</td>
