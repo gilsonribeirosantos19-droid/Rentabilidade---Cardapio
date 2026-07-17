@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { FichaModal } from './FichaModal'
 import './fichas.css'
 
@@ -23,13 +24,13 @@ const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as str
 
 export function FichasTecnicas() {
   const { tenantId } = useAuth()
+  const { lojaId } = useLoja()   // usa o seletor GLOBAL de loja (topo do app) p/ o custo da ficha
   const [busca, setBusca] = useState('')
   const [fCat, setFCat] = useState('')
   const [fStatus, setFStatus] = useState('')
   const [fCmv, setFCmv] = useState('')
   const [ver, setVer] = useState<Ficha | null>(null)
   const [editing, setEditing] = useState<Ficha | 'new' | null>(null)
-  const [lojaSel, setLojaSel] = useState('')
 
   const { data: fichas = [], isLoading } = useQuery({
     queryKey: ['fichas', tenantId], enabled: !!tenantId,
@@ -56,8 +57,6 @@ export function FichasTecnicas() {
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
     queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)),
   })
-  const { data: lojas = [] } = useQuery({ queryKey: ['fic-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome?: string }[] } })
-  useEffect(() => { if (!lojaSel && lojas.length) setLojaSel(lojas[0].id) }, [lojas, lojaSel])
   // parâmetros de precificação (taxas que saem da venda) — pra Margem Salão/Delivery
   const { data: precoParams } = useQuery({
     queryKey: ['fic-precparams', tenantId], enabled: !!tenantId,
@@ -81,7 +80,7 @@ export function FichasTecnicas() {
   // ── custo ──
   const custoBase = (ins: Insumo) => {
     const porLoja = cmByLoja[ins.id] || {}
-    if (lojaSel) { const c = porLoja[lojaSel] || 0; return c > 0 ? c : (ins.preco_compra || 0) }
+    if (lojaId) { const c = porLoja[lojaId] || 0; return c > 0 ? c : (ins.preco_compra || 0) }
     const mx = Math.max(0, ...Object.values(porLoja))
     return mx > 0 ? mx : (ins.preco_compra || 0)
   }
@@ -150,12 +149,6 @@ export function FichasTecnicas() {
         <div className="fic-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar ficha..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-        </div>
-        <div className="fic-field"><span className="fic-label">Loja (custo)</span>
-          <select className="fic-sel" value={lojaSel} onChange={(e) => setLojaSel(e.target.value)}>
-            <option value="">Custo geral (maior)</option>
-            {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-          </select>
         </div>
         <div className="fic-field"><span className="fic-label">Categoria</span>
           <select className="fic-sel" value={fCat} onChange={(e) => setFCat(e.target.value)}>
