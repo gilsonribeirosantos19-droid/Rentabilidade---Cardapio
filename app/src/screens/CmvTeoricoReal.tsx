@@ -9,9 +9,11 @@ import { downloadCsv } from '../lib/csv'
 import './cmv.css'
 
 type Insumo = { id: string; nome?: string; categoria?: string; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
-type Ficha = { id: string; rendimento_porcoes?: number }
+type Ficha = { id: string; rendimento_porcoes?: number; produto_id?: string | null }
 type ItemFicha = { ficha_id: string; insumo_id: string; quantidade_g?: number }
 type Venda = { ficha_id?: string; produto_id?: string; quantidade?: number; valor_total?: number; loja_id?: string | null }
+type ProdMin = { id: string; codigo_pdv?: string | null }
+type IcoVenda = { produto_id?: number | string; qtd?: number; faturado?: number; loja_id?: string | null }
 type Fat = { valor?: number; total?: number; valor_total?: number }
 type Saida = { insumo_id: string; quantidade?: number; tipo?: string; loja_id?: string | null; criado_em?: string }
 type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: number; loja_id?: string | null; criado_em?: string; created_at?: string }
@@ -29,6 +31,16 @@ function periodoRange(tipo: string): { de: string; ate: string } | null {
   if (tipo === 'mes_atual') return { de: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`, ate: d.toLocaleDateString('en-CA') }
   if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); return { de: `${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`, ate: l.toLocaleDateString('en-CA') } }
   return null
+}
+
+// competências 'YYYY-MM' tocadas pelo intervalo (as vendas do iComanda são por MÊS)
+function compsRange(de: string, ate: string): string[] {
+  if (!de || !ate) return []
+  let [y, m] = de.slice(0, 7).split('-').map(Number)
+  const [y2, m2] = ate.slice(0, 7).split('-').map(Number)
+  const out: string[] = []
+  while ((y < y2 || (y === y2 && m <= m2)) && out.length < 36) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++ } }
+  return out
 }
 
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
@@ -59,10 +71,11 @@ export function CmvTeoricoReal() {
     queryKey: ['cmv', tenantId, de, ate, cat], enabled: !!tenantId && !!de && !!ate,
     queryFn: async () => {
       const catEq = (q: any) => cat ? q.eq('categoria', cat) : q
-      const [fats, vendas, fichas, insumos, saldos, entradas, saidas] = await Promise.all([
+      const comps = compsRange(de, ate)
+      const [fats, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas] = await Promise.all([
         supabase.from('faturamento').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).then((r) => (r.data ?? []) as Fat[], () => [] as Fat[]),
         fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('ficha_id,produto_id,quantidade,valor_total,loja_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('id').range(f, t)).catch(() => [] as Venda[]),
-        fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
+        fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
         fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').range(f, t)),
         fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').range(f, t)),
         // entradas/saídas do HISTÓRICO todo até "ate" (não só do período): o custo médio na data
@@ -70,19 +83,32 @@ export function CmvTeoricoReal() {
         // por período do consumo REAL é feito depois, em JS (realMap).
         fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Mov[]),
         fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
+        // de-para: produtos (código PDV) + vendas do iComanda (por competência) p/ o consumo teórico
+        fetchAll<ProdMin>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)).catch(() => [] as ProdMin[]),
+        comps.length ? fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas').select('produto_id,qtd,faturado,loja_id,competencia').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)).catch(() => [] as IcoVenda[]) : Promise.resolve([] as IcoVenda[]),
       ])
       const ids = fichas.map((f) => f.id)
       const itensFicha = ids.length
         ? await fetchAll<ItemFicha>((f, t) => supabase.from('itens_ficha').select('ficha_id,insumo_id,quantidade_g').in('ficha_id', ids).order('id').range(f, t)).catch(() => [] as ItemFicha[])
         : []
-      return { fats, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas }
+      return { fats, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas, produtos, icomandaVendas }
     },
   })
 
   const calc = useMemo(() => {
     if (!data) return null
     const byLoja = <T extends { loja_id?: string | null }>(arr: T[]) => lojaId ? arr.filter((x) => (x.loja_id || null) === lojaId) : arr
-    const vendas = byLoja(data.vendas)
+    // de-para: código PDV do produto → produto → ficha; vendas do iComanda viram "venda" c/ ficha_id
+    const prodByCod = new Map<string, string>()
+    data.produtos.forEach((p) => { const c = (p.codigo_pdv ?? '').toString().trim(); if (c) prodByCod.set(c, p.id) })
+    const fichaIdByProduto = new Map<string, string>()
+    data.fichas.forEach((f) => { if (f.produto_id) fichaIdByProduto.set(f.produto_id, f.id) })
+    const icoVendas: Venda[] = data.icomandaVendas.map((v) => {
+      const pid = prodByCod.get(String(v.produto_id ?? '').trim())
+      const fid = pid ? fichaIdByProduto.get(pid) : undefined
+      return fid ? { ficha_id: fid, quantidade: Number(v.qtd) || 0, valor_total: Number(v.faturado) || 0, loja_id: (v.loja_id as string) ?? null } : null
+    }).filter(Boolean) as Venda[]
+    const vendas = byLoja([...data.vendas, ...icoVendas])
     const saidas = byLoja(data.saidas)
     const entradas = byLoja(data.entradas)
     const saldos = byLoja(data.saldos)
