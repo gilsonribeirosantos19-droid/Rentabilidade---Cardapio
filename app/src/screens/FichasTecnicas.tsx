@@ -100,6 +100,13 @@ export function FichasTecnicas() {
     if (um === 'un' || um === 'pct' || um === 'cx') return cb * qtdG
     return cb / ((ins.rendimento_pct || 100) / 100) / 1000 * qtdG
   }
+  // mesmo cálculo, mas PARA UMA LOJA específica — usado ao salvar um processado com custo POR LOJA.
+  const custoIngLoja = (ins: Insumo, qtdG: number, lojaId: string) => {
+    const cb = custoDoInsumo(ins.id, lojaId || null, costCtx)
+    const um = ins.unidade_medida || ins.unidade_compra || 'g'
+    if (um === 'un' || um === 'pct' || um === 'cx') return cb * qtdG
+    return cb / ((ins.rendimento_pct || 100) / 100) / 1000 * qtdG
+  }
   const custoProduto = (pid: string, seen: Set<string>): number => {
     if (seen.has(pid)) return 0
     seen.add(pid)
@@ -233,7 +240,7 @@ export function FichasTecnicas() {
         const pid = editing !== 'new' ? editing.produto_id : null
         if (pid && !ativos.some((p) => p.id === pid)) { const ex = produtos.find((p) => p.id === pid); if (ex) return [...ativos, ex] }
         return ativos
-      })()} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
+      })()} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} custoIngLoja={custoIngLoja} lojas={lojas} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
     </div>
   )
 }
