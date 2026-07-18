@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import './insumos.css'
 
 // Title Case pt-BR enquanto digita: 1ª letra de cada palavra maiúscula (igual à normalização do banco)
@@ -26,7 +27,7 @@ type Insumo = {
   observacao?: string | null
   ativo?: boolean
 }
-type Saldo = { insumo_id: string; custo_medio?: number; quantidade?: number }
+type Saldo = { insumo_id: string; custo_medio?: number; quantidade?: number; loja_id?: string }
 type Form = Partial<Insumo>
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -39,6 +40,7 @@ const novoForm = (): Form => ({ participa_cmv: 'sim', tipo_baixa: 'consumo', ati
 
 export function Insumos() {
   const { tenantId } = useAuth()
+  const { lojaId } = useLoja()   // custo respeita a loja global (Todas = maior, só visão geral)
   const qc = useQueryClient()
   const [tab, setTab] = useState<'cadastro' | 'produtos' | 'custos'>('produtos')
   const [cadForm, setCadForm] = useState<Form>(novoForm())
@@ -62,9 +64,14 @@ export function Insumos() {
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id, custo_medio, quantidade').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id, custo_medio, quantidade, loja_id').eq('tenant_id', tenantId).range(f, t)),
   })
-  const custoMedio = (id: string) => saldos.filter((s) => s.insumo_id === id && (s.custo_medio || 0) > 0).reduce((b, s) => Math.max(b, s.custo_medio || 0), 0)
+  // custo médio RESPEITANDO a loja global: loja selecionada → custo dela; "Todas" → maior (visão geral).
+  const custoMedio = (id: string) => {
+    const rows = saldos.filter((s) => s.insumo_id === id && (s.custo_medio || 0) > 0)
+    if (lojaId) { const s = rows.find((x) => x.loja_id === lojaId); return s ? (s.custo_medio || 0) : 0 }
+    return rows.reduce((b, s) => Math.max(b, s.custo_medio || 0), 0)
+  }
 
   // classificações do CADASTRO (Config › Geral) — pra grupos/famílias/subgrupos NOVOS aparecerem
   // no filtro/select mesmo antes de algum insumo usar (senão só apareciam os já em uso).
