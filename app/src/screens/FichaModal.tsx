@@ -17,12 +17,14 @@ const umOf = (i?: Ins) => (i ? i.unidade_medida || i.unidade_compra || 'g' : 'g'
 const isW = (um: string) => um === 'kg' || um === 'litro'
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantId, onClose, onSaved }: {
+export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIngLoja, lojas, tenantId, onClose, onSaved }: {
   ficha: FichaIn | null
   produtos: Prod[]
   insumos: Ins[]
   insMap: Record<string, Ins>
   custoIng: (ins: Ins, qtdG: number) => number
+  custoIngLoja: (ins: Ins, qtdG: number, lojaId: string) => number
+  lojas: { id: string; nome?: string }[]
   tenantId: string | null
   onClose: () => void
   onSaved: () => void
@@ -128,12 +130,20 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
       const r3 = await supabase.rpc('replace_itens_ficha', { p_ficha_id: fid, p_itens: rows })
       if (r3.error) throw r3.error
       if (vincId && rendReceitaG && rendReceitaG > 0) {
-        const tot = rows.reduce((a, r) => { const ins = insMap[r.insumo_id]; return a + (ins ? custoIng(ins, r.quantidade_g) : 0) }, 0)
-        const custoKg = tot / (rendReceitaG / 1000)
-        await supabase.from('insumos').update({ preco_compra: Number(custoKg.toFixed(4)) }).eq('id', vincId).eq('tenant_id', tenantId)
+        // custo do processado POR LOJA → grava em saldo_estoque (fonte da regra por-loja).
+        const agora = new Date().toISOString()
+        const linhas = (lojas || []).map((lj) => {
+          const tot = rows.reduce((a, r) => { const ins = insMap[r.insumo_id]; return a + (ins ? custoIngLoja(ins, r.quantidade_g, lj.id) : 0) }, 0)
+          return { tenant_id: tenantId, insumo_id: vincId, loja_id: lj.id, quantidade: 0, custo_medio: Number((tot / (rendReceitaG / 1000)).toFixed(6)), atualizado_em: agora }
+        }).filter((l) => l.custo_medio > 0)
+        if (linhas.length) { const { error } = await supabase.from('saldo_estoque').upsert(linhas, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (error) throw error }
+        // preço de compra = reserva GLOBAL (custo de referência da loja atual); NUNCA grava zero.
+        const totRef = rows.reduce((a, r) => { const ins = insMap[r.insumo_id]; return a + (ins ? custoIng(ins, r.quantidade_g) : 0) }, 0)
+        const custoKgRef = totRef / (rendReceitaG / 1000)
+        if (custoKgRef > 0) await supabase.from('insumos').update({ preco_compra: Number(custoKgRef.toFixed(4)) }).eq('id', vincId).eq('tenant_id', tenantId)
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['fichas'] }); qc.invalidateQueries({ queryKey: ['insumos'] }); onSaved() },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['fichas'] }); qc.invalidateQueries({ queryKey: ['insumos'] }); qc.invalidateQueries({ queryKey: ['saldos'] }); onSaved() },
     onError: (e: Error) => setErro(e.message),
   })
 

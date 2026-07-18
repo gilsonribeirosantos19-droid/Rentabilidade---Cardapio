@@ -76,7 +76,9 @@ export function Recalcular() {
       fetchAll<{ insumo_id: string; custo_medio?: number }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lId).range(f, t)),
       fetchAll<{ insumo_id: string; preco_unitario?: number }>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,preco_unitario').eq('tenant_id', tenantId).range(f, t)),
     ])
-    const ctx = { saldos: saldosLoja.map((s) => ({ ...s, loja_id: lId })), vinculos: vinc, insumos }
+    // strictLoja: mesma regra da Ficha (custo POR LOJA, sem custo de outra loja)
+    const ctx = { saldos: saldosLoja.map((s) => ({ ...s, loja_id: lId })), vinculos: vinc, insumos, strictLoja: true }
+    const agora = new Date().toISOString()
     let n = 0
     for (const f of fichas) {
       if (alvoFicha && f.insumo_vinculado_id !== alvoFicha) continue
@@ -84,7 +86,10 @@ export function Recalcular() {
       if (!rendG || !(f.itens_ficha || []).length) continue
       const custoTotal = custoFichaPorcao(f.itens_ficha || [], 1, lId, ctx)
       const custoKg = custoTotal / rendG * 1000
-      const { error } = await supabase.from('insumos').update({ preco_compra: +custoKg.toFixed(4) }).eq('id', f.insumo_vinculado_id!); if (error) throw error
+      // custo do processado POR LOJA → saldo_estoque (fonte da regra por-loja)
+      const { error } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: f.insumo_vinculado_id, loja_id: lId, quantidade: 0, custo_medio: +custoKg.toFixed(6), atualizado_em: agora }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (error) throw error
+      // preço de compra = reserva global; NUNCA grava zero (guarda-costas contra a zeragem)
+      if (custoKg > 0) { const { error: e2 } = await supabase.from('insumos').update({ preco_compra: +custoKg.toFixed(4) }).eq('id', f.insumo_vinculado_id!); if (e2) throw e2 }
       n++
     }
     return n
