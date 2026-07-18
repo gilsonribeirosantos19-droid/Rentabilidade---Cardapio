@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
+import { custoFichaPorcao } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import './faturamento.css'
@@ -13,6 +15,7 @@ import './faturamento.css'
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
 
 type Prod = { id: string; lojaId: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number; vCustoMedio: number }
+type FichaEng = { id: string; produto_id?: string; rendimento_porcoes?: number; itens_ficha?: { insumo_id: string; quantidade_g?: number }[] }
 
 const m2 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const q4 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
@@ -227,16 +230,33 @@ export function EngenhariaCardapio() {
     }
   }
 
+  // ── custo da ficha por produto (de-para código PDV → produto → ficha), POR LOJA ──
+  const { data: engProdutos = [] } = useQuery({ queryKey: ['eng-prod', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId); return (data ?? []) as { id: string; codigo_pdv?: string }[] } })
+  const { data: engFichas = [] } = useQuery({ queryKey: ['eng-fichas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<FichaEng>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,rendimento_porcoes,itens_ficha(insumo_id,quantidade_g)').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: engInsumos = [] } = useQuery({ queryKey: ['eng-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }>((f, t) => supabase.from('insumos').select('id,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: engSaldos = [] } = useQuery({ queryKey: ['eng-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ insumo_id: string; custo_medio?: number; loja_id?: string }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)) })
+  const prodByCod = useMemo(() => { const m = new Map<string, string>(); engProdutos.forEach((p) => { const c = (p.codigo_pdv || '').trim(); if (c) m.set(c, p.id) }); return m }, [engProdutos])
+  const fichaByProduto = useMemo(() => { const m = new Map<string, FichaEng>(); engFichas.forEach((f) => { if (f.produto_id) m.set(f.produto_id, f) }); return m }, [engFichas])
+  const engCostCtx = useMemo(() => ({ saldos: engSaldos, insumos: engInsumos, strictLoja: true }), [engSaldos, engInsumos])
+  // preenche o custo unitário da ficha em cada linha (por loja) → CMV Teórico/%Custo/%Margem calculam sozinhos
+  const rowsComCusto = useMemo(() => rows.map((v) => {
+    const pid = prodByCod.get(String(v.codigo).trim())
+    const ficha = pid ? fichaByProduto.get(pid) : undefined
+    if (!ficha || !(ficha.itens_ficha || []).length) return v
+    const custoUnit = custoFichaPorcao(ficha.itens_ficha || [], ficha.rendimento_porcoes || 1, v.lojaId || null, engCostCtx)
+    return custoUnit > 0 ? { ...v, vCustoMedio: custoUnit } : v
+  }), [rows, prodByCod, fichaByProduto, engCostCtx])
+
   const preLista = useMemo(() => {
     const q = norm(busca.trim())
     const filtraLoja = lojaSet.size > 0 && !allSel
-    return rows.filter((v) => {
+    return rowsComCusto.filter((v) => {
       if (!incluirZerado && (v.vBruta - v.vDesc) === 0) return false
       if (filtraLoja && !lojaSet.has(v.lojaId)) return false
       if (q && !norm([v.item, v.grupo, v.codigo].join(' ')).includes(q)) return false
       return true
     })
-  }, [rows, busca, lojaSet, allSel, incluirZerado])
+  }, [rowsComCusto, busca, lojaSet, allSel, incluirZerado])
   const lista = useMemo(() => preLista.filter((v) => Object.entries(colFilters).every(([k, set]) => set.has(cellVal(v, COLS.find((c) => c.key === k)!)))), [preLista, colFilters])
 
   const distinct = (k: ColKey) => { const c = COLS.find((x) => x.key === k)!; return [...new Set(preLista.map((v) => cellVal(v, c)))].sort() }
