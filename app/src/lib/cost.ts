@@ -6,7 +6,9 @@ export type Saldo = { insumo_id: string; loja_id?: string | null; custo_medio?: 
 export type Vinculo = { insumo_id: string; preco_unitario?: number }
 export type InsumoLike = { id: string; preco_compra?: number; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
 export type FichaItem = { insumo_id: string; quantidade_g?: number }
-export type CostCtx = { entradas?: Mov[]; saidas?: Mov[]; saldos?: Saldo[]; vinculos?: Vinculo[]; insumos?: InsumoLike[]; dataLimite?: string | null }
+// strictLoja: modo "custo POR LOJA" (usado na Ficha) — NÃO usa custo de outra loja nem vínculo,
+// cai direto no preco_compra do insumo. Sem a flag = comportamento antigo (compat, não muda nada).
+export type CostCtx = { entradas?: Mov[]; saidas?: Mov[]; saldos?: Saldo[]; vinculos?: Vinculo[]; insumos?: InsumoLike[]; dataLimite?: string | null; strictLoja?: boolean }
 
 // Média móvel ponderada: novo custo médio ao ENTRAR `qEnt` unidades a `custoEnt`
 // (mesma regra do custoMedioNaData/recalc do banco). Fonte única p/ Entradas manual e NF-e.
@@ -56,10 +58,14 @@ export function custoDoInsumo(insumoId: string, lojaId: string | null, ctx: Cost
   const saldos = ctx.saldos || [], vinculos = ctx.vinculos || [], insumos = ctx.insumos || []
   const salLoja = lojaId && saldos.find((s) => s.insumo_id === insumoId && s.loja_id === lojaId && +(s.custo_medio || 0) > 0)
   if (salLoja) return +(salLoja.custo_medio || 0)
-  const salAny = saldos.find((s) => s.insumo_id === insumoId && +(s.custo_medio || 0) > 0)
-  if (salAny) return +(salAny.custo_medio || 0)
-  const vin = vinculos.find((v) => v.insumo_id === insumoId && +(v.preco_unitario || 0) > 0)
-  if (vin) return +(vin.preco_unitario || 0)
+  // modo padrão (compat): cai p/ QUALQUER loja + vínculo de fornecedor.
+  // strictLoja (Ficha): pula esses dois → vai direto ao preco_compra (regra "sem custo de outra loja").
+  if (!ctx.strictLoja) {
+    const salAny = saldos.find((s) => s.insumo_id === insumoId && +(s.custo_medio || 0) > 0)
+    if (salAny) return +(salAny.custo_medio || 0)
+    const vin = vinculos.find((v) => v.insumo_id === insumoId && +(v.preco_unitario || 0) > 0)
+    if (vin) return +(vin.preco_unitario || 0)
+  }
   const ins = insumos.find((i) => i.id === insumoId)
   return ins && +(ins.preco_compra || 0) > 0 ? +(ins.preco_compra || 0) : 0
 }

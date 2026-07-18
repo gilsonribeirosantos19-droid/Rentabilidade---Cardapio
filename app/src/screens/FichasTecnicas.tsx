@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { custoDoInsumo } from '../lib/cost'
 import { FichaModal } from './FichaModal'
 import './fichas.css'
 
@@ -86,25 +87,13 @@ export function FichasTecnicas() {
     const ci = f.insumo_vinculado_id ? insMap[f.insumo_vinculado_id]?.codigo_interno : undefined
     return ci != null ? String(ci).padStart(6, '0') : '—'
   }
-  // custo médio POR LOJA (não mistura entre lojas) — a ficha reflete a loja selecionada
-  const cmByLoja = useMemo(() => {
-    const m: Record<string, Record<string, number>> = {}
-    saldos.forEach((s) => { if (s.loja_id) (m[s.insumo_id] ||= {})[s.loja_id] = s.custo_medio || 0 })
-    return m
-  }, [saldos])
   const fichaByProduto = useMemo(() => Object.fromEntries(fichas.filter((f) => f.produto_id).map((f) => [f.produto_id!, f])), [fichas])
 
-  // ── custo ── custo médio da LOJA (Ponta Negra p/ ficha); se a loja não tem custo médio do insumo,
-  //   usa o PREÇO DE COMPRA cadastrado (custo base do insumo) de reserva; senão ZERO.
-  //   NÃO usa média/custo geral ENTRE LOJAS (regra do dono). O preco_compra é do próprio insumo,
-  //   não é média entre lojas — é o que dá custo pros crus sem entrada na loja e pros processados.
-  const custoBase = (ins: Insumo) => {
-    const porLoja = cmByLoja[ins.id] || {}
-    const reserva = ins.preco_compra || 0
-    if (lojaCusto) { const c = porLoja[lojaCusto] || 0; return c > 0 ? c : reserva }
-    const mx = Math.max(0, ...Object.values(porLoja))   // fallback (sem loja definida): maior entre as lojas
-    return mx > 0 ? mx : reserva
-  }
+  // ── custo ── FONTE ÚNICA: usa `custoDoInsumo` (lib/cost.ts) em modo ESTRITO POR LOJA.
+  //   Regra: custo médio da loja (Ponta Negra p/ ficha) → preço de compra do insumo → zero.
+  //   NÃO usa custo de outra loja / média geral (o strictLoja garante isso). Mesma função do resto do app.
+  const costCtx = useMemo(() => ({ saldos, insumos, strictLoja: true }), [saldos, insumos])
+  const custoBase = (ins: Insumo) => custoDoInsumo(ins.id, lojaCusto || null, costCtx)
   const custoIngrediente = (ins: Insumo, qtdG: number) => {
     const cb = custoBase(ins)
     const um = ins.unidade_medida || ins.unidade_compra || 'g'
