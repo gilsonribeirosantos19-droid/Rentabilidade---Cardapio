@@ -30,13 +30,17 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, tenantI
   const qc = useQueryClient()
   const [nome, setNome] = useState(ficha?.nome || '')
   const [categoria, setCategoria] = useState(ficha?.categoria || '')
-  const [subj, setSubj] = useState<{ kind: 'produto' | 'insumo'; id: string } | null>(
-    // produto → assunto é o produto; senão, se for processado (tem insumo vinculado) → assunto é esse insumo.
-    // Sem isto, ao reabrir um processado o seletor vinha VAZIO (o assunto-insumo não é gravado à parte).
-    ficha?.produto_id ? { kind: 'produto', id: ficha.produto_id }
-      : ficha?.insumo_vinculado_id ? { kind: 'insumo', id: ficha.insumo_vinculado_id }
-        : null
-  )
+  const [subj, setSubj] = useState<{ kind: 'produto' | 'insumo'; id: string } | null>(() => {
+    if (ficha?.produto_id) return { kind: 'produto', id: ficha.produto_id }
+    // processado: o assunto NÃO é gravado à parte. Recupera pelo NOME da ficha (o item escolhido no
+    // seletor) → assim o "Produto/Insumo" ao editar bate com o nome da lista. Só cai no insumo do
+    // custo (insumo_vinculado_id) se não achar nenhum insumo com esse nome (compatibilidade).
+    const nm = (ficha?.nome || '').trim().toLowerCase()
+    const m = nm ? insumos.find((i) => (i.nome || '').trim().toLowerCase() === nm) : undefined
+    if (m) return { kind: 'insumo', id: m.id }
+    if (ficha?.insumo_vinculado_id) return { kind: 'insumo', id: ficha.insumo_vinculado_id }
+    return null
+  })
   const [porcoes, setPorcoes] = useState(String(ficha?.rendimento_porcoes || 1))
   const [preco, setPreco] = useState(ficha?.preco_venda != null ? String(ficha.preco_venda) : '')
   const [precoDel, setPrecoDel] = useState(ficha?.preco_delivery != null ? String(ficha.preco_delivery) : '')
