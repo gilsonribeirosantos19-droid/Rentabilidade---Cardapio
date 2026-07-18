@@ -55,6 +55,8 @@ const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${Str
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const diasEntre = (de: string, ate: string) => Math.max(1, Math.round((new Date(ate + 'T12:00:00').getTime() - new Date(de + 'T12:00:00').getTime()) / 86400000) + 1)
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
+// os dados de produto do iComanda são por MÊS (competência) → o filtro é por mês, não por dia.
+const ultimoDiaMes = (ym: string) => { if (!ym) return ''; const [y, m] = ym.split('-').map(Number); return new Date(y, m, 0).toLocaleDateString('en-CA') }
 
 // competências 'YYYY-MM' tocadas pelo intervalo (os dados do iComanda são por MÊS)
 function compsBetween(de: string, ate: string): string[] {
@@ -298,8 +300,8 @@ export function EngenhariaCardapio() {
         <div className="ds-field" style={{ minWidth: 130 }}><label>Período</label>
           <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
-        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
-        <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>Mês (de)</label><input type="month" className="field" value={de ? de.slice(0, 7) : ''} onChange={(e) => { setDe(e.target.value ? e.target.value + '-01' : ''); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>até</label><input type="month" className="field" value={ate ? ate.slice(0, 7) : ''} onChange={(e) => { setAte(ultimoDiaMes(e.target.value)); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-field"><label>&nbsp;</label>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 34, fontSize: 13, color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             <input type="checkbox" checked={incluirZerado} onChange={(e) => setIncluirZerado(e.target.checked)} style={{ width: 15, height: 15, accentColor: '#f97316' }} />
