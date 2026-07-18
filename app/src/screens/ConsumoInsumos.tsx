@@ -17,7 +17,7 @@ const CMP_VAL: Record<string, string> = { 'Nenhuma comparação': 'nenhuma', 'Pe
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; categoria?: string; preco_compra?: number; ativo?: boolean }
 type Saida = { insumo_id: string; quantidade?: number; criado_em?: string }
-type Saldo = { insumo_id: string; custo_medio?: number }
+type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
 type Forn = { id: string; nome: string }
 // 1º dia do mês SEGUINTE a 'YYYY-MM' — pra filtrar com "< proxMes" (evita datas inválidas tipo 2026-04-31)
 const proxMes1 = (comp: string) => { const [y, m] = comp.split('-').map(Number); return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 10) }
@@ -69,7 +69,7 @@ export function ConsumoInsumos() {
   const meses = useMemo(() => mesesEntre(periodo.de, periodo.ate), [periodo.de, periodo.ate])
 
   const { data: insumos = [] } = useQuery({ queryKey: ['ci-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,categoria,preco_compra,ativo').eq('tenant_id', tenantId).order('nome').range(f, t)) })
-  const { data: saldos = [] } = useQuery({ queryKey: ['ci-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: saldos = [] } = useQuery({ queryKey: ['ci-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)) })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['ci-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Forn[] } })
   const { data: vincs = [] } = useQuery({ queryKey: ['ci-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).range(f, t)) })
   const { data: saidas = [], isLoading } = useQuery({
@@ -81,7 +81,13 @@ export function ConsumoInsumos() {
     queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lt('criado_em', proxMes1(cmpP!.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
   })
 
-  const custo = (insId: string) => { const s = saldos.find((x) => x.insumo_id === insId); if (s && s.custo_medio) return Number(s.custo_medio) || 0; const i = insumos.find((x) => x.id === insId); return Number(i?.preco_compra) || 0 }
+  // custo RESPEITANDO a loja global: loja selecionada → custo dela; "Todas" → maior; senão preço de compra.
+  const custo = (insId: string) => {
+    const rows = saldos.filter((x) => x.insumo_id === insId && (x.custo_medio || 0) > 0)
+    const cm = lojaId ? (rows.find((x) => x.loja_id === lojaId)?.custo_medio || 0) : rows.reduce((b, x) => Math.max(b, x.custo_medio || 0), 0)
+    if (cm > 0) return Number(cm)
+    const i = insumos.find((x) => x.id === insId); return Number(i?.preco_compra) || 0
+  }
   const cats = useMemo(() => [...new Set(insumos.map((i) => i.categoria).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'pt-BR')), [insumos])
 
   const { rows, resumo } = useMemo(() => {
