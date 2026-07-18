@@ -213,8 +213,8 @@ export function FichasTecnicas() {
                 return (
                   <tr key={f.id} onClick={() => setVer(f)}>
                     <td className="mono" style={{ color: '#64748b', fontSize: 12 }}>{fichaCodigo(f)}</td>
-                    <td style={{ textTransform: 'lowercase' }}>{f.nome}</td>
-                    <td style={{ color: '#475569', textTransform: 'lowercase' }}>{f.categoria || '—'}</td>
+                    <td>{f.nome}</td>
+                    <td style={{ color: '#475569' }}>{f.categoria || '—'}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{f.rendimento_porcoes || 1} un</td>
                     <td className="r mono">{custo > 0 ? brl(custo) : '—'}</td>
                     <td className="r mono">{pv > 0 ? brl(pv) : '—'}</td>
