@@ -89,6 +89,7 @@ export const MODULES: Module[] = [
       { label: 'Vendas por Dia', key: 'pdv/vendas-dia' },
       { label: 'Curva ABC', key: 'pdv/abc' },
       { label: 'Engenharia de Cardápio', key: 'pdv/engenharia' },
+      { label: 'Conferência do Dia', key: 'pdv/conferencia' },
       { label: 'Recebimento de Vendas', key: 'pdv/importar' },
     ],
   },

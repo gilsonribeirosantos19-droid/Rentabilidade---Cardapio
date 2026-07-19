@@ -91,6 +91,8 @@ serve(async (req) => {
     const competencia = String((body as Record<string, unknown>).competencia || '')
     const dDe = String((body as Record<string, unknown>).data_ini || '')
     const dAte = String((body as Record<string, unknown>).data_fim || '')
+    const modo = String((body as Record<string, unknown>).modo || '')
+    const dataDia = String((body as Record<string, unknown>).data || '')
     if (!tenant_id) throw new Error('Informe tenant_id.')
 
     const sb = createClient(SB_URL, SB_SERVICE)
@@ -115,6 +117,23 @@ serve(async (req) => {
     const { data: lojas, error: eL } = await sb.from('lojas').select('id,nome').eq('tenant_id', tenant_id).eq('ativo', true)
     if (eL) throw eL
     if (!lojas?.length) throw new Error('Nenhuma loja ativa neste tenant.')
+
+    // ===== MODO CONFERÊNCIA (produtos vendidos de UM DIA, AO VIVO — NÃO grava nada) =====
+    // body {modo:'conferencia', data:'YYYY-MM-DD'} → retorna, por loja, os produtos daquele dia.
+    if (modo === 'conferencia') {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dataDia)) throw new Error('Informe data (YYYY-MM-DD) para a conferência.')
+      const filiaisDia = asArray(await ico('filiais.listar', { data_ini: dataDia, data_fim: dataDia })) as { id: number; nome: string; faturado?: number; qtd_caixas?: number }[]
+      const { mapa, naoCasadas } = matchLojas(lojas, filiaisDia)
+      const out: unknown[] = []
+      for (const { loja, filial } of mapa) {
+        const prods = asArray(await ico('produtos.top_vendidos', { data_ini: dataDia, data_fim: dataDia, filial_id: String(filial.id), limit: '1000', ordenar_por: 'faturado' })) as any[]
+        out.push({
+          loja_id: loja.id, loja: loja.nome, filial: filial.nome, faturado: Number(filial.faturado) || 0,
+          produtos: prods.filter((p) => p && p.produto_id != null).map((p) => ({ produto_id: Number(p.produto_id), nome: String(p.nome || '').trim(), grupo: String(p.grupo || '').trim(), qtd: Number(p.qtd) || 0, faturado: Number(p.faturado) || 0 })),
+        })
+      }
+      return json({ status: 'ok', modo: 'conferencia', data: dataDia, lojas: out, lojas_nao_casadas: naoCasadas })
+    }
 
     // ===== MODO DIÁRIO (portão "Recebimento de Vendas"): body {data_ini, data_fim} em YYYY-MM-DD =====
     // Puxa dia a dia o FATURAMENTO por loja e grava em icomanda_recebimento com status.
