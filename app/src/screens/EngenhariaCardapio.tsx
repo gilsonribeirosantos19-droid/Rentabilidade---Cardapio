@@ -182,7 +182,7 @@ export function EngenhariaCardapio() {
   }
 
   // ── custo da ficha por produto (de-para código PDV → produto → ficha), POR LOJA ──
-  const { data: engProdutos = [] } = useQuery({ queryKey: ['eng-prod', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId); return (data ?? []) as { id: string; codigo_pdv?: string }[] } })
+  const { data: engProdutos = [] } = useQuery({ queryKey: ['eng-prod', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; codigo_pdv?: string }>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).range(f, t)) })
   const { data: engFichas = [] } = useQuery({ queryKey: ['eng-fichas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<FichaEng>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,rendimento_porcoes,itens_ficha(insumo_id,quantidade_g)').eq('tenant_id', tenantId).range(f, t)) })
   const { data: engInsumos = [] } = useQuery({ queryKey: ['eng-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }>((f, t) => supabase.from('insumos').select('id,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId).range(f, t)) })
   const { data: engSaldos = [] } = useQuery({ queryKey: ['eng-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ insumo_id: string; custo_medio?: number; loja_id?: string }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)) })

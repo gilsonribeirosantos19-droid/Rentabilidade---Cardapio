@@ -59,10 +59,8 @@ export function FichasTecnicas() {
   })
   const { data: produtos = [] } = useQuery({
     queryKey: ['produtos-min', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data } = await supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo,codigo_pdv').eq('tenant_id', tenantId).order('nome')
-      return (data ?? []) as ProdutoMin[]
-    },
+    // fetchAll: vence o teto de 1000 do PostgREST (senão produtos somem e o código da ficha fica "—")
+    queryFn: () => fetchAll<ProdutoMin>((f, t) => supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo,codigo_pdv').eq('tenant_id', tenantId).order('nome').range(f, t)),
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
