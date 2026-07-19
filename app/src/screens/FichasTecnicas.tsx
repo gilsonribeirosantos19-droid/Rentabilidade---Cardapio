@@ -232,7 +232,7 @@ export function FichasTecnicas() {
       <div className="fic-foot">{filtrada.length} fichas</div>
 
       {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
-        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
+        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} produtoById={produtoById} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
       ) })()}
       {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={(() => {
         // só produtos ATIVOS no seletor; mantém o produto da ficha em edição (mesmo inativo)
@@ -245,7 +245,7 @@ export function FichasTecnicas() {
   )
 }
 
-function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, params, tenantId, onClose, onEdit }: {
+function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, produtoById, params, tenantId, onClose, onEdit }: {
   ficha: Ficha
   m: { custo: number; pv: number; cmv: number | null; margem: number | null }
   st: { t: string; bg: string; c: string }
@@ -253,6 +253,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
   custoItem: (it: Item) => number
   custoBase: (ins: Insumo) => number
   processadoIds: Set<string>
+  produtoById: Record<string, ProdutoMin>
   params: PrecoParams
   tenantId?: string | null
   onClose: () => void
@@ -334,6 +335,23 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
               <tbody>
                 {itens.length === 0 ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
                   : itens.map((it, idx) => {
+                    if (it.produto_id) {   // meia porção / combo: aponta pra outro produto (× multiplicador), não é insumo
+                      const p = produtoById[it.produto_id]
+                      const mult = Number(it.quantidade_g) || 0
+                      const rotuloQtd = mult === 0.5 ? '½ porção' : `${mult.toLocaleString('pt-BR')}× porção`
+                      return (
+                        <tr key={it.id || idx}>
+                          <td style={{ fontWeight: 600 }}>{p?.nome || '(produto)'}</td>
+                          <td style={{ color: '#64748b', fontSize: 11.5 }}>Produto</td>
+                          <td className="r">—</td>
+                          <td className="r">—</td>
+                          <td className="r">{rotuloQtd}</td>
+                          <td className="r">—</td>
+                          <td className="r" style={{ color: '#94a3b8' }}>—</td>
+                          <td className="r">{brl(custoItem(it))}</td>
+                        </tr>
+                      )
+                    }
                     const ins = insMap[it.insumo_id || '']
                     const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g'
                     const isUnit = um === 'un' || um === 'pct' || um === 'cx'
@@ -344,7 +362,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     const tipoItem = ins ? (processadoIds.has(ins.id) ? 'Produto Intermediário' : 'Matéria Prima') : '—'
                     return (
                       <tr key={it.id || idx}>
-                        <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
+                        <td style={{ fontWeight: 600 }}>{ins?.nome || '—'}</td>
                         <td style={{ color: '#64748b', fontSize: 11.5 }}>{tipoItem}</td>
                         <td className="r">{rendPct}%</td>
                         <td className="r">{brl(preco)}</td>
@@ -356,7 +374,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     )
                   })}
               </tbody>
-              <tfoot><tr><td colSpan={4}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r" /><td className="r" /><td className="r">{brl(custoTot)}</td></tr></tfoot>
+              <tfoot><tr><td colSpan={4}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (it.produto_id ? 0 : Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r" /><td className="r" /><td className="r">{brl(custoTot)}</td></tr></tfoot>
             </table>
             </div>
             <div className="dp-sec">Resumo financeiro</div>
@@ -372,13 +390,26 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
               {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente cadastrado</td></tr>
                 : itens.map((it, idx) => {
                   const ins = insMap[it.insumo_id || '']
+                  if (it.produto_id) {   // meia porção / combo
+                    const p = produtoById[it.produto_id]
+                    const mult = Number(it.quantidade_g) || 0
+                    return (
+                      <tr key={it.id || idx}>
+                        <td style={{ fontWeight: 600 }}>{p?.nome || '(produto)'}</td>
+                        <td style={{ color: '#64748b' }}>porção</td>
+                        <td className="r">{mult === 0.5 ? '½' : mult.toLocaleString('pt-BR') + '×'}</td>
+                        <td className="r">—</td>
+                        <td className="r" style={{ color: '#00b890' }}>{brl(custoItem(it))}</td>
+                      </tr>
+                    )
+                  }
                   const um = ins ? ins.unidade_medida || ins.unidade_compra || 'g' : 'g'
                   const isUnit = um === 'un' || um === 'pct' || um === 'cx'
                   const cb = ins ? custoBase(ins) : 0
                   const ckg = ins ? (isUnit ? cb : cb / ((ins.rendimento_pct || 100) / 100)) : 0
                   return (
                     <tr key={it.id || idx}>
-                      <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
+                      <td style={{ fontWeight: 600 }}>{ins?.nome || '—'}</td>
                       <td style={{ color: '#64748b' }}>{um}</td>
                       <td className="r">{qtdFmt(it, ins)}</td>
                       <td className="r">{brl(ckg)}</td>
