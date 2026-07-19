@@ -42,7 +42,6 @@ import { FaturamentoVendas } from '../screens/FaturamentoVendas'
 import { VendasDiario } from '../screens/VendasDiario'
 import { MonitorVendas } from '../screens/MonitorVendas'
 import { EngenhariaCardapio } from '../screens/EngenhariaCardapio'
-import { ConferenciaVendas } from '../screens/ConferenciaVendas'
 import { CurvaAbcVendas } from '../screens/CurvaAbcVendas'
 import { SugestaoCompra } from '../screens/SugestaoCompra'
 import { ConfigGeral } from '../screens/ConfigGeral'
@@ -112,7 +111,6 @@ function ScreenFor({ k, label }: { k: string; label: string }) {
   if (k === 'pdv/vendas-dia') return <VendasDiario />
   if (k === 'pdv/importar') return <MonitorVendas />
   if (k === 'pdv/engenharia') return <EngenhariaCardapio />
-  if (k === 'pdv/conferencia') return <ConferenciaVendas />
   if (k === 'pdv/abc') return <CurvaAbcVendas />
   return <Placeholder label={label} />
 }
@@ -172,7 +170,7 @@ export function Shell() {
           </div>
           <div className="tr">
             {/* telas com filtro de loja próprio ou de config do tenant escondem o seletor global de loja */}
-            {!['pdv/importar', 'pdv/faturamento', 'pdv/vendas-dia', 'pdv/engenharia', 'pdv/conferencia', 'pdv/abc', 'compras/sugestao', 'pcp/setores', 'pcp/itens-porc', 'pcp/calendario', 'pcp/atividades'].includes(active) && !active.startsWith('config/') && (
+            {!['pdv/importar', 'pdv/faturamento', 'pdv/vendas-dia', 'pdv/engenharia', 'pdv/abc', 'compras/sugestao', 'pcp/setores', 'pcp/itens-porc', 'pcp/calendario', 'pcp/atividades'].includes(active) && !active.startsWith('config/') && (
               <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
                 <option value="">Todas as lojas</option>
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
