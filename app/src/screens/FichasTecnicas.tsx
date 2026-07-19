@@ -328,8 +328,8 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
               <thead><tr>
                 <th>Ingrediente</th><th>Tipo do item</th>
                 <th className="r">% Aprov.</th><th className="r">Preço (R$)</th>
-                <th className="r">Fator aplic.</th><th className="r">Qtd baixa est.</th>
-                <th className="r">Qtd. utilizada</th><th className="r">Custo (R$)</th>
+                <th className="r">Fator aplic.</th><th className="r">Qtd. utilizada</th>
+                <th className="r">Qtd baixa est.</th><th className="r">Custo (R$)</th>
               </tr></thead>
               <tbody>
                 {itens.length === 0 ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
@@ -349,14 +349,14 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                         <td className="r">{rendPct}%</td>
                         <td className="r">{brl(preco)}</td>
                         <td className="r">{fator.toFixed(3)}</td>
-                        <td className="r" style={{ color: '#94a3b8' }}>{fmtQ(netQ * fator, um)}</td>
                         <td className="r">{fmtQ(netQ, um)}</td>
+                        <td className="r" style={{ color: '#94a3b8' }}>{fmtQ(netQ * fator, um)}</td>
                         <td className="r">{brl(custoItem(it))}</td>
                       </tr>
                     )
                   })}
               </tbody>
-              <tfoot><tr><td colSpan={6}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r">{brl(custoTot)}</td></tr></tfoot>
+              <tfoot><tr><td colSpan={5}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r" /><td className="r">{brl(custoTot)}</td></tr></tfoot>
             </table>
             </div>
             <div className="dp-sec">Resumo financeiro</div>
