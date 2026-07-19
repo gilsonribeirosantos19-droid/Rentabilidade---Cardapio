@@ -57,6 +57,7 @@ export function Produtos() {
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
   const [fSit, setFSit] = useState('ativos')
+  const [incluirZerado, setIncluirZerado] = useState(false)   // por padrão esconde produtos R$0
   const [editing, setEditing] = useState<Form | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2600) }
@@ -87,12 +88,13 @@ export function Produtos() {
     return lista.filter((p) => {
       if (q && !norm([p.nome, p.codigo_pdv].filter(Boolean).join(' ')).includes(q)) return false
       if (fGrupo && (p.grupo || p.categoria || '') !== fGrupo) return false
+      if (!incluirZerado && !(Number(p.preco_venda) > 0)) return false   // esconde R$0 (padrão)
       const inativo = sitEfetiva(p) === 'inativo'
       if (fSit === 'ativos' && inativo) return false      // esconde inativos (padrão)
       if (fSit === 'inativos' && !inativo) return false    // só inativos
       return true
     })
-  }, [lista, busca, fGrupo, fSit])
+  }, [lista, busca, fGrupo, fSit, incluirZerado])
 
   const saveMut = useMutation({
     mutationFn: async (f: Form) => {
@@ -137,6 +139,10 @@ export function Produtos() {
         </div>
         <div className="pr-grupo"><SearchSelect value={fGrupo} onChange={setFGrupo} options={opts.grupos} placeholder="Todos os grupos" /></div>
         <div className="pr-grupo" style={{ minWidth: 150 }}><SearchSelect value={SIT_TO_LBL[fSit]} onChange={(l) => setFSit(SIT_TO_VAL[l] || 'ativos')} options={SIT_OPTS} placeholder="Situação" /></div>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <input type="checkbox" checked={incluirZerado} onChange={(e) => setIncluirZerado(e.target.checked)} style={{ width: 15, height: 15, accentColor: '#f97316' }} />
+          Incluir itens com valor zerado
+        </label>
         <button className="pr-novo" onClick={() => setEditing(novo())}>+ Novo Produto</button>
       </div>
 
