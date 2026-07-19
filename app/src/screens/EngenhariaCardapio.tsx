@@ -9,7 +9,7 @@ import { downloadCsv } from '../lib/csv'
 import './faturamento.css'
 
 // Engenharia de Cardápio — análise POR PRODUTO (modelo Everest).
-// VENDAS reais do iComanda (icomanda_vendas), respeitando o portão (só mês sem erro).
+// VENDAS reais do iComanda POR DIA (icomanda_vendas_dia) → filtra por dia/período de verdade.
 // As colunas de CUSTO/CMV/Margem dependem da FICHA (de-para produto↔ficha) — enquanto
 // o produto não tem ficha, elas aparecem como "—" (aguardando ficha) e o faturamento entra normal.
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
@@ -55,19 +55,6 @@ const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${Str
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const diasEntre = (de: string, ate: string) => Math.max(1, Math.round((new Date(ate + 'T12:00:00').getTime() - new Date(de + 'T12:00:00').getTime()) / 86400000) + 1)
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
-// os dados de produto do iComanda são por MÊS (competência) → o filtro é por mês, não por dia.
-const ultimoDiaMes = (ym: string) => { if (!ym) return ''; const [y, m] = ym.split('-').map(Number); return new Date(y, m, 0).toLocaleDateString('en-CA') }
-
-// competências 'YYYY-MM' tocadas pelo intervalo (os dados do iComanda são por MÊS)
-function compsBetween(de: string, ate: string): string[] {
-  if (!de || !ate) return []
-  const [y1, m1] = de.slice(0, 7).split('-').map(Number)
-  const [y2, m2] = ate.slice(0, 7).split('-').map(Number)
-  const out: string[] = []
-  let y = y1, m = m1
-  while ((y < y2 || (y === y2 && m <= m2)) && out.length < 24) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++ } }
-  return out
-}
 // colunas que dependem do custo da ficha (mostram "—" enquanto o produto não tem ficha)
 const COST_KEYS = new Set<ColKey>(['vCustoMedio', 'cmvTeo', 'cmvAjust', 'pctCusto', 'pctMargem'])
 
@@ -93,7 +80,6 @@ export function EngenhariaCardapio() {
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [msg, setMsg] = useState('')
-  const [bloqueados, setBloqueados] = useState<string[]>([])
   const lojaNome = useMemo(() => { const m: Record<string, string> = {}; lojas.forEach((l) => { m[l.id] = l.nome }); return m }, [lojas])
   const buildRows = (data: Record<string, unknown>[]): Prod[] => {
     const map = new Map<string, Prod>()
@@ -105,45 +91,20 @@ export function EngenhariaCardapio() {
     }
     return [...map.values()]
   }
-  // produtos + portão: uma loja×mês só entra se recebida e SEM erro (regra do portão)
-  async function fetchVendas(comps: string[]): Promise<Prod[]> {
-    const gateDe = comps[0] + '-01'
-    const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
-    const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
-    const [vendas, gate] = await Promise.all([
-      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)),
-      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_recebimento').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
-    ])
-    const gk = new Map<string, { ok: boolean; erro: boolean }>()
-    for (const r of gate) {
-      const k = `${r.loja_id}|${String(r.data).slice(0, 7)}`
-      const g = gk.get(k) || { ok: false, erro: false }
-      if (r.status === 'processado') g.ok = true
-      if (r.status === 'com_erro') g.erro = true
-      gk.set(k, g)
-    }
-    // liberado = mês RECEBIDO no portão (≥1 dia processado). 1 dia com erro não bloqueia o mês de produtos.
-    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok }
-    const bloq = new Set<string>()
-    const okVendas = vendas.filter((r) => {
-      if (liberado(String(r.loja_id), String(r.competencia))) return true
-      bloq.add(`${lojaNome[r.loja_id as string] || r.loja_id} · ${r.competencia}`)
-      return false
-    })
-    setBloqueados([...bloq])
-    return buildRows(okVendas)
+  // produtos vendidos POR DIA (icomanda_vendas_dia) — filtra pelo intervalo de datas escolhido.
+  async function fetchVendas(d1: string, d2: string): Promise<Prod[]> {
+    const vendas = await fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_vendas_dia').select('*').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).range(f, t))
+    return buildRows(vendas)
   }
-  async function carregar(comps: string[]) {
-    try { setRows(await fetchVendas(comps)) }
+  async function carregar(d1: string, d2: string) {
+    try { setRows(await fetchVendas(d1, d2)) }
     catch (e) { setMsg('Erro ao carregar vendas: ' + (e as Error).message); setRows([]) }
   }
   useEffect(() => {
-    if (!tenantId) { setRows([]); return }
-    const comps = compsBetween(de, ate)
-    if (!comps.length) { setRows([]); return }
+    if (!tenantId || !de || !ate) { setRows([]); return }
     let alive = true
     setLoading(true)
-    fetchVendas(comps)
+    fetchVendas(de, ate)
       .then((r) => { if (alive) setRows(r) })
       .catch((e) => { if (alive) { setMsg('Erro ao carregar vendas: ' + (e as Error).message); setRows([]) } })
       .finally(() => { if (alive) setLoading(false) })
@@ -151,26 +112,14 @@ export function EngenhariaCardapio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, de, ate, lojaNome])
   async function puxar() {
-    if (!tenantId || syncing) return
-    const comps = compsBetween(de, ate)
-    if (!comps.length) { setMsg('Selecione um período.'); return }
-    const gateDe = comps[0] + '-01'
-    const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
-    const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
-    setSyncing(true); setMsg('Puxando do iComanda… (portão + produtos, pode levar ~1 min)')
+    if (!tenantId || syncing || !de || !ate) return
+    setSyncing(true); setMsg('Puxando do iComanda… (dia a dia — portão + produtos, pode levar ~1 min)')
     try {
-      const d1 = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: gateDe, data_fim: gateAte } })
-      if (d1.error) throw d1.error
-      if (d1.data?.status !== 'ok') throw new Error(d1.data?.mensagem || 'erro no portão')
-      let prods = 0
-      for (const competencia of comps) {
-        const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, competencia } })
-        if (error) throw error
-        if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro nos produtos')
-        prods += data.produtos_gravados
-      }
-      setMsg(`✓ ${d1.data.processados} dias processados · ${prods} produtos.`)
-      await carregar(comps)
+      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate } })
+      if (error) throw error
+      if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
+      setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}.`)
+      await carregar(de, ate)
     } catch (e) {
       setMsg('Erro ao puxar: ' + (e as Error).message)
     } finally { setSyncing(false) }
@@ -300,8 +249,8 @@ export function EngenhariaCardapio() {
         <div className="ds-field" style={{ minWidth: 130 }}><label>Período</label>
           <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
         </div>
-        <div className="ds-field"><label>Mês (de)</label><input type="month" className="field" value={de ? de.slice(0, 7) : ''} onChange={(e) => { setDe(e.target.value ? e.target.value + '-01' : ''); setPeriodoSel('Personalizado') }} /></div>
-        <div className="ds-field"><label>até</label><input type="month" className="field" value={ate ? ate.slice(0, 7) : ''} onChange={(e) => { setAte(ultimoDiaMes(e.target.value)); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
+        <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-field"><label>&nbsp;</label>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 34, fontSize: 13, color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             <input type="checkbox" checked={incluirZerado} onChange={(e) => setIncluirZerado(e.target.checked)} style={{ width: 15, height: 15, accentColor: '#f97316' }} />
@@ -319,8 +268,7 @@ export function EngenhariaCardapio() {
         {msg
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando vendas…</span>
-          : <span className="mock-tag" style={{ background: '#fff7ed', color: '#9a3412', borderColor: 'transparent' }}>● Vendas reais — custo/margem em "—" até cadastrar a ficha do produto</span>}
-        {bloqueados.length > 0 && <span className="mock-tag" style={{ background: '#fef2f2', color: '#b91c1c', borderColor: 'transparent' }} title={bloqueados.join(', ')}>⛔ {bloqueados.length} loja×mês ainda não recebido(s) no portão</span>}
+          : <span className="mock-tag" style={{ background: '#fff7ed', color: '#9a3412', borderColor: 'transparent' }}>● Vendas por dia — custo/margem em "—" até cadastrar a ficha do produto</span>}
       </div>
 
       <div className="grid-wrap">
