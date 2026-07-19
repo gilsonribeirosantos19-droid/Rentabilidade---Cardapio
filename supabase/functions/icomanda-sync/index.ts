@@ -199,6 +199,14 @@ serve(async (req) => {
               por_canal: porCanal,
               status: 'processado', erros: null, data_integracao: now, atualizado_em: now,
             })
+            // PRODUTOS vendidos desse dia/loja → tabela por-dia (fundação p/ produção por uso diário).
+            // Best-effort: se a chamada falhar, só pula (NÃO bloqueia o portão nem apaga o que já tinha).
+            try {
+              const prods = asArray(await ico('produtos.top_vendidos', { data_ini: dia, data_fim: dia, filial_id: String(filial.id), limit: '1000', ordenar_por: 'faturado' })) as any[]
+              const pr = prods.filter((p) => p && p.produto_id != null).map((p) => ({ tenant_id, loja_id: loja.id, data: dia, produto_id: Number(p.produto_id), produto_nome: String(p.nome || '').trim() || null, grupo: String(p.grupo || '').trim() || null, qtd: Number(p.qtd) || 0, faturado: Number(p.faturado) || 0, atualizado_em: now }))
+              await sb.from('icomanda_vendas_dia').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('data', dia)
+              for (let i = 0; i < pr.length; i += 500) { const { error: ev } = await sb.from('icomanda_vendas_dia').insert(pr.slice(i, i + 500)); if (ev) throw ev }
+            } catch (ev) { console.error('vendas_dia', loja.id, dia, (ev as Error).message) }
           }
           const { error } = await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
           if (error) throw error
