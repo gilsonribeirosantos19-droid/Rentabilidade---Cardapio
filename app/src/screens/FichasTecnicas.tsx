@@ -338,7 +338,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     if (it.produto_id) {   // meia porção / combo: aponta pra outro produto (× multiplicador), não é insumo
                       const p = produtoById[it.produto_id]
                       const mult = Number(it.quantidade_g) || 0
-                      const rotuloQtd = mult === 0.5 ? '½ porção' : `${mult.toLocaleString('pt-BR')}× porção`
+                      const rotuloQtd = mult.toLocaleString('pt-BR')   // ex.: 0,5
                       return (
                         <tr key={it.id || idx}>
                           <td style={{ fontWeight: 600 }}>{p?.nome || '(produto)'}</td>
@@ -397,7 +397,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                       <tr key={it.id || idx}>
                         <td style={{ fontWeight: 600 }}>{p?.nome || '(produto)'}</td>
                         <td style={{ color: '#64748b' }}>porção</td>
-                        <td className="r">{mult === 0.5 ? '½' : mult.toLocaleString('pt-BR') + '×'}</td>
+                        <td className="r">{mult.toLocaleString('pt-BR')}</td>
                         <td className="r">—</td>
                         <td className="r" style={{ color: '#00b890' }}>{brl(custoItem(it))}</td>
                       </tr>
