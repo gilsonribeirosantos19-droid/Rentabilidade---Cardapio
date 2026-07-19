@@ -127,7 +127,7 @@
 
 /* ===== painel lateral de visualização (dockado, inline na página) ===== */
 .fic-screen .dp-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.18); z-index: 100; display: flex; justify-content: flex-end; }
-.fic-screen .dp { width: 640px; max-width: 96vw; background: #fff; height: 100%; box-shadow: -12px 0 40px rgba(15,23,42,.2); display: flex; flex-direction: column; }
+.fic-screen .dp { width: 900px; max-width: 96vw; background: #fff; height: 100%; box-shadow: -12px 0 40px rgba(15,23,42,.2); display: flex; flex-direction: column; }
 .fic-screen .dp-hdr { padding: 22px 26px 16px; display: flex; align-items: center; gap: 11px; }
 .fic-screen .dp-hdr h2 { font-size: 19px; font-weight: 800; color: #0f172a; }
 .fic-screen .dp-badge { font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; }
@@ -145,10 +145,10 @@
 .fic-screen .dp-close:hover { background: #f8fafc; }
 .fic-screen .dp-sec { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .07em; margin: 24px 0 11px; }
 .fic-screen .dp-sec:first-child { margin-top: 2px; }
-.fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.fic-screen .vg-tbl th { text-align: left; padding: 8px 6px; font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; white-space: nowrap; }
+.fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+.fic-screen .vg-tbl th { text-align: left; padding: 5px 6px; font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; white-space: nowrap; }
 .fic-screen .vg-tbl th.r { text-align: right; }
-.fic-screen .vg-tbl td { padding: 11px 6px; font-size: 12.5px; border-bottom: 1px solid #f5f7fa; color: #0f172a; }
+.fic-screen .vg-tbl td { padding: 4px 6px; font-size: 10.5px; border-bottom: 1px solid #f5f7fa; color: #0f172a; white-space: nowrap; }
 .fic-screen .vg-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
 .fic-screen .vg-tbl tfoot td { border-top: 2px solid #f1f5f9; border-bottom: none; font-weight: 700; color: #00b890; }
 .fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
