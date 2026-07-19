@@ -86,6 +86,8 @@ export function FichasTecnicas() {
     return ci != null ? String(ci).padStart(6, '0') : '—'
   }
   const fichaByProduto = useMemo(() => Object.fromEntries(fichas.filter((f) => f.produto_id).map((f) => [f.produto_id!, f])), [fichas])
+  // insumos que SÃO processados (têm ficha vinculada) → "Produto Intermediário"; o resto = "Matéria Prima"
+  const processadoIds = useMemo(() => new Set(fichas.filter((f) => f.insumo_vinculado_id).map((f) => f.insumo_vinculado_id as string)), [fichas])
 
   // ── custo ── FONTE ÚNICA: usa `custoDoInsumo` (lib/cost.ts) em modo ESTRITO POR LOJA.
   //   Regra: custo médio da loja (Ponta Negra p/ ficha) → preço de compra do insumo → zero.
@@ -230,7 +232,7 @@ export function FichasTecnicas() {
       <div className="fic-foot">{filtrada.length} fichas</div>
 
       {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
-        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
+        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
       ) })()}
       {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={(() => {
         // só produtos ATIVOS no seletor; mantém o produto da ficha em edição (mesmo inativo)
@@ -243,13 +245,14 @@ export function FichasTecnicas() {
   )
 }
 
-function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId, onClose, onEdit }: {
+function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, params, tenantId, onClose, onEdit }: {
   ficha: Ficha
   m: { custo: number; pv: number; cmv: number | null; margem: number | null }
   st: { t: string; bg: string; c: string }
   insMap: Record<string, Insumo>
   custoItem: (it: Item) => number
   custoBase: (ins: Insumo) => number
+  processadoIds: Set<string>
   params: PrecoParams
   tenantId?: string | null
   onClose: () => void
@@ -286,6 +289,8 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
     const q = Number(it.quantidade_g) || 0
     return um === 'kg' || um === 'litro' ? (q / 1000).toFixed(3) + ' ' + um : q + ' ' + um
   }
+  // formata uma quantidade (em g p/ kg/litro, ou unidades) respeitando a unidade do insumo
+  const fmtQ = (q: number, um: string) => (um === 'kg' || um === 'litro') ? (q / 1000).toFixed(3) + ' ' + um : (+q.toFixed(3)) + ' ' + um
 
   const finCards = (
     <div className="fin-grid">
@@ -318,27 +323,42 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, params, tenantId
         {tab === 'resumo' && (
           <>
             <div className="dp-sec">Ingredientes (rendimento: {ficha.rendimento_porcoes || 1} un)</div>
-            <table className="vg-tbl">
-              <thead><tr><th>Ingrediente</th><th>Categoria</th><th className="r">Qtd. utilizada</th><th className="r">Custo (R$)</th><th className="r">% do custo</th></tr></thead>
+            <div style={{ overflowX: 'auto' }}>
+            <table className="vg-tbl" style={{ minWidth: 760 }}>
+              <thead><tr>
+                <th>Ingrediente</th><th>Tipo do item</th>
+                <th className="r">% Aprov.</th><th className="r">Preço (R$)</th>
+                <th className="r">Fator aplic.</th><th className="r">Qtd baixa est.</th>
+                <th className="r">Qtd. utilizada</th><th className="r">Custo (R$)</th>
+              </tr></thead>
               <tbody>
-                {itens.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
+                {itens.length === 0 ? <tr><td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: 16 }}>Nenhum ingrediente</td></tr>
                   : itens.map((it, idx) => {
                     const ins = insMap[it.insumo_id || '']
-                    const sub = custoItem(it)
-                    const pct = custoTot > 0 ? (sub / custoTot) * 100 : 0
+                    const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g'
+                    const isUnit = um === 'un' || um === 'pct' || um === 'cx'
+                    const rendPct = ins ? (Number(ins.rendimento_pct) || 100) : 100
+                    const fator = isUnit ? 1 : (rendPct > 0 ? 100 / rendPct : 1)   // 100 ÷ aproveitamento
+                    const preco = ins ? custoBase(ins) : 0                          // preço real do insumo (R$/un)
+                    const netQ = Number(it.quantidade_g) || 0
+                    const tipoItem = ins ? (processadoIds.has(ins.id) ? 'Produto Intermediário' : 'Matéria Prima') : '—'
                     return (
                       <tr key={it.id || idx}>
                         <td style={{ fontWeight: 600 }}>{ins?.nome || (it.produto_id ? '(produto)' : '—')}</td>
-                        <td style={{ color: '#64748b', fontSize: 11.5 }}>{ins?.categoria || '—'}</td>
-                        <td className="r">{qtdFmt(it, ins)}</td>
-                        <td className="r">{brl(sub)}</td>
-                        <td className="r" style={{ color: '#94a3b8' }}>{pct.toFixed(1)}%</td>
+                        <td style={{ color: '#64748b', fontSize: 11.5 }}>{tipoItem}</td>
+                        <td className="r">{rendPct}%</td>
+                        <td className="r">{brl(preco)}</td>
+                        <td className="r">{fator.toFixed(3)}</td>
+                        <td className="r" style={{ color: '#94a3b8' }}>{fmtQ(netQ * fator, um)}</td>
+                        <td className="r">{fmtQ(netQ, um)}</td>
+                        <td className="r">{brl(custoItem(it))}</td>
                       </tr>
                     )
                   })}
               </tbody>
-              <tfoot><tr><td colSpan={2}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r">{brl(custoTot)}</td><td className="r">100%</td></tr></tfoot>
+              <tfoot><tr><td colSpan={6}>TOTAL</td><td className="r">{(() => { const t = itens.reduce((s, it) => s + (Number(it.quantidade_g) || 0), 0); return t >= 1000 ? (t / 1000).toFixed(3) + ' kg' : t + ' g' })()}</td><td className="r">{brl(custoTot)}</td></tr></tfoot>
             </table>
+            </div>
             <div className="dp-sec">Resumo financeiro</div>
             {finCards}
             {ficha.observacoes && <><div className="dp-sec">Observações</div><div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>{ficha.observacoes}</div></>}
