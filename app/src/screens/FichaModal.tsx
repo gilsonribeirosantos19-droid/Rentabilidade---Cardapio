@@ -5,30 +5,32 @@ import { SearchSelect } from '../components/SearchSelect'
 
 type Ins = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
 type Prod = { id: string; nome?: string; grupo?: string; categoria?: string }
-type ItemRow = { insumo_id: string; qtd: string }
+type ItemRow = { insumo_id?: string; produto_id?: string; qtd: string }   // insumo OU produto (meia porção / combo)
 type FichaIn = {
   id?: string; nome?: string; categoria?: string; produto_id?: string | null; insumo_vinculado_id?: string | null
   rendimento_porcoes?: number; preco_venda?: number | null; preco_delivery?: number | null; status?: string
   rendimento_receita_g?: number | null; modo_preparo?: string | null; observacoes?: string | null
-  itens_ficha?: { insumo_id?: string | null; quantidade_g?: number }[]
+  itens_ficha?: { insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number }[]
 }
 
 const umOf = (i?: Ins) => (i ? i.unidade_medida || i.unidade_compra || 'g' : 'g')
 const isW = (um: string) => um === 'kg' || um === 'litro'
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIngLoja, lojas, tenantId, onClose, onSaved }: {
+export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIngLoja, custoProduto, lojas, tenantId, onClose, onSaved }: {
   ficha: FichaIn | null
   produtos: Prod[]
   insumos: Ins[]
   insMap: Record<string, Ins>
   custoIng: (ins: Ins, qtdG: number) => number
   custoIngLoja: (ins: Ins, qtdG: number, lojaId: string) => number
+  custoProduto: (produtoId: string) => number   // custo de 1 porção do produto (p/ meia porção / combo)
   lojas: { id: string; nome?: string }[]
   tenantId: string | null
   onClose: () => void
   onSaved: () => void
 }) {
+  const prodById = useMemo(() => Object.fromEntries(produtos.map((p) => [p.id, p])) as Record<string, Prod>, [produtos])
   const qc = useQueryClient()
   const [nome, setNome] = useState(ficha?.nome || '')
   const [categoria, setCategoria] = useState(ficha?.categoria || '')
@@ -55,16 +57,29 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
   const [aba, setAba] = useState<'preparo' | 'obs'>('preparo')
   const [erro, setErro] = useState('')
   const [itens, setItens] = useState<ItemRow[]>(() =>
-    (ficha?.itens_ficha || []).filter((it) => it.insumo_id).map((it) => {
+    (ficha?.itens_ficha || []).filter((it) => it.insumo_id || it.produto_id).map((it) => {
+      if (it.produto_id) return { produto_id: it.produto_id, qtd: String(Number(it.quantidade_g) || 0) }   // meia porção: qtd = multiplicador (ex.: 0,5)
       const ins = insMap[it.insumo_id!]; const um = umOf(ins); const g = Number(it.quantidade_g) || 0
       return { insumo_id: it.insumo_id!, qtd: String(isW(um) ? g / 1000 : g) }
     })
   )
 
-  // linha de adicionar (buscar insumo + quantidade → Adicionar)
-  const [addIns, setAddIns] = useState('')
+  // custo de 1 linha de item (insumo em qtd, ou produto × multiplicador)
+  const custoRow = (r: ItemRow) => {
+    if (r.produto_id) return custoProduto(r.produto_id) * (Number(r.qtd) || 0)
+    const ins = insMap[r.insumo_id || '']; if (!ins) return 0
+    const qtdG = isW(umOf(ins)) ? (Number(r.qtd) || 0) * 1000 : (Number(r.qtd) || 0)
+    return custoIng(ins, qtdG)
+  }
+
+  // linha de adicionar (buscar insumo OU produto + quantidade → Adicionar)
+  const [addSel, setAddSel] = useState<{ kind: 'insumo' | 'produto'; id: string } | null>(null)
   const [addQtd, setAddQtd] = useState('')
-  const adicionar = () => { if (!addIns || !(Number(addQtd) > 0)) return; setItens((a) => [...a, { insumo_id: addIns, qtd: addQtd }]); setAddIns(''); setAddQtd('') }
+  const adicionar = () => {
+    if (!addSel || !(Number(addQtd) > 0)) return
+    setItens((a) => [...a, addSel.kind === 'produto' ? { produto_id: addSel.id, qtd: addQtd } : { insumo_id: addSel.id, qtd: addQtd }])
+    setAddSel(null); setAddQtd('')
+  }
 
   const ehProc = subj?.kind === 'insumo'
 
@@ -86,17 +101,27 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
   const insNames = useMemo(() => insumos.map((i) => i.nome || ''), [insumos])
   const vincName = vincId ? insMap[vincId]?.nome || '' : ''
 
+  // busca da linha de adicionar: insumos (nome puro) + produtos (com sufixo " — produto")
+  const addPickMap = useMemo(() => {
+    const m = new Map<string, { kind: 'insumo' | 'produto'; id: string }>()
+    const uniq = (b: string) => { let l = b, n = 2; while (m.has(l)) l = `${b} (${n++})`; return l }
+    insumos.forEach((i) => m.set(uniq(i.nome || '(sem nome)'), { kind: 'insumo', id: i.id }))
+    produtos.forEach((p) => m.set(uniq((p.nome || '(sem nome)') + ' — produto'), { kind: 'produto', id: p.id }))
+    return m
+  }, [insumos, produtos])
+  const addLabel = useMemo(() => {
+    if (!addSel) return ''
+    for (const [label, v] of addPickMap) if (v.kind === addSel.kind && v.id === addSel.id) return label
+    return ''
+  }, [addSel, addPickMap])
+
   const onPick = (label: string) => {
     const v = pickMap.get(label)
     if (!v) { setSubj(null); setNome(''); return }
     setSubj({ kind: v.kind, id: v.id }); setNome(v.nome); setCategoria(v.categoria)
   }
 
-  const total = itens.reduce((a, r) => {
-    const ins = insMap[r.insumo_id]; if (!ins) return a
-    const qtdG = isW(umOf(ins)) ? (Number(r.qtd) || 0) * 1000 : (Number(r.qtd) || 0)
-    return a + custoIng(ins, qtdG)
-  }, 0)
+  const total = itens.reduce((a, r) => a + custoRow(r), 0)
   const por = Number(porcoes) > 0 ? Number(porcoes) : 1
   const rendReceitaG = vincId && rendVal ? (rendUnid === 'kg' || rendUnid === 'L' ? Number(rendVal) * 1000 : Number(rendVal)) : null
   const custoUnit = vincId && rendReceitaG ? total / (rendReceitaG / 1000) : total / por
@@ -121,9 +146,10 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
         if (r2.error) throw r2.error
         fid = (r2.data as { id: string }).id
       }
-      const rows = itens.filter((r) => r.insumo_id && Number(r.qtd) > 0).map((r, i) => {
-        const ins = insMap[r.insumo_id]; const qtdG = isW(umOf(ins)) ? Number(r.qtd) * 1000 : Number(r.qtd)
-        return { insumo_id: r.insumo_id, quantidade_g: qtdG, ordem: i }
+      const rows = itens.filter((r) => (r.insumo_id || r.produto_id) && Number(r.qtd) > 0).map((r, i) => {
+        if (r.produto_id) return { insumo_id: null as string | null, produto_id: r.produto_id as string | null, quantidade_g: Number(r.qtd), ordem: i }   // meia porção: guarda o multiplicador
+        const ins = insMap[r.insumo_id!]; const qtdG = isW(umOf(ins)) ? Number(r.qtd) * 1000 : Number(r.qtd)
+        return { insumo_id: r.insumo_id! as string | null, produto_id: null as string | null, quantidade_g: qtdG, ordem: i }
       })
       // troca os ingredientes de forma ATÔMICA (delete + insert numa transação no banco):
       // se falhar, a ficha NÃO fica sem ingredientes (antes o delete/insert era separado)
@@ -133,12 +159,12 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
         // custo do processado POR LOJA → grava em saldo_estoque (fonte da regra por-loja).
         const agora = new Date().toISOString()
         const linhas = (lojas || []).map((lj) => {
-          const tot = rows.reduce((a, r) => { const ins = insMap[r.insumo_id]; return a + (ins ? custoIngLoja(ins, r.quantidade_g, lj.id) : 0) }, 0)
+          const tot = rows.reduce((a, r) => { const ins = r.insumo_id ? insMap[r.insumo_id] : undefined; return a + (ins ? custoIngLoja(ins, r.quantidade_g, lj.id) : 0) }, 0)
           return { tenant_id: tenantId, insumo_id: vincId, loja_id: lj.id, quantidade: 0, custo_medio: Number((tot / (rendReceitaG / 1000)).toFixed(6)), atualizado_em: agora }
         }).filter((l) => l.custo_medio > 0)
         if (linhas.length) { const { error } = await supabase.from('saldo_estoque').upsert(linhas, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (error) throw error }
         // preço de compra = reserva GLOBAL (custo de referência da loja atual); NUNCA grava zero.
-        const totRef = rows.reduce((a, r) => { const ins = insMap[r.insumo_id]; return a + (ins ? custoIng(ins, r.quantidade_g) : 0) }, 0)
+        const totRef = rows.reduce((a, r) => { const ins = r.insumo_id ? insMap[r.insumo_id] : undefined; return a + (ins ? custoIng(ins, r.quantidade_g) : 0) }, 0)
         const custoKgRef = totRef / (rendReceitaG / 1000)
         if (custoKgRef > 0) await supabase.from('insumos').update({ preco_compra: Number(custoKgRef.toFixed(4)) }).eq('id', vincId).eq('tenant_id', tenantId)
       }
@@ -187,17 +213,33 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
 
           <h3 style={{ fontSize: 15, fontWeight: 700, marginTop: 18, marginBottom: 12 }}>Ingredientes</h3>
           <div className="ing-add">
-            <div className="ing-add-s"><SearchSelect value={addIns ? (insMap[addIns]?.nome || '') : ''} options={insNames} placeholder="Buscar insumo (código ou descrição)" onChange={(nm) => setAddIns(insByName.get(nm) || '')} /></div>
-            <div className="ing-add-f"><label>UM</label><div className="ing-um">{addIns ? umOf(insMap[addIns]) : '—'}</div></div>
-            <div className="ing-add-f"><label>Quantidade</label><input className="ing-qtd" type="number" step="any" value={addQtd} onChange={(e) => setAddQtd(e.target.value)} placeholder="Ex.: 0,100" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionar() } }} /></div>
-            <button className="ing-add-btn" onClick={adicionar} disabled={!addIns || !(Number(addQtd) > 0)}>Adicionar</button>
+            <div className="ing-add-s"><SearchSelect value={addLabel} options={[...addPickMap.keys()]} placeholder="Buscar insumo ou produto (p/ meia porção)" onChange={(lb) => setAddSel(addPickMap.get(lb) || null)} /></div>
+            <div className="ing-add-f"><label>UM</label><div className="ing-um">{addSel ? (addSel.kind === 'produto' ? 'porção' : umOf(insMap[addSel.id])) : '—'}</div></div>
+            <div className="ing-add-f"><label>Quantidade</label><input className="ing-qtd" type="number" step="any" value={addQtd} onChange={(e) => setAddQtd(e.target.value)} placeholder={addSel?.kind === 'produto' ? 'Ex.: 0,5' : 'Ex.: 0,100'} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionar() } }} /></div>
+            <button className="ing-add-btn" onClick={adicionar} disabled={!addSel || !(Number(addQtd) > 0)}>Adicionar</button>
           </div>
           <div className="ing-tbl">
-            <div className="ing-thead"><div>Insumo</div><div>UM</div><div className="r">Quantidade</div><div className="r">% Aprov.</div><div className="r">Custo Unitário</div><div className="r">Custo Total</div><div className="c">Ações</div></div>
-            {itens.length === 0 ? <div className="ing2-empty">Nenhum ingrediente — busque acima e clique em "Adicionar".</div>
+            <div className="ing-thead"><div>Item</div><div>UM</div><div className="r">Quantidade</div><div className="r">% Aprov.</div><div className="r">Custo Unitário</div><div className="r">Custo Total</div><div className="c">Ações</div></div>
+            {itens.length === 0 ? <div className="ing2-empty">Nenhum item — busque acima e clique em "Adicionar".</div>
               : <>
                 {itens.map((r, idx) => {
-                  const ins = insMap[r.insumo_id]; const um = umOf(ins)
+                  if (r.produto_id) {   // meia porção / combo: aponta pra um produto (× multiplicador)
+                    const p = prodById[r.produto_id]
+                    const ct = custoRow(r)
+                    const cu = custoProduto(r.produto_id)
+                    return (
+                      <div className="ing-trow" key={idx}>
+                        <div className="ins">{p?.nome || '(produto)'}</div>
+                        <div className="um">porção</div>
+                        <div className="r">{r.qtd || '0'}</div>
+                        <div className="r muted">—</div>
+                        <div className="r mono">{brl(cu)}</div>
+                        <div className="r bold mono">{brl(ct)}</div>
+                        <div className="c"><button className="ing2-del" title="Remover" onClick={() => setItens((a) => a.filter((_, i) => i !== idx))}>🗑</button></div>
+                      </div>
+                    )
+                  }
+                  const ins = insMap[r.insumo_id || '']; const um = umOf(ins)
                   const qtdG = isW(um) ? (Number(r.qtd) || 0) * 1000 : (Number(r.qtd) || 0)
                   const ct = ins ? custoIng(ins, qtdG) : 0
                   const cu = ins ? custoIng(ins, isW(um) ? 1000 : 1) : 0

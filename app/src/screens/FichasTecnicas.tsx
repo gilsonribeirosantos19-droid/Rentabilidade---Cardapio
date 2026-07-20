@@ -240,7 +240,7 @@ export function FichasTecnicas() {
         const pid = editing !== 'new' ? editing.produto_id : null
         if (pid && !ativos.some((p) => p.id === pid)) { const ex = produtos.find((p) => p.id === pid); if (ex) return [...ativos, ex] }
         return ativos
-      })()} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} custoIngLoja={custoIngLoja} lojas={lojas} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
+      })()} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} custoIngLoja={custoIngLoja} custoProduto={(pid: string) => { const f = fichaByProduto[pid]; return f ? custoFicha(f) : 0 }} lojas={lojas} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
     </div>
   )
 }
