@@ -9,8 +9,8 @@ import { downloadCsv } from '../lib/csv'
 import './cmv.css'
 
 type Insumo = { id: string; nome?: string; categoria?: string; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
-type Ficha = { id: string; rendimento_porcoes?: number; produto_id?: string | null }
-type ItemFicha = { ficha_id: string; insumo_id: string; quantidade_g?: number }
+type Ficha = { id: string; rendimento_porcoes?: number; produto_id?: string | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null }
+type ItemFicha = { ficha_id: string; insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number }
 type Venda = { ficha_id?: string; produto_id?: string; quantidade?: number; valor_total?: number; loja_id?: string | null }
 type ProdMin = { id: string; codigo_pdv?: string | null }
 type IcoVenda = { produto_id?: number | string; qtd?: number; faturado?: number; loja_id?: string | null }
@@ -76,7 +76,7 @@ export function CmvTeoricoReal() {
       const [fats, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas] = await Promise.all([
         supabase.from('faturamento').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).then((r) => (r.data ?? []) as Fat[], () => [] as Fat[]),
         fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('ficha_id,produto_id,quantidade,valor_total,loja_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('id').range(f, t)).catch(() => [] as Venda[]),
-        fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
+        fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id,insumo_vinculado_id,rendimento_receita_g').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
         fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').range(f, t)),
         fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').range(f, t)),
         // entradas/saídas do HISTÓRICO todo até "ate" (não só do período): o custo médio na data
@@ -90,7 +90,7 @@ export function CmvTeoricoReal() {
       ])
       const ids = fichas.map((f) => f.id)
       const itensFicha = ids.length
-        ? await fetchAll<ItemFicha>((f, t) => supabase.from('itens_ficha').select('ficha_id,insumo_id,quantidade_g').in('ficha_id', ids).order('id').range(f, t)).catch(() => [] as ItemFicha[])
+        ? await fetchAll<ItemFicha>((f, t) => supabase.from('itens_ficha').select('ficha_id,insumo_id,produto_id,quantidade_g').in('ficha_id', ids).order('id').range(f, t)).catch(() => [] as ItemFicha[])
         : []
       return { fats, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas, produtos, icomandaVendas }
     },
@@ -121,12 +121,38 @@ export function CmvTeoricoReal() {
     const vendaFat = vendas.reduce((s, v) => s + (v.valor_total || 0), 0)
     const totalFat = fatSum > 0 ? fatSum : vendaFat
 
+    // mapas p/ EXPLOSÃO recursiva: processado tem ficha própria (insumo_vinculado_id) e
+    // meia porção/combo aponta pra outro produto (produto_id). Descemos até o insumo CRU —
+    // é o que bate com o consumo real do estoque (que é sempre insumo cru).
+    const fichaById = new Map<string, Ficha>()
+    fichas.forEach((f) => fichaById.set(f.id, f))
+    const itensByFicha = new Map<string, ItemFicha[]>()
+    itensFicha.forEach((it) => { const a = itensByFicha.get(it.ficha_id); if (a) a.push(it); else itensByFicha.set(it.ficha_id, [it]) })
+    // insumo processado -> ficha que o produz (+ rendimento em g da receita)
+    const fichaByInsumoVinc = new Map<string, { fid: string; rendG: number }>()
+    fichas.forEach((f) => { if (f.insumo_vinculado_id && Number(f.rendimento_receita_g) > 0) fichaByInsumoVinc.set(f.insumo_vinculado_id, { fid: f.id, rendG: Number(f.rendimento_receita_g) }) })
+
     const teoMap: Record<string, number> = {}
+    // acumula consumo de insumo CRU (g) de uma ficha, com um fator de escala.
+    // 'seen' clonado por ramo evita loop infinito (ficha que se referencia em ciclo).
+    const explode = (fid: string, factor: number, seen: Set<string>) => {
+      if (!factor || seen.has(fid)) return
+      const s2 = new Set(seen); s2.add(fid)
+      for (const it of itensByFicha.get(fid) || []) {
+        if (it.produto_id) {                                                // meia porção / combo → prato base × multiplicador
+          const bf = fichaIdByProduto.get(it.produto_id)
+          if (bf) explode(bf, factor * (it.quantidade_g || 0) / (fichaById.get(bf)?.rendimento_porcoes || 1), s2)
+          continue
+        }
+        const proc = it.insumo_id ? fichaByInsumoVinc.get(it.insumo_id) : undefined
+        if (proc) { explode(proc.fid, factor * (it.quantidade_g || 0) / proc.rendG, s2); continue }  // processado → abre a ficha dele
+        if (it.insumo_id) teoMap[it.insumo_id] = (teoMap[it.insumo_id] || 0) + factor * (it.quantidade_g || 0)  // insumo cru
+      }
+    }
     vendas.forEach((v) => {
       const fid = v.ficha_id || v.produto_id; if (!fid) return
-      const f = fichas.find((x) => x.id === fid); if (!f) return
-      const por = f.rendimento_porcoes || 1
-      itensFicha.filter((i) => i.ficha_id === fid).forEach((it) => { teoMap[it.insumo_id] = (teoMap[it.insumo_id] || 0) + (it.quantidade_g || 0) / por * (v.quantidade || 0) })
+      const f = fichaById.get(fid); if (!f) return
+      explode(fid, (v.quantidade || 0) / (f.rendimento_porcoes || 1), new Set())
     })
     // consumo REAL = saídas de consumo/produção DENTRO do período (as saídas vêm do histórico
     // todo p/ o custo médio; aqui recorta só [de, ate]).
