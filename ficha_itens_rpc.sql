@@ -10,7 +10,8 @@
 -- é do tenant do usuário (get_my_tenant_id), então não dá pra mexer em ficha
 -- de outro tenant mesmo que itens_ficha não tenha RLS própria.
 --
--- p_itens: jsonb array [{ "insumo_id": uuid, "quantidade_g": num, "ordem": int }]
+-- p_itens: jsonb array [{ "insumo_id": uuid, "produto_id": uuid, "quantidade_g": num, "ordem": int }]
+--          cada item tem insumo_id OU produto_id (produto = meia porção / combo).
 -- Rodar este arquivo inteiro no Supabase -> SQL Editor.
 -- ============================================================================
 
@@ -30,13 +31,15 @@ begin
 
   delete from public.itens_ficha where ficha_id = p_ficha_id;
 
-  insert into public.itens_ficha (ficha_id, insumo_id, quantidade_g, ordem)
+  insert into public.itens_ficha (ficha_id, insumo_id, produto_id, quantidade_g, ordem)
   select p_ficha_id,
          nullif(e->>'insumo_id', '')::uuid,
+         nullif(e->>'produto_id', '')::uuid,
          coalesce((e->>'quantidade_g')::numeric, 0),
          coalesce((e->>'ordem')::int, 0)
   from jsonb_array_elements(coalesce(p_itens, '[]'::jsonb)) as e
-  where nullif(e->>'insumo_id', '') is not null;
+  where nullif(e->>'insumo_id', '') is not null
+     or nullif(e->>'produto_id', '') is not null;
 end;
 $$;
 
