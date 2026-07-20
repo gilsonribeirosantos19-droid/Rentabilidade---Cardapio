@@ -33,16 +33,6 @@ function periodoRange(tipo: string): { de: string; ate: string } | null {
   return null
 }
 
-// competências 'YYYY-MM' tocadas pelo intervalo (as vendas do iComanda são por MÊS)
-function compsRange(de: string, ate: string): string[] {
-  if (!de || !ate) return []
-  let [y, m] = de.slice(0, 7).split('-').map(Number)
-  const [y2, m2] = ate.slice(0, 7).split('-').map(Number)
-  const out: string[] = []
-  while ((y < y2 || (y === y2 && m <= m2)) && out.length < 36) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++ } }
-  return out
-}
-
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 const PERIODO_TIPO: Record<string, string> = { 'Personalizado': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
 
@@ -72,7 +62,6 @@ export function CmvTeoricoReal() {
     queryKey: ['cmv', tenantId, de, ate, cat], enabled: !!tenantId && !!de && !!ate,
     queryFn: async () => {
       const catEq = (q: any) => cat ? q.eq('categoria', cat) : q
-      const comps = compsRange(de, ate)
       const [fats, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas] = await Promise.all([
         supabase.from('faturamento').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).then((r) => (r.data ?? []) as Fat[], () => [] as Fat[]),
         fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('ficha_id,produto_id,quantidade,valor_total,loja_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('id').range(f, t)).catch(() => [] as Venda[]),
@@ -84,9 +73,10 @@ export function CmvTeoricoReal() {
         // por período do consumo REAL é feito depois, em JS (realMap).
         fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Mov[]),
         fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
-        // de-para: produtos (código PDV) + vendas do iComanda (por competência) p/ o consumo teórico
+        // de-para: produtos (código PDV) + vendas do iComanda POR DIA (icomanda_vendas_dia) p/ o consumo teórico
+        // (antes era a tabela mensal por competência; agora usa a diária, respeitando o intervalo exato De→Até)
         fetchAll<ProdMin>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)).catch(() => [] as ProdMin[]),
-        comps.length ? fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas').select('produto_id,qtd,faturado,loja_id,competencia').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)).catch(() => [] as IcoVenda[]) : Promise.resolve([] as IcoVenda[]),
+        fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas_dia').select('produto_id,qtd,faturado,loja_id,data').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as IcoVenda[]),
       ])
       const ids = fichas.map((f) => f.id)
       const itensFicha = ids.length
