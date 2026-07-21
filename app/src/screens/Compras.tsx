@@ -11,7 +11,7 @@ type ItemPedido = { id?: string; pedido_id: string; insumo_id: string; quantidad
 type Loja = { id: string; nome: string }
 type Insumo = { id: string; nome: string; unidade_medida?: string; codigo_interno?: number | string; categoria?: string }
 type Forn = { id: string; nome: string; whatsapp?: string | null }
-type Vinc = { insumo_id: string; fornecedor_id: string; principal?: boolean; preco_unitario?: number | null; updated_at?: string; created_at?: string }
+type Vinc = { insumo_id: string; fornecedor_id: string; principal?: boolean; preco_unitario?: number | null; ultima_entrada?: string; created_at?: string }
 
 const brl = (v?: number | null) => (v == null || !(+v)) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtQty = (v?: number) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
@@ -50,7 +50,7 @@ function useCompras(tenantId: string) {
   const insumos = useQuery({ queryKey: ['cmp-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,codigo_interno,categoria').eq('tenant_id', tenantId).order('nome').range(f, t)) })
   const fornecedores = useQuery({ queryKey: ['cmp-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome,whatsapp').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Forn[] } })
   const lojas = useQuery({ queryKey: ['cmp-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Loja[] } })
-  const vinculos = useQuery({ queryKey: ['cmp-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id,principal,preco_unitario,updated_at,created_at').eq('tenant_id', tenantId).range(f, t)) })
+  const vinculos = useQuery({ queryKey: ['cmp-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id,principal,preco_unitario,ultima_entrada,created_at').eq('tenant_id', tenantId).range(f, t)) })
   return { insumos: insumos.data ?? [], fornecedores: fornecedores.data ?? [], lojas: lojas.data ?? [], vinculos: vinculos.data ?? [] }
 }
 
@@ -77,7 +77,8 @@ type Shared = ReturnType<typeof useCompras>
 // ═══════════════════════ SOLICITAÇÕES ═══════════════════════
 function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }) {
   const { lojas, insumos } = shared
-  const [lojaF, setLojaF] = useState(''); const [statusF, setStatusF] = useState('')
+  // abre já filtrando por "Aguardando" (solicitado) — processadas só aparecem se trocar o filtro
+  const [lojaF, setLojaF] = useState(''); const [statusF, setStatusF] = useState('solicitado')
   const [periodo, setPeriodo] = useState('mes_atual')
   const [de, setDe] = useState(primeiroDia()); const [ate, setAte] = useState(hoje())
   const [pag, setPag] = useState(1); const [verId, setVerId] = useState<string | null>(null)
@@ -183,7 +184,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   useEffect(() => { const q: Record<string, number> = {}, f: Record<string, string> = {}; consolidado.forEach((d) => { q[d.insId] = d.total; f[d.insId] = d.fornecedorId || '' }); setQComprar(q); setFornSel(f) }, [consolidado])
 
   const fornOptsDe = (insId: string) => { const vincs = vinculos.filter((v) => v.insumo_id === insId); if (vincs.length) return vincs.map((v) => ({ id: v.fornecedor_id, nome: (fornMap[v.fornecedor_id] || v.fornecedor_id) + (v.principal ? ' ★' : '') })); return fornecedores.map((f) => ({ id: f.id, nome: f.nome })) }
-  const ultCompra = (insId: string) => { const v = vinculos.find((x) => x.insumo_id === insId && x.fornecedor_id === fornSel[insId]) || vinculos.find((x) => x.insumo_id === insId); if (!v?.preco_unitario) return '—'; const dt = v.updated_at || v.created_at ? new Date(v.updated_at || v.created_at!).toLocaleDateString('pt-BR') : ''; return `${dt} - ${brl(v.preco_unitario)}` }
+  const ultCompra = (insId: string) => { const v = vinculos.find((x) => x.insumo_id === insId && x.fornecedor_id === fornSel[insId]) || vinculos.find((x) => x.insumo_id === insId); if (!v?.preco_unitario) return '—'; const dt = v.ultima_entrada || v.created_at ? new Date(v.ultima_entrada || v.created_at!).toLocaleDateString('pt-BR') : ''; return `${dt} - ${brl(v.preco_unitario)}` }
 
   const nLojas = new Set(sols.map((s) => s.loja_id)).size
 
