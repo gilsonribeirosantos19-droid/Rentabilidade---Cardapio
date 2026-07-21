@@ -168,7 +168,9 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
       const ins = insMap[it.insumo_id]
       if (!c[it.insumo_id]) {
         const vincs = vinculos.filter((v) => v.insumo_id === it.insumo_id)
-        const principal = vincs.find((v) => v.principal) || vincs[0]
+        // sugestão: "principal" (se marcado) tem prioridade; senão, o fornecedor da ÚLTIMA COMPRA (ultima_entrada mais recente)
+        const maisRecente = [...vincs].sort((a, b) => (b.ultima_entrada || b.created_at || '').localeCompare(a.ultima_entrada || a.created_at || ''))[0]
+        const principal = vincs.find((v) => v.principal) || maisRecente
         c[it.insumo_id] = { insId: it.insumo_id, nome: ins?.nome || it.insumo_id, unidade: it.unidade || ins?.unidade_medida || 'un', total: 0, lojas: [], fornecedorId: principal?.fornecedor_id || null }
       }
       c[it.insumo_id].total += Number(it.quantidade) || 0
