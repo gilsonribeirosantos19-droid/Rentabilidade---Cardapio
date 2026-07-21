@@ -45,7 +45,11 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
     const m: Record<string, number> = {}; saldos.forEach((s) => { m[s.insumo_id] = byLoja[s.insumo_id] || byAny[s.insumo_id] || 0 }); return m
   }, [saldos, loja])
   const custoBase = (ins?: Insumo) => (ins ? (cmMap[ins.id] > 0 ? cmMap[ins.id] : ins.preco_compra || 0) : 0)
-  const custoIngG = (ins: Insumo, qtdG: number) => custoBase(ins) / ((ins.rendimento_pct || 100) / 100) / 1000 * qtdG
+  const custoIngG = (ins: Insumo, qtdG: number) => {
+    const um = (ins.unidade_medida || 'g').toLowerCase()
+    if (um === 'un' || um === 'pct' || um === 'cx') return custoBase(ins) * qtdG   // unidade discreta: sem ÷1000 e sem aproveitamento (igual à ficha)
+    return custoBase(ins) / ((ins.rendimento_pct || 100) / 100) / 1000 * qtdG
+  }
 
   const fichaOpts = useMemo(() => fichas.map((f) => f.nome || ''), [fichas])
   const fichaByNome = useMemo(() => new Map(fichas.map((f) => [f.nome || '', f.id])), [fichas])

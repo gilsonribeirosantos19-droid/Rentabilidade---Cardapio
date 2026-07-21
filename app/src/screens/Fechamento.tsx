@@ -17,7 +17,8 @@ type ItemRow = { id: string; nome: string; un: string; ei: number; compras: numb
 type Row = { loja: Loja; situacao: 'aberto' | 'fechado'; itens: ItemRow[]; faturamento: number; estoque_inicial: number; compras: number; entradas_transferencia: number; saidas_transferencia: number; consumo: number; perdas: number; estoque_final: number; cmv: number }
 
 const brl = (v?: number) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const dataOf = (m: Mov) => (m.criado_em || m.created_at || '').slice(0, 10)
+// data LOCAL (Brasil) do movimento — evita que lançamento de madrugada (UTC) caia no dia/mês errado
+const dataOf = (m: Mov) => { const r = m.criado_em || m.created_at; return r ? new Date(r).toLocaleDateString('en-CA') : '' }
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 const ACAO_OPTS = ['Fechar', 'Abrir (reabrir)']
 const ACAO_LBL: Record<string, string> = { fechar: 'Fechar', abrir: 'Abrir (reabrir)' }
@@ -113,7 +114,8 @@ export function Fechamento() {
       const ens = (id: string) => byIns[id] || (byIns[id] = { id, nome: insMap[id]?.nome || '—', un: insMap[id]?.unidade_medida || '', ei: 0, compras: 0, entT: 0, saiT: 0, consumo: 0, perdas: 0, ef: 0, cmv: 0 })
       const addInv = (inv: Inv | null, campo: 'ei' | 'ef') => { (inv && itensByInv[inv.id] || []).forEach((it) => { if (cmvSet.has(it.insumo_id)) ens(it.insumo_id)[campo] += (it.qtd_contada || 0) * (it.custo_medio || 0) }) }
       addInv(ini, 'ei'); addInv(fin, 'ef')
-      entMes.filter((e) => e.loja_id === l.id && cmvSet.has(e.insumo_id)).forEach((e) => { const o = ens(e.insumo_id), v = (e.quantidade || 0) * (e.custo_unitario || 0); if (e.tipo === 'transferencia') o.entT += v; else o.compras += v })
+      // ajuste de estoque (correção) NÃO é compra: como EI e EF são contagem física, o ajuste já está refletido no EF → não entra em Compras (o ajuste de saída também já cai fora abaixo)
+      entMes.filter((e) => e.loja_id === l.id && cmvSet.has(e.insumo_id)).forEach((e) => { const o = ens(e.insumo_id), v = (e.quantidade || 0) * (e.custo_unitario || 0); if (e.tipo === 'transferencia') o.entT += v; else if (e.tipo !== 'ajuste') o.compras += v })
       saiMes.filter((s) => s.loja_id === l.id && cmvSet.has(s.insumo_id)).forEach((s) => { const o = ens(s.insumo_id), v = (s.quantidade || 0) * cmFimL(s.insumo_id); if (s.tipo === 'consumo') o.consumo += v; else if (s.tipo === 'transferencia') o.saiT += v; else if (['perda', 'vencimento', 'descarte'].includes(s.tipo || '')) o.perdas += v })
       // CMV por inventário = EI + Compras + Ent.Transf − Saí.Transf − Estoque Final.
       // (As perdas já entram naturalmente — o Estoque Final físico da contagem já as reflete;

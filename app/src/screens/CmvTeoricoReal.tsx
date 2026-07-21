@@ -148,7 +148,7 @@ export function CmvTeoricoReal() {
     })
     // consumo REAL = saídas de consumo/produção DENTRO do período (as saídas vêm do histórico
     // todo p/ o custo médio; aqui recorta só [de, ate]).
-    const inPer = (m: { criado_em?: string }) => { const d = (m.criado_em || '').slice(0, 10); return d >= de && d <= ate }
+    const inPer = (m: { criado_em?: string }) => { const d = m.criado_em ? new Date(m.criado_em).toLocaleDateString('en-CA') : ''; return d >= de && d <= ate }   // data LOCAL (Brasil), não UTC
     const realMap: Record<string, number> = {}
     saidas.filter((s) => ['consumo', 'producao'].includes(s.tipo || '') && inPer(s)).forEach((s) => { realMap[s.insumo_id] = (realMap[s.insumo_id] || 0) + (s.quantidade || 0) })
 

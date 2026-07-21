@@ -54,7 +54,7 @@ export function custoFichaPorcao(itens: FichaItem[], rendimentoPorcoes: number, 
     }
     const ins = insumos.find((i) => i.id === it.insumo_id)
     const custoBase = custoDoInsumo(it.insumo_id || '', lojaId, ctx)
-    const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g'
+    const um = (ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g').toLowerCase()
     if (um === 'un' || um === 'pct' || um === 'cx') { total += custoBase * (+(it.quantidade_g || 0)) }
     else { const rend = (ins && +(ins.rendimento_pct || 0) > 0) ? (ins.rendimento_pct as number) / 100 : 1; total += (custoBase / rend / 1000) * (+(it.quantidade_g || 0)) }
   })
