@@ -148,7 +148,7 @@
 .fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
 .fic-screen .vg-tbl th { text-align: left; padding: 5px 6px; font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; white-space: nowrap; }
 .fic-screen .vg-tbl th.r { text-align: right; }
-.fic-screen .vg-tbl td { padding: 4px 6px; font-size: 10.5px; border-bottom: 1px solid #f5f7fa; color: #0f172a; white-space: nowrap; }
+.fic-screen .vg-tbl td { padding: 8px 6px; font-size: 10.5px; border-bottom: 1px solid #f5f7fa; color: #0f172a; white-space: nowrap; }
 .fic-screen .vg-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
 .fic-screen .vg-tbl tfoot td { border-top: 2px solid #f1f5f9; border-bottom: none; font-weight: 700; color: #00b890; }
 .fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
