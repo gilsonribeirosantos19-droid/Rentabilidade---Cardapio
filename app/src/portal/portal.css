@@ -62,6 +62,11 @@
 .portal .p-btn-pri { background: #f97316; color: #fff; border-color: #f97316; }
 .portal .p-btn-pri:hover { background: #ea6a0a; }
 .portal .p-btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+/* sub-abas no padrão do sistema principal (sublinhado laranja / SAP Fiori) */
+.portal .p-subtabs { display: flex; gap: 4px; border-bottom: 1px solid #e2e8f0; margin: 4px 0 14px; }
+.portal .p-subtab { padding: 9px 16px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; font-family: inherit; margin-bottom: -1px; }
+.portal .p-subtab:hover { color: #475569; }
+.portal .p-subtab.on { color: #f97316; border-bottom-color: #f97316; }
 .portal .p-field { height: 34px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 13px; font-family: inherit; background: #fff; color: #0f172a; }
 .portal .p-field:focus { outline: none; border-color: #f97316; }
 .portal .ass-btn { height: 34px; border-radius: 8px; }
