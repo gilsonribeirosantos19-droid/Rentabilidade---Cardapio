@@ -260,7 +260,7 @@ function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido
       onSaved()
     } catch (e) { setErr('Erro: ' + (e as Error).message) } finally { setBusy(false) }
   }
-  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ nome: insMap[x.insumo_id]?.nome || x.insumo_id, qtd: num(x.qtd), un: x.un })), lojaNome, obs)
+  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: embalagem(insMap[x.insumo_id]), qtd: num(x.qtd), un: x.un })), lojaNome, obs)
 
   return (
     <div className="p-ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -269,11 +269,13 @@ function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido
         <div className="mb">
           {!editavel && <div style={{ background: '#fef3c7', color: '#92400e', padding: '8px 12px', borderRadius: 8, fontSize: 12.5, marginBottom: 10 }}>Este pedido já foi <b>processado</b> por Compras — só pode ser visualizado.</div>}
           <table className="p-tbl">
-            <thead><tr><th>Item</th><th className="r">Quantidade</th><th>Un.</th>{editavel && <th></th>}</tr></thead>
+            <thead><tr><th>Código</th><th>Item</th><th>Embalagem</th><th className="r">Quantidade</th><th>Un.</th>{editavel && <th></th>}</tr></thead>
             <tbody>
               {itens.map((it) => (
                 <tr key={it.id}>
+                  <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td>
                   <td style={{ fontWeight: 600 }}>{insMap[it.insumo_id]?.nome || it.insumo_id}</td>
+                  <td style={{ fontSize: 12, color: '#475569' }}>{embalagem(insMap[it.insumo_id])}</td>
                   <td className="r">{editavel
                     ? <input type="text" inputMode="decimal" value={it.qtd} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: e.target.value } : x))} style={{ width: 90, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5 }} />
                     : <span className="mono">{it.qtd}</span>}</td>
@@ -283,7 +285,7 @@ function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido
                   {editavel && <td className="r"><button className="p-btn" title="Remover item" onClick={() => setItens((a) => a.filter((x) => x.id !== it.id))}>🗑</button></td>}
                 </tr>
               ))}
-              {!itens.length && <tr><td colSpan={4} className="p-empty">Sem itens.</td></tr>}
+              {!itens.length && <tr><td colSpan={editavel ? 6 : 5} className="p-empty">Sem itens.</td></tr>}
             </tbody>
           </table>
           <div className="pf-fld" style={{ marginTop: 12 }}><label>Observação</label><input className="p-field" value={obs} disabled={!editavel} onChange={(e) => setObs(e.target.value)} placeholder="(opcional)" /></div>
@@ -302,25 +304,25 @@ function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido
 }
 
 // PDF/impressão de UMA solicitação — abre a folha com botão manual (não trava)
-function imprimirSolicitacao(pedido: PedidoMin, itens: { nome: string; qtd: number; un: string }[], lojaNome: string, obs: string) {
+function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: string; emb: string; qtd: number; un: string }[], lojaNome: string, obs: string) {
   const dt = (pedido.created_at || pedido.data_pedido || '').slice(0, 10) || hojeStr()
   const data = new Date(dt + 'T12:00:00').toLocaleDateString('pt-BR')
   const stLbl: Record<string, string> = { solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
-  const linhas = itens.map((it) => `<tr><td>${esc(it.nome)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })} ${esc(it.un)}</td></tr>`).join('')
+  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })} ${esc(it.un)}</td></tr>`).join('')
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Solicitação — ${esc(lojaNome)} — ${data}</title><style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}body{background:#fff;color:#0f172a;padding:24px;max-width:720px;margin:0 auto}
     .toolbar{position:sticky;top:0;background:#0f2a52;padding:12px;text-align:center;margin:-24px -24px 16px}
     .toolbar button{background:#f97316;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer}
     .brand{font-weight:800;font-size:16px;color:#00b890;border-bottom:2px solid #00d4aa;padding-bottom:6px;margin-bottom:10px}.brand span{color:#94a3b8;font-weight:600;font-size:12px}
     h1{font-size:15px;margin-bottom:2px}.meta{color:#64748b;font-size:12.5px;margin-bottom:12px}
-    table{width:100%;border-collapse:collapse;font-size:13px}td,th{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}th{background:#1e2030;color:#fff}.q{text-align:right;font-weight:700;white-space:nowrap}
+    table{width:100%;border-collapse:collapse;font-size:13px}td,th{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}th{background:#1e2030;color:#fff}.q{text-align:right;font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}
     .obs{margin-top:12px;font-size:12.5px;color:#334155}
     @media print{.toolbar{display:none}body{padding:0}}
   </style></head><body>
     <div class="toolbar"><button onclick="window.print()">🖨️ Imprimir / Salvar PDF</button></div>
     <div class="brand">Aiko <span>· solicitação de compra</span></div>
     <h1>${esc(lojaNome)}</h1><div class="meta">Data: ${data}${pedido.status ? ' · ' + (stLbl[pedido.status] || esc(pedido.status)) : ''}</div>
-    <table><thead><tr><th>Item</th><th class="q">Quantidade</th></tr></thead><tbody>${linhas}</tbody></table>
+    <table><thead><tr><th class="c">Código</th><th>Item</th><th>Embalagem</th><th class="q">Quantidade</th></tr></thead><tbody>${linhas}</tbody></table>
     ${obs ? `<div class="obs"><b>Observação:</b> ${esc(obs)}</div>` : ''}
   </body></html>`
   const win = window.open('', '_blank')
