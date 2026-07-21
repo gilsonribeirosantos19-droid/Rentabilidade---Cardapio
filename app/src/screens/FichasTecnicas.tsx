@@ -16,7 +16,7 @@ type Ficha = {
 }
 type PrecoParams = { txDel: number; txCar: number; txImp: number; margMin: number }
 type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string; codigo_interno?: number }
-type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string; situacao?: string; ativo?: boolean; codigo_pdv?: string }
+type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string; situacao?: string; ativo?: boolean; codigo_pdv?: string; preco_venda?: number | null }
 type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -60,7 +60,7 @@ export function FichasTecnicas() {
   const { data: produtos = [] } = useQuery({
     queryKey: ['produtos-min', tenantId], enabled: !!tenantId,
     // fetchAll: vence o teto de 1000 do PostgREST (senão produtos somem e o código da ficha fica "—")
-    queryFn: () => fetchAll<ProdutoMin>((f, t) => supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo,codigo_pdv').eq('tenant_id', tenantId).order('nome').range(f, t)),
+    queryFn: () => fetchAll<ProdutoMin>((f, t) => supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo,codigo_pdv,preco_venda').eq('tenant_id', tenantId).order('nome').range(f, t)),
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
@@ -128,7 +128,8 @@ export function FichasTecnicas() {
 
   const metricas = (f: Ficha) => {
     const custo = custoFicha(f)
-    const pv = Number(f.preco_venda) || 0
+    // preço de venda: o da ficha se tiver; senão vem do PRODUTO cadastrado (fallback automático)
+    const pv = Number(f.preco_venda) || Number(f.produto_id ? produtoById[f.produto_id]?.preco_venda : 0) || 0
     const cmv = custo > 0 && pv > 0 ? (custo / pv) * 100 : null
     const margem = custo > 0 && pv > 0 ? ((pv - custo) / pv) * 100 : null
     return { custo, pv, cmv, margem }
