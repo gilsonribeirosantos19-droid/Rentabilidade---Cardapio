@@ -35,7 +35,7 @@ export function Login() {
     const mail = email.trim()
     if (!mail) { setErro('Digite seu e-mail acima para receber o link de redefinição.'); return }
     const { error } = await supabase.auth.resetPasswordForEmail(mail, {
-      redirectTo: 'https://rentabilidade-cardapio.vercel.app/login.html',
+      redirectTo: window.location.origin,   // volta pro PRÓPRIO app (preview ou produção) → tela de nova senha
     })
     if (error) setErro(traduzErro(error.message))
     else setOk('Link de redefinição enviado! Verifique seu e-mail (inclusive o spam).')

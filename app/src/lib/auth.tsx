@@ -17,6 +17,8 @@ type AuthCtx = {
   usuario: Usuario | null
   tenantId: string | null
   loading: boolean
+  recovery: boolean                 // veio de um link "esqueci minha senha" → mostrar tela de nova senha
+  clearRecovery: () => void
   signIn: (email: string, senha: string) => Promise<{ error?: string }>
   signOut: () => Promise<void>
 }
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recovery, setRecovery] = useState(false)
 
   async function loadUsuario(s: Session | null) {
     if (!s) {
@@ -49,7 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await loadUsuario(data.session)
       setLoading(false)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((evt, s) => {
+      if (evt === 'PASSWORD_RECOVERY') setRecovery(true)   // clicou no link de redefinição de senha
       setSession(s)
       void loadUsuario(s)
     })
@@ -68,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider
-      value={{ session, usuario, tenantId: usuario?.tenant_id ?? null, loading, signIn, signOut }}
+      value={{ session, usuario, tenantId: usuario?.tenant_id ?? null, loading, recovery, clearRecovery: () => setRecovery(false), signIn, signOut }}
     >
       {children}
     </Ctx.Provider>
