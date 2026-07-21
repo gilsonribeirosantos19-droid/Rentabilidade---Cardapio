@@ -160,7 +160,9 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
         const agora = new Date().toISOString()
         const linhas = (lojas || []).map((lj) => {
           const tot = rows.reduce((a, r) => { const ins = r.insumo_id ? insMap[r.insumo_id] : undefined; return a + (ins ? custoIngLoja(ins, r.quantidade_g, lj.id) : 0) }, 0)
-          return { tenant_id: tenantId, insumo_id: vincId, loja_id: lj.id, quantidade: 0, custo_medio: Number((tot / (rendReceitaG / 1000)).toFixed(6)), atualizado_em: agora }
+          // NÃO enviar 'quantidade': o upsert só atualiza as colunas presentes → preserva o saldo físico
+          // existente (coluna tem DEFAULT 0, então em insert novo nasce 0). Evita zerar estoque de processado.
+          return { tenant_id: tenantId, insumo_id: vincId, loja_id: lj.id, custo_medio: Number((tot / (rendReceitaG / 1000)).toFixed(6)), atualizado_em: agora }
         }).filter((l) => l.custo_medio > 0)
         if (linhas.length) { const { error } = await supabase.from('saldo_estoque').upsert(linhas, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (error) throw error }
         // preço de compra = reserva GLOBAL (custo de referência da loja atual); NUNCA grava zero.
