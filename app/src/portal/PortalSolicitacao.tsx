@@ -14,7 +14,12 @@ type PedidoMin = { id: string; status?: string; data_pedido?: string; created_at
 type ItemPed = { id: string; insumo_id: string; quantidade?: number; unidade?: string }
 const esc = (s: string) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string))
 
-const UNIDADES = ['kg', 'g', 'un', 'pct', 'litro', 'ml', 'cx', 'fardo', 'bd', 'sc']
+// embalagens de compra que a gerente escolhe — POR EXTENSO. Sem grama/ml (não se compra assim).
+const UNID_LABEL: Record<string, string> = { un: 'Unidade', kg: 'Quilograma', litro: 'Litro', l: 'Litro', pct: 'Pacote', cx: 'Caixa', fardo: 'Fardo', fd: 'Fardo', bd: 'Bandeja', sc: 'Saco', g: 'Grama', ml: 'Mililitro' }
+const UNID_OPTS = ['un', 'kg', 'litro', 'pct', 'cx', 'fardo', 'bd', 'sc']
+const unidLabel = (u?: string) => UNID_LABEL[(u || '').toLowerCase()] || (u || '')
+// inclui o valor atual mesmo que não esteja na lista (ex.: item antigo salvo em 'g') pra não sumir
+const unidOpts = (cur?: string) => (cur && !UNID_OPTS.includes(cur) ? [cur, ...UNID_OPTS] : UNID_OPTS)
 const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',')
 const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const hoje7 = () => new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-CA')
@@ -173,7 +178,7 @@ export function PortalSolicitacao() {
                       <td style={{ color: '#64748b' }}>—</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td className="r"><input type="text" inputMode="decimal" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 96, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5, color: '#0f172a', background: '#fff' }} /></td>
-                      <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{UNIDADES.map((x) => <option key={x} value={x}>{x}</option>)}</select></td>
+                      <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{unidOpts(un[id] || u).map((x) => <option key={x} value={x}>{unidLabel(x)}</option>)}</select></td>
                     </tr>
                   ) })}
                 </tbody>
@@ -260,7 +265,7 @@ function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido
       onSaved()
     } catch (e) { setErr('Erro: ' + (e as Error).message) } finally { setBusy(false) }
   }
-  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: EMB[(x.un || '').toLowerCase()] || (x.un || '').toUpperCase(), qtd: num(x.qtd) })), lojaNome, obs)
+  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd) })), lojaNome, obs)
 
   return (
     <div className="p-ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -279,8 +284,8 @@ function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido
                     ? <input type="text" inputMode="decimal" value={it.qtd} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: e.target.value } : x))} style={{ width: 90, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5 }} />
                     : <span className="mono">{it.qtd}</span>}</td>
                   <td>{editavel
-                    ? <select value={it.un} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, un: e.target.value } : x))} style={{ height: 26, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{UNIDADES.map((u) => <option key={u} value={u}>{u}</option>)}</select>
-                    : it.un}</td>
+                    ? <select value={it.un} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, un: e.target.value } : x))} style={{ height: 26, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{unidOpts(it.un).map((u) => <option key={u} value={u}>{unidLabel(u)}</option>)}</select>
+                    : unidLabel(it.un)}</td>
                   {editavel && <td className="r"><button className="p-btn" title="Remover item" onClick={() => setItens((a) => a.filter((x) => x.id !== it.id))}>🗑</button></td>}
                 </tr>
               ))}
