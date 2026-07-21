@@ -96,6 +96,18 @@ export function Fechamento() {
     },
   })
 
+  // faturamento por loja do mês (iComanda diário) → alimenta o CMV% das linhas ABERTAS
+  const { data: icoFatByLoja = {} } = useQuery({
+    queryKey: ['fech-icofat', tenantId, comp], enabled: !!tenantId && !!comp,
+    queryFn: async () => {
+      const { de, ate } = monthBounds(comp)
+      const vendas = await fetchAll<{ loja_id?: string; faturado?: number }>((f, t) => supabase.from('icomanda_vendas_dia').select('loja_id,faturado').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as { loja_id?: string; faturado?: number }[])
+      const m: Record<string, number> = {}
+      vendas.forEach((v) => { if (v.loja_id) m[v.loja_id] = (m[v.loja_id] || 0) + (Number(v.faturado) || 0) })
+      return m
+    },
+  })
+
   const rowsData = useMemo<Row[]>(() => {
     if (!base) return []
     const { de, ate } = monthBounds(comp)
@@ -132,9 +144,9 @@ export function Fechamento() {
       const c = compoLoja(l)
       const fech = base.fechamentos.find((f) => f.loja_id === l.id && f.competencia === comp && f.situacao === 'fechado')
       if (fech) return { loja: l, situacao: 'fechado', itens: c.itens, faturamento: +(fech.faturamento || 0), estoque_inicial: +(fech.estoque_inicial || 0), compras: +(fech.compras || 0), entradas_transferencia: +(fech.entradas_transferencia || 0), saidas_transferencia: +(fech.saidas_transferencia || 0), consumo: +(fech.consumo || 0), perdas: +(fech.perdas || 0), estoque_final: +(fech.estoque_final || 0), cmv: +(fech.cmv || 0) }
-      return { loja: l, situacao: 'aberto', faturamento: 0, ...c }
+      return { loja: l, situacao: 'aberto', faturamento: icoFatByLoja[l.id] || 0, ...c }
     })
-  }, [base, invMap, itensByInv, comp])
+  }, [base, invMap, itensByInv, comp, icoFatByLoja])
 
   const rows = useMemo(() => rowsData.filter((r) => !lojaFiltro || r.loja.id === lojaFiltro), [rowsData, lojaFiltro])
   const buscaRows = useMemo(() => {
