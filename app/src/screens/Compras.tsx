@@ -326,7 +326,8 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
 function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared }) {
   const { insumos, fornecedores, lojas } = shared
   const qc = useQueryClient()
-  const [statusF, setStatusF] = useState('ativos'); const [busca, setBusca] = useState(''); const [filData, setFilData] = useState(''); const [ordenar, setOrdenar] = useState('forn')
+  // abre já filtrando por "Aguardando envio" (pendente) — enviados/baixados só ao trocar o filtro
+  const [statusF, setStatusF] = useState('pendente'); const [busca, setBusca] = useState(''); const [filData, setFilData] = useState(''); const [ordenar, setOrdenar] = useState('forn')
   const [verId, setVerId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
@@ -433,7 +434,7 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
         <div className="fbar-ss" style={{ minWidth: 200 }}><SearchSelect value={PG_ST_LBL[statusF] || 'Ativos (a enviar / enviados)'} options={PG_ST_OPTS} placeholder="Status" onChange={(l) => setStatusF(PG_ST_VAL[l] || 'ativos')} /></div>
         <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={PG_DT_LBL[filData] || 'Qualquer data'} options={PG_DT_OPTS} placeholder="Qualquer data" onChange={(l) => setFilData(PG_DT_VAL[l] ?? '')} /></div>
         <div className="fbar-ss" style={{ minWidth: 170 }}><SearchSelect value={PG_ORD_LBL[ordenar] || 'Fornecedor (A-Z)'} options={PG_ORD_OPTS} placeholder="Ordenar" onChange={(l) => setOrdenar(PG_ORD_VAL[l] || 'forn')} /></div>
-        <button className="btn-ghost" onClick={() => { setStatusF('ativos'); setBusca(''); setFilData(''); setOrdenar('forn') }}>Limpar filtros</button>
+        <button className="btn-ghost" onClick={() => { setStatusF('pendente'); setBusca(''); setFilData(''); setOrdenar('forn') }}>Limpar filtros</button>
         <button className="btn-ghost" style={{ marginLeft: 'auto' }} title="Imprime 1 folha por loja com todos os itens consolidados dos pedidos listados" onClick={imprimirTodos}>🖨 Baixar todos (por loja)</button>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
