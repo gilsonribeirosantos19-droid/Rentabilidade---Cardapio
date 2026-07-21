@@ -12,6 +12,7 @@ type GI = { grupo_id: string; insumo_id: string }
 type Saldo = { insumo_id: string; quantidade?: number }
 type PedidoMin = { id: string; status?: string; data_pedido?: string; created_at?: string; observacao?: string | null; data_entrega_prevista?: string | null; itens_pedido?: { count: number }[] }
 type ItemPed = { id: string; insumo_id: string; quantidade?: number; unidade?: string }
+type LojaFull = { nome?: string; razao_social?: string; cnpj?: string; endereco?: string }
 const esc = (s: string) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string))
 
 // embalagens de compra que a gerente escolhe — POR EXTENSO. Sem grama/ml (não se compra assim).
@@ -51,7 +52,7 @@ export function PortalSolicitacao() {
   const { data: saldos = [] } = useQuery({ queryKey: ['psol-saldos', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,quantidade').eq('tenant_id', tenantId).eq('loja_id', lojaId!); return (data ?? []) as Saldo[] } })
   // solicitações já enviadas por esta loja (histórico)
   const { data: minhas = [] } = useQuery({ queryKey: ['psol-minhas', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('pedidos_compra').select('id,status,data_pedido,created_at,observacao,data_entrega_prevista,itens_pedido(count)').eq('tenant_id', tenantId).eq('loja_id', lojaId!).order('created_at', { ascending: false }).limit(50); return (data ?? []) as PedidoMin[] } })
-  const { data: lojaNome = '' } = useQuery({ queryKey: ['psol-loja', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('lojas').select('nome').eq('id', lojaId!).single(); return (data?.nome as string) || '' } })
+  const { data: loja = null } = useQuery({ queryKey: ['psol-loja', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('id', lojaId!).single(); return (data ?? null) as LojaFull | null } })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const saldoMap = useMemo(() => Object.fromEntries(saldos.map((s) => [s.insumo_id, s.quantidade])) as Record<string, number>, [saldos])
@@ -196,7 +197,7 @@ export function PortalSolicitacao() {
         </div>
       )}
 
-      {verPed && <VerEditarSolic pedido={verPed} insMap={insMap} lojaNome={lojaNome} onClose={() => setVerPed(null)} onSaved={() => { qc.invalidateQueries({ queryKey: ['psol-minhas'] }); setVerPed(null); showToast('Solicitação atualizada!') }} />}
+      {verPed && <VerEditarSolic pedido={verPed} insMap={insMap} loja={loja} onClose={() => setVerPed(null)} onSaved={() => { qc.invalidateQueries({ queryKey: ['psol-minhas'] }); setVerPed(null); showToast('Solicitação atualizada!') }} />}
 
       {toast && <div className={'p-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
     </div>
@@ -233,7 +234,7 @@ function MinhasSolicitacoes({ lista, insMap, onVer }: { lista: PedidoMin[]; insM
 }
 
 // ── Modal Ver / Editar uma solicitação (edita só se status = solicitado/Aguardando) ──
-function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido: PedidoMin; insMap: Record<string, Insumo>; lojaNome: string; onClose: () => void; onSaved: () => void }) {
+function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: PedidoMin; insMap: Record<string, Insumo>; loja: LojaFull | null; onClose: () => void; onSaved: () => void }) {
   const editavel = pedido.status === 'solicitado'
   const [itens, setItens] = useState<{ id: string; insumo_id: string; qtd: string; un: string }[]>([])
   const [orig, setOrig] = useState<string[]>([])
@@ -265,7 +266,7 @@ function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido
       onSaved()
     } catch (e) { setErr('Erro: ' + (e as Error).message) } finally { setBusy(false) }
   }
-  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd) })), lojaNome, obs)
+  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd) })), loja, obs)
 
   return (
     <div className="p-ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -308,25 +309,35 @@ function VerEditarSolic({ pedido, insMap, lojaNome, onClose, onSaved }: { pedido
 }
 
 // PDF/impressão de UMA solicitação — abre a folha com botão manual (não trava)
-function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: string; emb: string; qtd: number }[], lojaNome: string, obs: string) {
+function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: string; emb: string; qtd: number }[], loja: LojaFull | null, obs: string) {
   const dt = (pedido.created_at || pedido.data_pedido || '').slice(0, 10) || hojeStr()
   const data = new Date(dt + 'T12:00:00').toLocaleDateString('pt-BR')
   const stLbl: Record<string, string> = { solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
+  const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || ''
+  const situacao = pedido.status ? (stLbl[pedido.status] || pedido.status) : ''
   const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td></tr>`).join('')
-  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Solicitação — ${esc(lojaNome)} — ${data}</title><style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}body{background:#fff;color:#0f172a;padding:24px;max-width:720px;margin:0 auto}
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Solicitação — ${esc(nomeLoja)} — ${data}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a;padding:24px;max-width:720px;margin:0 auto}
     .toolbar{position:sticky;top:0;background:#0f2a52;padding:12px;text-align:center;margin:-24px -24px 16px}
     .toolbar button{background:#f97316;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer}
-    .brand{font-weight:800;font-size:16px;color:#00b890;border-bottom:2px solid #00d4aa;padding-bottom:6px;margin-bottom:10px}.brand span{color:#94a3b8;font-weight:600;font-size:12px}
-    h1{font-size:15px;margin-bottom:2px}.meta{color:#64748b;font-size:12.5px;margin-bottom:12px}
-    table{width:100%;border-collapse:collapse;font-size:13px}td,th{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}th{background:#1e2030;color:#fff}.q{text-align:right;font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}
+    .brand{font-weight:800;font-size:16px;color:#00b890;padding-bottom:6px;border-bottom:2px solid #00d4aa;margin-bottom:8px}.brand span{color:#94a3b8;font-weight:600;font-size:12px}
+    .head{width:100%;border-collapse:collapse;font-size:13px}.head td{border:1px solid #cbd5e1;padding:7px 10px;vertical-align:middle}
+    .cel-loja{font-weight:800;font-size:15px;width:55%;color:#1e2030}.cel-dl{font-weight:600;color:#64748b;font-size:10px;letter-spacing:.05em;width:15%;text-align:center}.cel-d{font-weight:700;font-size:13px;width:30%;text-align:right}
+    .cel-info{background:#f1f5f9;color:#334155;font-size:11.5px;line-height:1.5}
+    .items{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}.items td,.items th{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}.items th{background:#1e2030;color:#fff}
+    .q{text-align:right;font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}
     .obs{margin-top:12px;font-size:12.5px;color:#334155}
     @media print{.toolbar{display:none}body{padding:0}}
   </style></head><body>
     <div class="toolbar"><button onclick="window.print()">🖨️ Imprimir / Salvar PDF</button></div>
     <div class="brand">Aiko <span>· solicitação de compra</span></div>
-    <h1>${esc(lojaNome)}</h1><div class="meta">Data: ${data}${pedido.status ? ' · ' + (stLbl[pedido.status] || esc(pedido.status)) : ''}</div>
-    <table><thead><tr><th class="c">Código</th><th>Item</th><th>Embalagem</th><th class="q">Quantidade</th></tr></thead><tbody>${linhas}</tbody></table>
+    <table class="head">
+      <tr><td class="cel-loja">${esc(nomeLoja.toUpperCase())}</td><td class="cel-dl">DATA</td><td class="cel-d">${data}</td></tr>
+      <tr><td colspan="3" class="cel-info"><b>RAZÃO SOCIAL:</b> ${esc(razao)}${cnpj ? ' &nbsp;·&nbsp; <b>CNPJ:</b> ' + esc(cnpj) : ''}</td></tr>
+      <tr><td colspan="3" class="cel-info"><b>ENDEREÇO:</b> ${esc(ende)}</td></tr>
+      ${situacao ? `<tr><td colspan="3" class="cel-info"><b>SITUAÇÃO:</b> ${esc(situacao)}</td></tr>` : ''}
+    </table>
+    <table class="items"><thead><tr><th>Código</th><th>Item</th><th>Embalagem</th><th class="q">Quantidade</th></tr></thead><tbody>${linhas}</tbody></table>
     ${obs ? `<div class="obs"><b>Observação:</b> ${esc(obs)}</div>` : ''}
   </body></html>`
   const win = window.open('', '_blank')
