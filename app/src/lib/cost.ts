@@ -5,7 +5,9 @@ export type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: num
 export type Saldo = { insumo_id: string; loja_id?: string | null; custo_medio?: number }
 export type Vinculo = { insumo_id: string; preco_unitario?: number }
 export type InsumoLike = { id: string; preco_compra?: number; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
-export type FichaItem = { insumo_id: string; quantidade_g?: number }
+export type FichaItem = { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }
+// mapa produto_id -> ficha do prato base (p/ combos / meia porção descerem recursivamente)
+export type FichasByProduto = Map<string, { itens: FichaItem[]; rendimento_porcoes?: number }>
 // strictLoja: modo "custo POR LOJA" (usado na Ficha) — NÃO usa custo de outra loja nem vínculo,
 // cai direto no preco_compra do insumo. Sem a flag = comportamento antigo (compat, não muda nada).
 export type CostCtx = { entradas?: Mov[]; saidas?: Mov[]; saldos?: Saldo[]; vinculos?: Vinculo[]; insumos?: InsumoLike[]; dataLimite?: string | null; strictLoja?: boolean }
@@ -28,20 +30,30 @@ export function custoMedioNaData(insumoId: string, dataLimite: string | null, ct
   let q = 0, cm = 0
   movs.forEach((m) => {
     if (m.ent) {
-      if (m.q === 0) { cm = m.v }                                  // ajuste de custo médio (redefine)
+      if (m.q === 0) { if (m.v > 0) cm = m.v }                     // ajuste de custo médio (redefine) — só se custo informado > 0 (linha qtd0/custo0 não zera o custo válido)
       else { const nq = q + m.q; cm = nq > 0 ? (q * cm + m.q * m.v) / nq : cm; q = nq }
     } else { q = Math.max(0, q - m.q) }
   })
   return { custo: cm, quantidade: q }
 }
 
-// custo de UMA porção da ficha (soma dos itens, respeitando unidade e rendimento do insumo)
-export function custoFichaPorcao(itens: FichaItem[], rendimentoPorcoes: number, lojaId: string | null, ctx: CostCtx): number {
+// custo de UMA porção da ficha (soma dos itens, respeitando unidade e rendimento do insumo).
+// fichasByProduto (opcional): permite que itens de PRODUTO (combo / meia porção) desçam no prato base.
+export function custoFichaPorcao(itens: FichaItem[], rendimentoPorcoes: number, lojaId: string | null, ctx: CostCtx, fichasByProduto?: FichasByProduto, seen?: Set<string>): number {
   const insumos = ctx.insumos || []
   let total = 0
   ;(itens || []).forEach((it) => {
+    // item de PRODUTO (meia porção / combo): custo = custo por porção do prato base × multiplicador (quantidade_g)
+    if (it.produto_id) {
+      if (!fichasByProduto || (seen && seen.has(it.produto_id))) return   // sem mapa ou ciclo → ignora
+      const base = fichasByProduto.get(it.produto_id)
+      if (!base) return
+      const s2 = new Set(seen || []); s2.add(it.produto_id)               // clone por ramo (evita loop, permite reuso legítimo)
+      total += custoFichaPorcao(base.itens || [], base.rendimento_porcoes || 1, lojaId, ctx, fichasByProduto, s2) * (+(it.quantidade_g || 0))
+      return
+    }
     const ins = insumos.find((i) => i.id === it.insumo_id)
-    const custoBase = custoDoInsumo(it.insumo_id, lojaId, ctx)
+    const custoBase = custoDoInsumo(it.insumo_id || '', lojaId, ctx)
     const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g'
     if (um === 'un' || um === 'pct' || um === 'cx') { total += custoBase * (+(it.quantidade_g || 0)) }
     else { const rend = (ins && +(ins.rendimento_pct || 0) > 0) ? (ins.rendimento_pct as number) / 100 : 1; total += (custoBase / rend / 1000) * (+(it.quantidade_g || 0)) }

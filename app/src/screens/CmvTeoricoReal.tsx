@@ -109,7 +109,9 @@ export function CmvTeoricoReal() {
     // somatório das vendas por item. Antes somava os dois → duplicava quando havia as 2 fontes.
     const fatSum = fats.reduce((s, f) => s + (f.valor ?? f.total ?? f.valor_total ?? 0), 0)
     const vendaFat = vendas.reduce((s, v) => s + (v.valor_total || 0), 0)
-    const totalFat = fatSum > 0 ? fatSum : vendaFat
+    // a tabela `faturamento` NÃO tem loja_id (é do tenant inteiro). Com uma loja selecionada,
+    // usar o faturamento das VENDAS daquela loja; só sem loja (Todas) usar a tabela.
+    const totalFat = lojaId ? vendaFat : (fatSum > 0 ? fatSum : vendaFat)
 
     // mapas p/ EXPLOSÃO recursiva: processado tem ficha própria (insumo_vinculado_id) e
     // meia porção/combo aponta pra outro produto (produto_id). Descemos até o insumo CRU —
@@ -152,12 +154,15 @@ export function CmvTeoricoReal() {
 
     const ctx = { saldos, insumos, entradas, saidas, dataLimite: ate }
     const rows = insumos.filter((i) => teoMap[i.id] || realMap[i.id]).map((i) => {
-      const un = i.unidade_medida || i.unidade_compra || 'un'
-      const div = ['kg', 'litro'].includes(un) ? 1000 : 1
-      const qTeo = (teoMap[i.id] || 0) / div
+      const un = (i.unidade_medida || i.unidade_compra || 'un').toLowerCase()
+      const disc = un === 'un' || un === 'pct' || un === 'cx'                 // discreta: sem aproveitamento
+      const div = un === 'kg' || un === 'litro' ? 1000 : 1
+      const rend = disc ? 1 : ((i.rendimento_pct || 100) / 100)              // aproveitamento só p/ peso
+      // quantidade teórica em BRUTO (o que sai do estoque) = líquido da ficha ÷ aproveitamento → comparável ao real
+      const qTeo = ((teoMap[i.id] || 0) / div) / rend
       const qReal = realMap[i.id] || 0
       const cm = custoDoInsumo(i.id, null, ctx)
-      const cTeo = qTeo * (cm / ((i.rendimento_pct || 100) / 100))
+      const cTeo = qTeo * cm                                                 // qTeo já é bruto → custo = bruto × custo unitário (mesmo valor de antes)
       const cReal = qReal * cm
       const dQtd = qReal - qTeo
       const dPct = qTeo > 0 ? dQtd / qTeo * 100 : 0
