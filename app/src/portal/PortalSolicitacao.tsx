@@ -102,9 +102,9 @@ export function PortalSolicitacao() {
       <div className="p-ttl">Solicitação de Compra</div>
       <div className="p-sub">Selecione os itens por grupo, informe as quantidades e envie para Compras.</div>
 
-      <div style={{ display: 'flex', gap: 8, margin: '4px 0 14px' }}>
-        <button className={'p-btn' + (aba === 'nova' ? ' p-btn-pri' : '')} onClick={() => setAba('nova')}>Nova solicitação</button>
-        <button className={'p-btn' + (aba === 'minhas' ? ' p-btn-pri' : '')} onClick={() => setAba('minhas')}>Minhas solicitações{minhas.length ? ` (${minhas.length})` : ''}</button>
+      <div className="p-subtabs">
+        <button className={'p-subtab' + (aba === 'nova' ? ' on' : '')} onClick={() => setAba('nova')}>Nova solicitação</button>
+        <button className={'p-subtab' + (aba === 'minhas' ? ' on' : '')} onClick={() => setAba('minhas')}>Minhas solicitações{minhas.length ? ` (${minhas.length})` : ''}</button>
       </div>
 
       {aba === 'minhas' && <MinhasSolicitacoes lista={minhas} insMap={insMap} onVer={setVerPed} />}
