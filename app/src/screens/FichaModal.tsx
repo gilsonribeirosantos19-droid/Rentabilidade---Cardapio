@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { SearchSelect } from '../components/SearchSelect'
 
 type Ins = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
-type Prod = { id: string; nome?: string; grupo?: string; categoria?: string }
+type Prod = { id: string; nome?: string; grupo?: string; categoria?: string; preco_venda?: number | null }
 type ItemRow = { insumo_id?: string; produto_id?: string; qtd: string }   // insumo OU produto (meia porção / combo)
 type FichaIn = {
   id?: string; nome?: string; categoria?: string; produto_id?: string | null; insumo_vinculado_id?: string | null
@@ -82,6 +82,7 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
   }
 
   const ehProc = subj?.kind === 'insumo'
+  const precoProduto = subj?.kind === 'produto' ? (Number(prodById[subj.id]?.preco_venda) || null) : null
 
   const pickMap = useMemo(() => {
     const m = new Map<string, { kind: 'produto' | 'insumo'; id: string; nome: string; categoria: string }>()
@@ -194,7 +195,7 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
           </div>
           <div className="fm-row">
             <div className="fm-g"><label className="fm-l">Rendimento (porções) *</label><input className="fm-i" type="number" min="1" value={porcoes} onChange={(e) => setPorcoes(e.target.value)} /></div>
-            <div className="fm-g"><label className="fm-l">Preço de venda — salão (R$)</label><input className="fm-i" type="number" step="0.01" value={preco} disabled={ehProc} onChange={(e) => setPreco(e.target.value)} placeholder="Ex: 49.90" /></div>
+            <div className="fm-g"><label className="fm-l">Preço de venda — salão (R$)</label><input className="fm-i" type="number" step="0.01" value={preco} disabled={ehProc} onChange={(e) => setPreco(e.target.value)} placeholder={precoProduto ? `Vem do produto: ${brl(precoProduto)}` : 'Ex: 49.90'} />{!preco && precoProduto ? <small className="fm-hint">Vazio = usa o preço do produto ({brl(precoProduto)}). Preencha só p/ um preço diferente.</small> : null}</div>
           </div>
           <div className="fm-row">
             <div className="fm-g"><label className="fm-l">Preço de delivery (R$)</label><input className="fm-i" type="number" step="0.01" value={precoDel} disabled={ehProc} onChange={(e) => setPrecoDel(e.target.value)} placeholder="Ex: 59.90 (maior, p/ cobrir o iFood)" /><small className="fm-hint">Deixe vazio se for igual ao salão</small></div>
