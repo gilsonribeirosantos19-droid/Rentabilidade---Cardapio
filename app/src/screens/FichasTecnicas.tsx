@@ -96,22 +96,22 @@ export function FichasTecnicas() {
   const custoBase = (ins: Insumo) => custoDoInsumo(ins.id, lojaCusto || null, costCtx)
   const custoIngrediente = (ins: Insumo, qtdG: number) => {
     const cb = custoBase(ins)
-    const um = ins.unidade_medida || ins.unidade_compra || 'g'
+    const um = (ins.unidade_medida || ins.unidade_compra || 'g').toLowerCase()
     if (um === 'un' || um === 'pct' || um === 'cx') return cb * qtdG
     return cb / ((ins.rendimento_pct || 100) / 100) / 1000 * qtdG
   }
   // mesmo cálculo, mas PARA UMA LOJA específica — usado ao salvar um processado com custo POR LOJA.
   const custoIngLoja = (ins: Insumo, qtdG: number, lojaId: string) => {
     const cb = custoDoInsumo(ins.id, lojaId || null, costCtx)
-    const um = ins.unidade_medida || ins.unidade_compra || 'g'
+    const um = (ins.unidade_medida || ins.unidade_compra || 'g').toLowerCase()
     if (um === 'un' || um === 'pct' || um === 'cx') return cb * qtdG
     return cb / ((ins.rendimento_pct || 100) / 100) / 1000 * qtdG
   }
   const custoProduto = (pid: string, seen: Set<string>): number => {
-    if (seen.has(pid)) return 0
-    seen.add(pid)
+    if (seen.has(pid)) return 0                    // ciclo real (pid já está no caminho atual)
+    const s2 = new Set(seen); s2.add(pid)          // clone POR RAMO: não deduplica irmãos legítimos (combo com o mesmo produto 2x / sub-produto compartilhado)
     const f = fichaByProduto[pid]
-    return f ? custoFicha(f, seen) : 0
+    return f ? custoFicha(f, s2) : 0
   }
   const custoItem = (it: Item, seen: Set<string>): number => {
     const q = Number(it.quantidade_g) || 0

@@ -186,7 +186,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   useEffect(() => { const q: Record<string, number> = {}, f: Record<string, string> = {}; consolidado.forEach((d) => { q[d.insId] = d.total; f[d.insId] = d.fornecedorId || '' }); setQComprar(q); setFornSel(f) }, [consolidado])
 
   const fornOptsDe = (insId: string) => { const vincs = vinculos.filter((v) => v.insumo_id === insId); if (vincs.length) return vincs.map((v) => ({ id: v.fornecedor_id, nome: (fornMap[v.fornecedor_id] || v.fornecedor_id) + (v.principal ? ' ★' : '') })); return fornecedores.map((f) => ({ id: f.id, nome: f.nome })) }
-  const ultCompra = (insId: string) => { const v = vinculos.find((x) => x.insumo_id === insId && x.fornecedor_id === fornSel[insId]) || vinculos.find((x) => x.insumo_id === insId); if (!v?.preco_unitario) return '—'; const dt = v.ultima_entrada || v.created_at ? new Date(v.ultima_entrada || v.created_at!).toLocaleDateString('pt-BR') : ''; return `${dt} - ${brl(v.preco_unitario)}` }
+  const ultCompra = (insId: string) => { const v = vinculos.find((x) => x.insumo_id === insId && x.fornecedor_id === fornSel[insId]) || vinculos.find((x) => x.insumo_id === insId); if (!v?.preco_unitario) return '—'; const raw = v.ultima_entrada || v.created_at; const dt = raw ? new Date(raw.length === 10 ? raw + 'T12:00:00' : raw).toLocaleDateString('pt-BR') : ''; return `${dt} - ${brl(v.preco_unitario)}` }
 
   const nLojas = new Set(sols.map((s) => s.loja_id)).size
 
@@ -338,6 +338,9 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
       let q = supabase.from('pedidos_compra').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false })
       if (statusF === 'ativos' || statusF === '') q = q.in('status', ['aguardando_aprovacao', 'pendente', 'enviado'])
       else if (statusF === 'todos') q = q.in('status', ['pendente', 'enviado', 'baixado', 'cancelado', 'aguardando_aprovacao', 'aprovado'])
+      // "Aguardando envio" (padrão): mostra o que ainda NÃO foi enviado — inclui os que dependem de aprovação,
+      // senão pedidos recém-gerados em tenants com aprovação somem da tela.
+      else if (statusF === 'pendente') q = q.in('status', ['aguardando_aprovacao', 'pendente'])
       else q = q.eq('status', statusF)
       return q.range(f, t)
     }),

@@ -259,7 +259,8 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
     if (!val.length) { setErr('Deixe ao menos 1 item com quantidade maior que zero.'); return }
     setBusy(true)
     try {
-      const removed = orig.filter((id) => !itens.some((x) => x.id === id))
+      // apaga o que saiu da lista OU teve a quantidade zerada (val = só itens com qtd > 0)
+      const removed = orig.filter((id) => !val.some((x) => x.id === id))
       if (removed.length) { const { error } = await supabase.from('itens_pedido').delete().in('id', removed); if (error) throw error }
       for (const it of val) { const { error } = await supabase.from('itens_pedido').update({ quantidade: num(it.qtd), unidade: it.un }).eq('id', it.id); if (error) throw error }
       const { error: e2 } = await supabase.from('pedidos_compra').update({ observacao: obs.trim() || null }).eq('id', pedido.id); if (e2) throw e2
