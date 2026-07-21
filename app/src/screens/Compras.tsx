@@ -168,7 +168,9 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
       const ins = insMap[it.insumo_id]
       if (!c[it.insumo_id]) {
         const vincs = vinculos.filter((v) => v.insumo_id === it.insumo_id)
-        const principal = vincs.find((v) => v.principal) || vincs[0]
+        // sugestão: "principal" (se marcado) tem prioridade; senão, o fornecedor da ÚLTIMA COMPRA (ultima_entrada mais recente)
+        const maisRecente = [...vincs].sort((a, b) => (b.ultima_entrada || b.created_at || '').localeCompare(a.ultima_entrada || a.created_at || ''))[0]
+        const principal = vincs.find((v) => v.principal) || maisRecente
         c[it.insumo_id] = { insId: it.insumo_id, nome: ins?.nome || it.insumo_id, unidade: it.unidade || ins?.unidade_medida || 'un', total: 0, lojas: [], fornecedorId: principal?.fornecedor_id || null }
       }
       c[it.insumo_id].total += Number(it.quantidade) || 0
@@ -311,9 +313,12 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
     .cel-th{background:#1e2030;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;padding:8px 10px}.cel-th-q{text-align:center}
     .cel-item{height:26px;font-size:12.5px}.cel-qty{text-align:center;font-weight:700;font-size:12.5px}
     .cel-footer{background:#1e2030;color:#fff;font-weight:700;font-size:11px;text-align:center;padding:6px}.cel-footer-l{text-align:left}
-    @media print{body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pagina{padding:8px;max-width:100%}}
-  </style></head><body>${paginas}<script>window.onload=function(){window.onafterprint=function(){window.close()};window.print();}<\/script></body></html>`
-  const win = window.open('', '_blank'); if (!win) return
+    .toolbar{position:sticky;top:0;z-index:9;background:#0f2a52;padding:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+    .toolbar button{background:#f97316;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer}
+    @media print{body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pagina{padding:8px;max-width:100%}.toolbar{display:none}}
+  </style></head><body><div class="toolbar"><button onclick="window.print()">🖨️ Imprimir / Salvar PDF</button></div>${paginas}</body></html>`
+  const win = window.open('', '_blank')
+  if (!win) { alert('O navegador bloqueou a janela do PDF. Libere os pop-ups deste site e tente de novo.'); return }
   win.document.write(html); win.document.close()
 }
 
