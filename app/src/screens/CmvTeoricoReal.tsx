@@ -33,6 +33,17 @@ function periodoRange(tipo: string): { de: string; ate: string } | null {
   return null
 }
 
+// competências (YYYY-MM) cobertas pelo período — p/ o fallback na tabela mensal icomanda_vendas
+function compsRange(de: string, ate: string): string[] {
+  const out: string[] = []
+  if (!de || !ate) return out
+  let [y, m] = de.slice(0, 7).split('-').map(Number)
+  const [ey, em] = ate.slice(0, 7).split('-').map(Number)
+  let guard = 0
+  while ((y < ey || (y === ey && m <= em)) && guard++ < 60) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++ } }
+  return out
+}
+
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 const PERIODO_TIPO: Record<string, string> = { 'Personalizado': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
 
@@ -62,7 +73,8 @@ export function CmvTeoricoReal() {
     queryKey: ['cmv', tenantId, de, ate, cat], enabled: !!tenantId && !!de && !!ate,
     queryFn: async () => {
       const catEq = (q: any) => cat ? q.eq('categoria', cat) : q
-      const [fats, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas] = await Promise.all([
+      const comps = compsRange(de, ate)   // meses do período, p/ o fallback mensal
+      const [fats, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes] = await Promise.all([
         supabase.from('faturamento').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).then((r) => (r.data ?? []) as Fat[], () => [] as Fat[]),
         fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('ficha_id,produto_id,quantidade,valor_total,loja_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('id').range(f, t)).catch(() => [] as Venda[]),
         fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id,insumo_vinculado_id,rendimento_receita_g').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
@@ -77,12 +89,14 @@ export function CmvTeoricoReal() {
         // (antes era a tabela mensal por competência; agora usa a diária, respeitando o intervalo exato De→Até)
         fetchAll<ProdMin>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)).catch(() => [] as ProdMin[]),
         fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas_dia').select('produto_id,qtd,faturado,loja_id,data').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as IcoVenda[]),
+        // FALLBACK mensal: se a tabela diária ainda não estiver preenchida, usa icomanda_vendas por competência
+        comps.length ? fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas').select('produto_id,qtd,faturado,loja_id,competencia').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)).catch(() => [] as IcoVenda[]) : Promise.resolve([] as IcoVenda[]),
       ])
       const ids = fichas.map((f) => f.id)
       const itensFicha = ids.length
         ? await fetchAll<ItemFicha>((f, t) => supabase.from('itens_ficha').select('ficha_id,insumo_id,produto_id,quantidade_g').in('ficha_id', ids).order('id').range(f, t)).catch(() => [] as ItemFicha[])
         : []
-      return { fats, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas, produtos, icomandaVendas }
+      return { fats, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes }
     },
   })
 
@@ -94,7 +108,9 @@ export function CmvTeoricoReal() {
     data.produtos.forEach((p) => { const c = (p.codigo_pdv ?? '').toString().trim(); if (c) prodByCod.set(c, p.id) })
     const fichaIdByProduto = new Map<string, string>()
     data.fichas.forEach((f) => { if (f.produto_id) fichaIdByProduto.set(f.produto_id, f.id) })
-    const icoVendas: Venda[] = data.icomandaVendas.map((v) => {
+    // diária se já tiver dados; senão cai na mensal (evita CMV Teórico zerado enquanto a diária não é preenchida)
+    const icoRaw = data.icomandaVendas.length ? data.icomandaVendas : data.icomandaVendasMes
+    const icoVendas: Venda[] = icoRaw.map((v) => {
       const pid = prodByCod.get(String(v.produto_id ?? '').trim())
       const fid = pid ? fichaIdByProduto.get(pid) : undefined
       return fid ? { ficha_id: fid, quantidade: Number(v.qtd) || 0, valor_total: Number(v.faturado) || 0, loja_id: (v.loja_id as string) ?? null } : null
