@@ -49,6 +49,7 @@ function parseNfeXml(xml: string) {
   const serie = doc.querySelector('serie')?.textContent || ''
   const emitNome = doc.querySelector('emit xNome')?.textContent?.trim() || ''
   const cnpjEmit = (doc.querySelector('emit CNPJ')?.textContent || '').replace(/\D/g, '')
+  const cnpjDest = (doc.querySelector('dest CNPJ')?.textContent || '').replace(/\D/g, '')   // p/ rotear a loja
   const chaveAcesso = (doc.querySelector('infNFe')?.getAttribute('Id') || '').replace(/^NFe/, '')
   const dhEmi = doc.querySelector('ide dhEmi')?.textContent || doc.querySelector('ide dEmi')?.textContent || ''
   const vNF = parseFloat(doc.querySelector('ICMSTot vNF')?.textContent || '0')
@@ -57,7 +58,7 @@ function parseNfeXml(xml: string) {
     const prod = det.querySelector('prod'); if (!prod) return
     itens.push({ descricao: prod.querySelector('xProd')?.textContent?.trim() || '', codigo: prod.querySelector('cProd')?.textContent?.trim() || '', unidade: prod.querySelector('uCom')?.textContent?.trim() || '', quantidade: parseFloat(prod.querySelector('qCom')?.textContent || '0'), valorUnit: parseFloat(prod.querySelector('vUnCom')?.textContent || '0') })
   })
-  return { nNF, serie, emitNome, cnpjEmit, chaveAcesso, dhEmi, vNF, itens }
+  return { nNF, serie, emitNome, cnpjEmit, cnpjDest, chaveAcesso, dhEmi, vNF, itens }
 }
 
 export function MonitorNfe() {
@@ -386,7 +387,7 @@ export function MonitorNfe() {
         </>
       )}
 
-      {xmlOpen && <ImportXmlModal tenantId={tenantId!} vinculos={vinculos} ifv={ifv} insumos={insumos} fornecedores={fornecedores} onClose={() => setXmlOpen(false)} onDone={() => { setXmlOpen(false); qc.invalidateQueries({ predicate: (q) => /mon-/i.test(String(q.queryKey[0])) }) }} onToast={showToast} />}
+      {xmlOpen && <ImportXmlModal tenantId={tenantId!} vinculos={vinculos} ifv={ifv} insumos={insumos} fornecedores={fornecedores} lojas={lojas} lojaIdGlobal={lojaId} onClose={() => setXmlOpen(false)} onDone={() => { setXmlOpen(false); qc.invalidateQueries({ predicate: (q) => /mon-/i.test(String(q.queryKey[0])) }) }} onToast={showToast} />}
       {vinc && selNfe && <CorrigirItem item={vinc} nfe={selNfe} insumos={insumos} vinculos={vinculos} forn={fornByCnpj(selNfe.cnpj_emitente)} lojas={lojas} tenantId={tenantId!}
         onClose={() => setVinc(null)} onRefresh={() => qc.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === 'string' && /mon-/i.test(k) } })} onToast={showToast} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
@@ -592,9 +593,10 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
   )
 }
 
-function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, onClose, onDone, onToast }: { tenantId: string; vinculos: Vinc[]; ifv: IFV[]; insumos: Insumo[]; fornecedores: Forn[]; onClose: () => void; onDone: () => void; onToast: (m: string, t?: 'ok' | 'err') => void }) {
+function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas, lojaIdGlobal, onClose, onDone, onToast }: { tenantId: string; vinculos: Vinc[]; ifv: IFV[]; insumos: Insumo[]; fornecedores: Forn[]; lojas: { id: string; nome: string; cnpj?: string }[]; lojaIdGlobal: string | null; onClose: () => void; onDone: () => void; onToast: (m: string, t?: 'ok' | 'err') => void }) {
   const [parsed, setParsed] = useState<ReturnType<typeof parseNfeXml> | null>(null)
   const [fornId, setFornId] = useState('')
+  const [lojaSel, setLojaSel] = useState('')
   const [data, setData] = useState(new Date().toISOString().split('T')[0])
   const [saving, setSaving] = useState(false)
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
@@ -608,6 +610,9 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, onClos
         const en = p.emitNome.toLowerCase()
         const fm = fornecedores.find((f) => (f.cnpj || '').replace(/\D/g, '') === p.cnpjEmit) || fornecedores.find((f) => (f.nome || '').toLowerCase() === en || (en && (f.nome || '').toLowerCase().includes(en.substring(0, 6))))
         if (fm) setFornId(fm.id)
+        // auto-detecta a loja pelo CNPJ do destinatário; se não achar, usa a loja selecionada no topo
+        const lm = lojas.find((l) => (l.cnpj || '').replace(/\D/g, '') === p.cnpjDest)
+        setLojaSel(lm?.id || lojaIdGlobal || '')
         if (p.dhEmi) setData(p.dhEmi.slice(0, 10))
       } catch (e: any) { onToast('Erro ao ler XML: ' + e.message, 'err') }
     }
@@ -625,7 +630,7 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, onClos
   const okCount = matched.filter(Boolean).length
   const pend = parsed ? parsed.itens.length - okCount : 0
 
-  const criar = async (p: any, status: string): Promise<string> => { const { data: d, error } = await supabase.from('nfe_recebidas').insert({ tenant_id: tenantId, numero: p.nNF || '0', serie: p.serie || '1', chave_acesso: p.chaveAcesso || null, cnpj_emitente: p.cnpjEmit || '', nome_emitente: p.emitNome || '', data_emissao: p.dhEmi || (data + 'T12:00:00'), valor_total: p.vNF || 0, status, fonte: 'upload' }).select('id'); if (error) throw error; return d![0].id }
+  const criar = async (p: any, status: string): Promise<string> => { const { data: d, error } = await supabase.from('nfe_recebidas').insert({ tenant_id: tenantId, loja_id: lojaSel || null, numero: p.nNF || '0', serie: p.serie || '1', chave_acesso: p.chaveAcesso || null, cnpj_emitente: p.cnpjEmit || '', nome_emitente: p.emitNome || '', data_emissao: p.dhEmi || (data + 'T12:00:00'), valor_total: p.vNF || 0, status, fonte: 'upload' }).select('id'); if (error) throw error; return d![0].id }
 
   const registrar = async () => {
     if (!parsed) return
@@ -640,7 +645,7 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, onClos
           const { data: its } = await supabase.from('nfe_itens').select('id').eq('nfe_id', ex[0].id).limit(1)
           if (its && its.length) { onToast(`NF-e ${p.nNF} já estava registrada no Monitor.`, 'ok'); setSaving(false); onDone(); return }
           nfeId = ex[0].id
-          await supabase.from('nfe_recebidas').update({ status, numero: p.nNF || '0', serie: p.serie || '1', nome_emitente: p.emitNome, valor_total: p.vNF || 0, data_emissao: p.dhEmi || (data + 'T12:00:00'), fonte: 'upload' }).eq('id', nfeId)
+          await supabase.from('nfe_recebidas').update({ status, loja_id: lojaSel || null, numero: p.nNF || '0', serie: p.serie || '1', nome_emitente: p.emitNome, valor_total: p.vNF || 0, data_emissao: p.dhEmi || (data + 'T12:00:00'), fonte: 'upload' }).eq('id', nfeId)
         } else nfeId = await criar(p, status)
       } else nfeId = await criar(p, status)
       const batch = p.itens.map((it, i) => ({ nfe_id: nfeId, tenant_id: tenantId, descricao_nfe: (it.descricao || '').toUpperCase(), codigo_item_fornecedor: it.codigo || null, quantidade: it.quantidade || 0, unidade_nfe: (it.unidade || 'UN').toUpperCase(), valor_unitario: it.valorUnit || 0, valor_total: +((it.quantidade || 0) * (it.valorUnit || 0)).toFixed(2), vinculacao_id: matched[i] }))
@@ -664,12 +669,14 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, onClos
             </div>
           ) : (
             <>
-              <div className="cor-card" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr 1fr', gap: '4px 18px', alignItems: 'end' }}>
+              <div className="cor-card" style={{ display: 'grid', gridTemplateColumns: '0.8fr 1.2fr 1fr 1fr 1fr', gap: '4px 18px', alignItems: 'end' }}>
                 <div><div className="l" style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase' }}>NF-e</div><div style={{ fontWeight: 700, color: '#2563eb', fontSize: 14 }}>{parsed.nNF}/{parsed.serie}</div></div>
                 <div><div className="l" style={{ fontSize: 10, color: '#94a3b8', textTransform: 'uppercase' }}>Emitente</div><div style={{ fontWeight: 600, fontSize: 12 }}>{parsed.emitNome}</div><div style={{ fontSize: 11, color: '#94a3b8' }}>{brl(parsed.vNF)}</div></div>
+                <div className="cor-fg"><label>Loja (destino)</label><select value={lojaSel} onChange={(e) => setLojaSel(e.target.value)} style={!lojaSel ? { borderColor: '#f59e0b' } : undefined}><option value="">Selecione a loja…</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>
                 <div className="cor-fg"><label>Fornecedor</label><select value={fornId} onChange={(e) => setFornId(e.target.value)}><option value="">Sem fornecedor</option>{fornecedores.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</select></div>
                 <div className="cor-fg"><label>Data de entrada</label><input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
               </div>
+              {!lojaSel && <div style={{ fontSize: 12, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '7px 10px', marginTop: 8 }}>⚠️ Selecione a loja de destino — sem ela a nota pode não aparecer no Monitor quando você filtrar por loja.</div>}
               {okCount > 0 && <div className="cor-conv">✓ {okCount} item(ns) reconhecido(s) automaticamente{pend > 0 ? ` · ${pend} pendente(s) de vínculo` : ''}.</div>}
               <div className="cor-tbl"><div className="cor-tbl-sc" style={{ maxHeight: 300 }}>
                 <table>
