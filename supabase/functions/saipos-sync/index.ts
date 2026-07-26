@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
 
           // DETALHE item-a-item (vendas_item) — usado pela Divergências
           rowsItem.push({
-            tenant_id: tenant, data: dia, loja_id, ficha_id: fid,
+            tenant_id: tenant, data: dia, ficha_id: fid,   // vendas_item é tenant-level (NÃO tem loja_id)
             produto_nome: String(it?.desc_sale_item || '(sem nome)'),
             quantidade: qtd, valor_unitario: vu, valor_total: vt,
             canal: null, pdv_ref: 'saipos:' + (it?.id_sale_item ?? ''),
