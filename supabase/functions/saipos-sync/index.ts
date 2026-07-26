@@ -173,6 +173,12 @@ Deno.serve(async (req) => {
   const now = new Date().toISOString()
   const dataMin = ymd(new Date(Date.now() - dias * 86400000))
 
+  // 🛡️ TRAVA ANTI-ZERAGEM: se não leu NADA do Saipos (API vazia / rate-limit / falha), NÃO apaga o que já existe.
+  // (mesma lógica do icomanda-sync: "só regrava se veio dado" — evita zerar por resposta transitória)
+  if (itensLidos === 0) {
+    return json({ ok: false, modo: 'pull', tenant, aviso: 'Nada lido do Saipos (API vazia ou falha) — NAO apaguei/gravei nada.', itensLidos, comProduto, ultimoStatus, ultimoRaw }, 200)
+  }
+
   // 1) DETALHE item-a-item
   await supabase.from('vendas_item').delete().eq('tenant_id', tenant).like('pdv_ref', 'saipos:%').gte('data', dataMin)
   for (let i = 0; i < rowsItem.length; i += 500) {
