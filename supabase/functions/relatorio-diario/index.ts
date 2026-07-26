@@ -41,7 +41,7 @@ async function montarDados(iso: string, dow: number, dataExtenso: string, hora: 
   const { data: lojas } = await supabase.from('lojas').select('id,nome').eq('tenant_id', TENANT).eq('ativo', true)
   const { data: metaSem } = await supabase.from('metas_semana').select('loja_id,dia_semana,valor,canal').eq('tenant_id', TENANT)
   const { data: metaExc } = await supabase.from('metas_excecao').select('loja_id,valor').eq('tenant_id', TENANT).eq('data', iso)
-  const { data: rec } = await supabase.from('icomanda_recebimento').select('loja_id,faturado,qtd_comandas,pessoas').eq('tenant_id', TENANT).eq('data', iso).eq('status', 'processado')
+  const { data: rec } = await supabase.from('recebimento_vendas').select('loja_id,faturado,qtd_comandas,pessoas').eq('tenant_id', TENANT).eq('data', iso).eq('status', 'processado')
 
   const semMap: Record<string, number> = {}, lojaCanais: Record<string, string[]> = {}
   for (const s of metaSem || []) {

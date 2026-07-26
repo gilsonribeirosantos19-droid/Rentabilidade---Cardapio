@@ -13,7 +13,7 @@ type Ficha = { id: string; rendimento_porcoes?: number; produto_id?: string | nu
 type ItemFicha = { ficha_id: string; insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number }
 type Venda = { ficha_id?: string; produto_id?: string; quantidade?: number; valor_total?: number; loja_id?: string | null }
 type ProdMin = { id: string; codigo_pdv?: string | null }
-type IcoVenda = { produto_id?: number | string; qtd?: number; faturado?: number; loja_id?: string | null }
+type IcoVenda = { produto_id?: number | string; qtd?: number; faturado?: number; loja_id?: string | null; ficha_id?: string | null }
 type Fat = { valor?: number; total?: number; valor_total?: number }
 type Saida = { insumo_id: string; quantidade?: number; tipo?: string; loja_id?: string | null; criado_em?: string }
 type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: number; loja_id?: string | null; criado_em?: string; created_at?: string }
@@ -76,9 +76,9 @@ export function CmvTeoricoReal() {
       const comps = compsRange(de, ate)   // meses do período, p/ o fallback mensal
       const [fats, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes] = await Promise.all([
         supabase.from('faturamento').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).then((r) => (r.data ?? []) as Fat[], () => [] as Fat[]),
-        // ⚠️ vendas_item NÃO tem produto_id nem loja_id (só ficha_id + produto_nome). Pedir coluna
-        // inexistente ZERAVA a query (bug PostgREST) → vendas Saipos vinham vazias. Só colunas reais:
-        fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('ficha_id,quantidade,valor_total').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('id').range(f, t)).catch(() => [] as Venda[]),
+        // vendas_item NÃO é mais usado no CMV: a fonte única virou vendas_produto_dia (iComanda + Saipos).
+        // Placeholder [] só p/ manter o shape do Promise.all.
+        Promise.resolve([] as Venda[]),
         fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id,insumo_vinculado_id,rendimento_receita_g').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
         fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').range(f, t)),
         fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').range(f, t)),
@@ -90,7 +90,7 @@ export function CmvTeoricoReal() {
         // de-para: produtos (código PDV) + vendas do iComanda POR DIA (icomanda_vendas_dia) p/ o consumo teórico
         // (antes era a tabela mensal por competência; agora usa a diária, respeitando o intervalo exato De→Até)
         fetchAll<ProdMin>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)).catch(() => [] as ProdMin[]),
-        fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas_dia').select('produto_id,qtd,faturado,loja_id,data').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as IcoVenda[]),
+        fetchAll<IcoVenda>((f, t) => supabase.from('vendas_produto_dia').select('produto_id,qtd,faturado,loja_id,data,ficha_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as IcoVenda[]),
         // FALLBACK mensal: se a tabela diária ainda não estiver preenchida, usa icomanda_vendas por competência
         comps.length ? fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas').select('produto_id,qtd,faturado,loja_id,competencia').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)).catch(() => [] as IcoVenda[]) : Promise.resolve([] as IcoVenda[]),
       ])
@@ -113,12 +113,13 @@ export function CmvTeoricoReal() {
     // diária se já tiver dados; senão cai na mensal (evita CMV Teórico zerado enquanto a diária não é preenchida)
     const icoRaw = data.icomandaVendas.length ? data.icomandaVendas : data.icomandaVendasMes
     const icoVendas: Venda[] = icoRaw.map((v) => {
+      // Saipos já traz ficha_id direto; iComanda mapeia produto_id(=código PDV) → produto → ficha
       const pid = prodByCod.get(String(v.produto_id ?? '').trim())
-      const fid = pid ? fichaIdByProduto.get(pid) : undefined
+      const fid = (v.ficha_id as string) || (pid ? fichaIdByProduto.get(pid) : undefined)
       return fid ? { ficha_id: fid, quantidade: Number(v.qtd) || 0, valor_total: Number(v.faturado) || 0, loja_id: (v.loja_id as string) ?? null } : null
     }).filter(Boolean) as Venda[]
-    // vendas_item (Saipos) é por TENANT (sem loja_id) → não filtra por loja; só o iComanda (tem loja_id) filtra
-    const vendas = [...data.vendas, ...byLoja(icoVendas)]
+    // fonte ÚNICA de vendas = vendas_produto_dia (iComanda + Saipos), já com loja_id → filtra por loja normalmente
+    const vendas = byLoja(icoVendas)
     const saidas = byLoja(data.saidas)
     const entradas = byLoja(data.entradas)
     const saldos = byLoja(data.saldos)

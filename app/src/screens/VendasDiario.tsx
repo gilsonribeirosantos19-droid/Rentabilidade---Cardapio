@@ -53,7 +53,7 @@ export function VendasDiario() {
   const lojaNome = useMemo(() => { const m: Record<string, string> = {}; lojas.forEach((l) => { m[l.id] = l.nome }); return m }, [lojas])
 
   async function fetchDias(): Promise<RecRow[]> {
-    return fetchAll<RecRow>((f, t) => supabase.from('icomanda_recebimento').select('*').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).range(f, t))
+    return fetchAll<RecRow>((f, t) => supabase.from('recebimento_vendas').select('*').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).range(f, t))
   }
   useEffect(() => {
     if (!tenantId || !de || !ate) { setRecebidos([]); return }
