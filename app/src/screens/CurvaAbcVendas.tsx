@@ -99,9 +99,10 @@ export function CurvaAbcVendas() {
     const gateDe = comps[0] + '-01'
     const [ly, lm] = comps[comps.length - 1].split('-').map(Number)
     const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
+    // vendas por DIA (camada genérica vendas_produto_dia: iComanda + Saipos) — agregadas no buildRows por loja×produto
     const [vendas, gate] = await Promise.all([
-      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_vendas').select('*').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)),
-      fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_recebimento').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('loja_id,produto_id,produto_nome,grupo,qtd,faturado,data').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
     ])
     // portão por loja×mês: recebido? tem erro?
     const gk = new Map<string, { ok: boolean; erro: boolean }>()
@@ -117,7 +118,7 @@ export function CurvaAbcVendas() {
     const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok }
     const bloq = new Set<string>()
     const okVendas = vendas.filter((r) => {
-      const lojaId = String(r.loja_id), comp = String(r.competencia)
+      const lojaId = String(r.loja_id), comp = String(r.data).slice(0, 7)   // competência vem da data (tabela é diária)
       if (liberado(lojaId, comp)) return true
       bloq.add(`${lojaNome[lojaId] || lojaId} · ${comp}`)
       return false
