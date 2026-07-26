@@ -92,9 +92,9 @@ export function EngenhariaCardapio() {
     }
     return [...map.values()]
   }
-  // produtos vendidos POR DIA (icomanda_vendas_dia) — filtra pelo intervalo de datas escolhido.
+  // produtos vendidos POR DIA (vendas_produto_dia — camada genérica: iComanda + Saipos) — filtra pelo intervalo.
   async function fetchVendas(d1: string, d2: string): Promise<Prod[]> {
-    const vendas = await fetchAll<Record<string, unknown>>((f, t) => supabase.from('icomanda_vendas_dia').select('*').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).range(f, t))
+    const vendas = await fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('*').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).range(f, t))
     return buildRows(vendas)
   }
   async function carregar(d1: string, d2: string) {

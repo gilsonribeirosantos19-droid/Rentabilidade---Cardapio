@@ -76,7 +76,9 @@ export function CmvTeoricoReal() {
       const comps = compsRange(de, ate)   // meses do período, p/ o fallback mensal
       const [fats, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes] = await Promise.all([
         supabase.from('faturamento').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).then((r) => (r.data ?? []) as Fat[], () => [] as Fat[]),
-        fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('ficha_id,produto_id,quantidade,valor_total,loja_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('id').range(f, t)).catch(() => [] as Venda[]),
+        // ⚠️ vendas_item NÃO tem produto_id nem loja_id (só ficha_id + produto_nome). Pedir coluna
+        // inexistente ZERAVA a query (bug PostgREST) → vendas Saipos vinham vazias. Só colunas reais:
+        fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('ficha_id,quantidade,valor_total').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('id').range(f, t)).catch(() => [] as Venda[]),
         fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id,insumo_vinculado_id,rendimento_receita_g').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
         fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').range(f, t)),
         fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').range(f, t)),
@@ -115,7 +117,8 @@ export function CmvTeoricoReal() {
       const fid = pid ? fichaIdByProduto.get(pid) : undefined
       return fid ? { ficha_id: fid, quantidade: Number(v.qtd) || 0, valor_total: Number(v.faturado) || 0, loja_id: (v.loja_id as string) ?? null } : null
     }).filter(Boolean) as Venda[]
-    const vendas = byLoja([...data.vendas, ...icoVendas])
+    // vendas_item (Saipos) é por TENANT (sem loja_id) → não filtra por loja; só o iComanda (tem loja_id) filtra
+    const vendas = [...data.vendas, ...byLoja(icoVendas)]
     const saidas = byLoja(data.saidas)
     const entradas = byLoja(data.entradas)
     const saldos = byLoja(data.saldos)

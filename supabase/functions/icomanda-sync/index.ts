@@ -136,7 +136,7 @@ serve(async (req) => {
     }
 
     // ===== MODO DIÁRIO (portão "Recebimento de Vendas"): body {data_ini, data_fim} em YYYY-MM-DD =====
-    // Puxa dia a dia o FATURAMENTO por loja e grava em icomanda_recebimento com status.
+    // Puxa dia a dia o FATURAMENTO por loja e grava em recebimento_vendas (fonte=icomanda) com status.
     // Puxada OK do dia → 'processado' (auto) → entra nos relatórios. Falha → 'com_erro' → bloqueado.
     if (/^\d{4}-\d{2}-\d{2}$/.test(dDe) && /^\d{4}-\d{2}-\d{2}$/.test(dAte)) {
       const filiaisRange = asArray(await ico('filiais.listar', { data_ini: dDe, data_fim: dAte })) as { id: number; nome: string; faturado?: number; qtd_caixas?: number }[]
@@ -204,19 +204,19 @@ serve(async (req) => {
             try {
               const prods = asArray(await ico('produtos.top_vendidos', { data_ini: dia, data_fim: dia, filial_id: String(filial.id), limit: '1000', ordenar_por: 'faturado' })) as any[]
               const pr = prods.filter((p) => p && p.produto_id != null).map((p) => ({ tenant_id, loja_id: loja.id, data: dia, produto_id: Number(p.produto_id), produto_nome: String(p.nome || '').trim() || null, grupo: String(p.grupo || '').trim() || null, qtd: Number(p.qtd) || 0, faturado: Number(p.faturado) || 0, atualizado_em: now }))
-              await sb.from('icomanda_vendas_dia').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('data', dia)
-              for (let i = 0; i < pr.length; i += 500) { const { error: ev } = await sb.from('icomanda_vendas_dia').insert(pr.slice(i, i + 500)); if (ev) throw ev }
+              await sb.from('vendas_produto_dia').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('data', dia)
+              for (let i = 0; i < pr.length; i += 500) { const { error: ev } = await sb.from('vendas_produto_dia').insert(pr.slice(i, i + 500)); if (ev) throw ev }
             } catch (ev) { console.error('vendas_dia', loja.id, dia, (ev as Error).message) }
           }
-          const { error } = await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
+          const { error } = await sb.from('recebimento_vendas').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
           if (error) throw error
           processados += linhas.length
         } catch (e) {
           // dia falhou → marca 'com_erro', MAS NÃO rebaixa loja×dia que já estava 'processado' (dado bom)
-          const { data: jaOk } = await sb.from('icomanda_recebimento').select('loja_id').eq('tenant_id', tenant_id).eq('data', dia).eq('status', 'processado')
+          const { data: jaOk } = await sb.from('recebimento_vendas').select('loja_id').eq('tenant_id', tenant_id).eq('data', dia).eq('status', 'processado')
           const okSet = new Set((jaOk || []).map((r: { loja_id: string }) => r.loja_id))
           const linhas = mapa.filter(({ loja }) => !okSet.has(loja.id)).map(({ loja }) => ({ tenant_id, loja_id: loja.id, data: dia, status: 'com_erro', erros: String((e as Error).message).slice(0, 300), data_integracao: now, atualizado_em: now }))
-          if (linhas.length) await sb.from('icomanda_recebimento').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
+          if (linhas.length) await sb.from('recebimento_vendas').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
           comErro += linhas.length
         }
       }
