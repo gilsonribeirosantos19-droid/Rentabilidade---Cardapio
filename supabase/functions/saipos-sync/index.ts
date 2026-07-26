@@ -42,7 +42,10 @@ function janelas(dias: number): Array<{ ini: string; fim: string }> {
   return out
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 // GET sales_items (uma página de VENDAS; cada venda tem items[] + id_sale + shift_date + created_at)
+// Até 3 tentativas: a API do Saipos às vezes devolve 504 (timeout) sob carga — repetir evita zerar o pull.
 async function buscarVendas(ini: string, fim: string, limit: number, offset: number) {
   const qs = new URLSearchParams({
     p_date_column_filter: 'shift_date',
@@ -51,11 +54,23 @@ async function buscarVendas(ini: string, fim: string, limit: number, offset: num
     p_limit: String(limit),
     p_offset: String(offset),
   })
-  const res = await fetch(`${SAIPOS_BASE}/sales_items?${qs}`, { headers: { Authorization: `Bearer ${SAIPOS_TOKEN}` } })
-  const raw = await res.text()
-  let data: unknown = null
-  try { data = JSON.parse(raw) } catch { /* ignore */ }
-  return { status: res.status, sales: Array.isArray(data) ? (data as any[]) : [], rawHead: raw.substring(0, 300) }
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(`${SAIPOS_BASE}/sales_items?${qs}`, { headers: { Authorization: `Bearer ${SAIPOS_TOKEN}` } })
+      const raw = await res.text()
+      if (res.status === 200) {
+        let data: unknown = null
+        try { data = JSON.parse(raw) } catch { /* ignore */ }
+        return { status: 200, sales: Array.isArray(data) ? (data as any[]) : [], rawHead: raw.substring(0, 300) }
+      }
+      if (res.status >= 500 && attempt < 3) { await sleep(2000); continue }   // 5xx/504 → espera e tenta de novo
+      return { status: res.status, sales: [] as any[], rawHead: raw.substring(0, 300) }
+    } catch (e) {
+      if (attempt < 3) { await sleep(2000); continue }
+      return { status: 0, sales: [] as any[], rawHead: String(e).substring(0, 300) }
+    }
+  }
+  return { status: 0, sales: [] as any[], rawHead: 'sem resposta' }
 }
 
 Deno.serve(async (req) => {
