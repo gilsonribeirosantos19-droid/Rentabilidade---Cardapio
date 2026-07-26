@@ -101,7 +101,7 @@ export function Fechamento() {
     queryKey: ['fech-icofat', tenantId, comp], enabled: !!tenantId && !!comp,
     queryFn: async () => {
       const { de, ate } = monthBounds(comp)
-      const vendas = await fetchAll<{ loja_id?: string; faturado?: number }>((f, t) => supabase.from('icomanda_vendas_dia').select('loja_id,faturado').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as { loja_id?: string; faturado?: number }[])
+      const vendas = await fetchAll<{ loja_id?: string; faturado?: number }>((f, t) => supabase.from('vendas_produto_dia').select('loja_id,faturado').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as { loja_id?: string; faturado?: number }[])
       const m: Record<string, number> = {}
       vendas.forEach((v) => { if (v.loja_id) m[v.loja_id] = (m[v.loja_id] || 0) + (Number(v.faturado) || 0) })
       return m

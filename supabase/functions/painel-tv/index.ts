@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
   const { data: metaSem } = await supabase.from('metas_semana').select('dia_semana,valor,canal').eq('tenant_id', tenant).eq('loja_id', lojaId)
   const { data: metaExc } = await supabase.from('metas_excecao').select('data,valor').eq('tenant_id', tenant).eq('loja_id', lojaId).gte('data', ini).lte('data', hoje)
-  const { data: rec } = await supabase.from('icomanda_recebimento').select('data,faturado,pessoas,qtd_comandas').eq('tenant_id', tenant).eq('loja_id', lojaId).eq('status', 'processado').gte('data', ini).lte('data', hoje)
+  const { data: rec } = await supabase.from('recebimento_vendas').select('data,faturado,pessoas,qtd_comandas').eq('tenant_id', tenant).eq('loja_id', lojaId).eq('status', 'processado').gte('data', ini).lte('data', hoje)
   const { data: inds } = await supabase.from('painel_indicadores').select('indicador,valor,meta').eq('tenant_id', tenant).eq('loja_id', lojaId)
 
   const semMap: Record<string, number> = {}; const canais: string[] = []

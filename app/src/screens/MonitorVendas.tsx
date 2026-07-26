@@ -75,7 +75,7 @@ export function MonitorVendas() {
   // dias já recebidos (tabela do portão)
   const { data: recebidos = [], refetch } = useQuery({
     queryKey: ['ico-receb', tenantId, de, ate], enabled: !!tenantId && !!de && !!ate,
-    queryFn: async () => fetchAll<RecRow>((f, t) => supabase.from('icomanda_recebimento').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as RecRow[]),
+    queryFn: async () => fetchAll<RecRow>((f, t) => supabase.from('recebimento_vendas').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as RecRow[]),
   })
 
   async function puxar() {
