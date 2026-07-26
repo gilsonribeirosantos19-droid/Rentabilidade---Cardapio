@@ -53,12 +53,18 @@ function parseNfeXml(xml: string) {
   const chaveAcesso = (doc.querySelector('infNFe')?.getAttribute('Id') || '').replace(/^NFe/, '')
   const dhEmi = doc.querySelector('ide dhEmi')?.textContent || doc.querySelector('ide dEmi')?.textContent || ''
   const vNF = parseFloat(doc.querySelector('ICMSTot vNF')?.textContent || '0')
+  // cobrança (duplicatas): vencimento (1ª parcela) + valor do título (líquido, ou soma das parcelas, ou o total)
+  const dups = Array.from(doc.querySelectorAll('cobr dup'))
+  const dataVenc = dups[0]?.querySelector('dVenc')?.textContent || ''
+  const vLiq = parseFloat(doc.querySelector('cobr fat vLiq')?.textContent || '0')
+  const somaDup = dups.reduce((s, d) => s + parseFloat(d.querySelector('vDup')?.textContent || '0'), 0)
+  const valorTitulo = vLiq || somaDup || vNF
   const itens: XmlItem[] = []
   doc.querySelectorAll('det').forEach((det) => {
     const prod = det.querySelector('prod'); if (!prod) return
     itens.push({ descricao: prod.querySelector('xProd')?.textContent?.trim() || '', codigo: prod.querySelector('cProd')?.textContent?.trim() || '', unidade: prod.querySelector('uCom')?.textContent?.trim() || '', quantidade: parseFloat(prod.querySelector('qCom')?.textContent || '0'), valorUnit: parseFloat(prod.querySelector('vUnCom')?.textContent || '0') })
   })
-  return { nNF, serie, emitNome, cnpjEmit, cnpjDest, chaveAcesso, dhEmi, vNF, itens }
+  return { nNF, serie, emitNome, cnpjEmit, cnpjDest, chaveAcesso, dhEmi, vNF, dataVenc, valorTitulo, itens }
 }
 
 export function MonitorNfe() {
@@ -630,7 +636,7 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
   const okCount = matched.filter(Boolean).length
   const pend = parsed ? parsed.itens.length - okCount : 0
 
-  const criar = async (p: any, status: string): Promise<string> => { const { data: d, error } = await supabase.from('nfe_recebidas').insert({ tenant_id: tenantId, loja_id: lojaSel || null, numero: p.nNF || '0', serie: p.serie || '1', chave_acesso: p.chaveAcesso || null, cnpj_emitente: p.cnpjEmit || '', nome_emitente: p.emitNome || '', data_emissao: p.dhEmi || (data + 'T12:00:00'), valor_total: p.vNF || 0, status, fonte: 'upload' }).select('id'); if (error) throw error; return d![0].id }
+  const criar = async (p: any, status: string): Promise<string> => { const { data: d, error } = await supabase.from('nfe_recebidas').insert({ tenant_id: tenantId, loja_id: lojaSel || null, numero: p.nNF || '0', serie: p.serie || '1', chave_acesso: p.chaveAcesso || null, cnpj_emitente: p.cnpjEmit || '', nome_emitente: p.emitNome || '', data_emissao: p.dhEmi || (data + 'T12:00:00'), valor_total: p.vNF || 0, valor_titulo: p.valorTitulo || null, data_vencimento: p.dataVenc || null, status, fonte: 'upload' }).select('id'); if (error) throw error; return d![0].id }
 
   const registrar = async () => {
     if (!parsed) return
@@ -645,7 +651,7 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
           const { data: its } = await supabase.from('nfe_itens').select('id').eq('nfe_id', ex[0].id).limit(1)
           if (its && its.length) { onToast(`NF-e ${p.nNF} já estava registrada no Monitor.`, 'ok'); setSaving(false); onDone(); return }
           nfeId = ex[0].id
-          await supabase.from('nfe_recebidas').update({ status, loja_id: lojaSel || null, numero: p.nNF || '0', serie: p.serie || '1', nome_emitente: p.emitNome, valor_total: p.vNF || 0, data_emissao: p.dhEmi || (data + 'T12:00:00'), fonte: 'upload' }).eq('id', nfeId)
+          await supabase.from('nfe_recebidas').update({ status, loja_id: lojaSel || null, numero: p.nNF || '0', serie: p.serie || '1', nome_emitente: p.emitNome, valor_total: p.vNF || 0, valor_titulo: p.valorTitulo || null, data_vencimento: p.dataVenc || null, data_emissao: p.dhEmi || (data + 'T12:00:00'), fonte: 'upload' }).eq('id', nfeId)
         } else nfeId = await criar(p, status)
       } else nfeId = await criar(p, status)
       const batch = p.itens.map((it, i) => ({ nfe_id: nfeId, tenant_id: tenantId, descricao_nfe: (it.descricao || '').toUpperCase(), codigo_item_fornecedor: it.codigo || null, quantidade: it.quantidade || 0, unidade_nfe: (it.unidade || 'UN').toUpperCase(), valor_unitario: it.valorUnit || 0, valor_total: +((it.quantidade || 0) * (it.valorUnit || 0)).toFixed(2), vinculacao_id: matched[i] }))
