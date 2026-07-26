@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
   const wins = janelas(dias)
   const inicio = Date.now()
-  let itensLidos = 0, comFicha = 0, semFicha = 0, gravados = 0, ultimoStatus = 0, ultimoRaw = ''
+  let itensLidos = 0, comProduto = 0, semProduto = 0, comFicha = 0, gravados = 0, ultimoStatus = 0, ultimoRaw = ''
   const rows: any[] = []
 
   for (const w of wins) {
@@ -87,12 +87,14 @@ Deno.serve(async (req) => {
         const dia = String(venda?.shift_date || '').substring(0, 10) || null
         const items = Array.isArray(venda?.items) ? venda.items : []
         for (const it of items) {
-          if (it?.deleted === 'S' || it?.deleted === true) continue   // item cancelado
+          if (it?.deleted === 'Y' || it?.deleted === true) continue   // item CANCELADO (Saipos usa 'Y'/'N')
           itensLidos++
           const cod = String(it?.integration_code ?? '').trim()
           const pid = cod ? prodByCod.get(cod) : undefined
-          const fid = pid ? fichaByProduto.get(pid) : undefined
-          if (fid) comFicha++; else semFicha++
+          if (!pid) { semProduto++; continue }   // não é produto cadastrado (inclusão de rodízio, etc.) → ignora
+          comProduto++
+          const fid = fichaByProduto.get(pid)
+          if (fid) comFicha++
           const qtd = Number(it?.quantity) || 0
           const vu = Number(it?.unit_price) || 0
           rows.push({
@@ -108,11 +110,11 @@ Deno.serve(async (req) => {
     if (Date.now() - inicio > BUDGET_MS) break
   }
 
-  const cobertura = itensLidos ? Math.round((comFicha / itensLidos) * 100) : 0
+  const cobertura = comProduto ? Math.round((comFicha / comProduto) * 100) : 0
 
   // DIAG: só conta (não grava)
   if (modo !== 'pull') {
-    return json({ modo: 'diag', tenant, janelas: wins.length, itensLidos, comFicha, semFicha, cobertura_pct: cobertura, ultimoStatus, ultimoRaw })
+    return json({ modo: 'diag', tenant, janelas: wins.length, itensLidos, comProduto, semProduto, comFicha, cobertura_pct: cobertura, ultimoStatus, ultimoRaw })
   }
 
   // PULL: apaga os itens Saipos do período e reinsere (idempotente)
@@ -125,6 +127,6 @@ Deno.serve(async (req) => {
     if (!error) gravados += chunk.length
   }
 
-  console.log('saipos pull:', { tenant, itensLidos, comFicha, gravados })
-  return json({ ok: true, modo: 'pull', tenant, janelas: wins.length, itensLidos, comFicha, semFicha, cobertura_pct: cobertura, gravados, ultimoStatus })
+  console.log('saipos pull:', { tenant, itensLidos, comProduto, comFicha, gravados })
+  return json({ ok: true, modo: 'pull', tenant, janelas: wins.length, itensLidos, comProduto, semProduto, comFicha, cobertura_pct: cobertura, gravados, ultimoStatus })
 })
