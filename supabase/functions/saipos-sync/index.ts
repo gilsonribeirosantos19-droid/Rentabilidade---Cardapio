@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
   const inicio = Date.now()
   let itensLidos = 0, comProduto = 0, semProduto = 0, comFicha = 0, gravados = 0, ultimoStatus = 0, ultimoRaw = ''
   const rows: any[] = []
+  const semProdNomes = new Map<string, number>()   // ranking dos nomes que NÃO bateram (só diag)
 
   for (const w of wins) {
     for (let off = 0; off < 200000; off += 1000) {
@@ -91,7 +92,12 @@ Deno.serve(async (req) => {
           itensLidos++
           const cod = String(it?.integration_code ?? '').trim()
           const pid = cod ? prodByCod.get(cod) : undefined
-          if (!pid) { semProduto++; continue }   // não é produto cadastrado (inclusão de rodízio, etc.) → ignora
+          if (!pid) {   // não é produto cadastrado (inclusão de rodízio, etc.) → ignora
+            semProduto++
+            const nm = String(it?.desc_sale_item || '(sem nome)')
+            semProdNomes.set(nm, (semProdNomes.get(nm) || 0) + 1)
+            continue
+          }
           comProduto++
           const fid = fichaByProduto.get(pid)
           if (fid) comFicha++
@@ -112,9 +118,10 @@ Deno.serve(async (req) => {
 
   const cobertura = comProduto ? Math.round((comFicha / comProduto) * 100) : 0
 
-  // DIAG: só conta (não grava)
+  // DIAG: só conta (não grava). topSemProduto = os 30 nomes que MAIS aparecem sem bater produto.
   if (modo !== 'pull') {
-    return json({ modo: 'diag', tenant, janelas: wins.length, itensLidos, comProduto, semProduto, comFicha, cobertura_pct: cobertura, ultimoStatus, ultimoRaw })
+    const topSemProduto = [...semProdNomes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([nome, qtd]) => ({ nome, qtd }))
+    return json({ modo: 'diag', tenant, janelas: wins.length, itensLidos, comProduto, semProduto, comFicha, cobertura_pct: cobertura, topSemProduto, ultimoStatus })
   }
 
   // PULL: apaga os itens Saipos do período e reinsere (idempotente)
