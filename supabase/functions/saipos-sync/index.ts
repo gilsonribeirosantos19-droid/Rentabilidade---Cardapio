@@ -1,17 +1,15 @@
 // ════════════════════════════════════════════════════════════════════════════
 //  saipos-sync — CAPTURA de vendas via SAIPOS → CAMADA DE VENDAS GENÉRICA (PULL)
-//  Fonte: GET https://data.saipos.io/v1/sales_items (Bearer <SAIPOS_TOKEN>)
-//  Grava em (todas com fonte='saipos'):
-//    • recebimento_vendas  → portão/totais por loja×dia (faturado, comandas, turno, status='processado')
-//    • vendas_produto_dia  → produtos vendidos por loja×dia (qtd, faturado, ficha_id) — alimenta CMV/CurvaABC/Engenharia
-//    • vendas_item         → detalhe item-a-item (usado pela tela Divergências)
-//  De-para: produtos.codigo_pdv == item.integration_code → produto → ficha.
-//    produto_id gravado em vendas_produto_dia = o próprio código (== codigo_pdv), pra casar com o de-para das telas.
-//  Turno: o Saipos NÃO manda turno → separa almoço/jantar pela HORA do created_at da venda (< CORTE = almoço).
-//  Loja: mapeia por id_store; no piloto (tenant com 1 loja) usa a única loja ativa.
-//  ⚠️ ROBUSTEZ: puxa DIA A DIA (requisição pequena, com retry) — se um dia falhar (504), PULA esse dia e
-//     PRESERVA o que já existe (não zera, não deixa parcial). Grava dia a dia (progresso não se perde no timeout).
-//  Modos (body.mode): 'diag' (padrão, só conta) | 'pull' (grava). body.dias = quantos dias atrás (máx útil 15).
+//  Usa DOIS endpoints da API de Consulta de Dados (Bearer <SAIPOS_TOKEN>):
+//    • GET /v1/search_sales  → PEDIDOS  → recebimento_vendas (faturamento/turno/pessoas/comandas).
+//        faturamento = Σ total_amount (COM taxa de serviço) dos pedidos com canceled='N'. BATE com o painel.
+//        turno vem pronto (store_shift.desc_store_shift = 'almoço'/'jantar'), pessoas = customers_on_table.
+//    • GET /v1/sales_items   → ITENS    → vendas_produto_dia + vendas_item (produtos p/ CMV/CurvaABC/Engenharia).
+//  De-para: produtos.codigo_pdv == item.integration_code → produto → ficha (ficha_id).
+//  Loja: no piloto (tenant com 1 loja) usa a única loja ativa.
+//  ⚠️ ROBUSTEZ: DIA A DIA (do mais NOVO pro mais antigo), com retry. Se um fetch falhar (504), PULA e
+//     PRESERVA o que já existe. Grava dia a dia (progresso não se perde no timeout).
+//  Modos (body.mode): 'diag' (só conta, não grava) | 'pull' (grava). body.dias = quantos dias atrás.
 // ════════════════════════════════════════════════════════════════════════════
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -24,21 +22,21 @@ const TENANT_MORI = '33e81daf-662f-43d1-8684-0702e959c4f9' // piloto Saipos
 const SAIPOS_BASE = 'https://data.saipos.io/v1'
 const SAIPOS_TOKEN = Deno.env.get('SAIPOS_TOKEN') || ''
 const BUDGET_MS = 110000
-const CORTE_ALMOCO_H = 17     // hora local < 17h = almoço; 17h+ = jantar (Mori: jantar começa 17h). Saipos não manda turno.
+const CORTE_ALMOCO_H = 17     // fallback de turno se o pedido não trouxer store_shift
 
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json' } })
 const ymd = (d: Date) => d.toISOString().substring(0, 10)
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-// lista dos últimos `dias` dias (inclui hoje) — do mais antigo pro mais novo
+// últimos `dias` dias, do MAIS NOVO pro mais antigo (o cron precisa do dia de ontem primeiro)
 function ultimosDias(dias: number): string[] {
   const out: string[] = []
-  for (let i = dias; i >= 0; i--) out.push(ymd(new Date(Date.now() - i * 86400000)))
+  for (let i = 0; i <= dias; i++) out.push(ymd(new Date(Date.now() - i * 86400000)))
   return out
 }
 
-// GET sales_items de UM DIA (cada venda tem items[] + id_sale + created_at). Até 3 tentativas (504 sob carga).
-async function buscarDia(dia: string, offset: number) {
+// GET genérico de um recurso do Saipos p/ UM dia. Até 3 tentativas (504 sob carga).
+async function buscar(recurso: string, dia: string, offset: number) {
   const qs = new URLSearchParams({
     p_date_column_filter: 'shift_date',
     p_filter_date_start: `${dia} 00:00:00`,
@@ -48,21 +46,37 @@ async function buscarDia(dia: string, offset: number) {
   })
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await fetch(`${SAIPOS_BASE}/sales_items?${qs}`, { headers: { Authorization: `Bearer ${SAIPOS_TOKEN}` } })
+      const res = await fetch(`${SAIPOS_BASE}/${recurso}?${qs}`, { headers: { Authorization: `Bearer ${SAIPOS_TOKEN}` } })
       const raw = await res.text()
       if (res.status === 200) {
         let data: unknown = null
         try { data = JSON.parse(raw) } catch { /* ignore */ }
-        return { status: 200, sales: Array.isArray(data) ? (data as any[]) : [], rawHead: raw.substring(0, 300) }
+        return { status: 200, rows: Array.isArray(data) ? (data as any[]) : [] }
       }
       if (res.status >= 500 && attempt < 3) { await sleep(2000); continue }
-      return { status: res.status, sales: [] as any[], rawHead: raw.substring(0, 300) }
-    } catch (e) {
+      return { status: res.status, rows: [] as any[] }
+    } catch (_e) {
       if (attempt < 3) { await sleep(2000); continue }
-      return { status: 0, sales: [] as any[], rawHead: String(e).substring(0, 300) }
+      return { status: 0, rows: [] as any[] }
     }
   }
-  return { status: 0, sales: [] as any[], rawHead: 'sem resposta' }
+  return { status: 0, rows: [] as any[] }
+}
+
+// lê TODAS as páginas de um recurso p/ um dia (respeitando o budget). ok=false se algum fetch falhar.
+async function buscarTudo(recurso: string, dia: string, inicio: number) {
+  const rows: any[] = []
+  let ok = true, status = 0
+  for (let off = 0; off < 200000; off += 1000) {
+    if (Date.now() - inicio > BUDGET_MS) { ok = false; break }
+    const r = await buscar(recurso, dia, off)
+    status = r.status
+    if (r.status !== 200) { ok = false; break }
+    if (!r.rows.length) break
+    rows.push(...r.rows)
+    if (r.rows.length < 1000) break
+  }
+  return { ok, status, rows }
 }
 
 Deno.serve(async (req) => {
@@ -75,7 +89,7 @@ Deno.serve(async (req) => {
   const modo = body.mode || 'diag'
   const corte = Number(body.corte) || CORTE_ALMOCO_H
 
-  // de-para: codigo_pdv (== integration_code) → produto (id/nome/grupo) → ficha_id
+  // de-para p/ os ITENS: codigo_pdv (== integration_code) → produto (id/nome/grupo) → ficha_id
   const { data: prods } = await supabase.from('produtos').select('id,codigo_pdv,nome,grupo').eq('tenant_id', tenant)
   const prodByCod = new Map<string, { id: string; nome: string | null; grupo: string | null }>()
   for (const p of prods || []) { const c = String((p as any).codigo_pdv ?? '').trim(); if (c) prodByCod.set(c, { id: (p as any).id, nome: (p as any).nome ?? null, grupo: (p as any).grupo ?? null }) }
@@ -83,55 +97,69 @@ Deno.serve(async (req) => {
   const fichaByProduto = new Map<string, string>()
   for (const f of fichas || []) { if ((f as any).produto_id) fichaByProduto.set((f as any).produto_id, (f as any).id) }
 
-  // loja: piloto = tenant com 1 loja ativa → usa ela. (multi-loja: mapear id_store → loja depois.)
+  // loja: piloto = tenant com 1 loja ativa
   const { data: lojasRows } = await supabase.from('lojas').select('id').eq('tenant_id', tenant).eq('ativo', true)
   const lojaUnica = (lojasRows && lojasRows.length === 1) ? (lojasRows[0] as any).id as string : null
 
   const inicio = Date.now()
   const now = new Date().toISOString()
-  let itensLidos = 0, comProduto = 0, semProduto = 0, comFicha = 0
-  let gravItem = 0, gravProd = 0, gravRec = 0, diasGravados = 0, diasPulados = 0, ultimoStatus = 0, ultimoRaw = ''
-  const semProdNomes = new Map<string, number>()               // ranking dos nomes que NÃO bateram (diag)
+  let faturamentoTotal = 0, comandasTotal = 0, itensLidos = 0, comProduto = 0, semProduto = 0, comFicha = 0
+  let gravRec = 0, gravProd = 0, gravItem = 0, diasRec = 0, diasProd = 0, diasPulados = 0, ultimoStatus = 0
+  const semProdNomes = new Map<string, number>()
 
-  // ── LOOP DIA A DIA (cada dia é atômico: se falhar, pula e preserva o existente) ──
   for (const dia of ultimosDias(dias)) {
     if (Date.now() - inicio > BUDGET_MS) break
 
-    const rec = { fat: 0, almoco: 0, jantar: 0, comandas: new Set<any>() }
-    const pd = new Map<number, { produto_nome: string | null; grupo: string | null; ficha_id: string | null; qtd: number; faturado: number }>()
-    const itemRows: any[] = []
-    let lidosDia = 0
-    let okDia = true
+    // ═══ 1) PEDIDOS (search_sales) → recebimento_vendas ═══
+    const ped = await buscarTudo('search_sales', dia, inicio)
+    ultimoStatus = ped.status
+    if (ped.ok && ped.rows.length) {
+      let fat = 0, almoco = 0, jantar = 0, desconto = 0, taxa = 0, subtotal = 0, pessoas = 0, comandas = 0, canceladas = 0
+      for (const v of ped.rows) {
+        if (v?.canceled === 'Y' || v?.canceled === true) { canceladas++; continue }   // pedido cancelado → fora
+        const tot = Number(v?.total_amount) || 0
+        fat += tot; comandas++
+        subtotal += Number(v?.total_amount_items) || 0
+        desconto += Number(v?.total_discount) || 0
+        taxa += Number(v?.table_order?.total_service_charge_amount) || 0
+        pessoas += Number(v?.table_order?.customers_on_table) || 0
+        const shift = String(v?.store_shift?.desc_store_shift || '').toLowerCase()
+        const isAlmoco = shift ? shift.startsWith('almo') : (Number(String(v?.created_at || '').substring(11, 13)) < corte)
+        if (isAlmoco) almoco += tot; else jantar += tot
+      }
+      faturamentoTotal += fat; comandasTotal += comandas
+      if (modo === 'pull' && lojaUnica) {
+        await supabase.from('recebimento_vendas').delete().eq('tenant_id', tenant).eq('fonte', 'saipos').eq('data', dia)
+        const { error } = await supabase.from('recebimento_vendas').insert({
+          tenant_id: tenant, loja_id: lojaUnica, data: dia,
+          faturado: Number(fat.toFixed(2)), subtotal: Number(subtotal.toFixed(2)),
+          desconto: Number(desconto.toFixed(2)), taxa: Number(taxa.toFixed(2)), couvert: 0, qtd_caixas: 0,
+          qtd_comandas: comandas, qtd_canceladas: canceladas, pessoas,
+          ticket_medio: comandas ? Number((fat / comandas).toFixed(2)) : 0,
+          fat_almoco: Number(almoco.toFixed(2)), fat_jantar: Number(jantar.toFixed(2)),
+          por_canal: null, status: 'processado', erros: null, fonte: 'saipos',
+          data_integracao: now, atualizado_em: now,
+        })
+        if (!error) { gravRec++; diasRec++ }
+      } else if (modo !== 'pull') { diasRec++ }
+    } else { diasPulados++ }
 
-    for (let off = 0; off < 200000; off += 1000) {
-      if (Date.now() - inicio > BUDGET_MS) { okDia = false; break }
-      const r = await buscarDia(dia, off)
-      ultimoStatus = r.status; ultimoRaw = r.rawHead
-      if (r.status !== 200) { okDia = false; break }   // dia falhou → NÃO mexe nesse dia
-      if (!r.sales.length) break
-      for (const venda of r.sales) {
-        const hora = Number(String(venda?.created_at || '').substring(11, 13))
-        const turno = (hora >= 0 && hora < corte) ? 'almoco' : 'jantar'
+    // ═══ 2) ITENS (sales_items) → vendas_produto_dia + vendas_item ═══
+    if (Date.now() - inicio > BUDGET_MS) break
+    const its = await buscarTudo('sales_items', dia, inicio)
+    if (its.ok && its.rows.length) {
+      const pd = new Map<number, { produto_nome: string | null; grupo: string | null; ficha_id: string | null; qtd: number; faturado: number }>()
+      const itemRows: any[] = []
+      for (const venda of its.rows) {
         const items = Array.isArray(venda?.items) ? venda.items : []
-        let teve = false
         for (const it of items) {
-          // Conta TODOS os itens. O "Total dos pedidos" do Saipos inclui transferências E itens com
-          // "motivo de cancelamento" (que NÃO são cancelamento de fato — foram cobrados). Só os pedidos
-          // 100% cancelados (~R$1.262/mês no Mori) ficam de fora lá — desprezível. Excluir dava ~R$14k a menos.
-          itensLidos++; lidosDia++
+          itensLidos++
           const qtd = Number(it?.quantity) || 0
           const vu = Number(it?.unit_price) || 0
           const vt = Number((qtd * vu).toFixed(2))
           const cod = String(it?.integration_code ?? '').trim()
-          // portão: soma TODOS os itens (é o faturamento real do dia)
-          rec.fat += vt; if (turno === 'almoco') rec.almoco += vt; else rec.jantar += vt; teve = true
           const p = cod ? prodByCod.get(cod) : undefined
-          if (!p) {   // não é produto cadastrado (inclusão de rodízio etc.)
-            semProduto++
-            const nm = String(it?.desc_sale_item || '(sem nome)')
-            semProdNomes.set(nm, (semProdNomes.get(nm) || 0) + 1)
-            continue
-          }
+          if (!p) { semProduto++; const nm = String(it?.desc_sale_item || '(sem nome)'); semProdNomes.set(nm, (semProdNomes.get(nm) || 0) + 1); continue }
           comProduto++
           const fid = fichaByProduto.get(p.id) || null
           if (fid) comFicha++
@@ -144,65 +172,29 @@ Deno.serve(async (req) => {
           const prodNum = /^\d+$/.test(cod) ? Number(cod) : null
           if (prodNum !== null) {
             const a = pd.get(prodNum) || { produto_nome: p.nome, grupo: p.grupo, ficha_id: fid, qtd: 0, faturado: 0 }
-            a.qtd += qtd; a.faturado = Number((a.faturado + vt).toFixed(2))
-            pd.set(prodNum, a)
+            a.qtd += qtd; a.faturado = Number((a.faturado + vt).toFixed(2)); pd.set(prodNum, a)
           }
         }
-        if (teve) rec.comandas.add(venda?.id_sale)
       }
-      if (r.sales.length < 1000) break
+      if (modo === 'pull' && lojaUnica) {
+        await supabase.from('vendas_item').delete().eq('tenant_id', tenant).like('pdv_ref', 'saipos:%').eq('data', dia)
+        for (let i = 0; i < itemRows.length; i += 500) { const { error } = await supabase.from('vendas_item').insert(itemRows.slice(i, i + 500)); if (!error) gravItem += Math.min(500, itemRows.length - i) }
+        await supabase.from('vendas_produto_dia').delete().eq('tenant_id', tenant).eq('fonte', 'saipos').eq('data', dia)
+        const pdRows = [...pd.entries()].map(([produto_id, a]) => ({ tenant_id: tenant, loja_id: lojaUnica, data: dia, produto_id, produto_nome: a.produto_nome, grupo: a.grupo, qtd: a.qtd, faturado: a.faturado, ficha_id: a.ficha_id, fonte: 'saipos', atualizado_em: now }))
+        for (let i = 0; i < pdRows.length; i += 500) { const { error } = await supabase.from('vendas_produto_dia').insert(pdRows.slice(i, i + 500)); if (!error) gravProd += Math.min(500, pdRows.length - i) }
+        diasProd++
+      } else if (modo !== 'pull') { diasProd++ }
     }
-
-    if (!okDia) { diasPulados++; continue }        // dia falhou (504/timeout) → preserva o existente
-    if (lidosDia === 0) { diasPulados++; continue } // dia sem venda → NÃO apaga (preserva)
-    if (modo !== 'pull') { diasGravados++; continue } // diag: só conta
-    if (!lojaUnica) { diasPulados++; continue }     // sem loja definida → não grava
-
-    // ── grava SÓ esse dia (idempotente por dia; NÃO toca no que é fonte='icomanda') ──
-    await supabase.from('vendas_item').delete().eq('tenant_id', tenant).like('pdv_ref', 'saipos:%').eq('data', dia)
-    for (let i = 0; i < itemRows.length; i += 500) {
-      const { error } = await supabase.from('vendas_item').insert(itemRows.slice(i, i + 500))
-      if (!error) gravItem += Math.min(500, itemRows.length - i)
-    }
-
-    await supabase.from('vendas_produto_dia').delete().eq('tenant_id', tenant).eq('fonte', 'saipos').eq('data', dia)
-    const pdRows = [...pd.entries()].map(([produto_id, a]) => ({
-      tenant_id: tenant, loja_id: lojaUnica, data: dia, produto_id,
-      produto_nome: a.produto_nome, grupo: a.grupo, qtd: a.qtd, faturado: a.faturado,
-      ficha_id: a.ficha_id, fonte: 'saipos', atualizado_em: now,
-    }))
-    for (let i = 0; i < pdRows.length; i += 500) {
-      const { error } = await supabase.from('vendas_produto_dia').insert(pdRows.slice(i, i + 500))
-      if (!error) gravProd += Math.min(500, pdRows.length - i)
-    }
-
-    await supabase.from('recebimento_vendas').delete().eq('tenant_id', tenant).eq('fonte', 'saipos').eq('data', dia)
-    const com = rec.comandas.size
-    const { error: eR } = await supabase.from('recebimento_vendas').insert({
-      tenant_id: tenant, loja_id: lojaUnica, data: dia,
-      faturado: Number(rec.fat.toFixed(2)), subtotal: Number(rec.fat.toFixed(2)),
-      desconto: 0, taxa: 0, couvert: 0, qtd_caixas: 0,
-      qtd_comandas: com, qtd_canceladas: 0, pessoas: 0,
-      ticket_medio: com ? Number((rec.fat / com).toFixed(2)) : 0,
-      fat_almoco: Number(rec.almoco.toFixed(2)), fat_jantar: Number(rec.jantar.toFixed(2)),
-      por_canal: null, status: 'processado', erros: null, fonte: 'saipos',
-      data_integracao: now, atualizado_em: now,
-    })
-    if (!eR) gravRec++
-    diasGravados++
   }
 
   const cobertura = comProduto ? Math.round((comFicha / comProduto) * 100) : 0
-
-  if (modo !== 'pull') {
-    const topSemProduto = [...semProdNomes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([nome, qtd]) => ({ nome, qtd }))
-    return json({ modo: 'diag', tenant, dias_ok: diasGravados, dias_pulados: diasPulados, itensLidos, comProduto, semProduto, comFicha, cobertura_pct: cobertura, loja_unica: lojaUnica, topSemProduto, ultimoStatus })
-  }
-
-  console.log('saipos pull:', { tenant, diasGravados, diasPulados, itensLidos, comProduto, comFicha, gravItem, gravProd, gravRec })
-  return json({
-    ok: true, modo: 'pull', tenant, dias_gravados: diasGravados, dias_pulados: diasPulados,
+  const res: any = {
+    ok: true, modo, tenant, dias_recebimento: diasRec, dias_produtos: diasProd, dias_pulados: diasPulados,
+    faturamento: Number(faturamentoTotal.toFixed(2)), comandas: comandasTotal,
     itensLidos, comProduto, semProduto, comFicha, cobertura_pct: cobertura,
-    gravados_item: gravItem, gravados_produto_dia: gravProd, gravados_recebimento: gravRec, ultimoStatus,
-  })
+    gravados_recebimento: gravRec, gravados_produto_dia: gravProd, gravados_item: gravItem, ultimoStatus,
+  }
+  if (modo !== 'pull') res.topSemProduto = [...semProdNomes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([nome, qtd]) => ({ nome, qtd }))
+  console.log('saipos', modo, { tenant, diasRec, diasProd, faturamentoTotal, gravRec, gravProd, gravItem })
+  return json(res)
 })
