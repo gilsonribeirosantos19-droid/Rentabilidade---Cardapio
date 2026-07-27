@@ -38,7 +38,6 @@ export function FaturamentoVendas() {
   // --- dados REAIS do iComanda (icomanda_faturamento) ---
   const [rows, setRows] = useState<FatRow[]>([])
   const [loading, setLoading] = useState(false)
-  const [syncing, setSyncing] = useState(false)
   const [msg, setMsg] = useState('')
   const lojaNome = useMemo(() => { const m: Record<string, string> = {}; lojas.forEach((l) => { m[l.id] = l.nome }); return m }, [lojas])
   // agrega por loja somando faturado/caixas/comissão(taxa)/pessoas/comandas dos dias do intervalo
@@ -58,10 +57,6 @@ export function FaturamentoVendas() {
       supabase.from('recebimento_vendas').select('*').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).range(f, t))
     return buildRows(data)
   }
-  async function carregar() {
-    try { setRows(await fetchFat()) }
-    catch (e) { setMsg('Erro ao carregar faturamento: ' + (e as Error).message); setRows([]) }
-  }
   useEffect(() => {
     if (!tenantId || !de || !ate) { setRows([]); return }
     let alive = true
@@ -73,20 +68,6 @@ export function FaturamentoVendas() {
     return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, de, ate, lojaNome])
-  async function puxar() {
-    if (!tenantId || syncing || !de || !ate) return
-    setSyncing(true); setMsg('Puxando do iComanda… (dia a dia, pode levar ~1 min)')
-    try {
-      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate } })
-      if (error) throw error
-      if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
-      setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}.`)
-      await carregar()
-    } catch (e) {
-      setMsg('Erro ao puxar: ' + (e as Error).message)
-    } finally { setSyncing(false) }
-  }
-
   const setPeriodo = (label: string) => {
     const lb = label || 'Personalizado'; setPeriodoSel(lb); const d = new Date()
     if (lb === 'Mês Atual') { setDe(mesInicio()); setAte(mesFim()) }
@@ -134,7 +115,6 @@ export function FaturamentoVendas() {
         <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-actions">
-          <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
           <button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button>
         </div>
       </div>
@@ -162,7 +142,7 @@ export function FaturamentoVendas() {
           </thead>
           <tbody>
             {!lista.length
-              ? <tr><td colSpan={8} className="empty">Nenhum faturamento no filtro. Clique em "Puxar do iComanda".</td></tr>
+              ? <tr><td colSpan={8} className="empty">Nenhum faturamento no filtro. Puxe as vendas na tela Recebimento de Vendas.</td></tr>
               : <>
                 {lista.map((r, i) => {
                   const pct = totFat > 0 ? r.faturado / totFat * 100 : 0
