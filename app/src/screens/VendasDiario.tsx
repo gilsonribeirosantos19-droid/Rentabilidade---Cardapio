@@ -33,7 +33,6 @@ export function VendasDiario() {
   const [lojaOpen, setLojaOpen] = useState(false)
   const [turnoSel, setTurnoSel] = useState('Almoço + Jantar')
   const [canalSel, setCanalSel] = useState('Todos')
-  const [syncing, setSyncing] = useState(false)
   const [msg, setMsg] = useState('')
   const initRef = useRef(false)
   useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.id))) } }, [lojas])
@@ -66,20 +65,6 @@ export function VendasDiario() {
     return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, de, ate])
-  async function puxar() {
-    if (!tenantId || syncing || !de || !ate) return
-    setSyncing(true); setMsg('Puxando do iComanda… (dia a dia, pode levar ~1 min)')
-    try {
-      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate } })
-      if (error) throw error
-      if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
-      setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}.`)
-      setRecebidos(await fetchDias())
-    } catch (e) {
-      setMsg('Erro ao puxar: ' + (e as Error).message)
-    } finally { setSyncing(false) }
-  }
-
   const lista = useMemo<Row[]>(() => {
     const filtraLoja = lojaSet.size > 0 && !allSel
     const base = recebidos.filter((r) => !filtraLoja || lojaSet.has(r.loja_id))
@@ -177,7 +162,6 @@ export function VendasDiario() {
         <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-actions">
-          <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
           <button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button>
         </div>
       </div>
@@ -200,7 +184,7 @@ export function VendasDiario() {
           </thead>
           <tbody>
             {!lista.length
-              ? <tr><td colSpan={nCols} className="empty">Nenhum dia processado no filtro. Clique em "Puxar do iComanda".</td></tr>
+              ? <tr><td colSpan={nCols} className="empty">Nenhum dia processado no filtro. Puxe as vendas na tela Recebimento de Vendas.</td></tr>
               : <>
                 {lista.map((r) => (
                   <tr key={r.id}>
