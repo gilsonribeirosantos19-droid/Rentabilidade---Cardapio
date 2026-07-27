@@ -115,7 +115,9 @@ Deno.serve(async (req) => {
         const items = Array.isArray(venda?.items) ? venda.items : []
         let teve = false
         for (const it of items) {
-          if (it?.deleted === 'Y' || it?.deleted === true) continue   // item CANCELADO (Saipos usa 'Y'/'N')
+          // pula SÓ cancelamento REAL (tem id_store_cancellation_reason). Transferência de mesa
+          // (deleted='Y' + id_sale_to, SEM motivo de cancelamento) é VENDA REAL → mantém.
+          if (it?.id_store_cancellation_reason != null) continue
           itensLidos++; lidosDia++
           const qtd = Number(it?.quantity) || 0
           const vu = Number(it?.unit_price) || 0
