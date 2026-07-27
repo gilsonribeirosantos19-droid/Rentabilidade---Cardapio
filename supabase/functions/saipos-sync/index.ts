@@ -115,9 +115,9 @@ Deno.serve(async (req) => {
         const items = Array.isArray(venda?.items) ? venda.items : []
         let teve = false
         for (const it of items) {
-          // pula SÓ cancelamento REAL (tem id_store_cancellation_reason). Transferência de mesa
-          // (deleted='Y' + id_sale_to, SEM motivo de cancelamento) é VENDA REAL → mantém.
-          if (it?.id_store_cancellation_reason != null) continue
+          // Conta TODOS os itens. O "Total dos pedidos" do Saipos inclui transferências E itens com
+          // "motivo de cancelamento" (que NÃO são cancelamento de fato — foram cobrados). Só os pedidos
+          // 100% cancelados (~R$1.262/mês no Mori) ficam de fora lá — desprezível. Excluir dava ~R$14k a menos.
           itensLidos++; lidosDia++
           const qtd = Number(it?.quantity) || 0
           const vu = Number(it?.unit_price) || 0
