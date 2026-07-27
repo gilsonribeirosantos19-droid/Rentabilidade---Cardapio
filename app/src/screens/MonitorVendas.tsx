@@ -78,6 +78,12 @@ export function MonitorVendas() {
     queryFn: async () => fetchAll<RecRow>((f, t) => supabase.from('recebimento_vendas').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as RecRow[]),
   })
 
+  // este tenant usa Saipos? (tem algum recebimento fonte='saipos'). Define qual botão/motor de puxada.
+  const { data: usaSaipos = false } = useQuery({
+    queryKey: ['usa-saipos', tenantId], enabled: !!tenantId,
+    queryFn: async () => { const { count } = await supabase.from('recebimento_vendas').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('fonte', 'saipos'); return (count ?? 0) > 0 },
+  })
+
   async function puxar() {
     if (!tenantId || syncing || !de || !ate) return
     setSyncing(true); setMsg('Puxando do iComanda… (dia a dia, pode levar ~1 min)')
@@ -91,6 +97,24 @@ export function MonitorVendas() {
       setMsg('Erro ao puxar: ' + (e as Error).message)
     } finally { setSyncing(false) }
   }
+
+  async function puxarSaipos() {
+    if (!tenantId || syncing || !de || !ate) return
+    setSyncing(true); setMsg('Puxando do Saipos… (dia a dia; se um período grande não completar, clique de novo)')
+    try {
+      const { data, error } = await supabase.functions.invoke('saipos-sync', { body: { mode: 'pull', de, ate } })
+      if (error) throw error
+      setMsg(`✓ ${data?.dias_recebimento ?? 0} dias · R$ ${brl(Number(data?.faturamento) || 0)} de faturamento.`)
+      refetch()
+    } catch (e) {
+      // pode ser timeout num período grande — parte já foi gravada; refaz a leitura e avisa pra clicar de novo
+      setMsg('Puxada interrompida (período grande? clique de novo pra completar). ' + (e as Error).message)
+      refetch()
+    } finally { setSyncing(false) }
+  }
+  // motor de puxada conforme o PDV do tenant
+  const doPuxar = usaSaipos ? puxarSaipos : puxar
+  const puxarLabel = usaSaipos ? 'Puxar do Saipos' : 'Puxar do iComanda'
 
   // monta as linhas: para cada loja × cada dia do período → registro recebido, senão "Não Recebido"
   const rows = useMemo<Row[]>(() => {
@@ -140,7 +164,7 @@ export function MonitorVendas() {
         <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-actions">
-          <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
+          <button className="btn-ghost" onClick={doPuxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : `↻ ${puxarLabel}`}</button>
         </div>
       </div>
 
@@ -168,7 +192,7 @@ export function MonitorVendas() {
       <div className="card">
         <div className="toolbar">
           <button className="btn-ghost btn-sm" onClick={() => refetch()}>↻ Atualizar</button>
-          <button className="btn-ghost btn-sm" onClick={puxar} disabled={syncing}>{syncing ? '⏳ Puxando…' : '⇩ Puxar dias do período'}</button>
+          <button className="btn-ghost btn-sm" onClick={doPuxar} disabled={syncing}>{syncing ? '⏳ Puxando…' : '⇩ Puxar dias do período'}</button>
         </div>
         <div style={{ overflowX: 'auto', maxHeight: 'calc(100vh - 400px)' }}>
           <table>
