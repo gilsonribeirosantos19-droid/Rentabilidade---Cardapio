@@ -35,6 +35,7 @@ export function VendasDiario() {
   const [canalSel, setCanalSel] = useState('Todos')
   const [syncing, setSyncing] = useState(false)
   const [msg, setMsg] = useState('')
+  const [usaSaipos, setUsaSaipos] = useState(false)   // tenant usa Saipos? (define botão/motor de puxada)
   const initRef = useRef(false)
   useEffect(() => { if (!initRef.current && lojas.length) { initRef.current = true; setLojaSet(new Set(lojas.map((l) => l.id))) } }, [lojas])
   const allSel = lojas.length > 0 && lojaSet.size === lojas.length
@@ -79,6 +80,25 @@ export function VendasDiario() {
       setMsg('Erro ao puxar: ' + (e as Error).message)
     } finally { setSyncing(false) }
   }
+  useEffect(() => {
+    if (!tenantId) return
+    supabase.from('recebimento_vendas').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('fonte', 'saipos').then(({ count }) => setUsaSaipos((count ?? 0) > 0))
+  }, [tenantId])
+  async function puxarSaipos() {
+    if (!tenantId || syncing || !de || !ate) return
+    setSyncing(true); setMsg('Puxando do Saipos… (dia a dia; período grande pode precisar de 2 cliques)')
+    try {
+      const { data, error } = await supabase.functions.invoke('saipos-sync', { body: { mode: 'pull', de, ate } })
+      if (error) throw error
+      setMsg(`✓ ${data?.dias_recebimento ?? 0} dias · R$ ${(Number(data?.faturamento) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`)
+      setRecebidos(await fetchDias())
+    } catch (e) {
+      setMsg('Puxada interrompida (clique de novo pra completar). ' + (e as Error).message)
+      setRecebidos(await fetchDias())
+    } finally { setSyncing(false) }
+  }
+  const doPuxar = usaSaipos ? puxarSaipos : puxar
+  const puxarLabel = usaSaipos ? 'Puxar do Saipos' : 'Puxar do iComanda'
 
   const lista = useMemo<Row[]>(() => {
     const filtraLoja = lojaSet.size > 0 && !allSel
@@ -177,7 +197,7 @@ export function VendasDiario() {
         <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-field"><label>até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Personalizado') }} /></div>
         <div className="ds-actions">
-          <button className="btn-ghost" onClick={puxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : '↻ Puxar do iComanda'}</button>
+          <button className="btn-ghost" onClick={doPuxar} disabled={syncing || !tenantId}>{syncing ? '⏳ Puxando…' : `↻ ${puxarLabel}`}</button>
           <button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button>
         </div>
       </div>
