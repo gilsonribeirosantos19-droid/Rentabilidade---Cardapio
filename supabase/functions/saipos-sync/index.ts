@@ -24,7 +24,7 @@ const TENANT_MORI = '33e81daf-662f-43d1-8684-0702e959c4f9' // piloto Saipos
 const SAIPOS_BASE = 'https://data.saipos.io/v1'
 const SAIPOS_TOKEN = Deno.env.get('SAIPOS_TOKEN') || ''
 const BUDGET_MS = 110000
-const CORTE_ALMOCO_H = 16     // hora local < 16h = almoço; senão jantar (Saipos não manda turno)
+const CORTE_ALMOCO_H = 17     // hora local < 17h = almoço; 17h+ = jantar (Mori: jantar começa 17h). Saipos não manda turno.
 
 const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json' } })
 const ymd = (d: Date) => d.toISOString().substring(0, 10)
