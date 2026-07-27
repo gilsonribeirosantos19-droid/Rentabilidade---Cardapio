@@ -35,6 +35,14 @@ function ultimosDias(dias: number): string[] {
   return out
 }
 
+// dias de um intervalo explícito de/ate (p/ backfill de datas específicas). Trava em 90 dias.
+function diasNoIntervalo(de: string, ate: string): string[] {
+  const out: string[] = []
+  const d = new Date(de + 'T00:00:00Z'); const fim = new Date(ate + 'T00:00:00Z')
+  while (d <= fim && out.length < 90) { out.push(ymd(d)); d.setUTCDate(d.getUTCDate() + 1) }
+  return out
+}
+
 // GET genérico de um recurso do Saipos p/ UM dia. Até 3 tentativas (504 sob carga).
 async function buscar(recurso: string, dia: string, offset: number) {
   const qs = new URLSearchParams({
@@ -88,6 +96,9 @@ Deno.serve(async (req) => {
   const dias = Number(body.dias) || 15
   const modo = body.mode || 'diag'
   const corte = Number(body.corte) || CORTE_ALMOCO_H
+  // body.de + body.ate ('YYYY-MM-DD') → puxa esse intervalo exato (backfill). Senão, últimos `dias`.
+  const de = String(body.de || ''), ate = String(body.ate || '')
+  const listaDias = (/^\d{4}-\d{2}-\d{2}$/.test(de) && /^\d{4}-\d{2}-\d{2}$/.test(ate)) ? diasNoIntervalo(de, ate) : ultimosDias(dias)
 
   // de-para p/ os ITENS: codigo_pdv (== integration_code) → produto (id/nome/grupo) → ficha_id
   const { data: prods } = await supabase.from('produtos').select('id,codigo_pdv,nome,grupo').eq('tenant_id', tenant)
@@ -107,7 +118,7 @@ Deno.serve(async (req) => {
   let gravRec = 0, gravProd = 0, gravItem = 0, diasRec = 0, diasProd = 0, diasPulados = 0, ultimoStatus = 0
   const semProdNomes = new Map<string, number>()
 
-  for (const dia of ultimosDias(dias)) {
+  for (const dia of listaDias) {
     if (Date.now() - inicio > BUDGET_MS) break
 
     // ═══ 1) PEDIDOS (search_sales) → recebimento_vendas ═══
