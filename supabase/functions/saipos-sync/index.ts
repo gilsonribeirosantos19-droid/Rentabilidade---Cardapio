@@ -24,7 +24,12 @@ const SAIPOS_TOKEN = Deno.env.get('SAIPOS_TOKEN') || ''
 const BUDGET_MS = 110000
 const CORTE_ALMOCO_H = 17     // fallback de turno se o pedido não trouxer store_shift
 
-const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json' } })
+const CORS: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+const json = (o: unknown, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...CORS, 'Content-Type': 'application/json' } })
 const ymd = (d: Date) => d.toISOString().substring(0, 10)
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -88,7 +93,8 @@ async function buscarTudo(recurso: string, dia: string, inicio: number) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method !== 'POST') return new Response('OK', { status: 200 })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })   // preflight do navegador
+  if (req.method !== 'POST') return new Response('OK', { status: 200, headers: CORS })
   if (!SAIPOS_TOKEN) return json({ error: 'falta o secret SAIPOS_TOKEN' }, 400)
 
   const body = await req.json().catch(() => ({})) as any
