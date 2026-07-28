@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './shell.css'
 import { Sidebar } from './Sidebar'
-import { labelForKey, titleForKey } from './nav'
+import { labelForKey, titleForKey, ADMIN_ONLY_KEYS } from './nav'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { Fornecedores } from '../screens/Fornecedores'
@@ -60,7 +60,11 @@ import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
 
-function ScreenFor({ k, label }: { k: string; label: string }) {
+function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: boolean }) {
+  // FAIL-CLOSED: tela restrita a admin não renderiza pra não-admin (defesa além do menu escondido).
+  if (ADMIN_ONLY_KEYS.has(k) && !isAdmin) {
+    return <div className="pane"><div className="scr-h">Acesso restrito</div><div className="empty" style={{ marginTop: 20 }}>Esta tela é exclusiva de administradores.</div></div>
+  }
   if (k === 'fornecedores') return <Fornecedores />
   if (k === 'insumos') return <Insumos />
   if (k === 'produtos') return <Produtos />
@@ -129,6 +133,7 @@ function Home() {
 
 export function Shell() {
   const { usuario, signOut } = useAuth()
+  const isAdmin = (usuario?.role || usuario?.perfil || '').toLowerCase().startsWith('admin')
   const { lojas, lojaId, setLojaId } = useLoja()
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [active, setActive] = useState('__home')
@@ -205,7 +210,7 @@ export function Shell() {
           </div>
           {openTabs.map((t) => (
             <div key={t.key} style={{ display: active === t.key ? 'block' : 'none', height: '100%' }}>
-              <ScreenFor k={t.key} label={t.label} />
+              <ScreenFor k={t.key} label={t.label} isAdmin={isAdmin} />
             </div>
           ))}
         </div>

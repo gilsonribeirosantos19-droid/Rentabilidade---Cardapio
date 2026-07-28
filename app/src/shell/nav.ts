@@ -2,9 +2,13 @@
 // `key` identifica a tela (vira uma aba). Por enquanto só 'fornecedores' é real;
 // o resto abre um Placeholder até ser migrado.
 
-export type Leaf = { label: string; key: string }
+export type Leaf = { label: string; key: string; admin?: boolean }
 export type Section = Leaf | { group: string; items: Leaf[] }
 export type Module = { id: string; label: string; icon: string; home?: boolean; sections?: Section[]; requiresCd?: boolean }
+
+// Telas restritas a admin (gestão de usuários/permissões). Escondidas do menu e bloqueadas
+// na renderização (fail-closed) pra quem não é admin. O RLS do banco é a trava definitiva.
+export const ADMIN_ONLY_KEYS = new Set(['config/usuarios', 'config/permissoes'])
 
 export const MODULES: Module[] = [
   { id: 'inicio', label: 'Visão geral', icon: 'home', home: true },
@@ -115,8 +119,8 @@ export const MODULES: Module[] = [
     id: 'config', label: 'Configurações', icon: 'gear',
     sections: [
       { label: 'Geral', key: 'config/geral' },
-      { label: 'Usuários', key: 'config/usuarios' },
-      { label: 'Permissões', key: 'config/permissoes' },
+      { label: 'Usuários', key: 'config/usuarios', admin: true },
+      { label: 'Permissões', key: 'config/permissoes', admin: true },
       { label: 'Parâmetros', key: 'config/parametros' },
     ],
   },
