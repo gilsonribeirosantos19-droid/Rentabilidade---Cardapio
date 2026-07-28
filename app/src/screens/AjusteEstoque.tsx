@@ -75,7 +75,11 @@ export function AjusteEstoque() {
         const payload: Record<string, unknown> = { tenant_id: tenantId, insumo_id: insumoId, loja_id: it.lId, quantidade: Math.abs(it.dif), tipo: 'ajuste', motivo, observacao: 'Ajuste de estoque', criado_em: agora }
         // ajuste POSITIVO = entrada: carrega o custo médio vigente (senão o recálculo entra com custo 0 e derruba a média)
         if (it.dif > 0) payload.custo_unitario = +it.custo.toFixed(6)
-        const { error: e1 } = await supabase.from(tabela).insert(payload); if (e1) throw e1
+        // IDEMPOTÊNCIA: se um salvamento anterior já gravou ESTE mesmo ajuste (mesmo insumo/loja/
+        // data/quantidade) e falhou depois no meio, um novo clique NÃO deve duplicar o movimento.
+        // (O saldo abaixo é absoluto, então já era idempotente; o risco era só a linha duplicada.)
+        const { data: dup } = await supabase.from(tabela).select('id').eq('tenant_id', tenantId).eq('insumo_id', insumoId).eq('loja_id', it.lId).eq('tipo', 'ajuste').eq('criado_em', agora).eq('quantidade', Math.abs(it.dif)).limit(1)
+        if (!dup?.length) { const { error: e1 } = await supabase.from(tabela).insert(payload); if (e1) throw e1 }
         const { error: e2 } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: it.lId, quantidade: +it.nova.toFixed(4), custo_medio: +it.custo.toFixed(6), atualizado_em: agora }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (e2) throw e2
       }
       return itens.length
