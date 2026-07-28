@@ -269,6 +269,8 @@ Deno.serve(async (req) => {
       { nome: 'com Email', body: { ...base, Downloadevent: false, Email: email } },
       { nome: 'CnpjDestinatario (nome alt)', body: { XmlType: XML_TYPE_NFE, CnpjDestinatario: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
       { nome: 'CnpjEmit (emitente)', body: { XmlType: XML_TYPE_NFE, CnpjEmit: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
+      { nome: 'por DataUpload (CnpjDest)', body: { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, DataUploadInicio: iniD, DataUploadFim: fimD, Downloadevent: false } },
+      { nome: 'por DataUpload (CnpjEmit)', body: { XmlType: XML_TYPE_NFE, CnpjEmit: cnpj, Take: 50, Skip: 0, DataUploadInicio: iniD, DataUploadFim: fimD, Downloadevent: false } },
     ]
     const resultados = []
     for (const v of variantes) {
