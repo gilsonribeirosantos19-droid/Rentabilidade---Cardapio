@@ -16,7 +16,7 @@ type Forn = { id: string; nome?: string }
 type Mov = { id?: string; insumo_id: string; quantidade?: number; observacao?: string; motivo?: string; responsavel?: string; criado_em?: string; created_at?: string; tipo?: string }
 
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const fQ = (v?: number | null) => (v != null ? Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 3 }) : '—')
+const fQ = (v?: number | null) => (v != null ? Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '—')
 const fmtQtd = (v?: number) => { const n = Number(v) || 0; return n % 1 === 0 ? n.toLocaleString('pt-BR') : n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) }
 const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const hojeStr = () => new Date().toLocaleDateString('en-CA')
@@ -172,11 +172,11 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
       <div className="p-card">
         <table className="p-tbl">
           <thead><tr>
-            <th>Insumo</th><th>Un.</th><th className="r">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r">Mín.</th><th className="r">Máx.</th><th className="r">Valor</th><th>Última mov.</th>
+            <th>Insumo</th><th>Un.</th><th className="r">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r">Valor</th><th>Última mov.</th>
           </tr></thead>
           <tbody>
-            {isFetching ? <tr><td colSpan={10} className="p-empty">Carregando…</td></tr>
-              : !rows.length ? <tr><td colSpan={10} className="p-empty">Nenhum item encontrado.</td></tr>
+            {isFetching ? <tr><td colSpan={8} className="p-empty">Carregando…</td></tr>
+              : !rows.length ? <tr><td colSpan={8} className="p-empty">Nenhum item encontrado.</td></tr>
                 : rows.map((r: any) => (
                   <tr key={r.ins.id}>
                     <td>{r.ins.nome}</td>
@@ -184,18 +184,22 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
                     <td className="r mono" style={{ color: '#0369a1' }}>{fQ(r.inicial ?? 0)}</td>
                     <td className="r mono" style={{ color: r.ent > 0 ? '#16a34a' : '#94a3b8' }}>{fQ(r.ent)}</td>
                     <td className="r mono" style={{ color: r.sai > 0 ? '#dc2626' : '#94a3b8' }}>{fQ(r.sai)}</td>
-                    <td className="r mono">{fQ(r.saldo)}</td>
-                    <td className="r mono" style={{ color: '#94a3b8' }}>{fQ(r.min ?? 0)}</td>
-                    <td className="r mono" style={{ color: '#94a3b8' }}>{fQ(r.max ?? 0)}</td>
+                    <td className="r mono" style={r.saldo < 0 ? { color: '#dc2626', fontWeight: 700 } : undefined}>{fQ(r.saldo)}</td>
                     <td className="r mono">{brl(r.saldo * r.cm)}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{r.ult ? fmtDataHora(r.ult) : '—'}</td>
                   </tr>
                 ))}
           </tbody>
+          {rows.length > 0 && (
+            <tfoot>
+              <tr>
+                <td colSpan={6} className="r" style={{ borderTop: '2px solid #e2e8f0', fontWeight: 700, color: '#475569' }}>Total — {rows.length} {rows.length === 1 ? 'item' : 'itens'}</td>
+                <td className="r mono" style={{ borderTop: '2px solid #e2e8f0', fontWeight: 700 }}>{brl(rows.reduce((a: number, r: any) => a + r.saldo * r.cm, 0))}</td>
+                <td style={{ borderTop: '2px solid #e2e8f0' }} />
+              </tr>
+            </tfoot>
+          )}
         </table>
-        {rows.length > 0 && (
-          <div style={{ padding: '8px 12px', borderTop: '1px solid #f1f5f9', fontSize: 12, color: '#64748b' }}>{rows.length} {rows.length === 1 ? 'item' : 'itens'}</div>
-        )}
       </div>
     </>
   )
