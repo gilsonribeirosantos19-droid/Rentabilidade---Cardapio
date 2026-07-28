@@ -32,18 +32,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [recovery, setRecovery] = useState(false)
 
-  async function loadUsuario(s: Session | null) {
+  async function loadUsuario(s: Session | null, attempt = 0) {
     if (!s) {
       setUsuario(null)
       return
     }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('usuarios')
       .select('*')
       .eq('id', s.user.id)
       .limit(1)
       .maybeSingle()
-    setUsuario(data ?? { id: s.user.id, email: s.user.email })
+    if (data) { setUsuario(data as Usuario); return }
+    // Releitura falhou (erro/RLS logo após renovação de token idle). NUNCA rebaixa um
+    // perfil já carregado — perder o `perfil` faria o gerente cair no sistema principal.
+    // Tenta de novo algumas vezes enquanto o token novo se estabiliza.
+    if (error && attempt < 3) {
+      await new Promise((r) => setTimeout(r, 600 * (attempt + 1)))
+      return loadUsuario(s, attempt + 1)
+    }
+    // Mantém o perfil anterior se houver; só usa o fallback mínimo (id/email) quando
+    // realmente não existe linha em `usuarios` (sem erro) e nada foi carregado ainda.
+    setUsuario((prev) => prev ?? (error ? null : { id: s.user.id, email: s.user.email }))
   }
 
   useEffect(() => {
