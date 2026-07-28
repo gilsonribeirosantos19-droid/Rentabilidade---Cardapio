@@ -200,6 +200,7 @@ serve(async (req) => {
               ticket_medio: Number(f.ticket_medio_comanda) || 0,
               fat_almoco: +fatAlmoco.toFixed(2), fat_jantar: +fatJantar.toFixed(2),
               por_canal: porCanal,
+              fonte: 'icomanda',
               status: 'processado', erros: null, data_integracao: now, atualizado_em: now,
             })
             // PRODUTOS vendidos desse dia/loja → tabela por-dia (fundação p/ produção por uso diário).
@@ -221,7 +222,7 @@ serve(async (req) => {
           // dia falhou → marca 'com_erro', MAS NÃO rebaixa loja×dia que já estava 'processado' (dado bom)
           const { data: jaOk } = await sb.from('recebimento_vendas').select('loja_id').eq('tenant_id', tenant_id).eq('data', dia).eq('status', 'processado')
           const okSet = new Set((jaOk || []).map((r: { loja_id: string }) => r.loja_id))
-          const linhas = mapa.filter(({ loja }) => !okSet.has(loja.id)).map(({ loja }) => ({ tenant_id, loja_id: loja.id, data: dia, status: 'com_erro', erros: String((e as Error).message).slice(0, 300), data_integracao: now, atualizado_em: now }))
+          const linhas = mapa.filter(({ loja }) => !okSet.has(loja.id)).map(({ loja }) => ({ tenant_id, loja_id: loja.id, data: dia, fonte: 'icomanda', status: 'com_erro', erros: String((e as Error).message).slice(0, 300), data_integracao: now, atualizado_em: now }))
           if (linhas.length) await sb.from('recebimento_vendas').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
           comErro += linhas.length
         }
