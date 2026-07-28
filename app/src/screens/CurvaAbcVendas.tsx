@@ -104,23 +104,15 @@ export function CurvaAbcVendas() {
       fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('loja_id,produto_id,produto_nome,grupo,qtd,faturado,data').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
       fetchAll<Record<string, unknown>>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
     ])
-    // portão por loja×mês: recebido? tem erro?
-    const gk = new Map<string, { ok: boolean; erro: boolean }>()
-    for (const r of gate) {
-      const k = `${r.loja_id}|${String(r.data).slice(0, 7)}`
-      const g = gk.get(k) || { ok: false, erro: false }
-      if (r.status === 'processado') g.ok = true
-      if (r.status === 'com_erro') g.erro = true
-      gk.set(k, g)
-    }
-    // liberado = mês RECEBIDO no portão (tem ≥1 dia processado). Um dia com erro não bloqueia o mês inteiro
-    // (os produtos são um agregado mensal atômico; o faturamento diário é que exclui o dia com erro).
-    const liberado = (lojaId: string, comp: string) => { const g = gk.get(`${lojaId}|${comp}`); return !!g && g.ok }
+    // PORTÃO por loja×DIA: só entra a venda de (loja, dia) cujo recebimento está 'processado'.
+    // (Antes era por loja×mês — 1 dia bom liberava o mês inteiro, deixando entrar dias com erro
+    //  → não batia com o Faturamento, que é dia a dia. Agora casa exatamente com o Faturamento.)
+    const okDia = new Set<string>()
+    for (const r of gate) if (r.status === 'processado') okDia.add(`${r.loja_id}|${r.data}`)
     const bloq = new Set<string>()
     const okVendas = vendas.filter((r) => {
-      const lojaId = String(r.loja_id), comp = String(r.data).slice(0, 7)   // competência vem da data (tabela é diária)
-      if (liberado(lojaId, comp)) return true
-      bloq.add(`${lojaNome[lojaId] || lojaId} · ${comp}`)
+      if (okDia.has(`${r.loja_id}|${r.data}`)) return true
+      bloq.add(`${lojaNome[String(r.loja_id)] || r.loja_id} · ${String(r.data).slice(0, 7)}`)
       return false
     })
     setBloqueados([...bloq])

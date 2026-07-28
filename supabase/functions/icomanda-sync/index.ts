@@ -152,6 +152,9 @@ serve(async (req) => {
           // pacote completo do dia (faturamento.total já traz TODAS as lojas em por_filial)
           const dados = await ico('faturamento.total', { data_ini: dia, data_fim: dia })
           const pf = (dados && Array.isArray((dados as { por_filial?: unknown }).por_filial) ? (dados as { por_filial: any[] }).por_filial : []) as any[]
+          // ANTI-ZERAGEM: resposta ok+vazia (glitch da API) não deve sobrescrever o dia bom com 0.
+          // Sem por_filial → joga pro catch (que NÃO rebaixa loja×dia já 'processado').
+          if (!pf.length) throw new Error('faturamento.total sem por_filial (resposta vazia) — não sobrescreve o dia')
           const byId = new Map<number, any>(pf.map((f) => [Number(f.filial_id), f]))
           const linhas = []
           for (const { loja, filial } of mapa) {
@@ -204,8 +207,11 @@ serve(async (req) => {
             try {
               const prods = asArray(await ico('produtos.top_vendidos', { data_ini: dia, data_fim: dia, filial_id: String(filial.id), limit: '1000', ordenar_por: 'faturado' })) as any[]
               const pr = prods.filter((p) => p && p.produto_id != null).map((p) => ({ tenant_id, loja_id: loja.id, data: dia, produto_id: Number(p.produto_id), produto_nome: String(p.nome || '').trim() || null, grupo: String(p.grupo || '').trim() || null, qtd: Number(p.qtd) || 0, faturado: Number(p.faturado) || 0, atualizado_em: now }))
-              await sb.from('vendas_produto_dia').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('data', dia)
-              for (let i = 0; i < pr.length; i += 500) { const { error: ev } = await sb.from('vendas_produto_dia').insert(pr.slice(i, i + 500)); if (ev) throw ev }
+              // ANTI-ZERAGEM: só substitui se veio produto. Resposta ok+vazia NÃO apaga o dia bom.
+              if (pr.length) {
+                await sb.from('vendas_produto_dia').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('data', dia)
+                for (let i = 0; i < pr.length; i += 500) { const { error: ev } = await sb.from('vendas_produto_dia').insert(pr.slice(i, i + 500)); if (ev) throw ev }
+              }
             } catch (ev) { console.error('vendas_dia', loja.id, dia, (ev as Error).message) }
           }
           const { error } = await sb.from('recebimento_vendas').upsert(linhas, { onConflict: 'tenant_id,loja_id,data' })
