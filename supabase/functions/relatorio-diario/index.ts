@@ -12,11 +12,11 @@ const supabase = createClient(
 
 const TENANT = 'ad59e5f2-1c1f-4abb-b816-44a1c4f9cfb5'          // Sushi PN
 const FONES  = ['5592994948230', '5592995194090']             // quem recebe
-const GATE   = 'aiko_cron_7Kd2mP9qXr4Lz1'                     // mesmo segredo dos crons
-
-const ZAPI_INSTANCE = '3F5DF875142B614462BE3A5069A7E82E'
-const ZAPI_TOKEN    = '3D562E6235E9D24CD65AC7A7'
-const ZAPI_CLIENT   = 'F612a663424164fa3bcc571452911217fS'
+// Segredos SÓ no servidor (Supabase → Edge Functions → Secrets). Nunca no código/git.
+const GATE   = Deno.env.get('CRON_SECRET') ?? ''              // mesmo segredo dos crons
+const ZAPI_INSTANCE = Deno.env.get('ZAPI_INSTANCE') ?? ''
+const ZAPI_TOKEN    = Deno.env.get('ZAPI_TOKEN') ?? ''
+const ZAPI_CLIENT   = Deno.env.get('ZAPI_CLIENT') ?? ''
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 const pad2 = (n: number) => String(n).padStart(2, '0')
@@ -198,7 +198,8 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('OK', { status: 200 })
   const body = await req.json().catch(() => ({} as any))
   const gate = req.headers.get('x-cron-secret') || body.secret || ''
-  if (gate !== GATE) return json({ error: 'não autorizado' }, 401)
+  // fail-closed: sem CRON_SECRET configurado, NEGA (não deixa passar com segredo vazio)
+  if (!GATE || gate !== GATE) return json({ error: 'não autorizado' }, 401)
 
   // relatório do dia fechado = ONTEM (Manaus). body.dia='hoje' força hoje (pra testar).
   const off = body.dia === 'hoje' ? 0 : -1
