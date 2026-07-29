@@ -340,15 +340,24 @@ function GrupoEditModal({ grupo, insumos, tenantId, onClose, onSaved, showToast 
     setSaving(true)
     try {
       let grupoId = grupo?.id
+      let antigos: { insumo_id: string; ordem: number }[] = []
       if (grupoId) {
         const { error } = await supabase.from('grupos_inventario').update({ nome: nome.trim(), tipo }).eq('id', grupoId); if (error) throw error
+        // guarda os itens atuais ANTES de apagar, pra poder restaurar se o insert dos novos falhar
+        const { data: old } = await supabase.from('grupos_inventario_itens').select('insumo_id,ordem').eq('grupo_id', grupoId)
+        antigos = (old ?? []) as { insumo_id: string; ordem: number }[]
         await supabase.from('grupos_inventario_itens').delete().eq('grupo_id', grupoId)
       } else {
         const { data, error } = await supabase.from('grupos_inventario').insert({ tenant_id: tenantId, nome: nome.trim(), tipo, ativo: true }).select('id'); if (error) throw error
         grupoId = data?.[0]?.id; if (!grupoId) throw new Error('Falha ao criar grupo.')
       }
       const linhas = [...sel].map((insId, ordem) => ({ tenant_id: tenantId, grupo_id: grupoId, insumo_id: insId, ordem }))
-      const { error: e2 } = await supabase.from('grupos_inventario_itens').insert(linhas); if (e2) throw e2
+      const { error: e2 } = await supabase.from('grupos_inventario_itens').insert(linhas)
+      if (e2) {
+        // COMPENSAÇÃO: repõe os itens antigos pra não deixar o grupo vazio (perda de dado)
+        if (antigos.length) await supabase.from('grupos_inventario_itens').insert(antigos.map((o) => ({ tenant_id: tenantId, grupo_id: grupoId, insumo_id: o.insumo_id, ordem: o.ordem })))
+        throw e2
+      }
       showToast(`Grupo "${nome}" salvo com ${linhas.length} insumos!`, 'ok'); onSaved()
     } catch (e: any) { showToast('Erro: ' + e.message, 'err') } finally { setSaving(false) }
   }

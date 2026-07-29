@@ -125,6 +125,7 @@ export function Insumos() {
         nome, categoria: f.categoria || null, unidade_medida: und, unidade_compra: und,
         tipo_baixa: f.tipo_baixa || 'consumo', tipo_item: f.tipo_item || null, familia: f.familia || null,
         subgrupo: f.subgrupo || null, participa_cmv: f.participa_cmv === 'nao' ? 'nao' : 'sim', ativo: f.ativo !== false,
+        ncm: (f.ncm || '').trim() || null,
       }
       if (f.id) {
         const { error } = await supabase.from('insumos').update(payload).eq('id', f.id); if (error) throw error

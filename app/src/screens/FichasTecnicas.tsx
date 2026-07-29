@@ -52,10 +52,8 @@ export function FichasTecnicas() {
   })
   const { data: insumos = [] } = useQuery({
     queryKey: ['insumos-min', tenantId], enabled: !!tenantId,
-    queryFn: async () => {
-      const { data } = await supabase.from('insumos').select('id,nome,categoria,preco_compra,rendimento_pct,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome')
-      return (data ?? []) as Insumo[]
-    },
+    // fetchAll: vence o teto de 1000 do PostgREST (senão insumos somem e a ficha que os usa fica custo R$ 0)
+    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,preco_compra,rendimento_pct,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)),
   })
   const { data: produtos = [] } = useQuery({
     queryKey: ['produtos-min', tenantId], enabled: !!tenantId,

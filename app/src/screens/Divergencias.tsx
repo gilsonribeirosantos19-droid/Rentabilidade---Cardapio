@@ -10,7 +10,7 @@ type Ficha = { id: string; nome?: string; preco_venda?: number | null; status?: 
 type Vinc = { id: string; insumo_id: string; qtd_por_embalagem?: number | null; embalagem_descricao?: string; codigo_fornecedor?: string; fornecedor_id?: string }
 type NfeItem = { id: string; descricao_nfe?: string; nfe_id?: string; codigo_item_fornecedor?: string }
 type Nfe = { id: string; numero?: string; serie?: string; status?: string; nome_emitente?: string; valor_total?: number; created_at?: string; cnpj_emitente?: string }
-type Venda = { produto_nome?: string; quantidade?: number }
+type Venda = { produto_nome?: string; qtd?: number }
 type Forn = { id: string; cnpj?: string }
 
 const num = (v?: number) => (+((v ?? 0)) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
@@ -31,7 +31,7 @@ export function Divergencias() {
         fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('id,insumo_id,qtd_por_embalagem,embalagem_descricao,codigo_fornecedor,fornecedor_id').eq('tenant_id', tenantId).range(f, t)),
         fetchAll<NfeItem>((f, t) => supabase.from('nfe_itens').select('id,descricao_nfe,nfe_id,codigo_item_fornecedor').eq('tenant_id', tenantId).is('vinculacao_id', null).range(f, t)),
         fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('id,numero,status,cnpj_emitente').eq('tenant_id', tenantId).range(f, t)),
-        fetchAll<Venda>((f, t) => supabase.from('vendas_item').select('produto_nome,quantidade').eq('tenant_id', tenantId).is('ficha_id', null).range(f, t)).catch(() => [] as Venda[]),
+        fetchAll<Venda>((f, t) => supabase.from('vendas_produto_dia').select('produto_nome,qtd').eq('tenant_id', tenantId).is('ficha_id', null).range(f, t)).catch(() => [] as Venda[]),
         supabase.from('nfe_recebidas').select('numero,serie,nome_emitente,valor_total,created_at').eq('tenant_id', tenantId).eq('status', 'em_transito').then((r) => (r.data ?? []) as Nfe[], () => [] as Nfe[]),
         fetchAll<Forn>((f, t) => supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', tenantId).range(f, t)),
       ])
@@ -89,7 +89,7 @@ export function Divergencias() {
     c.push({ key: 'nfe', titulo: 'Itens de NF-e sem vínculo', cols: ['NF-e', 'Produto da nota'], rows: nfeItens.filter((it) => { const n = recMap[it.nfe_id || '']; return n && n.status !== 'processada' && !resolvido(it) }).map((it) => ({ a: recMap[it.nfe_id || '']?.numero || '—', b: it.descricao_nfe || '—' })) })
     c.push({ key: 'custo', titulo: 'Saldo com custo médio zerado', cols: ['Insumo', 'Saldo'], rows: saldos.filter((s) => (+(s.quantidade || 0) > 0) && !(+(s.custo_medio || 0) > 0)).map((s) => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) })) })
     c.push({ key: 'neg', titulo: 'Estoque negativo', cols: ['Insumo', 'Saldo'], rows: saldos.filter((s) => +(s.quantidade || 0) < 0).map((s) => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) })) })
-    const vMap: Record<string, number> = {}; vendas.forEach((v) => { vMap[v.produto_nome || '—'] = (vMap[v.produto_nome || '—'] || 0) + (+(v.quantidade || 0)) })
+    const vMap: Record<string, number> = {}; vendas.forEach((v) => { vMap[v.produto_nome || '—'] = (vMap[v.produto_nome || '—'] || 0) + (+(v.qtd || 0)) })
     c.push({ key: 'venda', titulo: 'Produtos vendidos sem ficha técnica', cols: ['Produto', 'Qtd vendida'], rows: Object.entries(vMap).map(([n, q]) => ({ a: n, b: num(q) })) })
     c.push({ key: 'ficha', titulo: 'Fichas ativas sem preço de venda', cols: ['Ficha', 'Preço'], rows: fichas.filter((f) => f.status === 'ativa' && !(+(f.preco_venda || 0) > 0)).map((f) => ({ a: f.nome || '—', b: '—' })) })
     c.push({ key: 'conv', titulo: 'Vínculos sem conversão (qtd na embalagem)', cols: ['Insumo', 'Embalagem'], rows: vinc.filter((v) => !(+(v.qtd_por_embalagem || 0) > 0)).map((v) => ({ a: insMap[v.insumo_id] || '—', b: v.embalagem_descricao || '—' })) })

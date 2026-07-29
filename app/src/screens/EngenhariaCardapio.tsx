@@ -92,10 +92,17 @@ export function EngenhariaCardapio() {
     }
     return [...map.values()]
   }
-  // produtos vendidos POR DIA (vendas_produto_dia — camada genérica: iComanda + Saipos) — filtra pelo intervalo.
+  // produtos vendidos POR DIA (vendas_produto_dia — camada genérica: iComanda + Saipos), aplicando o
+  // PORTÃO por loja×DIA: só conta o dia cujo recebimento está 'processado' (igual Faturamento/CurvaABC).
+  // Sem isso, dias 'com_erro' entravam na Engenharia mas não no Faturamento → números não batiam.
   async function fetchVendas(d1: string, d2: string): Promise<Prod[]> {
-    const vendas = await fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('*').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).range(f, t))
-    return buildRows(vendas)
+    const [vendas, gate] = await Promise.all([
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('*').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).range(f, t)),
+    ])
+    const okDia = new Set<string>()
+    for (const r of gate) if (r.status === 'processado') okDia.add(`${r.loja_id}|${r.data}`)
+    return buildRows(vendas.filter((r) => okDia.has(`${r.loja_id}|${r.data}`)))
   }
   async function carregar(d1: string, d2: string) {
     try { setRows(await fetchVendas(d1, d2)) }

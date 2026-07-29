@@ -8,9 +8,12 @@
 //   ICOMANDA_BASE  = (a URL base da API do iComanda)
 
 import { serve } from 'https://deno.land/std@0.203.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const ICOMANDA_TOKEN = Deno.env.get('ICOMANDA_TOKEN') ?? ''
 const ICOMANDA_BASE = (Deno.env.get('ICOMANDA_BASE') ?? '').replace(/\/+$/, '')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
+const SUPABASE_ANON = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 
 const CORS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
@@ -39,6 +42,17 @@ const json = (obj: unknown, status = 200) =>
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return json({ status: 'erro', mensagem: 'Use POST.' }, 405)
+
+  // AUTENTICAÇÃO: exige um usuário logado (JWT do Supabase). Sem isso, qualquer um com a URL
+  // lia faturamento/base de clientes. O app manda o token automaticamente no functions.invoke.
+  const authHeader = req.headers.get('Authorization') || ''
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+  if (!token) return json({ status: 'erro', mensagem: 'Não autenticado.' }, 401)
+  try {
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON, { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } })
+    const { data: u, error: uErr } = await sb.auth.getUser(token)
+    if (uErr || !u?.user) return json({ status: 'erro', mensagem: 'Sessão inválida.' }, 401)
+  } catch { return json({ status: 'erro', mensagem: 'Falha ao validar a sessão.' }, 401) }
 
   try {
     if (!ICOMANDA_TOKEN || !ICOMANDA_BASE) throw new Error('Config ausente: defina ICOMANDA_TOKEN e ICOMANDA_BASE.')

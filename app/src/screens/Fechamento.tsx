@@ -96,12 +96,15 @@ export function Fechamento() {
     },
   })
 
-  // faturamento por loja do mês (iComanda diário) → alimenta o CMV% das linhas ABERTAS
+  // faturamento por loja do mês → alimenta o CMV% das linhas ABERTAS.
+  // Fonte = recebimento_vendas (faturamento CHEIO, só dias 'processado'), a MESMA da tela
+  // Faturamento/Metas. NÃO usar vendas_produto_dia (soma só produtos top-500, sem couvert/taxa
+  // → denominador menor → CMV% inflado).
   const { data: icoFatByLoja = {} } = useQuery({
     queryKey: ['fech-icofat', tenantId, comp], enabled: !!tenantId && !!comp,
     queryFn: async () => {
       const { de, ate } = monthBounds(comp)
-      const vendas = await fetchAll<{ loja_id?: string; faturado?: number }>((f, t) => supabase.from('vendas_produto_dia').select('loja_id,faturado').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as { loja_id?: string; faturado?: number }[])
+      const vendas = await fetchAll<{ loja_id?: string; faturado?: number }>((f, t) => supabase.from('recebimento_vendas').select('loja_id,faturado').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as { loja_id?: string; faturado?: number }[])
       const m: Record<string, number> = {}
       vendas.forEach((v) => { if (v.loja_id) m[v.loja_id] = (m[v.loja_id] || 0) + (Number(v.faturado) || 0) })
       return m

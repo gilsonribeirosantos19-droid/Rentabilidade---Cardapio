@@ -165,7 +165,7 @@ export function ConfigGeral() {
       case 'grupo_compra': return { qtd: await cnt('grupos_compra_itens', (q) => q.eq('grupo_id', r.id)), onde: 'item(ns) no grupo' }
       case 'loja': {
         let total = 0
-        for (const t of ['saldo_estoque', 'entradas', 'saidas', 'usuarios', 'nfe_recebidas']) total += await cnt(t, (q) => T(q).eq('loja_id', r.id))
+        for (const t of ['saldo_estoque', 'entradas_estoque', 'saidas_estoque', 'usuarios', 'nfe_recebidas']) total += await cnt(t, (q) => T(q).eq('loja_id', r.id))
         return { qtd: total, onde: 'movimentação(ões)/usuário(s)' }
       }
       default: return { qtd: 0, onde: '' }

@@ -30,6 +30,8 @@ export function Sidebar({
 }) {
   const { usuario, signOut, tenantId } = useAuth()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const isAdmin = (usuario?.role || usuario?.perfil || '').toLowerCase().startsWith('admin')
+  const podeVer = (it: { admin?: boolean }) => !it.admin || isAdmin   // item admin-only só aparece p/ admin
 
   // Módulos com requiresCd (ex.: Distribuição) só aparecem se o tenant tiver um CD configurado
   const { data: temCd = false } = useQuery({ queryKey: ['sidebar-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
@@ -93,7 +95,9 @@ export function Sidebar({
 
           {(active.sections ?? []).map((s, i) => {
             if ('group' in s) {
-              const isCol = collapsed[active.id + i] ?? !s.items.some((it) => it.key === activeKey)
+              const items = s.items.filter(podeVer)
+              if (!items.length) return null   // grupo sem item visível some
+              const isCol = collapsed[active.id + i] ?? !items.some((it) => it.key === activeKey)
               return (
                 <div key={i} className={'sgrp' + (isCol ? ' col' : '')}>
                   <div
@@ -105,7 +109,7 @@ export function Sidebar({
                     <Chevron />
                   </div>
                   <div className="sgrp-items">
-                    {s.items.map((it) => (
+                    {items.map((it) => (
                       <div
                         key={it.key}
                         className={'sitem' + (it.key === activeKey ? ' on' : '')}
@@ -119,6 +123,7 @@ export function Sidebar({
                 </div>
               )
             }
+            if (!podeVer(s)) return null   // tela admin-only escondida de quem não é admin
             return (
               <div
                 key={s.key}
