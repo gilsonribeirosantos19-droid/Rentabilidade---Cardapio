@@ -13,7 +13,7 @@ type Grupo = { id: string; nome?: string; ativo?: boolean }
 type GI = { grupo_id: string; insumo_id: string }
 type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number; minimo?: number | null; maximo?: number | null }
 type Forn = { id: string; nome?: string }
-type Mov = { id?: string; insumo_id: string; quantidade?: number; observacao?: string; motivo?: string; responsavel?: string; criado_em?: string; created_at?: string; tipo?: string }
+type Mov = { id?: string; insumo_id: string; quantidade?: number; observacao?: string; motivo?: string; responsavel?: string; criado_em?: string; created_at?: string; tipo?: string; chave_acesso?: string | null; nfe_numero?: string | null }
 
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fQ = (v?: number | null) => (v != null ? Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '—')
@@ -363,6 +363,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
   const [busca, setBusca] = useState('')
   const [periodo, setPeriodo] = useState('atual')
   const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: primeiroDiaMes(), ate: hojeStr() })
+  const [nfeChave, setNfeChave] = useState<string | null>(null)   // NF-e aberta pelo clique no número (Observação)
 
   const onPeriodo = (p: string) => {
     setPeriodo(p)
@@ -430,12 +431,76 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
                     <td className="r mono" style={{ color: pos ? '#16a34a' : '#dc2626' }}>{pos ? '+' : '-'}{fmtQtd(m.quantidade)}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{un(ins)}</td>
                     <td style={{ fontSize: 12, color: '#475569' }}>{m.responsavel || '—'}</td>
-                    <td style={{ fontSize: 12, color: '#64748b' }}>{m.observacao || m.motivo || '—'}</td>
+                    <td style={{ fontSize: 12, color: '#64748b' }}>{m.chave_acesso
+                      ? <button onClick={() => setNfeChave(m.chave_acesso!)} title="Ver a nota fiscal" style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>{m.observacao || m.motivo || 'Ver NF-e'}</button>
+                      : (m.observacao || m.motivo || '—')}</td>
                   </tr>
                 ) })}
           </tbody>
         </table>
       </div>
+      {nfeChave && <NfeModal chave={nfeChave} tenantId={tenantId} onClose={() => setNfeChave(null)} />}
     </>
+  )
+}
+
+// ══════════════════════ MODAL "ESPELHO DA NF-e" ══════════════════════
+// Abre pelo clique no número da nota (Histórico). Busca a nota pela CHAVE de acesso
+// (44 dígitos, guardada na entrada) + os itens. Mostra fornecedor, número e a lista de itens.
+function fmtDataNfe(d?: string) { if (!d) return '—'; const s = String(d).slice(0, 10); const [y, m, dd] = s.split('-'); return (y && m && dd) ? `${dd}/${m}/${y}` : s }
+function NfeModal({ chave, tenantId, onClose }: { chave: string; tenantId: string; onClose: () => void }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['portal-nfe', chave, tenantId], enabled: !!chave && !!tenantId,
+    queryFn: async () => {
+      const { data: nfe } = await supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).eq('chave_acesso', chave).limit(1).maybeSingle()
+      if (!nfe) return { nfe: null as Record<string, unknown> | null, itens: [] as Record<string, unknown>[] }
+      const { data: itens } = await supabase.from('nfe_itens').select('*').eq('nfe_id', (nfe as { id: string }).id).order('id')
+      return { nfe: nfe as Record<string, unknown>, itens: (itens ?? []) as Record<string, unknown>[] }
+    },
+  })
+  const nfe = data?.nfe as Record<string, any> | null | undefined
+  const itens = (data?.itens ?? []) as Record<string, any>[]
+  const totalItens = itens.reduce((a, it) => a + (Number(it.valor_total) || 0), 0)
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.55)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px', zIndex: 1000, overflowY: 'auto' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(820px, 100%)', boxShadow: '0 20px 60px rgba(15,23,42,.35)', overflow: 'hidden' }}>
+        <div style={{ background: '#14315f', color: '#fff', padding: '13px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>Nota Fiscal Eletrônica</div>
+          <button onClick={onClose} style={{ background: 'none', border: 0, color: '#cbd5e1', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+        {isLoading ? <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Carregando nota…</div>
+          : !nfe ? <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Não foi possível abrir esta nota (não encontrada ou sem permissão).</div>
+          : <>
+            <div style={{ padding: '16px 18px', borderBottom: '1px solid #eef1f6' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{nfe.nome_emitente || '—'}</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>CNPJ {nfe.cnpj_emitente || '—'}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 24px', marginTop: 10, fontSize: 12.5, color: '#334155' }}>
+                <span><b>NF-e</b> {nfe.numero}/{nfe.serie}</span>
+                <span><b>Emissão</b> {fmtDataNfe(nfe.data_emissao)}</span>
+                <span><b>Valor total</b> <span style={{ color: '#0f766e', fontWeight: 700 }}>{brl(Number(nfe.valor_total) || 0)}</span></span>
+              </div>
+            </div>
+            <div style={{ maxHeight: '55vh', overflowY: 'auto' }}>
+              <table className="p-tbl">
+                <thead><tr><th style={{ width: 30 }}>#</th><th>Descrição</th><th className="r">Qtd</th><th>Un.</th><th className="r">V. Unit</th><th className="r">V. Total</th></tr></thead>
+                <tbody>
+                  {!itens.length ? <tr><td colSpan={6} className="p-empty">Nota sem itens detalhados.</td></tr>
+                    : itens.map((it, i) => (
+                      <tr key={String(it.id ?? i)}>
+                        <td style={{ color: '#94a3b8', fontSize: 12 }}>{i + 1}</td>
+                        <td>{it.descricao_nfe || '—'}{it.codigo_item_fornecedor ? <span style={{ color: '#94a3b8', fontSize: 11 }}> · cód {it.codigo_item_fornecedor}</span> : null}</td>
+                        <td className="r mono">{fmtQtd(it.quantidade)}</td>
+                        <td style={{ fontSize: 12, color: '#64748b' }}>{String(it.unidade_nfe || '').toLowerCase()}</td>
+                        <td className="r mono">{brl(Number(it.valor_unitario) || 0)}</td>
+                        <td className="r mono">{brl(Number(it.valor_total) || 0)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+                {itens.length > 0 && <tfoot><tr><td colSpan={5} className="r" style={{ fontWeight: 700, padding: '8px 10px', borderTop: '2px solid #e2e8f0' }}>Total dos itens</td><td className="r mono" style={{ fontWeight: 700, borderTop: '2px solid #e2e8f0' }}>{brl(totalItens)}</td></tr></tfoot>}
+              </table>
+            </div>
+          </>}
+      </div>
+    </div>
   )
 }
