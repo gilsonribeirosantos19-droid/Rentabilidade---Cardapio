@@ -180,6 +180,16 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
     onSuccess: () => { showToast('Inventário reaberto.', 'ok'); onBack() },
     onError: (e: Error) => showToast('Erro: ' + e.message, 'err'),
   })
+  // Cancelar um inventário ATIVO (rascunho errado). Marca status='cancelado' → some do Portal
+  // (que esconde cancelados) e da lista de ativos. NÃO mexe no estoque (nada foi ajustado ainda).
+  const cancelarMut = useMutation({
+    mutationFn: async () => {
+      if (!confirm('Cancelar este inventário?\n\nEle sai da lista de ativos e some do Portal do Gerente. O estoque NÃO é alterado (nenhum ajuste foi feito ainda). Depois é só criar um novo.')) throw new Error('__cancel__')
+      const { error } = await supabase.from('inventarios').update({ status: 'cancelado' }).eq('id', invId); if (error) throw error
+    },
+    onSuccess: () => { qc.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === 'string' && /inv-/i.test(k) } }); showToast('Inventário cancelado.', 'ok'); onBack() },
+    onError: (e: Error) => { if (e.message !== '__cancel__') showToast('Erro: ' + e.message, 'err') },
+  })
 
   return (
     <div className="est-screen">
@@ -189,6 +199,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
           <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>{inv ? `${TIPO_LABEL[inv.tipo || ''] || inv.tipo} · ${fmtD(inv.data_inicial)} a ${fmtD(inv.data_final)} · ${inv.status === 'ativo' ? 'Ativo' : 'Encerrado'}` : ''}</div>
         </div>
         <button className="btn-sec" onClick={onBack}>← Voltar</button>
+        {isAtivo && <button className="btn-sec" style={{ color: '#e11d48', borderColor: '#fecaca' }} disabled={cancelarMut.isPending} onClick={() => cancelarMut.mutate()}>{cancelarMut.isPending ? 'Cancelando…' : '✕ Cancelar inventário'}</button>}
         {isAtivo && <button className="btn-pri" disabled={encMut.isPending} onClick={() => encMut.mutate()}>{encMut.isPending ? 'Encerrando…' : '✓ Encerrar e ajustar estoque'}</button>}
         {inv && !isAtivo && <button className="btn-sec" disabled={reabrirMut.isPending} onClick={() => reabrirMut.mutate()}>↺ Reabrir</button>}
       </div>
