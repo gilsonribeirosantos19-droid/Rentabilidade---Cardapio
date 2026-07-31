@@ -12,7 +12,7 @@ type Insumo = { id: string; nome?: string; categoria?: string; unidade_medida?: 
 type Ficha = { id: string; rendimento_porcoes?: number; produto_id?: string | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null }
 type ItemFicha = { ficha_id: string; insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number }
 type Venda = { ficha_id?: string; produto_id?: string; quantidade?: number; valor_total?: number; loja_id?: string | null }
-type ProdMin = { id: string; codigo_pdv?: string | null }
+type ProdMin = { id: string; codigo_pdv?: string | null; nome?: string }
 type IcoVenda = { produto_id?: number | string; qtd?: number; faturado?: number; loja_id?: string | null; ficha_id?: string | null }
 type Fat = { valor?: number; total?: number; valor_total?: number }
 type Saida = { insumo_id: string; quantidade?: number; tipo?: string; loja_id?: string | null; criado_em?: string }
@@ -59,6 +59,8 @@ export function CmvTeoricoReal() {
   const [apenasDiv, setApenasDiv] = useState(false)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
+  // modal de detalhe: quais produtos consumiram (teórico) um insumo
+  const [detIns, setDetIns] = useState<{ nome: string; un: string; det: { nome: string; qtdVend: number; qtd: number; custo: number }[]; qTot: number; cTot: number } | null>(null)
 
   // grupos p/ o filtro (categorias distintas dos insumos)
   const { data: grupos = [] } = useQuery({
@@ -89,7 +91,7 @@ export function CmvTeoricoReal() {
         fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
         // de-para: produtos (código PDV) + vendas do iComanda POR DIA (icomanda_vendas_dia) p/ o consumo teórico
         // (antes era a tabela mensal por competência; agora usa a diária, respeitando o intervalo exato De→Até)
-        fetchAll<ProdMin>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)).catch(() => [] as ProdMin[]),
+        fetchAll<ProdMin>((f, t) => supabase.from('produtos').select('id,codigo_pdv,nome').eq('tenant_id', tenantId).order('id').range(f, t)).catch(() => [] as ProdMin[]),
         fetchAll<IcoVenda>((f, t) => supabase.from('vendas_produto_dia').select('produto_id,qtd,faturado,loja_id,data,ficha_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as IcoVenda[]),
         // FALLBACK mensal: se a tabela diária ainda não estiver preenchida, usa icomanda_vendas por competência
         comps.length ? fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas').select('produto_id,qtd,faturado,loja_id,competencia').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)).catch(() => [] as IcoVenda[]) : Promise.resolve([] as IcoVenda[]),
@@ -145,26 +147,39 @@ export function CmvTeoricoReal() {
     fichas.forEach((f) => { if (f.insumo_vinculado_id && Number(f.rendimento_receita_g) > 0) fichaByInsumoVinc.set(f.insumo_vinculado_id, { fid: f.id, rendG: Number(f.rendimento_receita_g) }) })
 
     const teoMap: Record<string, number> = {}
-    // acumula consumo de insumo CRU (g) de uma ficha, com um fator de escala.
-    // 'seen' clonado por ramo evita loop infinito (ficha que se referencia em ciclo).
-    const explode = (fid: string, factor: number, seen: Set<string>) => {
+    // DETALHE da explosão: por insumo cru, quanto (g líquidos) veio de cada PRODUTO vendido (ficha topo).
+    const detalhe: Record<string, Map<string, number>> = {}   // insumo_id -> (fichaTopo -> g líquidos)
+    const nomeByFicha = new Map<string, string>()             // fichaTopo -> nome do produto
+    const qtdVendByFicha = new Map<string, number>()          // fichaTopo -> qtd vendida no período
+    const prodNomeById = new Map<string, string>()
+    data.produtos.forEach((p) => { if (p.nome) prodNomeById.set(p.id, p.nome) })
+    // acumula consumo de insumo CRU (g) de uma ficha, com um fator de escala. 'root' = ficha do
+    // produto vendido (topo), pra saber QUEM consumiu. 'seen' clonado por ramo evita loop infinito.
+    const explode = (fid: string, factor: number, seen: Set<string>, root: string) => {
       if (!factor || seen.has(fid)) return
       const s2 = new Set(seen); s2.add(fid)
       for (const it of itensByFicha.get(fid) || []) {
         if (it.produto_id) {                                                // meia porção / combo → prato base × multiplicador
           const bf = fichaIdByProduto.get(it.produto_id)
-          if (bf) explode(bf, factor * (it.quantidade_g || 0) / (fichaById.get(bf)?.rendimento_porcoes || 1), s2)
+          if (bf) explode(bf, factor * (it.quantidade_g || 0) / (fichaById.get(bf)?.rendimento_porcoes || 1), s2, root)
           continue
         }
         const proc = it.insumo_id ? fichaByInsumoVinc.get(it.insumo_id) : undefined
-        if (proc) { explode(proc.fid, factor * (it.quantidade_g || 0) / proc.rendG, s2); continue }  // processado → abre a ficha dele
-        if (it.insumo_id) teoMap[it.insumo_id] = (teoMap[it.insumo_id] || 0) + factor * (it.quantidade_g || 0)  // insumo cru
+        if (proc) { explode(proc.fid, factor * (it.quantidade_g || 0) / proc.rendG, s2, root); continue }  // processado → abre a ficha dele
+        if (it.insumo_id) {                                                 // insumo cru
+          const g = factor * (it.quantidade_g || 0)
+          teoMap[it.insumo_id] = (teoMap[it.insumo_id] || 0) + g
+          const m = detalhe[it.insumo_id] || (detalhe[it.insumo_id] = new Map())
+          m.set(root, (m.get(root) || 0) + g)
+        }
       }
     }
     vendas.forEach((v) => {
       const fid = v.ficha_id || v.produto_id; if (!fid) return
       const f = fichaById.get(fid); if (!f) return
-      explode(fid, (v.quantidade || 0) / (f.rendimento_porcoes || 1), new Set())
+      qtdVendByFicha.set(fid, (qtdVendByFicha.get(fid) || 0) + (v.quantidade || 0))
+      if (!nomeByFicha.has(fid)) nomeByFicha.set(fid, prodNomeById.get(f.produto_id || '') || '(sem produto)')
+      explode(fid, (v.quantidade || 0) / (f.rendimento_porcoes || 1), new Set(), fid)
     })
     // consumo REAL = saídas de consumo/produção DENTRO do período (as saídas vêm do histórico
     // todo p/ o custo médio; aqui recorta só [de, ate]).
@@ -187,7 +202,10 @@ export function CmvTeoricoReal() {
       const dQtd = qReal - qTeo
       const dPct = qTeo > 0 ? dQtd / qTeo * 100 : 0
       const imp = cReal - cTeo
-      return { i, un, qTeo, qReal, cTeo, cReal, dQtd, dPct, imp, st: getStatus(dPct) }
+      // quebra por PRODUTO (teórico): g líquidos → bruto (÷div ÷rend), pra somar igual ao qTeo.
+      const dm = detalhe[i.id]
+      const det = dm ? [...dm.entries()].map(([fid, gL]) => { const qb = (gL / div) / rend; return { nome: nomeByFicha.get(fid) || '(sem produto)', qtdVend: qtdVendByFicha.get(fid) || 0, qtd: qb, custo: qb * cm } }).filter((x) => x.qtd > 1e-9).sort((a, b) => b.qtd - a.qtd) : []
+      return { i, un, qTeo, qReal, cTeo, cReal, dQtd, dPct, imp, st: getStatus(dPct), det }
     })
 
     const totalTeo = rows.reduce((s, r) => s + r.cTeo, 0)
@@ -298,7 +316,7 @@ export function CmvTeoricoReal() {
                     const sign = r.dQtd >= 0 ? '+' : '', psign = r.dPct >= 0 ? '+' : '', isign = r.imp >= 0 ? '+' : ''
                     return (
                       <tr key={r.i.id}>
-                        <td>{r.i.nome}</td>
+                        <td><button type="button" title="Ver quais produtos consumiram (teórico)" onClick={() => setDetIns({ nome: r.i.nome || '', un: r.un, det: r.det, qTot: r.qTeo, cTot: r.cTeo })} style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: '#2563eb', cursor: 'pointer', textAlign: 'left', textDecoration: 'underline dotted' }}>{r.i.nome}</button></td>
                         <td style={{ color: '#64748b' }}>{r.un}</td>
                         <td className="r mono">{fq(r.qTeo)}</td>
                         <td className="r mono">{brl(r.cTeo)}</td>
@@ -359,6 +377,45 @@ export function CmvTeoricoReal() {
         <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', padding: 0 }} onClick={() => refetch()}>↻ Atualizar cálculo</button>
       </div>
 
+      {detIns && (
+        <div onClick={() => setDetIns(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px', zIndex: 1000, overflowY: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(720px, 100%)', boxShadow: '0 20px 60px rgba(15,27,45,.35)', overflow: 'hidden' }}>
+            <div style={{ background: '#14315f', color: '#fff', padding: '13px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{detIns.nome} — quem consumiu (teórico)</div>
+              <button onClick={() => setDetIns(null)} style={{ background: 'none', border: 0, color: '#cbd5e1', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ maxHeight: '62vh', overflowY: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+                <thead><tr style={{ background: '#f1f5f9', color: '#475569', textAlign: 'right' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 14px' }}>Produto</th>
+                  <th style={{ padding: '8px 14px' }}>Qtd vendida</th>
+                  <th style={{ padding: '8px 14px' }}>Por porção</th>
+                  <th style={{ padding: '8px 14px' }}>Consumo ({detIns.un})</th>
+                  <th style={{ padding: '8px 14px' }}>Custo</th>
+                </tr></thead>
+                <tbody>
+                  {!detIns.det.length ? <tr><td colSpan={5} style={{ padding: 26, textAlign: 'center', color: '#64748b' }}>Sem consumo teórico no período.</td></tr>
+                    : detIns.det.map((d, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #eef1f6' }}>
+                        <td style={{ padding: '6px 14px', fontWeight: 600 }}>{d.nome}</td>
+                        <td style={{ padding: '6px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace" }}>{d.qtdVend.toLocaleString('pt-BR')}</td>
+                        <td style={{ padding: '6px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace", color: '#64748b' }}>{d.qtdVend > 0 ? fq(d.qtd / d.qtdVend) : '—'}</td>
+                        <td style={{ padding: '6px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace" }}>{fq(d.qtd)}</td>
+                        <td style={{ padding: '6px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace" }}>{brl(d.custo)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+                {detIns.det.length > 0 && <tfoot><tr style={{ borderTop: '2px solid #e2e8f0', fontWeight: 700 }}>
+                  <td style={{ padding: '8px 14px' }}>Total</td><td /><td />
+                  <td style={{ padding: '8px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace" }}>{fq(detIns.qTot)}</td>
+                  <td style={{ padding: '8px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace" }}>{brl(detIns.cTot)}</td>
+                </tr></tfoot>}
+              </table>
+            </div>
+            <div style={{ padding: '10px 14px', borderTop: '1px solid #eef1f6', fontSize: 11.5, color: '#94a3b8' }}>Teórico = o que as fichas dizem que os produtos vendidos deveriam ter consumido.</div>
+          </div>
+        </div>
+      )}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
