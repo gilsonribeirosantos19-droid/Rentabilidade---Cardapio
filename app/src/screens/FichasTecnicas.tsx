@@ -42,6 +42,7 @@ export function FichasTecnicas() {
   const [fCmv, setFCmv] = useState('')
   const [ver, setVer] = useState<Ficha | null>(null)
   const [editing, setEditing] = useState<Ficha | 'new' | null>(null)
+  const [dup, setDup] = useState<Ficha | null>(null)   // ficha ORIGEM da duplicação
 
   const { data: fichas = [], isLoading } = useQuery({
     queryKey: ['fichas', tenantId], enabled: !!tenantId,
@@ -217,6 +218,7 @@ export function FichasTecnicas() {
                     <td style={{ whiteSpace: 'nowrap' }}>
                       <button className="ed-btn" onClick={(e) => { e.stopPropagation(); setEditing(f) }}>✎ Editar</button>
                       <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setVer(f) }}>👁 Ver</button>
+                      <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setDup(f) }}>📋 Duplicar</button>
                       {(f.status || 'ativa') === 'arquivada'
                         ? <button className="ver-btn" onClick={(e) => { e.stopPropagation(); statusMut.mutate({ id: f.id, status: 'ativa' }) }}>↺ Reativar</button>
                         : <button className="ver-btn" style={{ color: '#b45309' }} onClick={(e) => { e.stopPropagation(); if (confirm(`Arquivar (desativar) a ficha "${f.nome}"?`)) statusMut.mutate({ id: f.id, status: 'arquivada' }) }}>🗄 Arquivar</button>}
@@ -233,13 +235,19 @@ export function FichasTecnicas() {
       {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
         <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} produtoById={produtoById} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
       ) })()}
-      {editing && <FichaModal ficha={editing === 'new' ? null : editing} produtos={(() => {
+      {(editing || dup) && (() => {
+        // DUPLICAR: copia ingredientes/rendimento/preparo da origem, mas SEM id/produto/preço
+        // (id vazio → salva NOVA; você escolhe o prato no seletor; preço vem do novo produto).
+        const src: Ficha | null = dup
+          ? { ...dup, id: '', produto_id: null, nome: '', categoria: '', insumo_vinculado_id: null, rendimento_receita_g: null, preco_venda: null, preco_delivery: null }
+          : (editing === 'new' ? null : (editing as Ficha))
         // só produtos ATIVOS no seletor; mantém o produto da ficha em edição (mesmo inativo)
         const ativos = produtos.filter((p) => (p.situacao || (p.ativo !== false ? 'ativo' : 'inativo')) !== 'inativo')
-        const pid = editing !== 'new' ? editing.produto_id : null
-        if (pid && !ativos.some((p) => p.id === pid)) { const ex = produtos.find((p) => p.id === pid); if (ex) return [...ativos, ex] }
-        return ativos
-      })()} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} custoIngLoja={custoIngLoja} custoProduto={(pid: string) => { const f = fichaByProduto[pid]; return f ? custoFicha(f) : 0 }} lojas={lojas} tenantId={tenantId} onClose={() => setEditing(null)} onSaved={() => setEditing(null)} />}
+        const pid = (!dup && editing !== 'new') ? (editing as Ficha).produto_id : null
+        const prodList = (pid && !ativos.some((p) => p.id === pid)) ? (() => { const ex = produtos.find((p) => p.id === pid); return ex ? [...ativos, ex] : ativos })() : ativos
+        const fecha = () => { setEditing(null); setDup(null) }
+        return <FichaModal ficha={src} titulo={dup ? 'Duplicar Ficha Técnica' : undefined} produtos={prodList} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} custoIngLoja={custoIngLoja} custoProduto={(pid: string) => { const f = fichaByProduto[pid]; return f ? custoFicha(f) : 0 }} lojas={lojas} tenantId={tenantId} onClose={fecha} onSaved={fecha} />
+      })()}
     </div>
   )
 }

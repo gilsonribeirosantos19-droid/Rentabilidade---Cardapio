@@ -16,9 +16,13 @@ type FichaIn = {
 const umOf = (i?: Ins) => (i ? i.unidade_medida || i.unidade_compra || 'g' : 'g')
 const isW = (um: string) => um === 'kg' || um === 'litro'
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+const nq = (s?: string) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isNaN(n) ? 0 : n }
+// exibe a quantidade com casas claras: peso/volume (kg/L) SEMPRE com 3 casas (0,200) e vírgula BR
+const showQ = (s: string | undefined, weight: boolean) => nq(s).toLocaleString('pt-BR', weight ? { minimumFractionDigits: 3, maximumFractionDigits: 3 } : { maximumFractionDigits: 3 })
 
-export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIngLoja, custoProduto, lojas, tenantId, onClose, onSaved }: {
+export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng, custoIngLoja, custoProduto, lojas, tenantId, onClose, onSaved }: {
   ficha: FichaIn | null
+  titulo?: string
   produtos: Prod[]
   insumos: Ins[]
   insMap: Record<string, Ins>
@@ -180,7 +184,7 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
     <div className="overlay" onClick={onClose}>
       <div className="vm" style={{ width: 'min(1080px, 94vw)' }} onClick={(e) => e.stopPropagation()}>
         <div className="vm-head">
-          <h2>{ficha?.id ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}</h2>
+          <h2>{titulo || (ficha?.id ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica')}</h2>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
             <button className="fm-cancel" onClick={onClose}>Cancelar</button>
             <button className="fm-save" disabled={save.isPending} onClick={() => { setErro(''); save.mutate() }}>{save.isPending ? 'Salvando…' : 'Salvar'}</button>
@@ -234,7 +238,7 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
                       <div className="ing-trow" key={idx}>
                         <div className="ins">{p?.nome || '(produto)'}</div>
                         <div className="um">porção</div>
-                        <div className="r">{r.qtd || '0'}</div>
+                        <div className="r">{showQ(r.qtd, false)}</div>
                         <div className="r muted">—</div>
                         <div className="r mono">{brl(cu)}</div>
                         <div className="r bold mono">{brl(ct)}</div>
@@ -250,7 +254,7 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
                     <div className="ing-trow" key={idx}>
                       <div className="ins">{ins?.nome || '—'}</div>
                       <div className="um">{ins ? um : '—'}</div>
-                      <div className="r">{r.qtd || '0'}</div>
+                      <div className="r">{showQ(r.qtd, isW(um))}</div>
                       <div className="r muted">{ins ? (ins.rendimento_pct || 100) + '%' : '—'}</div>
                       <div className="r mono">{ins ? brl(cu) : '—'}</div>
                       <div className="r bold mono">{ins ? brl(ct) : '—'}</div>
