@@ -17,8 +17,9 @@ const umOf = (i?: Ins) => (i ? i.unidade_medida || i.unidade_compra || 'g' : 'g'
 const isW = (um: string) => um === 'kg' || um === 'litro'
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIngLoja, custoProduto, lojas, tenantId, onClose, onSaved }: {
+export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng, custoIngLoja, custoProduto, lojas, tenantId, onClose, onSaved }: {
   ficha: FichaIn | null
+  titulo?: string
   produtos: Prod[]
   insumos: Ins[]
   insMap: Record<string, Ins>
@@ -180,7 +181,7 @@ export function FichaModal({ ficha, produtos, insumos, insMap, custoIng, custoIn
     <div className="overlay" onClick={onClose}>
       <div className="vm" style={{ width: 'min(1080px, 94vw)' }} onClick={(e) => e.stopPropagation()}>
         <div className="vm-head">
-          <h2>{ficha?.id ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}</h2>
+          <h2>{titulo || (ficha?.id ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica')}</h2>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
             <button className="fm-cancel" onClick={onClose}>Cancelar</button>
             <button className="fm-save" disabled={save.isPending} onClick={() => { setErro(''); save.mutate() }}>{save.isPending ? 'Salvando…' : 'Salvar'}</button>
