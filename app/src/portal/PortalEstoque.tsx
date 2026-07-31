@@ -26,7 +26,7 @@ const proxDia = (d: string) => { const dt = new Date(d + 'T12:00:00'); dt.setDat
 const un = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
 const fmtDataHora = (dt?: string) => (dt ? new Date(dt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—')
 
-type SubTab = 'relatorio' | 'movimentacao' | 'historico'
+type SubTab = 'relatorio' | 'movimentacao' | 'saida_lote' | 'historico'
 
 export function PortalEstoque() {
   const { tenantId, usuario } = useAuth()
@@ -63,7 +63,7 @@ export function PortalEstoque() {
   const gruposItens = useMemo(() => { const m: Record<string, string[]> = {}; gci.forEach((g) => { if (insMap[g.insumo_id]) (m[g.grupo_id] ||= []).push(g.insumo_id) }); return m }, [gci, insMap])
   const grupoNome = (insId: string) => grupos.find((g) => (gruposItens[g.id] || []).includes(insId))?.nome || '—'
 
-  const TABS: [SubTab, string][] = [['relatorio', 'Relatório'], ['movimentacao', 'Movimentação'], ['historico', 'Histórico']]
+  const TABS: [SubTab, string][] = [['relatorio', 'Relatório'], ['movimentacao', 'Movimentação'], ['saida_lote', 'Saída em Lote'], ['historico', 'Histórico']]
 
   return (
     <div>
@@ -76,6 +76,7 @@ export function PortalEstoque() {
 
       {sub === 'relatorio' && <Relatorio {...{ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap, tenantId, lojaId, baselineData: baseline?.data ?? null }} />}
       {sub === 'movimentacao' && <Movimentacao {...{ insumos, grupos, gruposItens, insMap, fornecedores, tenantId, lojaId, usuario, showToast, onSaved: () => { qc.invalidateQueries({ queryKey: ['pest-saldos'] }); qc.invalidateQueries({ queryKey: ['pest-mov'] }) } }} />}
+      {sub === 'saida_lote' && <SaidaLote {...{ insumos, saldoMap, tenantId, lojaId, usuario, showToast, onSaved: () => { qc.invalidateQueries({ queryKey: ['pest-saldos'] }); qc.invalidateQueries({ queryKey: ['pest-mov'] }) } }} />}
       {sub === 'historico' && <Historico {...{ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, lojaId }} />}
 
       {toast && <div className={'p-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
@@ -353,6 +354,86 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
         </table>
       </div>
     </div>
+  )
+}
+
+// ══════════════════════ SAÍDA EM LOTE ══════════════════════
+// Baixa de vários insumos numa tela só (CEGA: não mostra saldo — igual à contagem do inventário).
+// Você digita a saída dos itens que saíram e um clique grava tudo: saidas_estoque + abate o saldo.
+function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, onSaved }: any) {
+  const [data, setData] = useState(hojeStr())
+  const [motivo, setMotivo] = useState('Consumo')
+  const [grupoFiltro, setGrupoFiltro] = useState('')
+  const [busca, setBusca] = useState('')
+  const [soSaldo, setSoSaldo] = useState(true)
+  const [saida, setSaida] = useState<Record<string, string>>({})
+
+  const categorias = useMemo(() => [...new Set((insumos as Insumo[]).map((i) => i.categoria).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'pt-BR')), [insumos])
+  const lista = useMemo(() => {
+    let l = (insumos as Insumo[]).filter((i) => i.ativo !== false)
+    if (grupoFiltro) l = l.filter((i) => (i.categoria || '') === grupoFiltro)
+    const b = busca.toLowerCase().trim()
+    if (b) l = l.filter((i) => (i.nome || '').toLowerCase().includes(b))
+    if (soSaldo) l = l.filter((i) => (Number(saldoMap[i.id]?.quantidade) || 0) > 0 || num(saida[i.id]) > 0)
+    return l.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'))
+  }, [insumos, grupoFiltro, busca, soSaldo, saldoMap, saida])
+
+  const comSaida = useMemo(() => (insumos as Insumo[]).filter((i) => num(saida[i.id]) > 0), [insumos, saida])
+  const valTotal = comSaida.reduce((a, i) => a + num(saida[i.id]) * (Number(saldoMap[i.id]?.custo_medio) || 0), 0)
+
+  const registrar = useMutation({
+    mutationFn: async () => {
+      const itens = comSaida.map((i) => ({ id: i.id, qtd: num(saida[i.id]) })).filter((x) => x.qtd > 0)
+      if (!itens.length) throw new Error('Digite a saída de ao menos um item.')
+      const criadoEm = data + 'T12:00:00.000Z'
+      for (const it of itens) {
+        const s = saldoMap[it.id]; const atual = Number(s?.quantidade) || 0; const cm = Number(s?.custo_medio) || 0
+        const { error: e1 } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: it.id, quantidade: it.qtd, tipo: 'consumo', motivo, responsavel: usuario?.nome || null, criado_em: criadoEm }); if (e1) throw e1
+        const nova = Math.max(0, atual - it.qtd)
+        const { error: e2 } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: it.id, quantidade: parseFloat(nova.toFixed(4)), custo_medio: parseFloat(cm.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (e2) throw e2
+      }
+      return itens.length
+    },
+    onSuccess: (n) => { showToast(`${n} saída${n > 1 ? 's' : ''} registrada${n > 1 ? 's' : ''}!`); setSaida({}); onSaved() },
+    onError: (e: Error) => showToast('Erro: ' + e.message, true),
+  })
+
+  const setQ = (id: string, v: string) => setSaida((p) => ({ ...p, [id]: v }))
+
+  return (
+    <>
+      <div className="pf-bar">
+        <div className="pf-fld"><label>Data</label><input type="date" className="p-field" value={data} onChange={(e) => setData(e.target.value)} /></div>
+        <div className="pf-fld"><label>Motivo</label><select className="p-field" value={motivo} onChange={(e) => setMotivo(e.target.value)}><option>Consumo</option><option>Perda / Quebra</option><option>Uso interno</option><option>Transferência</option></select></div>
+        <div className="pf-fld"><label>Grupo</label><select className="p-field" value={grupoFiltro} onChange={(e) => setGrupoFiltro(e.target.value)}><option value="">Todos</option>{categorias.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+        <div className="pf-fld" style={{ flex: 1, minWidth: 180 }}><label>Buscar item</label><input className="p-field" style={{ width: '100%' }} placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
+        <label className="pf-chk"><input type="checkbox" checked={soSaldo} onChange={(e) => setSoSaldo(e.target.checked)} />Só com saldo</label>
+        <button className="p-btn p-btn-pri" style={{ marginLeft: 'auto' }} disabled={registrar.isPending || comSaida.length === 0} onClick={() => registrar.mutate()}>{registrar.isPending ? 'Registrando…' : `✓ Registrar saídas (${comSaida.length})`}</button>
+      </div>
+
+      <div className="p-card">
+        <table className="p-tbl">
+          <thead><tr><th>Insumo</th><th>Grupo</th><th>Un.</th><th className="r" style={{ width: 140 }}>Saída</th></tr></thead>
+          <tbody>
+            {!lista.length ? <tr><td colSpan={4} className="p-empty">Nenhum item no filtro.</td></tr>
+              : lista.map((i: Insumo) => (
+                <tr key={i.id} style={num(saida[i.id]) > 0 ? { background: '#fff7ed' } : undefined}>
+                  <td style={{ fontWeight: 600 }}>{i.nome}</td>
+                  <td style={{ fontSize: 12, color: '#64748b' }}>{i.categoria || '—'}</td>
+                  <td style={{ color: '#94a3b8', fontSize: 12 }}>{un(i)}</td>
+                  <td className="r"><input inputMode="decimal" className="p-field" style={{ width: 110, height: 30, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} placeholder="0,000" value={saida[i.id] ?? ''} onChange={(e) => setQ(i.id, e.target.value)} /></td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+        {comSaida.length > 0 && (
+          <div style={{ padding: '8px 12px', borderTop: '1px solid #f1f5f9', fontSize: 12.5, color: '#64748b', display: 'flex', gap: 18 }}>
+            <span><b style={{ color: '#1e293b' }}>{comSaida.length}</b> {comSaida.length === 1 ? 'item' : 'itens'} com saída</span>
+            <span>Total baixado: <b style={{ color: '#ea6a0a' }}>{brl(valTotal)}</b></span>
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 
