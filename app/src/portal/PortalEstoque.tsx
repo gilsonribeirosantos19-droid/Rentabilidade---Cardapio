@@ -226,7 +226,10 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
 
   const insSel: Insumo | undefined = insMap[insumoId]
   const unSel = un(insSel)
-  const listaInsumos = useMemo(() => { let l = insumos as Insumo[]; if (grupoFiltro) { const ids = gruposItens[grupoFiltro] || []; l = l.filter((i) => ids.includes(i.id)) } return l.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || '')) }, [insumos, grupoFiltro, gruposItens])
+  // categorias REAIS dos insumos (o grupo de COMPRA do Portal só tinha 1 = HORTIFRUTI; a categoria
+  // é o que classifica de verdade). O filtro passa a usar categoria e o insumo vira campo de BUSCA.
+  const categorias = useMemo(() => [...new Set((insumos as Insumo[]).map((i) => i.categoria).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'pt-BR')), [insumos])
+  const listaInsumos = useMemo(() => { let l = insumos as Insumo[]; if (grupoFiltro) l = l.filter((i) => (i.categoria || '') === grupoFiltro); return l.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || '')) }, [insumos, grupoFiltro])
   const valorTotal = num(qtd) * num(custo)
 
   const onInsumo = (id: string) => { setInsumoId(id); const i = insMap[id]; setUnidCompra(i?.unidade_compra || ''); if (i?.preco_compra) setCusto(String(i.preco_compra)) }
@@ -289,11 +292,11 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
           <div><label style={lbl}>Data</label><input type="date" className="p-field" style={{ width: '100%' }} value={data} onChange={(e) => setData(e.target.value)} /></div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-          <div><label style={lbl}>Grupo (filtro)</label><select className="p-field" style={{ width: '100%' }} value={grupoFiltro} onChange={(e) => { setGrupoFiltro(e.target.value); setInsumoId('') }}><option value="">Todos</option>{grupos.filter((g: Grupo) => (gruposItens[g.id] || []).length).map((g: Grupo) => <option key={g.id} value={g.id}>{g.nome}</option>)}</select></div>
+          <div><label style={lbl}>Grupo (filtro)</label><select className="p-field" style={{ width: '100%' }} value={grupoFiltro} onChange={(e) => { setGrupoFiltro(e.target.value); setInsumoId('') }}><option value="">Todos</option>{categorias.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
           <div><label style={lbl}>Unidade</label><input className="p-field" style={{ width: '100%', background: '#f1f5f9' }} readOnly value={unSel} /></div>
         </div>
         <div style={{ marginBottom: 12 }}><label style={lbl}>Insumo *</label>
-          <select className="p-field" style={{ width: '100%' }} value={insumoId} onChange={(e) => onInsumo(e.target.value)}><option value="">Selecione…</option>{listaInsumos.map((i) => <option key={i.id} value={i.id}>{i.nome}</option>)}</select>
+          <SearchSelect value={insSel?.nome || ''} placeholder="Buscar insumo…" options={[...new Set(listaInsumos.map((i) => i.nome || '').filter(Boolean))]} onChange={(nome) => { const found = listaInsumos.find((i) => (i.nome || '') === nome); onInsumo(found?.id || '') }} />
         </div>
         <div style={{ marginBottom: 12 }}><label style={lbl}>{tipo === 'entrada' ? 'Quantidade (na embalagem) *' : 'Quantidade *'}</label>
           <input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" />
