@@ -413,15 +413,16 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
 
       <div className="p-card">
         <table className="p-tbl">
-          <thead><tr><th>Insumo</th><th>Grupo</th><th>Un.</th><th className="r" style={{ width: 140 }}>Saída</th></tr></thead>
+          <thead><tr><th style={{ width: 300 }}>Insumo</th><th style={{ width: 190 }}>Grupo</th><th style={{ width: 70 }}>Un.</th><th className="r" style={{ width: 130 }}>Saída</th><th aria-hidden="true"></th></tr></thead>
           <tbody>
-            {!lista.length ? <tr><td colSpan={4} className="p-empty">Nenhum item no filtro.</td></tr>
+            {!lista.length ? <tr><td colSpan={5} className="p-empty">Nenhum item no filtro.</td></tr>
               : lista.map((i: Insumo) => (
                 <tr key={i.id} style={num(saida[i.id]) > 0 ? { background: '#fff7ed' } : undefined}>
                   <td style={{ fontWeight: 600 }}>{i.nome}</td>
                   <td style={{ fontSize: 12, color: '#64748b' }}>{i.categoria || '—'}</td>
                   <td style={{ color: '#94a3b8', fontSize: 12 }}>{un(i)}</td>
                   <td className="r"><input inputMode="decimal" className="p-field" style={{ width: 110, height: 30, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} placeholder="0,000" value={saida[i.id] ?? ''} onChange={(e) => setQ(i.id, e.target.value)} /></td>
+                  <td aria-hidden="true"></td>
                 </tr>
               ))}
           </tbody>
