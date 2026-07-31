@@ -316,7 +316,7 @@ export function CmvTeoricoReal() {
                     const sign = r.dQtd >= 0 ? '+' : '', psign = r.dPct >= 0 ? '+' : '', isign = r.imp >= 0 ? '+' : ''
                     return (
                       <tr key={r.i.id}>
-                        <td><button type="button" title="Ver quais produtos consumiram (teórico)" onClick={() => setDetIns({ nome: r.i.nome || '', un: r.un, det: r.det, qTot: r.qTeo, cTot: r.cTeo })} style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: '#2563eb', cursor: 'pointer', textAlign: 'left', textDecoration: 'underline dotted' }}>{r.i.nome}</button></td>
+                        <td><button type="button" title="Ver quais produtos consumiram (teórico)" onClick={() => setDetIns({ nome: r.i.nome || '', un: r.un, det: r.det, qTot: r.qTeo, cTot: r.cTeo })} style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: 'inherit', cursor: 'pointer', textAlign: 'left' }}>{r.i.nome}</button></td>
                         <td style={{ color: '#64748b' }}>{r.un}</td>
                         <td className="r mono">{fq(r.qTeo)}</td>
                         <td className="r mono">{brl(r.cTeo)}</td>
