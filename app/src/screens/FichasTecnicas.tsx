@@ -233,7 +233,7 @@ export function FichasTecnicas() {
       <div className="fic-foot">{filtrada.length} fichas</div>
 
       {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
-        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} produtoById={produtoById} params={params} tenantId={tenantId} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
+        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} produtoById={produtoById} params={params} tenantId={tenantId} lojaId={lojaCusto} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
       ) })()}
       {(editing || dup) && (() => {
         // DUPLICAR: copia ingredientes/rendimento/preparo da origem, mas SEM id/produto/preço
@@ -252,7 +252,7 @@ export function FichasTecnicas() {
   )
 }
 
-function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, produtoById, params, tenantId, onClose, onEdit }: {
+function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, produtoById, params, tenantId, lojaId, onClose, onEdit }: {
   ficha: Ficha
   m: { custo: number; pv: number; cmv: number | null; margem: number | null }
   st: { t: string; bg: string; c: string }
@@ -263,6 +263,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
   produtoById: Record<string, ProdutoMin>
   params: PrecoParams
   tenantId?: string | null
+  lojaId?: string | null
   onClose: () => void
   onEdit: () => void
 }) {
@@ -300,6 +301,64 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
   // formata uma quantidade (em g p/ kg/litro, ou unidades) respeitando a unidade do insumo
   const fmtQ = (q: number, um: string) => (um === 'kg' || um === 'litro') ? (q / 1000).toFixed(3) + ' ' + um : (+q.toFixed(3)) + ' ' + um
 
+  // dados da empresa (loja) p/ o cabeçalho da impressão
+  const { data: empresa } = useQuery({
+    queryKey: ['fic-empresa', lojaId], enabled: !!lojaId,
+    queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('id', lojaId!).limit(1).maybeSingle(); return (data || null) as Record<string, unknown> | null },
+  })
+  // monta um layout limpo e chama a impressão do navegador (Imprimir OU Salvar em PDF)
+  const imprimir = () => {
+    const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => (({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as Record<string, string>)[c]))
+    const emp = (empresa || {}) as Record<string, string>
+    const nomeEmp = emp.razao_social || emp.nome || 'Ficha Técnica'
+    const codigo = ficha.produto_id ? (produtoById[ficha.produto_id]?.codigo_pdv || '') : ''
+    const rows = itens.map((it) => {
+      if (it.produto_id) {
+        const p = produtoById[it.produto_id]
+        const mult = Number(it.quantidade_g) || 0
+        return `<tr><td>${esc(p?.nome || '(produto)')}</td><td>Produto</td><td class="r">—</td><td class="r">—</td><td class="r">${esc(mult.toLocaleString('pt-BR'))}</td><td class="r">—</td><td class="r">—</td><td class="r">${esc(brl(custoItem(it)))}</td></tr>`
+      }
+      const ins = insMap[it.insumo_id || '']
+      const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g'
+      const isUnit = um === 'un' || um === 'pct' || um === 'cx'
+      const rendPct = ins ? (Number(ins.rendimento_pct) || 100) : 100
+      const fator = isUnit ? 1 : (rendPct > 0 ? 100 / rendPct : 1)
+      const preco = ins ? custoBase(ins) : 0
+      const netQ = Number(it.quantidade_g) || 0
+      const tipoItem = ins ? (processadoIds.has(ins.id) ? 'Produto Intermediário' : 'Matéria Prima') : '—'
+      return `<tr><td>${esc(ins?.nome || '—')}</td><td>${tipoItem}</td><td class="r">${rendPct}%</td><td class="r">${esc(brl(preco))}</td><td class="r">${esc(fmtQ(netQ, um))}</td><td class="r">${fator.toFixed(3)}</td><td class="r">${esc(fmtQ(netQ * fator, um))}</td><td class="r">${esc(brl(custoItem(it)))}</td></tr>`
+    }).join('')
+    const cmvTxt = cmv !== null ? cmv.toFixed(1) + '%' : '—'
+    const margTxt = margemPct !== null ? margemPct.toFixed(1) + '%' : '—'
+    const mkTxt = markup !== null ? markup.toFixed(2) + 'x' : '—'
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Ficha - ${esc(ficha.nome)}</title><style>
+      *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#111;margin:18px} table{width:100%;border-collapse:collapse} .r{text-align:right}
+      .hdr{border:1px solid #333;padding:10px 14px} .hdr .emp{font-size:14px;font-weight:bold} .hdr .sub{font-size:10px;color:#333;margin-top:2px}
+      .titulo{text-align:center;font-weight:bold;font-size:13px;border:1px solid #333;border-top:0;padding:6px;letter-spacing:.05em}
+      .item td,.item th{border:1px solid #999;padding:4px 6px;font-size:10.5px} .item th{background:#eef2f8;text-align:left}
+      .sec{background:#14315f;color:#fff;font-weight:bold;padding:4px 8px;font-size:10.5px}
+      .ing td,.ing th{border:1px solid #999;padding:3px 6px;font-size:10px} .ing th{background:#14315f;color:#fff;text-align:left} .ing tfoot td{font-weight:bold;background:#f1f5f9}
+      .fin{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap} .fin div{border:1px solid #ccc;border-radius:4px;padding:4px 10px;font-size:10px}
+      .foot{margin-top:16px;font-size:9px;color:#777;text-align:right} @media print{body{margin:10mm}}
+    </style></head><body>
+      <div class="hdr"><div class="emp">${esc(nomeEmp)}</div>${emp.endereco ? `<div class="sub">${esc(emp.endereco)}</div>` : ''}${emp.cnpj ? `<div class="sub">CNPJ: ${esc(emp.cnpj)}</div>` : ''}</div>
+      <div class="titulo">FICHA TÉCNICA</div>
+      <table class="item"><tr><th>Código</th><th>Descrição</th><th>Grupo</th><th class="r">Rendimento</th><th class="r">Custo/un</th><th class="r">Preço</th><th class="r">CMV%</th><th>Situação</th></tr>
+      <tr><td>${esc(codigo || '—')}</td><td><b>${esc(ficha.nome)}</b></td><td>${esc(ficha.categoria || '—')}</td><td class="r">${ficha.rendimento_porcoes || 1} un</td><td class="r">${esc(brl(custo))}</td><td class="r">${pv > 0 ? esc(brl(pv)) : '—'}</td><td class="r">${cmvTxt}</td><td>${esc(st.t)}</td></tr></table>
+      <div class="sec">INSUMOS</div>
+      <table class="ing"><thead><tr><th>Ingrediente</th><th>Tipo do item</th><th class="r">% Aprov.</th><th class="r">Preço</th><th class="r">Qtd. utilizada</th><th class="r">Fator</th><th class="r">Qtd baixa est.</th><th class="r">Custo</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="8" style="text-align:center;color:#888">Nenhum ingrediente</td></tr>'}</tbody>
+      <tfoot><tr><td colspan="7" class="r">Custo total da receita</td><td class="r">${esc(brl(custoTot))}</td></tr></tfoot></table>
+      <div class="fin"><div>Custo/un: <b>${esc(brl(custo))}</b></div><div>Preço: <b>${pv > 0 ? esc(brl(pv)) : '—'}</b></div><div>CMV%: <b>${cmvTxt}</b></div><div>Margem%: <b>${margTxt}</b></div><div>Markup: <b>${mkTxt}</b></div></div>
+      ${ficha.observacoes ? `<div class="sec" style="margin-top:12px">OBSERVAÇÕES</div><div style="border:1px solid #999;border-top:0;padding:6px;font-size:10px">${esc(ficha.observacoes)}</div>` : ''}
+      <div class="foot">AIKO — gerado em ${new Date().toLocaleString('pt-BR')}</div>
+    </body></html>`
+    const w = window.open('', '_blank', 'width=980,height=800')
+    if (!w) { alert('Permita pop-ups para imprimir a ficha.'); return }
+    w.document.write(html); w.document.close(); w.focus()
+    setTimeout(() => w.print(), 300)
+  }
+
   const finCards = (
     <div className="fin-grid">
       <div className="fin-card"><div className="l">Custo/un</div><div className="v">{custo > 0 ? brl(custo) : '—'}</div></div>
@@ -319,6 +378,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
         <div className="dp-hdr">
           <h2>{ficha.nome}</h2>
           <span className="dp-badge" style={{ background: st.bg, color: st.c }}>{st.t}</span>
+          <button onClick={imprimir} title="Imprimir / Salvar em PDF" style={{ marginLeft: 'auto', marginRight: 8, background: '#14315f', color: '#fff', border: 0, borderRadius: 7, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>🖨 Imprimir / PDF</button>
           <button className="dp-x" onClick={onClose}>✕</button>
         </div>
         <div className="dp-tabs">
