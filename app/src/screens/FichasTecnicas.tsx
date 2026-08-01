@@ -67,7 +67,7 @@ function printFichas(fichas: Ficha[], empresa: Record<string, string> | null, ct
   if (!fichas.length) { alert('Nenhuma ficha para imprimir.'); return }
   const body = fichas.map((f) => _blocoFicha(f, empresa || {}, ctx)).join('')
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>Fichas Técnicas</title><style>
-    *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#111;margin:0} table{width:100%;border-collapse:collapse} .r{text-align:right}
+    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact} body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#111;margin:0} table{width:100%;border-collapse:collapse} .r{text-align:right}
     .pagina{padding:16px} .pagina:not(:last-child){page-break-after:always}
     .hdr{border:1px solid #333;padding:10px 14px} .hdr .emp{font-size:14px;font-weight:bold} .hdr .sub{font-size:10px;color:#333;margin-top:2px}
     .titulo{text-align:center;font-weight:bold;font-size:13px;border:1px solid #333;border-top:0;padding:6px;letter-spacing:.05em}
@@ -403,7 +403,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
     const margTxt = margemPct !== null ? margemPct.toFixed(1) + '%' : '—'
     const mkTxt = markup !== null ? markup.toFixed(2) + 'x' : '—'
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Ficha - ${esc(ficha.nome)}</title><style>
-      *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#111;margin:18px} table{width:100%;border-collapse:collapse} .r{text-align:right}
+      *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact} body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#111;margin:18px} table{width:100%;border-collapse:collapse} .r{text-align:right}
       .hdr{border:1px solid #333;padding:10px 14px} .hdr .emp{font-size:14px;font-weight:bold} .hdr .sub{font-size:10px;color:#333;margin-top:2px}
       .titulo{text-align:center;font-weight:bold;font-size:13px;border:1px solid #333;border-top:0;padding:6px;letter-spacing:.05em}
       .item td,.item th{border:1px solid #999;padding:4px 6px;font-size:10.5px} .item th{background:#eef2f8;text-align:left}
