@@ -84,6 +84,14 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
     setItens((a) => [...a, addSel.kind === 'produto' ? { produto_id: addSel.id, qtd: addQtd } : { insumo_id: addSel.id, qtd: addQtd }])
     setAddSel(null); setAddQtd('')
   }
+  // clicar num item da lista → devolve ele pra linha de cima (busca + quantidade) p/ editar e re-adicionar
+  const editarItem = (idx: number) => {
+    const it = itens[idx]; if (!it) return
+    if (it.produto_id) setAddSel({ kind: 'produto', id: it.produto_id })
+    else if (it.insumo_id) setAddSel({ kind: 'insumo', id: it.insumo_id })
+    setAddQtd(it.qtd)
+    setItens((a) => a.filter((_, i) => i !== idx))
+  }
 
   const ehProc = subj?.kind === 'insumo'
   const precoProduto = subj?.kind === 'produto' ? (Number(prodById[subj.id]?.preco_venda) || null) : null
@@ -236,7 +244,7 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
                     const cu = custoProduto(r.produto_id)
                     return (
                       <div className="ing-trow" key={idx}>
-                        <div className="ins">{p?.nome || '(produto)'}</div>
+                        <div className="ins" title="Clique para editar" style={{ cursor: 'pointer' }} onClick={() => editarItem(idx)}>{p?.nome || '(produto)'}</div>
                         <div className="um">porção</div>
                         <div className="r">{showQ(r.qtd, false)}</div>
                         <div className="r muted">—</div>
@@ -252,7 +260,7 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
                   const cu = ins ? custoIng(ins, isW(um) ? 1000 : 1) : 0
                   return (
                     <div className="ing-trow" key={idx}>
-                      <div className="ins">{ins?.nome || '—'}</div>
+                      <div className="ins" title="Clique para editar" style={{ cursor: 'pointer' }} onClick={() => editarItem(idx)}>{ins?.nome || '—'}</div>
                       <div className="um">{ins ? um : '—'}</div>
                       <div className="r">{showQ(r.qtd, isW(um))}</div>
                       <div className="r muted">{ins ? (ins.rendimento_pct || 100) + '%' : '—'}</div>
