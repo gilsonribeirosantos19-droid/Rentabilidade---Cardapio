@@ -23,6 +23,65 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
 
+// ── Impressão de fichas (1 ou várias) — layout tipo Everest, print do navegador (Imprimir/PDF) ──
+type PrintCtx = {
+  insMap: Record<string, Insumo>; produtoById: Record<string, ProdutoMin>; processadoIds: Set<string>
+  custoItem: (it: Item) => number; custoBase: (ins: Insumo) => number
+  metricas: (f: Ficha) => { custo: number; pv: number; cmv: number | null; margem: number | null }
+  codigo: (f: Ficha) => string; statusText: (f: Ficha) => string
+}
+const _esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, (c) => (({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as Record<string, string>)[c]))
+const _fmtQ = (q: number, um: string) => (um === 'kg' || um === 'litro') ? (q / 1000).toFixed(3) + ' ' + um : (+q.toFixed(3)) + ' ' + um
+function _blocoFicha(ficha: Ficha, empresa: Record<string, string>, ctx: PrintCtx): string {
+  const itens = [...(ficha.itens_ficha || [])].sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+  const m = ctx.metricas(ficha); const custo = m.custo, pv = m.pv, cmv = m.cmv
+  const markup = custo > 0 && pv > 0 ? pv / custo : null
+  const custoTot = itens.reduce((s, it) => s + ctx.custoItem(it), 0)
+  const nomeEmp = empresa.razao_social || empresa.nome || 'Ficha Técnica'
+  const rows = itens.map((it) => {
+    if (it.produto_id) {
+      const p = ctx.produtoById[it.produto_id]; const mult = Number(it.quantidade_g) || 0
+      return `<tr><td>${_esc(p?.nome || '(produto)')}</td><td>Produto</td><td class="r">—</td><td class="r">—</td><td class="r">${_esc(mult.toLocaleString('pt-BR'))}</td><td class="r">—</td><td class="r">—</td><td class="r">${_esc(brl(ctx.custoItem(it)))}</td></tr>`
+    }
+    const ins = ctx.insMap[it.insumo_id || '']; const um = ins ? (ins.unidade_medida || ins.unidade_compra || 'g') : 'g'
+    const isUnit = um === 'un' || um === 'pct' || um === 'cx'; const rendPct = ins ? (Number(ins.rendimento_pct) || 100) : 100
+    const fator = isUnit ? 1 : (rendPct > 0 ? 100 / rendPct : 1); const preco = ins ? ctx.custoBase(ins) : 0
+    const netQ = Number(it.quantidade_g) || 0; const tipoItem = ins ? (ctx.processadoIds.has(ins.id) ? 'Produto Intermediário' : 'Matéria Prima') : '—'
+    return `<tr><td>${_esc(ins?.nome || '—')}</td><td>${tipoItem}</td><td class="r">${rendPct}%</td><td class="r">${_esc(brl(preco))}</td><td class="r">${_esc(_fmtQ(netQ, um))}</td><td class="r">${fator.toFixed(3)}</td><td class="r">${_esc(_fmtQ(netQ * fator, um))}</td><td class="r">${_esc(brl(ctx.custoItem(it)))}</td></tr>`
+  }).join('')
+  const cmvTxt = cmv !== null ? cmv.toFixed(1) + '%' : '—'; const margTxt = m.margem !== null ? m.margem.toFixed(1) + '%' : '—'; const mkTxt = markup !== null ? markup.toFixed(2) + 'x' : '—'
+  return `<section class="pagina">
+    <div class="hdr"><div class="emp">${_esc(nomeEmp)}</div>${empresa.endereco ? `<div class="sub">${_esc(empresa.endereco)}</div>` : ''}${empresa.cnpj ? `<div class="sub">CNPJ: ${_esc(empresa.cnpj)}</div>` : ''}</div>
+    <div class="titulo">FICHA TÉCNICA</div>
+    <table class="item"><tr><th>Código</th><th>Descrição</th><th>Grupo</th><th class="r">Rendimento</th><th class="r">Custo/un</th><th class="r">Preço</th><th class="r">CMV%</th><th>Situação</th></tr>
+    <tr><td>${_esc(ctx.codigo(ficha) || '—')}</td><td><b>${_esc(ficha.nome)}</b></td><td>${_esc(ficha.categoria || '—')}</td><td class="r">${ficha.rendimento_porcoes || 1} un</td><td class="r">${_esc(brl(custo))}</td><td class="r">${pv > 0 ? _esc(brl(pv)) : '—'}</td><td class="r">${cmvTxt}</td><td>${_esc(ctx.statusText(ficha))}</td></tr></table>
+    <div class="sec">INSUMOS</div>
+    <table class="ing"><thead><tr><th>Ingrediente</th><th>Tipo do item</th><th class="r">% Aprov.</th><th class="r">Preço</th><th class="r">Qtd. utilizada</th><th class="r">Fator</th><th class="r">Qtd baixa est.</th><th class="r">Custo</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="8" style="text-align:center;color:#888">Nenhum ingrediente</td></tr>'}</tbody>
+    <tfoot><tr><td colspan="7" class="r">Custo total da receita</td><td class="r">${_esc(brl(custoTot))}</td></tr></tfoot></table>
+    <div class="fin"><div>Custo/un: <b>${_esc(brl(custo))}</b></div><div>Preço: <b>${pv > 0 ? _esc(brl(pv)) : '—'}</b></div><div>CMV%: <b>${cmvTxt}</b></div><div>Margem%: <b>${margTxt}</b></div><div>Markup: <b>${mkTxt}</b></div></div>
+    ${ficha.observacoes ? `<div class="sec" style="margin-top:10px">OBSERVAÇÕES</div><div style="border:1px solid #999;border-top:0;padding:6px;font-size:10px">${_esc(ficha.observacoes)}</div>` : ''}
+  </section>`
+}
+function printFichas(fichas: Ficha[], empresa: Record<string, string> | null, ctx: PrintCtx) {
+  if (!fichas.length) { alert('Nenhuma ficha para imprimir.'); return }
+  const body = fichas.map((f) => _blocoFicha(f, empresa || {}, ctx)).join('')
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Fichas Técnicas</title><style>
+    *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#111;margin:0} table{width:100%;border-collapse:collapse} .r{text-align:right}
+    .pagina{padding:16px} .pagina:not(:last-child){page-break-after:always}
+    .hdr{border:1px solid #333;padding:10px 14px} .hdr .emp{font-size:14px;font-weight:bold} .hdr .sub{font-size:10px;color:#333;margin-top:2px}
+    .titulo{text-align:center;font-weight:bold;font-size:13px;border:1px solid #333;border-top:0;padding:6px;letter-spacing:.05em}
+    .item td,.item th{border:1px solid #999;padding:4px 6px;font-size:10.5px} .item th{background:#eef2f8;text-align:left}
+    .sec{background:#14315f;color:#fff;font-weight:bold;padding:4px 8px;font-size:10.5px}
+    .ing td,.ing th{border:1px solid #999;padding:3px 6px;font-size:10px} .ing th{background:#14315f;color:#fff;text-align:left} .ing tfoot td{font-weight:bold;background:#f1f5f9}
+    .fin{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap} .fin div{border:1px solid #ccc;border-radius:4px;padding:4px 10px;font-size:10px}
+  </style></head><body>${body}</body></html>`
+  const w = window.open('', '_blank', 'width=980,height=800')
+  if (!w) { alert('Permita pop-ups para imprimir as fichas.'); return }
+  w.document.write(html); w.document.close(); w.focus()
+  setTimeout(() => w.print(), 350)
+}
+
 export function FichasTecnicas() {
   const { tenantId } = useAuth()
   const { lojas, lojaId } = useLoja()
@@ -78,6 +137,10 @@ export function FichasTecnicas() {
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])), [insumos])
   const produtoById = useMemo(() => Object.fromEntries(produtos.map((p) => [p.id, p])) as Record<string, ProdutoMin>, [produtos])
+  const { data: empresa } = useQuery({
+    queryKey: ['fic-empresa', lojaCusto], enabled: !!lojaCusto,
+    queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('id', lojaCusto).limit(1).maybeSingle(); return (data || null) as Record<string, string> | null },
+  })
   // código do item da ficha: produto → código PDV; processado (insumo vinculado) → código interno do insumo
   const fichaCodigo = (f: Ficha): string => {
     if (f.produto_id) return produtoById[f.produto_id]?.codigo_pdv || '—'
@@ -143,6 +206,13 @@ export function FichasTecnicas() {
   }
 
   const categorias = useMemo(() => uniq(fichas.map((f) => f.categoria)), [fichas])
+  const printCtx: PrintCtx = {
+    insMap, produtoById, processadoIds,
+    custoItem: (it) => custoItem(it, new Set()),
+    custoBase, metricas, codigo: fichaCodigo,
+    statusText: (f) => { const mm = metricas(f); return statusPill(f, mm.cmv, mm.pv).t },
+  }
+  const imprimirLista = (fs: Ficha[]) => printFichas(fs, empresa ?? null, printCtx)
   const filtrada = useMemo(() => {
     const q = norm(busca.trim())
     return fichas.filter((f) => {
@@ -189,6 +259,7 @@ export function FichasTecnicas() {
           </select>
         </div>
         <button className="fic-mais"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg> Mais filtros</button>
+        <button className="fic-mais" onClick={() => imprimirLista(filtrada)} title="Imprimir / Salvar PDF de todas as fichas do filtro">🖨 Imprimir ({filtrada.length})</button>
         <button className="fic-nova" onClick={() => setEditing('new')}>+ Nova ficha</button>
       </div>
 
