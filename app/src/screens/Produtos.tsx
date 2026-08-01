@@ -36,6 +36,16 @@ const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,
 const brl = (n?: number | null) => (n != null ? Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—')
 const TIPO_LABEL: Record<string, string> = { produto_acabado: 'Produto acabado', revenda: 'Mercadoria p/ revenda', combo: 'Combo', outro: 'Outro' }
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
+// dedupe ignorando MAIÚSCULA/minúscula/acento; prefere a versão que NÃO é toda maiúscula (Title Case
+// fica mais legível). Evita "KARAAGE" e "Karaage" aparecerem repetidos no filtro (import Saipos vem maiúsculo).
+const uniqCI = (a: (string | undefined)[]) => {
+  const m = new Map<string, string>()
+  for (const s of a.filter(Boolean) as string[]) {
+    const k = norm(s); const cur = m.get(k)
+    if (!cur || (cur === cur.toUpperCase() && s !== s.toUpperCase())) m.set(k, s)
+  }
+  return [...m.values()].sort((x, y) => x.localeCompare(y, 'pt-BR'))
+}
 const novo = (): Form => ({ situacao: 'ativo', participa_cmv: false, tipo_baixa: 'nao_baixar', unidade_venda: 'un', pesavel: false })
 
 function sitBadge(p: Produto) {
@@ -77,9 +87,9 @@ export function Produtos() {
   const opts = useMemo(() => {
     const cad = (tipo: string) => clsf.filter((c) => c.tipo === tipo).map((c) => c.nome)
     return {
-      grupos: uniq([...cad('grupo'), ...lista.map((p) => p.grupo || p.categoria)]),
-      familias: uniq([...cad('familia'), ...lista.map((p) => p.familia)]),
-      subgrupos: uniq([...cad('subgrupo'), ...lista.map((p) => p.subgrupo)]),
+      grupos: uniqCI([...cad('grupo'), ...lista.map((p) => p.grupo || p.categoria)]),
+      familias: uniqCI([...cad('familia'), ...lista.map((p) => p.familia)]),
+      subgrupos: uniqCI([...cad('subgrupo'), ...lista.map((p) => p.subgrupo)]),
     }
   }, [lista, clsf])
 
@@ -87,7 +97,7 @@ export function Produtos() {
     const q = norm(busca.trim())
     return lista.filter((p) => {
       if (q && !norm([p.nome, p.codigo_pdv].filter(Boolean).join(' ')).includes(q)) return false
-      if (fGrupo && (p.grupo || p.categoria || '') !== fGrupo) return false
+      if (fGrupo && norm(p.grupo || p.categoria || '') !== norm(fGrupo)) return false
       if (!incluirZerado && !(Number(p.preco_venda) > 0)) return false   // esconde R$0 (padrão)
       const inativo = sitEfetiva(p) === 'inativo'
       if (fSit === 'ativos' && inativo) return false      // esconde inativos (padrão)
