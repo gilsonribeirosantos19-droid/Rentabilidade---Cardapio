@@ -67,6 +67,7 @@ export function Produtos() {
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
   const [fSit, setFSit] = useState('ativos')
+  const [fTipo, setFTipo] = useState('')
   const [incluirZerado, setIncluirZerado] = useState(false)   // por padrão esconde produtos R$0
   const [editing, setEditing] = useState<Form | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
@@ -90,6 +91,7 @@ export function Produtos() {
       grupos: uniqCI([...cad('grupo'), ...lista.map((p) => p.grupo || p.categoria)]),
       familias: uniqCI([...cad('familia'), ...lista.map((p) => p.familia)]),
       subgrupos: uniqCI([...cad('subgrupo'), ...lista.map((p) => p.subgrupo)]),
+      tipos: uniq(lista.map((p) => TIPO_LABEL[p.tipo_item || ''] || p.tipo_item || '')),
     }
   }, [lista, clsf])
 
@@ -98,13 +100,14 @@ export function Produtos() {
     return lista.filter((p) => {
       if (q && !norm([p.nome, p.codigo_pdv].filter(Boolean).join(' ')).includes(q)) return false
       if (fGrupo && norm(p.grupo || p.categoria || '') !== norm(fGrupo)) return false
+      if (fTipo && (TIPO_LABEL[p.tipo_item || ''] || p.tipo_item || '') !== fTipo) return false
       if (!incluirZerado && !(Number(p.preco_venda) > 0)) return false   // esconde R$0 (padrão)
       const inativo = sitEfetiva(p) === 'inativo'
       if (fSit === 'ativos' && inativo) return false      // esconde inativos (padrão)
       if (fSit === 'inativos' && !inativo) return false    // só inativos
       return true
     })
-  }, [lista, busca, fGrupo, fSit, incluirZerado])
+  }, [lista, busca, fGrupo, fTipo, fSit, incluirZerado])
 
   const saveMut = useMutation({
     mutationFn: async (f: Form) => {
@@ -148,6 +151,7 @@ export function Produtos() {
           <input placeholder="Buscar por nome ou código..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
         <div className="pr-grupo"><SearchSelect value={fGrupo} onChange={setFGrupo} options={opts.grupos} placeholder="Todos os grupos" /></div>
+        <div className="pr-grupo" style={{ minWidth: 150 }}><SearchSelect value={fTipo} onChange={setFTipo} options={opts.tipos} placeholder="Todos os tipos" /></div>
         <div className="pr-grupo" style={{ minWidth: 150 }}><SearchSelect value={SIT_TO_LBL[fSit]} onChange={(l) => setFSit(SIT_TO_VAL[l] || 'ativos')} options={SIT_OPTS} placeholder="Situação" /></div>
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
           <input type="checkbox" checked={incluirZerado} onChange={(e) => setIncluirZerado(e.target.checked)} style={{ width: 15, height: 15, accentColor: '#f97316' }} />
