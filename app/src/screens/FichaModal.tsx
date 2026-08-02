@@ -139,6 +139,21 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
   const rendReceitaG = vincId && rendVal ? (rendUnid === 'kg' || rendUnid === 'L' ? Number(rendVal) * 1000 : Number(rendVal)) : null
   const custoUnit = vincId && rendReceitaG ? total / (rendReceitaG / 1000) : total / por
 
+  // Sugestão de rendimento "SEM COCÇÃO" = peso do que ENTRA (ingrediente principal / soma dos ingredientes).
+  // Evita embutir perda de cocção sem querer: o rendimento nasce igual ao peso de entrada (fator = só o aproveitamento).
+  const pesoEntrada = useMemo(() => {
+    let total = 0, maiorKg = 0, maiorNome = ''
+    for (const r of itens) {
+      if (!r.insumo_id) continue                                   // ignora produto / meia porção
+      const ins = insMap[r.insumo_id]; if (!ins || !isW(umOf(ins))) continue   // só peso/volume (kg/L)
+      const kg = Number(r.qtd) || 0                                // qtd já está em kg/L (ver montagem de itens)
+      total += kg
+      if (kg > maiorKg) { maiorKg = kg; maiorNome = ins.nome || '' }
+    }
+    return { total, maiorKg, maiorNome }
+  }, [itens, insMap])
+  const fmtNum = (n: number) => String(Math.round(n * 1000) / 1000)
+
   const save = useMutation({
     mutationFn: async () => {
       if (!nome.trim()) throw new Error('Selecione o produto ou insumo da ficha.')
@@ -223,6 +238,21 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
                 <input className="fm-i" type="number" step="any" value={rendVal} disabled={!vincId} onChange={(e) => setRendVal(e.target.value)} placeholder="Ex: 800" style={{ flex: 1 }} />
                 <select className="fm-i" value={rendUnid} disabled={!vincId} onChange={(e) => setRendUnid(e.target.value)} style={{ width: 80 }}><option value="kg">kg</option><option value="g">g</option><option value="L">litro</option><option value="ml">ml</option></select>
               </div>
+              {vincId && pesoEntrada.maiorKg > 0 && (
+                <div style={{ marginTop: 6, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                  Sem cocção? Rendimento = peso do que entra:{' '}
+                  <button type="button" onClick={() => { setRendVal(fmtNum(pesoEntrada.maiorKg)); setRendUnid('kg') }} style={{ background: 'none', border: 'none', padding: 0, color: '#00b890', cursor: 'pointer', font: 'inherit', textDecoration: 'underline' }}>
+                    principal ({pesoEntrada.maiorNome}: {showQ(fmtNum(pesoEntrada.maiorKg), true)} kg)
+                  </button>
+                  {pesoEntrada.total > pesoEntrada.maiorKg + 1e-9 && (
+                    <>{' · '}
+                      <button type="button" onClick={() => { setRendVal(fmtNum(pesoEntrada.total)); setRendUnid('kg') }} style={{ background: 'none', border: 'none', padding: 0, color: '#00b890', cursor: 'pointer', font: 'inherit', textDecoration: 'underline' }}>
+                        soma dos ingredientes ({showQ(fmtNum(pesoEntrada.total), true)} kg)
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
