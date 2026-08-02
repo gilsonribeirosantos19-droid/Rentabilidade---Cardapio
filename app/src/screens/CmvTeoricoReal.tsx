@@ -23,8 +23,6 @@ const brl = (v?: number) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { min
 const brlSigned = (v: number) => (v >= 0 ? '+' : '-') + 'R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fq = (v: number) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const getStatus = (pct: number): 'critico' | 'atencao' | 'ok' => { const a = Math.abs(pct); return a > 15 ? 'critico' : a > 5 ? 'atencao' : 'ok' }
-const getCausa = (pct: number) => { if (Math.abs(pct) <= 5) return '—'; if (pct > 300) return 'Produção / Padrão'; if (pct > 50) return 'Perda não lançada'; if (pct > 15) return pct > 30 ? 'Rendimento / Perda' : 'Rendimento'; return 'Rendimento' }
-const SC = { critico: { dot: '#e11d48', txt: 'Crítico' }, atencao: { dot: '#f59e0b', txt: 'Atenção' }, ok: { dot: '#22c55e', txt: 'Dentro do padrão' } }
 
 function periodoRange(tipo: string): { de: string; ate: string } | null {
   const d = new Date()
@@ -291,14 +289,12 @@ export function CmvTeoricoReal() {
           <table>
             <thead>
               <tr className="th-main">
-                <th rowSpan={2} style={{ width: 150 }}>Insumo</th>
+                <th rowSpan={2} style={{ width: 280 }}>Insumo</th>
                 <th rowSpan={2} style={{ width: 40 }}>UN.</th>
                 <th colSpan={2} style={{ textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,.12)' }}>Consumo Teórico (Ficha)</th>
                 <th colSpan={2} style={{ textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,.12)' }}>Consumo Real (Estoque)</th>
                 <th rowSpan={2} style={{ textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,.12)', width: 90 }}>%</th>
                 <th colSpan={2} style={{ textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,.12)' }}>Diferença</th>
-                <th rowSpan={2} style={{ borderLeft: '1px solid rgba(255,255,255,.12)', width: 120 }}>Status</th>
-                <th rowSpan={2} style={{ borderLeft: '1px solid rgba(255,255,255,.12)' }}>Possível Causa</th>
               </tr>
               <tr className="th-sub">
                 <th style={{ borderLeft: '1px solid rgba(255,255,255,.06)' }}>Quantidade</th><th>Custo (R$)</th>
@@ -308,11 +304,10 @@ export function CmvTeoricoReal() {
             </thead>
             <tbody>
               {isFetching && !calc
-                ? <tr><td colSpan={11} className="empty">Calculando…</td></tr>
+                ? <tr><td colSpan={9} className="empty">Calculando…</td></tr>
                 : !rows.length
-                  ? <tr><td colSpan={11} className="empty">Nenhum insumo com dados no período</td></tr>
+                  ? <tr><td colSpan={9} className="empty">Nenhum insumo com dados no período</td></tr>
                   : rows.map((r) => {
-                    const c = SC[r.st]
                     const sign = r.dQtd >= 0 ? '+' : '', psign = r.dPct >= 0 ? '+' : '', isign = r.imp >= 0 ? '+' : ''
                     return (
                       <tr key={r.i.id}>
@@ -328,8 +323,6 @@ export function CmvTeoricoReal() {
                         </td>
                         <td className="r mono" style={{ fontWeight: 600 }}>{sign}{fq(r.dQtd)}</td>
                         <td className="r mono" style={{ fontWeight: 600 }}>{isign}{brl(Math.abs(r.imp))}</td>
-                        <td><span className="status-dot"><span className="dot" style={{ background: c.dot }} /><span style={{ color: c.dot, fontSize: 11, fontWeight: 600 }}>{c.txt}</span></span></td>
-                        <td style={{ color: '#64748b', fontSize: 12 }}>{getCausa(r.dPct)}</td>
                       </tr>
                     )
                   })}
@@ -342,8 +335,6 @@ export function CmvTeoricoReal() {
                 <td className="c" style={{ fontFamily: "'DM Mono', monospace" }}>{(foot.tPct >= 0 ? '+' : '') + foot.tPct.toFixed(1)}%</td>
                 <td className="r mono">{(foot.tDQ >= 0 ? '+' : '') + fq(foot.tDQ)}</td>
                 <td className="r mono">{brlSigned(foot.tImp)}</td>
-                <td style={{ color: foot.crit > 0 ? '#fca5a5' : 'rgba(255,255,255,.6)', fontSize: 12 }}>{foot.crit} crítico{foot.crit !== 1 ? 's' : ''}</td>
-                <td />
               </tr>
             </tfoot>}
           </table>
