@@ -8,7 +8,7 @@ import './config.css'
 // via Edge Function `admin-users` (a chave admin fica no servidor).
 // Papéis: admin / gerente / operador. Loja vinculada só para gerente.
 
-type Usuario = { id: string; nome?: string; email?: string; role?: string; loja_id?: string | null }
+type Usuario = { id: string; nome?: string; email?: string; role?: string; loja_id?: string | null; ativo?: boolean }
 type Loja = { id: string; nome: string }
 type Modal = { id?: string; nome: string; email: string; role: string; lojaId: string; senha: string }
 
@@ -20,10 +20,15 @@ const roleCls = (r?: string) => (r === 'admin' ? 'role-admin' : r === 'gerente' 
 async function invokeAdmin(body: Record<string, unknown>): Promise<any> {
   const { data, error } = await supabase.functions.invoke('admin-users', { body })
   if (error) {
-    let msg = error.message
-    try { const b = await (error as unknown as { context?: Response }).context?.json(); if (b?.error) msg = b.error } catch { /* ignore */ }
+    let msg = error.message || 'Falha ao chamar a função'
+    try {
+      const ctx = (error as unknown as { context?: Response }).context
+      const txt = ctx ? await ctx.text() : ''
+      if (txt) { try { const b = JSON.parse(txt); msg = (b?.error && (typeof b.error === 'string' ? b.error : JSON.stringify(b.error))) || txt } catch { msg = txt } }
+    } catch { /* ignore */ }
     throw new Error(msg)
   }
+  if (data && (data as { error?: unknown }).error) { const de = (data as { error: unknown }).error; throw new Error(typeof de === 'string' ? de : JSON.stringify(de)) }
   return data
 }
 
@@ -32,6 +37,7 @@ export function ConfigUsuarios() {
   const qc = useQueryClient()
   const [modal, setModal] = useState<Modal | null>(null)
   const [del, setDel] = useState<{ id: string; nome: string } | null>(null)
+  const [verInativos, setVerInativos] = useState(false)
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 7000 : 2600) }
 
@@ -73,11 +79,35 @@ export function ConfigUsuarios() {
     onError: (e: Error) => { console.error('[ConfigUsuarios]', e); showToast('Erro: ' + e.message, true) },
   })
   const delMut = useMutation({
-    // apaga o perfil E a conta de login (via Edge Function, com a chave admin no servidor)
-    mutationFn: async (id: string) => { await invokeAdmin({ action: 'delete', userId: id }) },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-usuarios'] }); setDel(null); showToast('Usuário removido.') },
+    // exclui perfil + login; se o usuário tiver histórico (ex.: pedidos), o servidor DESATIVA e bloqueia o acesso
+    mutationFn: async (id: string) => await invokeAdmin({ action: 'delete', userId: id }),
+    onSuccess: (r) => { qc.invalidateQueries({ queryKey: ['cfg-usuarios'] }); setDel(null); showToast((r as { soft?: boolean })?.soft ? 'Acesso bloqueado — o usuário tinha histórico, então foi desativado (registros mantidos).' : 'Usuário removido.') },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
+  const reativarMut = useMutation({
+    mutationFn: async (id: string) => await invokeAdmin({ action: 'reactivate', userId: id }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-usuarios'] }); showToast('Usuário reativado.') },
+    onError: (e: Error) => showToast('Erro: ' + e.message, true),
+  })
+
+  const renderCard = (u: Usuario, inativo: boolean) => (
+    <div className="usr-card" key={u.id} style={inativo ? { opacity: 0.55 } : undefined}>
+      <div className="usr-avatar">{(u.nome || '?')[0].toUpperCase()}</div>
+      <div className="usr-info">
+        <div className="usr-nome">{u.nome || '—'}{inativo ? ' · inativo' : ''}</div>
+        <div className="usr-email">{u.email || '—'}{u.role === 'gerente' && u.loja_id ? ` · ${lojaNome[u.loja_id] || 'loja'}` : ''}</div>
+      </div>
+      <span className={'role-badge ' + roleCls(u.role)}>{ROLE_LABEL[u.role || ''] || u.role || '—'}</span>
+      <div className="usr-acts">
+        {inativo
+          ? <button className="cfg-btn" style={{ height: 30 }} disabled={reativarMut.isPending} onClick={() => reativarMut.mutate(u.id)}>Reativar</button>
+          : <>
+              <button className="cfg-btn" style={{ height: 30 }} onClick={() => editar(u)}>Editar</button>
+              <button className="cfg-btn danger" style={{ height: 30 }} onClick={() => setDel({ id: u.id, nome: u.nome ?? '' })}>Remover</button>
+            </>}
+      </div>
+    </div>
+  )
 
   return (
     <div className="cfg-screen">
@@ -90,20 +120,19 @@ export function ConfigUsuarios() {
         {isLoading ? <div className="usr-empty">Carregando usuários…</div>
           : qErr ? <div className="usr-empty" style={{ color: '#b91c1c' }}>Erro ao carregar: {(qErr as Error).message}</div>
           : usuarios.length === 0 ? <div className="usr-empty">Nenhum usuário cadastrado. Clique em “+ Novo usuário”.</div>
-            : usuarios.map((u) => (
-              <div className="usr-card" key={u.id}>
-                <div className="usr-avatar">{(u.nome || '?')[0].toUpperCase()}</div>
-                <div className="usr-info">
-                  <div className="usr-nome">{u.nome || '—'}</div>
-                  <div className="usr-email">{u.email || '—'}{u.role === 'gerente' && u.loja_id ? ` · ${lojaNome[u.loja_id] || 'loja'}` : ''}</div>
-                </div>
-                <span className={'role-badge ' + roleCls(u.role)}>{ROLE_LABEL[u.role || ''] || u.role || '—'}</span>
-                <div className="usr-acts">
-                  <button className="cfg-btn" style={{ height: 30 }} onClick={() => editar(u)}>Editar</button>
-                  <button className="cfg-btn danger" style={{ height: 30 }} onClick={() => setDel({ id: u.id, nome: u.nome ?? '' })}>Remover</button>
-                </div>
-              </div>
-            ))}
+            : (() => {
+              const ativos = usuarios.filter((u) => u.ativo !== false)
+              const inativos = usuarios.filter((u) => u.ativo === false)
+              return <>
+                {ativos.map((u) => renderCard(u, false))}
+                {inativos.length > 0 && (
+                  <button className="cfg-btn" style={{ alignSelf: 'flex-start', marginTop: 4 }} onClick={() => setVerInativos((v) => !v)}>
+                    {verInativos ? 'Ocultar' : 'Mostrar'} inativos ({inativos.length})
+                  </button>
+                )}
+                {verInativos && inativos.map((u) => renderCard(u, true))}
+              </>
+            })()}
       </div>
 
       <div className="info-card">

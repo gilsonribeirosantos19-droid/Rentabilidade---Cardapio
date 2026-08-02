@@ -1,5 +1,5 @@
 // Edge Function: admin-users
-// Gerencia usuários (criar / atualizar senha) com a chave admin no SERVIDOR.
+// Gerencia usuários (criar / atualizar senha / remover / reativar) com a chave admin no SERVIDOR.
 // Só ADMINISTRADORES logados conseguem chamar. A chave service_role NUNCA vai pro navegador.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -66,15 +66,40 @@ Deno.serve(async (req) => {
       const { data: alvo } = await admin.from('usuarios').select('tenant_id').eq('id', body.userId).maybeSingle()
       if (!alvo || alvo.tenant_id !== caller?.tenant_id)
         return json({ error: 'Usuario nao pertence ao seu tenant' }, 403)
-      // apaga o PERFIL e a CONTA DE LOGIN (senao a conta de auth fica orfa)
-      await admin.from('usuarios').delete().eq('id', body.userId)
+
+      // Tenta EXCLUIR de vez (perfil + conta de login). Se o usuario tiver HISTORICO vinculado
+      // (ex.: pedidos_compra.solicitante_id) o banco bloqueia por FK -> nesse caso a gente DESATIVA
+      // e BLOQUEIA o login (soft delete), preservando o historico. Nunca apaga registros do usuario.
+      const delProf = await admin.from('usuarios').delete().eq('id', body.userId)
+      if (delProf.error) {
+        // FK / dependencia -> soft delete: desativa + bane a conta de login
+        const { error: upErr } = await admin.from('usuarios').update({ ativo: false }).eq('id', body.userId)
+        if (upErr) return json({ error: 'Nao foi possivel desativar o usuario: ' + upErr.message }, 400)
+        const { error: banErr } = await admin.auth.admin.updateUserById(body.userId, { ban_duration: '876000h' })
+        if (banErr) return json({ error: 'Usuario desativado, mas falhou ao bloquear o login: ' + banErr.message }, 400)
+        return json({ ok: true, soft: true })
+      }
+      // sem vinculos: apaga a conta de login tambem (senao a conta de auth fica orfa)
       const { error } = await admin.auth.admin.deleteUser(body.userId)
       if (error) return json({ error: error.message }, 400)
       return json({ ok: true })
     }
 
+    if (body.action === 'reactivate') {
+      if (!body.userId) return json({ error: 'userId obrigatorio' }, 400)
+      const { data: alvo } = await admin.from('usuarios').select('tenant_id').eq('id', body.userId).maybeSingle()
+      if (!alvo || alvo.tenant_id !== caller?.tenant_id)
+        return json({ error: 'Usuario nao pertence ao seu tenant' }, 403)
+      const { error: upErr } = await admin.from('usuarios').update({ ativo: true }).eq('id', body.userId)
+      if (upErr) return json({ error: 'Falha ao reativar: ' + upErr.message }, 400)
+      // remove o banimento do login (ban_duration 'none' libera a conta)
+      const { error: banErr } = await admin.auth.admin.updateUserById(body.userId, { ban_duration: 'none' })
+      if (banErr) return json({ error: 'Reativado, mas falhou ao liberar o login: ' + banErr.message }, 400)
+      return json({ ok: true })
+    }
+
     return json({ error: 'Acao desconhecida' }, 400)
   } catch (e) {
-    return json({ error: (e as Error).message }, 500)
+    return json({ error: (e as Error).message || String(e) }, 500)
   }
 })

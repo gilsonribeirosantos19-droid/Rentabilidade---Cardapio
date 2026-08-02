@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import './config.css'
 
@@ -8,7 +9,7 @@ import './config.css'
 // item_classificacoes (tipo_item/familia/grupo/subgrupo/embalagem), unidades_medida,
 // categorias (ficha), grupos_compra (+ grupos_compra_itens) e lojas.
 
-type Row = { id: string; nome?: string; created_at?: string; abreviacao?: string; tipo?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string; is_cd?: boolean }
+type Row = { id: string; nome?: string; categoria?: string; created_at?: string; abreviacao?: string; tipo?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string; is_cd?: boolean }
 type CadKey = 'tipo_item' | 'familia' | 'grupo' | 'subgrupo' | 'embalagem' | 'unidade' | 'cat_ficha' | 'grupo_compra' | 'loja'
 
 type Cad = { key: CadKey; label: string; table: string; clsfTipo?: string; special?: 'unidade' | 'loja' | 'grupo_compra' }
@@ -38,6 +39,8 @@ export function ConfigGeral() {
   const [del, setDel] = useState<{ table: string; id: string; nome: string } | null>(null)
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const [insBusca, setInsBusca] = useState('')
+  const [insGrupo, setInsGrupo] = useState('')          // filtro por grupo (categoria) no modal de grupo de compra
+  const [soSel, setSoSel] = useState(false)             // filtro "só selecionados"
   const [checando, setChecando] = useState<string | null>(null)
 
   const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 8000 : 2600) }
@@ -62,7 +65,7 @@ export function ConfigGeral() {
   const lojas = useCfg('lojas')
   const insumos = useQuery({
     queryKey: ['cfg', 'insumos-sel', tenantId], enabled: !!tenantId,
-    queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Row[] },
+    queryFn: () => fetchAll<Row>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)),
   })
   const gcItens = useQuery({
     queryKey: ['cfg', 'grupos_compra_itens', tenantId], enabled: !!tenantId,
@@ -131,13 +134,13 @@ export function ConfigGeral() {
   })
 
   const novo = (c: Cad) => {
-    if (c.special === 'grupo_compra') { setGModal({ nome: '', sel: new Set() }); setInsBusca(''); return }
+    if (c.special === 'grupo_compra') { setGModal({ nome: '', sel: new Set() }); setInsBusca(''); setInsGrupo(''); setSoSel(false); return }
     setModal({ key: c.key, nome: '', abrev: '', razao: '', cnpj: '', ende: '', hm: '', ht: '', isCd: false })
   }
   const editar = (c: Cad, r: Row) => {
     if (c.special === 'grupo_compra') {
       const sel = new Set((gcItens.data ?? []).filter((x) => x.grupo_id === r.id).map((x) => x.insumo_id))
-      setGModal({ id: r.id, nome: r.nome ?? '', sel }); setInsBusca(''); return
+      setGModal({ id: r.id, nome: r.nome ?? '', sel }); setInsBusca(''); setInsGrupo(''); setSoSel(false); return
     }
     setModal({ key: c.key, id: r.id, nome: r.nome ?? '', abrev: r.abreviacao ?? '', razao: r.razao_social ?? '', cnpj: r.cnpj ?? '', ende: r.endereco ?? '', hm: r.horario_manha ?? '', ht: r.horario_tarde ?? '', isCd: !!r.is_cd })
   }
@@ -182,7 +185,16 @@ export function ConfigGeral() {
   }
 
   const modalCad = modal ? CADS.find((c) => c.key === modal.key)! : null
-  const insFiltrados = useMemo(() => { const q = insBusca.trim().toLowerCase(); return (insumos.data ?? []).filter((i) => !q || (i.nome ?? '').toLowerCase().includes(q)) }, [insumos.data, insBusca])
+  const insGrupos = useMemo(() => [...new Set((insumos.data ?? []).map((i) => i.categoria).filter(Boolean))].sort() as string[], [insumos.data])
+  const insFiltrados = useMemo(() => {
+    const q = insBusca.trim().toLowerCase()
+    return (insumos.data ?? []).filter((i) => {
+      if (q && !(i.nome ?? '').toLowerCase().includes(q)) return false
+      if (insGrupo && (i.categoria ?? '') !== insGrupo) return false
+      if (soSel && !gModal?.sel.has(i.id)) return false
+      return true
+    })
+  }, [insumos.data, insBusca, insGrupo, soSel, gModal?.sel])
 
   return (
     <div className="cfg-screen">
@@ -269,7 +281,17 @@ export function ConfigGeral() {
               <div className="cfg-fg"><label>Nome do grupo *</label><input autoFocus value={gModal.nome} onChange={(e) => setGModal({ ...gModal, nome: e.target.value })} /></div>
               <div className="cfg-fg">
                 <label>Insumos do grupo ({gModal.sel.size} selecionados)</label>
-                <input className="cfg-search" style={{ width: '100%', marginBottom: 8 }} placeholder="Buscar insumo..." value={insBusca} onChange={(e) => setInsBusca(e.target.value)} />
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input className="cfg-search" style={{ flex: 1, minWidth: 150, marginBottom: 0 }} placeholder="Buscar insumo..." value={insBusca} onChange={(e) => setInsBusca(e.target.value)} />
+                  <select className="cfg-search" style={{ marginBottom: 0, minWidth: 150 }} value={insGrupo} onChange={(e) => setInsGrupo(e.target.value)}>
+                    <option value="">Todos os grupos</option>
+                    {insGrupos.map((g) => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={soSel} onChange={(e) => setSoSel(e.target.checked)} /> Só selecionados
+                  </label>
+                  <button type="button" className="cfg-btn" style={{ padding: '5px 10px', fontSize: 12 }} onClick={() => setGModal((g) => g && ({ ...g, sel: new Set([...g.sel, ...insFiltrados.map((i) => i.id)]) }))}>Marcar filtrados</button>
+                </div>
                 <div className="cfg-ins-box">
                   {insFiltrados.map((i) => (
                     <label key={i.id}>
