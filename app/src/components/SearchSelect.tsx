@@ -18,7 +18,7 @@ export function SearchSelect({
 }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
-  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null)
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
 
@@ -35,7 +35,12 @@ export function SearchSelect({
   function toggle() {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect()
-      setPos({ top: r.bottom + 4, left: r.left, width: r.width })
+      const POP = 300                                  // altura aprox. do popup (busca + lista) p/ decidir o lado
+      const abaixo = window.innerHeight - r.bottom
+      if (abaixo < POP && r.top > abaixo)              // pouco espaço embaixo → abre pra CIMA (ancora acima do botão)
+        setPos({ bottom: window.innerHeight - r.top + 4, left: r.left, width: r.width })
+      else
+        setPos({ top: r.bottom + 4, left: r.left, width: r.width })
     }
     setQ('')
     setOpen((o) => !o)
@@ -49,7 +54,7 @@ export function SearchSelect({
         {value || placeholder}
       </button>
       {open && pos && (
-        <div className="ass-pop" style={{ top: pos.top, left: pos.left, minWidth: Math.max(pos.width, 200) }}>
+        <div className="ass-pop" style={{ top: pos.top, bottom: pos.bottom, left: pos.left, minWidth: Math.max(pos.width, 200) }}>
           <input className="ass-q" autoFocus placeholder="Digite para buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="ass-list">
             <div className="ass-opt" onClick={() => { onChange(''); setOpen(false) }}>{placeholder}</div>

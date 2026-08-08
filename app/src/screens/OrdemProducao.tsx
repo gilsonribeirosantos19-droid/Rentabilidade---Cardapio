@@ -63,9 +63,13 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
     if (!fichaSel) return []
     return (fichaSel.itens_ficha || []).filter((it) => it.insumo_id).map((it) => {
       const ins = insMap[it.insumo_id!]
-      const baixarG = (Number(it.quantidade_g) || 0) * fator
-      const custo = ins ? custoIngG(ins, baixarG) : 0
-      return { ins, baixarKg: baixarG / 1000, custo }
+      const liquidoG = (Number(it.quantidade_g) || 0) * fator          // o que a ficha manda (líquido)
+      const um = (ins?.unidade_medida || 'g').toLowerCase()
+      const disc = um === 'un' || um === 'pct' || um === 'cx'           // discreto: sem aproveitamento
+      // o que SAI do estoque = BRUTO (líquido ÷ aproveitamento) — igual ao CMV Teórico e ao Everest
+      const brutoG = disc ? liquidoG : liquidoG / ((ins?.rendimento_pct || 100) / 100)
+      const custo = ins ? custoIngG(ins, liquidoG) : 0                  // custoIngG recebe o líquido e aplica o aproveitamento
+      return { ins, baixar: disc ? brutoG : brutoG / 1000, custo }
     })
   }, [fichaSel, fator, insMap, cmMap])
   const custoTotal = linhas.reduce((a, l) => a + l.custo, 0)
@@ -78,7 +82,7 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
       const { data: ord, error } = await supabase.from('ordens_producao').insert({ tenant_id: tenantId, loja_id: loja || null, data: new Date(data).toISOString(), ficha_id: fichaSel.id, insumo_produzido_id: fichaSel.insumo_vinculado_id, quantidade: alvo, custo_total: custoTotal, status: 'aberta' }).select('id').single()
       if (error) throw error
       const ordemId = (ord as { id: string }).id
-      const rows = linhas.filter((l) => l.ins).map((l) => ({ tenant_id: tenantId, ordem_id: ordemId, insumo_id: l.ins!.id, quantidade: l.baixarKg, custo: l.custo }))
+      const rows = linhas.filter((l) => l.ins).map((l) => ({ tenant_id: tenantId, ordem_id: ordemId, insumo_id: l.ins!.id, quantidade: l.baixar, custo: l.custo }))
       // se os itens falharem, desfaz a ordem (não deixa cabeçalho órfão sem linhas)
       if (rows.length) { const { error: e2 } = await supabase.from('ordens_producao_itens').insert(rows); if (e2) { await supabase.from('ordens_producao').delete().eq('id', ordemId); throw e2 } }
     },
@@ -106,7 +110,7 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
 
       <div className="cfg-card" style={{ marginTop: 14 }}>
         <table>
-          <thead><tr><th>Ingrediente <span className="muted" style={{ fontWeight: 400 }}>(da ficha técnica)</span></th><th className="c" style={{ width: 60 }}>Un.</th><th className="r" style={{ width: 140 }}>Qtd a baixar</th><th className="r" style={{ width: 140 }}>Custo</th></tr></thead>
+          <thead><tr><th>Ingrediente <span className="muted" style={{ fontWeight: 400 }}>(da ficha técnica)</span></th><th className="c" style={{ width: 60 }}>Un.</th><th className="r" style={{ width: 140 }}>Qtd a baixar <span className="muted" style={{ fontWeight: 400 }}>(bruto)</span></th><th className="r" style={{ width: 140 }}>Custo</th></tr></thead>
           <tbody>
             {!fichaSel ? <tr><td colSpan={4} className="empty">Selecione o item a produzir.</td></tr>
               : alvo <= 0 ? <tr><td colSpan={4} className="empty">Informe a quantidade a produzir.</td></tr>
@@ -115,7 +119,7 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
                     <tr key={i}>
                       <td>{l.ins?.nome || '—'}</td>
                       <td className="c muted">{l.ins?.unidade_medida?.toUpperCase() || '—'}</td>
-                      <td className="r mono">{q3(l.baixarKg)}</td>
+                      <td className="r mono">{q3(l.baixar)}</td>
                       <td className="r mono">{brl(l.custo)}</td>
                     </tr>
                   ))}

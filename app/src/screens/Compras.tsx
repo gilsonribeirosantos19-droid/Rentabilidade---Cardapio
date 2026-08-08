@@ -167,7 +167,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
       const s = solById[it.pedido_id]; if (!s) return
       const ins = insMap[it.insumo_id]
       if (!c[it.insumo_id]) {
-        const vincs = vinculos.filter((v) => v.insumo_id === it.insumo_id)
+        const vincs = vinculos.filter((v) => v.insumo_id === it.insumo_id && fornMap[v.fornecedor_id])   // ignora vínculo órfão (fornecedor inativo/apagado)
         // sugestão: "principal" (se marcado) tem prioridade; senão, o fornecedor da ÚLTIMA COMPRA (ultima_entrada mais recente)
         const maisRecente = [...vincs].sort((a, b) => (b.ultima_entrada || b.created_at || '').localeCompare(a.ultima_entrada || a.created_at || ''))[0]
         const principal = vincs.find((v) => v.principal) || maisRecente
@@ -185,7 +185,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   // inicializa qComprar/fornSel quando o consolidado muda
   useEffect(() => { const q: Record<string, number> = {}, f: Record<string, string> = {}; consolidado.forEach((d) => { q[d.insId] = d.total; f[d.insId] = d.fornecedorId || '' }); setQComprar(q); setFornSel(f) }, [consolidado])
 
-  const fornOptsDe = (insId: string) => { const vincs = vinculos.filter((v) => v.insumo_id === insId); if (vincs.length) return vincs.map((v) => ({ id: v.fornecedor_id, nome: (fornMap[v.fornecedor_id] || v.fornecedor_id) + (v.principal ? ' ★' : '') })); return fornecedores.map((f) => ({ id: f.id, nome: f.nome })) }
+  const fornOptsDe = (insId: string) => { const vincs = vinculos.filter((v) => v.insumo_id === insId && fornMap[v.fornecedor_id]); if (vincs.length) return vincs.map((v) => ({ id: v.fornecedor_id, nome: fornMap[v.fornecedor_id] + (v.principal ? ' ★' : '') })); return fornecedores.map((f) => ({ id: f.id, nome: f.nome })) }
   const ultCompra = (insId: string) => { const v = vinculos.find((x) => x.insumo_id === insId && x.fornecedor_id === fornSel[insId]) || vinculos.find((x) => x.insumo_id === insId); if (!v?.preco_unitario) return '—'; const raw = v.ultima_entrada || v.created_at; const dt = raw ? new Date(raw.length === 10 ? raw + 'T12:00:00' : raw).toLocaleDateString('pt-BR') : ''; return `${dt} - ${brl(v.preco_unitario)}` }
 
   const nLojas = new Set(sols.map((s) => s.loja_id)).size

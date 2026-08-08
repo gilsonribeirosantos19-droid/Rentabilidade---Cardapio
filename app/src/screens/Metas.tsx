@@ -12,12 +12,12 @@ import './metas.css'
 type MetaSem = { loja_id: string; dia_semana: number; valor?: number; canal?: string }
 type MetaExc = { id?: string; loja_id: string; data: string; valor?: number; motivo?: string | null }
 type Canal = { canal?: string; faturado?: number; pessoas?: number; comandas?: number }
-type Rec = { loja_id: string; data: string; faturado?: number; ticket_medio?: number; pessoas?: number; qtd_comandas?: number; status?: string; por_canal?: Canal[] }
+type Rec = { loja_id: string; data: string; faturado?: number; ticket_medio?: number; pessoas?: number; qtd_comandas?: number; status?: string; por_canal?: Canal[]; fat_almoco?: number; fat_jantar?: number }
 
 const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 // Canais de venda (o iComanda separa; o sync grava em icomanda_recebimento.por_canal).
 // 'total' = a loja inteira (padrão de quase todas). Só quem separa (ex.: Cidade Nova) usa Salão/Delivery.
-const CANAIS = ['total', 'Salão', 'Delivery']  // Balcão entra no Salão (não é canal separado)
+const CANAIS = ['total', 'Salão', 'Delivery', 'Jantar', 'Almoço']  // Salão/Delivery = split por CANAL; Jantar/Almoço = split por TURNO. Balcão entra no Salão.
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const brl = (n: number) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const parseNum = (v: unknown) => parseFloat(String(v ?? '').replace(/\./g, '').replace(',', '.')) || 0
@@ -42,7 +42,7 @@ export function Metas() {
   const { data: metaSem = [] } = useQuery({ queryKey: ['metas-sem', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('metas_semana').select('loja_id,dia_semana,valor,canal').eq('tenant_id', tenantId); return (data ?? []) as MetaSem[] } })
   const { data: metaExc = [] } = useQuery({ queryKey: ['metas-exc', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('metas_excecao').select('id,loja_id,data,valor,motivo').eq('tenant_id', tenantId); return (data ?? []) as MetaExc[] } })
   const { data: lojaMeta = [] } = useQuery({ queryKey: ['metas-lojaticket', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,meta_ticket').eq('tenant_id', tenantId); return (data ?? []) as { id: string; meta_ticket?: number }[] } })
-  const { data: rec = [] } = useQuery({ queryKey: ['metas-rec', tenantId, mes], enabled: !!tenantId, queryFn: () => fetchAll<Rec>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,faturado,ticket_medio,pessoas,qtd_comandas,status,por_canal').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', ini).lte('data', fim).range(f, t)) })
+  const { data: rec = [] } = useQuery({ queryKey: ['metas-rec', tenantId, mes], enabled: !!tenantId, queryFn: () => fetchAll<Rec>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,faturado,ticket_medio,pessoas,qtd_comandas,status,por_canal,fat_almoco,fat_jantar').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', ini).lte('data', fim).range(f, t)) })
 
   const semMap = useMemo(() => { const m: Record<string, number> = {}; metaSem.forEach((s) => { m[`${s.loja_id}|${s.dia_semana}|${s.canal || 'total'}`] = Number(s.valor) || 0 }); return m }, [metaSem])
   const excMap = useMemo(() => { const m: Record<string, number> = {}; metaExc.forEach((e) => { m[`${e.loja_id}|${e.data}`] = Number(e.valor) || 0 }); return m }, [metaExc])
@@ -67,6 +67,9 @@ export function Metas() {
     if (!r) return { fat: 0, pes: 0, com: 0 }
     const tot = { fat: Number(r.faturado) || 0, pes: Number(r.pessoas) || 0, com: Number(r.qtd_comandas) || 0 }
     if (canal === 'total') return tot
+    // TURNO (almoço/jantar): o iComanda manda só o FATURADO por turno (pessoas/comandas não vêm separados → ticket fica —)
+    if (norm(canal) === norm('Almoço')) return { fat: Number(r.fat_almoco) || 0, pes: 0, com: 0 }
+    if (norm(canal) === norm('Jantar')) return { fat: Number(r.fat_jantar) || 0, pes: 0, com: 0 }
     const d = (r.por_canal || []).find((x) => norm(x.canal) === norm('Delivery'))
     const del = { fat: Number(d?.faturado) || 0, pes: Number(d?.pessoas) || 0, com: Number(d?.comandas) || 0 }
     if (norm(canal) === norm('Delivery')) return del
@@ -120,18 +123,18 @@ export function Metas() {
 
   // ---- config (modal) ---- sem é indexado por `${loja}|${canal}`; split = loja que separa canais
   const [sem, setSem] = useState<Record<string, Record<number, string>>>({})
-  const [split, setSplit] = useState<Record<string, boolean>>({})
+  const [split, setSplit] = useState<Record<string, '' | 'canal' | 'turno'>>({})  // '' = inteira · 'canal' = Salão/Delivery · 'turno' = Jantar/Almoço
   const [metaTk, setMetaTk] = useState<Record<string, string>>({})
   const [excs, setExcs] = useState<MetaExc[]>([])
   const openCfg = () => {
-    const s: Record<string, Record<number, string>> = {}, mt: Record<string, string> = {}, sp: Record<string, boolean> = {}
-    lojas.forEach((l) => { CANAIS.forEach((canal) => { const key = `${l.id}|${canal}`; s[key] = {}; for (let dow = 0; dow <= 6; dow++) { const v = semMap[`${l.id}|${dow}|${canal}`]; s[key][dow] = v ? String(v) : '' } }); const t = metaTkMap[l.id]; mt[l.id] = t ? String(t) : ''; sp[l.id] = (lojaCanais[l.id]?.length || 0) > 0 })
+    const s: Record<string, Record<number, string>> = {}, mt: Record<string, string> = {}, sp: Record<string, '' | 'canal' | 'turno'> = {}
+    lojas.forEach((l) => { CANAIS.forEach((canal) => { const key = `${l.id}|${canal}`; s[key] = {}; for (let dow = 0; dow <= 6; dow++) { const v = semMap[`${l.id}|${dow}|${canal}`]; s[key][dow] = v ? String(v) : '' } }); const t = metaTkMap[l.id]; mt[l.id] = t ? String(t) : ''; const cs = lojaCanais[l.id] || []; sp[l.id] = (cs.includes('Almoço') || cs.includes('Jantar')) ? 'turno' : cs.length ? 'canal' : '' })
     setSem(s); setSplit(sp); setMetaTk(mt); setExcs(metaExc.map((e) => ({ ...e }))); setCfgOpen(true)
   }
   const salvar = useMutation({
     mutationFn: async () => {
       // loja que separa: grava só os canais (total = 0); loja normal: grava só o total (canais = 0)
-      const rowsSem = lojas.flatMap((l) => { const isSp = !!split[l.id]; return CANAIS.flatMap((canal) => Array.from({ length: 7 }, (_, dow) => { const use = isSp ? canal !== 'total' : canal === 'total'; return { tenant_id: tenantId, loja_id: l.id, dia_semana: dow, canal, valor: use ? parseNum(sem[`${l.id}|${canal}`]?.[dow]) : 0 } })) })
+      const rowsSem = lojas.flatMap((l) => { const mode = split[l.id] || ''; const canaisUso = mode === 'canal' ? ['Salão', 'Delivery'] : mode === 'turno' ? ['Jantar', 'Almoço'] : ['total']; return CANAIS.flatMap((canal) => Array.from({ length: 7 }, (_, dow) => ({ tenant_id: tenantId, loja_id: l.id, dia_semana: dow, canal, valor: canaisUso.includes(canal) ? parseNum(sem[`${l.id}|${canal}`]?.[dow]) : 0 }))) })
       const { error: e1 } = await supabase.from('metas_semana').upsert(rowsSem, { onConflict: 'tenant_id,loja_id,dia_semana,canal' }); if (e1) throw e1
       for (const l of lojas) { const { error } = await supabase.from('lojas').update({ meta_ticket: parseNum(metaTk[l.id]) }).eq('id', l.id); if (error) throw error }
       await supabase.from('metas_excecao').delete().eq('tenant_id', tenantId)
@@ -212,22 +215,22 @@ export function Metas() {
           <div className="modal">
             <div className="mh"><h2>⚙️ Configurar metas</h2><button className="mx" onClick={() => setCfgOpen(false)}>✕</button></div>
             <div className="mb">
-              <div className="cfg-lb">Meta por dia da semana (R$) + meta de ticket <span style={{ fontWeight: 400, textTransform: 'none', color: '#94a3b8' }}>— marque ☑ na loja que separa Salão/Delivery (ex.: Cidade Nova)</span></div>
+              <div className="cfg-lb">Meta por dia da semana (R$) + meta de ticket <span style={{ fontWeight: 400, textTransform: 'none', color: '#94a3b8' }}>— na coluna 🔀 escolha como separar: <b>Salão+Delivery</b> (ex.: Cidade Nova) ou <b>Almoço+Jantar</b> (ex.: Distrito, Delivery)</span></div>
               <div style={{ overflowX: 'auto' }}>
                 <table className="mgrid">
                   <thead><tr><th style={{ width: 26, textAlign: 'center' }} title="Separar por canal">🔀</th><th>Loja</th>{DOW.map((d) => <th key={d}>{d}</th>)}<th style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}>🎫 Ticket</th></tr></thead>
                   <tbody>
-                    {lojas.map((l) => { const isSp = !!split[l.id]; const tk = `${l.id}|total`; return (
+                    {lojas.map((l) => { const mode = split[l.id] || ''; const isSp = mode !== ''; const subCanais = mode === 'turno' ? ['Jantar', 'Almoço'] : mode === 'canal' ? ['Salão', 'Delivery'] : []; const tk = `${l.id}|total`; return (
                       <Fragment key={l.id}>
                         <tr>
-                          <td style={{ textAlign: 'center' }}><input type="checkbox" checked={isSp} title="Separar Salão/Delivery" onChange={(e) => setSplit((s) => ({ ...s, [l.id]: e.target.checked }))} /></td>
-                          <td>{l.nome}{isSp && <span style={{ color: '#94a3b8', fontSize: 11 }}> · por canal ↓</span>}</td>
+                          <td style={{ textAlign: 'center' }}><select value={mode} title="Como separar esta loja" onChange={(e) => setSplit((s) => ({ ...s, [l.id]: e.target.value as '' | 'canal' | 'turno' }))} style={{ fontSize: 11, padding: '2px 3px', maxWidth: 92 }}><option value="">Inteira</option><option value="canal">Salão+Deliv.</option><option value="turno">Almoço+Jantar</option></select></td>
+                          <td>{l.nome}{isSp && <span style={{ color: '#94a3b8', fontSize: 11 }}> · separado ↓</span>}</td>
                           {isSp ? DOW.map((_, i) => <td key={i} style={{ background: '#f8fafc' }} />) : Array.from({ length: 7 }, (_, dow) => (
                             <td key={dow}><input className="minp" value={sem[tk]?.[dow] ?? ''} onChange={(e) => setSem((s) => ({ ...s, [tk]: { ...(s[tk] || {}), [dow]: e.target.value } }))} placeholder="0" /></td>
                           ))}
                           <td style={{ paddingLeft: 14, borderLeft: '2px solid #e5e9f0' }}><input className="minp" value={metaTk[l.id] ?? ''} onChange={(e) => setMetaTk((m) => ({ ...m, [l.id]: e.target.value }))} placeholder="0,00" /></td>
                         </tr>
-                        {isSp && ['Salão', 'Delivery'].map((canal) => { const key = `${l.id}|${canal}`; return (
+                        {subCanais.map((canal) => { const key = `${l.id}|${canal}`; return (
                           <tr key={canal}>
                             <td />
                             <td style={{ paddingLeft: 22, color: '#475569', fontWeight: 400 }}>· {canal}</td>
