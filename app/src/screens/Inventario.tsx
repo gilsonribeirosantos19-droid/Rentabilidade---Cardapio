@@ -145,6 +145,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
   }, [itens])
 
   const visItens = itens.filter((it) => insMap[it.insumo_id])
+    .sort((a, b) => (insMap[a.insumo_id]?.nome || '').localeCompare(insMap[b.insumo_id]?.nome || '', 'pt-BR', { sensitivity: 'base' }))   // ordem alfabética por nome
   const rows = visItens.map((it) => {
     const sys = it.qtd_sistema || 0
     const cnt = parseFloat(counts[it.id] ?? String(it.qtd_contada ?? sys)) || 0
