@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -222,14 +223,36 @@ export function PortalSolicitacao() {
 
 // ── Lista "Minhas solicitações" ──
 function MinhasSolicitacoes({ lista, insMap, onVer }: { lista: PedidoMin[]; insMap: Record<string, Insumo>; onVer: (p: PedidoMin) => void }) {
+  void insMap
   const ST: Record<string, { l: string; c: string; b: string }> = { solicitado: { l: 'Aguardando', c: '#92400e', b: '#fef3c7' }, processado: { l: 'Processado', c: '#166534', b: '#dcfce7' }, cancelado: { l: 'Cancelado', c: '#991b1b', b: '#fee2e2' } }
+  const [fStatus, setFStatus] = useState(''); const [fDe, setFDe] = useState(''); const [fAte, setFAte] = useState('')
+  const filtrada = useMemo(() => lista.filter((p) => {
+    if (fStatus && (p.status || '') !== fStatus) return false
+    const dt = (p.created_at || p.data_pedido || '').slice(0, 10)
+    if (fDe && dt && dt < fDe) return false
+    if (fAte && dt && dt > fAte) return false
+    return true
+  }), [lista, fStatus, fDe, fAte])
+  const temFiltro = !!(fStatus || fDe || fAte)
+  const lblSt: CSSProperties = { fontSize: 11, fontWeight: 600, color: '#64748b', marginLeft: 2 }
+  const fieldSt: CSSProperties = { height: 34, border: '1px solid #cbd5e1', borderRadius: 8, padding: '0 10px', fontSize: 13, fontFamily: 'inherit', background: '#fff', color: '#0f172a' }
   if (!lista.length) return <div className="p-card"><div className="p-empty">Você ainda não enviou nenhuma solicitação.</div></div>
   return (
     <div className="p-card">
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Status</label>
+          <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={fieldSt}><option value="">Todas</option><option value="solicitado">Aguardando</option><option value="processado">Processado</option><option value="cancelado">Cancelado</option></select>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>De</label><input type="date" value={fDe} onChange={(e) => setFDe(e.target.value)} style={fieldSt} /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Até</label><input type="date" value={fAte} onChange={(e) => setFAte(e.target.value)} style={fieldSt} /></div>
+        {temFiltro && <button onClick={() => { setFStatus(''); setFDe(''); setFAte('') }} style={{ height: 34, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', color: '#475569', fontSize: 12.5, fontWeight: 600, padding: '0 12px', cursor: 'pointer' }}>Limpar</button>}
+        <span style={{ marginLeft: 'auto', alignSelf: 'center', color: '#94a3b8', fontSize: 12 }}>{filtrada.length} de {lista.length}</span>
+      </div>
+      {!filtrada.length ? <div className="p-empty">Nenhuma solicitação com esse filtro.</div> : (
       <table className="p-tbl">
         <thead><tr><th>Data</th><th>Itens</th><th>Status</th><th>Observação</th><th></th></tr></thead>
         <tbody>
-          {lista.map((p) => {
+          {filtrada.map((p) => {
             const st = ST[p.status || ''] || { l: p.status || '—', c: '#475569', b: '#f1f5f9' }
             const n = p.itens_pedido?.[0]?.count ?? 0
             const dt = (p.created_at || p.data_pedido || '').slice(0, 10)
@@ -245,6 +268,7 @@ function MinhasSolicitacoes({ lista, insMap, onVer }: { lista: PedidoMin[]; insM
           })}
         </tbody>
       </table>
+      )}
     </div>
   )
 }
