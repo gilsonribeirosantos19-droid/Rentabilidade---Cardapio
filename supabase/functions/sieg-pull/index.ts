@@ -17,6 +17,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { XMLParser } from 'https://esm.sh/fast-xml-parser@4'
+import { unzipSync } from 'https://esm.sh/fflate@0.8.2' // o SIEG entrega os XMLs num ZIP → descompactar
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -101,7 +102,7 @@ async function siegFetch(url: string, body: unknown, jwt: string): Promise<{ sta
 // ── contar-xmls: quantas notas tem no período p/ um CNPJ (teste seguro) ───────
 // Filtro por CnpjDest = notas recebidas (entrada) pela loja.
 async function contarXmls(jwt: string, cnpj: string, ini: string, fim: string): Promise<{ status: number; nfe: number | null; raw: string }> {
-  const body = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, DataEmissaoInicio: ini, DataEmissaoFim: fim }
+  const body = { TipoXml: XML_TYPE_NFE, CnpjDest: cnpj, DataEmissaoInicio: ini, DataEmissaoFim: fim }
   const { status, raw } = await siegFetch(`${SIEG_BASE}/api/v1/contar-xmls`, body, jwt)
   let nfe: number | null = null
   try { const j = JSON.parse(raw); nfe = j?.Data?.NFe ?? null } catch { /* ignore */ }
@@ -111,20 +112,40 @@ async function contarXmls(jwt: string, cnpj: string, ini: string, fim: string): 
 // ── baixar-xmls: traz os XMLs em lote (Take/Skip) p/ um CNPJ. Lista de XML strings ─
 // datas em SÓ-DATA (yyyy-MM-dd); 404 "Nenhum arquivo" = janela vazia (não é erro).
 async function baixarXmls(jwt: string, cnpj: string, ini: string, fim: string, skip: number, take = 50): Promise<{ status: number; xmls: string[]; rawHead: string }> {
-  const body = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: take, Skip: skip, DataEmissaoInicio: ini, DataEmissaoFim: fim, Downloadevent: false }
-  const { status, raw } = await siegFetch(`${SIEG_BASE}/api/v1/baixar-xmls`, body, jwt)
-  if (status === 404) return { status, xmls: [], rawHead: raw.substring(0, 200) } // janela vazia
-  if (status !== 200) return { status, xmls: [], rawHead: raw.substring(0, 400) }
-  // formato pode ser: array de XML strings, array base64, ou envelope {xmls:[...]}
+  const body = { TipoXml: XML_TYPE_NFE, CnpjDest: cnpj, Take: take, Skip: skip, DataEmissaoInicio: ini, DataEmissaoFim: fim, Downloadevent: false }
+  // fetch próprio (bytes) — o SIEG responde um ZIP binário; res.text() estragaria o arquivo
+  let res: Response | null = null
+  for (let tent = 0; tent < 4; tent++) {
+    res = await fetch(`${SIEG_BASE}/api/v1/baixar-xmls`, { method: 'POST', headers: authHeaders(jwt), body: JSON.stringify(body) })
+    if (res.status !== 429) break
+    await sleep(4000 * (tent + 1)) // 429: espera 4s, 8s, 12s e tenta de novo
+  }
+  if (!res) return { status: 0, xmls: [], rawHead: 'sem resposta' }
+  if (res.status === 404) { await res.body?.cancel().catch(() => {}); return { status: 404, xmls: [], rawHead: 'Nenhum arquivo (janela vazia)' } } // janela vazia = ok
+  const buf = new Uint8Array(await res.arrayBuffer())
+  if (res.status !== 200) return { status: res.status, xmls: [], rawHead: new TextDecoder().decode(buf.slice(0, 300)) }
+  // O SIEG entrega os XMLs num arquivo ZIP (assinatura PK\x03\x04) → descompacta e lê cada .xml
+  if (buf.length >= 2 && buf[0] === 0x50 && buf[1] === 0x4B) {
+    try {
+      const files = unzipSync(buf)
+      const xmls = Object.entries(files)
+        .filter(([nome]) => nome.toLowerCase().endsWith('.xml'))
+        .map(([, u8]) => new TextDecoder('utf-8').decode(u8))
+        .filter((s) => s.includes('<'))
+      return { status: 200, xmls, rawHead: `ZIP: ${xmls.length} xml(s)` }
+    } catch (e) { return { status: 200, xmls: [], rawHead: 'ZIP erro: ' + (e as Error).message } }
+  }
+  // fallback: formato JSON (array de XML strings, base64, ou envelope {xmls:[...]})
+  const raw = new TextDecoder().decode(buf)
   let data: unknown
-  try { data = JSON.parse(raw) } catch { return { status, xmls: [], rawHead: raw.substring(0, 400) } }
+  try { data = JSON.parse(raw) } catch { return { status: 200, xmls: [], rawHead: raw.substring(0, 300) } }
   const lista = Array.isArray(data) ? data : ((data as any)?.xmls ?? (data as any)?.Xmls ?? (data as any)?.xmlS ?? [])
   const xmls = (lista as string[]).map((x) => {
     const s = String(x || '')
     if (s.trimStart().startsWith('<')) return s
     try { return atob(s) } catch { return s }
   }).filter(Boolean)
-  return { status, xmls, rawHead: raw.substring(0, 200) }
+  return { status: 200, xmls, rawHead: raw.substring(0, 200) }
 }
 
 // ── parse do XML da NF-e ─────────────────────────────────────────────────────
@@ -261,16 +282,16 @@ Deno.serve(async (req) => {
       for (const l of lojas || []) { const c = onlyDigits((l as any).cnpj); if (c.length === 14) { cnpj = c; break } }
     }
     const email = String((body as any).email || '')
-    const base = { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD }
+    const base = { TipoXml: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD }
     const variantes: Array<{ nome: string; body: Record<string, unknown> }> = [
       { nome: 'base (Downloadevent:false)', body: { ...base, Downloadevent: false } },
       { nome: 'Downloadevent:true', body: { ...base, Downloadevent: true } },
-      { nome: 'sem filtro de data', body: { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, Downloadevent: false } },
+      { nome: 'sem filtro de data', body: { TipoXml: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, Downloadevent: false } },
       { nome: 'com Email', body: { ...base, Downloadevent: false, Email: email } },
-      { nome: 'CnpjDestinatario (nome alt)', body: { XmlType: XML_TYPE_NFE, CnpjDestinatario: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
-      { nome: 'CnpjEmit (emitente)', body: { XmlType: XML_TYPE_NFE, CnpjEmit: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
-      { nome: 'por DataUpload (CnpjDest)', body: { XmlType: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, DataUploadInicio: iniD, DataUploadFim: fimD, Downloadevent: false } },
-      { nome: 'por DataUpload (CnpjEmit)', body: { XmlType: XML_TYPE_NFE, CnpjEmit: cnpj, Take: 50, Skip: 0, DataUploadInicio: iniD, DataUploadFim: fimD, Downloadevent: false } },
+      { nome: 'CnpjDestinatario (nome alt)', body: { TipoXml: XML_TYPE_NFE, CnpjDestinatario: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
+      { nome: 'CnpjEmit (emitente)', body: { TipoXml: XML_TYPE_NFE, CnpjEmit: cnpj, Take: 50, Skip: 0, DataEmissaoInicio: iniD, DataEmissaoFim: fimD, Downloadevent: false } },
+      { nome: 'por DataUpload (CnpjDest)', body: { TipoXml: XML_TYPE_NFE, CnpjDest: cnpj, Take: 50, Skip: 0, DataUploadInicio: iniD, DataUploadFim: fimD, Downloadevent: false } },
+      { nome: 'por DataUpload (CnpjEmit)', body: { TipoXml: XML_TYPE_NFE, CnpjEmit: cnpj, Take: 50, Skip: 0, DataUploadInicio: iniD, DataUploadFim: fimD, Downloadevent: false } },
     ]
     const resultados = []
     for (const v of variantes) {
