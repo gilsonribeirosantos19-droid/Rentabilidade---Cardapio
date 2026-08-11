@@ -281,7 +281,7 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
       onSaved()
     } catch (e) { setErr('Erro: ' + (e as Error).message) } finally { setBusy(false) }
   }
-  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd) })), loja, obs)
+  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd), preco: insMap[x.insumo_id]?.preco_compra })), loja, obs)
 
   return (
     <div className="p-ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -324,15 +324,16 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
 }
 
 // PDF/impressão de UMA solicitação — abre a folha com botão manual (não trava)
-function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: string; emb: string; qtd: number }[], loja: LojaFull | null, obs: string) {
+function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: string; emb: string; qtd: number; preco?: number }[], loja: LojaFull | null, obs: string) {
   const dt = (pedido.created_at || pedido.data_pedido || '').slice(0, 10) || hojeStr()
   const data = new Date(dt + 'T12:00:00').toLocaleDateString('pt-BR')
   const stLbl: Record<string, string> = { solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
   const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || ''
   const situacao = pedido.status ? (stLbl[pedido.status] || pedido.status) : ''
-  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td></tr>`).join('')
+  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td><td class="p">${it.preco != null && it.preco > 0 ? brl(it.preco) : '—'}</td></tr>`).join('')
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Solicitação — ${esc(nomeLoja)} — ${data}</title><style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a;padding:24px;max-width:720px;margin:0 auto}
+    @page{size:A4 landscape;margin:10mm}
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a;padding:24px;max-width:1000px;margin:0 auto}
     .toolbar{position:sticky;top:0;background:#0f2a52;padding:12px;text-align:center;margin:-24px -24px 16px}
     .toolbar button{background:#f97316;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer}
     .brand{font-weight:800;font-size:16px;color:#00b890;padding-bottom:6px;border-bottom:2px solid #00d4aa;margin-bottom:8px}.brand span{color:#94a3b8;font-weight:600;font-size:12px}
@@ -340,7 +341,7 @@ function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: stri
     .cel-loja{font-weight:800;font-size:15px;width:55%;color:#1e2030}.cel-dl{font-weight:600;color:#64748b;font-size:10px;letter-spacing:.05em;width:15%;text-align:center}.cel-d{font-weight:700;font-size:13px;width:30%;text-align:right}
     .cel-info{background:#f1f5f9;color:#334155;font-size:11.5px;line-height:1.5}
     .items{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}.items td,.items th{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}.items th{background:#1e2030;color:#fff}
-    .q{text-align:right;font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}
+    .q{text-align:right;font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}.p{text-align:right;white-space:nowrap;color:#334155}
     .obs{margin-top:12px;font-size:12.5px;color:#334155}
     @media print{.toolbar{display:none}body{padding:0}}
   </style></head><body>
@@ -352,7 +353,7 @@ function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: stri
       <tr><td colspan="3" class="cel-info"><b>ENDEREÇO:</b> ${esc(ende)}</td></tr>
       ${situacao ? `<tr><td colspan="3" class="cel-info"><b>SITUAÇÃO:</b> ${esc(situacao)}</td></tr>` : ''}
     </table>
-    <table class="items"><thead><tr><th>Código</th><th>Item</th><th>Embalagem</th><th class="q">Quantidade</th></tr></thead><tbody>${linhas}</tbody></table>
+    <table class="items"><thead><tr><th>Código</th><th>Item</th><th>Embalagem</th><th class="q">Quantidade</th><th class="p">Último Preço</th></tr></thead><tbody>${linhas}</tbody></table>
     ${obs ? `<div class="obs"><b>Observação:</b> ${esc(obs)}</div>` : ''}
   </body></html>`
   const win = window.open('', '_blank')
