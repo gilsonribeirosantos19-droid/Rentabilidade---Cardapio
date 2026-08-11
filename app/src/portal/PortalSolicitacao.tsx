@@ -154,7 +154,7 @@ export function PortalSolicitacao() {
         <button className={'p-subtab' + (aba === 'minhas' ? ' on' : '')} onClick={() => setAba('minhas')}>Minhas solicitações{minhasTotal ? ` (${minhasTotal})` : ''}</button>
       </div>
 
-      {aba === 'minhas' && <MinhasSolicitacoes lista={minhas} total={minhasTotal} onVer={setVerPed} fStatus={fStatus} setFStatus={setFStatus} fPeriodo={fPeriodo} aplicarPeriodo={aplicarPeriodo} fDe={fDe} setFDe={setFDe} fAte={fAte} setFAte={setFAte} />}
+      {aba === 'minhas' && <MinhasSolicitacoes lista={minhas} total={minhasTotal} onVer={setVerPed} fStatus={fStatus} setFStatus={setFStatus} fPeriodo={fPeriodo} aplicarPeriodo={aplicarPeriodo} setFPeriodo={setFPeriodo} fDe={fDe} setFDe={setFDe} fAte={fAte} setFAte={setFAte} />}
 
       {aba === 'nova' && <>
       <div className="pf-bar" style={{ position: 'sticky', top: 0, zIndex: 5 }}>
@@ -251,7 +251,7 @@ export function PortalSolicitacao() {
 }
 
 // ── Lista "Minhas solicitações" ──
-function MinhasSolicitacoes({ lista, total, onVer, fStatus, setFStatus, fPeriodo, aplicarPeriodo, fDe, setFDe, fAte, setFAte }: { lista: PedidoMin[]; total: number; onVer: (p: PedidoMin) => void; fStatus: string; setFStatus: (v: string) => void; fPeriodo: string; aplicarPeriodo: (v: string) => void; fDe: string; setFDe: (v: string) => void; fAte: string; setFAte: (v: string) => void }) {
+function MinhasSolicitacoes({ lista, total, onVer, fStatus, setFStatus, fPeriodo, aplicarPeriodo, setFPeriodo, fDe, setFDe, fAte, setFAte }: { lista: PedidoMin[]; total: number; onVer: (p: PedidoMin) => void; fStatus: string; setFStatus: (v: string) => void; fPeriodo: string; aplicarPeriodo: (v: string) => void; setFPeriodo: (v: string) => void; fDe: string; setFDe: (v: string) => void; fAte: string; setFAte: (v: string) => void }) {
   const ST: Record<string, { l: string; c: string; b: string }> = { solicitado: { l: 'Aguardando', c: '#92400e', b: '#fef3c7' }, processado: { l: 'Processado', c: '#166534', b: '#dcfce7' }, cancelado: { l: 'Cancelado', c: '#991b1b', b: '#fee2e2' } }
   const lblSt: CSSProperties = { fontSize: 11, fontWeight: 600, color: '#64748b', marginLeft: 2 }
   const fieldSt: CSSProperties = { height: 34, border: '1px solid #cbd5e1', borderRadius: 8, padding: '0 10px', fontSize: 13, fontFamily: 'inherit', background: '#fff', color: '#0f172a' }
@@ -265,10 +265,8 @@ function MinhasSolicitacoes({ lista, total, onVer, fStatus, setFStatus, fPeriodo
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Período</label>
           <select value={fPeriodo} onChange={(e) => aplicarPeriodo(e.target.value)} style={fieldSt}><option value="atual">Mês atual</option><option value="anterior">Mês anterior</option><option value="custom">Personalizado</option><option value="tudo">Tudo</option></select>
         </div>
-        {fPeriodo === 'custom' && <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>De</label><input type="date" value={fDe} onChange={(e) => setFDe(e.target.value)} style={fieldSt} /></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Até</label><input type="date" value={fAte} onChange={(e) => setFAte(e.target.value)} style={fieldSt} /></div>
-        </>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>De</label><input type="date" value={fDe} onChange={(e) => { setFDe(e.target.value); setFPeriodo('custom') }} style={fieldSt} /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Até</label><input type="date" value={fAte} onChange={(e) => { setFAte(e.target.value); setFPeriodo('custom') }} style={fieldSt} /></div>
         <span style={{ marginLeft: 'auto', alignSelf: 'center', color: '#94a3b8', fontSize: 12 }}>{lista.length} de {total}</span>
       </div>
       {!lista.length ? <div className="p-empty">Nenhuma solicitação com esse filtro.</div> : (
