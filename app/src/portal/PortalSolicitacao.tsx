@@ -43,6 +43,10 @@ const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const fmtQtd = (v?: string) => { const n = num(v); return v && n > 0 ? n.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : (v || '') }
 const hoje7 = () => new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-CA')
 const hojeStr = () => new Date().toLocaleDateString('en-CA')
+const pad2 = (n: number) => String(n).padStart(2, '0')
+const ymd = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+// range de um mês: offset 0 = mês atual, -1 = mês anterior
+const mesRange = (offset: number) => { const n = new Date(); return { de: ymd(new Date(n.getFullYear(), n.getMonth() + offset, 1)), ate: ymd(new Date(n.getFullYear(), n.getMonth() + offset + 1, 0)) } }
 const fmtCod = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')
 const EMB: Record<string, string> = { kg: 'QUILOGRAMA', g: 'GRAMA', l: 'LITRO', litro: 'LITRO', ml: 'MILILITRO', un: 'UNIDADE', unid: 'UNIDADE', cx: 'CAIXA', pct: 'PACOTE', fd: 'FARDO', fardo: 'FARDO' }
 const embalagem = (i?: { unidade_compra?: string; unidade_medida?: string }) => { const u = (i?.unidade_compra || i?.unidade_medida || '').toLowerCase().trim(); return EMB[u] || (u ? u.toUpperCase() : '—') }
@@ -61,7 +65,18 @@ export function PortalSolicitacao() {
   const [aba, setAba] = useState<'nova' | 'minhas'>('nova')
   const [verPed, setVerPed] = useState<PedidoMin | null>(null)
   // filtro da lista "Minhas solicitações" — vai pro SERVIDOR (acha qualquer data, não só as carregadas)
-  const [fStatus, setFStatus] = useState(''); const [fDe, setFDe] = useState(''); const [fAte, setFAte] = useState('')
+  // abre já em "Aguardando" + "mês atual" (evita lista gigante); presets de período trocam De/Até
+  const [fStatus, setFStatus] = useState('solicitado')
+  const [fPeriodo, setFPeriodo] = useState('atual')
+  const [fDe, setFDe] = useState(() => mesRange(0).de)
+  const [fAte, setFAte] = useState(() => mesRange(0).ate)
+  const aplicarPeriodo = (p: string) => {
+    setFPeriodo(p)
+    if (p === 'atual') { const r = mesRange(0); setFDe(r.de); setFAte(r.ate) }
+    else if (p === 'anterior') { const r = mesRange(-1); setFDe(r.de); setFAte(r.ate) }
+    else if (p === 'tudo') { setFDe(''); setFAte('') }
+    // 'custom' mantém o que o usuário digitar em De/Até
+  }
   const [entrega, setEntrega] = useState(hoje7()); const [obs, setObs] = useState('')
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const showToast = (m: string, err = false) => { setToast({ msg: m, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
@@ -139,7 +154,7 @@ export function PortalSolicitacao() {
         <button className={'p-subtab' + (aba === 'minhas' ? ' on' : '')} onClick={() => setAba('minhas')}>Minhas solicitações{minhasTotal ? ` (${minhasTotal})` : ''}</button>
       </div>
 
-      {aba === 'minhas' && <MinhasSolicitacoes lista={minhas} total={minhasTotal} onVer={setVerPed} fStatus={fStatus} setFStatus={setFStatus} fDe={fDe} setFDe={setFDe} fAte={fAte} setFAte={setFAte} />}
+      {aba === 'minhas' && <MinhasSolicitacoes lista={minhas} total={minhasTotal} onVer={setVerPed} fStatus={fStatus} setFStatus={setFStatus} fPeriodo={fPeriodo} aplicarPeriodo={aplicarPeriodo} fDe={fDe} setFDe={setFDe} fAte={fAte} setFAte={setFAte} />}
 
       {aba === 'nova' && <>
       <div className="pf-bar" style={{ position: 'sticky', top: 0, zIndex: 5 }}>
@@ -236,22 +251,25 @@ export function PortalSolicitacao() {
 }
 
 // ── Lista "Minhas solicitações" ──
-function MinhasSolicitacoes({ lista, total, onVer, fStatus, setFStatus, fDe, setFDe, fAte, setFAte }: { lista: PedidoMin[]; total: number; onVer: (p: PedidoMin) => void; fStatus: string; setFStatus: (v: string) => void; fDe: string; setFDe: (v: string) => void; fAte: string; setFAte: (v: string) => void }) {
+function MinhasSolicitacoes({ lista, total, onVer, fStatus, setFStatus, fPeriodo, aplicarPeriodo, fDe, setFDe, fAte, setFAte }: { lista: PedidoMin[]; total: number; onVer: (p: PedidoMin) => void; fStatus: string; setFStatus: (v: string) => void; fPeriodo: string; aplicarPeriodo: (v: string) => void; fDe: string; setFDe: (v: string) => void; fAte: string; setFAte: (v: string) => void }) {
   const ST: Record<string, { l: string; c: string; b: string }> = { solicitado: { l: 'Aguardando', c: '#92400e', b: '#fef3c7' }, processado: { l: 'Processado', c: '#166534', b: '#dcfce7' }, cancelado: { l: 'Cancelado', c: '#991b1b', b: '#fee2e2' } }
-  const temFiltro = !!(fStatus || fDe || fAte)
   const lblSt: CSSProperties = { fontSize: 11, fontWeight: 600, color: '#64748b', marginLeft: 2 }
   const fieldSt: CSSProperties = { height: 34, border: '1px solid #cbd5e1', borderRadius: 8, padding: '0 10px', fontSize: 13, fontFamily: 'inherit', background: '#fff', color: '#0f172a' }
-  if (!total && !temFiltro) return <div className="p-card"><div className="p-empty">Você ainda não enviou nenhuma solicitação.</div></div>
+  if (!total) return <div className="p-card"><div className="p-empty">Você ainda não enviou nenhuma solicitação.</div></div>
   return (
     <div className="p-card">
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Status</label>
           <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={fieldSt}><option value="">Todas</option><option value="solicitado">Aguardando</option><option value="processado">Processado</option><option value="cancelado">Cancelado</option></select>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>De</label><input type="date" value={fDe} onChange={(e) => setFDe(e.target.value)} style={fieldSt} /></div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Até</label><input type="date" value={fAte} onChange={(e) => setFAte(e.target.value)} style={fieldSt} /></div>
-        {temFiltro && <button onClick={() => { setFStatus(''); setFDe(''); setFAte('') }} style={{ height: 34, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', color: '#475569', fontSize: 12.5, fontWeight: 600, padding: '0 12px', cursor: 'pointer' }}>Limpar</button>}
-        <span style={{ marginLeft: 'auto', alignSelf: 'center', color: '#94a3b8', fontSize: 12 }}>{lista.length} resultado{lista.length === 1 ? '' : 's'}{temFiltro ? ` · ${total} no total` : ''}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Período</label>
+          <select value={fPeriodo} onChange={(e) => aplicarPeriodo(e.target.value)} style={fieldSt}><option value="atual">Mês atual</option><option value="anterior">Mês anterior</option><option value="custom">Personalizado</option><option value="tudo">Tudo</option></select>
+        </div>
+        {fPeriodo === 'custom' && <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>De</label><input type="date" value={fDe} onChange={(e) => setFDe(e.target.value)} style={fieldSt} /></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Até</label><input type="date" value={fAte} onChange={(e) => setFAte(e.target.value)} style={fieldSt} /></div>
+        </>}
+        <span style={{ marginLeft: 'auto', alignSelf: 'center', color: '#94a3b8', fontSize: 12 }}>{lista.length} de {total}</span>
       </div>
       {!lista.length ? <div className="p-empty">Nenhuma solicitação com esse filtro.</div> : (
       <table className="p-tbl">
