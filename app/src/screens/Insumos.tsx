@@ -408,12 +408,16 @@ function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: stri
         <tbody>
           {rows.map((r, i) => (
             <tr key={i} className={r.base ? 'base' : ''}>
-              <td><input className="emb-in" value={r.nome} placeholder="Ex: Caixa com 1,68 kg" onChange={(e) => set(i, { nome: e.target.value })} />{r.base && <span className="emb-tag">BASE / ESTOQUE</span>}</td>
+              <td><div className="emb-nome"><input className="emb-in" value={r.nome} placeholder="Ex: Caixa com 1,68 kg" onChange={(e) => set(i, { nome: e.target.value })} />{r.base && <span className="emb-tag">BASE</span>}</div></td>
               <td>
-                <select className="emb-in" value={r.un || 'cx'} disabled={r.base} onChange={(e) => set(i, { un: e.target.value })}>
-                  {UN_OPTS.map((u) => <option key={u} value={u}>{unLabel(u)}</option>)}
-                  {r.un && !UN_OPTS.includes(r.un) && <option value={r.un}>{unLabel(r.un)}</option>}
-                </select>
+                {r.base
+                  ? <span className="emb-base-un">{unLabel(r.un)}</span>
+                  : (
+                    <select className="emb-in" value={r.un || 'cx'} onChange={(e) => set(i, { un: e.target.value })}>
+                      {UN_OPTS.map((u) => <option key={u} value={u}>{unLabel(u)}</option>)}
+                      {r.un && !UN_OPTS.includes(r.un) && <option value={r.un}>{unLabel(r.un)}</option>}
+                    </select>
+                  )}
               </td>
               <td className="c"><input className="emb-in num" value={r.qtd ?? ''} onChange={(e) => set(i, { qtd: parseFloat((e.target.value || '').replace(',', '.')) || undefined })} /></td>
               <td className="c"><input type="checkbox" checked={!!r.ver} onChange={(e) => set(i, { ver: e.target.checked })} /></td>

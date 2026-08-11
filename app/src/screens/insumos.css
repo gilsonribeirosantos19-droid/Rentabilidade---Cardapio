@@ -95,13 +95,16 @@
 .ins-screen .emb-grid tbody td { padding: 5px 10px; border-bottom: 1px solid #eef1f5; vertical-align: middle; }
 .ins-screen .emb-grid tbody td.c { text-align: center; }
 .ins-screen .emb-grid tbody tr.base { background: #fbfdff; }
+.ins-screen .emb-nome { display: flex; align-items: center; gap: 6px; }
+.ins-screen .emb-nome .emb-in { flex: 1; min-width: 0; }
+.ins-screen .emb-base-un { color: #64748b; font-size: 12.5px; font-weight: 500; }
 .ins-screen .emb-in { width: 100%; height: 32px; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0 8px; font-size: 12.5px; font-family: inherit; background: #fff; color: #0f172a; }
 .ins-screen .emb-in:focus { outline: none; border-color: #f97316; }
 .ins-screen .emb-in:disabled { background: #f1f5f9; color: #64748b; }
 .ins-screen .emb-in.num { text-align: right; font-family: 'DM Mono', monospace; max-width: 88px; }
 .ins-screen .emb-grid input[type=checkbox] { width: 17px; height: 17px; accent-color: #f97316; cursor: pointer; }
 .ins-screen .emb-grid input[type=radio] { width: 17px; height: 17px; accent-color: #f59e0b; cursor: pointer; }
-.ins-screen .emb-tag { display: inline-block; background: #eef4ff; color: #14315F; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 6px; margin-left: 6px; vertical-align: middle; }
+.ins-screen .emb-tag { flex: none; background: #eef4ff; color: #14315F; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
 .ins-screen .emb-del { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 15px; line-height: 1; }
 .ins-screen .emb-del:hover { color: #ef4444; }
 .ins-screen .emb-add { margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px dashed #f97316; color: #ea6c00; font-weight: 700; font-size: 12.5px; border-radius: 8px; padding: 8px 14px; cursor: pointer; }
