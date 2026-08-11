@@ -267,6 +267,19 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
     return () => { alive = false }
   }, [pedido.id])
 
+  // preço da ÚLTIMA COMPRA (nota): custo_unitario da entrada mais recente com quantidade>0 (exclui ajuste de custo médio)
+  const { tenantId } = useAuth()
+  const insIds = useMemo(() => [...new Set(itens.map((x) => x.insumo_id))], [itens])
+  const { data: lastPreco = {} } = useQuery({
+    queryKey: ['psol-lastpreco', tenantId, insIds.join(',')], enabled: !!tenantId && insIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from('entradas_estoque').select('insumo_id,custo_unitario,criado_em').eq('tenant_id', tenantId).in('insumo_id', insIds).gt('quantidade', 0).gt('custo_unitario', 0).order('criado_em', { ascending: false })
+      const m: Record<string, number> = {}
+      ;(data ?? []).forEach((r) => { const row = r as { insumo_id: string; custo_unitario: number }; if (m[row.insumo_id] == null) m[row.insumo_id] = row.custo_unitario })
+      return m
+    },
+  })
+
   const salvar = async () => {
     setErr('')
     const val = itens.filter((x) => num(x.qtd) > 0)
@@ -281,7 +294,7 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
       onSaved()
     } catch (e) { setErr('Erro: ' + (e as Error).message) } finally { setBusy(false) }
   }
-  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd), preco: insMap[x.insumo_id]?.preco_compra })), loja, obs)
+  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd), preco: lastPreco[x.insumo_id] ?? insMap[x.insumo_id]?.preco_compra })), loja, obs)
 
   return (
     <div className="p-ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
