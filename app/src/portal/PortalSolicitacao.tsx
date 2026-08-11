@@ -38,6 +38,8 @@ const optsDe = (i: Insumo | undefined, cur?: string): { value: string; label: st
 }
 const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',')
 const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
+// arruma o texto digitado pra 3 casas ao sair do campo (1 -> 1,000); vazio/zero fica como está
+const fmtQtd = (v?: string) => { const n = num(v); return v && n > 0 ? n.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : (v || '') }
 const hoje7 = () => new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-CA')
 const hojeStr = () => new Date().toLocaleDateString('en-CA')
 const fmtCod = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')
@@ -192,7 +194,7 @@ export function PortalSolicitacao() {
                       <td style={{ color: '#64748b' }}>{fmtV(saldoMap[id])}</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td style={{ color: '#64748b' }}>—</td>
-                      <td className="r"><input type="text" inputMode="decimal" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 96, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5, color: '#0f172a', background: '#fff' }} /></td>
+                      <td className="r"><input type="text" inputMode="decimal" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} onBlur={(e) => onQty(id, fmtQtd(e.target.value))} style={{ width: 96, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5, color: '#0f172a', background: '#fff' }} /></td>
                       <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{optsDe(ins, un[id] || u).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
                     </tr>
                   ) })}
@@ -315,7 +317,7 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
                     ? <select value={it.un} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, un: e.target.value } : x))} style={{ height: 26, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{optsDe(insMap[it.insumo_id], it.un).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
                     : unidLabel(it.un)}</td>
                   <td className="r">{editavel
-                    ? <input type="text" inputMode="decimal" value={it.qtd} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: e.target.value } : x))} style={{ width: 90, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5 }} />
+                    ? <input type="text" inputMode="decimal" value={it.qtd} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: e.target.value } : x))} onBlur={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: fmtQtd(e.target.value) } : x))} style={{ width: 90, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5 }} />
                     : <span className="mono">{num(it.qtd).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>}</td>
                   <td className="r">{p != null && p > 0 ? <span className="mono">{brl(p)} <span style={{ color: '#94a3b8', fontSize: 11 }}>/{shortUn(insMap[it.insumo_id]?.unidade_medida)}</span></span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
                   {editavel && <td className="r"><button className="p-btn" title="Remover item" onClick={() => setItens((a) => a.filter((x) => x.id !== it.id))}>🗑</button></td>}
