@@ -184,7 +184,7 @@ export function Insumos() {
         <div className="ins-body">
           <div className="form-card">
             <div className="cad-subtabs">
-              <button type="button" className={'cad-subtab' + (cadSub === 'basico' ? ' active' : '')} onClick={() => setCadSub('basico')}>Básico</button>
+              <button type="button" className={'cad-subtab' + (cadSub === 'basico' ? ' active' : '')} onClick={() => setCadSub('basico')}>Cadastros</button>
               <button type="button" className={'cad-subtab' + (cadSub === 'emb' ? ' active' : '')} onClick={() => setCadSub('emb')}>Embalagens de compra</button>
             </div>
 
