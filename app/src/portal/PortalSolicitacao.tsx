@@ -303,22 +303,25 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
         <div className="mb">
           {!editavel && <div style={{ background: '#fef3c7', color: '#92400e', padding: '8px 12px', borderRadius: 8, fontSize: 12.5, marginBottom: 10 }}>Este pedido já foi <b>processado</b> por Compras — só pode ser visualizado.</div>}
           <table className="p-tbl">
-            <thead><tr><th>Código</th><th>Item</th><th className="r">Quantidade</th><th>Embalagem</th>{editavel && <th></th>}</tr></thead>
+            <thead><tr><th>Código</th><th>Item</th><th>Embalagem</th><th className="r">Quantidade</th><th className="r">Último Preço</th>{editavel && <th></th>}</tr></thead>
             <tbody>
-              {itens.map((it) => (
+              {itens.map((it) => {
+                const p = lastPreco[it.insumo_id] ?? insMap[it.insumo_id]?.preco_compra
+                return (
                 <tr key={it.id}>
                   <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td>
                   <td style={{ fontWeight: 600 }}>{insMap[it.insumo_id]?.nome || it.insumo_id}</td>
-                  <td className="r">{editavel
-                    ? <input type="text" inputMode="decimal" value={it.qtd} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: e.target.value } : x))} style={{ width: 90, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5 }} />
-                    : <span className="mono">{it.qtd}</span>}</td>
                   <td>{editavel
                     ? <select value={it.un} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, un: e.target.value } : x))} style={{ height: 26, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{optsDe(insMap[it.insumo_id], it.un).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
                     : unidLabel(it.un)}</td>
+                  <td className="r">{editavel
+                    ? <input type="text" inputMode="decimal" value={it.qtd} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: e.target.value } : x))} style={{ width: 90, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5 }} />
+                    : <span className="mono">{it.qtd}</span>}</td>
+                  <td className="r">{p != null && p > 0 ? <span className="mono">{brl(p)} <span style={{ color: '#94a3b8', fontSize: 11 }}>/{shortUn(insMap[it.insumo_id]?.unidade_medida)}</span></span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
                   {editavel && <td className="r"><button className="p-btn" title="Remover item" onClick={() => setItens((a) => a.filter((x) => x.id !== it.id))}>🗑</button></td>}
                 </tr>
-              ))}
-              {!itens.length && <tr><td colSpan={editavel ? 5 : 4} className="p-empty">Sem itens.</td></tr>}
+              )})}
+              {!itens.length && <tr><td colSpan={editavel ? 6 : 5} className="p-empty">Sem itens.</td></tr>}
             </tbody>
           </table>
           <div className="pf-fld" style={{ marginTop: 12 }}><label>Observação</label><input className="p-field" value={obs} disabled={!editavel} onChange={(e) => setObs(e.target.value)} placeholder="(opcional)" /></div>
