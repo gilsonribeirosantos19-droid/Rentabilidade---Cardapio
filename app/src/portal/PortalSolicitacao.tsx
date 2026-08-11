@@ -253,12 +253,12 @@ export function PortalSolicitacao() {
 // ── Lista "Minhas solicitações" ──
 function MinhasSolicitacoes({ lista, total, onVer, fStatus, setFStatus, fPeriodo, aplicarPeriodo, setFPeriodo, fDe, setFDe, fAte, setFAte }: { lista: PedidoMin[]; total: number; onVer: (p: PedidoMin) => void; fStatus: string; setFStatus: (v: string) => void; fPeriodo: string; aplicarPeriodo: (v: string) => void; setFPeriodo: (v: string) => void; fDe: string; setFDe: (v: string) => void; fAte: string; setFAte: (v: string) => void }) {
   const ST: Record<string, { l: string; c: string; b: string }> = { solicitado: { l: 'Aguardando', c: '#92400e', b: '#fef3c7' }, processado: { l: 'Processado', c: '#166534', b: '#dcfce7' }, cancelado: { l: 'Cancelado', c: '#991b1b', b: '#fee2e2' } }
-  const lblSt: CSSProperties = { fontSize: 11, fontWeight: 600, color: '#64748b', marginLeft: 2 }
-  const fieldSt: CSSProperties = { height: 34, border: '1px solid #cbd5e1', borderRadius: 8, padding: '0 10px', fontSize: 13, fontFamily: 'inherit', background: '#fff', color: '#0f172a' }
+  const lblSt: CSSProperties = { fontSize: 11, fontWeight: 600, color: '#64748b', marginLeft: 2, marginBottom: 2 }
+  const fieldSt: CSSProperties = { height: 38, minWidth: 150, border: '1px solid #cbd5e1', borderRadius: 8, padding: '0 12px', fontSize: 13, fontFamily: 'inherit', background: '#fff', color: '#0f172a' }
   if (!total) return <div className="p-card"><div className="p-empty">Você ainda não enviou nenhuma solicitação.</div></div>
   return (
     <div className="p-card">
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', flexWrap: 'wrap', margin: '8px 0 22px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Status</label>
           <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={fieldSt}><option value="">Todas</option><option value="solicitado">Aguardando</option><option value="processado">Processado</option><option value="cancelado">Cancelado</option></select>
         </div>
