@@ -84,6 +84,12 @@
 .ins-screen .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 200; }
 .ins-screen .toast.ok { background: #059669; } .ins-screen .toast.err { background: #ef4444; }
 
+/* ===== SUB-ABAS DO CADASTRO ===== */
+.ins-screen .cad-subtabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid #e2e8f0; }
+.ins-screen .cad-subtab { padding: 9px 16px; font-size: 13px; font-weight: 600; color: #64748b; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; font-family: inherit; }
+.ins-screen .cad-subtab:hover { color: #0f172a; }
+.ins-screen .cad-subtab.active { color: #14315F; border-bottom-color: #f97316; }
+
 /* ===== EMBALAGENS DE COMPRA ===== */
 .ins-screen .emb-wrap { margin-top: 16px; }
 .ins-screen .emb-head { font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 8px; }

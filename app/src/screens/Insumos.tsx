@@ -51,6 +51,7 @@ export function Insumos() {
   const { lojaId } = useLoja()   // custo respeita a loja global (Todas = maior, só visão geral)
   const qc = useQueryClient()
   const [tab, setTab] = useState<'cadastro' | 'produtos' | 'custos'>('produtos')
+  const [cadSub, setCadSub] = useState<'basico' | 'emb'>('basico')   // sub-abas do cadastro (evita form muito longo)
   const [cadForm, setCadForm] = useState<Form>(novoForm())
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
@@ -157,7 +158,7 @@ export function Insumos() {
     onError: (e: Error) => showToast(e.message, 'err'),
   })
 
-  const editar = (item: Insumo) => { setCadForm(item); setTab('cadastro') }
+  const editar = (item: Insumo) => { setCadForm(item); setCadSub('basico'); setTab('cadastro') }
   // Duplicar: abre um pop-up rápido só com o nome. A classificação toda é copiada do item
   // de origem; ao salvar, cria um item NOVO (código gerado automático). Ágil p/ vários da mesma categoria.
   const duplicar = (item: Insumo) => { setDup(item); setDupNome((item.nome || '') + ' (cópia)') }
@@ -173,7 +174,7 @@ export function Insumos() {
   return (
     <div className="ins-screen">
       <div className="mod-tabs">
-        <button className={'mod-tab' + (tab === 'cadastro' ? ' active' : '')} onClick={() => { setCadForm(novoForm()); setTab('cadastro') }}>Cadastro de Item</button>
+        <button className={'mod-tab' + (tab === 'cadastro' ? ' active' : '')} onClick={() => { setCadForm(novoForm()); setCadSub('basico'); setTab('cadastro') }}>Cadastro de Item</button>
         <button className={'mod-tab' + (tab === 'produtos' ? ' active' : '')} onClick={() => setTab('produtos')}>Produtos / Itens</button>
         <button className={'mod-tab' + (tab === 'custos' ? ' active' : '')} onClick={() => setTab('custos')}>Base de Custos da Ficha Técnica</button>
       </div>
@@ -182,6 +183,12 @@ export function Insumos() {
       {tab === 'cadastro' && (
         <div className="ins-body">
           <div className="form-card">
+            <div className="cad-subtabs">
+              <button type="button" className={'cad-subtab' + (cadSub === 'basico' ? ' active' : '')} onClick={() => setCadSub('basico')}>Básico</button>
+              <button type="button" className={'cad-subtab' + (cadSub === 'emb' ? ' active' : '')} onClick={() => setCadSub('emb')}>Embalagens de compra</button>
+            </div>
+
+            {cadSub === 'basico' && <>
             <div className="form-section">
               <div className="form-section-title">1. Identificação</div>
               <div className="form-grid-3">
@@ -211,13 +218,21 @@ export function Insumos() {
               </div>
             </div>
             <div className="form-section">
-              <div className="form-section-title">3. Unidade e Embalagem</div>
+              <div className="form-section-title">3. Unidade de estoque</div>
               <div className="form-grid-3">
                 <Sel label="Unidade de estoque *" value={cadForm.unidade_medida} options={opts.unidades} onChange={(v) => setF('unidade_medida', v)} />
                 <div className="form-group"><label className="form-label">Local / Depósito padrão</label><input className="form-input" placeholder="Ex: Câmara fria" /></div>
               </div>
-              <EmbalagensEditor unidadeBase={cadForm.unidade_medida} value={cadForm.embalagens} onChange={(v) => setCadForm((f) => ({ ...f, embalagens: v }))} />
             </div>
+            </>}
+
+            {cadSub === 'emb' && (
+              <div className="form-section">
+                <div className="form-section-title">Embalagens de compra</div>
+                <EmbalagensEditor unidadeBase={cadForm.unidade_medida} value={cadForm.embalagens} onChange={(v) => setCadForm((f) => ({ ...f, embalagens: v }))} />
+              </div>
+            )}
+
             <div className="form-footer">
               <button className="f-btn" onClick={() => { setCadForm(novoForm()); setTab('produtos') }}>Cancelar</button>
               <button className="f-btn primary" disabled={saveMut.isPending} onClick={() => saveMut.mutate(cadForm)}>{saveMut.isPending ? 'Salvando…' : 'Salvar'}</button>
