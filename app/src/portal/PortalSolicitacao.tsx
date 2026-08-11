@@ -294,7 +294,7 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
       onSaved()
     } catch (e) { setErr('Erro: ' + (e as Error).message) } finally { setBusy(false) }
   }
-  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd), preco: lastPreco[x.insumo_id] ?? insMap[x.insumo_id]?.preco_compra })), loja, obs)
+  const pdf = () => imprimirSolicitacao(pedido, itens.filter((x) => num(x.qtd) > 0).map((x) => ({ cod: fmtCod(insMap[x.insumo_id]?.codigo_interno), nome: insMap[x.insumo_id]?.nome || x.insumo_id, emb: unidLabel(x.un), qtd: num(x.qtd), preco: lastPreco[x.insumo_id] ?? insMap[x.insumo_id]?.preco_compra, precoUn: insMap[x.insumo_id]?.unidade_medida })), loja, obs)
 
   return (
     <div className="p-ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -337,13 +337,15 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
 }
 
 // PDF/impressão de UMA solicitação — abre a folha com botão manual (não trava)
-function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: string; emb: string; qtd: number; preco?: number }[], loja: LojaFull | null, obs: string) {
+// unidade curta pro preço (R$/kg, R$/L…) — deixa claro que o preço é por unidade de estoque, não por embalagem
+const shortUn = (u?: string) => { const k = (u || '').toLowerCase().trim(); const m: Record<string, string> = { kg: 'kg', quilograma: 'kg', kilograma: 'kg', g: 'g', grama: 'g', litro: 'L', l: 'L', lt: 'L', ml: 'ml', un: 'un', unidade: 'un', und: 'un' }; return m[k] || k || 'un' }
+function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: string; emb: string; qtd: number; preco?: number; precoUn?: string }[], loja: LojaFull | null, obs: string) {
   const dt = (pedido.created_at || pedido.data_pedido || '').slice(0, 10) || hojeStr()
   const data = new Date(dt + 'T12:00:00').toLocaleDateString('pt-BR')
   const stLbl: Record<string, string> = { solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
   const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || ''
   const situacao = pedido.status ? (stLbl[pedido.status] || pedido.status) : ''
-  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td><td class="p">${it.preco != null && it.preco > 0 ? brl(it.preco) : '—'}</td></tr>`).join('')
+  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td><td class="p">${it.preco != null && it.preco > 0 ? brl(it.preco) + ' <span class="pu">/' + esc(shortUn(it.precoUn)) + '</span>' : '—'}</td></tr>`).join('')
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Solicitação — ${esc(nomeLoja)} — ${data}</title><style>
     @page{size:A4 landscape;margin:10mm}
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a;padding:24px;max-width:1000px;margin:0 auto}
@@ -354,7 +356,7 @@ function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: stri
     .cel-loja{font-weight:800;font-size:15px;width:55%;color:#1e2030}.cel-dl{font-weight:600;color:#64748b;font-size:10px;letter-spacing:.05em;width:15%;text-align:center}.cel-d{font-weight:700;font-size:13px;width:30%;text-align:right}
     .cel-info{background:#f1f5f9;color:#334155;font-size:11.5px;line-height:1.5}
     .items{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}.items td,.items th{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}.items th{background:#1e2030;color:#fff}
-    .q{text-align:right;font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}.p{text-align:right;white-space:nowrap;color:#334155}
+    .q{text-align:right;font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}.p{text-align:right;white-space:nowrap;color:#334155}.pu{color:#94a3b8;font-size:11px;font-weight:400}
     .obs{margin-top:12px;font-size:12.5px;color:#334155}
     @media print{.toolbar{display:none}body{padding:0}}
   </style></head><body>
