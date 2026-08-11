@@ -316,7 +316,7 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
                     : unidLabel(it.un)}</td>
                   <td className="r">{editavel
                     ? <input type="text" inputMode="decimal" value={it.qtd} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: e.target.value } : x))} style={{ width: 90, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5 }} />
-                    : <span className="mono">{it.qtd}</span>}</td>
+                    : <span className="mono">{num(it.qtd).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>}</td>
                   <td className="r">{p != null && p > 0 ? <span className="mono">{brl(p)} <span style={{ color: '#94a3b8', fontSize: 11 }}>/{shortUn(insMap[it.insumo_id]?.unidade_medida)}</span></span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
                   {editavel && <td className="r"><button className="p-btn" title="Remover item" onClick={() => setItens((a) => a.filter((x) => x.id !== it.id))}>🗑</button></td>}
                 </tr>
@@ -348,7 +348,7 @@ function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: stri
   const stLbl: Record<string, string> = { solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
   const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || ''
   const situacao = pedido.status ? (stLbl[pedido.status] || pedido.status) : ''
-  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td><td class="p">${it.preco != null && it.preco > 0 ? brl(it.preco) + ' <span class="pu">/' + esc(shortUn(it.precoUn)) + '</span>' : '—'}</td></tr>`).join('')
+  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td><td class="p">${it.preco != null && it.preco > 0 ? brl(it.preco) + ' <span class="pu">/' + esc(shortUn(it.precoUn)) + '</span>' : '—'}</td></tr>`).join('')
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Solicitação — ${esc(nomeLoja)} — ${data}</title><style>
     @page{size:A4 landscape;margin:10mm}
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a;padding:24px;max-width:1000px;margin:0 auto}
