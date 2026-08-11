@@ -302,7 +302,7 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
         <div className="mh"><h2>Solicitação {editavel ? '— editar' : '(processada)'}</h2><button className="p-mx" onClick={onClose}>✕</button></div>
         <div className="mb">
           {!editavel && <div style={{ background: '#fef3c7', color: '#92400e', padding: '8px 12px', borderRadius: 8, fontSize: 12.5, marginBottom: 10 }}>Este pedido já foi <b>processado</b> por Compras — só pode ser visualizado.</div>}
-          <table className="p-tbl">
+          <table className="p-tbl p-tbl-doc">
             <thead><tr><th>Código</th><th>Item</th><th>Embalagem</th><th className="r">Quantidade</th><th className="r">Último Preço</th>{editavel && <th></th>}</tr></thead>
             <tbody>
               {itens.map((it) => {
@@ -348,7 +348,7 @@ function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: stri
   const stLbl: Record<string, string> = { solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
   const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || ''
   const situacao = pedido.status ? (stLbl[pedido.status] || pedido.status) : ''
-  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td class="it-nome">${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td><td class="p">${it.preco != null && it.preco > 0 ? brl(it.preco) + ' <span class="pu">/' + esc(shortUn(it.precoUn)) + '</span>' : '—'}</td></tr>`).join('')
+  const linhas = itens.map((it) => `<tr><td class="c">${esc(it.cod)}</td><td>${esc(it.nome)}</td><td>${esc(it.emb)}</td><td class="q">${it.qtd.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td><td class="p">${it.preco != null && it.preco > 0 ? brl(it.preco) + ' <span class="pu">/' + esc(shortUn(it.precoUn)) + '</span>' : '—'}</td></tr>`).join('')
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Solicitação — ${esc(nomeLoja)} — ${data}</title><style>
     @page{size:A4 landscape;margin:10mm}
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a;padding:24px;max-width:1000px;margin:0 auto}
@@ -358,13 +358,8 @@ function imprimirSolicitacao(pedido: PedidoMin, itens: { cod: string; nome: stri
     .head{width:100%;border-collapse:collapse;font-size:13px}.head td{border:1px solid #cbd5e1;padding:7px 10px;vertical-align:middle}
     .cel-loja{font-weight:800;font-size:15px;width:55%;color:#1e2030}.cel-dl{font-weight:600;color:#64748b;font-size:10px;letter-spacing:.05em;width:15%;text-align:center}.cel-d{font-weight:700;font-size:13px;width:30%;text-align:right}
     .cel-info{background:#f1f5f9;color:#334155;font-size:11.5px;line-height:1.5}
-    .items{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
-    .items th{background:#f1f5f9;color:#64748b;font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:9px 12px;text-align:left;border-bottom:1px solid #e2e8f0}
-    .items td{padding:9px 12px;text-align:left;border-bottom:1px solid #eef1f5}
-    .items tbody tr:last-child td{border-bottom:1px solid #cbd5e1}
-    .items .it-nome{font-weight:700;color:#0f172a}
-    .items .q,.items .p{text-align:right}
-    .q{font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}.p{white-space:nowrap;color:#334155}.pu{color:#94a3b8;font-size:11px;font-weight:400}
+    .items{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}.items td,.items th{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}.items th{background:#1e2030;color:#fff}
+    .q{text-align:right;font-weight:700;white-space:nowrap}.c{font-family:'Courier New',monospace;color:#64748b;font-size:11px;white-space:nowrap}.p{text-align:right;white-space:nowrap;color:#334155}.pu{color:#94a3b8;font-size:11px;font-weight:400}
     .obs{margin-top:12px;font-size:12.5px;color:#334155}
     @media print{.toolbar{display:none}body{padding:0}}
   </style></head><body>
