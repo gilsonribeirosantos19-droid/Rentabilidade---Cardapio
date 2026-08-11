@@ -6,7 +6,8 @@ import { useAuth } from '../lib/auth'
 // Portal › Solicitação de Compra — o gerente seleciona insumos por grupo,
 // informa quantidades e envia a solicitação para Compras. Fiel ao loja.html.
 
-type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; preco_compra?: number; unidade_medida?: string; unidade_compra?: string }
+type Embalagem = { nome: string; un?: string; qtd?: number; ver?: boolean; padrao?: boolean; base?: boolean }
+type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; preco_compra?: number; unidade_medida?: string; unidade_compra?: string; embalagens?: Embalagem[] }
 type Grupo = { id: string; nome?: string; ativo?: boolean }
 type GI = { grupo_id: string; insumo_id: string }
 type Saldo = { insumo_id: string; quantidade?: number }
@@ -21,6 +22,20 @@ const UNID_OPTS = ['un', 'kg', 'litro', 'pct', 'cx', 'fardo', 'bd', 'sc']
 const unidLabel = (u?: string) => UNID_LABEL[(u || '').toLowerCase()] || (u || '')
 // inclui o valor atual mesmo que não esteja na lista (ex.: item antigo salvo em 'g') pra não sumir
 const unidOpts = (cur?: string) => (cur && !UNID_OPTS.includes(cur) ? [cur, ...UNID_OPTS] : UNID_OPTS)
+// embalagens que a gerente pode pedir NESTE item (as marcadas "aparece pro gerente")
+const embList = (i?: Insumo) => (i?.embalagens || []).filter((e) => e.ver && (e.nome || '').trim())
+// padrão do item: a embalagem ⭐ (ou a 1ª visível); se não configurou, a unidade de estoque
+const defUn = (i?: Insumo) => { const embs = embList(i); if (embs.length) return (embs.find((e) => e.padrao) || embs[0]).nome; return i?.unidade_medida || i?.unidade_compra || 'un' }
+// opções do seletor: as embalagens do item (por nome) OU a lista genérica por extenso
+const optsDe = (i: Insumo | undefined, cur?: string): { value: string; label: string }[] => {
+  const embs = embList(i)
+  if (embs.length) {
+    const list = embs.map((e) => ({ value: e.nome, label: e.nome }))
+    if (cur && !list.some((o) => o.value === cur)) list.unshift({ value: cur, label: unidLabel(cur) }) // item antigo salvo em outra unidade — não some
+    return list
+  }
+  return unidOpts(cur).map((x) => ({ value: x, label: unidLabel(x) }))
+}
 const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',')
 const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const hoje7 = () => new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-CA')
@@ -46,7 +61,7 @@ export function PortalSolicitacao() {
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const showToast = (m: string, err = false) => { setToast({ msg: m, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['psol-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Insumo[] } })
+  const { data: insumos = [] } = useQuery({ queryKey: ['psol-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra,embalagens').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Insumo[] } })
   const { data: grupos = [] } = useQuery({ queryKey: ['psol-grupos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra').select('id,nome,ativo').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Grupo[] } })
   const { data: gci = [] } = useQuery({ queryKey: ['psol-gci', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra_itens').select('grupo_id,insumo_id').eq('tenant_id', tenantId); return (data ?? []) as GI[] } })
   const { data: saldos = [] } = useQuery({ queryKey: ['psol-saldos', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,quantidade').eq('tenant_id', tenantId).eq('loja_id', lojaId!); return (data ?? []) as Saldo[] } })
@@ -57,7 +72,6 @@ export function PortalSolicitacao() {
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const saldoMap = useMemo(() => Object.fromEntries(saldos.map((s) => [s.insumo_id, s.quantidade])) as Record<string, number>, [saldos])
   const gruposItens = useMemo(() => { const m: Record<string, string[]> = {}; gci.forEach((g) => { if (insMap[g.insumo_id]) (m[g.grupo_id] ||= []).push(g.insumo_id) }); return m }, [gci, insMap])
-  const defUn = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
 
   const [buscado, setBuscado] = useState<{ grupo: string; busca: string } | null>(null)
   const buscar = () => setBuscado({ grupo: filGrupo, busca })
@@ -179,7 +193,7 @@ export function PortalSolicitacao() {
                       <td style={{ color: '#64748b' }}>—</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td className="r"><input type="text" inputMode="decimal" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 96, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5, color: '#0f172a', background: '#fff' }} /></td>
-                      <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{unidOpts(un[id] || u).map((x) => <option key={x} value={x}>{unidLabel(x)}</option>)}</select></td>
+                      <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{optsDe(ins, un[id] || u).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
                     </tr>
                   ) })}
                 </tbody>
@@ -286,7 +300,7 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
                     ? <input type="text" inputMode="decimal" value={it.qtd} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, qtd: e.target.value } : x))} style={{ width: 90, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5 }} />
                     : <span className="mono">{it.qtd}</span>}</td>
                   <td>{editavel
-                    ? <select value={it.un} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, un: e.target.value } : x))} style={{ height: 26, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{unidOpts(it.un).map((u) => <option key={u} value={u}>{unidLabel(u)}</option>)}</select>
+                    ? <select value={it.un} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, un: e.target.value } : x))} style={{ height: 26, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{optsDe(insMap[it.insumo_id], it.un).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
                     : unidLabel(it.un)}</td>
                   {editavel && <td className="r"><button className="p-btn" title="Remover item" onClick={() => setItens((a) => a.filter((x) => x.id !== it.id))}>🗑</button></td>}
                 </tr>

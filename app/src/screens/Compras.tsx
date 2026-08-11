@@ -280,6 +280,11 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   )
 }
 
+// embalagem de compra POR EXTENSO (mesma tabela do Portal do gerente) — o pedido mostra a embalagem que a gerente pediu
+const EMB_LABEL: Record<string, string> = { un: 'Unidade', unid: 'Unidade', kg: 'Quilograma', g: 'Grama', litro: 'Litro', l: 'Litro', ml: 'Mililitro', pct: 'Pacote', cx: 'Caixa', fardo: 'Fardo', fd: 'Fardo', bd: 'Bandeja', sc: 'Saco' }
+// código curto (cx) → por extenso (Caixa); nome completo da embalagem ("Caixa com 1,68 kg") → como a gerente escreveu
+const embLabel = (u?: string) => { const k = (u || '').toLowerCase().trim(); if (EMB_LABEL[k]) return EMB_LABEL[k]; if (!u) return '—'; return u.length <= 5 ? u.toUpperCase() : u }
+
 // romaneio consolidado: 1 página por loja (portado do HTML antigo)
 type LojaFull = { id?: string; nome?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string }
 type PorLoja = Record<string, { loja: LojaFull; itens: Record<string, { qty: number; un: string }> }>
@@ -296,8 +301,8 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
       <tr><td colspan="3" class="cel-info"><b>RAZÃO SOCIAL:</b> ${razao}${cnpj ? ' &nbsp;·&nbsp; <b>CNPJ:</b> ' + cnpj : ''}</td></tr>
       <tr><td colspan="3" class="cel-info"><b>ENDEREÇO:</b> ${ende}</td></tr>
       ${fornecedor ? `<tr><td colspan="3" class="cel-forn">PEDIDO PARA O FORNECEDOR: ${fornecedor.toUpperCase()}</td></tr>` : ''}
-      <tr><td colspan="2" class="cel-th">ITENS</td><td class="cel-th cel-th-q">QUANTIDADE</td></tr>
-      ${linhas.map((it) => it ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${fmtQtyDoc(it.qty)} ${it.un.toUpperCase()}</td></tr>` : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
+      <tr><td class="cel-th">ITENS</td><td class="cel-th cel-th-e">EMBALAGEM</td><td class="cel-th cel-th-q">QUANTIDADE</td></tr>
+      ${linhas.map((it) => it ? `<tr><td class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-emb">${embLabel(it.un)}</td><td class="cel-qty">${fmtQtyDoc(it.qty)}</td></tr>` : `<tr><td class="cel-item">&nbsp;</td><td class="cel-emb">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
       <tr><td class="cel-footer cel-footer-l">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
       <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">${hrTarde}</td></tr>
     </table></div>`
@@ -310,8 +315,8 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
     .cel-loja{font-weight:800;font-size:15px;width:55%;color:#1e2030}.cel-data-label{font-weight:600;color:#64748b;font-size:10px;letter-spacing:.05em;width:15%;text-align:center}.cel-data{font-weight:700;font-size:13px;width:30%;text-align:right}
     .cel-info{background:#f1f5f9;color:#334155;font-size:11.5px;line-height:1.5;height:34px}
     .cel-forn{background:#d6f7ee;color:#00806a;font-weight:700;font-size:12.5px}
-    .cel-th{background:#1e2030;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;padding:8px 10px}.cel-th-q{text-align:center}
-    .cel-item{height:26px;font-size:12.5px}.cel-qty{text-align:center;font-weight:700;font-size:12.5px}
+    .cel-th{background:#1e2030;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;padding:8px 10px}.cel-th-q{text-align:center;width:22%}.cel-th-e{text-align:center;width:24%}
+    .cel-item{height:26px;font-size:12.5px}.cel-emb{text-align:center;font-size:12px;color:#334155;font-weight:600}.cel-qty{text-align:center;font-weight:700;font-size:12.5px}
     .cel-footer{background:#1e2030;color:#fff;font-weight:700;font-size:11px;text-align:center;padding:6px}.cel-footer-l{text-align:left}
     .toolbar{position:sticky;top:0;z-index:9;background:#0f2a52;padding:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15)}
     .toolbar button{background:#f97316;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer}

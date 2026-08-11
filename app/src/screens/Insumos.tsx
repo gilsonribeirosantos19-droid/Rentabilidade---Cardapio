@@ -8,6 +8,8 @@ import './insumos.css'
 // Title Case pt-BR enquanto digita: 1ª letra de cada palavra maiúscula (igual à normalização do banco)
 const titleCase = (s: string) => s.toLowerCase().replace(/(^|\s)(\S)/g, (_m, sp, c) => sp + (c as string).toUpperCase())
 
+// Embalagem de compra: o gerente pede nela (Caixa, Fardo...); qtd = referência (a conversão real é no monitor de compras)
+type Embalagem = { nome: string; un?: string; qtd?: number; ver?: boolean; padrao?: boolean; base?: boolean }
 type Insumo = {
   id: string
   tenant_id?: string
@@ -20,6 +22,7 @@ type Insumo = {
   subgrupo?: string
   unidade_medida?: string
   unidade_compra?: string
+  embalagens?: Embalagem[]
   preco_compra?: number
   rendimento_pct?: number
   participa_cmv?: string
@@ -29,6 +32,11 @@ type Insumo = {
 }
 type Saldo = { insumo_id: string; custo_medio?: number; quantidade?: number; loja_id?: string }
 type Form = Partial<Insumo>
+
+// unidades por extenso (rótulo que a gerente vê) — mesma tabela do Portal e do PDF do pedido
+const UN_LABEL: Record<string, string> = { un: 'Unidade', kg: 'Quilograma', g: 'Grama', litro: 'Litro', l: 'Litro', ml: 'Mililitro', pct: 'Pacote', cx: 'Caixa', fardo: 'Fardo', bd: 'Bandeja', sc: 'Saco' }
+const UN_OPTS = ['un', 'kg', 'litro', 'pct', 'cx', 'fardo', 'bd', 'sc']
+const unLabel = (u?: string) => UN_LABEL[(u || '').toLowerCase().trim()] || (u || '')
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -121,8 +129,11 @@ export function Insumos() {
       if (!f.tipo_item) throw new Error('Selecione o tipo do item.')
       if (!f.unidade_medida) throw new Error('Selecione a unidade.')
       const und = f.unidade_medida || null
+      // só grava embalagens se a gerente configurou (senão fica [] = usa a lista genérica no Portal)
+      const embs = (f.embalagens || []).filter((e) => (e.nome || '').trim())
       const payload = {
         nome, categoria: f.categoria || null, unidade_medida: und, unidade_compra: und,
+        embalagens: embs,
         tipo_baixa: f.tipo_baixa || 'consumo', tipo_item: f.tipo_item || null, familia: f.familia || null,
         subgrupo: f.subgrupo || null, participa_cmv: f.participa_cmv === 'nao' ? 'nao' : 'sim', ativo: f.ativo !== false,
         ncm: (f.ncm || '').trim() || null,
@@ -205,6 +216,7 @@ export function Insumos() {
                 <Sel label="Unidade de estoque *" value={cadForm.unidade_medida} options={opts.unidades} onChange={(v) => setF('unidade_medida', v)} />
                 <div className="form-group"><label className="form-label">Local / Depósito padrão</label><input className="form-input" placeholder="Ex: Câmara fria" /></div>
               </div>
+              <EmbalagensEditor unidadeBase={cadForm.unidade_medida} value={cadForm.embalagens} onChange={(v) => setCadForm((f) => ({ ...f, embalagens: v }))} />
             </div>
             <div className="form-footer">
               <button className="f-btn" onClick={() => { setCadForm(novoForm()); setTab('produtos') }}>Cancelar</button>
@@ -365,4 +377,53 @@ function Sel({ label, value, options, onChange }: { label: string; value?: strin
 }
 function FSel({ value, onChange, ph, options }: { value: string; onChange: (v: string) => void; ph: string; options: string[] }) {
   return <SearchSelect value={value} onChange={onChange} placeholder={ph} options={options} />
+}
+
+// Editor das embalagens de compra do item (modelo Everest): a gerente pede numa delas; a conversão fica no monitor.
+function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: string; value?: Embalagem[]; onChange: (v: Embalagem[]) => void }) {
+  const base = (unidadeBase || 'un').toLowerCase().trim()
+  // se ainda não configurou, mostra a linha base (unidade de estoque) já marcada como padrão
+  const rows: Embalagem[] = value && value.length ? value : [{ nome: unLabel(base), un: base, qtd: 1, ver: true, padrao: true, base: true }]
+  const commit = (next: Embalagem[]) => {
+    // garante exatamente 1 padrão entre as visíveis (sem mutar o estado)
+    const hasVisPadrao = next.some((r) => r.ver && r.padrao)
+    let assigned = false
+    onChange(next.map((r) => {
+      let padrao = !!r.padrao && !!r.ver
+      if (!hasVisPadrao && !assigned && r.ver) { padrao = true; assigned = true }
+      return { ...r, padrao }
+    }))
+  }
+  const set = (i: number, patch: Partial<Embalagem>) => commit(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
+  const setPadrao = (i: number) => onChange(rows.map((r, j) => ({ ...r, padrao: j === i })))
+  const add = () => onChange([...rows, { nome: '', un: 'cx', qtd: 1, ver: true }])
+  const del = (i: number) => commit(rows.filter((_, j) => j !== i))
+  return (
+    <div className="emb-wrap">
+      <div className="emb-head">Embalagens de compra <span>— marque quais o gerente pode pedir e qual é a padrão ⭐. A conversão continua no monitor.</span></div>
+      <table className="emb-grid">
+        <thead><tr>
+          <th>Nome da embalagem</th><th>Unidade</th><th className="c">Qtd na emb.<br /><small>(referência)</small></th><th className="c">Aparece<br />pro gerente</th><th className="c">Padrão ⭐</th><th></th>
+        </tr></thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} className={r.base ? 'base' : ''}>
+              <td><input className="emb-in" value={r.nome} placeholder="Ex: Caixa com 1,68 kg" onChange={(e) => set(i, { nome: e.target.value })} />{r.base && <span className="emb-tag">BASE / ESTOQUE</span>}</td>
+              <td>
+                <select className="emb-in" value={r.un || 'cx'} disabled={r.base} onChange={(e) => set(i, { un: e.target.value })}>
+                  {UN_OPTS.map((u) => <option key={u} value={u}>{unLabel(u)}</option>)}
+                  {r.un && !UN_OPTS.includes(r.un) && <option value={r.un}>{unLabel(r.un)}</option>}
+                </select>
+              </td>
+              <td className="c"><input className="emb-in num" value={r.qtd ?? ''} onChange={(e) => set(i, { qtd: parseFloat((e.target.value || '').replace(',', '.')) || undefined })} /></td>
+              <td className="c"><input type="checkbox" checked={!!r.ver} onChange={(e) => set(i, { ver: e.target.checked })} /></td>
+              <td className="c"><input type="radio" name="emb-padrao" checked={!!r.padrao} disabled={!r.ver} onChange={() => setPadrao(i)} /></td>
+              <td className="c">{r.base ? '' : <button type="button" className="emb-del" title="Remover" onClick={() => del(i)}>✕</button>}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button type="button" className="emb-add" onClick={add}>＋ Adicionar embalagem</button>
+    </div>
+  )
 }
