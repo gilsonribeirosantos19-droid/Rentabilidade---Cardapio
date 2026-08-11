@@ -60,6 +60,8 @@ export function PortalSolicitacao() {
   const [sheet, setSheet] = useState(false)
   const [aba, setAba] = useState<'nova' | 'minhas'>('nova')
   const [verPed, setVerPed] = useState<PedidoMin | null>(null)
+  // filtro da lista "Minhas solicitações" — vai pro SERVIDOR (acha qualquer data, não só as carregadas)
+  const [fStatus, setFStatus] = useState(''); const [fDe, setFDe] = useState(''); const [fAte, setFAte] = useState('')
   const [entrega, setEntrega] = useState(hoje7()); const [obs, setObs] = useState('')
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const showToast = (m: string, err = false) => { setToast({ msg: m, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
@@ -68,8 +70,20 @@ export function PortalSolicitacao() {
   const { data: grupos = [] } = useQuery({ queryKey: ['psol-grupos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra').select('id,nome,ativo').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Grupo[] } })
   const { data: gci = [] } = useQuery({ queryKey: ['psol-gci', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra_itens').select('grupo_id,insumo_id').eq('tenant_id', tenantId); return (data ?? []) as GI[] } })
   const { data: saldos = [] } = useQuery({ queryKey: ['psol-saldos', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,quantidade').eq('tenant_id', tenantId).eq('loja_id', lojaId!); return (data ?? []) as Saldo[] } })
-  // solicitações já enviadas por esta loja (histórico)
-  const { data: minhas = [] } = useQuery({ queryKey: ['psol-minhas', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('pedidos_compra').select('id,status,data_pedido,created_at,observacao,data_entrega_prevista,itens_pedido(count)').eq('tenant_id', tenantId).eq('loja_id', lojaId!).order('created_at', { ascending: false }).limit(50); return (data ?? []) as PedidoMin[] } })
+  // solicitações já enviadas por esta loja (histórico) — filtro Status/período aplicado NO SERVIDOR
+  const { data: minhas = [] } = useQuery({
+    queryKey: ['psol-minhas', tenantId, lojaId, fStatus, fDe, fAte], enabled: !!tenantId && !!lojaId,
+    queryFn: async () => {
+      let q = supabase.from('pedidos_compra').select('id,status,data_pedido,created_at,observacao,data_entrega_prevista,itens_pedido(count)').eq('tenant_id', tenantId).eq('loja_id', lojaId!)
+      if (fStatus) q = q.eq('status', fStatus)
+      if (fDe) q = q.gte('created_at', fDe + 'T00:00:00')
+      if (fAte) q = q.lte('created_at', fAte + 'T23:59:59')
+      const { data } = await q.order('created_at', { ascending: false }).limit(200)
+      return (data ?? []) as PedidoMin[]
+    },
+  })
+  // total real (sem filtro) — mantém o número certo na aba mesmo com filtro ativo
+  const { data: minhasTotal = 0 } = useQuery({ queryKey: ['psol-minhas-total', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { count } = await supabase.from('pedidos_compra').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('loja_id', lojaId!); return count ?? 0 } })
   const { data: loja = null } = useQuery({ queryKey: ['psol-loja', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('id', lojaId!).single(); return (data ?? null) as LojaFull | null } })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
@@ -109,7 +123,7 @@ export function PortalSolicitacao() {
       const rows = selIds.map((id) => ({ pedido_id: pedId, insumo_id: id, quantidade: num(qty[id]), unidade: un[id] || defUn(insMap[id]), preco_unitario: null }))
       const { error: e2 } = await supabase.from('itens_pedido').insert(rows); if (e2) throw e2
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['psol-minhas'] }); setSel(new Set()); setQty({}); setUn({}); setSheet(false); setAba('minhas'); showToast('Solicitação enviada com sucesso!') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['psol-minhas'] }); qc.invalidateQueries({ queryKey: ['psol-minhas-total'] }); setSel(new Set()); setQty({}); setUn({}); setSheet(false); setAba('minhas'); showToast('Solicitação enviada com sucesso!') },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
 
@@ -122,10 +136,10 @@ export function PortalSolicitacao() {
 
       <div className="p-subtabs">
         <button className={'p-subtab' + (aba === 'nova' ? ' on' : '')} onClick={() => setAba('nova')}>Nova solicitação</button>
-        <button className={'p-subtab' + (aba === 'minhas' ? ' on' : '')} onClick={() => setAba('minhas')}>Minhas solicitações{minhas.length ? ` (${minhas.length})` : ''}</button>
+        <button className={'p-subtab' + (aba === 'minhas' ? ' on' : '')} onClick={() => setAba('minhas')}>Minhas solicitações{minhasTotal ? ` (${minhasTotal})` : ''}</button>
       </div>
 
-      {aba === 'minhas' && <MinhasSolicitacoes lista={minhas} insMap={insMap} onVer={setVerPed} />}
+      {aba === 'minhas' && <MinhasSolicitacoes lista={minhas} total={minhasTotal} onVer={setVerPed} fStatus={fStatus} setFStatus={setFStatus} fDe={fDe} setFDe={setFDe} fAte={fAte} setFAte={setFAte} />}
 
       {aba === 'nova' && <>
       <div className="pf-bar" style={{ position: 'sticky', top: 0, zIndex: 5 }}>
@@ -222,21 +236,12 @@ export function PortalSolicitacao() {
 }
 
 // ── Lista "Minhas solicitações" ──
-function MinhasSolicitacoes({ lista, insMap, onVer }: { lista: PedidoMin[]; insMap: Record<string, Insumo>; onVer: (p: PedidoMin) => void }) {
-  void insMap
+function MinhasSolicitacoes({ lista, total, onVer, fStatus, setFStatus, fDe, setFDe, fAte, setFAte }: { lista: PedidoMin[]; total: number; onVer: (p: PedidoMin) => void; fStatus: string; setFStatus: (v: string) => void; fDe: string; setFDe: (v: string) => void; fAte: string; setFAte: (v: string) => void }) {
   const ST: Record<string, { l: string; c: string; b: string }> = { solicitado: { l: 'Aguardando', c: '#92400e', b: '#fef3c7' }, processado: { l: 'Processado', c: '#166534', b: '#dcfce7' }, cancelado: { l: 'Cancelado', c: '#991b1b', b: '#fee2e2' } }
-  const [fStatus, setFStatus] = useState(''); const [fDe, setFDe] = useState(''); const [fAte, setFAte] = useState('')
-  const filtrada = useMemo(() => lista.filter((p) => {
-    if (fStatus && (p.status || '') !== fStatus) return false
-    const dt = (p.created_at || p.data_pedido || '').slice(0, 10)
-    if (fDe && dt && dt < fDe) return false
-    if (fAte && dt && dt > fAte) return false
-    return true
-  }), [lista, fStatus, fDe, fAte])
   const temFiltro = !!(fStatus || fDe || fAte)
   const lblSt: CSSProperties = { fontSize: 11, fontWeight: 600, color: '#64748b', marginLeft: 2 }
   const fieldSt: CSSProperties = { height: 34, border: '1px solid #cbd5e1', borderRadius: 8, padding: '0 10px', fontSize: 13, fontFamily: 'inherit', background: '#fff', color: '#0f172a' }
-  if (!lista.length) return <div className="p-card"><div className="p-empty">Você ainda não enviou nenhuma solicitação.</div></div>
+  if (!total && !temFiltro) return <div className="p-card"><div className="p-empty">Você ainda não enviou nenhuma solicitação.</div></div>
   return (
     <div className="p-card">
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12 }}>
@@ -246,13 +251,13 @@ function MinhasSolicitacoes({ lista, insMap, onVer }: { lista: PedidoMin[]; insM
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>De</label><input type="date" value={fDe} onChange={(e) => setFDe(e.target.value)} style={fieldSt} /></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}><label style={lblSt}>Até</label><input type="date" value={fAte} onChange={(e) => setFAte(e.target.value)} style={fieldSt} /></div>
         {temFiltro && <button onClick={() => { setFStatus(''); setFDe(''); setFAte('') }} style={{ height: 34, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', color: '#475569', fontSize: 12.5, fontWeight: 600, padding: '0 12px', cursor: 'pointer' }}>Limpar</button>}
-        <span style={{ marginLeft: 'auto', alignSelf: 'center', color: '#94a3b8', fontSize: 12 }}>{filtrada.length} de {lista.length}</span>
+        <span style={{ marginLeft: 'auto', alignSelf: 'center', color: '#94a3b8', fontSize: 12 }}>{lista.length} resultado{lista.length === 1 ? '' : 's'}{temFiltro ? ` · ${total} no total` : ''}</span>
       </div>
-      {!filtrada.length ? <div className="p-empty">Nenhuma solicitação com esse filtro.</div> : (
+      {!lista.length ? <div className="p-empty">Nenhuma solicitação com esse filtro.</div> : (
       <table className="p-tbl">
         <thead><tr><th>Data</th><th>Itens</th><th>Status</th><th>Observação</th><th></th></tr></thead>
         <tbody>
-          {filtrada.map((p) => {
+          {lista.map((p) => {
             const st = ST[p.status || ''] || { l: p.status || '—', c: '#475569', b: '#f1f5f9' }
             const n = p.itens_pedido?.[0]?.count ?? 0
             const dt = (p.created_at || p.data_pedido || '').slice(0, 10)
