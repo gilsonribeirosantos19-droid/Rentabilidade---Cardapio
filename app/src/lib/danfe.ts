@@ -137,20 +137,10 @@ function abrePdfBase64(b64: string, onMsg: (m: string, t?: 'ok' | 'err') => void
   } catch (e: any) { onMsg('Erro ao abrir o PDF: ' + (e && e.message || e), 'err') }
 }
 
-// "Imprimir DANFE" = a DANFE OFICIAL gerada pelo SIEG (o MESMO que o Focus fazia).
-// Ordem: (1) SIEG GerarDanfeViaChave → PDF oficial; (2) nossa DANFE do XML; (3) espelho.
-export async function imprimirDanfeOficial(nfe: any, itens: any[], xml: string | null | undefined, onMsg: (m: string, t?: 'ok' | 'err') => void) {
-  const chave = String(nfe?.chave_acesso || '').replace(/\D/g, '')
-  if (chave.length === 44) {
-    onMsg('Gerando DANFE oficial (SIEG)…', 'ok')
-    try {
-      const { data, error } = await supabase.functions.invoke('sieg-pull', { body: { mode: 'danfe', chave } })
-      const d = data as { ok?: boolean; pdf_base64?: string } | null
-      if (!error && d?.ok && d.pdf_base64) { abrePdfBase64(d.pdf_base64, onMsg); return }
-    } catch { /* cai nos fallbacks abaixo */ }
-  }
-  if (xml) { onMsg('DANFE oficial indisponível no SIEG — abrindo a DANFE gerada do XML.', 'ok'); gerarDanfeXml(xml, onMsg); return }
-  onMsg('DANFE oficial indisponível — abrindo o espelho interno.', 'ok')
+// "Imprimir DANFE" = a DANFE completa gerada do XML autêntico da nota (todos os campos fiscais).
+// Se a nota ainda não tem XML capturado, cai no espelho interno. Não depende de serviço externo.
+export function imprimirDanfeOficial(nfe: any, itens: any[], xml: string | null | undefined, onMsg: (m: string, t?: 'ok' | 'err') => void) {
+  if (xml) { gerarDanfeXml(xml, onMsg); return }
   gerarDanfeLocal(nfe, itens, onMsg)
 }
 
