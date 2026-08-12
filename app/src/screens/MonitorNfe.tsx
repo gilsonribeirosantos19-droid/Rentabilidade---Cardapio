@@ -85,7 +85,7 @@ export function MonitorNfe() {
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
 
   const { data: nfes = [], isLoading } = useQuery({ queryKey: ['mon-nfe', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).is('excluida_em', null).order('data_emissao', { ascending: false }).range(f, t)) })
-  const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   // Parâmetro Estoque › "Data de movimentação" (emissao | processamento | manual): em que data a entrada afeta o estoque/CMV
   const { data: critDataMov = 'emissao' } = useQuery({ queryKey: ['mon-param-datamov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'data_movimentacao').limit(1); return (data?.[0]?.valor as string) || 'emissao' } })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['mon-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome,cnpj,codigo').eq('tenant_id', tenantId); return (data ?? []) as Forn[] } })
@@ -515,7 +515,7 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
             <div className="cor-st">🔗 {editId ? 'Editar vínculo' : 'Vincular novo item'}</div>
             <div className="cor-r1">
               <div className="cor-fg"><label>Código</label><input className="mono" readOnly value={insSel ? fmtCod(insSel.codigo_interno) : ''} placeholder="—" /></div>
-              <div className="cor-fg"><label>Item interno (estoque) *</label><SearchSelect value={insSel?.nome || ''} options={insumos.map((i) => i.nome)} meta={insMeta} placeholder="Pesquisar por nome ou código..." onChange={(nm) => setInsId(insByName.get(nm) || '')} /></div>
+              <div className="cor-fg"><label>Item interno (estoque) *</label><SearchSelect value={insSel?.nome || ''} options={[...new Set(insumos.map((i) => i.nome))]} meta={insMeta} placeholder="Pesquisar por nome ou código..." onChange={(nm) => setInsId(insByName.get(nm) || '')} /></div>
               <div className="cor-fg"><label>Un. controle *</label><input readOnly value={insSel?.unidade_medida || ''} placeholder="—" /></div>
               <div className="cor-fg"><label>Emb. (fornecedor) *</label><SearchSelect value={embDesc} options={embOpts} placeholder="Selecione..." onChange={onEmb} /></div>
               <div className="cor-fg"><label>Qt. na emb. *</label><input className="mono" type="number" step="0.001" min="0" value={qtEmb} onChange={(e) => setQtEmb(e.target.value)} /></div>
