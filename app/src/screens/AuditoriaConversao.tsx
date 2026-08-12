@@ -128,7 +128,7 @@ export function AuditoriaConversao() {
         </div>
         <div className="aud-fg" style={{ width: 230 }}>
           <div className="aud-lb">Pesquisar</div>
-          <input type="text" className="field" style={{ width: '100%' }} placeholder="Descrição, nº DANFE, código…" value={busca} onChange={(e) => { setBusca(e.target.value) }} />
+          <input type="text" className="field" style={{ width: '100%' }} placeholder="Buscar…" value={busca} onChange={(e) => { setBusca(e.target.value) }} />
         </div>
         <button className="btn-xml" onClick={consultar} style={{ background: '#f97316' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
