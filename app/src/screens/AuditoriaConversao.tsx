@@ -105,31 +105,20 @@ export function AuditoriaConversao() {
     <div className="fiscal-screen">
       <div className="fh-title">Auditoria de Conversão</div>
       <div className="fh-sub">Auditoria de fator de conversão nas entradas de NF-e.</div>
-      <div className="fl-bar" style={{ alignItems: 'flex-end' }}>
-        <div className="aud-fg" style={{ width: 150 }}>
-          <div className="aud-lb">D. Inicial</div>
-          <input type="date" className="field" style={{ width: '100%' }} value={de} onChange={(e) => setDe(e.target.value)} />
+      <div className="fl-bar">
+        <input type="date" className="field" style={{ width: 145 }} title="Data inicial" value={de} onChange={(e) => setDe(e.target.value)} />
+        <span style={{ color: '#94a3b8', fontSize: 12.5 }}>até</span>
+        <input type="date" className="field" style={{ width: 145 }} title="Data final" value={ate} onChange={(e) => setAte(e.target.value)} />
+        <div className="aud-fg" style={{ width: 210 }}>
+          <SearchSelect value={insId ? (insMap[insId]?.nome || '') : ''} options={insOpts} placeholder="Insumo: todos" onChange={(nm) => setInsId(nm === 'Todos' ? '' : (insByNome[nm] || ''))} />
         </div>
-        <div className="aud-fg" style={{ width: 150 }}>
-          <div className="aud-lb">D. Final</div>
-          <input type="date" className="field" style={{ width: '100%' }} value={ate} onChange={(e) => setAte(e.target.value)} />
+        <div className="aud-fg" style={{ width: 220 }}>
+          <SearchSelect value={fForn} options={fornOpts} placeholder="Fornecedor: todos" onChange={(nm) => { setFForn(nm === 'Todos' ? '' : nm) }} />
         </div>
-        <div className="aud-fg" style={{ width: 230 }}>
-          <div className="aud-lb">Insumo</div>
-          <SearchSelect value={insId ? (insMap[insId]?.nome || '') : ''} options={insOpts} placeholder="Todos" onChange={(nm) => setInsId(nm === 'Todos' ? '' : (insByNome[nm] || ''))} />
-        </div>
-        <div className="aud-fg" style={{ width: 230 }}>
-          <div className="aud-lb">Fornecedor</div>
-          <SearchSelect value={fForn} options={fornOpts} placeholder="Todos" onChange={(nm) => { setFForn(nm === 'Todos' ? '' : nm) }} />
-        </div>
-        <div className="aud-fg" style={{ width: 170 }}>
-          <div className="aud-lb">Loja</div>
+        <div className="aud-fg" style={{ width: 180 }}>
           <SearchSelect value={lojas.find((l) => l.id === loja)?.nome || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => setLoja(lojas.find((l) => l.nome === nm)?.id || '')} />
         </div>
-        <div className="aud-fg" style={{ width: 230 }}>
-          <div className="aud-lb">Pesquisar</div>
-          <input type="text" className="field" style={{ width: '100%' }} placeholder="Buscar…" value={busca} onChange={(e) => { setBusca(e.target.value) }} />
-        </div>
+        <input type="text" className="field" style={{ flex: 1, minWidth: 150 }} placeholder="Buscar…" value={busca} onChange={(e) => { setBusca(e.target.value) }} />
         <button className="btn-xml" onClick={consultar} style={{ background: '#f97316' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           Consultar
