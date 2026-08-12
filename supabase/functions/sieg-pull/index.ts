@@ -213,7 +213,11 @@ async function rodarPull(tenant: string, dias: number, jwt: string) {
       for (const xml of r.xmls) {
         try {
           const nf = parseNfe(xml); if (!nf) continue
-          if (jaExistem.has(nf.chave)) continue
+          if (jaExistem.has(nf.chave)) {
+            // BACKFILL: nota já capturada → preenche o XML dela se ainda estiver vazio (idempotente)
+            await supabase.from('nfe_recebidas').update({ xml }).eq('tenant_id', tenant).eq('chave_acesso', nf.chave).is('xml', null)
+            continue
+          }
           const lojaId = lojaByCnpj[nf.cnpjDest] || null
           const { data: nova, error } = await supabase.from('nfe_recebidas').insert({
             tenant_id: tenant, loja_id: lojaId, numero: nf.numero, serie: nf.serie, chave_acesso: nf.chave,
