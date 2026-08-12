@@ -219,6 +219,7 @@ async function rodarPull(tenant: string, dias: number, jwt: string) {
             tenant_id: tenant, loja_id: lojaId, numero: nf.numero, serie: nf.serie, chave_acesso: nf.chave,
             cnpj_emitente: nf.cnpjEmit, nome_emitente: nf.nomeEmit, data_emissao: nf.dataEmissao,
             valor_total: nf.valorTotal, status: 'aguard_vinculacao', fonte: 'sieg',
+            xml, // guarda o XML original (a "nota original") p/ DANFE oficial + download
           }).select('id').single()
           if (error) { if ((error as any).code === '23505') { jaExistem.add(nf.chave); continue } erros++; continue }
           jaExistem.add(nf.chave); novas++
