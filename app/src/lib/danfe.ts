@@ -37,6 +37,93 @@ export async function gerarDanfeAiko(chave: string, onMsg: (m: string, t?: 'ok' 
   } catch (e: any) { onMsg('Erro ao gerar DANFE: ' + (e && e.message || e), 'err') }
 }
 
+// "Ver DANFE" a partir da NOSSA base (nfe_recebidas + nfe_itens) — funciona pra QUALQUER nota
+// (Focus ou SIEG), sem depender do Focus ter o PDF. É um espelho interno com o que temos guardado.
+export function gerarDanfeLocal(nfe: any, itens: any[], onMsg: (m: string, t?: 'ok' | 'err') => void) {
+  if (!nfe) { onMsg('Nota não encontrada.', 'err'); return }
+  const E = (s: any) => esc(s == null ? '' : String(s))
+  const v2 = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const vu = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
+  const qt = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+  const docf = (v: any) => { const s = String(v || '').replace(/\D/g, ''); if (s.length === 14) return s.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); if (s.length === 11) return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); return v ? String(v) : '—' }
+  const dtm = (v: any) => { if (!v) return '—'; const s = String(v); const d = s.slice(0, 10).split('-'); const hm = s.slice(11, 16); return (d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : s) + (hm ? ` ${hm}` : '') }
+  const chaveF = (c: any) => String(c || '').replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ').trim()
+  const its = Array.isArray(itens) ? itens : []
+  const totalItens = its.reduce((a, it) => a + Number(it.valor_total || 0), 0)
+  const linhas = its.map((it: any) => `<tr><td class="mono">${E(it.codigo_item_fornecedor)}</td><td class="pdesc">${E(it.descricao_nfe)}</td><td class="c">${E((it.unidade_nfe || '').toUpperCase())}</td><td class="r">${qt(it.quantidade)}</td><td class="r">${vu(it.valor_unitario)}</td><td class="r">${v2(it.valor_total)}</td></tr>`).join('')
+
+  const css = `
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;background:#64748b;padding:18px;color:#000}
+    .toolbar{max-width:900px;margin:0 auto 12px;display:flex;gap:10px;align-items:center;color:#fff}
+    .toolbar .h{font-size:14px;font-weight:700;flex:1}
+    .btn{background:#f97316;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+    .danfe{max-width:900px;margin:0 auto;background:#fff;padding:14px}
+    .topo{display:flex;border:1px solid #000}
+    .emit{flex:2;padding:12px;border-right:1px solid #000}
+    .emit .nome{font-size:15px;font-weight:800;margin-bottom:3px}.emit .l{font-size:10px;color:#333}
+    .dbox{flex:1;padding:9px;text-align:center;border-right:1px solid #000}
+    .dbox .t{font-size:20px;font-weight:800;letter-spacing:1px}.dbox .s{font-size:8px}.dbox .es{font-size:10px;font-weight:700;margin-top:5px}
+    .barra{flex:1.4;padding:9px}
+    .bars{height:34px;background:repeating-linear-gradient(90deg,#000 0 1.5px,#fff 1.5px 3px,#000 3px 5px,#fff 5px 7px);margin-bottom:4px}
+    .lbl{font-size:8px;color:#333;text-transform:uppercase;display:block;margin-bottom:1px}.center{text-align:center}
+    .chave{font-size:11px;font-family:monospace;word-break:break-all;text-align:center;font-weight:700}
+    .row{display:flex;border:1px solid #000;border-top:none}
+    .cell{padding:4px 8px;flex:1;border-right:1px solid #000}.cell:last-child{border-right:none}
+    .val{font-size:12px;font-weight:600}
+    .sec{font-size:9px;font-weight:700;text-transform:uppercase;padding:4px 8px;margin-top:8px;background:#f3f4f6;border:1px solid #000}
+    table{width:100%;border-collapse:collapse;margin-top:-1px}
+    th,td{border:1px solid #000;padding:4px 6px;font-size:10px}
+    th{background:#eee;font-size:8px;text-transform:uppercase}
+    td.r,th.r{text-align:right}td.c,th.c{text-align:center}.mono{font-family:monospace;font-size:9px;color:#333}
+    .pdesc{text-align:left}
+    tfoot td{font-weight:700;background:#f8fafc}
+    .foot{margin-top:10px;font-size:9.5px;color:#333;border:1px dashed #999;padding:8px}
+    @page{size:A4;margin:9mm}
+    @media print{body{background:#fff;padding:0}.toolbar{display:none}.danfe{max-width:100%;padding:0}}
+  `
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>DANFE ${E(nfe.numero)} - ${E(nfe.nome_emitente)}</title><style>${css}</style></head><body>
+    <div class="toolbar"><div class="h">DANFE padrão Aiko — Nº ${E(nfe.numero)} · ${E(nfe.nome_emitente)} (espelho interno)</div><button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button></div>
+    <div class="danfe">
+      <div class="topo">
+        <div class="emit"><div class="nome">${E(nfe.nome_emitente || '—')}</div><div class="l">CNPJ ${E(docf(nfe.cnpj_emitente))}</div></div>
+        <div class="dbox"><div class="t">DANFE</div><div class="s">Documento Auxiliar da<br>Nota Fiscal Eletrônica</div><div class="es">0 - ENTRADA</div><div style="font-weight:700;margin-top:5px">Nº ${E(nfe.numero || '—')}<br>Série ${E(nfe.serie || '1')}</div></div>
+        <div class="barra"><div class="bars"></div><div class="lbl center">Chave de acesso</div><div class="chave">${E(chaveF(nfe.chave_acesso))}</div><div class="lbl center" style="margin-top:3px">Consulte pela chave em www.nfe.fazenda.gov.br</div></div>
+      </div>
+      <div class="row">
+        <div class="cell"><span class="lbl">Emissão</span><span class="val">${E(dtm(nfe.data_emissao))}</span></div>
+        <div class="cell"><span class="lbl">Processada no estoque</span><span class="val">${E(dtm(nfe.processada_em))}</span></div>
+        <div class="cell"><span class="lbl">Valor total da nota</span><span class="val">R$ ${v2(nfe.valor_total)}</span></div>
+      </div>
+      <div class="sec">Produtos / Itens da Nota (${its.length})</div>
+      <table>
+        <thead><tr><th style="width:80px">Cód.</th><th class="pdesc">Descrição</th><th class="c">Un.</th><th class="r">Qtd.</th><th class="r">V. Unit.</th><th class="r">V. Total</th></tr></thead>
+        <tbody>${linhas || '<tr><td colspan="6" class="c">Sem itens.</td></tr>'}</tbody>
+        <tfoot><tr><td colspan="5" class="r">TOTAL</td><td class="r">${v2(totalItens)}</td></tr></tfoot>
+      </table>
+      <div class="foot"><b>Espelho interno gerado pelo Aiko</b> a partir dos dados capturados da NF-e. Para fins fiscais, vale o DANFE oficial da SEFAZ (consulta pela chave de acesso).</div>
+    </div>
+  </body></html>`
+  const w = window.open('', '_blank')
+  if (!w) { onMsg('Permita pop-ups para abrir o DANFE.', 'err'); return }
+  w.document.write(html); w.document.close()
+}
+
+// "Imprimir DANFE": tenta o PDF oficial do Focus; se não tiver (ex.: nota do SIEG), cai no espelho interno.
+export async function imprimirDanfeOuLocal(nfe: any, itens: any[], onMsg: (m: string, t?: 'ok' | 'err') => void) {
+  const chave = nfe?.chave_acesso
+  if (chave) {
+    onMsg('Buscando DANFE oficial…', 'ok')
+    try {
+      const r = await fetch(NFE_WEBHOOK, { method: 'POST', headers: await webhookHeaders(), body: JSON.stringify({ danfe: true, chave }) })
+      const j = await r.json()
+      if (j && j.ok && j.url) { window.open(j.url, '_blank'); return }
+    } catch { /* cai no espelho */ }
+  }
+  onMsg('PDF oficial indisponível — abrindo o espelho interno (imprimível).', 'ok')
+  gerarDanfeLocal(nfe, itens, onMsg)
+}
+
 function abrirDanfeAiko(nota: any, onMsg: (m: string, t?: 'ok' | 'err') => void) {
   const req = nota.requisicao_nota_fiscal || {}
   const its = req.itens || []
