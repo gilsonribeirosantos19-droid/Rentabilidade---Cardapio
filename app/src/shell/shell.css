@@ -68,7 +68,7 @@
 .tab.on::after { content: ''; position: absolute; bottom: 0; left: 10px; right: 10px; height: 2.5px; background: var(--orange); border-radius: 2px; }
 .tab .x { color: #adb6c7; font-size: 15px; line-height: 1; margin-left: 2px; padding: 0 3px; border-radius: 5px; }
 .tab .x:hover { background: #fddede; color: var(--red); }
-.content { flex: 1; overflow-y: auto; background: var(--surface-2); border-top: 1px solid var(--border); position: relative; }
+.content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--surface-2); border-top: 1px solid var(--border); position: relative; }
 .pane { padding: 24px; }
 
 /* ====== UI genérica ====== */
