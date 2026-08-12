@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { gerarDanfeLocal, imprimirDanfeOuLocal, baixarXml } from '../lib/danfe'
+import { gerarDanfeLocal, imprimirDanfeOficial, baixarXml } from '../lib/danfe'
 import { SearchSelect } from '../components/SearchSelect'
 import './fiscal.css'
 
@@ -212,7 +212,7 @@ function DetalheModal({ nfe, onClose, onMsg }: { nfe: Nfe; onClose: () => void; 
         <div className="det-head">
           <div className="t">NF-e {nfe.numero || '—'} / {nfe.serie || '1'}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => imprimirDanfeOuLocal(nfe, itens, xml, onMsg)} title="Abrir a nota original (DANFE oficial do XML)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>Imprimir DANFE</button>
+            <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => imprimirDanfeOficial(nfe, itens, xml, onMsg)} title="Abrir a DANFE oficial (gerada pelo SIEG)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>Imprimir DANFE</button>
             {xml && <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => baixarXml(xml, `NFe-${nfe.numero || nfe.chave_acesso || 'nota'}`)} title="Baixar o XML original da nota"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>Baixar XML</button>}
             <button className="det-danfe" style={{ border: '1.5px solid #f97316', background: '#fff7ed', color: '#ea6c00' }} onClick={() => gerarDanfeLocal(nfe, itens, onMsg)} title="Visualizar o DANFE (espelho interno)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>Ver DANFE</button>
             <button className="det-x" onClick={onClose}>✕</button>

@@ -273,6 +273,25 @@ Deno.serve(async (req) => {
   //   if (modo !== 'diag' && WEBHOOK_SECRET) { ...401... }
   void WEBHOOK_SECRET
 
+  // ── DANFE OFICIAL: gera o PDF no SIEG (GerarDanfeViaChave) — o MESMO que o Focus fazia.
+  // Usa a Chave API (api_key na query), NÃO o JWT. Devolve o PDF em base64 pro front abrir.
+  if (modo === 'danfe') {
+    const chave = onlyDigits((body as any).chave)
+    if (chave.length !== 44) return json({ ok: false, erro: 'chave inválida' }, 200)
+    if (!SIEG_API_KEY) return json({ ok: false, erro: 'falta a Chave API do SIEG (env SIEG_API_KEY)' }, 200)
+    const url = `${SIEG_BASE}/api/Arquivos/GerarDanfeViaChave?xmlKey=${chave}&api_key=${encodeURIComponent(SIEG_API_KEY)}`
+    let res: Response | null = null
+    for (let tent = 0; tent < 3; tent++) { res = await fetch(url); if (res.status !== 429) break; await sleep(3000 * (tent + 1)) }
+    if (!res) return json({ ok: false, erro: 'sem resposta do SIEG' }, 200)
+    const raw = await res.text()
+    if (!res.ok) return json({ ok: false, status: res.status, raw: raw.substring(0, 300) }, 200)
+    let b64 = ''
+    try { const j = JSON.parse(raw); b64 = Array.isArray(j) ? String(j[0] || '') : String((j as any)?.danfe ?? (j as any)?.pdf ?? (j as any)?.Base64 ?? (j as any)?.base64 ?? '') } catch { b64 = raw.replace(/^"|"$/g, '') }
+    b64 = b64.replace(/^data:application\/pdf;base64,/, '').trim()
+    if (!b64 || b64.length < 100) return json({ ok: false, erro: 'DANFE vazia/indisponível no SIEG', raw: raw.substring(0, 200) }, 200)
+    return json({ ok: true, pdf_base64: b64 })
+  }
+
   // 1) autentica (create-jwt)
   const auth = await criarJwt()
   if (!auth.ok) return json({ etapa: 'create-jwt', ok: false, status: auth.status, raw: auth.raw, dica: 'se status=401/403 revisar ClientId/SecretKey; se "Invalid IP" a trava de IP ainda existe' }, 200)

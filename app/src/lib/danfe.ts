@@ -126,6 +126,34 @@ export async function imprimirDanfeOuLocal(nfe: any, itens: any[], xml: string |
   gerarDanfeLocal(nfe, itens, onMsg)
 }
 
+// abre um PDF (base64) numa aba nova
+function abrePdfBase64(b64: string, onMsg: (m: string, t?: 'ok' | 'err') => void) {
+  try {
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }))
+    const w = window.open(url, '_blank')
+    if (!w) { onMsg('Permita pop-ups para abrir a DANFE.', 'err'); return }
+    setTimeout(() => URL.revokeObjectURL(url), 60000)
+  } catch (e: any) { onMsg('Erro ao abrir o PDF: ' + (e && e.message || e), 'err') }
+}
+
+// "Imprimir DANFE" = a DANFE OFICIAL gerada pelo SIEG (o MESMO que o Focus fazia).
+// Ordem: (1) SIEG GerarDanfeViaChave → PDF oficial; (2) nossa DANFE do XML; (3) espelho.
+export async function imprimirDanfeOficial(nfe: any, itens: any[], xml: string | null | undefined, onMsg: (m: string, t?: 'ok' | 'err') => void) {
+  const chave = String(nfe?.chave_acesso || '').replace(/\D/g, '')
+  if (chave.length === 44) {
+    onMsg('Gerando DANFE oficial (SIEG)…', 'ok')
+    try {
+      const { data, error } = await supabase.functions.invoke('sieg-pull', { body: { mode: 'danfe', chave } })
+      const d = data as { ok?: boolean; pdf_base64?: string } | null
+      if (!error && d?.ok && d.pdf_base64) { abrePdfBase64(d.pdf_base64, onMsg); return }
+    } catch { /* cai nos fallbacks abaixo */ }
+  }
+  if (xml) { onMsg('DANFE oficial indisponível no SIEG — abrindo a DANFE gerada do XML.', 'ok'); gerarDanfeXml(xml, onMsg); return }
+  onMsg('DANFE oficial indisponível — abrindo o espelho interno.', 'ok')
+  gerarDanfeLocal(nfe, itens, onMsg)
+}
+
 // Baixa o XML original da nota (arquivo .xml) — a "nota original" de verdade.
 export function baixarXml(xml: string, nomeArquivo: string) {
   const blob = new Blob([xml], { type: 'application/xml;charset=utf-8' })
