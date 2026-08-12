@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { gerarDanfeLocal, imprimirDanfeOuLocal } from '../lib/danfe'
+import { gerarDanfeLocal, imprimirDanfeOuLocal, baixarXml } from '../lib/danfe'
 import { SearchSelect } from '../components/SearchSelect'
 import './fiscal.css'
 
@@ -41,7 +41,8 @@ export function EntradasProcessadas() {
   const { data: nfes = [], isLoading } = useQuery({
     queryKey: ['ep-nfe', tenantId, periodo, de, ate, campoData], enabled: !!tenantId,
     queryFn: () => fetchAll<Nfe>((f, t) => {
-      let q = supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).range(f, t)
+      // colunas explícitas (SEM o xml, que é grande) — o XML é buscado só no detalhe da nota
+      let q = supabase.from('nfe_recebidas').select('id,numero,serie,data_emissao,processada_em,nome_emitente,cnpj_emitente,valor_total,chave_acesso,loja_id').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).range(f, t)
       // limites no fuso de Brasília (−03:00), o MESMO que o estoque usa p/ datar a entrada.
       // Sem isso, a comparação sai em UTC e uma nota da virada de mês (ex.: 30/06 à noite) cai no mês errado.
       if (periodo !== 'todos') { if (de) q = q.gte(campoData, de + 'T00:00:00-03:00'); if (ate) q = q.lte(campoData, ate + 'T23:59:59-03:00') }
@@ -202,6 +203,8 @@ export function EntradasProcessadas() {
 function DetalheModal({ nfe, onClose, onMsg }: { nfe: Nfe; onClose: () => void; onMsg: (m: string, t?: 'ok' | 'err') => void }) {
   const itensRef = useRef<HTMLDivElement>(null)
   const { data: itens = [] } = useQuery({ queryKey: ['ep-det', nfe.id], queryFn: async () => { const { data } = await supabase.from('nfe_itens').select('*').eq('nfe_id', nfe.id).order('id'); return (data ?? []) as NfeItem[] } })
+  // XML original da nota (buscado só aqui no detalhe) — habilita a DANFE oficial + Baixar XML
+  const { data: xml = null } = useQuery({ queryKey: ['ep-xml', nfe.id], queryFn: async () => { const { data } = await supabase.from('nfe_recebidas').select('xml').eq('id', nfe.id).single(); return ((data as { xml?: string } | null)?.xml ?? null) as string | null } })
   const lbl = (t: string) => <div className="lbl">{t}</div>
   return (
     <div className="fov-portal" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -209,7 +212,8 @@ function DetalheModal({ nfe, onClose, onMsg }: { nfe: Nfe; onClose: () => void; 
         <div className="det-head">
           <div className="t">NF-e {nfe.numero || '—'} / {nfe.serie || '1'}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => imprimirDanfeOuLocal(nfe, itens, onMsg)} title="Abrir o DANFE em PDF para imprimir"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>Imprimir DANFE</button>
+            <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => imprimirDanfeOuLocal(nfe, itens, xml, onMsg)} title="Abrir a nota original (DANFE oficial do XML)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>Imprimir DANFE</button>
+            {xml && <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => baixarXml(xml, `NFe-${nfe.numero || nfe.chave_acesso || 'nota'}`)} title="Baixar o XML original da nota"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>Baixar XML</button>}
             <button className="det-danfe" style={{ border: '1.5px solid #f97316', background: '#fff7ed', color: '#ea6c00' }} onClick={() => gerarDanfeLocal(nfe, itens, onMsg)} title="Visualizar o DANFE (espelho interno)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>Ver DANFE</button>
             <button className="det-x" onClick={onClose}>✕</button>
           </div>

@@ -109,8 +109,10 @@ export function gerarDanfeLocal(nfe: any, itens: any[], onMsg: (m: string, t?: '
   w.document.write(html); w.document.close()
 }
 
-// "Imprimir DANFE": tenta o PDF oficial do Focus; se não tiver (ex.: nota do SIEG), cai no espelho interno.
-export async function imprimirDanfeOuLocal(nfe: any, itens: any[], onMsg: (m: string, t?: 'ok' | 'err') => void) {
+// "Imprimir DANFE" = a NOTA ORIGINAL. Ordem: (1) XML guardado (SIEG) → DANFE oficial completa;
+// (2) PDF do Focus (notas antigas); (3) espelho interno. Nunca dá erro/beco sem saída.
+export async function imprimirDanfeOuLocal(nfe: any, itens: any[], xml: string | null | undefined, onMsg: (m: string, t?: 'ok' | 'err') => void) {
+  if (xml) { gerarDanfeXml(xml, onMsg); return } // temos a nota original → DANFE oficial do XML
   const chave = nfe?.chave_acesso
   if (chave) {
     onMsg('Buscando DANFE oficial…', 'ok')
@@ -120,8 +122,55 @@ export async function imprimirDanfeOuLocal(nfe: any, itens: any[], onMsg: (m: st
       if (j && j.ok && j.url) { window.open(j.url, '_blank'); return }
     } catch { /* cai no espelho */ }
   }
-  onMsg('PDF oficial indisponível — abrindo o espelho interno (imprimível).', 'ok')
+  onMsg('Nota original ainda não capturada — abrindo o espelho interno (imprimível).', 'ok')
   gerarDanfeLocal(nfe, itens, onMsg)
+}
+
+// Baixa o XML original da nota (arquivo .xml) — a "nota original" de verdade.
+export function baixarXml(xml: string, nomeArquivo: string) {
+  const blob = new Blob([xml], { type: 'application/xml;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = nomeArquivo.endsWith('.xml') ? nomeArquivo : nomeArquivo + '.xml'
+  document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 2000)
+}
+
+// DANFE OFICIAL a partir do XML guardado — lê o XML da NF-e e reaproveita o layout completo (abrirDanfeAiko).
+export function gerarDanfeXml(xml: string, onMsg: (m: string, t?: 'ok' | 'err') => void) {
+  try {
+    const doc = new DOMParser().parseFromString(xml, 'application/xml')
+    if (doc.getElementsByTagName('parsererror').length) throw new Error('XML inválido')
+    const first = (root: Element | Document | null, tag: string): Element | null => ((root || doc).getElementsByTagName(tag)[0] || null)
+    const g = (root: Element | Document | null, tag: string): string => { const el = first(root, tag); return el ? (el.textContent || '').trim() : '' }
+    const infNFe = first(doc, 'infNFe')
+    const ide = first(doc, 'ide'), emit = first(doc, 'emit'), dest = first(doc, 'dest')
+    const enderEmit = first(emit, 'enderEmit'), enderDest = first(dest, 'enderDest')
+    const tot = first(doc, 'ICMSTot'), transp = first(doc, 'transp'), vol = first(transp, 'vol')
+    const cobr = first(doc, 'cobr'), fat = first(cobr, 'fat'), infAdic = first(doc, 'infAdic'), infProt = first(doc, 'infProt')
+    const chave = String(infNFe?.getAttribute('Id') || '').replace(/\D/g, '').slice(-44)
+    const dups = Array.from(cobr?.getElementsByTagName('dup') || []).map((d) => ({ numero: g(d, 'nDup'), data_vencimento: g(d, 'dVenc'), valor: g(d, 'vDup') }))
+    const itens = Array.from(doc.getElementsByTagName('det')).map((d) => {
+      const prod = first(d, 'prod'), icms = first(d, 'ICMS')
+      return {
+        codigo_produto: g(prod, 'cProd'), descricao: g(prod, 'xProd'), codigo_ncm: g(prod, 'NCM'), cfop: g(prod, 'CFOP'),
+        unidade_comercial: g(prod, 'uCom'), quantidade_comercial: g(prod, 'qCom'), valor_unitario_comercial: g(prod, 'vUnCom'), valor_bruto: g(prod, 'vProd'),
+        icms_origem: g(icms, 'orig'), icms_situacao_tributaria: g(icms, 'CST') || g(icms, 'CSOSN'),
+      }
+    })
+    const req = {
+      numero: g(ide, 'nNF'), serie: g(ide, 'serie'), natureza_operacao: g(ide, 'natOp'), data_emissao: g(ide, 'dhEmi') || g(ide, 'dEmi'), tipo_documento: g(ide, 'tpNF'),
+      nome_emitente: g(emit, 'xNome'), cnpj_emitente: g(emit, 'CNPJ'), inscricao_estadual_emitente: g(emit, 'IE'),
+      logradouro_emitente: g(enderEmit, 'xLgr'), numero_emitente: g(enderEmit, 'nro'), complemento_emitente: g(enderEmit, 'xCpl'), bairro_emitente: g(enderEmit, 'xBairro'), municipio_emitente: g(enderEmit, 'xMun'), uf_emitente: g(enderEmit, 'UF'), cep_emitente: g(enderEmit, 'CEP'), telefone_emitente: g(enderEmit, 'fone'),
+      nome_destinatario: g(dest, 'xNome'), cnpj_destinatario: g(dest, 'CNPJ') || g(dest, 'CPF'), inscricao_estadual_destinatario: g(dest, 'IE'),
+      logradouro_destinatario: g(enderDest, 'xLgr'), numero_destinatario: g(enderDest, 'nro'), complemento_destinatario: g(enderDest, 'xCpl'), bairro_destinatario: g(enderDest, 'xBairro'), municipio_destinatario: g(enderDest, 'xMun'), uf_destinatario: g(enderDest, 'UF'), cep_destinatario: g(enderDest, 'CEP'),
+      numero_fatura: g(fat, 'nFat'), valor_original_fatura: g(fat, 'vOrig'), valor_desconto_fatura: g(fat, 'vDesc'), valor_liquido_fatura: g(fat, 'vLiq'), duplicatas: dups,
+      icms_base_calculo: g(tot, 'vBC'), icms_valor_total: g(tot, 'vICMS'), icms_base_calculo_st: g(tot, 'vBCST'), icms_valor_total_st: g(tot, 'vST'), valor_frete: g(tot, 'vFrete'), valor_seguro: g(tot, 'vSeg'), valor_produtos: g(tot, 'vProd'), valor_desconto: g(tot, 'vDesc'), valor_outras_despesas: g(tot, 'vOutro'), valor_ipi: g(tot, 'vIPI'), valor_pis: g(tot, 'vPIS'), valor_cofins: g(tot, 'vCOFINS'), valor_total: g(tot, 'vNF'),
+      modalidade_frete: g(transp, 'modFrete'), volumes: vol ? [{ quantidade: g(vol, 'qVol'), especie: g(vol, 'esp'), peso_bruto: g(vol, 'pesoB'), peso_liquido: g(vol, 'pesoL') }] : [],
+      informacoes_adicionais_contribuinte: g(infAdic, 'infCpl'), observacoes_contribuinte: g(infAdic, 'obsCont'), chave_nfe: chave, itens,
+    }
+    const nota = { requisicao_nota_fiscal: req, protocolo_nota_fiscal: infProt ? { numero_protocolo: g(infProt, 'nProt'), data_recebimento: g(infProt, 'dhRecbto') } : null, chave_nfe: chave, valor_total: g(tot, 'vNF') }
+    abrirDanfeAiko(nota, onMsg)
+  } catch (e: any) { onMsg('Erro ao ler o XML da nota: ' + (e && e.message || e), 'err') }
 }
 
 function abrirDanfeAiko(nota: any, onMsg: (m: string, t?: 'ok' | 'err') => void) {
