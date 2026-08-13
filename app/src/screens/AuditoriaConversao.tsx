@@ -22,12 +22,11 @@ const hoje = () => isoD(new Date())
 
 export function AuditoriaConversao() {
   const { tenantId } = useAuth()
-  const { lojas } = useLoja()
+  const { lojas, lojaId } = useLoja()   // loja = seletor GLOBAL do topo (igual Movimentação), não filtro na barra
   const [de, setDe] = useState(primeiroDiaMes())
   const [ate, setAte] = useState(hoje())
   const [insId, setInsId] = useState('')
-  const [loja, setLoja] = useState('')
-  const [applied, setApplied] = useState({ de: primeiroDiaMes(), ate: hoje(), insId: '', loja: '' })
+  const [applied, setApplied] = useState({ de: primeiroDiaMes(), ate: hoje(), insId: '' })
   const [fForn, setFForn] = useState('')
   const [busca, setBusca] = useState('')
   const [statusFil, setStatusFil] = useState('')
@@ -36,10 +35,10 @@ export function AuditoriaConversao() {
   const { data: notas = [] } = useQuery({ queryKey: ['aud-notas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nota>((f, t) => supabase.from('nfe_recebidas').select('numero,serie,valor_total').eq('tenant_id', tenantId).range(f, t)) })
   const { data: vincs = [] } = useQuery({ queryKey: ['aud-vincs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('insumo_id,codigo_nfe').eq('tenant_id', tenantId).range(f, t)) })
   const { data: ents = [], isLoading, isFetching } = useQuery({
-    queryKey: ['aud-ents', tenantId, applied.de, applied.ate, applied.insId, applied.loja], enabled: !!tenantId,
+    queryKey: ['aud-ents', tenantId, applied.de, applied.ate, applied.insId, lojaId], enabled: !!tenantId,
     queryFn: () => fetchAll<Ent>((f, t) => {
       let q = supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false })
-      if (applied.loja) q = q.eq('loja_id', applied.loja)
+      if (lojaId) q = q.eq('loja_id', lojaId)
       if (applied.insId) q = q.eq('insumo_id', applied.insId)
       if (applied.de) q = q.gte('criado_em', applied.de + 'T00:00:00')
       if (applied.ate) q = q.lte('criado_em', applied.ate + 'T23:59:59')
@@ -86,7 +85,7 @@ export function AuditoriaConversao() {
     })
   }, [rows, statusFil, fForn, busca])
 
-  const consultar = () => { setApplied({ de, ate, insId, loja }) }
+  const consultar = () => { setApplied({ de, ate, insId }) }
 
   const statusCell = (suspeito: boolean, erro: boolean) => {
     if (erro) return <span style={{ color: '#e11d48', fontWeight: 700, fontSize: 12 }}>Erro</span>
@@ -113,9 +112,6 @@ export function AuditoriaConversao() {
         </div>
         <div className="ds-field" style={{ minWidth: 190 }}><label>Fornecedor</label>
           <SearchSelect value={fForn} options={fornOpts} placeholder="Todos" onChange={(nm) => { setFForn(nm === 'Todos' ? '' : nm) }} />
-        </div>
-        <div className="ds-field" style={{ minWidth: 170 }}><label>Loja</label>
-          <SearchSelect value={lojas.find((l) => l.id === loja)?.nome || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => setLoja(lojas.find((l) => l.nome === nm)?.id || '')} />
         </div>
         <div className="ds-field ds-grow"><label>Buscar insumo</label><input type="text" className="field" style={{ width: '100%', minWidth: 180 }} placeholder="Descrição, nº DANFE, código…" value={busca} onChange={(e) => { setBusca(e.target.value) }} /></div>
         <div className="ds-actions">
