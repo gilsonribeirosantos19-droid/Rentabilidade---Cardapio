@@ -162,44 +162,47 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
 
   const consolidado = useMemo(() => {
     const solById = Object.fromEntries(sols.map((s) => [s.id, s]))
-    const c: Record<string, { insId: string; nome: string; unidade: string; total: number; lojas: { loja_id: string; nome: string; qty: number }[]; fornecedorId: string | null }> = {}
+    // agrupa por INSUMO + EMBALAGEM (senão soma Fardo+Pacote+Unidade num item só — impossível). key = insumo|embalagem
+    const c: Record<string, { key: string; insId: string; nome: string; unidade: string; total: number; lojas: { loja_id: string; nome: string; qty: number }[]; fornecedorId: string | null }> = {}
     itensSol.forEach((it) => {
       const s = solById[it.pedido_id]; if (!s) return
       const ins = insMap[it.insumo_id]
-      if (!c[it.insumo_id]) {
+      const und = it.unidade || ins?.unidade_medida || 'un'
+      const key = it.insumo_id + '|' + und
+      if (!c[key]) {
         const vincs = vinculos.filter((v) => v.insumo_id === it.insumo_id && fornMap[v.fornecedor_id])   // ignora vínculo órfão (fornecedor inativo/apagado)
         // sugestão: "principal" (se marcado) tem prioridade; senão, o fornecedor da ÚLTIMA COMPRA (ultima_entrada mais recente)
         const maisRecente = [...vincs].sort((a, b) => (b.ultima_entrada || b.created_at || '').localeCompare(a.ultima_entrada || a.created_at || ''))[0]
         const principal = vincs.find((v) => v.principal) || maisRecente
-        c[it.insumo_id] = { insId: it.insumo_id, nome: ins?.nome || it.insumo_id, unidade: it.unidade || ins?.unidade_medida || 'un', total: 0, lojas: [], fornecedorId: principal?.fornecedor_id || null }
+        c[key] = { key, insId: it.insumo_id, nome: ins?.nome || it.insumo_id, unidade: und, total: 0, lojas: [], fornecedorId: principal?.fornecedor_id || null }
       }
-      c[it.insumo_id].total += Number(it.quantidade) || 0
-      const ex = c[it.insumo_id].lojas.find((l) => l.loja_id === s.loja_id)
+      c[key].total += Number(it.quantidade) || 0
+      const ex = c[key].lojas.find((l) => l.loja_id === s.loja_id)
       if (ex) ex.qty += Number(it.quantidade) || 0
-      else c[it.insumo_id].lojas.push({ loja_id: s.loja_id || '', nome: lojaMap[s.loja_id || ''] || 'Sem loja', qty: Number(it.quantidade) || 0 })
+      else c[key].lojas.push({ loja_id: s.loja_id || '', nome: lojaMap[s.loja_id || ''] || 'Sem loja', qty: Number(it.quantidade) || 0 })
     })
     return Object.values(c)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sols, itensSol, insMap, lojaMap, vinculos])
 
   // inicializa qComprar/fornSel quando o consolidado muda
-  useEffect(() => { const q: Record<string, number> = {}, f: Record<string, string> = {}; consolidado.forEach((d) => { q[d.insId] = d.total; f[d.insId] = d.fornecedorId || '' }); setQComprar(q); setFornSel(f) }, [consolidado])
+  useEffect(() => { const q: Record<string, number> = {}, f: Record<string, string> = {}; consolidado.forEach((d) => { q[d.key] = d.total; f[d.key] = d.fornecedorId || '' }); setQComprar(q); setFornSel(f) }, [consolidado])
 
   const fornOptsDe = (insId: string) => { const vincs = vinculos.filter((v) => v.insumo_id === insId && fornMap[v.fornecedor_id]); if (vincs.length) return vincs.map((v) => ({ id: v.fornecedor_id, nome: fornMap[v.fornecedor_id] + (v.principal ? ' ★' : '') })); return fornecedores.map((f) => ({ id: f.id, nome: f.nome })) }
-  const ultCompra = (insId: string) => { const v = vinculos.find((x) => x.insumo_id === insId && x.fornecedor_id === fornSel[insId]) || vinculos.find((x) => x.insumo_id === insId); if (!v?.preco_unitario) return '—'; const raw = v.ultima_entrada || v.created_at; const dt = raw ? new Date(raw.length === 10 ? raw + 'T12:00:00' : raw).toLocaleDateString('pt-BR') : ''; return `${dt} - ${brl(v.preco_unitario)}` }
+  const ultCompra = (insId: string, fornId: string) => { const v = vinculos.find((x) => x.insumo_id === insId && x.fornecedor_id === fornId) || vinculos.find((x) => x.insumo_id === insId); if (!v?.preco_unitario) return '—'; const raw = v.ultima_entrada || v.created_at; const dt = raw ? new Date(raw.length === 10 ? raw + 'T12:00:00' : raw).toLocaleDateString('pt-BR') : ''; return `${dt} - ${brl(v.preco_unitario)}` }
 
   const nLojas = new Set(sols.map((s) => s.loja_id)).size
 
   const gerarMut = useMutation({
     mutationFn: async () => {
       if (!consolidado.length) throw new Error('Nada para gerar.')
-      for (const d of consolidado) { if (!(qComprar[d.insId] > 0)) throw new Error('Informe Q. Comprar para todos os itens.') }
+      for (const d of consolidado) { if (!(qComprar[d.key] > 0)) throw new Error('Informe Q. Comprar para todos os itens.') }
       // Parâmetro: fornecedor obrigatório
-      if (!permitirSemForn) { const semForn = consolidado.filter((d) => !fornSel[d.insId]); if (semForn.length) throw new Error(`${semForn.length} item(ns) sem fornecedor. Obrigatório (Parâmetros › Compras).`) }
+      if (!permitirSemForn) { const semForn = consolidado.filter((d) => !fornSel[d.key]); if (semForn.length) throw new Error(`${semForn.length} item(ns) sem fornecedor. Obrigatório (Parâmetros › Compras).`) }
       // Parâmetro: exigir aprovação → pedido nasce "aguardando aprovação"
       const statusInicial = exigirAprovacao ? 'aguardando_aprovacao' : 'pendente'
       const porForn: Record<string, typeof consolidado> = {}
-      consolidado.forEach((d) => { const k = fornSel[d.insId] || '__sem__'; (porForn[k] = porForn[k] || []).push(d) })
+      consolidado.forEach((d) => { const k = fornSel[d.key] || '__sem__'; (porForn[k] = porForn[k] || []).push(d) })
       // Monta a carga (pedidos + itens) e gera TUDO numa função atômica no banco.
       // Se falhar no meio, nada é gravado → as solicitações continuam "solicitado" e repetir NÃO duplica pedido.
       const pedidos = Object.entries(porForn).map(([fKey, itensForn]) => {
@@ -209,9 +212,9 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
         const itens = itensForn.map((it) => {
           // se o comprador editou a "Q. Comprar" (ex.: lote), rateia por loja na mesma proporção → total = soma por loja
           const totalPed = it.lojas.reduce((a, l) => a + (Number(l.qty) || 0), 0)
-          const fator = totalPed > 0 ? (qComprar[it.insId] || 0) / totalPed : 1
+          const fator = totalPed > 0 ? (qComprar[it.key] || 0) / totalPed : 1
           const rateio = it.lojas.map((l) => ({ ...l, qc: +((Number(l.qty) || 0) * fator).toFixed(4) }))
-          return { insumo_id: it.insId, quantidade: qComprar[it.insId], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario ?? null, observacao: rateio.map((l) => l.nome + ': ' + fmtQtyDoc(l.qc)).join(', '), detalhe_lojas: rateio.filter((l) => l.loja_id).map((l) => ({ loja_id: l.loja_id, qtd: l.qc })) }
+          return { insumo_id: it.insId, quantidade: qComprar[it.key], unidade: it.unidade, preco_unitario: vinculos.find((v) => v.insumo_id === it.insId && v.fornecedor_id === fornId)?.preco_unitario ?? null, observacao: rateio.map((l) => l.nome + ': ' + fmtQtyDoc(l.qc)).join(', '), detalhe_lojas: rateio.filter((l) => l.loja_id).map((l) => ({ loja_id: l.loja_id, qtd: l.qc })) }
         })
         return { fornecedor_id: fornId, status: statusInicial, observacao: obs, itens }
       })
@@ -237,20 +240,20 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
           <tbody>
             {isLoading ? <tr><td colSpan={8} className="empty">Carregando…</td></tr>
               : consolidado.length === 0 ? <tr><td colSpan={8} className="empty">Nenhuma solicitação pendente</td></tr>
-              : consolidado.map((d) => <tr key={d.insId} className={detItem === d.insId ? 'sel' : ''}>
-                <td style={{ cursor: 'pointer', userSelect: 'none', fontWeight: detItem === d.insId ? 700 : undefined }} onClick={() => toggleDet(d.insId)} title="Clique para ver as lojas que pediram">{d.nome}</td>
+              : consolidado.map((d) => <tr key={d.key} className={detItem === d.key ? 'sel' : ''}>
+                <td style={{ cursor: 'pointer', userSelect: 'none', fontWeight: detItem === d.key ? 700 : undefined }} onClick={() => toggleDet(d.key)} title="Clique para ver as lojas que pediram">{d.nome}</td>
                 <td className="r mono">{fmtQty(d.total)}</td>
-                <td className="r"><input type="number" className="field" style={{ width: 100, height: 30, textAlign: 'right' }} min="0" step="0.001" value={qComprar[d.insId] ?? d.total} onChange={(e) => setQComprar((p) => ({ ...p, [d.insId]: parseFloat(e.target.value) || 0 }))} /></td>
+                <td className="r"><input type="number" className="field" style={{ width: 100, height: 30, textAlign: 'right' }} min="0" step="0.001" value={qComprar[d.key] ?? d.total} onChange={(e) => setQComprar((p) => ({ ...p, [d.key]: parseFloat(e.target.value) || 0 }))} /></td>
                 <td>{d.unidade}</td>
-                <td style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{ultCompra(d.insId)}</td>
+                <td style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{ultCompra(d.insId, fornSel[d.key])}</td>
                 <td style={{ fontSize: 12 }}>{d.fornecedorId ? <span style={{ color: '#16a34a', fontWeight: 600 }}>{fornMap[d.fornecedorId]}</span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
                 <td style={{ minWidth: 190 }}>{(() => {
                   const opts = fornOptsDe(d.insId)
                   const nameToId: Record<string, string> = {}; opts.forEach((o) => { nameToId[o.nome] = o.id })
-                  const curName = opts.find((o) => o.id === fornSel[d.insId])?.nome || ''
-                  return <SearchSelect value={curName} placeholder="— Sem fornecedor —" options={opts.map((o) => o.nome)} onChange={(nm) => setFornSel((p) => ({ ...p, [d.insId]: nameToId[nm] || '' }))} />
+                  const curName = opts.find((o) => o.id === fornSel[d.key])?.nome || ''
+                  return <SearchSelect value={curName} placeholder="— Sem fornecedor —" options={opts.map((o) => o.nome)} onChange={(nm) => setFornSel((p) => ({ ...p, [d.key]: nameToId[nm] || '' }))} />
                 })()}</td>
-                <td className="c"><button className="btn-ghost" style={{ height: 28, padding: '0 10px' }} onClick={() => toggleDet(d.insId)}>{detItem === d.insId ? 'Ocultar' : 'Ver lojas'}</button></td>
+                <td className="c"><button className="btn-ghost" style={{ height: 28, padding: '0 10px' }} onClick={() => toggleDet(d.key)}>{detItem === d.key ? 'Ocultar' : 'Ver lojas'}</button></td>
               </tr>)}
           </tbody>
         </table>
@@ -258,7 +261,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
       <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>ℹ O sistema sugere o fornecedor com base no último preço e histórico de compras. Altere se necessário. Clique num item para ver as lojas que pediram.</div>
 
       {detItem && (() => {
-        const d = consolidado.find((c) => c.insId === detItem)
+        const d = consolidado.find((c) => c.key === detItem)
         if (!d) return null
         return (
           <div style={{ marginTop: 12, background: '#fff', border: '1px solid #e7ebf0', borderRadius: 10, padding: '12px 16px' }}>
@@ -287,11 +290,11 @@ const embLabel = (u?: string) => { const k = (u || '').toLowerCase().trim(); if 
 
 // romaneio consolidado: 1 página por loja (portado do HTML antigo)
 type LojaFull = { id?: string; nome?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string }
-type PorLoja = Record<string, { loja: LojaFull; itens: Record<string, { qty: number; un: string }> }>
+type PorLoja = Record<string, { loja: LojaFull; itens: Record<string, { nome: string; qty: number; un: string }> }>
 function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: string) {
   const dataFormatada = new Date(dataRef.length === 10 ? dataRef + 'T12:00:00' : dataRef).toLocaleDateString('pt-BR')
   const paginas = Object.values(porLoja).map(({ loja, itens }) => {
-    const linhas: ({ nome: string; qty: number; un: string } | null)[] = Object.entries(itens).map(([nome, { qty, un }]) => ({ nome, qty, un }))
+    const linhas: ({ nome: string; qty: number; un: string } | null)[] = Object.values(itens).map(({ nome, qty, un }) => ({ nome, qty, un }))
     while (linhas.length < 8) linhas.push(null)
     const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || '', hrManha = loja?.horario_manha || '-', hrTarde = loja?.horario_tarde || '-'
     return `<div class="pagina">
@@ -369,7 +372,8 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     const porLoja: PorLoja = {}
     const addItem = (nomeIns: string, un: string, key: string, loja: LojaFull, qty: number) => {
       (porLoja[key] = porLoja[key] || { loja, itens: {} })
-      const prev = porLoja[key].itens[nomeIns]; porLoja[key].itens[nomeIns] = { qty: (prev?.qty || 0) + qty, un }
+      const ik = nomeIns + '|' + un   // item + embalagem (não junta Arroz-Fardo com Arroz-Pacote na mesma loja)
+      const prev = porLoja[key].itens[ik]; porLoja[key].itens[ik] = { nome: nomeIns, qty: (prev?.qty || 0) + qty, un }
     }
     peds.forEach((p) => {
       (itensMap[p.id] || []).forEach((it) => {
