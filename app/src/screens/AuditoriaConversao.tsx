@@ -22,7 +22,7 @@ const hoje = () => isoD(new Date())
 
 export function AuditoriaConversao() {
   const { tenantId } = useAuth()
-  const { lojas, lojaId } = useLoja()   // loja = seletor GLOBAL do topo (igual Movimentação), não filtro na barra
+  const { lojas, lojaId, setLojaId } = useLoja()   // loja = seletor GLOBAL (mesma do resto do sistema), no cabeçalho da tela
   const [de, setDe] = useState(primeiroDiaMes())
   const [ate, setAte] = useState(hoje())
   const [insId, setInsId] = useState('')
@@ -102,8 +102,19 @@ export function AuditoriaConversao() {
 
   return (
     <div className="fiscal-screen">
-      <div className="fh-title">Auditoria de Conversão</div>
-      <div className="fh-sub">Auditoria de fator de conversão nas entradas de NF-e.</div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <div className="fh-title">Auditoria de Conversão</div>
+          <div className="fh-sub">Auditoria de fator de conversão nas entradas de NF-e.</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
+          <label style={{ fontSize: 12, color: '#64748b' }}>Loja</label>
+          <select className="field" style={{ width: 180, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
+            <option value="">Todas as lojas</option>
+            {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+          </select>
+        </div>
+      </div>
       <div className="ds-filterbar">
         <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => setDe(e.target.value)} /></div>
         <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => setAte(e.target.value)} /></div>
