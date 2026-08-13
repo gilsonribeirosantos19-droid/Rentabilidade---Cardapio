@@ -11,7 +11,7 @@ type ItemPedido = { id?: string; pedido_id: string; insumo_id: string; quantidad
 type Loja = { id: string; nome: string }
 type Insumo = { id: string; nome: string; unidade_medida?: string; codigo_interno?: number | string; categoria?: string }
 type Forn = { id: string; nome: string; whatsapp?: string | null }
-type Vinc = { insumo_id: string; fornecedor_id: string; principal?: boolean; preco_unitario?: number | null; ultima_entrada?: string; created_at?: string }
+type Vinc = { insumo_id: string; fornecedor_id: string; codigo_fornecedor?: string | null; principal?: boolean; preco_unitario?: number | null; ultima_entrada?: string; created_at?: string }
 
 const brl = (v?: number | null) => (v == null || !(+v)) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtQty = (v?: number) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
@@ -50,7 +50,7 @@ function useCompras(tenantId: string) {
   const insumos = useQuery({ queryKey: ['cmp-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,codigo_interno,categoria').eq('tenant_id', tenantId).order('nome').range(f, t)) })
   const fornecedores = useQuery({ queryKey: ['cmp-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome,whatsapp').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Forn[] } })
   const lojas = useQuery({ queryKey: ['cmp-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Loja[] } })
-  const vinculos = useQuery({ queryKey: ['cmp-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id,principal,preco_unitario,ultima_entrada,created_at').eq('tenant_id', tenantId).range(f, t)) })
+  const vinculos = useQuery({ queryKey: ['cmp-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id,codigo_fornecedor,principal,preco_unitario,ultima_entrada,created_at').eq('tenant_id', tenantId).range(f, t)) })
   return { insumos: insumos.data ?? [], fornecedores: fornecedores.data ?? [], lojas: lojas.data ?? [], vinculos: vinculos.data ?? [] }
 }
 
@@ -290,24 +290,24 @@ const embLabel = (u?: string) => { const k = (u || '').toLowerCase().trim(); if 
 
 // romaneio consolidado: 1 página por loja (portado do HTML antigo)
 type LojaFull = { id?: string; nome?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string }
-type PorLoja = Record<string, { loja: LojaFull; itens: Record<string, { nome: string; qty: number; un: string }> }>
+type PorLoja = Record<string, { loja: LojaFull; itens: Record<string, { nome: string; qty: number; un: string; codForn: string }> }>
 function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: string) {
   const dataFormatada = new Date(dataRef.length === 10 ? dataRef + 'T12:00:00' : dataRef).toLocaleDateString('pt-BR')
   const paginas = Object.values(porLoja).map(({ loja, itens }) => {
-    const linhas: ({ nome: string; qty: number; un: string } | null)[] = Object.values(itens).map(({ nome, qty, un }) => ({ nome, qty, un }))
+    const linhas: ({ nome: string; qty: number; un: string; codForn: string } | null)[] = Object.values(itens).map(({ nome, qty, un, codForn }) => ({ nome, qty, un, codForn }))
     while (linhas.length < 8) linhas.push(null)
     const nomeLoja = loja?.nome || '—', razao = loja?.razao_social || '', cnpj = loja?.cnpj || '', ende = loja?.endereco || '', hrManha = loja?.horario_manha || '-', hrTarde = loja?.horario_tarde || '-'
     return `<div class="pagina">
       <div class="brand">Aiko <span>· pedido de compra</span></div>
       <table class="doc">
-      <tr><td class="cel-loja">${nomeLoja.toUpperCase()}</td><td class="cel-data-label">DATA</td><td class="cel-data">${dataFormatada}</td></tr>
-      <tr><td colspan="3" class="cel-info"><b>RAZÃO SOCIAL:</b> ${razao}${cnpj ? ' &nbsp;·&nbsp; <b>CNPJ:</b> ' + cnpj : ''}</td></tr>
-      <tr><td colspan="3" class="cel-info"><b>ENDEREÇO:</b> ${ende}</td></tr>
-      ${fornecedor ? `<tr><td colspan="3" class="cel-forn">PEDIDO PARA O FORNECEDOR: ${fornecedor.toUpperCase()}</td></tr>` : ''}
-      <tr><td class="cel-th">ITENS</td><td class="cel-th cel-th-e">EMBALAGEM</td><td class="cel-th cel-th-q">QUANTIDADE</td></tr>
-      ${linhas.map((it) => it ? `<tr><td class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-emb">${embLabel(it.un)}</td><td class="cel-qty">${fmtQtyDoc(it.qty)}</td></tr>` : `<tr><td class="cel-item">&nbsp;</td><td class="cel-emb">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
-      <tr><td class="cel-footer cel-footer-l">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
-      <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">${hrTarde}</td></tr>
+      <tr><td class="cel-loja" colspan="2">${nomeLoja.toUpperCase()}</td><td class="cel-data-label">DATA</td><td class="cel-data">${dataFormatada}</td></tr>
+      <tr><td colspan="4" class="cel-info"><b>RAZÃO SOCIAL:</b> ${razao}${cnpj ? ' &nbsp;·&nbsp; <b>CNPJ:</b> ' + cnpj : ''}</td></tr>
+      <tr><td colspan="4" class="cel-info"><b>ENDEREÇO:</b> ${ende}</td></tr>
+      ${fornecedor ? `<tr><td colspan="4" class="cel-forn">PEDIDO PARA O FORNECEDOR: ${fornecedor.toUpperCase()}</td></tr>` : ''}
+      <tr><td class="cel-th cel-th-cod">CÓD. FORN.</td><td class="cel-th">ITENS</td><td class="cel-th cel-th-e">EMBALAGEM</td><td class="cel-th cel-th-q">QUANTIDADE</td></tr>
+      ${linhas.map((it) => it ? `<tr><td class="cel-cod">${it.codForn || '—'}</td><td class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-emb">${embLabel(it.un)}</td><td class="cel-qty">${fmtQtyDoc(it.qty)}</td></tr>` : `<tr><td class="cel-cod">&nbsp;</td><td class="cel-item">&nbsp;</td><td class="cel-emb">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
+      <tr><td class="cel-footer cel-footer-l" colspan="2">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
+      <tr><td class="cel-footer" colspan="2">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">${hrTarde}</td></tr>
     </table></div>`
   }).join('')
   const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${fornecedor ? 'Pedido ' + fornecedor : 'Pedidos por Loja'} — ${dataFormatada}</title><style>
@@ -318,8 +318,8 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
     .cel-loja{font-weight:800;font-size:15px;width:55%;color:#1e2030}.cel-data-label{font-weight:600;color:#64748b;font-size:10px;letter-spacing:.05em;width:15%;text-align:center}.cel-data{font-weight:700;font-size:13px;width:30%;text-align:right}
     .cel-info{background:#f1f5f9;color:#334155;font-size:11.5px;line-height:1.5;height:34px}
     .cel-forn{background:#d6f7ee;color:#00806a;font-weight:700;font-size:12.5px}
-    .cel-th{background:#1e2030;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;padding:8px 10px}.cel-th-q{text-align:center;width:22%}.cel-th-e{text-align:center;width:24%}
-    .cel-item{height:26px;font-size:12.5px}.cel-emb{text-align:center;font-size:12px;color:#334155;font-weight:600}.cel-qty{text-align:center;font-weight:700;font-size:12.5px}
+    .cel-th{background:#1e2030;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;padding:8px 10px}.cel-th-q{text-align:center;width:20%}.cel-th-e{text-align:center;width:22%}.cel-th-cod{width:14%}
+    .cel-item{height:26px;font-size:12.5px}.cel-emb{text-align:center;font-size:12px;color:#334155;font-weight:600}.cel-qty{text-align:center;font-weight:700;font-size:12.5px}.cel-cod{font-family:'Courier New',monospace;font-size:10.5px;color:#64748b;white-space:nowrap}
     .cel-footer{background:#1e2030;color:#fff;font-weight:700;font-size:11px;text-align:center;padding:6px}.cel-footer-l{text-align:left}
     .toolbar{position:sticky;top:0;z-index:9;background:#0f2a52;padding:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.15)}
     .toolbar button{background:#f97316;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer}
@@ -332,7 +332,7 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
 
 // ═══════════════════════ PEDIDOS GERADOS ═══════════════════════
 function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared }) {
-  const { insumos, fornecedores, lojas } = shared
+  const { insumos, fornecedores, lojas, vinculos } = shared
   const qc = useQueryClient()
   // abre já filtrando por "Aguardando envio" (pendente) — enviados/baixados só ao trocar o filtro
   const [statusF, setStatusF] = useState('pendente'); const [busca, setBusca] = useState(''); const [filData, setFilData] = useState(''); const [ordenar, setOrdenar] = useState('forn')
@@ -370,21 +370,23 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
   // agrupa os itens dos pedidos por LOJA (usa detalhe_lojas estruturado; cai no texto p/ pedidos legados)
   const agruparPorLoja = (peds: Pedido[]): PorLoja => {
     const porLoja: PorLoja = {}
-    const addItem = (nomeIns: string, un: string, key: string, loja: LojaFull, qty: number) => {
+    const addItem = (nomeIns: string, un: string, codForn: string, key: string, loja: LojaFull, qty: number) => {
       (porLoja[key] = porLoja[key] || { loja, itens: {} })
       const ik = nomeIns + '|' + un   // item + embalagem (não junta Arroz-Fardo com Arroz-Pacote na mesma loja)
-      const prev = porLoja[key].itens[ik]; porLoja[key].itens[ik] = { nome: nomeIns, qty: (prev?.qty || 0) + qty, un }
+      const prev = porLoja[key].itens[ik]; porLoja[key].itens[ik] = { nome: nomeIns, qty: (prev?.qty || 0) + qty, un, codForn: codForn || prev?.codForn || '' }
     }
     peds.forEach((p) => {
       (itensMap[p.id] || []).forEach((it) => {
         const nomeIns = insMap[it.insumo_id]?.nome || it.insumo_id
         const un = it.unidade || 'un'
+        // código que o FORNECEDOR usa pro item (do vínculo insumo+fornecedor do pedido) — ajuda ele a achar o produto
+        const codForn = vinculos.find((v) => v.insumo_id === it.insumo_id && v.fornecedor_id === p.fornecedor_id)?.codigo_fornecedor || ''
         if (it.detalhe_lojas?.length) { // estruturado: agrupa por loja_id (imune a renomear)
-          it.detalhe_lojas.forEach((d) => { const loja = lojasFull.find((l) => l.id === d.loja_id) || { id: d.loja_id, nome: lojaNomeMap[d.loja_id] || 'Sem loja' }; addItem(nomeIns, un, loja.id || d.loja_id || 'sem', loja, Number(d.qtd) || 0) })
+          it.detalhe_lojas.forEach((d) => { const loja = lojasFull.find((l) => l.id === d.loja_id) || { id: d.loja_id, nome: lojaNomeMap[d.loja_id] || 'Sem loja' }; addItem(nomeIns, un, codForn, loja.id || d.loja_id || 'sem', loja, Number(d.qtd) || 0) })
         } else if (it.observacao) { // legado: parse do texto (casa por nome)
-          it.observacao.split(', ').forEach((parte) => { const m = parte.match(/^(.+?):\s*([\d.]+)$/); if (!m) return; const nomeLoja = m[1].trim(), qty = parseFloat(m[2]) || 0; const loja = lojasFull.find((l) => (l.nome || '').toLowerCase() === nomeLoja.toLowerCase()) || { nome: nomeLoja }; addItem(nomeIns, un, loja.id || nomeLoja, loja, qty) })
+          it.observacao.split(', ').forEach((parte) => { const m = parte.match(/^(.+?):\s*([\d.]+)$/); if (!m) return; const nomeLoja = m[1].trim(), qty = parseFloat(m[2]) || 0; const loja = lojasFull.find((l) => (l.nome || '').toLowerCase() === nomeLoja.toLowerCase()) || { nome: nomeLoja }; addItem(nomeIns, un, codForn, loja.id || nomeLoja, loja, qty) })
         } else {
-          addItem(nomeIns, un, '__geral__', { nome: 'Geral' }, Number(it.quantidade) || 0)
+          addItem(nomeIns, un, codForn, '__geral__', { nome: 'Geral' }, Number(it.quantidade) || 0)
         }
       })
     })
