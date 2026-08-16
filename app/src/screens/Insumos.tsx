@@ -467,10 +467,10 @@ function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: stri
   const del = (i: number) => commit(rows.filter((_, j) => j !== i))
   return (
     <div className="emb-wrap">
-      <div className="emb-head">Embalagens de compra <span>— o padrão ⭐ é sempre a <b>unidade de estoque</b> (como você controla o estoque) e não muda. Marque quais embalagens o gerente pode pedir. A conversão continua no monitor.</span></div>
+      <div className="emb-head">Embalagens de compra <span>— o padrão é sempre a <b>unidade de estoque</b> (como você controla o estoque) e não muda. Marque quais embalagens o gerente pode pedir. A conversão continua no monitor.</span></div>
       <table className="emb-grid">
         <thead><tr>
-          <th>Nome da embalagem</th><th>Unidade</th><th className="c">Qtd na emb.<br /><small>(referência)</small></th><th className="c">Aparece<br />pro gerente</th><th className="c">Padrão ⭐</th><th></th>
+          <th>Nome da embalagem</th><th>Unidade</th><th className="c">Qtd na emb.<br /><small>(referência)</small></th><th className="c">Aparece<br />pro gerente</th><th className="c">Padrão</th><th></th>
         </tr></thead>
         <tbody>
           {rows.map((r, i) => (
@@ -489,7 +489,7 @@ function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: stri
               </td>
               <td className="c"><input className="emb-in num" value={r.qtd ?? ''} onChange={(e) => set(i, { qtd: parseFloat((e.target.value || '').replace(',', '.')) || undefined })} /></td>
               <td className="c"><input type="checkbox" checked={!!r.ver} onChange={(e) => set(i, { ver: e.target.checked })} /></td>
-              <td className="c">{isBase(r) ? <span title="O padrão é sempre a unidade de estoque" style={{ fontSize: 15 }}>⭐</span> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+              <td className="c">{isBase(r) ? <input type="checkbox" checked onChange={() => {}} title="O padrão é sempre a unidade de estoque (fixo)" style={{ cursor: 'default' }} /> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
               <td className="c">{isBase(r) ? '' : <button type="button" className="emb-del" title="Remover" onClick={() => del(i)}>✕</button>}</td>
             </tr>
           ))}
