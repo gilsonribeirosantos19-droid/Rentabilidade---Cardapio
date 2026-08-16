@@ -330,7 +330,14 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
   const qc = useQueryClient()
   // abre já filtrando por "Aguardando envio" (pendente) — enviados/baixados só ao trocar o filtro
   const [statusF, setStatusF] = useState('pendente'); const [busca, setBusca] = useState('')
-  const [pgDe, setPgDe] = useState(''); const [pgAte, setPgAte] = useState('')
+  const [pgDe, setPgDe] = useState(primeiroDia()); const [pgAte, setPgAte] = useState(hoje())
+  const [pgPer, setPgPer] = useState('Mês Atual')
+  const setPgPreset = (label: string) => {
+    const l = label || 'Personalizado'; setPgPer(l); const now = new Date()
+    if (l === 'Mês Atual') { setPgDe(isoD(new Date(now.getFullYear(), now.getMonth(), 1))); setPgAte(isoD(now)) }
+    else if (l === 'Mês Anterior') { setPgDe(isoD(new Date(now.getFullYear(), now.getMonth() - 1, 1))); setPgAte(isoD(new Date(now.getFullYear(), now.getMonth(), 0))) }
+    // Personalizado → mantém as datas atuais
+  }
   const [verId, setVerId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
@@ -438,15 +445,20 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '4px 0 12px' }}>
-        <input className="field" style={{ minWidth: 200 }} placeholder="Buscar fornecedor..." value={busca} onChange={(e) => setBusca(e.target.value)} />
-        <div className="fbar-ss" style={{ minWidth: 200 }}><SearchSelect value={PG_ST_LBL[statusF] || 'Ativos (a enviar / enviados)'} options={PG_ST_OPTS} placeholder="Status" onChange={(l) => setStatusF(PG_ST_VAL[l] || 'ativos')} /></div>
-        <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>Data:</span>
-        <input type="date" className="field" style={{ width: 150 }} value={pgDe} onChange={(e) => setPgDe(e.target.value)} />
-        <span style={{ fontSize: 12, color: '#94a3b8' }}>até</span>
-        <input type="date" className="field" style={{ width: 150 }} value={pgAte} onChange={(e) => setPgAte(e.target.value)} />
-        <button className="btn-ghost" onClick={() => { setStatusF('pendente'); setBusca(''); setPgDe(''); setPgAte('') }}>Limpar filtros</button>
-        <button className="btn-ghost" style={{ marginLeft: 'auto' }} title="Imprime 1 folha por loja com todos os itens consolidados dos pedidos listados" onClick={imprimirTodos}>🖨 Baixar todos (por loja)</button>
+      <div className="ds-filterbar">
+        <div className="ds-field" style={{ minWidth: 150 }}><label>Período</label>
+          <SearchSelect value={pgPer} options={['Personalizado', 'Mês Atual', 'Mês Anterior']} placeholder="Período" onChange={setPgPreset} />
+        </div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={pgDe} onChange={(e) => { setPgDe(e.target.value); setPgPer('Personalizado') }} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={pgAte} onChange={(e) => { setPgAte(e.target.value); setPgPer('Personalizado') }} /></div>
+        <div className="ds-field" style={{ minWidth: 190 }}><label>Status</label>
+          <SearchSelect value={PG_ST_LBL[statusF] || 'Ativos (a enviar / enviados)'} options={PG_ST_OPTS} placeholder="Status" onChange={(l) => setStatusF(PG_ST_VAL[l] || 'ativos')} />
+        </div>
+        <div className="ds-field ds-grow"><label>Buscar fornecedor</label><input className="field" style={{ width: '100%', minWidth: 200 }} placeholder="Digite o nome do fornecedor..." value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
+        <div className="ds-actions">
+          <button className="btn-ghost" onClick={() => { setStatusF('pendente'); setBusca(''); setPgPreset('Mês Atual') }}>Limpar filtros</button>
+          <button className="btn-ghost" title="Imprime 1 folha por loja com todos os itens consolidados dos pedidos listados" onClick={imprimirTodos}>🖨 Baixar todos (por loja)</button>
+        </div>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
         <table className="tbl"><thead><tr><th>Fornecedor</th><th className="r">Itens</th><th className="r">Valor Total</th><th className="r">Lojas</th><th>Data</th><th>Status</th><th className="c">Ações</th></tr></thead>
