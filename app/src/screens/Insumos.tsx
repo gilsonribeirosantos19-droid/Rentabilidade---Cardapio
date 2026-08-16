@@ -452,35 +452,32 @@ function FSel({ value, onChange, ph, options }: { value: string; onChange: (v: s
 // Editor das embalagens de compra do item (modelo Everest): a gerente pede numa delas; a conversão fica no monitor.
 function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: string; value?: Embalagem[]; onChange: (v: Embalagem[]) => void }) {
   const base = (unidadeBase || 'un').toLowerCase().trim()
-  // se ainda não configurou, mostra a linha base (unidade de estoque) já marcada como padrão
-  const rows: Embalagem[] = value && value.length ? value : [{ nome: unLabel(base), un: base, qtd: 1, ver: true, padrao: true, base: true }]
-  const commit = (next: Embalagem[]) => {
-    // garante exatamente 1 padrão entre as visíveis (sem mutar o estado)
-    const hasVisPadrao = next.some((r) => r.ver && r.padrao)
-    let assigned = false
-    onChange(next.map((r) => {
-      let padrao = !!r.padrao && !!r.ver
-      if (!hasVisPadrao && !assigned && r.ver) { padrao = true; assigned = true }
-      return { ...r, padrao }
-    }))
-  }
+  // linha BASE = a UNIDADE DE ESTOQUE do item (como o estoque é controlado): flag base OU un === unidade de estoque
+  const isBase = (r: Embalagem) => !!r.base || (r.un || '').toLowerCase().trim() === base
+  // o PADRÃO ⭐ é SEMPRE a unidade de estoque — NÃO é movível (é como controlamos o estoque). As demais
+  // linhas são só embalagens que o gerente PODE pedir; no portal, o default cai na 1ª visível do gerente.
+  const normalize = (list: Embalagem[]) => { const anyBase = list.some(isBase); return list.map((r) => isBase(r) ? { ...r, padrao: true } : (anyBase ? { ...r, padrao: false } : r)) }
+  const raw: Embalagem[] = value && value.length ? value : [{ nome: unLabel(base), un: base, qtd: 1, ver: true, padrao: true, base: true }]
+  const rows = normalize(raw)
+  // ao abrir um item cujo padrão estava numa embalagem de compra, traz o ⭐ de volta pra base (sem loop)
+  useEffect(() => { const n = normalize(raw); if (JSON.stringify(n) !== JSON.stringify(raw)) onChange(n) }, [value, base])   // eslint-disable-line react-hooks/exhaustive-deps
+  const commit = (next: Embalagem[]) => onChange(normalize(next))
   const set = (i: number, patch: Partial<Embalagem>) => commit(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
-  const setPadrao = (i: number) => onChange(rows.map((r, j) => ({ ...r, padrao: j === i })))
   const add = () => onChange([...rows, { nome: '', un: 'cx', qtd: 1, ver: true }])
   const del = (i: number) => commit(rows.filter((_, j) => j !== i))
   return (
     <div className="emb-wrap">
-      <div className="emb-head">Embalagens de compra <span>— marque quais o gerente pode pedir e qual é a padrão ⭐. A conversão continua no monitor.</span></div>
+      <div className="emb-head">Embalagens de compra <span>— o padrão ⭐ é sempre a <b>unidade de estoque</b> (como você controla o estoque) e não muda. Marque quais embalagens o gerente pode pedir. A conversão continua no monitor.</span></div>
       <table className="emb-grid">
         <thead><tr>
           <th>Nome da embalagem</th><th>Unidade</th><th className="c">Qtd na emb.<br /><small>(referência)</small></th><th className="c">Aparece<br />pro gerente</th><th className="c">Padrão ⭐</th><th></th>
         </tr></thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className={r.base ? 'base' : ''}>
-              <td><div className="emb-nome"><input className="emb-in" value={r.nome} placeholder="Ex: Caixa com 1,68 kg" onChange={(e) => set(i, { nome: e.target.value })} />{r.base && <span className="emb-tag">BASE</span>}</div></td>
+            <tr key={i} className={isBase(r) ? 'base' : ''}>
+              <td><div className="emb-nome"><input className="emb-in" value={r.nome} placeholder="Ex: Caixa com 1,68 kg" onChange={(e) => set(i, { nome: e.target.value })} />{isBase(r) && <span className="emb-tag">BASE</span>}</div></td>
               <td>
-                {r.base
+                {isBase(r)
                   ? <span className="emb-base-un">{unLabel(r.un)}</span>
                   : (
                     <select className="emb-in" value={r.un || 'cx'} onChange={(e) => set(i, { un: e.target.value })}>
@@ -491,8 +488,8 @@ function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: stri
               </td>
               <td className="c"><input className="emb-in num" value={r.qtd ?? ''} onChange={(e) => set(i, { qtd: parseFloat((e.target.value || '').replace(',', '.')) || undefined })} /></td>
               <td className="c"><input type="checkbox" checked={!!r.ver} onChange={(e) => set(i, { ver: e.target.checked })} /></td>
-              <td className="c"><input type="radio" name="emb-padrao" checked={!!r.padrao} disabled={!r.ver} onChange={() => setPadrao(i)} /></td>
-              <td className="c">{r.base ? '' : <button type="button" className="emb-del" title="Remover" onClick={() => del(i)}>✕</button>}</td>
+              <td className="c">{isBase(r) ? <span title="O padrão é sempre a unidade de estoque" style={{ fontSize: 15 }}>⭐</span> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+              <td className="c">{isBase(r) ? '' : <button type="button" className="emb-del" title="Remover" onClick={() => del(i)}>✕</button>}</td>
             </tr>
           ))}
         </tbody>
