@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import './estoque.css'
 
@@ -72,19 +73,20 @@ type Shared = ReturnType<typeof useCompras>
 function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }) {
   const { lojas, insumos } = shared
   // abre já filtrando por "Aguardando" (solicitado) — processadas só aparecem se trocar o filtro
-  const [lojaF, setLojaF] = useState(''); const [statusF, setStatusF] = useState('solicitado')
+  const { lojaId } = useLoja()   // usa o seletor de loja GLOBAL do topo (não duplica filtro)
+  const [statusF, setStatusF] = useState('solicitado')
   const [periodo, setPeriodo] = useState('mes_atual')
   const [de, setDe] = useState(primeiroDia()); const [ate, setAte] = useState(hoje())
   const [pag, setPag] = useState(1); const [verId, setVerId] = useState<string | null>(null)
 
   const { data: pedidos = [], isLoading } = useQuery({
-    queryKey: ['cmp-sol', tenantId, lojaF, statusF, de, ate], enabled: !!tenantId,
+    queryKey: ['cmp-sol', tenantId, lojaId, statusF, de, ate], enabled: !!tenantId,
     queryFn: () => fetchAll<Pedido>((f, t) => {
       // Solicitações = pedidos que vieram das LOJAS (têm loja_id). Os pedidos GERADOS na aba
       // Processar têm loja_id null → não entram aqui (senão "voltam" pra Solicitações).
       let q = supabase.from('pedidos_compra').select('*').eq('tenant_id', tenantId).not('loja_id', 'is', null).order('created_at', { ascending: false })
       if (statusF) q = q.eq('status', statusF); else q = q.in('status', ['solicitado', 'processado', 'cancelado'])
-      if (lojaF) q = q.eq('loja_id', lojaF); if (de) q = q.gte('data_pedido', de); if (ate) q = q.lte('data_pedido', ate)
+      if (lojaId) q = q.eq('loja_id', lojaId); if (de) q = q.gte('data_pedido', de); if (ate) q = q.lte('data_pedido', ate)
       return q.range(f, t)
     }),
   })
@@ -100,9 +102,6 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
   return (
     <>
       <div className="ds-filterbar">
-        <div className="ds-field" style={{ minWidth: 150 }}><label>Loja</label>
-          <SearchSelect value={lojaMap[lojaF] || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => { setLojaF(lojas.find((l) => l.nome === nm)?.id || ''); setPag(1) }} />
-        </div>
         <div className="ds-field" style={{ minWidth: 150 }}><label>Período</label>
           <SearchSelect value={CMP_PER_LBL[periodo] || 'Personalizado'} options={CMP_PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(CMP_PER_VAL[l] || 'periodo')} />
         </div>
