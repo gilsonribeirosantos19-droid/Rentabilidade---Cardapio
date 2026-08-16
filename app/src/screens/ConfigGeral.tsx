@@ -10,7 +10,7 @@ import './config.css'
 // categorias (ficha), grupos_compra (+ grupos_compra_itens) e lojas.
 
 type Row = { id: string; nome?: string; categoria?: string; created_at?: string; abreviacao?: string; tipo?: string; razao_social?: string; cnpj?: string; endereco?: string; horario_manha?: string; horario_tarde?: string; is_cd?: boolean }
-type CadKey = 'tipo_item' | 'familia' | 'grupo' | 'subgrupo' | 'embalagem' | 'unidade' | 'cat_ficha' | 'grupo_compra' | 'loja'
+type CadKey = 'tipo_item' | 'familia' | 'grupo' | 'subgrupo' | 'embalagem' | 'unidade' | 'cat_ficha' | 'grupo_compra' | 'loja' | 'motivo_perda'
 
 type Cad = { key: CadKey; label: string; table: string; clsfTipo?: string; special?: 'unidade' | 'loja' | 'grupo_compra' }
 const CADS: Cad[] = [
@@ -18,6 +18,7 @@ const CADS: Cad[] = [
   { key: 'grupo_compra', label: 'Grupos de Compra', table: 'grupos_compra', special: 'grupo_compra' },
   { key: 'unidade', label: 'Unidades de Medida', table: 'unidades_medida', special: 'unidade' },
   { key: 'cat_ficha', label: 'Categorias de Fichas', table: 'categorias' },
+  { key: 'motivo_perda', label: 'Motivos de Perda', table: 'motivos_perda' },
   { key: 'tipo_item', label: 'Tipo do Item', table: 'item_classificacoes', clsfTipo: 'tipo_item' },
   { key: 'familia', label: 'Família', table: 'item_classificacoes', clsfTipo: 'familia' },
   { key: 'grupo', label: 'Grupo (Categoria)', table: 'item_classificacoes', clsfTipo: 'grupo' },
@@ -63,6 +64,7 @@ export function ConfigGeral() {
   const cat = useCfg('categorias', (q) => (q as never as { eq: (c: string, v: string) => unknown }).eq('tipo', 'ficha'))
   const gc = useCfg('grupos_compra')
   const lojas = useCfg('lojas')
+  const motPerda = useCfg('motivos_perda')
   const insumos = useQuery({
     queryKey: ['cfg', 'insumos-sel', tenantId], enabled: !!tenantId,
     queryFn: () => fetchAll<Row>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)),
@@ -78,6 +80,7 @@ export function ConfigGeral() {
     if (c.key === 'cat_ficha') return cat.data ?? []
     if (c.key === 'grupo_compra') return gc.data ?? []
     if (c.key === 'loja') return lojas.data ?? []
+    if (c.key === 'motivo_perda') return motPerda.data ?? []
     return []
   }
 
@@ -159,6 +162,7 @@ export function ConfigGeral() {
       case 'subgrupo': return { qtd: await cnt('insumos', (q) => T(q).eq('subgrupo', nome)), onde: 'insumo(s)' }
       case 'embalagem': return { qtd: await cnt('insumo_fornecedores', (q) => T(q).eq('embalagem_descricao', nome)), onde: 'vínculo(s) de fornecedor' }
       case 'cat_ficha': return { qtd: await cnt('fichas_tecnicas', (q) => T(q).eq('categoria', nome)), onde: 'ficha(s)' }
+      case 'motivo_perda': return { qtd: await cnt('perdas', (q) => T(q).eq('motivo_id', r.id)), onde: 'perda(s)' }
       case 'unidade': {
         const vals = [nome, r.abreviacao].filter(Boolean) as string[]
         const a = await cnt('insumos', (q) => T(q).in('unidade_medida', vals))
