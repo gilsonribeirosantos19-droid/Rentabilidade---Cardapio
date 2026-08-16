@@ -29,9 +29,9 @@ const PED_ST: Record<string, { l: string; b: string }> = { pendente: { l: 'Aguar
 const PED_ORDEM: Record<string, number> = { aguardando_aprovacao: 0, pendente: 1, enviado: 2, aprovado: 3, baixado: 4, cancelado: 5 }
 
 // dropdowns com busca da aba Compras (rótulo ↔ valor interno)
-const CMP_PER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']
-const CMP_PER_LBL: Record<string, string> = { periodo: 'Período', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior' }
-const CMP_PER_VAL: Record<string, string> = { 'Período': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
+const CMP_PER_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
+const CMP_PER_LBL: Record<string, string> = { periodo: 'Personalizado', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior' }
+const CMP_PER_VAL: Record<string, string> = { 'Personalizado': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
 const SOL_ST_OPTS = ['Todos os status', 'Aguardando', 'Processado', 'Cancelado']
 const SOL_ST_LBL: Record<string, string> = { '': 'Todos os status', solicitado: 'Aguardando', processado: 'Processado', cancelado: 'Cancelado' }
 const SOL_ST_VAL: Record<string, string> = { 'Todos os status': '', 'Aguardando': 'solicitado', 'Processado': 'processado', 'Cancelado': 'cancelado' }
@@ -99,13 +99,17 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-        <div><div style={{ fontSize: 13, fontWeight: 700 }}>1. SOLICITAÇÕES</div><div style={{ fontSize: 12, color: '#94a3b8' }}>Lista de solicitações enviadas pelas lojas</div></div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
-          <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={lojaMap[lojaF] || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => { setLojaF(lojas.find((l) => l.nome === nm)?.id || ''); setPag(1) }} /></div>
-          <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={CMP_PER_LBL[periodo] || 'Período'} options={CMP_PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(CMP_PER_VAL[l] || 'periodo')} /></div>
-          <input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo'); setPag(1) }} /><span style={{ fontSize: 12, color: '#94a3b8' }}>até</span><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo'); setPag(1) }} />
-          <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={SOL_ST_LBL[statusF] || 'Todos os status'} options={SOL_ST_OPTS} placeholder="Todos os status" onChange={(l) => { setStatusF(SOL_ST_VAL[l] || ''); setPag(1) }} /></div>
+      <div className="ds-filterbar">
+        <div className="ds-field" style={{ minWidth: 150 }}><label>Loja</label>
+          <SearchSelect value={lojaMap[lojaF] || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => { setLojaF(lojas.find((l) => l.nome === nm)?.id || ''); setPag(1) }} />
+        </div>
+        <div className="ds-field" style={{ minWidth: 150 }}><label>Período</label>
+          <SearchSelect value={CMP_PER_LBL[periodo] || 'Personalizado'} options={CMP_PER_OPTS} placeholder="Período" onChange={(l) => aplicarPeriodo(CMP_PER_VAL[l] || 'periodo')} />
+        </div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" style={{ width: 150 }} value={de} onChange={(e) => { setDe(e.target.value); setPeriodo('periodo'); setPag(1) }} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" style={{ width: 150 }} value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('periodo'); setPag(1) }} /></div>
+        <div className="ds-field" style={{ minWidth: 150 }}><label>Status</label>
+          <SearchSelect value={SOL_ST_LBL[statusF] || 'Todos os status'} options={SOL_ST_OPTS} placeholder="Todos os status" onChange={(l) => { setStatusF(SOL_ST_VAL[l] || ''); setPag(1) }} />
         </div>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
