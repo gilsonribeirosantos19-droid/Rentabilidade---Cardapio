@@ -22,6 +22,9 @@ const primeiroDiaMes = () => { const d = new Date(); return `${d.getFullYear()}-
 const fmtData = (d?: string) => (d ? d.split('T')[0].split('-').reverse().join('/') : '—')
 const CORES = ['#e11d48', '#f97316', '#f59e0b', '#10b981', '#6366f1', '#94a3b8']
 const SETORES = ['Sushibar', 'Cozinha', 'Confeitaria', 'Expedição', 'Almoxarifado']
+// insumo contado em UNIDADE (un/pct/cx): quantidade_g da ficha = contagem, NÃO grama (mesma regra do cost.ts)
+const UN_CONTAGEM = ['un', 'pct', 'cx']
+const ehContagem = (um?: string) => UN_CONTAGEM.includes((um || '').toLowerCase())
 
 export function PortalPerdas() {
   const { tenantId, usuario } = useAuth()
@@ -113,7 +116,16 @@ export function PortalPerdas() {
       const perdaId = (p as { id: string }).id
       let rows: { perda_id: string; insumo_id: string; quantidade: number; origem: string }[] = []
       if (tipo === 'insumo') rows = [{ perda_id: perdaId, insumo_id: itemId, quantidade: num(qtd), origem: 'insumo' }]
-      else { const f = fichaMap[itemId]; rows = (f?.itens_ficha ?? []).filter((it) => it.insumo_id).map((it) => ({ perda_id: perdaId, insumo_id: it.insumo_id as string, quantidade: (Number(it.quantidade_g) || 0) / 1000 * num(qtd), origem: 'produto' })) }
+      else {
+        const f = fichaMap[itemId]
+        rows = (f?.itens_ficha ?? []).filter((it) => it.insumo_id).map((it) => {
+          const ins = insMap[it.insumo_id || '']
+          const um = ins?.unidade_medida || ins?.unidade_compra
+          // un/pct/cx: quantidade_g já é contagem (1 = 1 un). Demais: grama → kg (/1000).
+          const base = ehContagem(um) ? (Number(it.quantidade_g) || 0) : (Number(it.quantidade_g) || 0) / 1000
+          return { perda_id: perdaId, insumo_id: it.insumo_id as string, quantidade: base * num(qtd), origem: 'produto' }
+        })
+      }
       if (rows.length) { const { error: e2 } = await supabase.from('perdas_itens').insert(rows); if (e2) throw e2 }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['pperdas-hist'] }); qc.invalidateQueries({ queryKey: ['pperdas-resumo'] }); limpar(); showToast('Perda registrada com sucesso!') },
@@ -175,7 +187,12 @@ export function PortalPerdas() {
           {tipo === 'produto' && fichaSel && (fichaSel.itens_ficha?.length ?? 0) > 0 && (
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 11.5, color: '#475569' }}>
               <div style={{ fontWeight: 700, marginBottom: 4 }}>Insumos que serão debitados (por unidade):</div>
-              {(fichaSel.itens_ficha ?? []).map((it, i) => <div key={i}>• {insMap[it.insumo_id || '']?.nome || it.insumo_id}: {(Number(it.quantidade_g) || 0).toFixed(1)}g</div>)}
+              {(fichaSel.itens_ficha ?? []).map((it, i) => {
+                const ins = insMap[it.insumo_id || '']
+                const um = (ins?.unidade_medida || ins?.unidade_compra || 'g').toLowerCase()
+                const q = Number(it.quantidade_g) || 0
+                return <div key={i}>• {ins?.nome || it.insumo_id}: {ehContagem(um) ? `${q} ${um}` : `${q.toFixed(1)}g`}</div>
+              })}
             </div>
           )}
 
