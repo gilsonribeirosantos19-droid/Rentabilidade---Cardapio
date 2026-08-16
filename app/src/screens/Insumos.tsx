@@ -56,6 +56,7 @@ export function Insumos() {
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const [dup, setDup] = useState<Insumo | null>(null); const [dupNome, setDupNome] = useState('')
+  const [transf, setTransf] = useState<{ ins: Insumo; count: number } | null>(null); const [transfDest, setTransfDest] = useState('')
   // filtros Produtos
   const [busca, setBusca] = useState(''); const [fTipo, setFTipo] = useState(''); const [fFam, setFFam] = useState('')
   const [fGrupo, setFGrupo] = useState(''); const [fSub, setFSub] = useState(''); const [fStatus, setFStatus] = useState('')
@@ -123,6 +124,16 @@ export function Insumos() {
     })
   }, [lista, cBusca, cCat, cStatus])
 
+  // trava de desativação: só desativa insumo SEM vínculo de fornecedor (senão a NF-e daquele
+  // fornecedor fica órfã). Com vínculo → obriga transferir pra outro item antes.
+  const contarVinc = async (insumoId: string) => {
+    const { count } = await supabase.from('insumo_fornecedores').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('insumo_id', insumoId)
+    return count || 0
+  }
+  const destLabel = (x: Insumo) => `${x.nome}${x.codigo_interno != null ? ' · ' + fmtCodigo(x.codigo_interno) : ''}`
+  const destList = useMemo(() => lista.filter((x) => x.ativo !== false && (!transf || x.id !== transf.ins.id)).sort((a, b) => (a.nome || '').localeCompare(b.nome || '')), [lista, transf])
+  const destByLabel = useMemo(() => new Map(destList.map((x) => [destLabel(x), x.id])), [destList])
+
   const saveMut = useMutation({
     mutationFn: async (f: Form) => {
       const nome = (f.nome || '').trim()
@@ -138,6 +149,14 @@ export function Insumos() {
         tipo_baixa: f.tipo_baixa || 'consumo', tipo_item: f.tipo_item || null, familia: f.familia || null,
         subgrupo: f.subgrupo || null, participa_cmv: f.participa_cmv === 'nao' ? 'nao' : 'sim', ativo: f.ativo !== false,
         ncm: (f.ncm || '').trim() || null,
+      }
+      // trava: não deixa INATIVAR (ativo=true → false) um item que ainda tem vínculo de fornecedor
+      if (f.id && f.ativo === false) {
+        const prev = lista.find((x) => x.id === f.id)
+        if (!prev || prev.ativo !== false) {
+          const n = await contarVinc(f.id)
+          if (n > 0) throw new Error(`Não dá pra inativar: ${n} ${n === 1 ? 'item de fornecedor vinculado' : 'itens de fornecedor vinculados'}. Use "Desativar" na lista (⋮) para transferir os vínculos para outro item primeiro.`)
+        }
       }
       if (f.id) {
         const { error } = await supabase.from('insumos').update(payload).eq('id', f.id); if (error) throw error
@@ -155,6 +174,17 @@ export function Insumos() {
   const delMut = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('insumos').update({ ativo: false }).eq('id', id); if (error) throw error },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['insumos'] }); showToast('Item desativado.', 'ok') },
+    onError: (e: Error) => showToast(e.message, 'err'),
+  })
+  // transfere TODOS os vínculos de um insumo pra outro e desativa o de origem (escape da trava)
+  const transferMut = useMutation({
+    mutationFn: async ({ srcId, destId }: { srcId: string; destId: string }) => {
+      if (!destId) throw new Error('Escolha o item de destino.')
+      const { error } = await supabase.from('insumo_fornecedores').update({ insumo_id: destId }).eq('tenant_id', tenantId).eq('insumo_id', srcId)
+      if (error) throw new Error('Não deu pra transferir: o item de destino já tem um vínculo com o mesmo código de fornecedor. Ajuste os duplicados na aba Vínculos e tente de novo.')
+      const { error: e2 } = await supabase.from('insumos').update({ ativo: false }).eq('id', srcId); if (e2) throw e2
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['insumos'] }); qc.invalidateQueries({ queryKey: ['vinculos-full'] }); setTransf(null); setTransfDest(''); showToast('Vínculos transferidos e item desativado.', 'ok') },
     onError: (e: Error) => showToast(e.message, 'err'),
   })
 
@@ -326,7 +356,7 @@ export function Insumos() {
         <div style={{ position: 'fixed', top: menu.y + 4, left: menu.x - 120, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 9, boxShadow: '0 8px 24px rgba(0,0,0,.14)', zIndex: 1000, minWidth: 130, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
           <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) editar(ins); setMenu(null) }}>✎ Editar</button>
           <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) duplicar(ins); setMenu(null) }}>⧉ Duplicar</button>
-          <button style={{ ...menuItemStyle, color: '#ef4444' }} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins && confirm(`Desativar "${ins.nome}"?`)) delMut.mutate(ins.id); setMenu(null) }}>🗑 Desativar</button>
+          <button style={{ ...menuItemStyle, color: '#ef4444' }} onClick={async () => { const ins = lista.find((x) => x.id === menu.id); setMenu(null); if (!ins) return; const n = await contarVinc(ins.id); if (n > 0) { setTransfDest(''); setTransf({ ins, count: n }); return } if (confirm(`Desativar "${ins.nome}"?`)) delMut.mutate(ins.id) }}>🗑 Desativar</button>
         </div>
       )}
 
@@ -344,6 +374,31 @@ export function Insumos() {
             <div style={{ padding: '12px 20px 18px', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button className="f-btn" onClick={() => setDup(null)}>Cancelar</button>
               <button className="f-btn primary" disabled={saveMut.isPending} onClick={confirmarDup}>{saveMut.isPending ? 'Salvando…' : 'Duplicar'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {transf && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }} onClick={() => setTransf(null)}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 'min(470px, 94vw)', boxShadow: '0 18px 48px rgba(0,0,0,.25)', overflow: 'visible' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #eef1f5' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Transferir vínculos e desativar</div>
+              <div style={{ fontSize: 12.5, color: '#64748b', marginTop: 4, lineHeight: 1.5 }}>
+                <b>{transf.ins.nome}</b> tem <b>{transf.count}</b> {transf.count === 1 ? 'item de fornecedor vinculado' : 'itens de fornecedor vinculados'}. Escolha o item que vai <b>receber</b> esses vínculos — depois o item atual é desativado.
+              </div>
+            </div>
+            <div style={{ padding: '16px 20px' }}>
+              <label className="form-label">Item de destino *</label>
+              <SearchSelect
+                value={transfDest && destList.find((x) => x.id === transfDest) ? destLabel(destList.find((x) => x.id === transfDest)!) : ''}
+                options={destList.map(destLabel)}
+                placeholder="Buscar item de destino…"
+                onChange={(lbl) => setTransfDest(destByLabel.get(lbl) || '')}
+              />
+            </div>
+            <div style={{ padding: '12px 20px 18px', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="f-btn" onClick={() => setTransf(null)}>Cancelar</button>
+              <button className="f-btn primary" disabled={!transfDest || transferMut.isPending} onClick={() => transferMut.mutate({ srcId: transf.ins.id, destId: transfDest })}>{transferMut.isPending ? 'Transferindo…' : 'Transferir e desativar'}</button>
             </div>
           </div>
         </div>
