@@ -444,7 +444,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
   const [de, setDe] = useState(primeiroDiaMes())
   const [ate, setAte] = useState(hojeStr())
   const [grupo, setGrupo] = useState('')
-  const [tipo, setTipo] = useState('')
+  const [tipo, setTipo] = useState('saida')   // abre filtrando por Saída (é onde se edita/corrige)
   const [resp, setResp] = useState('')
   const [busca, setBusca] = useState('')
   const [periodo, setPeriodo] = useState('atual')
