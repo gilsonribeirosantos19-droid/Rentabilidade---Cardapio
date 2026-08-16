@@ -463,7 +463,7 @@ function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: stri
   useEffect(() => { const n = normalize(raw); if (JSON.stringify(n) !== JSON.stringify(raw)) onChange(n) }, [value, base])   // eslint-disable-line react-hooks/exhaustive-deps
   const commit = (next: Embalagem[]) => onChange(normalize(next))
   const set = (i: number, patch: Partial<Embalagem>) => commit(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
-  const add = () => onChange([...rows, { nome: '', un: 'cx', qtd: 1, ver: true }])
+  const add = () => onChange([...rows, { nome: '', un: '', qtd: 1, ver: true }])
   const del = (i: number) => commit(rows.filter((_, j) => j !== i))
   return (
     <div className="emb-wrap">
@@ -480,7 +480,8 @@ function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: stri
                 {isBase(r)
                   ? <span className="emb-base-un">{unLabel(r.un)}</span>
                   : (
-                    <select className="emb-in" value={r.un || 'cx'} onChange={(e) => set(i, { un: e.target.value })}>
+                    <select className="emb-in" value={r.un || ''} onChange={(e) => set(i, { un: e.target.value })}>
+                      <option value="">—</option>
                       {UN_OPTS.map((u) => <option key={u} value={u}>{unLabel(u)}</option>)}
                       {r.un && !UN_OPTS.includes(r.un) && <option value={r.un}>{unLabel(r.un)}</option>}
                     </select>
