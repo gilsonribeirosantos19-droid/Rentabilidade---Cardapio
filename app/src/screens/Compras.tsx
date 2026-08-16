@@ -38,12 +38,6 @@ const SOL_ST_VAL: Record<string, string> = { 'Todos os status': '', 'Aguardando'
 const PG_ST_OPTS = ['Ativos (a enviar / enviados)', 'Aguardando aprovação', 'Aguardando envio', 'Enviado', 'Baixados', 'Cancelados', 'Todos']
 const PG_ST_LBL: Record<string, string> = { ativos: 'Ativos (a enviar / enviados)', aguardando_aprovacao: 'Aguardando aprovação', pendente: 'Aguardando envio', enviado: 'Enviado', baixado: 'Baixados', cancelado: 'Cancelados', todos: 'Todos' }
 const PG_ST_VAL: Record<string, string> = { 'Ativos (a enviar / enviados)': 'ativos', 'Aguardando aprovação': 'aguardando_aprovacao', 'Aguardando envio': 'pendente', 'Enviado': 'enviado', 'Baixados': 'baixado', 'Cancelados': 'cancelado', 'Todos': 'todos' }
-const PG_DT_OPTS = ['Qualquer data', 'Hoje', 'Últimos 7 dias', 'Últimos 30 dias', 'Período personalizado']
-const PG_DT_LBL: Record<string, string> = { '': 'Qualquer data', hoje: 'Hoje', '7': 'Últimos 7 dias', '30': 'Últimos 30 dias', custom: 'Período personalizado' }
-const PG_DT_VAL: Record<string, string> = { 'Qualquer data': '', 'Hoje': 'hoje', 'Últimos 7 dias': '7', 'Últimos 30 dias': '30', 'Período personalizado': 'custom' }
-const PG_ORD_OPTS = ['Fornecedor (A-Z)', 'Data (mais recente)', 'Valor (maior)']
-const PG_ORD_LBL: Record<string, string> = { forn: 'Fornecedor (A-Z)', data: 'Data (mais recente)', valor: 'Valor (maior)' }
-const PG_ORD_VAL: Record<string, string> = { 'Fornecedor (A-Z)': 'forn', 'Data (mais recente)': 'data', 'Valor (maior)': 'valor' }
 
 // dados compartilhados (leves) usados por várias abas
 function useCompras(tenantId: string) {
@@ -335,7 +329,7 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
   const { insumos, fornecedores, lojas, vinculos } = shared
   const qc = useQueryClient()
   // abre já filtrando por "Aguardando envio" (pendente) — enviados/baixados só ao trocar o filtro
-  const [statusF, setStatusF] = useState('pendente'); const [busca, setBusca] = useState(''); const [filData, setFilData] = useState(''); const [ordenar, setOrdenar] = useState('forn')
+  const [statusF, setStatusF] = useState('pendente'); const [busca, setBusca] = useState('')
   const [pgDe, setPgDe] = useState(''); const [pgAte, setPgAte] = useState('')
   const [verId, setVerId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
@@ -419,14 +413,10 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
       return { fKey, fornNome: forn?.nome || 'Sem fornecedor', peds, primId: peds[0].id, nItens, valor, nLojas: lojasSet.size, st, data: peds[0].data_pedido || peds[0].created_at || '', whatsapp: forn?.whatsapp }
     })
     if (busca) rows = rows.filter((r) => r.fornNome.toLowerCase().includes(busca.toLowerCase()))
-    if (filData === 'custom') {
-      rows = rows.filter((r) => { const d = (r.data || '').slice(0, 10); if (!d) return false; if (pgDe && d < pgDe) return false; if (pgAte && d > pgAte) return false; return true })
-    } else if (filData) {
-      const now = Date.now(); rows = rows.filter((r) => { if (filData === 'hoje') return new Date(r.data).toDateString() === new Date().toDateString(); return (now - new Date(r.data).getTime()) / 864e5 <= parseInt(filData) })
-    }
-    rows.sort((a, b) => ordenar === 'valor' ? b.valor - a.valor : ordenar === 'data' ? +new Date(b.data) - +new Date(a.data) : a.fornNome.localeCompare(b.fornNome))
+    if (pgDe || pgAte) rows = rows.filter((r) => { const d = (r.data || '').slice(0, 10); if (!d) return false; if (pgDe && d < pgDe) return false; if (pgAte && d > pgAte) return false; return true })
+    rows.sort((a, b) => a.fornNome.localeCompare(b.fornNome))
     return rows
-  }, [pedidos, itensMap, fornMap, busca, filData, pgDe, pgAte, ordenar])
+  }, [pedidos, itensMap, fornMap, busca, pgDe, pgAte])
 
   const totItens = linhas.reduce((s, r) => s + r.nItens, 0), totValor = linhas.reduce((s, r) => s + r.valor, 0)
 
@@ -451,14 +441,11 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '4px 0 12px' }}>
         <input className="field" style={{ minWidth: 200 }} placeholder="Buscar fornecedor..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         <div className="fbar-ss" style={{ minWidth: 200 }}><SearchSelect value={PG_ST_LBL[statusF] || 'Ativos (a enviar / enviados)'} options={PG_ST_OPTS} placeholder="Status" onChange={(l) => setStatusF(PG_ST_VAL[l] || 'ativos')} /></div>
-        <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={PG_DT_LBL[filData] || 'Qualquer data'} options={PG_DT_OPTS} placeholder="Qualquer data" onChange={(l) => setFilData(PG_DT_VAL[l] ?? '')} /></div>
-        {filData === 'custom' && (<>
-          <input type="date" className="field" style={{ width: 150 }} value={pgDe} onChange={(e) => setPgDe(e.target.value)} />
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>até</span>
-          <input type="date" className="field" style={{ width: 150 }} value={pgAte} onChange={(e) => setPgAte(e.target.value)} />
-        </>)}
-        <div className="fbar-ss" style={{ minWidth: 170 }}><SearchSelect value={PG_ORD_LBL[ordenar] || 'Fornecedor (A-Z)'} options={PG_ORD_OPTS} placeholder="Ordenar" onChange={(l) => setOrdenar(PG_ORD_VAL[l] || 'forn')} /></div>
-        <button className="btn-ghost" onClick={() => { setStatusF('pendente'); setBusca(''); setFilData(''); setPgDe(''); setPgAte(''); setOrdenar('forn') }}>Limpar filtros</button>
+        <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>Data:</span>
+        <input type="date" className="field" style={{ width: 150 }} value={pgDe} onChange={(e) => setPgDe(e.target.value)} />
+        <span style={{ fontSize: 12, color: '#94a3b8' }}>até</span>
+        <input type="date" className="field" style={{ width: 150 }} value={pgAte} onChange={(e) => setPgAte(e.target.value)} />
+        <button className="btn-ghost" onClick={() => { setStatusF('pendente'); setBusca(''); setPgDe(''); setPgAte('') }}>Limpar filtros</button>
         <button className="btn-ghost" style={{ marginLeft: 'auto' }} title="Imprime 1 folha por loja com todos os itens consolidados dos pedidos listados" onClick={imprimirTodos}>🖨 Baixar todos (por loja)</button>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
