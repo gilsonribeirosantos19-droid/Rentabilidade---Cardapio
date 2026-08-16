@@ -523,7 +523,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
 
       <div className="p-card">
         <table className="p-tbl">
-          <thead><tr><th>Data/Hora</th><th>Tipo</th><th>Insumo</th><th>Grupo</th><th className="r">Qtd.</th><th>Un.</th><th>Responsável</th><th>Observação</th><th></th></tr></thead>
+          <thead><tr><th>Data/Hora</th><th>Tipo</th><th>Insumo</th><th>Grupo</th><th className="r">Qtd.</th><th>Un.</th><th>Responsável</th><th>Observação</th><th className="c">Editar</th></tr></thead>
           <tbody>
             {isFetching ? <tr><td colSpan={9} className="p-empty">Carregando…</td></tr>
               : !lista.length ? <tr><td colSpan={9} className="p-empty">Nenhuma movimentação no período/filtros.</td></tr>
@@ -540,7 +540,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
                       ? <button onClick={() => setNfeChave(m.chave_acesso!)} title="Ver a nota fiscal" style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>{m.observacao || m.motivo || 'Ver NF-e'}</button>
                       : (m.observacao || m.motivo || '—')}</td>
                     <td className="c">{m._lado === 'saida' && m.tipo !== 'ajuste'
-                      ? <button onClick={() => { setCorr(m); setCorrQtd(String(Number(m.quantidade) || '')) }} title="Corrigir esta saída" style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 9px', fontSize: 11.5, color: '#475569', cursor: 'pointer', whiteSpace: 'nowrap' }}>Corrigir</button>
+                      ? <button onClick={() => { setCorr(m); setCorrQtd(String(Number(m.quantidade) || '')) }} title="Editar esta saída" style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 9px', fontSize: 11.5, color: '#475569', cursor: 'pointer', whiteSpace: 'nowrap' }}>Editar</button>
                       : null}</td>
                   </tr>
                 ) })}
@@ -552,7 +552,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
         <div onClick={() => setCorr(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(440px,100%)', boxShadow: '0 20px 60px rgba(15,23,42,.3)', overflow: 'hidden' }}>
             <div style={{ padding: '15px 18px', borderBottom: '1px solid #eef1f6' }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Corrigir saída</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Editar saída</div>
               <div style={{ fontSize: 12.5, color: '#64748b', marginTop: 3 }}>{insMap[corr.insumo_id]?.nome || '—'} · saída atual de <b>{fmtQtd(corr.quantidade)} {un(insMap[corr.insumo_id])}</b></div>
             </div>
             <div style={{ padding: '16px 18px' }}>
