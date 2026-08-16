@@ -77,7 +77,7 @@ export function PortalEstoque() {
       {sub === 'relatorio' && <Relatorio {...{ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap, tenantId, lojaId, baselineData: baseline?.data ?? null }} />}
       {sub === 'movimentacao' && <Movimentacao {...{ insumos, grupos, gruposItens, insMap, fornecedores, tenantId, lojaId, usuario, showToast, onSaved: () => { qc.invalidateQueries({ queryKey: ['pest-saldos'] }); qc.invalidateQueries({ queryKey: ['pest-mov'] }) } }} />}
       {sub === 'saida_lote' && <SaidaLote {...{ insumos, saldoMap, tenantId, lojaId, usuario, showToast, onSaved: () => { qc.invalidateQueries({ queryKey: ['pest-saldos'] }); qc.invalidateQueries({ queryKey: ['pest-mov'] }) } }} />}
-      {sub === 'historico' && <Historico {...{ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, lojaId }} />}
+      {sub === 'historico' && <Historico {...{ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, lojaId, showToast }} />}
 
       {toast && <div className={'p-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
     </div>
@@ -439,7 +439,8 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
 }
 
 // ══════════════════════ HISTÓRICO ══════════════════════
-function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, lojaId }: any) {
+function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, lojaId, showToast }: any) {
+  const qc = useQueryClient()
   const [de, setDe] = useState(primeiroDiaMes())
   const [ate, setAte] = useState(hojeStr())
   const [grupo, setGrupo] = useState('')
@@ -449,6 +450,25 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
   const [periodo, setPeriodo] = useState('atual')
   const [aplicado, setAplicado] = useState<{ de: string; ate: string } | null>({ de: primeiroDiaMes(), ate: hojeStr() })
   const [nfeChave, setNfeChave] = useState<string | null>(null)   // NF-e aberta pelo clique no número (Observação)
+  const [corr, setCorr] = useState<any | null>(null); const [corrQtd, setCorrQtd] = useState('')   // correção de saída
+  // Corrigir SAÍDA: devolve a qtd errada e aplica a certa (delta no saldo; custo médio não muda em saída).
+  const corrigirMut = useMutation({
+    mutationFn: async () => {
+      if (!corr) return
+      const oldQty = Number(corr.quantidade) || 0
+      const newQty = num(corrQtd)
+      if (newQty < 0) throw new Error('Quantidade inválida.')
+      const { data: sals } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lojaId).eq('insumo_id', corr.insumo_id)
+      const qtdAtual = Number((sals ?? [])[0]?.quantidade) || 0
+      const cmAtual = Number((sals ?? [])[0]?.custo_medio) || 0
+      const saldoNovo = Math.max(0, qtdAtual + oldQty - newQty)
+      if (newQty <= 0) { const { error } = await supabase.from('saidas_estoque').delete().eq('id', corr.id); if (error) throw error }
+      else { const { error } = await supabase.from('saidas_estoque').update({ quantidade: newQty }).eq('id', corr.id); if (error) throw error }
+      const { error: eu } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: corr.insumo_id, quantidade: parseFloat(saldoNovo.toFixed(4)), custo_medio: parseFloat(cmAtual.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (eu) throw eu
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pest-hist'] }); qc.invalidateQueries({ queryKey: ['pest-saldos'] }); setCorr(null); setCorrQtd(''); showToast('Lançamento corrigido!') },
+    onError: (e: Error) => showToast('Erro: ' + e.message, true),
+  })
 
   const onPeriodo = (p: string) => {
     setPeriodo(p)
@@ -503,10 +523,10 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
 
       <div className="p-card">
         <table className="p-tbl">
-          <thead><tr><th>Data/Hora</th><th>Tipo</th><th>Insumo</th><th>Grupo</th><th className="r">Qtd.</th><th>Un.</th><th>Responsável</th><th>Observação</th></tr></thead>
+          <thead><tr><th>Data/Hora</th><th>Tipo</th><th>Insumo</th><th>Grupo</th><th className="r">Qtd.</th><th>Un.</th><th>Responsável</th><th>Observação</th><th></th></tr></thead>
           <tbody>
-            {isFetching ? <tr><td colSpan={8} className="p-empty">Carregando…</td></tr>
-              : !lista.length ? <tr><td colSpan={8} className="p-empty">Nenhuma movimentação no período/filtros.</td></tr>
+            {isFetching ? <tr><td colSpan={9} className="p-empty">Carregando…</td></tr>
+              : !lista.length ? <tr><td colSpan={9} className="p-empty">Nenhuma movimentação no período/filtros.</td></tr>
                 : lista.map((m: any, idx: number) => { const ins = insMap[m.insumo_id]; const tp = _tipo(m); const pos = m._lado === 'entrada'; return (
                   <tr key={m.id || idx}>
                     <td className="mono" style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{fmtDataHora(m.criado_em || m.created_at)}</td>
@@ -519,12 +539,34 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
                     <td style={{ fontSize: 12, color: '#64748b' }}>{m.chave_acesso
                       ? <button onClick={() => setNfeChave(m.chave_acesso!)} title="Ver a nota fiscal" style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>{m.observacao || m.motivo || 'Ver NF-e'}</button>
                       : (m.observacao || m.motivo || '—')}</td>
+                    <td className="c">{m._lado === 'saida' && m.tipo !== 'ajuste'
+                      ? <button onClick={() => { setCorr(m); setCorrQtd(String(Number(m.quantidade) || '')) }} title="Corrigir esta saída" style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 9px', fontSize: 11.5, color: '#475569', cursor: 'pointer', whiteSpace: 'nowrap' }}>Corrigir</button>
+                      : null}</td>
                   </tr>
                 ) })}
           </tbody>
         </table>
       </div>
       {nfeChave && <NfeModal chave={nfeChave} tenantId={tenantId} onClose={() => setNfeChave(null)} />}
+      {corr && (
+        <div onClick={() => setCorr(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 1000 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, width: 'min(440px,100%)', boxShadow: '0 20px 60px rgba(15,23,42,.3)', overflow: 'hidden' }}>
+            <div style={{ padding: '15px 18px', borderBottom: '1px solid #eef1f6' }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>Corrigir saída</div>
+              <div style={{ fontSize: 12.5, color: '#64748b', marginTop: 3 }}>{insMap[corr.insumo_id]?.nome || '—'} · saída atual de <b>{fmtQtd(corr.quantidade)} {un(insMap[corr.insumo_id])}</b></div>
+            </div>
+            <div style={{ padding: '16px 18px' }}>
+              <label style={{ fontSize: 11, color: '#64748b', fontWeight: 600, display: 'block', marginBottom: 5 }}>Quantidade correta <span style={{ color: '#94a3b8', fontWeight: 400 }}>(0 = apagar o lançamento)</span></label>
+              <input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={corrQtd} onChange={(e) => setCorrQtd(e.target.value)} autoFocus />
+              <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 8 }}>O saldo é ajustado pela diferença (devolve a errada, aplica a certa). Custo médio não muda em saída.</div>
+            </div>
+            <div style={{ padding: '12px 18px 16px', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button className="p-btn" onClick={() => setCorr(null)}>Cancelar</button>
+              <button className="p-btn p-btn-pri" disabled={corrigirMut.isPending} onClick={() => corrigirMut.mutate()}>{corrigirMut.isPending ? 'Salvando…' : 'Salvar correção'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
