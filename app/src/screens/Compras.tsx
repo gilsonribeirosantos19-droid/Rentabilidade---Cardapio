@@ -408,9 +408,11 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
 
   const linhas = useMemo(() => {
     const porForn: Record<string, Pedido[]> = {}
-    pedidos.forEach((p) => { const k = p.fornecedor_id || '__sem__'; (porForn[k] = porForn[k] || []).push(p) })
-    let rows = Object.entries(porForn).map(([fKey, peds]) => {
-      const forn = fKey === '__sem__' ? null : fornMap[fKey]
+    // agrupa por fornecedor + DIA → cada dia vira uma linha (pedido não enviado de ontem não gruda no de hoje)
+    pedidos.forEach((p) => { const dia = (p.data_pedido || p.created_at || '').slice(0, 10); const k = (p.fornecedor_id || '__sem__') + '|' + dia; (porForn[k] = porForn[k] || []).push(p) })
+    let rows = Object.entries(porForn).map(([key, peds]) => {
+      const fornId = key.split('|')[0]
+      const forn = fornId === '__sem__' ? null : fornMap[fornId]
       let nItens = 0, valor = 0; const lojasSet = new Set<string>()
       peds.forEach((p) => {
         (itensMap[p.id] || []).forEach((it) => {
@@ -420,11 +422,11 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
         })
       })
       const st = peds.map((p) => p.status || '').sort((a, b) => (PED_ORDEM[a] ?? 9) - (PED_ORDEM[b] ?? 9))[0]
-      return { fKey, fornNome: forn?.nome || 'Sem fornecedor', peds, primId: peds[0].id, nItens, valor, nLojas: lojasSet.size, st, data: peds[0].data_pedido || peds[0].created_at || '', whatsapp: forn?.whatsapp }
+      return { fKey: key, fornId, fornNome: forn?.nome || 'Sem fornecedor', peds, primId: peds[0].id, nItens, valor, nLojas: lojasSet.size, st, data: peds[0].data_pedido || peds[0].created_at || '', whatsapp: forn?.whatsapp }
     })
     if (busca) rows = rows.filter((r) => r.fornNome.toLowerCase().includes(busca.toLowerCase()))
     if (pgDe || pgAte) rows = rows.filter((r) => { const d = (r.data || '').slice(0, 10); if (!d) return false; if (pgDe && d < pgDe) return false; if (pgAte && d > pgAte) return false; return true })
-    rows.sort((a, b) => a.fornNome.localeCompare(b.fornNome))
+    rows.sort((a, b) => a.fornNome.localeCompare(b.fornNome) || (b.data || '').localeCompare(a.data || ''))
     return rows
   }, [pedidos, itensMap, fornMap, busca, pgDe, pgAte])
 
@@ -478,7 +480,7 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
                 <td className="c" style={{ whiteSpace: 'nowrap' }}>
                   <button className="btn-ghost" style={{ height: 28, padding: '0 9px' }} onClick={() => setVerId(r.primId)}>Visualizar</button>
                   <button className="btn-ghost" style={{ height: 28, padding: '0 9px' }} onClick={() => imprimir(r.fornNome, r.peds)}>PDF</button>
-                  {r.whatsapp && <button className="btn-ghost" style={{ height: 28, padding: '0 9px' }} title="WhatsApp" onClick={() => enviarWhats(r.primId, fornMap[r.fKey])}>💬</button>}
+                  {r.whatsapp && <button className="btn-ghost" style={{ height: 28, padding: '0 9px' }} title="WhatsApp" onClick={() => enviarWhats(r.primId, fornMap[r.fornId])}>💬</button>}
                 </td>
               </tr> })}
           </tbody>
