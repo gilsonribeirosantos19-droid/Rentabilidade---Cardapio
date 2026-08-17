@@ -38,7 +38,9 @@ begin
       from public.saidas_estoque s
      where s.tenant_id = p_tenant and s.criado_em <= lim
        and (p_loja is null or s.loja_id = p_loja)
-    order by ins, dt
+    -- empate de data: ENTRADA antes de SAÍDA (mesma ordem do lib/cost.ts, que empilha entradas
+    -- primeiro num sort estável). Sem isso, uma saída no MESMO instante distorce o custo médio.
+    order by ins, dt, ent desc
   loop
     if r.ins is distinct from cur_ins then
       if cur_ins is not null then
