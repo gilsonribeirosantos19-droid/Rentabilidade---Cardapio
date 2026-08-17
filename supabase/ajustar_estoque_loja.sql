@@ -52,12 +52,13 @@ begin
   end if;
 
   if v_dif > 0 then
-    -- subiu → entrada de ajuste, carregando o custo médio vigente
-    insert into public.entradas_estoque (tenant_id, insumo_id, loja_id, quantidade, tipo, motivo, observacao, custo_unitario, criado_em)
-    values (v_tenant, v_insumo, v_loja, v_dif, 'ajuste', v_motivo, 'Ajuste de estoque', round(v_cmA, 6), v_data)
+    -- subiu → entrada de ajuste, carregando o custo médio vigente.
+    -- entradas_estoque NÃO tem coluna motivo: o texto do motivo vai em observacao.
+    insert into public.entradas_estoque (tenant_id, insumo_id, loja_id, quantidade, tipo, observacao, custo_unitario, criado_em)
+    values (v_tenant, v_insumo, v_loja, v_dif, 'ajuste', coalesce(nullif(v_motivo, ''), 'Ajuste de estoque'), round(v_cmA, 6), v_data)
     returning id into v_mov_id;
   else
-    -- caiu → saída de ajuste
+    -- caiu → saída de ajuste (saidas_estoque tem motivo E observacao)
     insert into public.saidas_estoque (tenant_id, insumo_id, loja_id, quantidade, tipo, motivo, observacao, criado_em)
     values (v_tenant, v_insumo, v_loja, abs(v_dif), 'ajuste', v_motivo, 'Ajuste de estoque', v_data)
     returning id into v_mov_id;

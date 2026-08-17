@@ -36,10 +36,10 @@ export function AjusteEstoque() {
     queryKey: ['ae-log', tenantId], enabled: !!tenantId,
     queryFn: async () => {
       const [e, s] = await Promise.all([
-        supabase.from('entradas_estoque').select('insumo_id,quantidade,motivo,criado_em').eq('tenant_id', tenantId).eq('tipo', 'ajuste').order('criado_em', { ascending: false }).limit(50),
+        supabase.from('entradas_estoque').select('insumo_id,quantidade,observacao,criado_em').eq('tenant_id', tenantId).eq('tipo', 'ajuste').order('criado_em', { ascending: false }).limit(50),
         supabase.from('saidas_estoque').select('insumo_id,quantidade,motivo,criado_em').eq('tenant_id', tenantId).eq('tipo', 'ajuste').order('criado_em', { ascending: false }).limit(50),
       ])
-      return [...(e.data ?? []).map((x) => ({ ...x, dir: 'pos' as const })), ...(s.data ?? []).map((x) => ({ ...x, dir: 'neg' as const }))].sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || '')) as Log[]
+      return [...(e.data ?? []).map((x) => ({ insumo_id: x.insumo_id, quantidade: x.quantidade, motivo: x.observacao, criado_em: x.criado_em, dir: 'pos' as const })), ...(s.data ?? []).map((x) => ({ ...x, dir: 'neg' as const }))].sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || '')) as Log[]
     },
   })
 
