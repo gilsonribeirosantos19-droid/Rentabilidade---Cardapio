@@ -16,6 +16,17 @@ import './portal.css'
 
 type TabKey = 'inventario' | 'solicitacao' | 'requisicao-cd' | 'indicadores' | 'perdas' | 'estoque' | 'pcp-porcionamento' | 'pcp-producao'
 const LABEL: Record<TabKey, string> = { inventario: 'Inventário', solicitacao: 'Solicitação de Compra', 'requisicao-cd': 'Requisição ao CD', indicadores: 'Indicadores', perdas: 'Perdas', estoque: 'Estoque', 'pcp-porcionamento': 'Ordem de Porcionamento', 'pcp-producao': 'Ordem de Produção' }
+// descrição de cada tela — exibida no cabeçalho fixo (no lugar de "Portal do Gerente — loja")
+const DESC: Record<TabKey, string> = {
+  inventario: 'Consulte os inventários da sua loja e preencha a contagem dos itens.',
+  solicitacao: 'Selecione os itens por grupo, informe as quantidades e envie para Compras.',
+  'requisicao-cd': 'Peça ao Centro de Distribuição o que a sua loja precisa. O CD separa e envia.',
+  indicadores: 'Lance os números que aparecem no painel de metas da TV.',
+  perdas: 'Registre as perdas reais de insumos e produtos.',
+  estoque: 'Consulte a posição, lance entradas/saídas e veja o histórico da sua loja.',
+  'pcp-porcionamento': 'Aponte a pesagem do porcionamento da sua loja.',
+  'pcp-producao': 'Lance a produção (item com ficha técnica) da sua loja.',
+}
 
 const ico = (d: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>{d.split('|').map((p, i) => <path key={i} d={p} />)}</svg>
 const ICONS: Record<string, ReactNode> = {
@@ -77,7 +88,10 @@ export function PortalShell() {
       <div className="p-main">
         <div className="p-topbar">
           <button className="p-hamb" onClick={() => setOpen(true)}>☰</button>
-          <div className="p-title">Portal do Gerente — {lojaNome}</div>
+          <div className="p-th">
+            <div className="p-title">{LABEL[tab]}</div>
+            <div className="p-subtitle">{DESC[tab]}</div>
+          </div>
           <div className="p-conn"><span className="p-dot" /> conectado</div>
         </div>
         <div className="p-content">
