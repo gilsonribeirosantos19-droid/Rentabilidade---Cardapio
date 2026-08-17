@@ -44,7 +44,7 @@ export function PortalInventario() {
 
   const sitList = useMemo(() => { const s: string[] = []; if (applied.sit.ativo) s.push('ativo'); if (applied.sit.encerrado) s.push('encerrado'); if (applied.sit.cancelado) s.push('cancelado'); return s }, [applied])
   const { data: invs = [], isLoading, error: qErr } = useQuery({
-    queryKey: ['pinv-list', tenantId, lojaId, applied], enabled: !!tenantId && sitList.length > 0,
+    queryKey: ['pinv-list', tenantId, lojaId, applied], enabled: !!tenantId && !!lojaId && sitList.length > 0,
     queryFn: async () => {
       let q = supabase.from('inventarios').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false })
       if (lojaId) q = q.eq('loja_id', lojaId)
@@ -76,6 +76,7 @@ export function PortalInventario() {
   const salvarMut = useMutation({
     mutationFn: async () => {
       if (!inv) return
+      if (!lojaId) throw new Error('Sua conta não está ligada a uma loja.')
       const num = (v: string) => parseFloat(String(v).replace(',', '.')) || 0
       const rows = linhas.map((l) => ({ id: l.id, inventario_id: inv.id, qtd_contada: lancado(l) ? num(l.qtd) : null, tenant_id: tenantId }))
       const { error } = await supabase.from('inventario_itens').upsert(rows, { onConflict: 'id' }); if (error) throw error

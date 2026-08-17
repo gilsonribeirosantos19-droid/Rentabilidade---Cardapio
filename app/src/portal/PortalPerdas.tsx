@@ -64,7 +64,7 @@ export function PortalPerdas() {
 
   // ---- dashboard ----
   const { data: hist } = useQuery({
-    queryKey: ['pperdas-hist', tenantId, lojaId], enabled: !!tenantId,
+    queryKey: ['pperdas-hist', tenantId, lojaId], enabled: !!tenantId && !!lojaId,
     queryFn: async () => {
       let q = supabase.from('perdas').select('id,motivo_id,data_perda').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(5)
       if (lojaId) q = q.eq('loja_id', lojaId)
@@ -75,7 +75,7 @@ export function PortalPerdas() {
     },
   })
   const { data: resumo } = useQuery({
-    queryKey: ['pperdas-resumo', tenantId, lojaId, resumoDe, resumoAte], enabled: !!tenantId,
+    queryKey: ['pperdas-resumo', tenantId, lojaId, resumoDe, resumoAte], enabled: !!tenantId && !!lojaId,
     queryFn: async () => {
       let q = supabase.from('perdas').select('id,motivo_id,data_perda').eq('tenant_id', tenantId).gte('data_perda', resumoDe).lte('data_perda', resumoAte).limit(500)
       if (lojaId) q = q.eq('loja_id', lojaId)
@@ -108,6 +108,7 @@ export function PortalPerdas() {
   const limpar = () => { setItemId(''); setQtd(''); setMotivoId(''); setSetor(''); setObs('') }
   const registrarMut = useMutation({
     mutationFn: async () => {
+      if (!lojaId) throw new Error('Sua conta não está ligada a uma loja.')
       if (!itemId) throw new Error('Selecione o item.')
       if (num(qtd) <= 0) throw new Error('Informe a quantidade.')
       if (!motivoId) throw new Error('Selecione o motivo.')

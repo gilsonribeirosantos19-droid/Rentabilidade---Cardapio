@@ -87,7 +87,9 @@ export function Recalcular() {
       const custoTotal = custoFichaPorcao(f.itens_ficha || [], 1, lId, ctx)
       const custoKg = custoTotal / rendG * 1000
       // custo do processado POR LOJA → saldo_estoque (fonte da regra por-loja)
-      const { error } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: f.insumo_vinculado_id, loja_id: lId, quantidade: 0, custo_medio: +custoKg.toFixed(6), atualizado_em: agora }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (error) throw error
+      // NÃO enviar 'quantidade' no upsert — senão zera o saldo físico do processado já contado
+      // (mesma proteção do FichaModal). Só atualiza o custo; a qtd fica com o valor existente.
+      const { error } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: f.insumo_vinculado_id, loja_id: lId, custo_medio: +custoKg.toFixed(6), atualizado_em: agora }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (error) throw error
       // preço de compra = reserva global; NUNCA grava zero (guarda-costas contra a zeragem)
       if (custoKg > 0) { const { error: e2 } = await supabase.from('insumos').update({ preco_compra: +custoKg.toFixed(4) }).eq('id', f.insumo_vinculado_id!); if (e2) throw e2 }
       n++

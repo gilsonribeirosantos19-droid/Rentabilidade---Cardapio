@@ -242,7 +242,10 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
   const listaInsumos = useMemo(() => { let l = insumos as Insumo[]; if (grupoFiltro) l = l.filter((i) => (i.categoria || '') === grupoFiltro); return l.slice().sort((a, b) => (a.nome || '').localeCompare(b.nome || '')) }, [insumos, grupoFiltro])
   const valorTotal = num(qtd) * num(custo)
 
-  const onInsumo = (id: string) => { setInsumoId(id); const i = insMap[id]; setUnidCompra(i?.unidade_compra || ''); if (i?.preco_compra) setCusto(String(i.preco_compra)) }
+  // pré-preenche o custo com o PREÇO DA EMBALAGEM = preco_compra(por unid. estoque) × fator.
+  // (o submit faz custoUnit = custo/fator; se pré-preencher com preco_compra puro, o custo médio despenca)
+  const onInsumo = (id: string) => { setInsumoId(id); const i = insMap[id]; setUnidCompra(i?.unidade_compra || ''); setCusto(i?.preco_compra ? String(+((Number(i.preco_compra) || 0) * (num(fator) || 1)).toFixed(4)) : '') }
+  const onFator = (f: string) => { setFator(f); if (insSel?.preco_compra) setCusto(String(+((Number(insSel.preco_compra) || 0) * (num(f) || 1)).toFixed(4))) }
 
   const { data: dia, isFetching } = useQuery({
     queryKey: ['pest-mov', tenantId, lojaId, data, tipoFil], enabled: !!tenantId && !!lojaId && !!data,
@@ -320,8 +323,8 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
               <div><label style={lbl}>Unid. de compra</label><input className="p-field" style={{ width: '100%' }} value={unidCompra} onChange={(e) => setUnidCompra(e.target.value)} placeholder="cx, fardo…" /></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
-              <div><label style={lbl}>Fator conversão</label><input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={fator} onChange={(e) => setFator(e.target.value)} /></div>
-              <div><label style={lbl}>Custo unit. (R$/{unSel})</label><input type="number" min="0" step="0.01" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={custo} onChange={(e) => setCusto(e.target.value)} /></div>
+              <div><label style={lbl}>Fator conversão</label><input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={fator} onChange={(e) => onFator(e.target.value)} /></div>
+              <div><label style={lbl}>Custo da compra (R${unidCompra ? '/' + unidCompra : ''})</label><input type="number" min="0" step="0.01" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={custo} onChange={(e) => setCusto(e.target.value)} /></div>
               <div><label style={lbl}>Valor total</label><div style={{ fontSize: 14, fontWeight: 700, height: 34, display: 'flex', alignItems: 'center', color: '#f97316' }}>{brl(valorTotal)}</div></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -547,7 +550,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
                     <td style={{ fontSize: 12, color: '#64748b' }}>{m.chave_acesso
                       ? <button onClick={() => setNfeChave(m.chave_acesso!)} title="Ver a nota fiscal" style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>{m.observacao || m.motivo || 'Ver NF-e'}</button>
                       : (m.observacao || m.motivo || '—')}</td>
-                    <td className="c">{m._lado === 'saida' && m.tipo !== 'ajuste'
+                    <td className="c">{m._lado === 'saida' && m.tipo === 'consumo'
                       ? <button onClick={() => { setCorr(m); setCorrQtd(String(Number(m.quantidade) || '')) }} title="Editar esta saída" style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '2px 9px', fontSize: 11.5, color: '#475569', cursor: 'pointer', whiteSpace: 'nowrap' }}>Editar</button>
                       : null}</td>
                   </tr>
