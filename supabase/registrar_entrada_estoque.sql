@@ -57,11 +57,13 @@ begin
                 then round((v_qAc * v_cmA + v_qtd * v_custo) / (v_qAc + v_qtd), 6)
                 else v_custo end;
 
-  -- grava a entrada (mesmos campos do front)
+  -- grava a entrada (mesmos campos do front). nfe_numero/chave_acesso são usados pela entrada de
+  -- NF-e (anti-duplicação + estorno); nas entradas manuais vêm nulos.
   insert into public.entradas_estoque (
     tenant_id, insumo_id, loja_id, fornecedor_id, fornecedor_nome,
     quantidade, quantidade_fornecedor, unidade_compra, fator_conversao,
-    custo_unitario, lote, validade, tipo, observacao, responsavel, criado_em
+    custo_unitario, lote, validade, tipo, observacao, responsavel, criado_em,
+    nfe_numero, chave_acesso
   ) values (
     v_tenant, v_insumo, v_loja,
     nullif(p_entrada->>'fornecedor_id','')::uuid, p_entrada->>'fornecedor_nome',
@@ -69,7 +71,8 @@ begin
     (p_entrada->>'fator_conversao')::numeric,
     v_custo, p_entrada->>'lote', nullif(p_entrada->>'validade','')::date,
     coalesce(p_entrada->>'tipo','manual'), p_entrada->>'observacao', p_entrada->>'responsavel',
-    coalesce((p_entrada->>'criado_em')::timestamptz, now())
+    coalesce((p_entrada->>'criado_em')::timestamptz, now()),
+    p_entrada->>'nfe_numero', p_entrada->>'chave_acesso'
   ) returning id into v_ent_id;
 
   -- atualiza o saldo travado
@@ -81,12 +84,12 @@ begin
   begin
     insert into public.historico_custo (
       tenant_id, insumo_id, loja_id, saldo_anterior, custo_medio_anterior,
-      qtd_entrada, custo_entrada, novo_custo_medio, impacto_pct, origem
+      qtd_entrada, custo_entrada, novo_custo_medio, impacto_pct, origem, documento_ref
     ) values (
       v_tenant, v_insumo, v_loja, round(v_qA,4), round(v_cmA,4),
       round(v_qtd,4), round(v_custo,4), round(v_cmN,4),
       case when v_cmA > 0 then round(((v_cmN - v_cmA)/v_cmA)*100, 4) else null end,
-      coalesce(p_entrada->>'origem','manual')
+      coalesce(p_entrada->>'origem','manual'), p_entrada->>'documento_ref'
     );
   exception when others then null;
   end;

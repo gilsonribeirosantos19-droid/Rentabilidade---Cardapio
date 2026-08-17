@@ -4,7 +4,6 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
-import { mediaPonderada } from '../lib/cost'
 import { imprimirDanfeOuLocal, gerarDanfeXml, gerarDanfeAiko } from '../lib/danfe'
 import { brl } from '../lib/format'
 import './fiscal.css'
@@ -166,16 +165,17 @@ export function MonitorNfe() {
   const [refreshing, setRefreshing] = useState(false)
   const atualizar = async () => { setRefreshing(true); try { await qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && /^mon-/i.test(q.queryKey[0] as string) }) } finally { setRefreshing(false) } }
 
-  // grava 1 entrada de NF-e: insere em entradas_estoque + recalcula saldo (média ponderada) + histórico + preço do vínculo
+  // grava 1 entrada de NF-e ATÔMICA (M2/M3): reusa a RPC registrar_entrada_estoque (entrada + saldo
+  // com custo médio + histórico + vínculo numa transação com trava). origem='nfe' e documento_ref
+  // levam o número da nota; nfe_numero e chave_acesso já vêm em `dados` (anti-duplicação + estorno).
   async function registrarEntradaNfe(insId: string, loja: string, fornId: string | null, fornNome: string | undefined, dados: any) {
-    const { error } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, fornecedor_id: fornId, fornecedor_nome: fornNome || null, ...dados })
+    const { error } = await supabase.rpc('registrar_entrada_estoque', { p_entrada: {
+      tenant_id: tenantId, insumo_id: insId, loja_id: loja,
+      fornecedor_id: fornId, fornecedor_nome: fornNome || null,
+      origem: 'nfe', documento_ref: dados.nfe_numero || null,
+      ...dados,
+    } })
     if (error) throw error
-    const { data: sd } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('insumo_id', insId).eq('loja_id', loja).limit(1)
-    const qA = sd?.[0]?.quantidade || 0, cmA = sd?.[0]?.custo_medio || 0, qN = qA + dados.quantidade
-    const cmN = mediaPonderada(qA, cmA, dados.quantidade, dados.custo_unitario)
-    await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, quantidade: +qN.toFixed(4), custo_medio: +cmN.toFixed(6), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
-    try { await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, saldo_anterior: +qA.toFixed(4), custo_medio_anterior: +cmA.toFixed(4), qtd_entrada: +dados.quantidade.toFixed(4), custo_entrada: +dados.custo_unitario.toFixed(4), novo_custo_medio: +cmN.toFixed(4), impacto_pct: cmA > 0 ? +(((cmN - cmA) / cmA) * 100).toFixed(4) : null, origem: 'nfe', documento_ref: dados.nfe_numero || null }) } catch { /* opcional */ }
-    if (fornId) { try { await supabase.from('insumo_fornecedores').update({ preco_unitario: +dados.custo_unitario.toFixed(6) }).eq('insumo_id', insId).eq('fornecedor_id', fornId) } catch { /* opcional */ } }
   }
 
   // processa 1 NF-e (gravação no estoque) — com trava anti-duplicação
