@@ -524,8 +524,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
         <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('personalizado') }} /></div>
         <div className="pf-fld"><label>Grupo</label><select className="p-field" value={grupo} onChange={(e) => setGrupo(e.target.value)}><option value="">Todos</option>{grupos.map((g: Grupo) => <option key={g.id} value={g.id}>{g.nome}</option>)}</select></div>
         <div className="pf-fld"><label>Tipo</label><select className="p-field" value={tipo} onChange={(e) => setTipo(e.target.value)}><option value="">Todos</option><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ajuste">Ajuste</option></select></div>
-        <div className="pf-fld"><label>Responsável</label><select className="p-field" value={resp} onChange={(e) => setResp(e.target.value)}><option value="">Todos</option>{responsaveis.map((n) => <option key={n} value={n}>{n}</option>)}</select></div>
-        <div className="pf-fld"><label>Buscar item</label><input className="p-field" placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
+        <div className="pf-fld" style={{ flex: 1, minWidth: 160 }}><label>Buscar item</label><input className="p-field" style={{ width: '100%' }} placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
         <button className="p-btn p-btn-pri" onClick={() => setAplicado({ de, ate })}>Atualizar</button>
         <button className="p-btn" onClick={exportar} style={{ marginLeft: 'auto' }}>Exportar CSV</button>
       </div>
