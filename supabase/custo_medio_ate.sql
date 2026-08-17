@@ -1,50 +1,45 @@
 -- custo_medio_ate: custo médio de CADA insumo "refazendo o filme" dos movimentos até uma data,
--- porém NO BANCO (C2 da auditoria — escala p/ 50+ lojas sem baixar todo o histórico pro navegador).
+-- porém NO BANCO (C2 — escala p/ 50+ lojas sem baixar todo o histórico pro navegador).
 --
--- Reproduz FIELMENTE a lógica de lib/cost.ts › custoMedioNaData:
---   percorre entradas+saídas do insumo em ordem de data e mantém (q, cm):
---     • ENTRADA com qtd>0: cm = (q*cm + qtd*custo) / (q+qtd);  q += qtd
---     • ENTRADA com qtd=0 e custo>0: cm = custo   (ajuste de custo médio)
---     • SAÍDA: q = max(0, q - qtd)   (custo médio não muda)
---   retorna o cm final de cada insumo.
+-- Reproduz FIELMENTE lib/cost.ts › custoMedioNaData, inclusive a ARITMÉTICA: usa `double precision`
+-- (IEEE 754 double = o mesmo tipo de número do JavaScript) e NÃO arredonda o resultado — assim o
+-- valor bate DÍGITO POR DÍGITO com o cálculo da tela, pro CMV ficar 100% igual.
 --
--- p_loja: se informado, refaz o filme só daquela loja (igual ao filtro por loja da tela);
---         se nulo, mistura todas as lojas do tenant (igual a "Todas as lojas").
+-- Ordem dos movimentos = data (criado_em); no EMPATE, ENTRADA antes de SAÍDA (igual ao sort estável
+-- do cost.ts, que empilha as entradas primeiro). Sem isso, uma saída no mesmo instante distorce.
 --
--- IMPORTANTE: não substitui nada sozinho — a tela vai usar isso e MANTER o fallback
--- (saldo/vínculo/preço) pros insumos que vierem com custo 0, pra o CMV nunca zerar.
+-- p_loja: se informado, refaz só daquela loja; se nulo, mistura todas as lojas do tenant.
 
 create or replace function public.custo_medio_ate(p_tenant uuid, p_ate date, p_loja uuid default null)
-returns table(insumo_id uuid, custo_medio numeric)
+returns table(insumo_id uuid, custo_medio double precision)
 language plpgsql
 stable
 as $$
 declare
   r        record;
   cur_ins  uuid := null;
-  q        numeric := 0;
-  cm       numeric := 0;
-  lim      timestamptz := (p_ate::text || 'T23:59:59')::timestamptz;   -- MESMO teto e MESMO fuso da consulta do front (criado_em <= ate T23:59:59); sem forçar UTC
+  q        double precision := 0;
+  cm       double precision := 0;
+  lim      timestamptz := (p_ate::text || 'T23:59:59')::timestamptz;   -- mesmo teto/fuso da consulta do front
 begin
   for r in
     select e.insumo_id as ins, e.criado_em as dt, true as ent,
-           coalesce(e.quantidade, 0) as qt, coalesce(e.custo_unitario, 0) as v
+           coalesce(e.quantidade, 0)::double precision   as qt,
+           coalesce(e.custo_unitario, 0)::double precision as v
       from public.entradas_estoque e
      where e.tenant_id = p_tenant and e.criado_em <= lim
        and (p_loja is null or e.loja_id = p_loja)
     union all
     select s.insumo_id, s.criado_em, false,
-           coalesce(s.quantidade, 0), 0
+           coalesce(s.quantidade, 0)::double precision, 0::double precision
       from public.saidas_estoque s
      where s.tenant_id = p_tenant and s.criado_em <= lim
        and (p_loja is null or s.loja_id = p_loja)
-    -- empate de data: ENTRADA antes de SAÍDA (mesma ordem do lib/cost.ts, que empilha entradas
-    -- primeiro num sort estável). Sem isso, uma saída no MESMO instante distorce o custo médio.
     order by ins, dt, ent desc
   loop
     if r.ins is distinct from cur_ins then
       if cur_ins is not null then
-        insumo_id := cur_ins; custo_medio := round(cm, 6); return next;
+        insumo_id := cur_ins; custo_medio := cm; return next;
       end if;
       cur_ins := r.ins; q := 0; cm := 0;
     end if;
@@ -57,12 +52,12 @@ begin
         q := q + r.qt;
       end if;
     else
-      q := greatest(0, q - r.qt);                                   -- saída não mexe no custo médio
+      q := greatest(0::double precision, q - r.qt);                 -- saída não mexe no custo médio
     end if;
   end loop;
 
   if cur_ins is not null then
-    insumo_id := cur_ins; custo_medio := round(cm, 6); return next;
+    insumo_id := cur_ins; custo_medio := cm; return next;
   end if;
 end;
 $$;
