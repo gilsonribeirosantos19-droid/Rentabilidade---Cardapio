@@ -12,7 +12,10 @@ type Usuario = { id: string; nome?: string; email?: string; role?: string; loja_
 type Loja = { id: string; nome: string }
 type Modal = { id?: string; nome: string; email: string; role: string; lojaId: string; senha: string }
 
-const ROLES = [{ v: 'admin', l: 'Administrador' }, { v: 'gerente', l: 'Gerente' }, { v: 'operador', l: 'Operador' }]
+// "operador" removido: só admin (acesso total) e gerente (preso à loja). Enquanto não há
+// permissão fina, "operador" caía em acesso ao tenant inteiro (risco). Mantido no ROLE_LABEL
+// só p/ exibir eventual usuário legado.
+const ROLES = [{ v: 'admin', l: 'Administrador' }, { v: 'gerente', l: 'Gerente' }]
 const ROLE_LABEL: Record<string, string> = { admin: 'Administrador', gerente: 'Gerente', operador: 'Operador' }
 const roleCls = (r?: string) => (r === 'admin' ? 'role-admin' : r === 'gerente' ? 'role-gerente' : 'role-operador')
 
@@ -51,8 +54,8 @@ export function ConfigUsuarios() {
   })
   const lojaNome = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
 
-  const novo = () => setModal({ nome: '', email: '', role: 'operador', lojaId: '', senha: '' })
-  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'operador', lojaId: u.loja_id ?? '', senha: '' })
+  const novo = () => setModal({ nome: '', email: '', role: 'gerente', lojaId: '', senha: '' })
+  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', lojaId: u.loja_id ?? '', senha: '' })
 
   const saveMut = useMutation({
     mutationFn: async (m: Modal) => {
@@ -137,7 +140,7 @@ export function ConfigUsuarios() {
 
       <div className="info-card">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2} style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-        <div>O <b>perfil</b> define o nível de acesso: <b>Administrador</b> (tudo), <b>Gerente</b> (vinculado a uma loja) e <b>Operador</b>. O controle fino por módulo fica na aba <b>Permissões</b>.</div>
+        <div>O <b>perfil</b> define o nível de acesso: <b>Administrador</b> (acesso total ao tenant) e <b>Gerente</b> (vê e edita só a loja vinculada).</div>
       </div>
 
       {/* ===== modal usuário ===== */}
