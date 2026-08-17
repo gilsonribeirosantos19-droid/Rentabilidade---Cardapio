@@ -268,10 +268,13 @@ Deno.serve(async (req) => {
   const dias = Number((body as any).dias) || 7
   const modo = (body as any).mode || 'diag'
 
-  // ⚠️ TESTE PILOTO: gate liberado (diag+pull) pra facilitar o teste manual.
-  // TODO: reativar quando montar o cron (o agendador passa ?secret= na URL):
-  //   if (modo !== 'diag' && WEBHOOK_SECRET) { ...401... }
-  void WEBHOOK_SECRET
+  // ── GATE (fail-closed): exige o WEBHOOK_SECRET em TODOS os modos. Esta função é de
+  // captura/cron; o app (front) NÃO a chama. O segredo pode vir na URL (?secret=),
+  // no corpo (secret) ou no header (x-webhook-secret). Sem segredo válido → 401.
+  const secretRecebido = new URL(req.url).searchParams.get('secret') || (body as any).secret || req.headers.get('x-webhook-secret') || ''
+  if (!WEBHOOK_SECRET || secretRecebido !== WEBHOOK_SECRET) {
+    return json({ error: 'nao autorizado (segredo ausente ou invalido)' }, 401)
+  }
 
   // ── DANFE OFICIAL: gera o PDF no SIEG (GerarDanfeViaChave) — o MESMO que o Focus fazia.
   // Usa a Chave API (api_key na query), NÃO o JWT. Devolve o PDF em base64 pro front abrir.
