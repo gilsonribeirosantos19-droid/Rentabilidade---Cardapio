@@ -169,10 +169,12 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
         <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodo('personalizado') }} /></div>
         <div className="pf-fld"><label>Grupo</label><div style={{ minWidth: 180 }}><SearchSelect value={grupo} onChange={setGrupo} options={categorias} placeholder="Todos os grupos" /></div></div>
         <div className="pf-fld"><label>Buscar item</label><input className="p-field" style={{ minWidth: 200 }} placeholder="Nome do insumo…" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
-        <label className="pf-chk"><input type="checkbox" checked={soSaldo} onChange={(e) => setSoSaldo(e.target.checked)} />Somente com saldo</label>
-        <label className="pf-chk"><input type="checkbox" checked={soCmv} onChange={(e) => setSoCmv(e.target.checked)} />Só CMV</label>
         <button className="p-btn p-btn-pri" onClick={aplicar}>Atualizar</button>
         <button className="p-btn" onClick={exportar} style={{ marginLeft: 'auto' }}>Exportar CSV</button>
+        <div style={{ flexBasis: '100%', display: 'flex', gap: 16, alignItems: 'center' }}>
+          <label className="pf-chk"><input type="checkbox" checked={soSaldo} onChange={(e) => setSoSaldo(e.target.checked)} />Somente com saldo</label>
+          <label className="pf-chk"><input type="checkbox" checked={soCmv} onChange={(e) => setSoCmv(e.target.checked)} />Só CMV</label>
+        </div>
       </div>
 
       <div className="p-card">

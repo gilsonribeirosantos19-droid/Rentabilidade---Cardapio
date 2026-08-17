@@ -93,7 +93,7 @@
 .portal .p-tbl-doc tbody tr:hover td { background: #eef4ff; }
 /* grade "de verdade": linhas de célula + zebra (só onde p-tbl-grade é aplicada — Estoque Relatório/Histórico) */
 .portal .p-tbl-grade { border: 1px solid #d3dce6; }
-.portal .p-tbl-grade thead th { border: 1px solid #cbd6e2; }
+.portal .p-tbl-grade thead th { border: 1px solid #cbd6e2; position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 0 #cbd6e2; }
 .portal .p-tbl-grade tbody td { border: 1px solid #e6ecf3; }
 .portal .p-tbl-grade tbody tr:nth-child(even) td { background: #f8fafc; }
 .portal .p-tbl-grade tfoot td { border: 1px solid #cbd6e2; }
