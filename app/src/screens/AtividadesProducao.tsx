@@ -4,13 +4,13 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { useItensProduziveis } from '../lib/pcp'
 import { SearchSelect } from '../components/SearchSelect'
+import { num } from '../lib/format'
 import './config.css'
 
 // Produção › Cadastros › Atividades — etapas/checklist por item produzível.
 // Opcional; útil pra padronizar o preparo. Aparecem como checklist na ordem.
 
 type Ativ = { id?: string; descricao: string; tempo: string }
-const num = (v: string) => parseFloat((v || '0').replace(',', '.')) || 0
 
 export function AtividadesProducao() {
   const { tenantId } = useAuth()

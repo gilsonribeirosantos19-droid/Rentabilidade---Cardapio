@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { num } from '../lib/format'
 import './config.css'
 
 // Produção › Lançar › Ordem de Porcionamento (apontamento).
@@ -17,7 +18,6 @@ type Deriv = { item_porcionamento_id: string; insumo_id: string; rendimento_pct?
 type LinhaD = { insumoId: string; qtd: string; peso: string }
 
 const nowLocal = () => { const d = new Date(); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}` }
-const num = (v: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const q2 = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const q3 = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 

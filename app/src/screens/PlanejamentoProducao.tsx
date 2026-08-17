@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { useItensProduziveis, type ItemProd } from '../lib/pcp'
+import { num } from '../lib/format'
 import './config.css'
 
 // Produção › Planejar › Planejamento da Produção — lista os itens produzíveis com
@@ -11,7 +12,6 @@ import './config.css'
 // (A Produzir). Consumo/dia, Sobra e Sugestão dependem do PDV (placeholder por ora).
 
 type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number; loja_id?: string }
-const num = (v: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const q3 = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 3 })
 
 export function PlanejamentoProducao() {

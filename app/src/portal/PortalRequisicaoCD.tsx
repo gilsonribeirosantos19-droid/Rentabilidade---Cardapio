@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { num } from '../lib/format'
 
 // Portal › Requisição ao CD — o gerente da filial pede itens ao Centro de Distribuição.
 // Espelha a Solicitação de Compra (mesma UX), mas grava em `requisicoes`/`requisicao_itens`
@@ -14,7 +15,6 @@ type Saldo = { insumo_id: string; quantidade?: number }
 type Loja = { id: string; nome?: string; is_cd?: boolean }
 type Req = { id: string; numero?: number; status?: string; created_at?: string; requisicao_itens?: { count: number }[] }
 
-const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const hojeStr = () => new Date().toLocaleDateString('en-CA')
 const fmtCod = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')
 const fmtV = (v?: number) => (v != null ? v.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '0,000')

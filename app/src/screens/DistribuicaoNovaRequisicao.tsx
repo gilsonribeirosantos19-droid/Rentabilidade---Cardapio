@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { num } from '../lib/format'
 import './fiscal.css'
 import './distribuicao.css'
 
@@ -12,7 +13,6 @@ type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: 
 type Saldo = { insumo_id: string; quantidade?: number }
 type Loja = { id: string; nome?: string; is_cd?: boolean }
 
-const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const fmtQ = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 

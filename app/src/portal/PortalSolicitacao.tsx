@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { num } from '../lib/format'
 
 // Portal › Solicitação de Compra — o gerente seleciona insumos por grupo,
 // informa quantidades e envia a solicitação para Compras. Fiel ao loja.html.
@@ -38,7 +39,6 @@ const optsDe = (i: Insumo | undefined, cur?: string): { value: string; label: st
   return unidOpts(cur).map((x) => ({ value: x, label: unidLabel(x) }))
 }
 const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',')
-const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 // arruma o texto digitado pra 3 casas ao sair do campo (1 -> 1,000); vazio/zero fica como está
 const fmtQtd = (v?: string) => { const n = num(v); return v && n > 0 ? n.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : (v || '') }
 const hoje7 = () => new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-CA')

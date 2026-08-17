@@ -23,3 +23,8 @@ export function brlDash(v?: number | null): string {
 export function brlNum(v?: number | null): string {
   return Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
+
+// Parse de campo de texto → número: aceita vírgula decimal do pt-BR, vazio/inválido = 0.
+// (mata a cópia idêntica de `num` espalhada em ~10 telas de entrada/produção.)
+// OBS: não confundir com o `num` FORMATADOR (número→texto) de Divergencias/VinculosPane — outra função.
+export const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0

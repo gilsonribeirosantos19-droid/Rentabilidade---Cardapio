@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { downloadCsv } from '../lib/csv'
 import { SearchSelect } from '../components/SearchSelect'
+import { num } from '../lib/format'
 
 // Portal › Estoque — 3 sub-abas: Relatório (posição atual + estoque inicial da
 // última contagem), Movimentação (lança entrada/saída) e Histórico. Fiel ao loja.html.
@@ -18,7 +19,6 @@ type Mov = { id?: string; insumo_id: string; quantidade?: number; observacao?: s
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fQ = (v?: number | null) => (v != null ? Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '—')
 const fmtQtd = (v?: number) => { const n = Number(v) || 0; return n % 1 === 0 ? n.toLocaleString('pt-BR') : n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) }
-const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 const hojeStr = () => new Date().toLocaleDateString('en-CA')
 const primeiroDiaMes = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 // Dia seguinte a uma data (YYYY-MM-DD) — usado p/ ancorar o relatório logo APÓS a contagem
