@@ -168,8 +168,8 @@ export function PortalSolicitacao() {
         : resultado.map(({ g, itens }) => {
           const aberto = !colapso.has(g.id)
           return (
-            <div className="p-card" key={g.id} style={{ marginBottom: 12, overflow: 'visible' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 14px', cursor: 'pointer', background: '#f8fafc', borderRadius: '12px 12px 0 0' }} onClick={() => setColapso((c) => { const n = new Set(c); n.has(g.id) ? n.delete(g.id) : n.add(g.id); return n })}>
+            <div className="p-card" key={g.id} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 14px', cursor: 'pointer', background: '#f8fafc' }} onClick={() => setColapso((c) => { const n = new Set(c); n.has(g.id) ? n.delete(g.id) : n.add(g.id); return n })}>
                 <span style={{ fontWeight: 700, fontSize: 13.5 }}>{g.nome}</span>
                 <span style={{ color: '#94a3b8', fontSize: 12 }}>{itens.length} itens</span>
                 <span style={{ marginLeft: 'auto', color: '#94a3b8', transform: aberto ? 'none' : 'rotate(-90deg)', transition: '.15s' }}>▾</span>
