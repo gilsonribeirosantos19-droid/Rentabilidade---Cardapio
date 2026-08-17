@@ -71,16 +71,12 @@ export function AjusteEstoque() {
       if (!itens.length) throw new Error('Marque uma loja e informe uma nova quantidade diferente do saldo atual.')
       const agora = data + 'T12:00:00.000Z'
       for (const it of itens) {
-        const tabela = it.dif > 0 ? 'entradas_estoque' : 'saidas_estoque'
-        const payload: Record<string, unknown> = { tenant_id: tenantId, insumo_id: insumoId, loja_id: it.lId, quantidade: Math.abs(it.dif), tipo: 'ajuste', motivo, observacao: 'Ajuste de estoque', criado_em: agora }
-        // ajuste POSITIVO = entrada: carrega o custo médio vigente (senão o recálculo entra com custo 0 e derruba a média)
-        if (it.dif > 0) payload.custo_unitario = +it.custo.toFixed(6)
-        // IDEMPOTÊNCIA: se um salvamento anterior já gravou ESTE mesmo ajuste (mesmo insumo/loja/
-        // data/quantidade) e falhou depois no meio, um novo clique NÃO deve duplicar o movimento.
-        // (O saldo abaixo é absoluto, então já era idempotente; o risco era só a linha duplicada.)
-        const { data: dup } = await supabase.from(tabela).select('id').eq('tenant_id', tenantId).eq('insumo_id', insumoId).eq('loja_id', it.lId).eq('tipo', 'ajuste').eq('criado_em', agora).eq('quantidade', Math.abs(it.dif)).limit(1)
-        if (!dup?.length) { const { error: e1 } = await supabase.from(tabela).insert(payload); if (e1) throw e1 }
-        const { error: e2 } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: it.lId, quantidade: +it.nova.toFixed(4), custo_medio: +it.custo.toFixed(6), atualizado_em: agora }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (e2) throw e2
+        // ATÔMICO (M2/M3): movimento (entrada/saída de ajuste) + saldo absoluto numa transação com
+        // trava no banco. A RPC recalcula a diferença sobre o saldo REAL e é idempotente (dif=0 = no-op).
+        const { error } = await supabase.rpc('ajustar_estoque_loja', { p_ajuste: {
+          tenant_id: tenantId, insumo_id: insumoId, loja_id: it.lId, nova: it.nova, motivo, criado_em: agora,
+        } })
+        if (error) throw error
       }
       return itens.length
     },
