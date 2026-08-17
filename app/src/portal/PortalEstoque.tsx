@@ -266,31 +266,27 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
       const { data: sals } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lojaId).eq('insumo_id', insumoId)
       const qtdAtual = Number((sals ?? [])[0]?.quantidade) || 0
       const cmAtual = Number((sals ?? [])[0]?.custo_medio) || 0
+      let novaQtd = qtdAtual, novoCm = cmAtual
       if (tipo === 'entrada') {
         const f = num(fator) || 1
         const c = num(custo)
         const fornNome = fornId ? (fornecedores as Forn[]).find((x) => x.id === fornId)?.nome || null : null
         const qtdEst = parseFloat((num(qtd) * f).toFixed(4))
         const custoUnit = parseFloat((c / f).toFixed(6))
-        // ATÔMICO (M2/M3): mesma RPC das Entradas do sistema — entrada + saldo (custo médio) + histórico
-        // numa transação com trava. Fim do lost-update do custo médio no Portal.
-        const { error } = await supabase.rpc('registrar_entrada_estoque', { p_entrada: {
-          tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId,
-          fornecedor_id: fornId || null, fornecedor_nome: fornNome,
-          quantidade: qtdEst, unidade_compra: unidCompra.trim() || null, fator_conversao: f,
-          custo_unitario: custoUnit, lote: lote.trim() || null, validade: validade || null,
-          tipo: 'manual', observacao: obs.trim() || null, responsavel: usuario?.nome || null,
-          criado_em: criadoEm, origem: 'entrada_loja',
-        } })
+        const { error } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, fornecedor_id: fornId || null, fornecedor_nome: fornNome, quantidade: qtdEst, unidade_compra: unidCompra.trim() || null, fator_conversao: f, custo_unitario: custoUnit, lote: lote.trim() || null, validade: validade || null, tipo: 'manual', observacao: obs.trim() || null, responsavel: usuario?.nome || null, criado_em: criadoEm })
         if (error) throw error
+        novaQtd = qtdAtual + qtdEst
+        const pesoAnt = Math.max(0, qtdAtual)   // saldo negativo não pesa no custo médio (senão distorce)
+        novoCm = (pesoAnt + qtdEst) > 0 ? (pesoAnt * cmAtual + qtdEst * custoUnit) / (pesoAnt + qtdEst) : custoUnit
+        const impacto = cmAtual > 0 ? parseFloat(((novoCm - cmAtual) / cmAtual * 100).toFixed(4)) : null
+        await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lojaId, saldo_anterior: parseFloat(qtdAtual.toFixed(4)), custo_medio_anterior: parseFloat(cmAtual.toFixed(4)), qtd_entrada: parseFloat(qtdEst.toFixed(4)), custo_entrada: parseFloat(custoUnit.toFixed(4)), novo_custo_medio: parseFloat(novoCm.toFixed(6)), impacto_pct: impacto, origem: 'entrada_loja', documento_ref: null })
       } else {
-        // saída (consumo): registra + abate o saldo, com clamp em 0 (custo médio não muda)
         const { error } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: num(qtd), tipo: 'consumo', motivo: obs.trim() || null, responsavel: usuario?.nome || null, criado_em: criadoEm })
         if (error) throw error
-        const novaQtd = Math.max(0, qtdAtual - num(qtd))
-        const { error: eu } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: parseFloat(novaQtd.toFixed(4)), custo_medio: parseFloat(cmAtual.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
-        if (eu) throw eu
+        novaQtd = Math.max(0, qtdAtual - num(qtd))
       }
+      const { error: eu } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: parseFloat(novaQtd.toFixed(4)), custo_medio: parseFloat(novoCm.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
+      if (eu) throw eu
     },
     onSuccess: () => { showToast(`${tipo === 'entrada' ? 'Entrada' : 'Saída'} registrada!`); setInsumoId(''); setQtd(''); setObs(''); setFornId(''); setUnidCompra(''); setFator('1'); setCusto(''); setLote(''); setValidade(''); onSaved() },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
