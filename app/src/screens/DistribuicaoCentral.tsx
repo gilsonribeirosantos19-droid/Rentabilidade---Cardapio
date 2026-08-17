@@ -98,26 +98,16 @@ export function DistribuicaoCentral() {
     if (!confirm(`Confirmar o envio da ${reqNo(sel.numero)}? Isso dá baixa no CD e entrada na filial (transferência).`)) return
     setBusy(true)
     try {
-      const nowIso = new Date().toISOString()
-      // IDEMPOTÊNCIA: lê o estado REAL no banco (não o da tela, que pode estar velho após uma
-      // falha parcial). Item que JÁ tem qtd_atendida gravada não é re-transferido num reenvio —
-      // senão a transferência anda 2× (baixa no CD + entrada na filial repetidas).
-      const { data: itensDb } = await supabase.from('requisicao_itens').select('id,qtd_atendida').in('id', itens.map((i) => i.id))
-      const jaAtendida = new Map((itensDb ?? []).map((r: { id: string; qtd_atendida?: number | null }) => [r.id, Number(r.qtd_atendida) || 0]))
-      let enviados = 0, valor = 0
-      for (const it of itens) {
-        const q = num(atend[it.id]); if (q <= 0) continue
-        const feito = jaAtendida.get(it.id) || 0
-        if (feito > 0) { enviados++; valor += feito * (it.custo_unitario ?? 0); continue }   // já transferido antes → só soma
-        const { error } = await supabase.rpc('transferir_estoque', { p_tenant: tenantId, p_insumo: it.insumo_id, p_origem: sel.cd_loja_id, p_destino: sel.loja_id, p_qtd: q, p_data: nowIso, p_motivo: 'Distribuição ' + reqNo(sel.numero), p_responsavel: usuario?.nome || null })
-        if (error) throw new Error(`Item ${insMap[it.insumo_id]?.nome || ''}: ${error.message}`)
-        await supabase.from('requisicao_itens').update({ qtd_atendida: q }).eq('id', it.id)
-        enviados++; valor += q * (it.custo_unitario ?? 0)
-      }
-      if (!enviados) throw new Error('Informe a quantidade atendida de ao menos um item.')
-      const { error: e2 } = await supabase.from('requisicoes').update({ status: 'a_caminho', enviado_em: nowIso, valor_total: valor }).eq('id', sel.id); if (e2) throw e2
+      const payload = itens.map((it) => ({ item_id: it.id, qtd: num(atend[it.id]) })).filter((x) => x.qtd > 0)
+      if (!payload.length) throw new Error('Informe a quantidade atendida de ao menos um item.')
+      // RPC ATÔMICA: transfere todos os itens (baixa CD + entrada filial) + grava qtd_atendida + status
+      // numa transação só (tudo-ou-nada). Fim da dupla-baixa / transferência pela metade. Idempotência
+      // (item já atendido não re-transfere) fica dentro da função.
+      const { data, error } = await supabase.rpc('atender_requisicao', { p_req_id: sel.id, p_itens: payload, p_responsavel: usuario?.nome || null })
+      if (error) throw error
+      const r = data as { itens?: number } | null
       qc.invalidateQueries({ queryKey: ['dist-reqs'] }); qc.invalidateQueries({ queryKey: ['dist-itens'] })
-      showToast(`Envio confirmado — ${enviados} item(ns) transferido(s) para ${lojaMap[sel.loja_id || '']?.nome || 'a filial'}.`)
+      showToast(`Envio confirmado — ${r?.itens ?? 0} item(ns) transferido(s) para ${lojaMap[sel.loja_id || '']?.nome || 'a filial'}.`)
       setSel(null)
     } catch (e: any) { showToast('Erro: ' + e.message, 'err') } finally { setBusy(false) }
   }
