@@ -84,12 +84,6 @@ export function Saidas() {
   const start = (pagAtual - 1) * porPag
   const page = filtrada.slice(start, start + porPag)
 
-  // grava o saldo (upsert por tenant+insumo+loja)
-  const upsertSaldo = async (insId: string, quantidade: number, custoMedio: number, loja: string) => {
-    const { error } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, insumo_id: insId, loja_id: loja, quantidade: +Number(quantidade).toFixed(4), custo_medio: +Number(custoMedio).toFixed(6), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
-    if (error) throw error
-  }
-
   const saveMut = useMutation({
     mutationFn: async (f: SaiForm) => {
       if (!lojaId) throw new Error('Selecione uma loja específica no topo (não "Todas as lojas") para registrar a saída.')
@@ -114,10 +108,14 @@ export function Saidas() {
         const { error } = await supabase.rpc('transferir_estoque', { p_tenant: tenantId, p_insumo: f.insumo_id, p_origem: lojaId, p_destino: destinoId, p_qtd: q, p_data: dataStr + 'T12:00:00.000Z', p_motivo: (f.motivo || '').trim() || null, p_responsavel: (f.responsavel || '').trim() || null })
         if (error) throw error
       } else {
-        // saída normal (manual/perda): registra a saída e debita o saldo (custo médio não muda)
-        const { error: e1 } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: lojaId, quantidade: q, tipo: f.tipo, motivo: (f.motivo || '').trim() || null, responsavel: (f.responsavel || '').trim() || null, criado_em: dataStr + 'T12:00:00.000Z' })
+        // saída normal (consumo/perda) ATÔMICA (M2/M3): saída + débito do saldo numa transação com
+        // trava no banco. A checagem de saldo negativo é autoritativa dentro da RPC. Custo médio não muda.
+        const { error: e1 } = await supabase.rpc('registrar_saida_estoque', { p_saida: {
+          tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: lojaId, quantidade: q, tipo: f.tipo,
+          motivo: (f.motivo || '').trim() || null, responsavel: (f.responsavel || '').trim() || null,
+          criado_em: dataStr + 'T12:00:00.000Z', permite_negativo: permiteNeg,
+        } })
         if (e1) throw e1
-        await upsertSaldo(f.insumo_id, (s.quantidade || 0) - q, s.custo_medio || 0, lojaId)
       }
       return f.tipo
     },
