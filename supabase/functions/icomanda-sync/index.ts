@@ -147,6 +147,9 @@ serve(async (req) => {
       const aviso = pedidos > dias.length ? `Atencao: pedido de ${pedidos} dias foi cortado no limite de ${dias.length}. Puxe em pedacos.` : undefined
       const now = new Date().toISOString()
       let processados = 0, comErro = 0
+      let caixaSample: string[] | null = null   // diag: nomes dos campos de um caixa
+      let diagCaixas: any[] | null = null       // diag: caixas CRUS (todos os campos) do Centro
+      let diagFilial: any = null                // diag: filial CRU (todos os campos) do Centro
       for (const dia of dias) {
         try {
           // pacote completo do dia (faturamento.total já traz TODAS as lojas em por_filial)
@@ -159,17 +162,25 @@ serve(async (req) => {
           const linhas = []
           for (const { loja, filial } of mapa) {
             const f = byId.get(filial.id) || {}
+            if (String(loja.nome).toLowerCase().includes('centro')) diagFilial = f   // diag: filial cru do Centro
             // TURNO: soma os CAIXAS por tipo_turno (EXATO — cada turno é uma sessão de caixa própria).
             // Isso resolve o "almoço fantasma": loja sem caixa de almoço dá almoço = 0, sem chute de hora.
-            let fatAlmoco = 0, fatJantar = 0
+            // COMANDA do CAIXA (bate com o PDV — "Histórico de Aberturas / Detalhamento de Caixa").
+            // f.qtd_comandas conta as COMANDAS (maior); o caixa conta as EFETIVAS (fechadas no caixa).
+            let fatAlmoco = 0, fatJantar = 0, cxComandas = 0, cxCanc = 0, temCx = false
             try {
               const dc = await ico('caixas.lista', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })
               const cx = (dc && Array.isArray((dc as { caixas?: unknown }).caixas) ? (dc as { caixas: any[] }).caixas : []) as any[]
+              if (!caixaSample && cx.length) caixaSample = Object.keys(cx[0])   // diag: campos disponíveis no caixa
+              if (String(loja.nome).toLowerCase().includes('centro')) diagCaixas = cx   // diag: caixas CRUS (todos os campos) do Centro
               for (const c of cx) {
                 const v = Number(c.faturado_caixa_valores) || 0
                 if (String(c.tipo_turno || '').toLowerCase().startsWith('almo')) fatAlmoco += v; else fatJantar += v
+                const nc = Number(c.qtd_comandas), ncan = Number(c.qtd_canceladas)   // comandas e canceladas DO CAIXA
+                if (Number.isFinite(nc)) { cxComandas += nc; temCx = true }
+                if (Number.isFinite(ncan)) cxCanc += ncan
               }
-            } catch { /* sem caixas: turno fica 0/0 */ }
+            } catch { /* sem caixas: turno 0/0 e comanda cai no total do filial */ }
             // CANAL (salão/delivery/balcão): exato, do faturamento.por_tipo
             let porCanal: any[] | null = null
             try {
@@ -194,8 +205,8 @@ serve(async (req) => {
               taxa: Number(f.tax) || 0,
               couvert: Number(f.couvert) || 0,
               qtd_caixas: Number(f.qtd_caixas) || 0,
-              qtd_comandas: Number(f.qtd_comandas) || 0,
-              qtd_canceladas: Number(f.qtd_comandas_canceladas) || 0,
+              qtd_comandas: temCx ? Math.max(0, cxComandas - cxCanc) : (Number(f.qtd_comandas) || 0),   // caixa efetivas (comandas − canceladas do caixa) = PDV; fallback = filial
+              qtd_canceladas: temCx ? cxCanc : (Number(f.qtd_comandas_canceladas) || 0),
               pessoas: Number(f.pessoas) || 0,
               ticket_medio: Number(f.ticket_medio_comanda) || 0,
               fat_almoco: +fatAlmoco.toFixed(2), fat_jantar: +fatJantar.toFixed(2),
@@ -207,10 +218,11 @@ serve(async (req) => {
             // Best-effort: se a chamada falhar, só pula (NÃO bloqueia o portão nem apaga o que já tinha).
             try {
               const prods = asArray(await ico('produtos.top_vendidos', { data_ini: dia, data_fim: dia, filial_id: String(filial.id), limit: '1000', ordenar_por: 'faturado' })) as any[]
-              const pr = prods.filter((p) => p && p.produto_id != null).map((p) => ({ tenant_id, loja_id: loja.id, data: dia, produto_id: Number(p.produto_id), produto_nome: String(p.nome || '').trim() || null, grupo: String(p.grupo || '').trim() || null, qtd: Number(p.qtd) || 0, faturado: Number(p.faturado) || 0, atualizado_em: now }))
+              const pr = prods.filter((p) => p && p.produto_id != null).map((p) => ({ tenant_id, loja_id: loja.id, data: dia, produto_id: Number(p.produto_id), produto_nome: String(p.nome || '').trim() || null, grupo: String(p.grupo || '').trim() || null, qtd: Number(p.qtd) || 0, faturado: Number(p.faturado) || 0, fonte: 'icomanda', atualizado_em: now }))
               // ANTI-ZERAGEM: só substitui se veio produto. Resposta ok+vazia NÃO apaga o dia bom.
               if (pr.length) {
-                await sb.from('vendas_produto_dia').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('data', dia)
+                // apaga só as linhas do iComanda (e legado sem fonte) — NÃO toca no que veio do Saipos (fonte='saipos')
+                await sb.from('vendas_produto_dia').delete().eq('tenant_id', tenant_id).eq('loja_id', loja.id).eq('data', dia).or('fonte.eq.icomanda,fonte.is.null')
                 for (let i = 0; i < pr.length; i += 500) { const { error: ev } = await sb.from('vendas_produto_dia').insert(pr.slice(i, i + 500)); if (ev) throw ev }
               }
             } catch (ev) { console.error('vendas_dia', loja.id, dia, (ev as Error).message) }
@@ -227,7 +239,7 @@ serve(async (req) => {
           comErro += linhas.length
         }
       }
-      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro, aviso })
+      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro, caixa_campos: caixaSample, diag_caixas: diagCaixas, diag_filial: diagFilial, aviso })
     }
 
     // ===== MODO MENSAL (produtos p/ CMV + faturamento cheio): body {competencia} em YYYY-MM =====
