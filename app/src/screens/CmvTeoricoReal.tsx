@@ -82,11 +82,12 @@ export function CmvTeoricoReal() {
         fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id,insumo_vinculado_id,rendimento_receita_g').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
         fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').range(f, t)),
         fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').range(f, t)),
-        // entradas/saídas do HISTÓRICO todo até "ate" (não só do período): o custo médio na data
-        // precisa da reconstrução completa (senão ignora o estoque/compras antes do "De"). O recorte
-        // por período do consumo REAL é feito depois, em JS (realMap).
-        fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Mov[]),
-        fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
+        // C2: o custo médio "até a data" agora vem PRONTO do banco (RPC custo_medio_ate — ver query cmRows
+        // abaixo), com paridade verificada. Não baixamos mais o histórico inteiro de entradas pro navegador.
+        // `entradas` fica vazio só p/ manter o shape do Promise.all.
+        Promise.resolve([] as Mov[]),
+        // saídas: só o PERÍODO [de, ate] (usado no consumo REAL). O custo médio já não depende delas aqui.
+        fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', de + 'T00:00:00').lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
         // de-para: produtos (código PDV) + vendas do iComanda POR DIA (icomanda_vendas_dia) p/ o consumo teórico
         // (antes era a tabela mensal por competência; agora usa a diária, respeitando o intervalo exato De→Até)
         fetchAll<ProdMin>((f, t) => supabase.from('produtos').select('id,codigo_pdv,nome').eq('tenant_id', tenantId).order('id').range(f, t)).catch(() => [] as ProdMin[]),
@@ -99,6 +100,17 @@ export function CmvTeoricoReal() {
         ? await fetchAll<ItemFicha>((f, t) => supabase.from('itens_ficha').select('ficha_id,insumo_id,produto_id,quantidade_g').in('ficha_id', ids).order('id').range(f, t)).catch(() => [] as ItemFicha[])
         : []
       return { fats, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes }
+    },
+  })
+
+  // C2: custo médio de cada insumo ATÉ a data-fim, calculado NO BANCO (mesma lógica do lib/cost.ts,
+  // paridade conferida). p_loja segue a loja selecionada (null = Todas → média de todas as lojas).
+  // Refaz só ao trocar tenant/data-fim/loja — não recarrega fichas/vendas.
+  const { data: cmRows = [] } = useQuery({
+    queryKey: ['cmv-cm', tenantId, ate, lojaId], enabled: !!tenantId && !!ate,
+    queryFn: async () => {
+      const { data } = await supabase.rpc('custo_medio_ate', { p_tenant: tenantId, p_ate: ate, p_loja: lojaId || null })
+      return (data ?? []) as { insumo_id: string; custo_medio: number }[]
     },
   })
 
@@ -121,9 +133,10 @@ export function CmvTeoricoReal() {
     // fonte ÚNICA de vendas = vendas_produto_dia (iComanda + Saipos), já com loja_id → filtra por loja normalmente
     const vendas = byLoja(icoVendas)
     const saidas = byLoja(data.saidas)
-    const entradas = byLoja(data.entradas)
     const saldos = byLoja(data.saldos)
     const { insumos, fichas, itensFicha, fats } = data
+    // C2: custo médio (por insumo) já pronto do banco, pra a loja selecionada. Fallback (saldo/preço) se vier 0.
+    const cmMap = new Map(cmRows.map((r) => [r.insumo_id, Number(r.custo_medio) || 0]))
 
     // Faturamento: usa a tabela `faturamento` (total diário) quando houver; senão, cai pro
     // somatório das vendas por item. Antes somava os dois → duplicava quando havia as 2 fontes.
@@ -185,7 +198,7 @@ export function CmvTeoricoReal() {
     const realMap: Record<string, number> = {}
     saidas.filter((s) => ['consumo', 'producao'].includes(s.tipo || '') && inPer(s)).forEach((s) => { realMap[s.insumo_id] = (realMap[s.insumo_id] || 0) + (s.quantidade || 0) })
 
-    const ctx = { saldos, insumos, entradas, saidas, dataLimite: ate }
+    const ctx = { saldos, insumos }   // só p/ fallback (saldo/preço); o custo médio vem do cmMap (C2)
     const rows = insumos.filter((i) => teoMap[i.id] || realMap[i.id]).map((i) => {
       const un = (i.unidade_medida || i.unidade_compra || 'un').toLowerCase()
       const disc = un === 'un' || un === 'pct' || un === 'cx'                 // discreta: sem aproveitamento
@@ -194,7 +207,8 @@ export function CmvTeoricoReal() {
       // quantidade teórica em BRUTO (o que sai do estoque) = líquido da ficha ÷ aproveitamento → comparável ao real
       const qTeo = ((teoMap[i.id] || 0) / div) / rend
       const qReal = realMap[i.id] || 0
-      const cm = custoDoInsumo(i.id, null, ctx)
+      const cmSrv = cmMap.get(i.id) || 0
+      const cm = cmSrv > 0 ? cmSrv : custoDoInsumo(i.id, null, ctx)   // C2: custo médio do banco; fallback saldo/preço se vier 0 (nunca zera)
       const cTeo = qTeo * cm                                                 // qTeo já é bruto → custo = bruto × custo unitário (mesmo valor de antes)
       const cReal = qReal * cm
       const dQtd = qReal - qTeo
@@ -213,7 +227,7 @@ export function CmvTeoricoReal() {
     const insAll = rows.length
     const comDiv = rows.filter((r) => r.qTeo > 0 && Math.abs(r.dPct) > 5).length
     return { totalFat, totalTeo, totalReal, dif, divPct, insAll, comDiv, rows }
-  }, [data, lojaId, de, ate])
+  }, [data, cmRows, lojaId, de, ate])
 
   const rows = useMemo(() => {
     if (!calc) return []
