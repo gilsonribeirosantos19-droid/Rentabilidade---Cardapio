@@ -127,6 +127,9 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
 
   const rows = useMemo(() => {
     if (!movs) return []
+    // dias do período (p/ o consumo médio diário do "Dias de estoque")
+    const d1 = new Date((aplicado?.de || hojeStr()) + 'T00:00:00'), d2 = new Date((aplicado?.ate || hojeStr()) + 'T00:00:00')
+    const diasPeriodo = Math.max(1, Math.round((d2.getTime() - d1.getTime()) / 86400000) + 1)
     const ult: Record<string, string> = {}
     ;[...movs.entradas, ...movs.saidas].forEach((m) => { const dt = m.criado_em || m.created_at; if (dt && (!ult[m.insumo_id] || dt > ult[m.insumo_id])) ult[m.insumo_id] = dt })
     let lista = (insumos as Insumo[]).filter((i) => i.ativo !== false)
@@ -143,16 +146,18 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
       if (soSaldo && saldo <= 0) return null
       if (!ent && !sai && !saldo && inicial == null) return null
       const min = (s?.minimo != null && Number(s.minimo) > 0) ? Number(s.minimo) : (Number(ins.minimo) > 0 ? Number(ins.minimo) : null)
-      return { ins, ent, sai, saldo, cm: Number(s?.custo_medio) || 0, min, max: s?.maximo != null ? Number(s.maximo) : null, inicial: inicial == null ? null : Number(inicial), ult: ult[ins.id] }
+      // dias de estoque = quanto o saldo dura no ritmo de consumo do período (— se sem giro ou saldo <= 0)
+      const dias = saldo > 0 && sai > 0 ? saldo * diasPeriodo / sai : null
+      return { ins, ent, sai, saldo, cm: Number(s?.custo_medio) || 0, min, max: s?.maximo != null ? Number(s.maximo) : null, inicial: inicial == null ? null : Number(inicial), ult: ult[ins.id], dias }
     }).filter(Boolean).sort((a: any, b: any) => a.ins.nome.localeCompare(b.ins.nome, 'pt-BR')) as any[]
-  }, [movs, insumos, grupo, gruposItens, soCmv, soSaldo, busca, saldoMap, inicialMap])
+  }, [movs, insumos, grupo, gruposItens, soCmv, soSaldo, busca, saldoMap, inicialMap, aplicado])
 
   const aplicar = () => { if (!de || !ate) return; setAplicado({ de, ate }) }
 
   const exportar = () => {
     if (!rows.length) return
-    const head = ['Insumo', 'Un.', 'Estoque Inicial', 'Entradas', 'Saidas', 'Saldo Atual', 'Minimo', 'Maximo', 'Valor Estoque (R$)', 'Ultima Mov.']
-    const linhas = rows.map((r: any) => [r.ins.nome, un(r.ins), r.inicial ?? '', r.ent, r.sai, r.saldo, r.min ?? '', r.max ?? '', +(r.saldo * r.cm).toFixed(2), r.ult ? fmtDataHora(r.ult) : ''])
+    const head = ['Insumo', 'Un.', 'Estoque Inicial', 'Entradas', 'Saidas', 'Saldo Atual', 'Minimo', 'Maximo', 'Valor Estoque (R$)', 'Dias Estoque', 'Ultima Mov.']
+    const linhas = rows.map((r: any) => [r.ins.nome, un(r.ins), r.inicial ?? '', r.ent, r.sai, r.saldo, r.min ?? '', r.max ?? '', +(r.saldo * r.cm).toFixed(2), r.dias == null ? '' : +r.dias.toFixed(1), r.ult ? fmtDataHora(r.ult) : ''])
     downloadCsv(`estoque_${hojeStr()}.csv`, [head, ...linhas])
   }
 
@@ -173,11 +178,11 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
       <div className="p-card">
         <table className="p-tbl">
           <thead><tr>
-            <th>Insumo</th><th>Un.</th><th className="r">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r">Valor</th><th>Última mov.</th>
+            <th>Insumo</th><th>Un.</th><th className="r">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r">Valor</th><th className="r" title="Quantos dias o saldo atual dura no ritmo de consumo (saídas) do período selecionado. — = sem consumo no período ou saldo zerado/negativo.">Dias estoque</th><th>Última mov.</th>
           </tr></thead>
           <tbody>
-            {isFetching ? <tr><td colSpan={8} className="p-empty">Carregando…</td></tr>
-              : !rows.length ? <tr><td colSpan={8} className="p-empty">Nenhum item encontrado.</td></tr>
+            {isFetching ? <tr><td colSpan={9} className="p-empty">Carregando…</td></tr>
+              : !rows.length ? <tr><td colSpan={9} className="p-empty">Nenhum item encontrado.</td></tr>
                 : rows.map((r: any) => (
                   <tr key={r.ins.id}>
                     <td>{r.ins.nome}</td>
@@ -187,6 +192,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
                     <td className="r mono" style={{ color: r.sai > 0 ? '#dc2626' : '#94a3b8' }}>{fQ(r.sai)}</td>
                     <td className="r mono" style={r.saldo < 0 ? { color: '#dc2626', fontWeight: 700 } : undefined}>{fQ(r.saldo)}</td>
                     <td className="r mono">{brl(r.saldo * r.cm)}</td>
+                    <td className="r mono" style={{ fontWeight: r.dias != null && r.dias < 7 ? 700 : 400, color: r.dias == null ? '#94a3b8' : r.dias < 3 ? '#dc2626' : r.dias < 7 ? '#d97706' : '#334155' }}>{r.dias == null ? '—' : r.dias.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{r.ult ? fmtDataHora(r.ult) : '—'}</td>
                   </tr>
                 ))}
@@ -196,6 +202,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
               <tr>
                 <td colSpan={6} className="r" style={{ borderTop: '2px solid #e2e8f0', fontWeight: 700, color: '#475569' }}>Total — {rows.length} {rows.length === 1 ? 'item' : 'itens'}</td>
                 <td className="r mono" style={{ borderTop: '2px solid #e2e8f0', fontWeight: 700 }}>{brl(rows.reduce((a: number, r: any) => a + r.saldo * r.cm, 0))}</td>
+                <td style={{ borderTop: '2px solid #e2e8f0' }} />
                 <td style={{ borderTop: '2px solid #e2e8f0' }} />
               </tr>
             </tfoot>

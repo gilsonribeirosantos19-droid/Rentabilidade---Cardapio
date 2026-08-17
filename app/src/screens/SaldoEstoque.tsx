@@ -72,6 +72,11 @@ export function SaldoEstoque() {
     queryKey: ['est-saidas', tenantId], enabled: !!tenantId && histAtivo,
     queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)),
   })
+  // saídas dos últimos 30 dias — base do "Dias de estoque" (consumo médio diário)
+  const { data: saidas30 = [] } = useQuery({
+    queryKey: ['est-saidas30', tenantId], enabled: !!tenantId,
+    queryFn: () => { const d = new Date(); d.setDate(d.getDate() - 30); const desde = d.toISOString().slice(0, 10); return fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).gte('criado_em', desde + 'T00:00:00').range(f, t)) },
+  })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l])) as Record<string, Loja>, [lojas])
@@ -95,6 +100,13 @@ export function SaldoEstoque() {
   const saldosL = useMemo(() => lojaId ? saldos.filter((s) => (s.loja_id || null) === lojaId) : saldos, [saldos, lojaId])
   const entradasL = useMemo(() => lojaId ? entradas.filter((e: any) => (e.loja_id || null) === lojaId) : entradas, [entradas, lojaId])
   const saidasL = useMemo(() => lojaId ? saidas.filter((s: any) => (s.loja_id || null) === lojaId) : saidas, [saidas, lojaId])
+  // consumo dos últimos 30 dias por insumo|loja (exclui ajuste) → dias de estoque = saldo / (consumo/30)
+  const consumoMap = useMemo(() => {
+    const src = lojaId ? (saidas30 as any[]).filter((s) => (s.loja_id || null) === lojaId) : (saidas30 as any[])
+    const m: Record<string, number> = {}
+    src.forEach((s: any) => { if (s.tipo === 'ajuste') return; const k = s.insumo_id + '|' + (s.loja_id || ''); m[k] = (m[k] || 0) + (Number(s.quantidade) || 0) })
+    return m
+  }, [saidas30, lojaId])
 
   // reconstrói o saldo na data (média móvel ponderada), igual ao Kardex
   const saldosCalc = useMemo<Saldo[]>(() => {
@@ -138,11 +150,13 @@ export function SaldoEstoque() {
       if (unidade && (ins.unidade_medida || ins.unidade_compra || '') !== unidade) return null
       if (fornecedor && !(fornMap[ins.id] && fornMap[ins.id].has(fornecedor))) return null
       const valor = (s.quantidade || 0) * (s.custo_medio || 0)
-      return { ins, loja: s.loja_id ? lojaMap[s.loja_id] : null, s, valor }
-    }).filter(Boolean) as { ins: Insumo; loja: Loja | null; s: Saldo; valor: number }[]
+      const consumo30 = consumoMap[s.insumo_id + '|' + (s.loja_id || '')] || 0
+      const dias = (s.quantidade || 0) > 0 && consumo30 > 0 ? (s.quantidade || 0) * 30 / consumo30 : null
+      return { ins, loja: s.loja_id ? lojaMap[s.loja_id] : null, s, valor, dias }
+    }).filter(Boolean) as { ins: Insumo; loja: Loja | null; s: Saldo; valor: number; dias: number | null }[]
     out.sort((a, b) => b.valor - a.valor)
     return out
-  }, [saldosCalc, insMap, lojaMap, fornMap, categoria, tipo, somenteCmv, busca, familia, subgrupo, unidade, fornecedor])
+  }, [saldosCalc, insMap, lojaMap, fornMap, categoria, tipo, somenteCmv, busca, familia, subgrupo, unidade, fornecedor, consumoMap])
 
   const totalValor = rows.reduce((s, r) => s + r.valor, 0)
   const mfAtivo = !!(tipo || familia || subgrupo || unidade || fornecedor || somenteCmv)
@@ -201,18 +215,18 @@ export function SaldoEstoque() {
         <table className="tbl">
           <thead><tr>
             <th>Insumo</th><th>Categoria</th><th>Tipo do Item</th><th>Un.</th><th>Loja</th>
-            <th className="r">{thSaldo}</th><th className="r">Custo Médio</th><th className="r">Valor em Estoque</th><th className="c">Status</th><th className="c">Calcula CMV</th>
+            <th className="r">{thSaldo}</th><th className="r">Custo Médio</th><th className="r">Valor em Estoque</th><th className="r" title="Quantos dias o saldo dura no ritmo de consumo (saídas dos últimos 30 dias). — = sem consumo no período ou saldo zerado.">Dias estoque</th><th className="c">Status</th><th className="c">Calcula CMV</th>
           </tr></thead>
           {rows.length > 0 && <tfoot><tr style={{ background: '#f8fafc', fontWeight: 700 }}>
             <td colSpan={5} style={{ fontSize: 11, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '.05em' }}>TOTAL</td>
             <td className="r mono">—</td><td className="r mono">—</td>
             <td className="r mono" style={{ color: '#16a34a' }}>{'R$ ' + totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            <td /><td />
+            <td className="r mono">—</td><td /><td />
           </tr></tfoot>}
           <tbody>
-            {carregando ? <tr><td colSpan={10} className="empty">Carregando…</td></tr>
-              : (posicao !== 'atual' && !dataBase) ? <tr><td colSpan={10} className="empty">Selecione uma data base.</td></tr>
-              : rows.length === 0 ? <tr><td colSpan={10} className="empty">{errSaldos ? 'Erro: ' + (errSaldos as Error).message : 'Nenhum saldo encontrado.'}</td></tr>
+            {carregando ? <tr><td colSpan={11} className="empty">Carregando…</td></tr>
+              : (posicao !== 'atual' && !dataBase) ? <tr><td colSpan={11} className="empty">Selecione uma data base.</td></tr>
+              : rows.length === 0 ? <tr><td colSpan={11} className="empty">{errSaldos ? 'Erro: ' + (errSaldos as Error).message : 'Nenhum saldo encontrado.'}</td></tr>
               : rows.map((r, i) => {
                 const q = r.s.quantidade || 0
                 const status = (r.ins.minimo && r.ins.minimo > 0 && q < r.ins.minimo)
@@ -229,6 +243,7 @@ export function SaldoEstoque() {
                     <td className="r mono">{qtd(q)}</td>
                     <td className="r mono">{brl(r.s.custo_medio)}</td>
                     <td className="r mono">{brl(r.valor)}</td>
+                    <td className="r mono" style={{ fontWeight: r.dias != null && r.dias < 7 ? 700 : 400, color: r.dias == null ? '#94a3b8' : r.dias < 3 ? '#dc2626' : r.dias < 7 ? '#d97706' : '#334155' }}>{r.dias == null ? '—' : r.dias.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
                     <td className="c">{status}</td>
                     <td className="c">{r.ins.participa_cmv !== 'nao' ? <span className="cmv-box">✓</span> : <span className="cmv-box" />}</td>
                   </tr>
