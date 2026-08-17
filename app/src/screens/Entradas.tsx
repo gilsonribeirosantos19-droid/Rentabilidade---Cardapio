@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
-import { mediaPonderada } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { DetailModal } from '../components/DetailModal'
 import { brlDash as brl } from '../lib/format'
@@ -98,28 +97,18 @@ export function Entradas() {
       const custoUnit = +(custo / fator).toFixed(6)
       const fornNome = f.fornecedor_id ? (fornecedores.find((x) => x.id === f.fornecedor_id)?.nome || null) : null
       const dataStr = f.data || hojeStr()
-      const { error: e1 } = await supabase.from('entradas_estoque').insert({
+      // ATÔMICO (M2/M3): entrada + saldo (custo médio ponderado) numa transação com trava de linha
+      // no banco (RPC registrar_entrada_estoque). Acaba o lost-update de quantidade/custo entre
+      // entradas concorrentes. Histórico e preço-do-vínculo continuam best-effort dentro da função.
+      const { error: e1 } = await supabase.rpc('registrar_entrada_estoque', { p_entrada: {
         tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: lojaId,
         fornecedor_id: f.fornecedor_id || null, fornecedor_nome: fornNome,
         quantidade: qtdEst, quantidade_fornecedor: qtd_, unidade_compra: f.unidade.trim() || null,
         fator_conversao: fator, custo_unitario: custoUnit, lote: f.lote.trim() || null,
         validade: f.validade || null, tipo: 'manual', observacao: f.obs.trim() || null,
-        responsavel: usuario?.nome || null,
-        criado_em: dataStr + 'T12:00:00.000Z',
-      })
+        responsavel: usuario?.nome || null, criado_em: dataStr + 'T12:00:00.000Z', origem: 'manual',
+      } })
       if (e1) throw e1
-      // custo médio ponderado (fonte única: lib/cost.ts)
-      const s = getSaldo(f.insumo_id)
-      const qA = s.quantidade || 0, cmA = s.custo_medio || 0, qN = qA + qtdEst
-      const cmN = mediaPonderada(qA, cmA, qtdEst, custoUnit)
-      await upsertSaldo(f.insumo_id, qN, +cmN.toFixed(6), lojaId)
-      // histórico de custo (best-effort)
-      try {
-        const impacto = cmA > 0 ? +(((cmN - cmA) / cmA) * 100).toFixed(4) : null
-        await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: f.insumo_id, loja_id: lojaId, saldo_anterior: +qA.toFixed(4), custo_medio_anterior: +cmA.toFixed(4), qtd_entrada: +qtdEst.toFixed(4), custo_entrada: +custoUnit.toFixed(4), novo_custo_medio: +cmN.toFixed(4), impacto_pct: impacto, origem: 'manual' })
-      } catch { /* opcional */ }
-      // atualiza preço no vínculo insumo→fornecedor
-      if (f.fornecedor_id) { try { await supabase.from('insumo_fornecedores').update({ preco_unitario: +custoUnit.toFixed(6) }).eq('insumo_id', f.insumo_id).eq('fornecedor_id', f.fornecedor_id) } catch { /* opcional */ } }
     },
     onSuccess: () => { qc.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === 'string' && /sald|said|entrad|insumo-forn/i.test(k) } }); setModal(false); setDup(null); showToast('Entrada registrada!', 'ok') },
     onError: (e: Error) => showToast(e.message, 'err'),
