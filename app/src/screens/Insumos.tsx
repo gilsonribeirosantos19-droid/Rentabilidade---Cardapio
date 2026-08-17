@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { brlCur as brl } from '../lib/format'
 import './insumos.css'
 
 // Title Case pt-BR enquanto digita: 1ª letra de cada palavra maiúscula (igual à normalização do banco)
@@ -39,7 +40,6 @@ const UN_OPTS = ['un', 'kg', 'litro', 'pct', 'cx', 'fardo', 'bd', 'sc']
 const unLabel = (u?: string) => UN_LABEL[(u || '').toLowerCase().trim()] || (u || '')
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const fmtCodigo = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')
 const getStatus = (i: Insumo) => { const r = Number(i.rendimento_pct ?? 100); return r < 60 ? 'critico' : r < 72 ? 'atencao' : 'ativo' }
 const ST_TXT: Record<string, string> = { ativo: 'Ativo', atencao: 'Estoque baixo', critico: 'Crítico' }

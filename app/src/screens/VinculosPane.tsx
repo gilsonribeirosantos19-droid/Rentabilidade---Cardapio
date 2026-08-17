@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
+import { brlZero as brl } from '../lib/format'
 
 type Fornecedor = { id: string; codigo?: string; razao_social?: string; nome_fantasia?: string; nome?: string; cnpj?: string; contato?: string; whatsapp?: string; cidade?: string }
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; categoria?: string }
@@ -14,7 +15,6 @@ type Vinculo = {
 }
 type VForm = Partial<Vinculo>
 
-const brl = (n?: number | null) => 'R$ ' + Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtDate = (d?: string | null) => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : '—'
 const num = (n?: number | null) => n != null ? Number(n).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) : '—'
 const low = (s: string) => s.toLowerCase()

@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
 import { FichaModal } from './FichaModal'
+import { brlCur as brl } from '../lib/format'
 import './fichas.css'
 
 type Item = { id?: string; insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number; ordem?: number }
@@ -20,7 +21,6 @@ type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: strin
 type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
 
 // ── Impressão de fichas (1 ou várias) — layout tipo Everest, print do navegador (Imprimir/PDF) ──

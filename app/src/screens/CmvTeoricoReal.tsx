@@ -6,6 +6,7 @@ import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
+import { brlZero as brl } from '../lib/format'
 import './cmv.css'
 
 type Insumo = { id: string; nome?: string; categoria?: string; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
@@ -19,7 +20,6 @@ type Saida = { insumo_id: string; quantidade?: number; tipo?: string; loja_id?: 
 type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: number; loja_id?: string | null; criado_em?: string; created_at?: string }
 type Saldo = { insumo_id: string; loja_id?: string | null; custo_medio?: number }
 
-const brl = (v?: number) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const brlSigned = (v: number) => (v >= 0 ? '+' : '-') + 'R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fq = (v: number) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const getStatus = (pct: number): 'critico' | 'atencao' | 'ok' => { const a = Math.abs(pct); return a > 15 ? 'critico' : a > 5 ? 'atencao' : 'ok' }

@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { custoDoInsumo } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
+import { brlZero as brl } from '../lib/format'
 import './estoque.css'
 
 type Loja = { id: string; nome?: string; cnpj?: string; razao_social?: string }
@@ -16,7 +17,6 @@ type Fech = { loja_id?: string; competencia?: string; situacao?: string; estoque
 type ItemRow = { id: string; nome: string; un: string; ei: number; compras: number; entT: number; saiT: number; consumo: number; perdas: number; ef: number; cmv: number }
 type Row = { loja: Loja; situacao: 'aberto' | 'fechado'; itens: ItemRow[]; faturamento: number; estoque_inicial: number; compras: number; entradas_transferencia: number; saidas_transferencia: number; consumo: number; perdas: number; estoque_final: number; cmv: number }
 
-const brl = (v?: number) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 // data LOCAL (Brasil) do movimento — evita que lançamento de madrugada (UTC) caia no dia/mês errado
 const dataOf = (m: Mov) => { const r = m.criado_em || m.created_at; return r ? new Date(r).toLocaleDateString('en-CA') : '' }
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']

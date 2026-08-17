@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
+import { brlCur as brl } from '../lib/format'
 import './produtos.css'
 
 type Produto = {
@@ -33,7 +34,6 @@ type Produto = {
 type Form = Partial<Produto>
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-const brl = (n?: number | null) => (n != null ? Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—')
 const TIPO_LABEL: Record<string, string> = { produto_acabado: 'Produto acabado', revenda: 'Mercadoria p/ revenda', combo: 'Combo', outro: 'Outro' }
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
 // dedupe ignorando MAIÚSCULA/minúscula/acento; prefere a versão que NÃO é toda maiúscula (Title Case

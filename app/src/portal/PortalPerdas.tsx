@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
-import { num } from '../lib/format'
+import { brl, num } from '../lib/format'
 
 // Portal › Perdas — registra perdas reais (insumo ou produto) + dashboard
 // (histórico recente, resumo do período, donut por motivo). Fiel ao loja.html.
@@ -15,7 +15,6 @@ type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number }
 type Perda = { id: string; motivo_id?: string; data_perda?: string }
 type PerdaItem = { perda_id: string; insumo_id: string; quantidade?: number }
 
-const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const q3 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const hojeStr = () => new Date().toLocaleDateString('en-CA')
 const primeiroDiaMes = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }

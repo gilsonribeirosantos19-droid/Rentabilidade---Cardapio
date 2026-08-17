@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { SearchSelect } from '../components/SearchSelect'
+import { brlCur as brl } from '../lib/format'
 
 type Ins = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
 type Prod = { id: string; nome?: string; grupo?: string; categoria?: string; preco_venda?: number | null }
@@ -15,7 +16,6 @@ type FichaIn = {
 
 const umOf = (i?: Ins) => (i ? i.unidade_medida || i.unidade_compra || 'g' : 'g')
 const isW = (um: string) => um === 'kg' || um === 'litro'
-const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const nq = (s?: string) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isNaN(n) ? 0 : n }
 // exibe a quantidade com casas claras: peso/volume (kg/L) SEMPRE com 3 casas (0,200) e vírgula BR
 const showQ = (s: string | undefined, weight: boolean) => nq(s).toLocaleString('pt-BR', weight ? { minimumFractionDigits: 3, maximumFractionDigits: 3 } : { maximumFractionDigits: 3 })
