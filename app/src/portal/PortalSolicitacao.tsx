@@ -175,7 +175,7 @@ export function PortalSolicitacao() {
                 <span style={{ marginLeft: 'auto', color: '#94a3b8', transform: aberto ? 'none' : 'rotate(-90deg)', transition: '.15s' }}>▾</span>
               </div>
               {aberto && (
-                <table className="p-tbl">
+                <table className="p-tbl psol-grade">
                   <thead><tr><th style={{ width: 36 }}></th><th>Código</th><th>Item</th><th>Embalagem</th><th>Estoque atual</th><th>Estoque mínimo</th></tr></thead>
                   <tbody>
                     {itens.map((ins) => {
