@@ -400,7 +400,9 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
       if (!itens.length) throw new Error('Digite a saída de ao menos um item.')
       const criadoEm = data + 'T12:00:00.000Z'
       for (const it of itens) {
-        const s = saldoMap[it.id]; const atual = Number(s?.quantidade) || 0; const cm = Number(s?.custo_medio) || 0
+        // relê o saldo FRESCO do banco (não o cache) — evita sobrescrever mudança concorrente (lost update)
+        const { data: sals } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lojaId).eq('insumo_id', it.id)
+        const atual = Number((sals ?? [])[0]?.quantidade) || 0; const cm = Number((sals ?? [])[0]?.custo_medio) || 0
         const { error: e1 } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: it.id, quantidade: it.qtd, tipo: 'consumo', motivo, responsavel: usuario?.nome || null, criado_em: criadoEm }); if (e1) throw e1
         const nova = Math.max(0, atual - it.qtd)
         const { error: e2 } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: it.id, quantidade: parseFloat(nova.toFixed(4)), custo_medio: parseFloat(cm.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (e2) throw e2
