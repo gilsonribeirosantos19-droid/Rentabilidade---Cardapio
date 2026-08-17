@@ -24,7 +24,7 @@ declare
   cur_ins  uuid := null;
   q        numeric := 0;
   cm       numeric := 0;
-  lim      timestamptz := (p_ate::text || 'T23:59:59.999Z')::timestamptz;   -- mesmo teto do front (criado_em <= ate T23:59:59)
+  lim      timestamptz := (p_ate::text || 'T23:59:59')::timestamptz;   -- MESMO teto e MESMO fuso da consulta do front (criado_em <= ate T23:59:59); sem forçar UTC
 begin
   for r in
     select e.insumo_id as ins, e.criado_em as dt, true as ent,
