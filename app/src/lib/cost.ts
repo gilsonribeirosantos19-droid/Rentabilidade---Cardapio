@@ -15,7 +15,9 @@ export type CostCtx = { entradas?: Mov[]; saidas?: Mov[]; saldos?: Saldo[]; vinc
 // Média móvel ponderada: novo custo médio ao ENTRAR `qEnt` unidades a `custoEnt`
 // (mesma regra do custoMedioNaData/recalc do banco). Fonte única p/ Entradas manual e NF-e.
 export function mediaPonderada(qAtual: number, cmAtual: number, qEnt: number, custoEnt: number): number {
-  const qA = +(qAtual || 0), cmA = +(cmAtual || 0), qE = +(qEnt || 0), cE = +(custoEnt || 0)
+  // peso do saldo ANTERIOR nunca negativo: estoque negativo não tem base de custo real; se
+  // pesasse negativo, distorceria (ou inflaria) o custo médio. Com peso 0, o custo da entrada manda.
+  const qA = Math.max(0, +(qAtual || 0)), cmA = +(cmAtual || 0), qE = +(qEnt || 0), cE = +(custoEnt || 0)
   const qN = qA + qE
   return qN > 0 ? (qA * cmA + qE * cE) / qN : cE
 }

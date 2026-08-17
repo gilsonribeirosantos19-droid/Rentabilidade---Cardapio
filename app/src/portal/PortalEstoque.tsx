@@ -277,7 +277,8 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
         const { error } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, fornecedor_id: fornId || null, fornecedor_nome: fornNome, quantidade: qtdEst, unidade_compra: unidCompra.trim() || null, fator_conversao: f, custo_unitario: custoUnit, lote: lote.trim() || null, validade: validade || null, tipo: 'manual', observacao: obs.trim() || null, responsavel: usuario?.nome || null, criado_em: criadoEm })
         if (error) throw error
         novaQtd = qtdAtual + qtdEst
-        novoCm = novaQtd > 0 ? (qtdAtual * cmAtual + qtdEst * custoUnit) / novaQtd : custoUnit
+        const pesoAnt = Math.max(0, qtdAtual)   // saldo negativo não pesa no custo médio (senão distorce)
+        novoCm = (pesoAnt + qtdEst) > 0 ? (pesoAnt * cmAtual + qtdEst * custoUnit) / (pesoAnt + qtdEst) : custoUnit
         const impacto = cmAtual > 0 ? parseFloat(((novoCm - cmAtual) / cmAtual * 100).toFixed(4)) : null
         await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lojaId, saldo_anterior: parseFloat(qtdAtual.toFixed(4)), custo_medio_anterior: parseFloat(cmAtual.toFixed(4)), qtd_entrada: parseFloat(qtdEst.toFixed(4)), custo_entrada: parseFloat(custoUnit.toFixed(4)), novo_custo_medio: parseFloat(novoCm.toFixed(6)), impacto_pct: impacto, origem: 'entrada_loja', documento_ref: null })
       } else {
