@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { brl } from '../lib/format'
 import './fiscal.css'
 
 type Insumo = { id: string; nome: string; codigo_interno?: string | number; unidade_medida?: string }
@@ -11,7 +12,6 @@ type Ent = { id: string; criado_em?: string; insumo_id: string; loja_id?: string
 type Nota = { numero?: string | number | null; serie?: string | number | null; valor_total?: number | null }
 type Vinc = { insumo_id?: string; codigo_nfe?: string }
 
-const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmt3 = (v: number) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const fmtFator = (v: number) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 const fmtCod = (c?: string | number | null) => (c != null && c !== '' ? String(c).padStart(6, '0') : '')

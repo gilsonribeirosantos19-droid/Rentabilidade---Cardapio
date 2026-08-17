@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { brlNum as brl } from '../lib/format'
 import './monitorvendas.css'
 
 // Recebimento de Vendas — o PORTÃO da integração com o iComanda (por loja × DIA).
@@ -23,7 +24,6 @@ const SIT_META: Record<Situacao, { nome: string; dot: string }> = {
 const ORDER: Situacao[] = ['com_erros', 'nao_recebido', 'processado']
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 
-const brl = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
 const fmtDia = (iso: string) => iso.split('-').reverse().join('/')

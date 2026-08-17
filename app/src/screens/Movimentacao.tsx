@@ -6,13 +6,13 @@ import { useLoja } from '../lib/loja'
 import { custoDoInsumo, type Mov } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
+import { brl } from '../lib/format'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string; tipo_item?: string; familia?: string; subgrupo?: string; unidade_medida?: string; unidade_compra?: string; participa_cmv?: string; preco_compra?: number }
 type Saida = Mov & { tipo?: string }
 type InvItem = { insumo_id: string; qtd_contada?: number; custo_medio?: number }
 
-const brl = (v?: number | null) => v == null ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean).map((v) => ('' + v).trim()).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'pt'))

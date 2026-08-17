@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
+import { brl } from '../lib/format'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
@@ -12,7 +13,6 @@ type Entrada = { insumo_id: string; quantidade?: number; custo_unitario?: number
 type Saida = { insumo_id: string; quantidade?: number; tipo?: string; motivo?: string; criado_em?: string }
 type KxMov = { data: string; tipo: 'entrada' | 'saida'; desc: string; qMov: number; vUnit: number; vEntrada: number; vSaida: number; qAcum: number; vAcum: number; cmedio: number }
 
-const brl = (v?: number | null) => (v == null || (v as any) === '') ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const fmtData = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`

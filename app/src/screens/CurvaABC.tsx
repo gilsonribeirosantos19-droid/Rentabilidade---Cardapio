@@ -5,12 +5,12 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
+import { brl } from '../lib/format'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number }
 
-const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const norm = (s?: string) => (s || '').toLowerCase()
 
 export function CurvaABC() {

@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { DetailModal } from '../components/DetailModal'
+import { brlDash as brl } from '../lib/format'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
@@ -13,7 +14,6 @@ type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; 
 type SaiForm = { insumo_id: string; quantidade: string; tipo: string; responsavel: string; data: string; motivo: string; destino: string }
 
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-const brl = (v?: number | null) => (v == null || v === 0) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtDH = (iso?: string) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const hojeStr = () => new Date().toISOString().split('T')[0]
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`

@@ -8,6 +8,7 @@ import { useLoja } from '../lib/loja'
 import { ChartBox } from '../components/ChartBox'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
+import { brl } from '../lib/format'
 import './sugestao.css'
 
 // dropdowns com busca da toolbar (rótulo ↔ valor)
@@ -30,7 +31,6 @@ type Pedido = { id: string; status?: string; loja_id?: string }
 type ItemPed = { pedido_id: string; insumo_id: string; quantidade?: number }
 type Row = { insumoId: string; cod: string; desc: string; grp: string; un: string; est: number; min: number; cons: number; ab: number; tr: number; custo: number; sug: number }
 
-const brl = (n: number) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const q2 = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const parseNum = (v: string) => parseFloat((v || '0').replace(/\./g, '').replace(',', '.')) || 0
 const fmtCod = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')

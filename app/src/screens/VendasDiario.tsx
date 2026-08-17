@@ -4,6 +4,7 @@ import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
+import { brlNum as brl } from '../lib/format'
 import './faturamento.css'
 
 // Vendas por Dia — detalhado por loja × DIA (lê o portão icomanda_recebimento, só 'processado').
@@ -14,7 +15,6 @@ type Canal = { canal: string; faturado: number; comandas: number; pessoas: numbe
 type RecRow = { loja_id: string; data: string; status: string; faturado?: number; desconto?: number; taxa?: number; couvert?: number; qtd_comandas?: number; pessoas?: number; fat_almoco?: number; fat_jantar?: number; por_canal?: Canal[] | null }
 type Row = { id: string; loja: string; data: string; canal: string; turno: string; dMovimento: string; comandas: number; pessoas: number; faturado: number; desconto: number; taxa: number; couvert: number; ticket: number }
 
-const brl = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const int = (v: number) => v.toLocaleString('pt-BR')
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }

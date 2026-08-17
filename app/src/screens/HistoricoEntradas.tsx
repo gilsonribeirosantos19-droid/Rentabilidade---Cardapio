@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
+import { brl } from '../lib/format'
 import './estoque.css'
 
 type Ent = { id: string; insumo_id: string; loja_id?: string | null; quantidade?: number; unidade_compra?: string; custo_unitario?: number; custo_total?: number; nfe_numero?: string | null; nfe_chave?: string | null; fornecedor_id?: string | null; fornecedor_nome?: string | null; status?: string | null; criado_em?: string }
@@ -10,7 +11,6 @@ type Insumo = { id: string; nome: string; unidade_medida?: string }
 type Forn = { id: string; nome: string }
 type Loja = { id: string; nome: string }
 
-const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
 const fmtD = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
 const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`

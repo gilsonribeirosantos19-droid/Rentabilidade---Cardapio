@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { brl } from '../lib/format'
 import './config.css'
 
 // Produção › Planejar › Monitor de Produção — lista todas as ordens (Produção +
@@ -13,7 +14,6 @@ type OrdP = { id: string; data?: string; insumo_produzido_id?: string; quantidad
 type OrdPorc = { id: string; data?: string; insumo_id?: string; quantidade?: number; peso?: number; status?: string; loja_id?: string }
 type Row = { id: string; data?: string; tipo: 'producao' | 'porcionamento'; insumoId: string; qtd?: number; custo?: number; status?: string }
 
-const brl = (n?: number) => (n != null ? 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—')
 const q3 = (n?: number) => (n ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 3 })
 const fmtDH = (d?: string) => (d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—')
 const p2 = (n: number) => String(n).padStart(2, '0')

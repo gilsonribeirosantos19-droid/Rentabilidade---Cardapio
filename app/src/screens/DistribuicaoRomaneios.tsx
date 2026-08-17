@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { Romaneio } from './Romaneio'
+import { brl } from '../lib/format'
 import './fiscal.css'
 import './distribuicao.css'
 
@@ -14,7 +15,6 @@ type Item = { id: string; insumo_id: string; qtd_atendida?: number; unidade?: st
 type Insumo = { id: string; nome?: string; unidade_medida?: string }
 type Loja = { id: string; nome?: string; cnpj?: string }
 
-const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtD = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
 const reqNo = (n?: number) => 'REQ-' + String(n ?? 0).padStart(6, '0')
 

@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { brlDash as brl } from '../lib/format'
 import './estoque.css'
 
 type Pedido = { id: string; loja_id?: string | null; status?: string; observacao?: string | null; data_pedido?: string; created_at?: string; fornecedor_id?: string | null }
@@ -14,7 +15,6 @@ type Insumo = { id: string; nome: string; unidade_medida?: string; codigo_intern
 type Forn = { id: string; nome: string; whatsapp?: string | null }
 type Vinc = { insumo_id: string; fornecedor_id: string; codigo_fornecedor?: string | null; principal?: boolean; preco_unitario?: number | null; ultima_entrada?: string; created_at?: string }
 
-const brl = (v?: number | null) => (v == null || !(+v)) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtQty = (v?: number) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
 const fmtQtyDoc = (v?: number) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const fmtCod = (c?: number | string) => (c != null && c !== '' ? String(c).padStart(6, '0') : '—')

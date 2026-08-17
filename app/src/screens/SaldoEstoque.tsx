@@ -5,6 +5,7 @@ import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
+import { brlDash as brl } from '../lib/format'
 import './estoque.css'
 
 // Posição: opções do dropdown com busca (mapeia rótulo ↔ valor interno)
@@ -17,7 +18,6 @@ type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; 
 type Mov = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_unitario?: number; criado_em?: string; created_at?: string }
 type Loja = { id: string; nome: string }
 
-const brl = (v?: number | null) => (v == null || v === 0) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean).map((v) => ('' + v).trim()).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'pt'))

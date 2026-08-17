@@ -4,6 +4,7 @@ import type { ChartConfiguration } from 'chart.js'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { ChartBox } from '../components/ChartBox'
+import { brl } from '../lib/format'
 import './pdv.css'
 
 type Fat = { id: string; data: string; canal?: string; valor?: number; observacao?: string | null }
@@ -11,7 +12,6 @@ type Fat = { id: string; data: string; canal?: string; valor?: number; observaca
 const CANAL_CORES: Record<string, string> = { 'salão': '#3b82f6', delivery: '#f97316', ifood: '#10b981', rappi: '#8b5cf6', 'balcão': '#f59e0b', outros: '#94a3b8' }
 const CANAL_NOMES: Record<string, string> = { 'salão': 'Salão', delivery: 'Delivery (App)', ifood: 'iFood', rappi: 'Rappi', 'balcão': 'Balcão', outros: 'Outros' }
 
-const brl = (v?: number | null) => (v == null || v === undefined) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const hojeLocal = () => new Date().toLocaleDateString('en-CA')
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 

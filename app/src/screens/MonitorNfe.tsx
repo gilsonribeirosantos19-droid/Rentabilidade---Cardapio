@@ -6,6 +6,7 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { mediaPonderada } from '../lib/cost'
 import { imprimirDanfeOuLocal, gerarDanfeXml, gerarDanfeAiko } from '../lib/danfe'
+import { brl } from '../lib/format'
 import './fiscal.css'
 
 // Período: rótulos do dropdown com busca ↔ valor interno
@@ -20,7 +21,6 @@ type Forn = { id: string; nome: string; cnpj?: string; codigo?: string }
 type IFV = { id: string; insumo_id: string; fornecedor_id?: string | null; descricao_fornecedor?: string; codigo_fornecedor?: string; embalagem_descricao?: string; qtd_por_embalagem?: number; preco_unitario?: number }
 type Vinc = { id: string; descricao_nfe?: string; codigo_nfe?: string; insumo_id?: string; fator_conversao?: number }
 
-const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtQ = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
 const fmtD = (iso?: string | null) => iso ? new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString('pt-BR') : '—'
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()

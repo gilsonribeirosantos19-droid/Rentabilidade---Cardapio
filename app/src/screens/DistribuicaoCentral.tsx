@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import './fiscal.css'
 import './distribuicao.css'
 import { Romaneio } from './Romaneio'
+import { brl } from '../lib/format'
 
 // Distribuição › Central de Distribuição — o CD (matriz) atende as requisições das
 // filiais: separa, gera romaneio e confirma o envio (dispara transferir_estoque CD→filial).
@@ -15,7 +16,6 @@ type Insumo = { id: string; nome?: string; unidade_medida?: string }
 type Saldo = { insumo_id: string; quantidade?: number }
 type Loja = { id: string; nome?: string; cnpj?: string; is_cd?: boolean }
 
-const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtQ = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
 const fmtD = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
 const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0

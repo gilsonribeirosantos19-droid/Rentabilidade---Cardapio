@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { brl } from '../lib/format'
 import './metas.css'
 
 // Gestão › Metas — acompanhamento diário (Meta × Realizado × Diferença), no modelo da planilha.
@@ -19,7 +20,6 @@ const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 // 'total' = a loja inteira (padrão de quase todas). Só quem separa (ex.: Cidade Nova) usa Salão/Delivery.
 const CANAIS = ['total', 'Salão', 'Delivery', 'Jantar', 'Almoço']  // Salão/Delivery = split por CANAL; Jantar/Almoço = split por TURNO. Balcão entra no Salão.
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-const brl = (n: number) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const parseNum = (v: unknown) => parseFloat(String(v ?? '').replace(/\./g, '').replace(',', '.')) || 0
 const pad = (n: number) => String(n).padStart(2, '0')
 

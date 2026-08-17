@@ -4,13 +4,13 @@ import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
+import { brlNum as brl } from '../lib/format'
 import './faturamento.css'
 
 // Faturamento por Loja (mensal) — lê a tabela icomanda_faturamento (número CHEIO,
 // vindo do bloco filiais.listar do iComanda: bate 100% com o relatório do PDV).
 // Botão "Puxar do iComanda" chama a Edge Function icomanda-sync p/ atualizar a competência.
 
-const brl = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const p1 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'
 const int = (v: number) => v.toLocaleString('pt-BR')
 

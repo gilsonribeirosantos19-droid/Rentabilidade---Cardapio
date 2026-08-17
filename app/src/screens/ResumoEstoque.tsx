@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
+import { brl } from '../lib/format'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number }
 
-const brl = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const fmtQ = (v?: number | null) => { const n = Number(v) || 0; return n % 1 === 0 ? n.toLocaleString('pt-BR') : n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) }
 
 export function ResumoEstoque() {
