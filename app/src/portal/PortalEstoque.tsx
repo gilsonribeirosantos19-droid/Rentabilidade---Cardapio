@@ -176,7 +176,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
       </div>
 
       <div className="p-card">
-        <table className="p-tbl">
+        <table className="p-tbl p-tbl-grade">
           <thead><tr>
             <th>Insumo</th><th>Un.</th><th className="r">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r">Valor</th><th className="r" title="Quantos dias o saldo atual dura no ritmo de consumo (saídas) do período selecionado. — = sem consumo no período ou saldo zerado/negativo.">Dias estoque</th><th>Última mov.</th>
           </tr></thead>
@@ -529,7 +529,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
       </div>
 
       <div className="p-card">
-        <table className="p-tbl">
+        <table className="p-tbl p-tbl-grade">
           <thead><tr><th>Data/Hora</th><th>Tipo</th><th>Insumo</th><th>Grupo</th><th className="r">Qtd.</th><th>Un.</th><th>Responsável</th><th>Observação</th><th className="c">Editar</th></tr></thead>
           <tbody>
             {isFetching ? <tr><td colSpan={9} className="p-empty">Carregando…</td></tr>

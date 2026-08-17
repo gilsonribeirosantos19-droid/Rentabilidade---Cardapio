@@ -88,6 +88,13 @@
 .portal .p-tbl-doc thead th { background: #1e2030; color: #fff; font-size: 11px; padding: 8px 10px; border: 1px solid #1e2030; }
 .portal .p-tbl-doc tbody td { border: 1px solid #cbd5e1; padding: 7px 10px; }
 .portal .p-tbl-doc tbody tr:hover td { background: #eef4ff; }
+/* grade "de verdade": linhas de célula + zebra (só onde p-tbl-grade é aplicada — Estoque Relatório/Histórico) */
+.portal .p-tbl-grade { border: 1px solid #d3dce6; }
+.portal .p-tbl-grade thead th { border: 1px solid #cbd6e2; }
+.portal .p-tbl-grade tbody td { border: 1px solid #e6ecf3; }
+.portal .p-tbl-grade tbody tr:nth-child(even) td { background: #f8fafc; }
+.portal .p-tbl-grade tfoot td { border: 1px solid #cbd6e2; }
+.portal .p-tbl-grade tbody tr:hover td { background: #d0dff2; }
 .portal .p-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .portal .p-qtd { width: 90px; text-align: right; height: 28px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 8px; font-family: 'DM Mono', monospace; font-size: 12px; background: #fffdf8; }
 
