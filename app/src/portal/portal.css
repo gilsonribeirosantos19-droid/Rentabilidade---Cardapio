@@ -98,9 +98,9 @@
 .portal .p-tbl-grade tbody tr:nth-child(even) td { background: #f8fafc; }
 .portal .p-tbl-grade tfoot td { border: 1px solid #cbd6e2; }
 .portal .p-tbl-grade tbody tr:hover td { background: #d0dff2; }
-/* Solicitação de Compra: grade + cabeçalho da tabela fixo ABAIXO da barra de busca (~60px) */
+/* Solicitação de Compra: grade na tabela de itens (dá "vida"); a barra de busca já é sticky no topo */
 .portal .psol-grade { border: 1px solid #d3dce6; }
-.portal .psol-grade thead th { border: 1px solid #cbd6e2; position: sticky; top: 60px; z-index: 3; box-shadow: 0 1px 0 #cbd6e2; }
+.portal .psol-grade thead th { border: 1px solid #cbd6e2; }
 .portal .psol-grade tbody td { border: 1px solid #eef2f7; }
 .portal .psol-grade tbody tr:hover td { background: #eef4ff; }
 .portal .p-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
