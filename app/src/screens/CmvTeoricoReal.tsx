@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
-import { custoDoInsumo, custoMedioNaData } from '../lib/cost'
+import { custoDoInsumo } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import { brlZero as brl } from '../lib/format'
@@ -111,18 +111,6 @@ export function CmvTeoricoReal() {
     queryFn: async () => {
       const { data } = await supabase.rpc('custo_medio_ate', { p_tenant: tenantId, p_ate: ate, p_loja: lojaId || null })
       return (data ?? []) as { insumo_id: string; custo_medio: number }[]
-    },
-  })
-
-  // ===== DIAGNÓSTICO TEMPORÁRIO (C2): baixa o histórico completo p/ recalcular no navegador e comparar com o banco =====
-  const { data: dbgMovs } = useQuery({
-    queryKey: ['cmv-dbg', tenantId, ate], enabled: !!tenantId && !!ate,
-    queryFn: async () => {
-      const [e, s] = await Promise.all([
-        fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Mov[]),
-        fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
-      ])
-      return { e, s }
     },
   })
 
@@ -241,24 +229,6 @@ export function CmvTeoricoReal() {
     return { totalFat, totalTeo, totalReal, dif, divPct, insAll, comDiv, rows }
   }, [data, cmRows, lojaId, de, ate])
 
-  // DIAGNÓSTICO TEMPORÁRIO (C2): compara o custo médio do banco (cmRows) com o recálculo do navegador
-  // (custoMedioNaData), insumo a insumo, e lista os que divergem por mais de 1 centavo.
-  const dbgDiffs = useMemo(() => {
-    if (!dbgMovs || !calc) return [] as { nome: string; cli: number; srv: number; qTeo: number; imp: number; cliQ: number; nE: number; nS: number }[]
-    const byLoja = <T extends { loja_id?: string | null }>(arr: T[]) => lojaId ? arr.filter((x) => (x.loja_id || null) === lojaId) : arr
-    const ctx = { entradas: byLoja(dbgMovs.e), saidas: byLoja(dbgMovs.s) }
-    const cmMap = new Map(cmRows.map((r) => [r.insumo_id, Number(r.custo_medio) || 0]))
-    const out: { nome: string; cli: number; srv: number; qTeo: number; imp: number; cliQ: number; nE: number; nS: number }[] = []
-    for (const row of calc.rows) {
-      const r = custoMedioNaData(row.i.id, ate, ctx)
-      const srv = cmMap.get(row.i.id) || 0
-      const nE = ctx.entradas.filter((e) => e.insumo_id === row.i.id).length
-      const nS = ctx.saidas.filter((s) => s.insumo_id === row.i.id).length
-      if (Math.abs(r.custo - srv) > 0.001) out.push({ nome: row.i.nome || '(sem nome)', cli: r.custo, srv, qTeo: row.qTeo, imp: row.qTeo * Math.abs(r.custo - srv), cliQ: r.quantidade, nE, nS })
-    }
-    return out.sort((a, b) => b.imp - a.imp).slice(0, 15)
-  }, [dbgMovs, calc, cmRows, lojaId, ate])
-
   const rows = useMemo(() => {
     if (!calc) return []
     let r = calc.rows
@@ -294,12 +264,6 @@ export function CmvTeoricoReal() {
 
   return (
     <div className="cmv-screen">
-      {dbgDiffs.length > 0 && (
-        <div style={{ background: '#fee2e2', border: '1px solid #ef4444', borderRadius: 8, padding: 10, margin: '0 0 10px', fontSize: 12, fontFamily: 'monospace', color: '#7f1d1d' }}>
-          <b>DIAGNÓSTICO C2 — {dbgDiffs.length} insumo(s) divergem (navegador × banco):</b>
-          {dbgDiffs.map((d, i) => <div key={i}>{d.nome}: navegador <b>{d.cli.toFixed(4)}</b> × banco <b>{d.srv.toFixed(4)}</b> · saldoNav {d.cliQ.toFixed(2)} · ent {d.nE} sai {d.nS} · qTeo {d.qTeo.toFixed(3)} · impacto R$ {d.imp.toFixed(2)}</div>)}
-        </div>
-      )}
       <div className="ds-filterbar">
         <div className="ds-field" style={{ minWidth: 130 }}>
           <label>Período</label>
