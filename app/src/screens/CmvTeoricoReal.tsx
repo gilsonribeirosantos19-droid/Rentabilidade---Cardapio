@@ -244,15 +244,17 @@ export function CmvTeoricoReal() {
   // DIAGNÓSTICO TEMPORÁRIO (C2): compara o custo médio do banco (cmRows) com o recálculo do navegador
   // (custoMedioNaData), insumo a insumo, e lista os que divergem por mais de 1 centavo.
   const dbgDiffs = useMemo(() => {
-    if (!dbgMovs || !calc) return [] as { nome: string; cli: number; srv: number; qTeo: number; imp: number }[]
+    if (!dbgMovs || !calc) return [] as { nome: string; cli: number; srv: number; qTeo: number; imp: number; cliQ: number; nE: number; nS: number }[]
     const byLoja = <T extends { loja_id?: string | null }>(arr: T[]) => lojaId ? arr.filter((x) => (x.loja_id || null) === lojaId) : arr
     const ctx = { entradas: byLoja(dbgMovs.e), saidas: byLoja(dbgMovs.s) }
     const cmMap = new Map(cmRows.map((r) => [r.insumo_id, Number(r.custo_medio) || 0]))
-    const out: { nome: string; cli: number; srv: number; qTeo: number; imp: number }[] = []
+    const out: { nome: string; cli: number; srv: number; qTeo: number; imp: number; cliQ: number; nE: number; nS: number }[] = []
     for (const row of calc.rows) {
-      const cli = custoMedioNaData(row.i.id, ate, ctx).custo
+      const r = custoMedioNaData(row.i.id, ate, ctx)
       const srv = cmMap.get(row.i.id) || 0
-      if (Math.abs(cli - srv) > 0.001) out.push({ nome: row.i.nome || '(sem nome)', cli, srv, qTeo: row.qTeo, imp: row.qTeo * Math.abs(cli - srv) })
+      const nE = ctx.entradas.filter((e) => e.insumo_id === row.i.id).length
+      const nS = ctx.saidas.filter((s) => s.insumo_id === row.i.id).length
+      if (Math.abs(r.custo - srv) > 0.001) out.push({ nome: row.i.nome || '(sem nome)', cli: r.custo, srv, qTeo: row.qTeo, imp: row.qTeo * Math.abs(r.custo - srv), cliQ: r.quantidade, nE, nS })
     }
     return out.sort((a, b) => b.imp - a.imp).slice(0, 15)
   }, [dbgMovs, calc, cmRows, lojaId, ate])
@@ -295,7 +297,7 @@ export function CmvTeoricoReal() {
       {dbgDiffs.length > 0 && (
         <div style={{ background: '#fee2e2', border: '1px solid #ef4444', borderRadius: 8, padding: 10, margin: '0 0 10px', fontSize: 12, fontFamily: 'monospace', color: '#7f1d1d' }}>
           <b>DIAGNÓSTICO C2 — {dbgDiffs.length} insumo(s) divergem (navegador × banco):</b>
-          {dbgDiffs.map((d, i) => <div key={i}>{d.nome}: navegador <b>{d.cli.toFixed(4)}</b> × banco <b>{d.srv.toFixed(4)}</b> · qTeo {d.qTeo.toFixed(3)} · impacto R$ {d.imp.toFixed(2)}</div>)}
+          {dbgDiffs.map((d, i) => <div key={i}>{d.nome}: navegador <b>{d.cli.toFixed(4)}</b> × banco <b>{d.srv.toFixed(4)}</b> · saldoNav {d.cliQ.toFixed(2)} · ent {d.nE} sai {d.nS} · qTeo {d.qTeo.toFixed(3)} · impacto R$ {d.imp.toFixed(2)}</div>)}
         </div>
       )}
       <div className="ds-filterbar">
