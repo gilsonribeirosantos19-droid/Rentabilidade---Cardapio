@@ -252,7 +252,7 @@ export function CmvTeoricoReal() {
     for (const row of calc.rows) {
       const cli = custoMedioNaData(row.i.id, ate, ctx).custo
       const srv = cmMap.get(row.i.id) || 0
-      if (Math.abs(cli - srv) > 0.001) out.push({ nome: row.i.nome, cli, srv, qTeo: row.qTeo, imp: row.qTeo * Math.abs(cli - srv) })
+      if (Math.abs(cli - srv) > 0.001) out.push({ nome: row.i.nome || '(sem nome)', cli, srv, qTeo: row.qTeo, imp: row.qTeo * Math.abs(cli - srv) })
     }
     return out.sort((a, b) => b.imp - a.imp).slice(0, 15)
   }, [dbgMovs, calc, cmRows, lojaId, ate])
