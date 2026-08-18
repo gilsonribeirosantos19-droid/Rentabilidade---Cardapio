@@ -29,10 +29,10 @@ export function InflacaoInsumos() {
   const meses = useMemo(() => { const h = new Date(); const out: string[] = []; for (let i = nMeses - 1; i >= 0; i--) { const d = new Date(h.getFullYear(), h.getMonth() - i, 1); out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`) } return out }, [nMeses])
   const inicio = meses[0] + '-01'
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['inf-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra').eq('tenant_id', tenantId).order('nome').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['inf-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)) })
   const { data: entradas = [], isLoading } = useQuery({
     queryKey: ['inf-ent', tenantId, lojaId, inicio], enabled: !!tenantId,
-    queryFn: () => fetchAll<Ent>((f, t) => { let q = supabase.from('entradas_estoque').select('insumo_id,criado_em,custo_unitario,fornecedor_id,fornecedor_nome,tipo').eq('tenant_id', tenantId).gte('criado_em', inicio + 'T00:00:00'); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
+    queryFn: () => fetchAll<Ent>((f, t) => { let q = supabase.from('entradas_estoque').select('insumo_id,criado_em,custo_unitario,fornecedor_id,fornecedor_nome,tipo').eq('tenant_id', tenantId).gte('criado_em', inicio + 'T00:00:00'); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('id').range(f, t) }),
   })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])

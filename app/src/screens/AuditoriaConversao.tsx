@@ -31,9 +31,9 @@ export function AuditoriaConversao() {
   const [busca, setBusca] = useState('')
   const [statusFil, setStatusFil] = useState('')
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['aud-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,codigo_interno,unidade_medida').eq('tenant_id', tenantId).order('nome').range(f, t)) })
-  const { data: notas = [] } = useQuery({ queryKey: ['aud-notas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nota>((f, t) => supabase.from('nfe_recebidas').select('numero,serie,valor_total').eq('tenant_id', tenantId).range(f, t)) })
-  const { data: vincs = [] } = useQuery({ queryKey: ['aud-vincs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('insumo_id,codigo_nfe').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['aud-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,codigo_interno,unidade_medida').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)) })
+  const { data: notas = [] } = useQuery({ queryKey: ['aud-notas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nota>((f, t) => supabase.from('nfe_recebidas').select('numero,serie,valor_total').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: vincs = [] } = useQuery({ queryKey: ['aud-vincs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('insumo_id,codigo_nfe').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: ents = [], isLoading, isFetching } = useQuery({
     queryKey: ['aud-ents', tenantId, applied.de, applied.ate, applied.insId, lojaId], enabled: !!tenantId,
     queryFn: () => fetchAll<Ent>((f, t) => {
@@ -42,7 +42,7 @@ export function AuditoriaConversao() {
       if (applied.insId) q = q.eq('insumo_id', applied.insId)
       if (applied.de) q = q.gte('criado_em', applied.de + 'T00:00:00')
       if (applied.ate) q = q.lte('criado_em', applied.ate + 'T23:59:59')
-      return q.range(f, t)
+      return q.order('id').range(f, t)
     }),
   })
 

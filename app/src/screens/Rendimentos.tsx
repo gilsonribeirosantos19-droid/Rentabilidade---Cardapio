@@ -50,10 +50,10 @@ export function Rendimentos() {
     queryKey: ['rend', tenantId], enabled: !!tenantId,
     queryFn: async () => {
       const [insumos, testes, saldos, vinc] = await Promise.all([
-        fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra,rendimento_pct,ativo').eq('tenant_id', tenantId).order('nome').range(f, t)),
-        fetchAll<Teste>((f, t) => supabase.from('testes_rendimento').select('id,insumo_id,peso_bruto,peso_liquido,rendimento_pct,observacao,criado_em').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)),
-        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).range(f, t)),
-        fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,preco_unitario').eq('tenant_id', tenantId).range(f, t)),
+        fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra,rendimento_pct,ativo').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
+        fetchAll<Teste>((f, t) => supabase.from('testes_rendimento').select('id,insumo_id,peso_bruto,peso_liquido,rendimento_pct,observacao,criado_em').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).order('id').range(f, t)),
+        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('id').range(f, t)),
+        fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,preco_unitario').eq('tenant_id', tenantId).order('id').range(f, t)),
       ])
       return { insumos, testes, saldos, vinc }
     },

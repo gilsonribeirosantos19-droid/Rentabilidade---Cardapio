@@ -76,7 +76,7 @@ export function Produtos() {
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['produtos', tenantId], enabled: !!tenantId,
     // fetchAll: vence o teto de 1000 do PostgREST (senão produtos somem da tela silenciosamente)
-    queryFn: () => fetchAll<Produto>((f, t) => supabase.from('produtos').select('*').eq('tenant_id', tenantId).order('nome').range(f, t)),
+    queryFn: () => fetchAll<Produto>((f, t) => supabase.from('produtos').select('*').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
   })
 
   // grupos/famílias/subgrupos vêm do CADASTRO (Config → Geral → Classificação) —

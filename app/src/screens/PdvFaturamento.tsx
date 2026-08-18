@@ -30,7 +30,7 @@ export function PdvFaturamento() {
 
   const { data: fats = [] } = useQuery({
     queryKey: ['pdv-fat', tenantId, de, ate], enabled: !!tenantId && !!de && !!ate,
-    queryFn: async () => fetchAll<Fat>((f, t) => supabase.from('faturamento').select('id,data,canal,valor,observacao').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('data').range(f, t)),
+    queryFn: async () => fetchAll<Fat>((f, t) => supabase.from('faturamento').select('id,data,canal,valor,observacao').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('data').order('id').range(f, t)),
   })
 
   // KPIs

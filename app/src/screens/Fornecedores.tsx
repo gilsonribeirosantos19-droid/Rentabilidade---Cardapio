@@ -35,7 +35,7 @@ export function Fornecedores() {
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['fornecedores', tenantId], enabled: !!tenantId,
     // fetchAll: vence o teto de 1000 do PostgREST
-    queryFn: () => fetchAll<Fornecedor>((f, t) => supabase.from('fornecedores').select('*').eq('tenant_id', tenantId).order('razao_social').range(f, t)),
+    queryFn: () => fetchAll<Fornecedor>((f, t) => supabase.from('fornecedores').select('*').eq('tenant_id', tenantId).order('razao_social').order('id').range(f, t)),
   })
   const { data: vinculos = [] } = useQuery({
     queryKey: ['insumo-forn', tenantId], enabled: !!tenantId,

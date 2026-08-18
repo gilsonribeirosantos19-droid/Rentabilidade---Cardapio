@@ -97,8 +97,8 @@ export function EngenhariaCardapio() {
   // Sem isso, dias 'com_erro' entravam na Engenharia mas não no Faturamento → números não batiam.
   async function fetchVendas(d1: string, d2: string): Promise<Prod[]> {
     const [vendas, gate] = await Promise.all([
-      fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('*').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).range(f, t)),
-      fetchAll<Record<string, unknown>>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('*').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).order('loja_id').order('data').order('produto_id').range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', d1).lte('data', d2).order('loja_id').order('data').range(f, t)),
     ])
     const okDia = new Set<string>()
     for (const r of gate) if (r.status === 'processado') okDia.add(`${r.loja_id}|${r.data}`)
@@ -190,13 +190,13 @@ export function EngenhariaCardapio() {
   }
 
   // ── custo da ficha por produto (de-para código PDV → produto → ficha), POR LOJA ──
-  const { data: engProdutos = [] } = useQuery({ queryKey: ['eng-prod', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; codigo_pdv?: string }>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).range(f, t)) })
-  const { data: engFichas = [] } = useQuery({ queryKey: ['eng-fichas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<FichaEng>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,rendimento_porcoes,itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).range(f, t)) })
-  const { data: engInsumos = [] } = useQuery({ queryKey: ['eng-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }>((f, t) => supabase.from('insumos').select('id,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId).range(f, t)) })
-  const { data: engSaldos = [] } = useQuery({ queryKey: ['eng-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ insumo_id: string; custo_medio?: number; loja_id?: string }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: engProdutos = [] } = useQuery({ queryKey: ['eng-prod', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; codigo_pdv?: string }>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: engFichas = [] } = useQuery({ queryKey: ['eng-fichas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<FichaEng>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,rendimento_porcoes,itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: engInsumos = [] } = useQuery({ queryKey: ['eng-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }>((f, t) => supabase.from('insumos').select('id,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: engSaldos = [] } = useQuery({ queryKey: ['eng-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ insumo_id: string; custo_medio?: number; loja_id?: string }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
   // histórico de movimentos ATÉ o fim do período → custo médio reconstruído NA DATA (custo do mês, não o de hoje)
-  const { data: engEntradas = [] } = useQuery({ queryKey: ['eng-ent', tenantId, ate], enabled: !!tenantId && !!ate, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)) })
-  const { data: engSaidas = [] } = useQuery({ queryKey: ['eng-sai', tenantId, ate], enabled: !!tenantId && !!ate, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)) })
+  const { data: engEntradas = [] } = useQuery({ queryKey: ['eng-ent', tenantId, ate], enabled: !!tenantId && !!ate, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').order('id').range(f, t)) })
+  const { data: engSaidas = [] } = useQuery({ queryKey: ['eng-sai', tenantId, ate], enabled: !!tenantId && !!ate, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').order('id').range(f, t)) })
   const prodByCod = useMemo(() => { const m = new Map<string, string>(); engProdutos.forEach((p) => { const c = (p.codigo_pdv || '').trim(); if (c) m.set(c, p.id) }); return m }, [engProdutos])
   const fichaByProduto = useMemo(() => { const m = new Map<string, FichaEng>(); engFichas.forEach((f) => { if (f.produto_id) m.set(f.produto_id, f) }); return m }, [engFichas])
   // mapa produto_id -> ficha base, p/ combos/meia porção descerem no custo (custoFichaPorcao recursivo)

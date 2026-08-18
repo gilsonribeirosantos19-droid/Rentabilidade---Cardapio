@@ -23,9 +23,9 @@ export function DistribuicaoRomaneios() {
   const [busca, setBusca] = useState('')
   const [sel, setSel] = useState<Req | null>(null)
 
-  const { data: reqs = [], isLoading } = useQuery({ queryKey: ['rom-reqs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Req>((f, t) => supabase.from('requisicoes').select('*, requisicao_itens(count)').eq('tenant_id', tenantId).in('status', ['a_caminho', 'recebida']).order('enviado_em', { ascending: false }).range(f, t)) })
+  const { data: reqs = [], isLoading } = useQuery({ queryKey: ['rom-reqs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Req>((f, t) => supabase.from('requisicoes').select('*, requisicao_itens(count)').eq('tenant_id', tenantId).in('status', ['a_caminho', 'recebida']).order('enviado_em', { ascending: false }).order('id').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['rom-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome,cnpj').eq('tenant_id', tenantId); return (data ?? []) as Loja[] } })
-  const { data: insumos = [] } = useQuery({ queryKey: ['rom-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['rom-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: itens = [] } = useQuery({ queryKey: ['rom-itens', sel?.id], enabled: !!sel?.id, queryFn: async () => { const { data } = await supabase.from('requisicao_itens').select('id,insumo_id,qtd_atendida,unidade').eq('requisicao_id', sel!.id).order('id'); return (data ?? []) as Item[] } })
 
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l])) as Record<string, Loja>, [lojas])

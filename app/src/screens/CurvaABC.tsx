@@ -19,8 +19,8 @@ export function CurvaABC() {
   const [cat, setCat] = useState(''); const [busca, setBusca] = useState('')
   const [pag, setPag] = useState(1); const [pageSize, setPageSize] = useState(20)
 
-  const { data: insumos = [], isLoading } = useQuery({ queryKey: ['abc-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
-  const { data: saldosRaw = [] } = useQuery({ queryKey: ['abc-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: insumos = [], isLoading } = useQuery({ queryKey: ['abc-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: saldosRaw = [] } = useQuery({ queryKey: ['abc-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).order('id').range(f, t)) })
 
   // agrega saldo por insumo (soma qtd, média do custo médio entre lojas) respeitando a loja
   const saldoMap = useMemo(() => {

@@ -67,7 +67,7 @@ export function ConfigGeral() {
   const motPerda = useCfg('motivos_perda')
   const insumos = useQuery({
     queryKey: ['cfg', 'insumos-sel', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Row>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)),
+    queryFn: () => fetchAll<Row>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)),
   })
   const gcItens = useQuery({
     queryKey: ['cfg', 'grupos_compra_itens', tenantId], enabled: !!tenantId,

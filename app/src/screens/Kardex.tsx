@@ -27,9 +27,9 @@ export function Kardex() {
   const [ate, setAte] = useState(iso(now))
   const [periodoSel, setPeriodoSel] = useState('Mês Atual')
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['kx-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
-  const { data: entradas = [] } = useQuery({ queryKey: ['kx-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)) })
-  const { data: saidas = [] } = useQuery({ queryKey: ['kx-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['kx-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: entradas = [] } = useQuery({ queryKey: ['kx-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
+  const { data: saidas = [] } = useQuery({ queryKey: ['kx-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
 
   const insOptions = useMemo(() => insumos.map((i) => i.nome), [insumos])
   const insByName = useMemo(() => new Map(insumos.map((i) => [i.nome, i.id])), [insumos])

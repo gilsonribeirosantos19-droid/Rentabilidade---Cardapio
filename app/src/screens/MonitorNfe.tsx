@@ -83,16 +83,16 @@ export function MonitorNfe() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
 
-  const { data: nfes = [], isLoading } = useQuery({ queryKey: ['mon-nfe', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).is('excluida_em', null).order('data_emissao', { ascending: false }).range(f, t)) })
+  const { data: nfes = [], isLoading } = useQuery({ queryKey: ['mon-nfe', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).is('excluida_em', null).order('data_emissao', { ascending: false }).order('id').range(f, t)) })
   const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   // Parâmetro Estoque › "Data de movimentação" (emissao | processamento | manual): em que data a entrada afeta o estoque/CMV
   const { data: critDataMov = 'emissao' } = useQuery({ queryKey: ['mon-param-datamov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'data_movimentacao').limit(1); return (data?.[0]?.valor as string) || 'emissao' } })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['mon-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome,cnpj,codigo').eq('tenant_id', tenantId); return (data ?? []) as Forn[] } })
-  const { data: ifv = [] } = useQuery({ queryKey: ['mon-ifv', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<IFV>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).range(f, t)) })
-  const { data: vinculos = [] } = useQuery({ queryKey: ['mon-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('*').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: ifv = [] } = useQuery({ queryKey: ['mon-ifv', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<IFV>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: vinculos = [] } = useQuery({ queryKey: ['mon-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('*').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: itens = [] } = useQuery({ queryKey: ['mon-itens', sel], enabled: !!sel, queryFn: async () => { const { data } = await supabase.from('nfe_itens').select('*').eq('nfe_id', sel).order('id'); return (data ?? []) as Item[] } })
   // todos os itens (leve: 3 colunas) — p/ reavaliar o vínculo por CNPJ+código na exibição
-  const { data: allItens = [] } = useQuery({ queryKey: ['mon-allitens', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ nfe_id: string; codigo_item_fornecedor?: string; vinculacao_id?: string | null }>((f, t) => supabase.from('nfe_itens').select('nfe_id,codigo_item_fornecedor,vinculacao_id').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: allItens = [] } = useQuery({ queryKey: ['mon-allitens', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ nfe_id: string; codigo_item_fornecedor?: string; vinculacao_id?: string | null }>((f, t) => supabase.from('nfe_itens').select('nfe_id,codigo_item_fornecedor,vinculacao_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
 
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])

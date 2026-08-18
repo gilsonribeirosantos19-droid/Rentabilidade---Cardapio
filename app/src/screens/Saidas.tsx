@@ -52,9 +52,9 @@ export function Saidas() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2800) }
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['sai-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
-  const { data: saldos = [] } = useQuery({ queryKey: ['sai-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
-  const { data: saidas = [], isLoading } = useQuery({ queryKey: ['sai-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['sai-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: saldos = [] } = useQuery({ queryKey: ['sai-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })
+  const { data: saidas = [], isLoading } = useQuery({ queryKey: ['sai-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).order('id').range(f, t)) })
   // Parâmetro Estoque › "Permitir estoque negativo": se 'nao', bloqueia saída que supera o saldo (default = permite, como no HTML)
   const { data: params = [] } = useQuery({ queryKey: ['sai-params', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'estoque'); return (data ?? []) as { chave: string; valor: string }[] } })
   const permiteNeg = useMemo(() => (params.find((p) => p.chave === 'permitir_negativo')?.valor) !== 'nao', [params])

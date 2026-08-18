@@ -22,7 +22,7 @@ export function Recalcular() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['rc-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,rendimento_pct,preco_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['rc-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,rendimento_pct,preco_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['rc-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Loja[] } })
   const { data: fichasProc = [] } = useQuery({ queryKey: ['rc-fichas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fichas_tecnicas').select('nome,insumo_vinculado_id').eq('tenant_id', tenantId).not('insumo_vinculado_id', 'is', null).order('nome'); return (data ?? []) as Ficha[] } })
 
@@ -46,8 +46,8 @@ export function Recalcular() {
           } catch { /* RPC ausente → fallback */ }
           if (!feitoRpc) {
             const [ents, sais] = await Promise.all([
-              fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,criado_em').eq('tenant_id', tenantId).eq('loja_id', lId).range(f, t)),
-              fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).eq('loja_id', lId).range(f, t)),
+              fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,criado_em').eq('tenant_id', tenantId).eq('loja_id', lId).order('id').range(f, t)),
+              fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).eq('loja_id', lId).order('id').range(f, t)),
             ])
             const insIds = alvoIns ? [alvoIns] : [...new Set([...ents.map((e) => e.insumo_id), ...sais.map((s) => s.insumo_id)])].filter(Boolean)
             const agora = new Date().toISOString()
@@ -73,8 +73,8 @@ export function Recalcular() {
   async function recalcularFichas(lId: string) {
     const [fichas, saldosLoja, vinc] = await Promise.all([
       supabase.from('fichas_tecnicas').select('id,insumo_vinculado_id,rendimento_receita_g,itens_ficha(insumo_id,quantidade_g)').eq('tenant_id', tenantId).not('insumo_vinculado_id', 'is', null).then((r) => (r.data ?? []) as Ficha[]),
-      fetchAll<{ insumo_id: string; custo_medio?: number }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lId).range(f, t)),
-      fetchAll<{ insumo_id: string; preco_unitario?: number }>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,preco_unitario').eq('tenant_id', tenantId).range(f, t)),
+      fetchAll<{ insumo_id: string; custo_medio?: number }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lId).order('id').range(f, t)),
+      fetchAll<{ insumo_id: string; preco_unitario?: number }>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,preco_unitario').eq('tenant_id', tenantId).order('id').range(f, t)),
     ])
     // strictLoja: mesma regra da Ficha (custo POR LOJA, sem custo de outra loja)
     const ctx = { saldos: saldosLoja.map((s) => ({ ...s, loja_id: lId })), vinculos: vinc, insumos, strictLoja: true }

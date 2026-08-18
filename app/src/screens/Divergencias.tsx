@@ -25,15 +25,15 @@ export function Divergencias() {
     queryKey: ['dv', tenantId], enabled: !!tenantId,
     queryFn: async () => {
       const [insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas, fornecedores] = await Promise.all([
-        fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).range(f, t)),
-        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).range(f, t)),
-        fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,nome,preco_venda,status').eq('tenant_id', tenantId).range(f, t)),
-        fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('id,insumo_id,qtd_por_embalagem,embalagem_descricao,codigo_fornecedor,fornecedor_id').eq('tenant_id', tenantId).range(f, t)),
-        fetchAll<NfeItem>((f, t) => supabase.from('nfe_itens').select('id,descricao_nfe,nfe_id,codigo_item_fornecedor').eq('tenant_id', tenantId).is('vinculacao_id', null).range(f, t)),
-        fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('id,numero,status,cnpj_emitente').eq('tenant_id', tenantId).range(f, t)),
-        fetchAll<Venda>((f, t) => supabase.from('vendas_produto_dia').select('produto_nome,qtd').eq('tenant_id', tenantId).is('ficha_id', null).range(f, t)).catch(() => [] as Venda[]),
+        fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).order('id').range(f, t)),
+        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).order('id').range(f, t)),
+        fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,nome,preco_venda,status').eq('tenant_id', tenantId).order('id').range(f, t)),
+        fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('id,insumo_id,qtd_por_embalagem,embalagem_descricao,codigo_fornecedor,fornecedor_id').eq('tenant_id', tenantId).order('id').range(f, t)),
+        fetchAll<NfeItem>((f, t) => supabase.from('nfe_itens').select('id,descricao_nfe,nfe_id,codigo_item_fornecedor').eq('tenant_id', tenantId).is('vinculacao_id', null).order('id').range(f, t)),
+        fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('id,numero,status,cnpj_emitente').eq('tenant_id', tenantId).order('id').range(f, t)),
+        fetchAll<Venda>((f, t) => supabase.from('vendas_produto_dia').select('produto_nome,qtd').eq('tenant_id', tenantId).is('ficha_id', null).order('loja_id').order('data').order('produto_id').range(f, t)).catch(() => [] as Venda[]),
         supabase.from('nfe_recebidas').select('numero,serie,nome_emitente,valor_total,created_at').eq('tenant_id', tenantId).eq('status', 'em_transito').then((r) => (r.data ?? []) as Nfe[], () => [] as Nfe[]),
-        fetchAll<Forn>((f, t) => supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', tenantId).range(f, t)),
+        fetchAll<Forn>((f, t) => supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', tenantId).order('id').range(f, t)),
       ])
       return { insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas, fornecedores }
     },
@@ -46,7 +46,7 @@ export function Divergencias() {
       const desde = new Date(Date.now() - 30 * 86400000).toISOString()
       const [lojasR, nfesR] = await Promise.all([
         supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'),
-        fetchAll<{ loja_id?: string | null; created_at?: string }>((f, t) => supabase.from('nfe_recebidas').select('loja_id,created_at').eq('tenant_id', tenantId).gte('created_at', desde).range(f, t)),
+        fetchAll<{ loja_id?: string | null; created_at?: string }>((f, t) => supabase.from('nfe_recebidas').select('loja_id,created_at').eq('tenant_id', tenantId).gte('created_at', desde).order('id').range(f, t)),
       ])
       return { lojas: (lojasR.data ?? []) as { id: string; nome: string }[], nfes: nfesR }
     },

@@ -42,7 +42,7 @@ export function EntradasProcessadas() {
     queryKey: ['ep-nfe', tenantId, periodo, de, ate, campoData], enabled: !!tenantId,
     queryFn: () => fetchAll<Nfe>((f, t) => {
       // colunas explícitas (SEM o xml, que é grande) — o XML é buscado só no detalhe da nota
-      let q = supabase.from('nfe_recebidas').select('id,numero,serie,data_emissao,processada_em,nome_emitente,cnpj_emitente,valor_total,chave_acesso,loja_id').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).range(f, t)
+      let q = supabase.from('nfe_recebidas').select('id,numero,serie,data_emissao,processada_em,nome_emitente,cnpj_emitente,valor_total,chave_acesso,loja_id').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).order('id').range(f, t)
       // limites no fuso de Brasília (−03:00), o MESMO que o estoque usa p/ datar a entrada.
       // Sem isso, a comparação sai em UTC e uma nota da virada de mês (ex.: 30/06 à noite) cai no mês errado.
       if (periodo !== 'todos') { if (de) q = q.gte(campoData, de + 'T00:00:00-03:00'); if (ate) q = q.lte(campoData, ate + 'T23:59:59-03:00') }
@@ -53,7 +53,7 @@ export function EntradasProcessadas() {
 
   const { data: itensCount = {} } = useQuery({
     queryKey: ['ep-itens-cnt', tenantId], enabled: !!tenantId,
-    queryFn: async () => { const rows = await fetchAll<{ nfe_id: string }>((f, t) => supabase.from('nfe_itens').select('nfe_id').eq('tenant_id', tenantId).range(f, t)); const m: Record<string, number> = {}; rows.forEach((r) => { m[r.nfe_id] = (m[r.nfe_id] || 0) + 1 }); return m },
+    queryFn: async () => { const rows = await fetchAll<{ nfe_id: string }>((f, t) => supabase.from('nfe_itens').select('nfe_id').eq('tenant_id', tenantId).order('id').range(f, t)); const m: Record<string, number> = {}; rows.forEach((r) => { m[r.nfe_id] = (m[r.nfe_id] || 0) + 1 }); return m },
   })
 
   const { data: lojas = [] } = useQuery({ queryKey: ['ep-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome: string }[] } })

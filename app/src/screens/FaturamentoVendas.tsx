@@ -54,7 +54,7 @@ export function FaturamentoVendas() {
   // lê o PORTÃO (icomanda_recebimento) — SÓ os dias 'processado' (regra: relatório só vê o aprovado)
   async function fetchFat(): Promise<FatRow[]> {
     const data = await fetchAll<Record<string, unknown>>((f, t) =>
-      supabase.from('recebimento_vendas').select('*').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).range(f, t))
+      supabase.from('recebimento_vendas').select('*').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).order('loja_id').order('data').range(f, t))
     return buildRows(data)
   }
   useEffect(() => {

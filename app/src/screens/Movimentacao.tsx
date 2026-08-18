@@ -63,11 +63,11 @@ export function Movimentacao() {
   const colsIcoRef = useRef<SVGSVGElement>(null)
   const colsDdRef = useRef<HTMLDivElement>(null)
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['mov-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
-  const { data: entradas = [] } = useQuery({ queryKey: ['mov-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)) })
-  const { data: saidas = [] } = useQuery({ queryKey: ['mov-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').range(f, t)) })
-  const { data: saldos = [] } = useQuery({ queryKey: ['mov-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<any>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
-  const { data: vinculos = [] } = useQuery({ queryKey: ['mov-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<any>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['mov-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: entradas = [] } = useQuery({ queryKey: ['mov-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
+  const { data: saidas = [] } = useQuery({ queryKey: ['mov-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
+  const { data: saldos = [] } = useQuery({ queryKey: ['mov-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<any>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })
+  const { data: vinculos = [] } = useQuery({ queryKey: ['mov-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<any>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })
   const { data: forns = [] } = useQuery({ queryKey: ['mov-forns', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as { id: string; nome: string }[] } })
   // inventário anterior + perdas de gerentes (dependem do período)
   const { data: invPerdas } = useQuery({
@@ -75,12 +75,12 @@ export function Movimentacao() {
     queryFn: async () => {
       let invIni: InvItem[] = []
       const inv = await supabase.from('inventarios').select('id').eq('tenant_id', tenantId).lt('criado_em', de).eq('status', 'encerrado').order('criado_em', { ascending: false }).limit(1)
-      if (inv.data?.length) { invIni = await fetchAll<InvItem>((f, t) => supabase.from('inventario_itens').select('*').eq('inventario_id', inv.data![0].id).range(f, t)) }
+      if (inv.data?.length) { invIni = await fetchAll<InvItem>((f, t) => supabase.from('inventario_itens').select('*').eq('inventario_id', inv.data![0].id).order('id').range(f, t)) }
       const perdasMap: Record<string, number> = {}
       const perdas = await supabase.from('perdas').select('id').eq('tenant_id', tenantId).gte('data_perda', de).lte('data_perda', ate)
       if (perdas.data?.length) {
         const ids = perdas.data.map((p: any) => p.id)
-        const its = await fetchAll<{ insumo_id: string; quantidade?: number }>((f, t) => supabase.from('perdas_itens').select('insumo_id,quantidade').in('perda_id', ids).range(f, t))
+        const its = await fetchAll<{ insumo_id: string; quantidade?: number }>((f, t) => supabase.from('perdas_itens').select('insumo_id,quantidade').in('perda_id', ids).order('id').range(f, t))
         its.forEach((it) => { perdasMap[it.insumo_id] = (perdasMap[it.insumo_id] || 0) + (Number(it.quantidade) || 0) })
       }
       return { invIni, perdasMap }

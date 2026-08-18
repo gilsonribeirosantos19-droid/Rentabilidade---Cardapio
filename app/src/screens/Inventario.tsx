@@ -33,15 +33,15 @@ export function Inventario() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2800) }
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['inv-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra,participa_cmv').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
-  const { data: saldos = [] } = useQuery({ queryKey: ['inv-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
-  const { data: invs = [], isLoading } = useQuery({ queryKey: ['inv-list', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Inv>((f, t) => supabase.from('inventarios').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['inv-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra,participa_cmv').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: saldos = [] } = useQuery({ queryKey: ['inv-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })
+  const { data: invs = [], isLoading } = useQuery({ queryKey: ['inv-list', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Inv>((f, t) => supabase.from('inventarios').select('*').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).order('id').range(f, t)) })
   // contador "X/Y contados" por inventário (itens com qtd_contada preenchida / total)
   const invIds = invs.map((i) => i.id)
   const { data: itensCount = {} as Record<string, { total: number; cont: number }> } = useQuery({
     queryKey: ['inv-counts', tenantId, invIds.join(',')], enabled: !!tenantId && invIds.length > 0,
     queryFn: async () => {
-      const rows = await fetchAll<{ inventario_id: string; qtd_contada: number | null }>((f, t) => supabase.from('inventario_itens').select('inventario_id,qtd_contada').in('inventario_id', invIds).range(f, t))
+      const rows = await fetchAll<{ inventario_id: string; qtd_contada: number | null }>((f, t) => supabase.from('inventario_itens').select('inventario_id,qtd_contada').in('inventario_id', invIds).order('id').range(f, t))
       const m: Record<string, { total: number; cont: number }> = {}
       rows.forEach((r) => { const e = (m[r.inventario_id] ||= { total: 0, cont: 0 }); e.total++; if (r.qtd_contada != null) e.cont++ })
       return m

@@ -73,16 +73,16 @@ export function SugestaoCompra() {
   // fetchAll (paginação por range) — evita o cap silencioso de 1000 linhas do Supabase
   // select('*') de propósito: pedir uma coluna inexistente (ex.: `minimo`, que fica no saldo_estoque)
   // ZERA a query silenciosamente e esvazia a tela. Ver project_portal_select_star.
-  const { data: insumos = [] } = useQuery({ queryKey: ['sug-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
-  const { data: saldos = [] } = useQuery({ queryKey: ['sug-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').range(f, t)) })
-  const { data: saidas = [] } = useQuery({ queryKey: ['sug-saidas', tenantId, desdeISO], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', desdeISO).order('criado_em').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['sug-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: saldos = [] } = useQuery({ queryKey: ['sug-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })
+  const { data: saidas = [] } = useQuery({ queryKey: ['sug-saidas', tenantId, desdeISO], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', desdeISO).order('criado_em').order('id').range(f, t)) })
   // pedidos + seus itens: itens_pedido não tem tenant_id — busca pelos IDs dos pedidos do tenant
   const { data: ped = { pedidos: [] as Pedido[], itens: [] as ItemPed[] } } = useQuery({
     queryKey: ['sug-ped', tenantId], enabled: !!tenantId,
     queryFn: async () => {
       const ps = await fetchAll<Pedido>((f, t) => supabase.from('pedidos_compra').select('id,status,loja_id').eq('tenant_id', tenantId).order('id').range(f, t))
       if (!ps.length) return { pedidos: ps, itens: [] as ItemPed[] }
-      const it = await fetchAll<ItemPed>((f, t) => supabase.from('itens_pedido').select('pedido_id,insumo_id,quantidade').in('pedido_id', ps.map((p) => p.id)).order('pedido_id').range(f, t))
+      const it = await fetchAll<ItemPed>((f, t) => supabase.from('itens_pedido').select('pedido_id,insumo_id,quantidade').in('pedido_id', ps.map((p) => p.id)).order('pedido_id').order('id').range(f, t))
       return { pedidos: ps, itens: it }
     },
   })

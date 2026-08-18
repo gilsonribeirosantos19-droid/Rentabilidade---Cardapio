@@ -68,17 +68,17 @@ export function ConsumoInsumos() {
   const cmpP = compPeriodo(periodo.de, periodo.ate, compara)
   const meses = useMemo(() => mesesEntre(periodo.de, periodo.ate), [periodo.de, periodo.ate])
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['ci-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,categoria,preco_compra,ativo').eq('tenant_id', tenantId).order('nome').range(f, t)) })
-  const { data: saldos = [] } = useQuery({ queryKey: ['ci-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['ci-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,categoria,preco_compra,ativo').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)) })
+  const { data: saldos = [] } = useQuery({ queryKey: ['ci-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['ci-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Forn[] } })
-  const { data: vincs = [] } = useQuery({ queryKey: ['ci-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: vincs = [] } = useQuery({ queryKey: ['ci-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: saidas = [], isLoading } = useQuery({
     queryKey: ['ci-sai', tenantId, lojaId, periodo.de, periodo.ate], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', periodo.de + '-01').lt('criado_em', proxMes1(periodo.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
+    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', periodo.de + '-01').lt('criado_em', proxMes1(periodo.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('id').range(f, t) }),
   })
   const { data: saidasCmp = [] } = useQuery({
     queryKey: ['ci-saiC', tenantId, lojaId, cmpP?.de, cmpP?.ate], enabled: !!tenantId && !!cmpP,
-    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lt('criado_em', proxMes1(cmpP!.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.range(f, t) }),
+    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lt('criado_em', proxMes1(cmpP!.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('id').range(f, t) }),
   })
 
   // custo RESPEITANDO a loja global: loja selecionada → custo dela; "Todas" → maior; senão preço de compra.

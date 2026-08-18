@@ -38,9 +38,9 @@ export function DistribuicaoCentral() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3500) }
 
-  const { data: reqs = [], isLoading } = useQuery({ queryKey: ['dist-reqs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Req>((f, t) => supabase.from('requisicoes').select('*, requisicao_itens(count)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).range(f, t)) })
+  const { data: reqs = [], isLoading } = useQuery({ queryKey: ['dist-reqs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Req>((f, t) => supabase.from('requisicoes').select('*, requisicao_itens(count)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).order('id').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['dist-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome,cnpj,is_cd').eq('tenant_id', tenantId); return (data ?? []) as Loja[] } })
-  const { data: insumos = [] } = useQuery({ queryKey: ['dist-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['dist-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida').eq('tenant_id', tenantId).order('id').range(f, t)) })
 
   // itens + saldo do CD da requisição selecionada
   const { data: itens = [] } = useQuery({ queryKey: ['dist-itens', sel?.id], enabled: !!sel?.id, queryFn: async () => { const { data } = await supabase.from('requisicao_itens').select('*').eq('requisicao_id', sel!.id).order('id'); return (data ?? []) as Item[] } })

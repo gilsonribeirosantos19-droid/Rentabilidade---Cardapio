@@ -14,8 +14,8 @@ const fmtQ = (v?: number | null) => { const n = Number(v) || 0; return n % 1 ===
 export function ResumoEstoque() {
   const { tenantId } = useAuth()
   const { lojaId } = useLoja()
-  const { data: insumos = [] } = useQuery({ queryKey: ['res-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
-  const { data: saldosRaw = [], isLoading } = useQuery({ queryKey: ['res-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['res-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: saldosRaw = [], isLoading } = useQuery({ queryKey: ['res-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).order('id').range(f, t)) })
 
   const saldos = useMemo(() => {
     // consolida "Todas as lojas" com custo médio PONDERADO pela quantidade (valor total ÷ qtd total),

@@ -28,7 +28,7 @@ export function AjusteCustoMedio() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['cm-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['cm-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['cm-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Loja[] } })
   const { data: saldos = [] } = useQuery({ queryKey: ['cm-sld', tenantId, insumoId], enabled: !!tenantId && !!insumoId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).eq('insumo_id', insumoId); return (data ?? []) as Saldo[] } })
   // Histórico REAL: os ajustes de custo médio são gravados como movimento em entradas_estoque

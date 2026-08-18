@@ -101,8 +101,8 @@ export function CurvaAbcVendas() {
     const gateAte = new Date(ly, lm, 0).toLocaleDateString('en-CA')
     // vendas por DIA (camada genérica vendas_produto_dia: iComanda + Saipos) — agregadas no buildRows por loja×produto
     const [vendas, gate] = await Promise.all([
-      fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('loja_id,produto_id,produto_nome,grupo,qtd,faturado,data').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
-      fetchAll<Record<string, unknown>>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('vendas_produto_dia').select('loja_id,produto_id,produto_nome,grupo,qtd,faturado,data').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).order('loja_id').order('data').order('produto_id').range(f, t)),
+      fetchAll<Record<string, unknown>>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', gateDe).lte('data', gateAte).order('loja_id').order('data').range(f, t)),
     ])
     // PORTÃO por loja×DIA: só entra a venda de (loja, dia) cujo recebimento está 'processado'.
     // (Antes era por loja×mês — 1 dia bom liberava o mês inteiro, deixando entrar dias com erro

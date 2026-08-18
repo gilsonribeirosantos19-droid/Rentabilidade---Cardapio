@@ -31,7 +31,7 @@ export function NfeExcluidas() {
 
   const { data: notas = [], isLoading, refetch } = useQuery({
     queryKey: ['nfe-excluidas', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).not('excluida_em', 'is', null).order('excluida_em', { ascending: false }).range(f, t)),
+    queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).not('excluida_em', 'is', null).order('excluida_em', { ascending: false }).order('id').range(f, t)),
   })
 
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])

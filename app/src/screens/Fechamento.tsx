@@ -55,13 +55,13 @@ export function Fechamento() {
     queryKey: ['fech-base', tenantId], enabled: !!tenantId,
     queryFn: async () => {
       const [lojas, insumos, entradas, saidas, saldos, inventarios, fechamentos] = await Promise.all([
-        fetchAll<Loja>((f, t) => supabase.from('lojas').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)),
-        fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,participa_cmv').eq('tenant_id', tenantId).order('nome').range(f, t)),
-        fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,tipo,loja_id,criado_em').eq('tenant_id', tenantId).order('criado_em').range(f, t)),
-        fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).order('criado_em').range(f, t)),
-        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').range(f, t)),
-        fetchAll<Inv>((f, t) => supabase.from('inventarios').select('id,loja_id,status,data_final').eq('tenant_id', tenantId).order('data_final', { ascending: false }).range(f, t)),
-        fetchAll<Fech>((f, t) => supabase.from('fechamento_custo').select('*').eq('tenant_id', tenantId).order('competencia').range(f, t)).catch(() => [] as Fech[]),
+        fetchAll<Loja>((f, t) => supabase.from('lojas').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)),
+        fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,participa_cmv').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
+        fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,tipo,loja_id,criado_em').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)),
+        fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)),
+        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)),
+        fetchAll<Inv>((f, t) => supabase.from('inventarios').select('id,loja_id,status,data_final').eq('tenant_id', tenantId).order('data_final', { ascending: false }).order('id').range(f, t)),
+        fetchAll<Fech>((f, t) => supabase.from('fechamento_custo').select('*').eq('tenant_id', tenantId).order('competencia').order('id').range(f, t)).catch(() => [] as Fech[]),
       ])
       return { lojas, insumos, entradas, saidas, saldos, inventarios, fechamentos }
     },
@@ -89,7 +89,7 @@ export function Fechamento() {
   const { data: itensByInv = {} } = useQuery({
     queryKey: ['fech-itens', tenantId, needIds.join(',')], enabled: !!tenantId && needIds.length > 0,
     queryFn: async () => {
-      const items = await fetchAll<InvItem>((f, t) => supabase.from('inventario_itens').select('inventario_id,insumo_id,qtd_contada,custo_medio').in('inventario_id', needIds).order('inventario_id').range(f, t))
+      const items = await fetchAll<InvItem>((f, t) => supabase.from('inventario_itens').select('inventario_id,insumo_id,qtd_contada,custo_medio').in('inventario_id', needIds).order('inventario_id').order('id').range(f, t))
       const map: Record<string, InvItem[]> = {}
       items.forEach((it) => { (map[it.inventario_id] = map[it.inventario_id] || []).push(it) })
       return map
@@ -104,7 +104,7 @@ export function Fechamento() {
     queryKey: ['fech-icofat', tenantId, comp], enabled: !!tenantId && !!comp,
     queryFn: async () => {
       const { de, ate } = monthBounds(comp)
-      const vendas = await fetchAll<{ loja_id?: string; faturado?: number }>((f, t) => supabase.from('recebimento_vendas').select('loja_id,faturado').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as { loja_id?: string; faturado?: number }[])
+      const vendas = await fetchAll<{ loja_id?: string; faturado?: number }>((f, t) => supabase.from('recebimento_vendas').select('loja_id,faturado').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).order('loja_id').order('data').range(f, t)).catch(() => [] as { loja_id?: string; faturado?: number }[])
       const m: Record<string, number> = {}
       vendas.forEach((v) => { if (v.loja_id) m[v.loja_id] = (m[v.loja_id] || 0) + (Number(v.faturado) || 0) })
       return m

@@ -27,7 +27,7 @@ export function DistribuicaoNovaRequisicao() {
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3500) }
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['dnr-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,codigo_interno,unidade_medida,unidade_compra,preco_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['dnr-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,codigo_interno,unidade_medida,unidade_compra,preco_compra').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['dnr-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome,is_cd').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Loja[] } })
   const cdLoja = useMemo(() => lojas.find((l) => l.is_cd) || null, [lojas])
   const { data: saldosCd = [] } = useQuery({ queryKey: ['dnr-saldocd', cdLoja?.id], enabled: !!tenantId && !!cdLoja?.id, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,quantidade').eq('tenant_id', tenantId).eq('loja_id', cdLoja!.id); return (data ?? []) as Saldo[] } })

@@ -70,11 +70,11 @@ export function Insumos() {
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['insumos', tenantId], enabled: !!tenantId,
     // fetchAll: vence o teto de 1000 do PostgREST (senão itens somem da tela silenciosamente)
-    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).order('nome').range(f, t)),
+    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id, custo_medio, quantidade, loja_id').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id, custo_medio, quantidade, loja_id').eq('tenant_id', tenantId).order('id').range(f, t)),
   })
   // custo médio RESPEITANDO a loja global: loja selecionada → custo dela; "Todas" → maior (visão geral).
   const custoMedio = (id: string) => {

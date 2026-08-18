@@ -30,7 +30,7 @@ export function HistoricoCustos() {
   const [de, setDe] = useState(isoD(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(isoD(now))
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['hc-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['hc-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['hc-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId); return (data ?? []) as Loja[] } })
   const { data: hist = [], isLoading } = useQuery({
     queryKey: ['hc-hist', tenantId, lojaId, insF, origem, de, ate], enabled: !!tenantId,

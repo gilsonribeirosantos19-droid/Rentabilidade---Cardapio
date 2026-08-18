@@ -42,10 +42,10 @@ const PG_ST_VAL: Record<string, string> = { 'Ativos (a enviar / enviados)': 'ati
 
 // dados compartilhados (leves) usados por várias abas
 function useCompras(tenantId: string) {
-  const insumos = useQuery({ queryKey: ['cmp-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,codigo_interno,categoria').eq('tenant_id', tenantId).order('nome').range(f, t)) })
+  const insumos = useQuery({ queryKey: ['cmp-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,codigo_interno,categoria').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)) })
   const fornecedores = useQuery({ queryKey: ['cmp-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome,whatsapp').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Forn[] } })
   const lojas = useQuery({ queryKey: ['cmp-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Loja[] } })
-  const vinculos = useQuery({ queryKey: ['cmp-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id,codigo_fornecedor,principal,preco_unitario,ultima_entrada,created_at').eq('tenant_id', tenantId).range(f, t)) })
+  const vinculos = useQuery({ queryKey: ['cmp-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id,codigo_fornecedor,principal,preco_unitario,ultima_entrada,created_at').eq('tenant_id', tenantId).order('id').range(f, t)) })
   return { insumos: insumos.data ?? [], fornecedores: fornecedores.data ?? [], lojas: lojas.data ?? [], vinculos: vinculos.data ?? [] }
 }
 
@@ -87,12 +87,12 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
       let q = supabase.from('pedidos_compra').select('*').eq('tenant_id', tenantId).not('loja_id', 'is', null).order('created_at', { ascending: false })
       if (statusF) q = q.eq('status', statusF); else q = q.in('status', ['solicitado', 'processado', 'cancelado'])
       if (lojaId) q = q.eq('loja_id', lojaId); if (de) q = q.gte('data_pedido', de); if (ate) q = q.lte('data_pedido', ate)
-      return q.range(f, t)
+      return q.order('id').range(f, t)
     }),
   })
   const { data: countMap = {} } = useQuery({
     queryKey: ['cmp-solcount', tenantId, pedidos.map((p) => p.id).join(',')], enabled: !!tenantId && pedidos.length > 0,
-    queryFn: async () => { const rows = await fetchAll<{ pedido_id: string }>((f, t) => supabase.from('itens_pedido').select('pedido_id').in('pedido_id', pedidos.map((p) => p.id)).range(f, t)); const m: Record<string, number> = {}; rows.forEach((r) => { m[r.pedido_id] = (m[r.pedido_id] || 0) + 1 }); return m },
+    queryFn: async () => { const rows = await fetchAll<{ pedido_id: string }>((f, t) => supabase.from('itens_pedido').select('pedido_id').in('pedido_id', pedidos.map((p) => p.id)).order('id').range(f, t)); const m: Record<string, number> = {}; rows.forEach((r) => { m[r.pedido_id] = (m[r.pedido_id] || 0) + 1 }); return m },
   })
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
   const totalPags = Math.max(1, Math.ceil(pedidos.length / SOL_PER_PAGE)); const pagAtual = Math.min(pag, totalPags)
@@ -146,8 +146,8 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
 
-  const { data: sols = [], isLoading, refetch, isFetching } = useQuery({ queryKey: ['cmp-cons-sols', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Pedido>((f, t) => supabase.from('pedidos_compra').select('id,loja_id').eq('tenant_id', tenantId).eq('status', 'solicitado').order('created_at').range(f, t)) })
-  const { data: itensSol = [] } = useQuery({ queryKey: ['cmp-cons-itens', tenantId, sols.map((s) => s.id).join(',')], enabled: !!tenantId && sols.length > 0, queryFn: async () => { const rows = await fetchAll<ItemPedido>((f, t) => supabase.from('itens_pedido').select('*').in('pedido_id', sols.map((s) => s.id)).range(f, t)); return rows } })
+  const { data: sols = [], isLoading, refetch, isFetching } = useQuery({ queryKey: ['cmp-cons-sols', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Pedido>((f, t) => supabase.from('pedidos_compra').select('id,loja_id').eq('tenant_id', tenantId).eq('status', 'solicitado').order('created_at').order('id').range(f, t)) })
+  const { data: itensSol = [] } = useQuery({ queryKey: ['cmp-cons-itens', tenantId, sols.map((s) => s.id).join(',')], enabled: !!tenantId && sols.length > 0, queryFn: async () => { const rows = await fetchAll<ItemPedido>((f, t) => supabase.from('itens_pedido').select('*').in('pedido_id', sols.map((s) => s.id)).order('id').range(f, t)); return rows } })
   // Parâmetros de Compras (Configurações › Parâmetros › Compras)
   const { data: params = [] } = useQuery({ queryKey: ['cmp-params', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'compras'); return (data ?? []) as { chave: string; valor: string }[] } })
   const permitirSemForn = useMemo(() => (params.find((p) => p.chave === 'permitir_sem_fornecedor')?.valor ?? 'sim') !== 'nao', [params])
@@ -355,12 +355,12 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
       // senão pedidos recém-gerados em tenants com aprovação somem da tela.
       else if (statusF === 'pendente') q = q.in('status', ['aguardando_aprovacao', 'pendente'])
       else q = q.eq('status', statusF)
-      return q.range(f, t)
+      return q.order('id').range(f, t)
     }),
   })
   const { data: itensMap = {} } = useQuery({
     queryKey: ['cmp-peditens', tenantId, pedidos.map((p) => p.id).join(',')], enabled: !!tenantId && pedidos.length > 0,
-    queryFn: async () => { const rows = await fetchAll<ItemPedido>((f, t) => supabase.from('itens_pedido').select('*').in('pedido_id', pedidos.map((p) => p.id)).range(f, t)); const m: Record<string, ItemPedido[]> = {}; rows.forEach((r) => { (m[r.pedido_id] = m[r.pedido_id] || []).push(r) }); return m },
+    queryFn: async () => { const rows = await fetchAll<ItemPedido>((f, t) => supabase.from('itens_pedido').select('*').in('pedido_id', pedidos.map((p) => p.id)).order('id').range(f, t)); const m: Record<string, ItemPedido[]> = {}; rows.forEach((r) => { (m[r.pedido_id] = m[r.pedido_id] || []).push(r) }); return m },
   })
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const fornMap = useMemo(() => Object.fromEntries(fornecedores.map((f) => [f.id, f])) as Record<string, Forn>, [fornecedores])

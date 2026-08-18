@@ -80,20 +80,20 @@ export function CmvTeoricoReal() {
         // Placeholder [] só p/ manter o shape do Promise.all.
         Promise.resolve([] as Venda[]),
         fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id,insumo_vinculado_id,rendimento_receita_g').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
-        fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').range(f, t)),
-        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').range(f, t)),
+        fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').order('id').range(f, t)),
+        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)),
         // C2: o custo médio "até a data" agora vem PRONTO do banco (RPC custo_medio_ate — ver query cmRows
         // abaixo), com paridade verificada. Não baixamos mais o histórico inteiro de entradas pro navegador.
         // `entradas` fica vazio só p/ manter o shape do Promise.all.
         Promise.resolve([] as Mov[]),
         // saídas: só o PERÍODO [de, ate] (usado no consumo REAL). O custo médio já não depende delas aqui.
-        fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', de + 'T00:00:00').lte('criado_em', ate + 'T23:59:59').order('criado_em').range(f, t)).catch(() => [] as Saida[]),
+        fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,tipo,loja_id,criado_em').eq('tenant_id', tenantId).gte('criado_em', de + 'T00:00:00').lte('criado_em', ate + 'T23:59:59').order('criado_em').order('id').range(f, t)).catch(() => [] as Saida[]),
         // de-para: produtos (código PDV) + vendas do iComanda POR DIA (icomanda_vendas_dia) p/ o consumo teórico
         // (antes era a tabela mensal por competência; agora usa a diária, respeitando o intervalo exato De→Até)
         fetchAll<ProdMin>((f, t) => supabase.from('produtos').select('id,codigo_pdv,nome').eq('tenant_id', tenantId).order('id').range(f, t)).catch(() => [] as ProdMin[]),
-        fetchAll<IcoVenda>((f, t) => supabase.from('vendas_produto_dia').select('produto_id,qtd,faturado,loja_id,data,ficha_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).range(f, t)).catch(() => [] as IcoVenda[]),
+        fetchAll<IcoVenda>((f, t) => supabase.from('vendas_produto_dia').select('produto_id,qtd,faturado,loja_id,data,ficha_id').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).order('loja_id').order('data').order('produto_id').range(f, t)).catch(() => [] as IcoVenda[]),
         // FALLBACK mensal: se a tabela diária ainda não estiver preenchida, usa icomanda_vendas por competência
-        comps.length ? fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas').select('produto_id,qtd,faturado,loja_id,competencia').eq('tenant_id', tenantId).in('competencia', comps).range(f, t)).catch(() => [] as IcoVenda[]) : Promise.resolve([] as IcoVenda[]),
+        comps.length ? fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas').select('produto_id,qtd,faturado,loja_id,competencia').eq('tenant_id', tenantId).in('competencia', comps).order('loja_id').order('competencia').order('produto_id').range(f, t)).catch(() => [] as IcoVenda[]) : Promise.resolve([] as IcoVenda[]),
       ])
       const ids = fichas.map((f) => f.id)
       const itensFicha = ids.length

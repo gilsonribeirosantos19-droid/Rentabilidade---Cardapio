@@ -39,7 +39,7 @@ export function HistoricoEntradas() {
   const [pag, setPag] = useState(1); const [pageSize, setPageSize] = useState(25)
   const [nfeAberta, setNfeAberta] = useState<string | null>(null)
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['he-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida').eq('tenant_id', tenantId).order('nome').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['he-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)) })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['he-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Forn[] } })
   const { data: lojas = [] } = useQuery({ queryKey: ['he-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Loja[] } })
   const { data: ents = [], isLoading, isFetching } = useQuery({
@@ -50,7 +50,7 @@ export function HistoricoEntradas() {
       if (applied.ate) q = q.lte('criado_em', applied.ate + 'T23:59:59')
       if (applied.forn) q = q.eq('fornecedor_id', applied.forn)
       if (applied.ins) q = q.eq('insumo_id', applied.ins)
-      return q.range(f, t)
+      return q.order('id').range(f, t)
     }),
   })
 

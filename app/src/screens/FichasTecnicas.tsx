@@ -109,21 +109,21 @@ export function FichasTecnicas() {
     // fetchAll: vence o teto de 1000 do PostgREST (o range vale pra ficha; o embed dos itens vem junto)
     queryFn: () => fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas')
       .select('*, itens_ficha(id,insumo_id,produto_id,quantidade_g,ordem)')
-      .eq('tenant_id', tenantId).order('nome').range(f, t)),
+      .eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
   })
   const { data: insumos = [] } = useQuery({
     queryKey: ['insumos-min', tenantId], enabled: !!tenantId,
     // fetchAll: vence o teto de 1000 do PostgREST (senão insumos somem e a ficha que os usa fica custo R$ 0)
-    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,preco_compra,rendimento_pct,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').range(f, t)),
+    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,preco_compra,rendimento_pct,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)),
   })
   const { data: produtos = [] } = useQuery({
     queryKey: ['produtos-min', tenantId], enabled: !!tenantId,
     // fetchAll: vence o teto de 1000 do PostgREST (senão produtos somem e o código da ficha fica "—")
-    queryFn: () => fetchAll<ProdutoMin>((f, t) => supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo,codigo_pdv,preco_venda').eq('tenant_id', tenantId).order('nome').range(f, t)),
+    queryFn: () => fetchAll<ProdutoMin>((f, t) => supabase.from('produtos').select('id,nome,grupo,categoria,situacao,ativo,codigo_pdv,preco_venda').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
   })
   const { data: saldos = [] } = useQuery({
     queryKey: ['saldos', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).range(f, t)),
+    queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).order('id').range(f, t)),
   })
   // parâmetros de precificação (taxas que saem da venda) — pra Margem Salão/Delivery
   const { data: precoParams } = useQuery({
