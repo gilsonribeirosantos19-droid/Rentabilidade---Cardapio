@@ -660,7 +660,16 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
       const { error } = await supabase.from('nfe_itens').insert(batch); if (error) throw error
       onToast(pend === 0 ? `NF-e ${p.nNF} registrada e pronta para processar!` : `NF-e ${p.nNF} registrada com ${pend} item(ns) pendente(s).`, 'ok')
       onDone()
-    } catch (e: any) { onToast('Erro: ' + e.message, 'err') } finally { setSaving(false) }
+    } catch (e: any) {
+      const msg = String(e?.message || e)
+      // chave de acesso é única GLOBAL (chave da SEFAZ). Se a nota já existe (nesta ou em outra unidade),
+      // o insert bate na constraint — mostra mensagem amigável em vez do erro cru do banco.
+      if (/duplicate key|chave_acesso_unique|already exists/i.test(msg)) {
+        onToast(`Esta NF-e (${parsed?.nNF ?? ''}) já está registrada no sistema. Se não a encontra no Monitor desta unidade, ela pode ter sido registrada em outra.`, 'err')
+      } else {
+        onToast('Erro: ' + msg, 'err')
+      }
+    } finally { setSaving(false) }
   }
 
   return (
