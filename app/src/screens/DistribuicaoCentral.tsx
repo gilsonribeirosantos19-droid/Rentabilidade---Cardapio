@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -35,8 +36,7 @@ export function DistribuicaoCentral() {
   const [atend, setAtend] = useState<Record<string, string>>({})
   const [rom, setRom] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3500) }
+  const { toast, setToast, showToast } = useToastTipo(3500)
 
   const { data: reqs = [], isLoading } = useQuery({ queryKey: ['dist-reqs', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Req>((f, t) => supabase.from('requisicoes').select('*, requisicao_itens(count)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).order('id').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['dist-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome,cnpj,is_cd').eq('tenant_id', tenantId); return (data ?? []) as Loja[] } })

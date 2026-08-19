@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -30,8 +31,7 @@ export function Inventario() {
   const [fIni, setFIni] = useState(''); const [fFim, setFFim] = useState('')
   const [pag, setPag] = useState(1); const [porPag, setPorPag] = useState(10)
   const [novoOpen, setNovoOpen] = useState(false); const [gruposOpen, setGruposOpen] = useState(false)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2800) }
+  const { toast, setToast, showToast } = useToastTipo(2800)
 
   const { data: insumos = [] } = useQuery({ queryKey: ['inv-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra,participa_cmv').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['inv-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })

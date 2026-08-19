@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -39,8 +40,7 @@ export function VinculosPane({ fornecedores }: { fornecedores: Fornecedor[] }) {
   const [buscaForn, setBuscaForn] = useState('')
   const [filtroItens, setFiltroItens] = useState('')
   const [form, setForm] = useState<VForm | null>(null)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2600) }
+  const { toast, setToast, showToast } = useToastTipo(2600)
 
   const { data: insumos = [] } = useQuery({
     queryKey: ['insumos-vin', tenantId], enabled: !!tenantId,

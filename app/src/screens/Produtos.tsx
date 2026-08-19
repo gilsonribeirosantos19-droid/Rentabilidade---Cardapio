@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
@@ -70,8 +71,7 @@ export function Produtos() {
   const [fTipo, setFTipo] = useState('')
   const [incluirZerado, setIncluirZerado] = useState(false)   // por padrão esconde produtos R$0
   const [editing, setEditing] = useState<Form | null>(null)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2600) }
+  const { toast, setToast, showToast } = useToastTipo(2600)
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['produtos', tenantId], enabled: !!tenantId,

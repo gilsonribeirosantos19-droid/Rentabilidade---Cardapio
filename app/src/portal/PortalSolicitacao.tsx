@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import { useToastErr } from '../lib/toast'
 import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
@@ -78,8 +79,7 @@ export function PortalSolicitacao() {
     // 'custom' mantém o que o usuário digitar em De/Até
   }
   const [entrega, setEntrega] = useState(hoje7()); const [obs, setObs] = useState('')
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (m: string, err = false) => { setToast({ msg: m, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
+  const { toast, setToast, showToast } = useToastErr(3000, 6000)
 
   const { data: insumos = [] } = useQuery({ queryKey: ['psol-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,categoria,codigo_interno,preco_compra,unidade_medida,unidade_compra,embalagens').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Insumo[] } })
   const { data: grupos = [] } = useQuery({ queryKey: ['psol-grupos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('grupos_compra').select('id,nome,ativo').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Grupo[] } })

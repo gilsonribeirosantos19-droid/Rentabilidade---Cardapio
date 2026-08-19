@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -40,8 +41,7 @@ export function PortalPerdas() {
   const [obs, setObs] = useState('')
   const [resumoDe, setResumoDe] = useState(primeiroDiaMes())
   const [resumoAte, setResumoAte] = useState(hojeStr())
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (m: string, err = false) => { setToast({ msg: m, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
+  const { toast, setToast, showToast } = useToastErr(3000, 6000)
 
   const { data: insumos = [] } = useQuery({ queryKey: ['pperdas-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,ativo,unidade_medida,unidade_compra,preco_compra').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })
   const { data: fichas = [] } = useQuery({ queryKey: ['pperdas-fichas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fichas_tecnicas').select('id,nome, itens_ficha(insumo_id,quantidade_g)').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Ficha[] } })

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -43,8 +44,7 @@ export function Rendimentos() {
   const [pag, setPag] = useState(1)
   const [porPag, setPorPag] = useState(10)
   const [modal, setModal] = useState<{ id: string | null; form: Form } | null>(null)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
+  const { toast, setToast, showToast } = useToastTipo(3200)
 
   const { data, isLoading } = useQuery({
     queryKey: ['rend', tenantId], enabled: !!tenantId,

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -80,8 +81,7 @@ export function MonitorNfe() {
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [vinc, setVinc] = useState<Item | null>(null)
   const [xmlOpen, setXmlOpen] = useState(false)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
+  const { toast, setToast, showToast } = useToastTipo(3000)
 
   const { data: nfes = [], isLoading } = useQuery({ queryKey: ['mon-nfe', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).is('excluida_em', null).order('data_emissao', { ascending: false }).order('id').range(f, t)) })
   const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -22,8 +23,7 @@ export function ItemPorcionamento() {
   const { tenantId } = useAuth()
   const qc = useQueryClient()
   const [form, setForm] = useState<Form | null>(null)
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 6000 : 2600) }
+  const { toast, setToast, showToast } = useToastErr(2600, 6000)
 
   const { data: insumos = [] } = useQuery({ queryKey: ['ip-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,codigo_interno,unidade_medida,tipo_item').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Insumo[] } })
   const { data: setores = [] } = useQuery({ queryKey: ['ip-setores', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('setores_producao').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Setor[] } })

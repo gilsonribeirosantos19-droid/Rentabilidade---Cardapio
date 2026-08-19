@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ChartConfiguration } from 'chart.js'
 import { supabase, fetchAll } from '../lib/db'
@@ -25,8 +26,7 @@ export function PdvFaturamento() {
   const [ate, setAte] = useState(hojeLocal())
   const [agrup, setAgrup] = useState<'dia' | 'semana' | 'canal'>('dia')
   const [modal, setModal] = useState<Form | null>(null)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
+  const { toast, setToast, showToast } = useToastTipo(3200)
 
   const { data: fats = [] } = useQuery({
     queryKey: ['pdv-fat', tenantId, de, ate], enabled: !!tenantId && !!de && !!ate,

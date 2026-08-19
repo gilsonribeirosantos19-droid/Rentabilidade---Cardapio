@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -46,8 +47,7 @@ export function Fechamento() {
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [detLoja, setDetLoja] = useState<string | null>(null)
   const [detBusca, setDetBusca] = useState('')
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
+  const { toast, setToast, showToast } = useToastTipo(3200)
   const comp = `${ano}-${mes}`
 
   // base (não depende do mês)

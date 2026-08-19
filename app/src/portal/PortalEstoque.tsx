@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -32,8 +33,7 @@ export function PortalEstoque() {
   const lojaId = usuario?.loja_id ?? null
   const qc = useQueryClient()
   const [sub, setSub] = useState<SubTab>('relatorio')
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (m: string, err = false) => { setToast({ msg: m, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
+  const { toast, setToast, showToast } = useToastErr(3000, 6000)
 
   // ---- dados compartilhados ----
   // select('*') p/ resiliência: colunas opcionais (participa_cmv/minimo/maximo) podem não existir

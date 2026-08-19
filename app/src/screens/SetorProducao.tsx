@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -13,8 +14,7 @@ export function SetorProducao() {
   const qc = useQueryClient()
   const [modal, setModal] = useState<Modal | null>(null)
   const [del, setDel] = useState<{ id: string; nome: string } | null>(null)
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 6000 : 2600) }
+  const { toast, setToast, showToast } = useToastErr(2600, 6000)
 
   const { data: setores = [], isLoading, error: qErr } = useQuery({
     queryKey: ['setores', tenantId], enabled: !!tenantId,

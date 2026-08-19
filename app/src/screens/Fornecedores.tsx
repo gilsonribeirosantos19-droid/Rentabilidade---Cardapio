@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
@@ -29,8 +30,7 @@ export function Fornecedores() {
   const [fCidade, setFCidade] = useState('')
   const [fStatus, setFStatus] = useState('')
   const [editing, setEditing] = useState<Form | null>(null)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2600) }
+  const { toast, setToast, showToast } = useToastTipo(2600)
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['fornecedores', tenantId], enabled: !!tenantId,

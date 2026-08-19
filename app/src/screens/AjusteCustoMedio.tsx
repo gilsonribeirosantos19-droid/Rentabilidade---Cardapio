@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -25,8 +26,7 @@ export function AjusteCustoMedio() {
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [logDe, setLogDe] = useState(isoD(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
   const [logAte, setLogAte] = useState(isoD(new Date()))
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
+  const { toast, setToast, showToast } = useToastTipo(3200)
 
   const { data: insumos = [] } = useQuery({ queryKey: ['cm-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: lojas = [] } = useQuery({ queryKey: ['cm-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as Loja[] } })

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
@@ -38,13 +39,12 @@ export function ConfigGeral() {
   const [modal, setModal] = useState<Modal | null>(null)
   const [gModal, setGModal] = useState<GModal | null>(null)
   const [del, setDel] = useState<{ table: string; id: string; nome: string } | null>(null)
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
   const [insBusca, setInsBusca] = useState('')
   const [insGrupo, setInsGrupo] = useState('')          // filtro por grupo (categoria) no modal de grupo de compra
   const [soSel, setSoSel] = useState(false)             // filtro "só selecionados"
   const [checando, setChecando] = useState<string | null>(null)
 
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 8000 : 2600) }
+  const { toast, setToast, showToast } = useToastErr(2600, 8000)
   const invalidar = () => qc.invalidateQueries({ queryKey: ['cfg'] })
 
   const useCfg = (table: string, filtro?: (q: ReturnType<typeof supabase.from>) => unknown) =>

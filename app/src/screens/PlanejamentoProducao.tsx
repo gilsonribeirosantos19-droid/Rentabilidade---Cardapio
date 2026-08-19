@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -21,8 +22,7 @@ export function PlanejamentoProducao() {
   const qc = useQueryClient()
   const [prod, setProd] = useState<Record<string, string>>({})
   const [gerando, setGerando] = useState(false)
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3000) }
+  const { toast, setToast, showToast } = useToastErr(3000, 6000)
 
   const { data: saldos = [] } = useQuery({ queryKey: ['plan-saldos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('saldo_estoque').select('insumo_id,quantidade,custo_medio,loja_id').eq('tenant_id', tenantId); return (data ?? []) as Saldo[] } })
   const estMap = useMemo(() => { const m: Record<string, number> = {}; saldos.forEach((s) => { if (lojaId && s.loja_id !== lojaId) return; m[s.insumo_id] = (m[s.insumo_id] || 0) + (Number(s.quantidade) || 0) }); return m }, [saldos, lojaId])

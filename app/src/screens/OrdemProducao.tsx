@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -29,8 +30,7 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
   const loja = lojaFixa ?? lojaSel
   const [fichaId, setFichaId] = useState('')
   const [qtd, setQtd] = useState('')
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 6000 : 2600) }
+  const { toast, setToast, showToast } = useToastErr(2600, 6000)
 
   const { data: fichas = [] } = useQuery({ queryKey: ['prod-fichas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fichas_tecnicas').select('id,nome,insumo_vinculado_id,rendimento_receita_g, itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).not('insumo_vinculado_id', 'is', null).order('nome'); return (data ?? []) as Ficha[] } })
   const { data: insumos = [] } = useQuery({ queryKey: ['prod-insumos', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,preco_compra,rendimento_pct,unidade_medida').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })

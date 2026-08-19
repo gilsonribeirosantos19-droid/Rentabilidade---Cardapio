@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -55,8 +56,7 @@ export function CmvTeoricoReal() {
   const [cat, setCat] = useState('')
   const [buscaIns, setBuscaIns] = useState('')
   const [apenasDiv, setApenasDiv] = useState(false)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
+  const { toast, setToast, showToast } = useToastTipo(3200)
   // modal de detalhe: quais produtos consumiram (teórico) um insumo
   const [detIns, setDetIns] = useState<{ nome: string; un: string; det: { nome: string; qtdVend: number; qtd: number; custo: number }[]; qTot: number; cTot: number } | null>(null)
 

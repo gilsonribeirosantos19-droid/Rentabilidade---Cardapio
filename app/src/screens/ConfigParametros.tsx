@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -120,8 +121,7 @@ export function ConfigParametros() {
   const [busca, setBusca] = useState('')
   const [open, setOpen] = useState<Set<string>>(new Set(['estoque']))
   const [val, setVal] = useState<Record<string, string>>({ ...DEFAULTS })
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 7000 : 2600) }
+  const { toast, setToast, showToast } = useToastErr(2600, 7000)
 
   const { data: params } = useQuery({
     queryKey: ['cfg-params', tenantId], enabled: !!tenantId,

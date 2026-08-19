@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -26,8 +27,7 @@ export function NfeExcluidas() {
   const [busca, setBusca] = useState('')
   const [fLoja, setFLoja] = useState('')
   const [busy, setBusy] = useState(false)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
+  const { toast, setToast, showToast } = useToastTipo(3000)
 
   const { data: notas = [], isLoading, refetch } = useQuery({
     queryKey: ['nfe-excluidas', tenantId], enabled: !!tenantId,

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -143,8 +144,7 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
   const [fornSel, setFornSel] = useState<Record<string, string>>({})
   const [detItem, setDetItem] = useState<string | null>(null)
   const toggleDet = (id: string) => setDetItem((cur) => (cur === id ? null : id))
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
+  const { toast, setToast, showToast } = useToastTipo(3200)
 
   const { data: sols = [], isLoading, refetch, isFetching } = useQuery({ queryKey: ['cmp-cons-sols', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Pedido>((f, t) => supabase.from('pedidos_compra').select('id,loja_id').eq('tenant_id', tenantId).eq('status', 'solicitado').order('created_at').order('id').range(f, t)) })
   const { data: itensSol = [] } = useQuery({ queryKey: ['cmp-cons-itens', tenantId, sols.map((s) => s.id).join(',')], enabled: !!tenantId && sols.length > 0, queryFn: async () => { const rows = await fetchAll<ItemPedido>((f, t) => supabase.from('itens_pedido').select('*').in('pedido_id', sols.map((s) => s.id)).order('id').range(f, t)); return rows } })
@@ -342,8 +342,7 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
     // Personalizado → mantém as datas atuais
   }
   const [verId, setVerId] = useState<string | null>(null)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3000) }
+  const { toast, setToast, showToast } = useToastTipo(3000)
 
   const { data: pedidos = [], isLoading } = useQuery({
     queryKey: ['cmp-ped', tenantId, statusF], enabled: !!tenantId,

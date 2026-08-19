@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -30,8 +31,7 @@ export function EntradasProcessadas() {
   const [pag, setPag] = useState(1); const [pageSize, setPageSize] = useState(20)
   const [detNfe, setDetNfe] = useState<Nfe | null>(null)
   const [menu, setMenu] = useState<{ nfe: Nfe; top: number; left: number } | null>(null)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 3200) }
+  const { toast, setToast, showToast } = useToastTipo(3200)
 
   // Parâmetro Estoque › "Data de movimentação": filtra pela MESMA data que a entrada usa no estoque
   // (emissão = padrão; processamento). Assim o mês da tela bate com o Fechamento/CMV.

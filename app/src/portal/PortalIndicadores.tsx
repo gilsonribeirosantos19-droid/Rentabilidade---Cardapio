@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -30,8 +31,7 @@ export function PortalIndicadores() {
   const qc = useQueryClient()
   const [val, setVal] = useState<Record<string, string>>({})
   const [meta, setMeta] = useState<Record<string, string>>({})
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 5000 : 2600) }
+  const { toast, setToast, showToast } = useToastErr(2600, 5000)
 
   const { data: rows = [] } = useQuery({ queryKey: ['pind', tenantId, lojaId], enabled: !!tenantId && !!lojaId, queryFn: async () => { const { data } = await supabase.from('painel_indicadores').select('*').eq('tenant_id', tenantId).eq('loja_id', lojaId!); return (data ?? []) as Row[] } })
   const rowMap = useMemo(() => Object.fromEntries(rows.map((r) => [r.indicador, r])) as Record<string, Row>, [rows])

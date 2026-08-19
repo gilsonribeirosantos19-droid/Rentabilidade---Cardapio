@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -30,8 +31,7 @@ export function PortalInventario() {
   const [sit, setSit] = useState({ ativo: true, encerrado: true, cancelado: false })
   const [applied, setApplied] = useState({ dataIni, dataFim, sit } as { dataIni: string; dataFim: string; sit: typeof sit })
 
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 6000 : 3200) }
+  const { toast, setToast, showToast } = useToastErr(3200, 6000)
   const setPeriodo = (t: string) => {
     const d = new Date()
     if (t === 'mes_atual') { setDataIni(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-01`); setDataFim(new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA')) }

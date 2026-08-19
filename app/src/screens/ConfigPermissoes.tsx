@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -32,8 +33,7 @@ export function ConfigPermissoes() {
   const [tab, setTab] = useState<'usuarios' | 'perms'>('usuarios')
   const [vinc, setVinc] = useState<Set<string>>(new Set())
   const [perms, setPerms] = useState<PState>({})
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 7000 : 2600) }
+  const { toast, setToast, showToast } = useToastErr(2600, 7000)
 
   const { data: grupos = [] } = useQuery({
     queryKey: ['cfg-grupos', tenantId], enabled: !!tenantId,

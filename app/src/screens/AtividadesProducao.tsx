@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useToastErr } from '../lib/toast'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
@@ -17,8 +18,7 @@ export function AtividadesProducao() {
   const { itens } = useItensProduziveis()
   const [insumoId, setInsumoId] = useState('')
   const [linhas, setLinhas] = useState<Ativ[]>([])
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
-  const showToast = (msg: string, err = false) => { setToast({ msg, err }); window.setTimeout(() => setToast(null), err ? 5000 : 2200) }
+  const { toast, setToast, showToast } = useToastErr(2200, 5000)
 
   const itemSel = itens.find((i) => i.insumoId === insumoId)
 

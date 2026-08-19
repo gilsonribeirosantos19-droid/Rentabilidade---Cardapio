@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -54,7 +55,6 @@ export function Insumos() {
   const [cadSub, setCadSub] = useState<'basico' | 'emb'>('basico')   // sub-abas do cadastro (evita form muito longo)
   const [cadForm, setCadForm] = useState<Form>(novoForm())
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
-  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
   const [dup, setDup] = useState<Insumo | null>(null); const [dupNome, setDupNome] = useState('')
   const [transf, setTransf] = useState<{ ins: Insumo; count: number } | null>(null); const [transfDest, setTransfDest] = useState('')
   // filtros Produtos
@@ -63,7 +63,7 @@ export function Insumos() {
   // filtros Custos
   const [cBusca, setCBusca] = useState(''); const [cCat, setCCat] = useState(''); const [cStatus, setCStatus] = useState('')
 
-  const showToast = (msg: string, tipo: 'ok' | 'err' = 'ok') => { setToast({ msg, tipo }); setTimeout(() => setToast(null), 2600) }
+  const { toast, setToast, showToast } = useToastTipo(2600)
 
   useEffect(() => { const close = () => setMenu(null); window.addEventListener('click', close); return () => window.removeEventListener('click', close) }, [])
 
