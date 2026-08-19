@@ -9,7 +9,10 @@
 -- Seguro: com a constraint global atual não existe nenhuma chave duplicada, então o índice parcial
 -- novo não falha em dado existente.
 
+-- a unique antiga pode ser CONSTRAINT ou ÍNDICE único — os 2 drops cobrem os dois casos
+-- (cada um é no-op se não existir; se for constraint, o 1º já leva o índice junto).
 alter table public.nfe_recebidas drop constraint if exists nfe_recebidas_chave_acesso_unique;
+drop index if exists public.nfe_recebidas_chave_acesso_unique;
 
 create unique index if not exists nfe_recebidas_chave_acesso_ativa_uidx
   on public.nfe_recebidas (chave_acesso)
