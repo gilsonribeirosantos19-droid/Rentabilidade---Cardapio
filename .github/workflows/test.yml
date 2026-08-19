@@ -1,0 +1,27 @@
+name: Testes
+
+# Roda os testes do coração (custo médio / CMV / ficha) a cada push e pull request.
+# O GitHub mostra ✓ verde (passou) ou ✗ vermelho (quebrou) do lado de cada commit.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Testes do coração (custo médio / CMV)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Instalar dependências
+        run: npm ci
+      - name: Rodar testes
+        run: npm test
