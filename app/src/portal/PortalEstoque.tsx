@@ -472,16 +472,14 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
   const corrigirMut = useMutation({
     mutationFn: async () => {
       if (!corr) return
-      const oldQty = Number(corr.quantidade) || 0
       const newQty = num(corrQtd)
       if (newQty < 0) throw new Error('Quantidade inválida.')
-      const { data: sals } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lojaId).eq('insumo_id', corr.insumo_id)
-      const qtdAtual = Number((sals ?? [])[0]?.quantidade) || 0
-      const cmAtual = Number((sals ?? [])[0]?.custo_medio) || 0
-      const saldoNovo = Math.max(0, qtdAtual + oldQty - newQty)
-      if (newQty <= 0) { const { error } = await supabase.from('saidas_estoque').delete().eq('id', corr.id); if (error) throw error }
-      else { const { error } = await supabase.from('saidas_estoque').update({ quantidade: newQty }).eq('id', corr.id); if (error) throw error }
-      const { error: eu } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: corr.insumo_id, quantidade: parseFloat(saldoNovo.toFixed(4)), custo_medio: parseFloat(cmAtual.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (eu) throw eu
+      // ATÔMICO (M2/M3): edita a saída (ou apaga se 0) + reajusta o saldo pela diferença, numa
+      // transação com trava no banco. A qtd antiga é lida do banco (não do cache). Piso 0.
+      const { error } = await supabase.rpc('editar_saida_estoque', { p: {
+        tenant_id: tenantId, loja_id: lojaId, insumo_id: corr.insumo_id, saida_id: corr.id, nova_qtd: newQty,
+      } })
+      if (error) throw error
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['pest-hist'] }); qc.invalidateQueries({ queryKey: ['pest-saldos'] }); setCorr(null); setCorrQtd(''); showToast('Lançamento corrigido!') },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
