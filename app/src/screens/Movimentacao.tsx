@@ -26,6 +26,8 @@ const MOV_COLS: { id: string; label: string; fixed?: boolean; def?: boolean; ali
   { id: 'v-anterior', label: 'V.Anterior', def: false, align: 'r' },
   { id: 'q-entradas', label: 'Q.Entradas', def: true, align: 'r' },
   { id: 'v-entradas', label: 'V.Entradas', def: false, align: 'r' },
+  { id: 'q-ajustes', label: 'Q.Ajustes/Transf.', def: false, align: 'r' },
+  { id: 'v-ajustes', label: 'V.Ajustes/Transf.', def: false, align: 'r' },
   { id: 'q-consumo', label: 'Q.Consumo', def: true, align: 'r' },
   { id: 'v-consumo', label: 'V.Consumo', def: false, align: 'r' },
   { id: 'q-perdas', label: 'Q.Perdas', def: true, align: 'r' },
@@ -41,7 +43,7 @@ function loadCols(): Record<string, boolean> {
   const d: Record<string, boolean> = {}; MOV_COLS.forEach((c) => { d[c.id] = c.fixed || !!c.def }); return d
 }
 
-type Row = { nome: string; un: string; cat: string; qAnt: number; vAnt: number; qEnt: number; vEnt: number; qCon: number; vCon: number; qPerd: number; vPerd: number; qFin: number; vFin: number; cm: number; cmv?: string }
+type Row = { nome: string; un: string; cat: string; qAnt: number; vAnt: number; qEnt: number; vEnt: number; qAjuste: number; vAjuste: number; qCon: number; vCon: number; qPerd: number; vPerd: number; qFin: number; vFin: number; cm: number; cmv?: string }
 
 export function Movimentacao() {
   const { tenantId } = useAuth()
@@ -131,8 +133,14 @@ export function Movimentacao() {
       const qAnt = antIt?.qtd_contada || 0
       const vAnt = qAnt * (antIt?.custo_medio || cmIni)
       const entsI = entsPerByIns[ins.id] || []
-      const qEnt = entsI.reduce((a, e) => a + (e.quantidade || 0), 0)
-      const vEnt = entsI.reduce((a, e) => a + ((e.quantidade || 0) * (e.custo_unitario || 0)), 0)
+      // M7: ajuste/transferência NÃO são compras — saem da coluna Entradas pra uma coluna própria (qFin não muda)
+      const isAjuste = (e: Mov) => { const t = (e as Saida).tipo; return t === 'ajuste' || t === 'transferencia' }
+      const entReal = entsI.filter((e) => !isAjuste(e))
+      const entAj = entsI.filter((e) => isAjuste(e))
+      const qEnt = entReal.reduce((a, e) => a + (e.quantidade || 0), 0)
+      const vEnt = entReal.reduce((a, e) => a + ((e.quantidade || 0) * (e.custo_unitario || 0)), 0)
+      const qAjEnt = entAj.reduce((a, e) => a + (e.quantidade || 0), 0)
+      const vAjEnt = entAj.reduce((a, e) => a + ((e.quantidade || 0) * (e.custo_unitario || 0)), 0)
       const saisI = saisPerByIns[ins.id] || []
       const qCon = saisI.filter((x) => x.tipo === 'consumo').reduce((a, c) => a + (c.quantidade || 0), 0)
       const vCon = qCon * cmFim
@@ -140,9 +148,11 @@ export function Movimentacao() {
       const qPerd = qPerdSaida + (perdasMap[ins.id] || 0)
       const vPerd = qPerd * cmFim
       const qOutras = saisI.filter((x) => !['consumo', 'perda', 'vencimento', 'descarte'].includes(x.tipo || '')).reduce((a, o) => a + (o.quantidade || 0), 0)
-      const qFin = qAnt + qEnt - qCon - qPerd - qOutras
+      const qAjuste = qAjEnt - qOutras                 // ajustes/transferências líquidos (entrada − saída)
+      const vAjuste = vAjEnt - qOutras * cmFim
+      const qFin = qAnt + qEnt + qAjuste - qCon - qPerd
       const vFin = qFin * cmFim
-      return { nome: ins.nome, un: ins.unidade_medida || ins.unidade_compra || '—', cat: ins.categoria || '—', qAnt, vAnt, qEnt, vEnt, qCon, vCon, qPerd, vPerd, qFin, vFin, cm: cmFim, cmv: ins.participa_cmv }
+      return { nome: ins.nome, un: ins.unidade_medida || ins.unidade_compra || '—', cat: ins.categoria || '—', qAnt, vAnt, qEnt, vEnt, qAjuste, vAjuste, qCon, vCon, qPerd, vPerd, qFin, vFin, cm: cmFim, cmv: ins.participa_cmv }
     })
     if (comSaldo) rows = rows.filter((r) => r.qFin > 0 || r.qAnt > 0 || r.qEnt > 0 || r.qCon > 0 || r.qPerd > 0)
     return rows
@@ -150,7 +160,7 @@ export function Movimentacao() {
 
   const rows = useMemo(() => { const b = norm(busca.trim()); return b ? rowsAll.filter((r) => norm(r.nome).includes(b)) : rowsAll }, [rowsAll, busca])
   const tot = useMemo(() => {
-    const t = rows.reduce((a, r) => { a.qAnt += r.qAnt; a.vAnt += r.vAnt; a.qEnt += r.qEnt; a.vEnt += r.vEnt; a.qCon += r.qCon; a.vCon += r.vCon; a.qPerd += r.qPerd; a.vPerd += r.vPerd; a.qFin += r.qFin; a.vFin += r.vFin; return a }, { qAnt: 0, vAnt: 0, qEnt: 0, vEnt: 0, qCon: 0, vCon: 0, qPerd: 0, vPerd: 0, qFin: 0, vFin: 0 })
+    const t = rows.reduce((a, r) => { a.qAnt += r.qAnt; a.vAnt += r.vAnt; a.qEnt += r.qEnt; a.vEnt += r.vEnt; a.qAjuste += r.qAjuste; a.vAjuste += r.vAjuste; a.qCon += r.qCon; a.vCon += r.vCon; a.qPerd += r.qPerd; a.vPerd += r.vPerd; a.qFin += r.qFin; a.vFin += r.vFin; return a }, { qAnt: 0, vAnt: 0, qEnt: 0, vEnt: 0, qAjuste: 0, vAjuste: 0, qCon: 0, vCon: 0, qPerd: 0, vPerd: 0, qFin: 0, vFin: 0 })
     return { ...t, cmGeral: t.qFin > 0 ? t.vFin / t.qFin : 0 }
   }, [rows])
 
@@ -191,8 +201,8 @@ export function Movimentacao() {
 
   const exportCSV = () => {
     if (!rows.length) return
-    const head = ['Descrição', 'Unidade', 'Grupo', 'Q.Anterior', 'V.Anterior', 'Q.Entradas', 'V.Entradas', 'Q.Consumo', 'V.Consumo', 'Q.Perdas', 'V.Perdas', 'Q.Final', 'V.Final', 'C.Médio']
-    const linhas = rows.map((r) => [r.nome, r.un, r.cat, +r.qAnt.toFixed(3), +r.vAnt.toFixed(2), +r.qEnt.toFixed(3), +r.vEnt.toFixed(2), +r.qCon.toFixed(3), +r.vCon.toFixed(2), +r.qPerd.toFixed(3), +r.vPerd.toFixed(2), +r.qFin.toFixed(3), +r.vFin.toFixed(2), +r.cm.toFixed(4)])
+    const head = ['Descrição', 'Unidade', 'Grupo', 'Q.Anterior', 'V.Anterior', 'Q.Entradas', 'V.Entradas', 'Q.Ajustes/Transf.', 'V.Ajustes/Transf.', 'Q.Consumo', 'V.Consumo', 'Q.Perdas', 'V.Perdas', 'Q.Final', 'V.Final', 'C.Médio']
+    const linhas = rows.map((r) => [r.nome, r.un, r.cat, +r.qAnt.toFixed(3), +r.vAnt.toFixed(2), +r.qEnt.toFixed(3), +r.vEnt.toFixed(2), +r.qAjuste.toFixed(3), +r.vAjuste.toFixed(2), +r.qCon.toFixed(3), +r.vCon.toFixed(2), +r.qPerd.toFixed(3), +r.vPerd.toFixed(2), +r.qFin.toFixed(3), +r.vFin.toFixed(2), +r.cm.toFixed(4)])
     downloadCsv(`movimentacao_${de}_${ate}.csv`, [head, ...linhas])
   }
 
@@ -205,6 +215,8 @@ export function Movimentacao() {
       case 'v-anterior': return <td key={id} className="r mono">{brl(r.vAnt)}</td>
       case 'q-entradas': return <td key={id} className="r mono">{qtd(r.qEnt)}</td>
       case 'v-entradas': return <td key={id} className="r mono">{brl(r.vEnt)}</td>
+      case 'q-ajustes': return <td key={id} className={'r mono' + (r.qAjuste < 0 ? ' neg' : '')}>{qtd(r.qAjuste)}</td>
+      case 'v-ajustes': return <td key={id} className={'r mono' + (r.vAjuste < 0 ? ' neg' : '')}>{brl(r.vAjuste)}</td>
       case 'q-consumo': return <td key={id} className="r mono">{qtd(r.qCon)}</td>
       case 'v-consumo': return <td key={id} className="r mono">{brl(r.vCon)}</td>
       case 'q-perdas': return <td key={id} className="r mono">{qtd(r.qPerd)}</td>
@@ -218,7 +230,7 @@ export function Movimentacao() {
   }
   const footCell = (id: string) => {
     const t = tot
-    const m: Record<string, any> = { 'q-anterior': qtd(t.qAnt), 'v-anterior': brl(t.vAnt), 'q-entradas': qtd(t.qEnt), 'v-entradas': brl(t.vEnt), 'q-consumo': qtd(t.qCon), 'v-consumo': brl(t.vCon), 'q-perdas': qtd(t.qPerd), 'v-perdas': brl(t.vPerd), 'q-final': qtd(t.qFin), 'v-final': brl(t.vFin), 'c-medio': brl(t.cmGeral) }
+    const m: Record<string, any> = { 'q-anterior': qtd(t.qAnt), 'v-anterior': brl(t.vAnt), 'q-entradas': qtd(t.qEnt), 'v-entradas': brl(t.vEnt), 'q-ajustes': qtd(t.qAjuste), 'v-ajustes': brl(t.vAjuste), 'q-consumo': qtd(t.qCon), 'v-consumo': brl(t.vCon), 'q-perdas': qtd(t.qPerd), 'v-perdas': brl(t.vPerd), 'q-final': qtd(t.qFin), 'v-final': brl(t.vFin), 'c-medio': brl(t.cmGeral) }
     if (id === 'descricao') return <td key={id} style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '.04em' }}>Totais do período</td>
     if (id in m) return <td key={id} className={'r mono' + ((id === 'q-final' && t.qFin < 0) || (id === 'v-final' && t.vFin < 0) ? ' neg' : '')}>{m[id]}</td>
     return <td key={id} />
