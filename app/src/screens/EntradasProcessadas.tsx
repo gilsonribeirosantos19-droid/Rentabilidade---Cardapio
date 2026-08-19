@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { gerarDanfeLocal, imprimirDanfeOficial, baixarXml } from '../lib/danfe'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
+import { isoD } from '../lib/date'
 import './fiscal.css'
 
 type Nfe = { id: string; numero?: string; serie?: string; data_emissao?: string; processada_em?: string; nome_emitente?: string; cnpj_emitente?: string; valor_total?: number; chave_acesso?: string; loja_id?: string | null }
@@ -13,7 +14,6 @@ type NfeItem = { id?: string; descricao_nfe?: string; codigo_item_fornecedor?: s
 
 const fmtDate = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
 const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 // Período: rótulos do dropdown com busca ↔ valor interno
 const PER_OPTS = ['Mês Atual', 'Mês Anterior', 'Todos', 'Período']
 const PER_LBL: Record<string, string> = { mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior', todos: 'Todos', periodo: 'Período' }

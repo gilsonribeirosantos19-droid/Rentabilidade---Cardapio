@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
+import { isoD } from '../lib/date'
 import './fiscal.css'
 
 type Insumo = { id: string; nome: string; codigo_interno?: string | number; unidade_medida?: string }
@@ -16,7 +17,6 @@ const fmt3 = (v: number) => Number(v).toLocaleString('pt-BR', { minimumFractionD
 const fmtFator = (v: number) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 const fmtCod = (c?: string | number | null) => (c != null && c !== '' ? String(c).padStart(6, '0') : '')
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const primeiroDiaMes = () => { const d = new Date(); return isoD(new Date(d.getFullYear(), d.getMonth(), 1)) }
 const hoje = () => isoD(new Date())
 

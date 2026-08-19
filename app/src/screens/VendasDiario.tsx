@@ -5,6 +5,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import { brlNum as brl } from '../lib/format'
+import { fmtDia } from '../lib/date'
 import './faturamento.css'
 
 // Vendas por Dia — detalhado por loja × DIA (lê o portão icomanda_recebimento, só 'processado').
@@ -18,7 +19,6 @@ type Row = { id: string; loja: string; data: string; canal: string; turno: strin
 const int = (v: number) => v.toLocaleString('pt-BR')
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
-const fmtDia = (iso: string) => iso.split('-').reverse().join('/')
 const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 const TURNO_FILTRO = ['Almoço + Jantar', 'Consolidado', 'Só Almoço', 'Só Jantar']
 const CANAL_FILTRO = ['Todos', 'Salão', 'Delivery']

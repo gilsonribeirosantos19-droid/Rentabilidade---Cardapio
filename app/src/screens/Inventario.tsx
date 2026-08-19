@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
+import { isoD } from '../lib/date'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; participa_cmv?: string }
@@ -16,7 +17,6 @@ type Grupo = { id: string; nome: string; tipo?: string; ativo?: boolean; itens?:
 
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const fmtD = (d?: string | null) => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('pt-BR') : '—'
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const primeiroDiaMes = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const ultimoDiaMes = () => isoD(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0))
 const TIPO_LABEL: Record<string, string> = { mensal: 'Mensal', quinzenal: 'Quinzenal', semanal: 'Semanal', avulso: 'Avulso' }

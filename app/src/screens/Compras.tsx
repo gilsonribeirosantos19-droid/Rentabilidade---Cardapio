@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlDash as brl } from '../lib/format'
+import { isoD } from '../lib/date'
 import './estoque.css'
 
 type Pedido = { id: string; loja_id?: string | null; status?: string; observacao?: string | null; data_pedido?: string; created_at?: string; fornecedor_id?: string | null }
@@ -21,7 +22,6 @@ const fmtQtyDoc = (v?: number) => Number(v || 0).toLocaleString('pt-BR', { minim
 const fmtCod = (c?: number | string) => (c != null && c !== '' ? String(c).padStart(6, '0') : '—')
 const fmtDH = (iso?: string) => { if (!iso) return '—'; const d = new Date(iso); const p = (n: number) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}` }
 const fmtData = (iso?: string) => iso ? new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString('pt-BR') : '—'
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const hoje = () => isoD(new Date())
 const primeiroDia = () => { const d = new Date(); return isoD(new Date(d.getFullYear(), d.getMonth(), 1)) }
 const SOL_PER_PAGE = 15

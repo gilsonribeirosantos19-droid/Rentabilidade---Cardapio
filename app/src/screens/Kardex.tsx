@@ -6,6 +6,7 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import { brl } from '../lib/format'
+import { isoD as iso } from '../lib/date'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
@@ -15,7 +16,6 @@ type KxMov = { data: string; tipo: 'entrada' | 'saida'; desc: string; qMov: numb
 
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const fmtData = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
-const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const cap = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s
 
 export function Kardex() {

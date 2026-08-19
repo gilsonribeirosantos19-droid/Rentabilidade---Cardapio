@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
+import { fmtDH, isoD } from '../lib/date'
 import './estoque.css'
 
 type Hist = { id?: string; data?: string; insumo_id?: string; loja_id?: string | null; origem?: string; saldo_anterior?: number | null; custo_medio_anterior?: number | null; qtd_entrada?: number | null; custo_entrada?: number | null; novo_custo_medio?: number | null; impacto_pct?: number | null }
@@ -12,8 +13,6 @@ type Insumo = { id: string; nome: string }
 type Loja = { id: string; nome: string }
 
 const q3 = (v?: number | null) => (v == null) ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-const fmtDH = (iso?: string) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const ORIGEM_LBL: Record<string, string> = { entrada_manual: 'Entrada Manual', nfe: 'XML / NF-e', nfe_importada: 'XML / NF-e', ajuste: 'Ajuste', manual: 'Entrada Manual' }
 const ORIGEM_OPTS = ['Entrada Manual', 'XML / NF-e', 'Ajuste']
 const ORIGEM_VAL: Record<string, string> = { 'Entrada Manual': 'entrada_manual', 'XML / NF-e': 'nfe', 'Ajuste': 'ajuste' }

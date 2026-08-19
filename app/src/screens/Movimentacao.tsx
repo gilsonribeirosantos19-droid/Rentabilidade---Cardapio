@@ -7,6 +7,7 @@ import { custoDoInsumo, type Mov } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import { brl } from '../lib/format'
+import { isoD as iso } from '../lib/date'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string; tipo_item?: string; familia?: string; subgrupo?: string; unidade_medida?: string; unidade_compra?: string; participa_cmv?: string; preco_compra?: number }
@@ -16,7 +17,6 @@ type InvItem = { insumo_id: string; qtd_contada?: number; custo_medio?: number }
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean).map((v) => ('' + v).trim()).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'pt'))
-const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 const MOV_COLS: { id: string; label: string; fixed?: boolean; def?: boolean; align: 'l' | 'r' | 'c' }[] = [
   { id: 'descricao', label: 'Descrição', fixed: true, align: 'l' },

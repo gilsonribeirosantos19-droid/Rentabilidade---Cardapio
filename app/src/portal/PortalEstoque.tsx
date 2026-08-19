@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { downloadCsv } from '../lib/csv'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl, num } from '../lib/format'
+import { hojeStr, fmtDH as fmtDataHora } from '../lib/date'
 
 // Portal › Estoque — 3 sub-abas: Relatório (posição atual + estoque inicial da
 // última contagem), Movimentação (lança entrada/saída) e Histórico. Fiel ao loja.html.
@@ -19,12 +20,10 @@ type Mov = { id?: string; insumo_id: string; quantidade?: number; observacao?: s
 
 const fQ = (v?: number | null) => (v != null ? Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '—')
 const fmtQtd = (v?: number) => { const n = Number(v) || 0; return n % 1 === 0 ? n.toLocaleString('pt-BR') : n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) }
-const hojeStr = () => new Date().toLocaleDateString('en-CA')
 const primeiroDiaMes = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 // Dia seguinte a uma data (YYYY-MM-DD) — usado p/ ancorar o relatório logo APÓS a contagem
 const proxDia = (d: string) => { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + 1); return dt.toLocaleDateString('en-CA') }
 const un = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
-const fmtDataHora = (dt?: string) => (dt ? new Date(dt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—')
 
 type SubTab = 'relatorio' | 'movimentacao' | 'saida_lote' | 'historico'
 

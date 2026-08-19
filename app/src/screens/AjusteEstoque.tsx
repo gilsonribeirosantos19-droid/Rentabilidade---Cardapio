@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
+import { fmtDH, isoD } from '../lib/date'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
@@ -12,8 +13,6 @@ type Saldo = { insumo_id: string; loja_id: string; quantidade?: number; custo_me
 type Log = { insumo_id?: string; quantidade?: number; motivo?: string; criado_em?: string; dir: 'pos' | 'neg' }
 
 const fmtQ = (v?: number | null) => { const n = Number(v) || 0; return n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 }) }
-const fmtDH = (iso?: string) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const MOTIVOS = [['contagem', 'Correção de contagem'], ['nota_errada', 'Nota fiscal errada'], ['perda', 'Perda / Quebra'], ['furto', 'Furto / Extravio'], ['outro', 'Outro']]
 
 export function AjusteEstoque() {

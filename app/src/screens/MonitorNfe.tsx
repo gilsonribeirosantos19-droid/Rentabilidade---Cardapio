@@ -7,6 +7,7 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { imprimirDanfeOuLocal, gerarDanfeXml, gerarDanfeAiko } from '../lib/danfe'
 import { brl } from '../lib/format'
+import { isoD } from '../lib/date'
 import './fiscal.css'
 
 // Período: rótulos do dropdown com busca ↔ valor interno
@@ -25,7 +26,6 @@ const fmtQ = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { min
 const fmtD = (iso?: string | null) => iso ? new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString('pt-BR') : '—'
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 const fmtCod = (c?: any) => (c != null && c !== '' ? String(c).padStart(6, '0') : '')
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 const DOT: Record<string, string> = { pendente: '#f59e0b', em_transito: '#f59e0b', aguard_vinculacao: '#dc2626', pronta: '#2563eb', processada: '#16a34a', com_erro: '#dc2626', recusada: '#94a3b8', cancelada: '#94a3b8' }
 const G_PEND = ['pendente', 'em_transito'], G_PROC = ['pronta'], G_ERRO = ['aguard_vinculacao', 'com_erro'], G_CANC = ['cancelada', 'recusada']

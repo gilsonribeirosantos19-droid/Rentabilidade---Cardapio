@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
+import { isoD } from '../lib/date'
 import './estoque.css'
 
 type Ent = { id: string; insumo_id: string; loja_id?: string | null; quantidade?: number; unidade_compra?: string; custo_unitario?: number; custo_total?: number; nfe_numero?: string | null; nfe_chave?: string | null; fornecedor_id?: string | null; fornecedor_nome?: string | null; status?: string | null; criado_em?: string }
@@ -13,7 +14,6 @@ type Loja = { id: string; nome: string }
 
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })
 const fmtD = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const primeiroDiaMes = () => { const d = new Date(); return isoD(new Date(d.getFullYear(), d.getMonth(), 1)) }
 const totalDe = (e: Ent) => e.custo_total != null ? Number(e.custo_total) : Number(e.quantidade || 0) * Number(e.custo_unitario || 0)
 

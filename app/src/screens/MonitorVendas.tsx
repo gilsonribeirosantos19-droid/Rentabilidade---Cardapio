@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlNum as brl } from '../lib/format'
+import { fmtDia } from '../lib/date'
 import './monitorvendas.css'
 
 // Recebimento de Vendas — o PORTÃO da integração com o iComanda (por loja × DIA).
@@ -26,7 +27,6 @@ const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
 
 const mesInicio = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01` }
 const mesFim = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toLocaleDateString('en-CA') }
-const fmtDia = (iso: string) => iso.split('-').reverse().join('/')
 const fmtTs = (ts?: string | null) => ts ? new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—'
 function diasPeriodo(de: string, ate: string): string[] {
   const out: string[] = []

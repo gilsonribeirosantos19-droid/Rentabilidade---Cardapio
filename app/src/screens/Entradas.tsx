@@ -7,6 +7,7 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { DetailModal } from '../components/DetailModal'
 import { brlDash as brl } from '../lib/format'
+import { fmtDH, isoD } from '../lib/date'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string; categoria?: string; unidade_medida?: string; unidade_compra?: string }
@@ -18,10 +19,8 @@ type EntForm = { insumo_id: string; fornecedor_id: string; data: string; qtd: st
 
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 const brl0 = (v?: number | null) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const fmtDH = (iso?: string) => iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const fmtDate = (d?: string | null) => d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR') : '—'
 const hojeStr = () => new Date().toISOString().split('T')[0]
-const isoD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const uniq = (a: (string | null | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
 // dropdowns com busca da toolbar (rótulo ↔ valor)
 const PER_OPTS = ['Período', 'Mês Atual', 'Mês Anterior']

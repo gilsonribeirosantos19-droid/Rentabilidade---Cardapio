@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { brl } from '../lib/format'
+import { fmtDH } from '../lib/date'
 import './config.css'
 
 // Produção › Planejar › Monitor de Produção — lista todas as ordens (Produção +
@@ -15,7 +16,6 @@ type OrdPorc = { id: string; data?: string; insumo_id?: string; quantidade?: num
 type Row = { id: string; data?: string; tipo: 'producao' | 'porcionamento'; insumoId: string; qtd?: number; custo?: number; status?: string }
 
 const q3 = (n?: number) => (n ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 3 })
-const fmtDH = (d?: string) => (d ? new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—')
 const p2 = (n: number) => String(n).padStart(2, '0')
 
 export function MonitorProducao() {

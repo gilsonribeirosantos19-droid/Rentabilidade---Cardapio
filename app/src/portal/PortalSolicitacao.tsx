@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { num } from '../lib/format'
+import { hojeStr } from '../lib/date'
 
 // Portal › Solicitação de Compra — o gerente seleciona insumos por grupo,
 // informa quantidades e envia a solicitação para Compras. Fiel ao loja.html.
@@ -43,7 +44,6 @@ const brl = (v: number) => 'R$ ' + v.toFixed(2).replace('.', ',')
 // arruma o texto digitado pra 3 casas ao sair do campo (1 -> 1,000); vazio/zero fica como está
 const fmtQtd = (v?: string) => { const n = num(v); return v && n > 0 ? n.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : (v || '') }
 const hoje7 = () => new Date(Date.now() + 7 * 86400000).toLocaleDateString('en-CA')
-const hojeStr = () => new Date().toLocaleDateString('en-CA')
 const pad2 = (n: number) => String(n).padStart(2, '0')
 const ymd = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 // range de um mês: offset 0 = mês atual, -1 = mês anterior
