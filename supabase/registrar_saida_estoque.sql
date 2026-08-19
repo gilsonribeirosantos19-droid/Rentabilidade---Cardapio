@@ -25,6 +25,7 @@ declare
   v_loja   uuid := (p_saida->>'loja_id')::uuid;
   v_qtd    numeric := coalesce((p_saida->>'quantidade')::numeric, 0);
   v_neg    boolean := coalesce((p_saida->>'permite_negativo')::boolean, false);
+  v_clamp  boolean := coalesce((p_saida->>'clamp_zero')::boolean, false);   -- Portal: saldo nunca fica negativo (piso 0), nunca bloqueia
   v_qA numeric; v_qN numeric;
   v_sai_id uuid;
 begin
@@ -46,9 +47,10 @@ begin
   v_qA := coalesce(v_qA, 0);
   v_qN := round(v_qA - v_qtd, 4);
 
-  -- checagem autoritativa de saldo negativo (sob trava)
-  if v_qN < 0 and not v_neg then
-    raise exception 'Saldo insuficiente: saída de % supera o saldo disponível (%).', v_qtd, v_qA;
+  if v_clamp then
+    v_qN := greatest(0, v_qN);                                   -- modo Portal: piso 0, não bloqueia
+  elsif v_qN < 0 and not v_neg then
+    raise exception 'Saldo insuficiente: saída de % supera o saldo disponível (%).', v_qtd, v_qA;   -- checagem autoritativa (sob trava)
   end if;
 
   insert into public.saidas_estoque (tenant_id, insumo_id, loja_id, quantidade, tipo, motivo, responsavel, criado_em)

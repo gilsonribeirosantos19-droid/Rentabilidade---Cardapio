@@ -266,7 +266,6 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
       const { data: sals } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lojaId).eq('insumo_id', insumoId)
       const qtdAtual = Number((sals ?? [])[0]?.quantidade) || 0
       const cmAtual = Number((sals ?? [])[0]?.custo_medio) || 0
-      let novaQtd = qtdAtual, novoCm = cmAtual
       if (tipo === 'entrada') {
         const f = num(fator) || 1
         const c = num(custo)
@@ -275,18 +274,22 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
         const custoUnit = parseFloat((c / f).toFixed(6))
         const { error } = await supabase.from('entradas_estoque').insert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, fornecedor_id: fornId || null, fornecedor_nome: fornNome, quantidade: qtdEst, unidade_compra: unidCompra.trim() || null, fator_conversao: f, custo_unitario: custoUnit, lote: lote.trim() || null, validade: validade || null, tipo: 'manual', observacao: obs.trim() || null, responsavel: usuario?.nome || null, criado_em: criadoEm })
         if (error) throw error
-        novaQtd = qtdAtual + qtdEst
+        const novaQtd = qtdAtual + qtdEst
         const pesoAnt = Math.max(0, qtdAtual)   // saldo negativo não pesa no custo médio (senão distorce)
-        novoCm = (pesoAnt + qtdEst) > 0 ? (pesoAnt * cmAtual + qtdEst * custoUnit) / (pesoAnt + qtdEst) : custoUnit
+        const novoCm = (pesoAnt + qtdEst) > 0 ? (pesoAnt * cmAtual + qtdEst * custoUnit) / (pesoAnt + qtdEst) : custoUnit
         const impacto = cmAtual > 0 ? parseFloat(((novoCm - cmAtual) / cmAtual * 100).toFixed(4)) : null
         await supabase.from('historico_custo').insert({ tenant_id: tenantId, insumo_id: insumoId, loja_id: lojaId, saldo_anterior: parseFloat(qtdAtual.toFixed(4)), custo_medio_anterior: parseFloat(cmAtual.toFixed(4)), qtd_entrada: parseFloat(qtdEst.toFixed(4)), custo_entrada: parseFloat(custoUnit.toFixed(4)), novo_custo_medio: parseFloat(novoCm.toFixed(6)), impacto_pct: impacto, origem: 'entrada_loja', documento_ref: null })
+        const { error: eu } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: parseFloat(novaQtd.toFixed(4)), custo_medio: parseFloat(novoCm.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
+        if (eu) throw eu
       } else {
-        const { error } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: num(qtd), tipo: 'consumo', motivo: obs.trim() || null, responsavel: usuario?.nome || null, criado_em: criadoEm })
+        // ATÔMICO (M2/M3): saída (consumo) + débito do saldo com clamp em 0, numa transação com trava no banco.
+        const { error } = await supabase.rpc('registrar_saida_estoque', { p_saida: {
+          tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: num(qtd),
+          tipo: 'consumo', motivo: obs.trim() || null, responsavel: usuario?.nome || null,
+          criado_em: criadoEm, clamp_zero: true,
+        } })
         if (error) throw error
-        novaQtd = Math.max(0, qtdAtual - num(qtd))
       }
-      const { error: eu } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: parseFloat(novaQtd.toFixed(4)), custo_medio: parseFloat(novoCm.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
-      if (eu) throw eu
     },
     onSuccess: () => { showToast(`${tipo === 'entrada' ? 'Entrada' : 'Saída'} registrada!`); setInsumoId(''); setQtd(''); setObs(''); setFornId(''); setUnidCompra(''); setFator('1'); setCusto(''); setLote(''); setValidade(''); onSaved() },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
@@ -399,12 +402,12 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
       if (!itens.length) throw new Error('Digite a saída de ao menos um item.')
       const criadoEm = data + 'T12:00:00.000Z'
       for (const it of itens) {
-        // relê o saldo FRESCO do banco (não o cache) — evita sobrescrever mudança concorrente (lost update)
-        const { data: sals } = await supabase.from('saldo_estoque').select('quantidade,custo_medio').eq('tenant_id', tenantId).eq('loja_id', lojaId).eq('insumo_id', it.id)
-        const atual = Number((sals ?? [])[0]?.quantidade) || 0; const cm = Number((sals ?? [])[0]?.custo_medio) || 0
-        const { error: e1 } = await supabase.from('saidas_estoque').insert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: it.id, quantidade: it.qtd, tipo: 'consumo', motivo, responsavel: usuario?.nome || null, criado_em: criadoEm }); if (e1) throw e1
-        const nova = Math.max(0, atual - it.qtd)
-        const { error: e2 } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: it.id, quantidade: parseFloat(nova.toFixed(4)), custo_medio: parseFloat(cm.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' }); if (e2) throw e2
+        // ATÔMICO (M2/M3): saída + débito do saldo (clamp em 0) numa transação com trava no banco.
+        const { error } = await supabase.rpc('registrar_saida_estoque', { p_saida: {
+          tenant_id: tenantId, loja_id: lojaId, insumo_id: it.id, quantidade: it.qtd,
+          tipo: 'consumo', motivo, responsavel: usuario?.nome || null, criado_em: criadoEm, clamp_zero: true,
+        } })
+        if (error) throw error
       }
       return itens.length
     },
