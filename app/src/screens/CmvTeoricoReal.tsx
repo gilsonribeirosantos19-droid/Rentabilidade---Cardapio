@@ -11,8 +11,8 @@ import { brlZero as brl } from '../lib/format'
 import './cmv.css'
 
 type Insumo = { id: string; nome?: string; categoria?: string; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
-type Ficha = { id: string; rendimento_porcoes?: number; produto_id?: string | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null }
 type ItemFicha = { ficha_id: string; insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number }
+type Ficha = { id: string; rendimento_porcoes?: number; produto_id?: string | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens_ficha?: ItemFicha[] }
 type Venda = { ficha_id?: string; produto_id?: string; quantidade?: number; valor_total?: number; loja_id?: string | null }
 type ProdMin = { id: string; codigo_pdv?: string | null; nome?: string }
 type IcoVenda = { produto_id?: number | string; qtd?: number; faturado?: number; loja_id?: string | null; ficha_id?: string | null }
@@ -79,7 +79,10 @@ export function CmvTeoricoReal() {
         // vendas_item NÃO é mais usado no CMV: a fonte única virou vendas_produto_dia (iComanda + Saipos).
         // Placeholder [] só p/ manter o shape do Promise.all.
         Promise.resolve([] as Venda[]),
-        fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id,insumo_vinculado_id,rendimento_receita_g').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
+        // FIX (CMV zerava em tenant com muitas fichas): embute os itens_ficha na busca (join no banco).
+        // Antes os itens vinham por .in('ficha_id',[todos os ids]) — no Sushi PN (837 fichas) a URL
+        // estourava (~30KB), a query falhava e o .catch ZERAVA o CMV silenciosamente. O embed escala.
+        fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,rendimento_porcoes,produto_id,insumo_vinculado_id,rendimento_receita_g,itens_ficha(ficha_id,insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
         fetchAll<Insumo>((f, t) => catEq(supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct').eq('tenant_id', tenantId).eq('ativo', true)).order('nome').order('id').range(f, t)),
         fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)),
         // C2: o custo médio "até a data" agora vem PRONTO do banco (RPC custo_medio_ate — ver query cmRows
@@ -95,10 +98,8 @@ export function CmvTeoricoReal() {
         // FALLBACK mensal: se a tabela diária ainda não estiver preenchida, usa icomanda_vendas por competência
         comps.length ? fetchAll<IcoVenda>((f, t) => supabase.from('icomanda_vendas').select('produto_id,qtd,faturado,loja_id,competencia').eq('tenant_id', tenantId).in('competencia', comps).order('loja_id').order('competencia').order('produto_id').range(f, t)).catch(() => [] as IcoVenda[]) : Promise.resolve([] as IcoVenda[]),
       ])
-      const ids = fichas.map((f) => f.id)
-      const itensFicha = ids.length
-        ? await fetchAll<ItemFicha>((f, t) => supabase.from('itens_ficha').select('ficha_id,insumo_id,produto_id,quantidade_g').in('ficha_id', ids).order('id').range(f, t)).catch(() => [] as ItemFicha[])
-        : []
+      // itens já vêm embutidos na busca de fichas (embed acima) — sem .in() gigante estourando a URL
+      const itensFicha = fichas.flatMap((f) => f.itens_ficha ?? [])
       return { fats, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes }
     },
   })
