@@ -607,6 +607,7 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
   const [lojaSel, setLojaSel] = useState('')
   const [data, setData] = useState(new Date().toISOString().split('T')[0])
   const [saving, setSaving] = useState(false)
+  const [batch, setBatch] = useState<{ total: number; feito: number; reg: number; pend: number; existia: number; erro: number; done: boolean } | null>(null)
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
 
   const handleFile = (file?: File | null) => {
@@ -633,6 +634,53 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
     if (!vn?.insumo_id) vn = vinculos.find((v) => norm(v.descricao_nfe) === norm(it.descricao))
     if (vn?.insumo_id) { const d = ifv.find((v) => v.insumo_id === vn!.insumo_id && (!fornId || v.fornecedor_id === fornId)) || ifv.find((v) => v.insumo_id === vn!.insumo_id); if (d) return d.id }
     return null
+  }
+  // versão do matchItem que recebe o fornecedor (o lote detecta um fornecedor por nota)
+  const matchItemWith = (it: XmlItem, fId: string): string | null => {
+    if (it.codigo) { const d = ifv.find((v) => v.codigo_fornecedor === it.codigo && (!fId || v.fornecedor_id === fId)); if (d) return d.id }
+    let vn = it.codigo ? vinculos.find((v) => v.codigo_nfe && v.codigo_nfe === it.codigo) : null
+    if (!vn?.insumo_id) vn = vinculos.find((v) => norm(v.descricao_nfe) === norm(it.descricao))
+    if (vn?.insumo_id) { const d = ifv.find((v) => v.insumo_id === vn!.insumo_id && (!fId || v.fornecedor_id === fId)) || ifv.find((v) => v.insumo_id === vn!.insumo_id); if (d) return d.id }
+    return null
+  }
+  const readXml = (file: File) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => rej(new Error('falha ao ler o arquivo')); r.readAsText(file, 'utf-8') })
+  const criarLote = async (p: any, status: string, lojaLocal: string | null, dataLocal: string): Promise<string> => { const { data: d, error } = await supabase.from('nfe_recebidas').insert({ tenant_id: tenantId, loja_id: lojaLocal || null, numero: p.nNF || '0', serie: p.serie || '1', chave_acesso: p.chaveAcesso || null, cnpj_emitente: p.cnpjEmit || '', nome_emitente: p.emitNome || '', data_emissao: p.dhEmi || (dataLocal + 'T12:00:00'), valor_total: p.vNF || 0, valor_titulo: p.valorTitulo || null, data_vencimento: p.dataVenc || null, status, fonte: 'upload' }).select('id'); if (error) throw error; return d![0].id }
+  // LOTE (auto): vários XML de uma vez — auto-detecta fornecedor(CNPJ)/loja(CNPJ dest)/data(dhEmi), casa itens,
+  // registra cada nota; itens sem match viram pendência (aguard_vinculacao). Dedup por chave (pula se já tem itens).
+  const handleBatch = async (files: File[]) => {
+    setBatch({ total: files.length, feito: 0, reg: 0, pend: 0, existia: 0, erro: 0, done: false })
+    let reg = 0, pend = 0, existia = 0, erro = 0
+    for (const file of files) {
+      try {
+        const p = parseNfeXml(await readXml(file))
+        const en = (p.emitNome || '').toLowerCase()
+        const fm = fornecedores.find((f) => (f.cnpj || '').replace(/\D/g, '') === p.cnpjEmit) || fornecedores.find((f) => (f.nome || '').toLowerCase() === en || (en && (f.nome || '').toLowerCase().includes(en.substring(0, 6))))
+        const fId = fm?.id || ''
+        const lm = lojas.find((l) => (l.cnpj || '').replace(/\D/g, '') === p.cnpjDest)
+        const lId = lm?.id || lojaIdGlobal || null
+        const dt = p.dhEmi ? p.dhEmi.slice(0, 10) : new Date().toISOString().split('T')[0]
+        const matchedLocal = p.itens.map((it) => matchItemWith(it, fId))
+        const pendLocal = p.itens.length - matchedLocal.filter(Boolean).length
+        const status = pendLocal === 0 ? 'pronta' : 'aguard_vinculacao'
+        let nfeId = '', skip = false
+        if (p.chaveAcesso) {
+          const { data: ex } = await supabase.from('nfe_recebidas').select('id').eq('tenant_id', tenantId).eq('chave_acesso', p.chaveAcesso).limit(1)
+          if (ex && ex.length) {
+            const { data: its } = await supabase.from('nfe_itens').select('id').eq('nfe_id', ex[0].id).limit(1)
+            if (its && its.length) { existia++; skip = true }
+            else { nfeId = ex[0].id; await supabase.from('nfe_recebidas').update({ status, loja_id: lId, numero: p.nNF || '0', serie: p.serie || '1', nome_emitente: p.emitNome, valor_total: p.vNF || 0, valor_titulo: p.valorTitulo || null, data_vencimento: p.dataVenc || null, data_emissao: p.dhEmi || (dt + 'T12:00:00'), fonte: 'upload' }).eq('id', nfeId); await supabase.from('nfe_itens').delete().eq('nfe_id', nfeId) }
+          }
+        }
+        if (!skip) {
+          if (!nfeId) nfeId = await criarLote(p, status, lId, dt)
+          const rows = p.itens.map((it, i) => ({ nfe_id: nfeId, tenant_id: tenantId, descricao_nfe: (it.descricao || '').toUpperCase(), codigo_item_fornecedor: it.codigo || null, quantidade: it.quantidade || 0, unidade_nfe: (it.unidade || 'UN').toUpperCase(), valor_unitario: it.valorUnit || 0, valor_total: +((it.quantidade || 0) * (it.valorUnit || 0)).toFixed(2), vinculacao_id: matchedLocal[i] }))
+          const { error } = await supabase.from('nfe_itens').insert(rows); if (error) throw error
+          if (pendLocal > 0) pend++; else reg++
+        }
+      } catch (e) { erro++; console.error('lote xml', (e as Error).message) }
+      setBatch((b) => b ? { ...b, feito: b.feito + 1, reg, pend, existia, erro } : b)
+    }
+    setBatch((b) => b ? { ...b, done: true, reg, pend, existia, erro } : b)
   }
   const matched = parsed ? parsed.itens.map(matchItem) : []
   const okCount = matched.filter(Boolean).length
@@ -677,12 +725,30 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
       <div className="cor" style={{ width: 'min(880px, 96vw)' }} onClick={(e) => e.stopPropagation()}>
         <div className="cor-hd"><div><h2>Entrada por NF-e / XML</h2><div className="s">Importe o XML da nota fiscal para registrar no Monitor.</div></div><button className="cor-x" onClick={onClose}>✕</button></div>
         <div className="cor-body">
-          {!parsed ? (
-            <div onClick={() => document.getElementById('xml-file')?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]) }} style={{ border: '2px dashed #cbd5e1', borderRadius: 12, padding: '44px 20px', textAlign: 'center', cursor: 'pointer', background: '#f8fafc' }}>
+          {batch ? (
+            <div style={{ padding: '30px 20px', textAlign: 'center' }}>
+              {!batch.done ? (
+                <><div style={{ fontSize: 40 }}>⏳</div><div style={{ fontWeight: 700, marginTop: 8 }}>Importando… {batch.feito}/{batch.total}</div></>
+              ) : (
+                <>
+                  <div style={{ fontSize: 40 }}>✅</div>
+                  <div style={{ fontWeight: 700, marginTop: 8, marginBottom: 14, fontSize: 16 }}>Importação em lote concluída</div>
+                  <div style={{ display: 'inline-grid', gridTemplateColumns: 'auto auto', gap: '6px 18px', textAlign: 'left', fontSize: 13.5 }}>
+                    <span>✅ Registradas (prontas)</span><b>{batch.reg}</b>
+                    <span>🟡 Com pendência de vínculo</span><b>{batch.pend}</b>
+                    <span>↩️ Já existiam</span><b>{batch.existia}</b>
+                    <span>❌ Com erro</span><b>{batch.erro}</b>
+                  </div>
+                  {batch.pend > 0 && <div style={{ marginTop: 14, fontSize: 12, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 12px' }}>As {batch.pend} com pendência aparecem em "Para processar" no Monitor — é só vincular os itens que faltaram.</div>}
+                </>
+              )}
+            </div>
+          ) : !parsed ? (
+            <div onClick={() => document.getElementById('xml-file')?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const fs = Array.from(e.dataTransfer.files || []); if (fs.length > 1) handleBatch(fs); else handleFile(fs[0]) }} style={{ border: '2px dashed #cbd5e1', borderRadius: 12, padding: '44px 20px', textAlign: 'center', cursor: 'pointer', background: '#f8fafc' }}>
               <div style={{ fontSize: 40, marginBottom: 8 }}>📄</div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>Clique ou arraste o arquivo XML</div>
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>NF-e padrão SEFAZ · .xml</div>
-              <input type="file" id="xml-file" accept=".xml" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files?.[0])} />
+              <div style={{ fontSize: 15, fontWeight: 700 }}>Clique ou arraste o(s) arquivo(s) XML</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>NF-e padrão SEFAZ · .xml · pode selecionar VÁRIOS (lote automático)</div>
+              <input type="file" id="xml-file" accept=".xml" multiple style={{ display: 'none' }} onChange={(e) => { const fs = Array.from(e.target.files || []); if (fs.length > 1) handleBatch(fs); else handleFile(fs[0]) }} />
             </div>
           ) : (
             <>
@@ -712,8 +778,14 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
           )}
         </div>
         <div className="cor-ft">
-          <button className="cor-back" onClick={onClose}>Cancelar</button>
-          {parsed && <button className="cor-save" disabled={saving} onClick={registrar}>{saving ? 'Salvando…' : (pend === 0 ? 'Registrar no Monitor' : `Registrar no Monitor (${pend} pend.)`)}</button>}
+          {batch ? (
+            <button className="cor-save" disabled={!batch.done} onClick={onDone}>{batch.done ? 'Fechar e atualizar' : `Importando… ${batch.feito}/${batch.total}`}</button>
+          ) : (
+            <>
+              <button className="cor-back" onClick={onClose}>Cancelar</button>
+              {parsed && <button className="cor-save" disabled={saving} onClick={registrar}>{saving ? 'Salvando…' : (pend === 0 ? 'Registrar no Monitor' : `Registrar no Monitor (${pend} pend.)`)}</button>}
+            </>
+          )}
         </div>
       </div>
     </div>
