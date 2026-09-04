@@ -66,8 +66,12 @@ export function Movimentacao() {
   const colsDdRef = useRef<HTMLDivElement>(null)
 
   const { data: insumos = [] } = useQuery({ queryKey: ['mov-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('*').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
-  const { data: entradas = [] } = useQuery({ queryKey: ['mov-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
-  const { data: saidas = [] } = useQuery({ queryKey: ['mov-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
+  // PERFORMANCE: filtro de loja empurrado pro banco (antes baixava TODAS as lojas e filtrava no
+  // navegador — 1 min num tenant grande). Com loja selecionada, baixa só ela (~1/9 no Sushi PN).
+  // Números idênticos: o custo médio já usa só os movimentos da loja (entradasL/saidasL). "Todas as
+  // lojas" (lojaId vazio) segue baixando tudo — é o comportamento agregado.
+  const { data: entradas = [] } = useQuery({ queryKey: ['mov-entradas', tenantId, lojaId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => { let q = supabase.from('entradas_estoque').select('*').eq('tenant_id', tenantId); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('criado_em').order('id').range(f, t) }) })
+  const { data: saidas = [] } = useQuery({ queryKey: ['mov-saidas', tenantId, lojaId], enabled: !!tenantId, queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('*').eq('tenant_id', tenantId); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('criado_em').order('id').range(f, t) }) })
   const { data: saldos = [] } = useQuery({ queryKey: ['mov-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<any>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })
   const { data: vinculos = [] } = useQuery({ queryKey: ['mov-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<any>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })
   const { data: forns = [] } = useQuery({ queryKey: ['mov-forns', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as { id: string; nome: string }[] } })
