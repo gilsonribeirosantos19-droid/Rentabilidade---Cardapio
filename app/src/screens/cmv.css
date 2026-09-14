@@ -36,7 +36,7 @@
 /* tabela com cabeçalho agrupado (navy) */
 .cmv-screen .tbl-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04); margin-bottom: 12px; }
 .cmv-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 320px); }
-.cmv-screen table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.cmv-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .cmv-screen thead { position: sticky; top: 0; z-index: 3; }
 .cmv-screen .th-main th { position: sticky; top: 0; }
 .cmv-screen .th-sub th { position: sticky; top: 23px; }
@@ -48,7 +48,7 @@
 .cmv-screen .th-sub th { padding: 6px 12px; font-size: 9px; font-weight: 600; color: rgba(255,255,255,.6); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; text-align: right; border-right: 1px solid rgba(255,255,255,.06); }
 .cmv-screen .th-sub th:first-child, .cmv-screen .th-sub th.l { text-align: left; }
 .cmv-screen .th-sub th:last-child { border-right: none; }
-.cmv-screen tbody td { padding: 2px 9px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #0f172a; line-height: 1.5; }
+.cmv-screen tbody td { padding: 4px 9px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #0f172a; line-height: 1.5; }
 .cmv-screen tbody tr:last-child td { border-bottom: none; }
 .cmv-screen tbody tr:hover { background: #d0dff2; }
 .cmv-screen td.r { text-align: right; }
@@ -56,7 +56,7 @@
 .cmv-screen .mono { font-family: 'DM Mono', monospace; }
 .cmv-screen .status-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .cmv-screen .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
-.cmv-screen tfoot td { padding: 6px 10px; background: #0f2d5c; font-size: 12px; color: #fff; border-bottom: none; font-weight: 700; }
+.cmv-screen tfoot td { padding: 6px 10px; background: #0f2d5c; font-size: 13px; color: #fff; border-bottom: none; font-weight: 700; }
 .cmv-screen tfoot td.r { text-align: right; }
 .cmv-screen .act-btn { display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; font-size: 11px; font-weight: 600; color: #64748b; cursor: pointer; font-family: inherit; }
 .cmv-screen .act-btn:hover { background: #f8fafc; }
