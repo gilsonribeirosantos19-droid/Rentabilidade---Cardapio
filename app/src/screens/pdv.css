@@ -29,7 +29,7 @@
 .pdv-screen .chart-wrap { position: relative; height: 230px; }
 
 /* tabela */
-.pdv-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pdv-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .pdv-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 10px; text-align: left; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
 .pdv-screen .tbl th.r, .pdv-screen .tbl td.r { text-align: right; }
 .pdv-screen .tbl tbody td { padding: 6px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; }

@@ -22,7 +22,7 @@
 /* tabela */
 .ins-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
 .ins-screen .tbl-scroll { overflow-x: auto; }
-.ins-screen table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.ins-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .ins-screen thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
 .ins-screen thead th.r { text-align: right; }
 .ins-screen thead th.c { text-align: center; }

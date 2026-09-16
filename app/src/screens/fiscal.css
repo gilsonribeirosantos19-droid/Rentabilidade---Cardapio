@@ -41,7 +41,7 @@
 /* cabeçalho fixo ao rolar (genérico): o container rola internamente e o thead trava no topo */
 .fiscal-screen .tbl-sticky { max-height: calc(100vh - 236px); overflow: auto; }
 .fiscal-screen .tbl-sticky thead th { position: sticky; top: 0; z-index: 3; }
-.fiscal-screen table.tbl { width: 100%; min-width: max-content; border-collapse: collapse; font-size: 11.5px; }
+.fiscal-screen table.tbl { width: 100%; min-width: max-content; border-collapse: collapse; font-size: 13px; }
 .fiscal-screen .tbl tbody td, .fiscal-screen .tbl tbody td * { font-weight: 400 !important; }
 .fiscal-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 10px; text-align: left; padding: 6px 10px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
 .fiscal-screen .tbl thead th.sortable { cursor: pointer; user-select: none; }
@@ -184,7 +184,7 @@
 .cor-search svg { position: absolute; left: 9px; top: 9px; color: #94a3b8; }
 .cor-tbl { border: 1px solid #e5e9f0; border-radius: 10px; overflow: hidden; }
 .cor-tbl-sc { overflow: auto; max-height: 300px; }
-.cor-tbl table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.cor-tbl table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .cor-tbl thead th { position: sticky; top: 0; background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: .03em; text-align: left; padding: 7px 9px; border-bottom: 1px solid #d6dce6; white-space: nowrap; z-index: 2; }
 .cor-tbl th.r, .cor-tbl td.r { text-align: right; } .cor-tbl th.c, .cor-tbl td.c { text-align: center; }
 .cor-tbl tbody td { padding: 4px 9px; border-bottom: 1px solid #eef1f5; border-right: 1px solid #f3f5f9; white-space: nowrap; }
