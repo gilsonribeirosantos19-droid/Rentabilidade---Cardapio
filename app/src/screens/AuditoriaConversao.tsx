@@ -101,7 +101,7 @@ export function AuditoriaConversao() {
   }
 
   return (
-    <div className="fiscal-screen">
+    <div className="fiscal-screen aud-screen">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <div className="fh-title">Auditoria de Conversão</div>

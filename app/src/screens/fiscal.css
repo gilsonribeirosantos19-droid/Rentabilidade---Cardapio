@@ -35,8 +35,11 @@
 
 .fiscal-screen .tbl-wrap { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
 .fiscal-screen .tbl-scroll { overflow-x: auto; }
-/* lista sem paginação: rola dentro da área e mantém o cabeçalho fixo no topo */
-.fiscal-screen .aud-scroll { max-height: calc(100vh - 300px); overflow: auto; }
+/* lista sem paginação: a tela vira coluna flex e a tabela PREENCHE o espaço que sobra
+   (sem número mágico) — o cabeçalho fica fixo no topo e o rodapé colado embaixo. */
+.fiscal-screen.aud-screen { height: 100%; display: flex; flex-direction: column; }
+.aud-screen .tbl-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.fiscal-screen .aud-scroll { flex: 1; min-height: 0; overflow: auto; }
 .fiscal-screen .aud-scroll thead th { position: sticky; top: 0; z-index: 3; }
 /* cabeçalho fixo ao rolar (genérico): o container rola internamente e o thead trava no topo */
 .fiscal-screen .tbl-sticky { max-height: calc(100vh - 236px); overflow: auto; }
