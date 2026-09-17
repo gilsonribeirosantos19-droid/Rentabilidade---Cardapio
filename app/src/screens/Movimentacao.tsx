@@ -212,7 +212,7 @@ export function Movimentacao() {
 
   const cell = (id: string, r: Row) => {
     switch (id) {
-      case 'descricao': return <td key={id} style={{ fontWeight: 500 }}>{r.nome}</td>
+      case 'descricao': return <td key={id}>{r.nome}</td>
       case 'un': return <td key={id} style={{ color: '#64748b' }}>{r.un}</td>
       case 'grupo': return <td key={id} style={{ color: '#64748b' }}>{r.cat}</td>
       case 'q-anterior': return <td key={id} className="r mono">{qtd(r.qAnt)}</td>
