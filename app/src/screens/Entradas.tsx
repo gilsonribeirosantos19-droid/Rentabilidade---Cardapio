@@ -172,7 +172,7 @@ export function Entradas() {
                 return (
                   <tr key={e.id}>
                     <td className="mono" style={{ color: '#64748b', fontSize: 12 }}>{fmtDH(e.criado_em)}</td>
-                    <td style={{ fontWeight: 600 }}>{ins ? ins.nome : <span style={{ color: '#ef4444' }}>Insumo não encontrado</span>}</td>
+                    <td>{ins ? ins.nome : <span style={{ color: '#ef4444' }}>Insumo não encontrado</span>}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{forn}</td>
                     <td className="c"><span className="badge-pill" style={{ background: badge.bg, color: badge.c }}>{badge.t}</span></td>
                     <td className="r mono">{qtd(e.quantidade)}</td>

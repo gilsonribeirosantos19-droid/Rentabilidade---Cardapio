@@ -83,7 +83,7 @@ export function CurvaABC() {
               : page.map((v) => (
                 <tr key={v.id}>
                   <td className="c mono" style={{ color: '#94a3b8', fontSize: 12 }}>{v.idx}</td>
-                  <td style={{ fontWeight: 600 }}>{v.nome}</td>
+                  <td>{v.nome}</td>
                   <td style={{ color: '#94a3b8', fontSize: 12, textTransform: 'capitalize' }}>{v.cat}</td>
                   <td className="c"><span className={'badge b-' + v.cl}>{v.cl}</span></td>
                   <td className="r mono">{brl(v.val)}</td>

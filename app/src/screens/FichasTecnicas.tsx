@@ -480,7 +480,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                       const rotuloQtd = mult.toLocaleString('pt-BR')   // ex.: 0,5
                       return (
                         <tr key={it.id || idx}>
-                          <td style={{ fontWeight: 600 }}>{p?.nome || '(produto)'}</td>
+                          <td>{p?.nome || '(produto)'}</td>
                           <td style={{ color: '#64748b', fontSize: 11.5 }}>Produto</td>
                           <td className="r">—</td>
                           <td className="r">—</td>
@@ -501,7 +501,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     const tipoItem = ins ? (processadoIds.has(ins.id) ? 'Produto Intermediário' : 'Matéria Prima') : '—'
                     return (
                       <tr key={it.id || idx}>
-                        <td style={{ fontWeight: 600 }}>{ins?.nome || '—'}</td>
+                        <td>{ins?.nome || '—'}</td>
                         <td style={{ color: '#64748b', fontSize: 11.5 }}>{tipoItem}</td>
                         <td className="r">{rendPct}%</td>
                         <td className="r">{brl(preco)}</td>
@@ -534,7 +534,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     const mult = Number(it.quantidade_g) || 0
                     return (
                       <tr key={it.id || idx}>
-                        <td style={{ fontWeight: 600 }}>{p?.nome || '(produto)'}</td>
+                        <td>{p?.nome || '(produto)'}</td>
                         <td style={{ color: '#64748b' }}>porção</td>
                         <td className="r">{mult.toLocaleString('pt-BR')}</td>
                         <td className="r">—</td>
@@ -548,7 +548,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                   const ckg = ins ? (isUnit ? cb : cb / ((ins.rendimento_pct || 100) / 100)) : 0
                   return (
                     <tr key={it.id || idx}>
-                      <td style={{ fontWeight: 600 }}>{ins?.nome || '—'}</td>
+                      <td>{ins?.nome || '—'}</td>
                       <td style={{ color: '#64748b' }}>{um}</td>
                       <td className="r">{qtdFmt(it, ins)}</td>
                       <td className="r">{brl(ckg)}</td>

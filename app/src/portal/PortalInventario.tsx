@@ -116,7 +116,7 @@ export function PortalInventario() {
                       {invs.map((i) => { const sc = ST[i.status || ''] || { bg: '#f1f5f9', c: '#64748b', l: i.status || '—' }; return (
                         <tr key={i.id} className="clik" onClick={() => abrir(i)}>
                           <td className="mono" style={{ color: '#64748b', fontSize: 12 }}>{i.numero ? `Nº ${i.numero}` : '—'}</td>
-                          <td style={{ fontWeight: 600 }}>{i.descricao || 'Inventário'}</td>
+                          <td>{i.descricao || 'Inventário'}</td>
                           <td style={{ color: '#64748b', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtData(i.data_inicial)}</td>
                           <td style={{ color: '#64748b', fontSize: 12, whiteSpace: 'nowrap' }}>{fmtData(i.data_final)}</td>
                           <td><span className="p-badge" style={{ background: sc.bg, color: sc.c }}>{sc.l}</span></td>
@@ -155,7 +155,7 @@ export function PortalInventario() {
                       : filtradas.map((l) => { const c = parseFloat(String(l.qtd).replace(',', '.')) || 0; return (
                         <tr key={l.id}>
                           <td className="mono" style={{ fontSize: 11 }}>{l.codigo}</td>
-                          <td style={{ fontWeight: 500 }}>{l.nome}</td>
+                          <td>{l.nome}</td>
                           <td style={{ fontSize: 12 }}>{l.embalagem}</td>
                           <td>{l.unidade}</td>
                           <td className="r"><input type="number" className="p-qtd" min="0" step="0.001" placeholder="0,000" value={l.qtd} onChange={(e) => setQtd(l.id, e.target.value)} /></td>

@@ -88,7 +88,7 @@ export function HistoricoCustos() {
                 return (
                   <tr key={h.id || i}>
                     <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtDH(h.data)}</td>
-                    <td style={{ fontWeight: 600 }}>{insMap[h.insumo_id || ''] || '—'}</td>
+                    <td>{insMap[h.insumo_id || ''] || '—'}</td>
                     <td>{lojaMap[h.loja_id || ''] || '—'}</td>
                     <td><span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: '#f1f5f9', color: '#475569' }}>{ORIGEM_LBL[h.origem || ''] || h.origem || '—'}</span></td>
                     <td className="r mono">{q3(h.saldo_anterior)}</td>

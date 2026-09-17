@@ -55,7 +55,7 @@ export function DistribuicaoRomaneios() {
                 : lista.map((r) => { const n = r.requisicao_itens?.[0]?.count ?? 0; return (
                   <tr key={r.id}>
                     <td className="mono">{reqNo(r.numero)}</td>
-                    <td style={{ fontWeight: 600 }}>{lojaMap[r.loja_id || '']?.nome || '—'}</td>
+                    <td>{lojaMap[r.loja_id || '']?.nome || '—'}</td>
                     <td className="c" style={{ color: '#64748b' }}>{fmtD(r.enviado_em || r.created_at)}</td>
                     <td className="r mono">{n}</td>
                     <td className="r mono">{brl(r.valor_total)}</td>

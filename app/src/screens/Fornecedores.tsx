@@ -145,7 +145,7 @@ export function Fornecedores() {
                   <tr key={f.id} onClick={() => setEditing(f)}>
                     <td className="td-mono" style={{ fontSize: 12 }}>{f.codigo || '—'}</td>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{f.nome_fantasia || f.nome || f.razao_social || '—'}</div>
+                      <div style={{ color: '#0f172a' }}>{f.nome_fantasia || f.nome || f.razao_social || '—'}</div>
                       {f.razao_social && (f.nome_fantasia || f.nome) && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{f.razao_social}</div>}
                     </td>
                     <td className="td-mono" style={{ color: '#64748b', fontSize: 12 }}>{f.cnpj || '—'}</td>

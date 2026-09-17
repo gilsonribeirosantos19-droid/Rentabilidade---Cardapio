@@ -159,7 +159,7 @@ export function PortalRequisicaoCD() {
                         <tr key={ins.id} style={{ background: sel.has(ins.id) ? '#fff7ed' : undefined }}>
                           <td className="c"><input type="checkbox" style={{ width: 16, height: 16, accentColor: '#f97316' }} checked={sel.has(ins.id)} onChange={(e) => toggle(ins.id, e.target.checked)} /></td>
                           <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(ins.codigo_interno)}</td>
-                          <td style={{ fontWeight: 600 }}>{ins.nome}</td>
+                          <td>{ins.nome}</td>
                           <td style={{ color: '#64748b' }}>{fmtV(meuSaldoMap[ins.id])}</td>
                           <td style={{ color: temCd ? '#0f766e' : '#dc2626', fontWeight: temCd ? 600 : 400 }}>{temCd ? '✅ ' + fmtV(cd) : '— sem estoque'}</td>
                         </tr>
@@ -191,7 +191,7 @@ export function PortalRequisicaoCD() {
                 <tbody>
                   {selIds.map((id) => { const ins = insMap[id]; return (
                     <tr key={id}>
-                      <td style={{ fontWeight: 600 }}>{ins?.nome || id}</td>
+                      <td>{ins?.nome || id}</td>
                       <td style={{ color: '#64748b' }}>{fmtV(meuSaldoMap[id])}</td>
                       <td style={{ color: '#64748b' }}>{fmtV(cdSaldoMap[id])}</td>
                       <td className="r"><input type="text" inputMode="decimal" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} style={{ width: 96, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5, color: '#0f172a', background: '#fff' }} /></td>

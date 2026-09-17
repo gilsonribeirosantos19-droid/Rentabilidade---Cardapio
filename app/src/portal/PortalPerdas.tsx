@@ -213,7 +213,7 @@ export function PortalPerdas() {
             {!hist?.perdas.length ? <div style={{ color: '#94a3b8', fontSize: 12, textAlign: 'center', padding: 14 }}>Nenhuma perda registrada.</div>
               : <table className="p-tbl"><thead><tr><th>Data</th><th>Insumo</th><th className="r">Qtd.</th><th className="r">Valor</th><th>Motivo</th></tr></thead>
                 <tbody>{hist.perdas.map((p) => { const its = hist.itens[p.id] || []; const it = its[0]; const ins = it ? insMap[it.insumo_id] : null; const nome = ins?.nome || (its.length > 1 ? `${its.length} insumos` : '—'); const val = it ? calcValor(it) : 0; const m = motivos.find((x) => x.id === p.motivo_id); return (
-                  <tr key={p.id}><td style={{ color: '#64748b' }}>{fmtData(p.data_perda)}</td><td style={{ fontWeight: 600 }}>{nome}</td><td className="r mono">{it ? q3(Number(it.quantidade) || 0) : '—'}</td><td className="r mono" style={{ color: '#dc2626' }}>{val > 0 ? brl(val) : '—'}</td><td>{m?.nome || '—'}</td></tr>
+                  <tr key={p.id}><td style={{ color: '#64748b' }}>{fmtData(p.data_perda)}</td><td>{nome}</td><td className="r mono">{it ? q3(Number(it.quantidade) || 0) : '—'}</td><td className="r mono" style={{ color: '#dc2626' }}>{val > 0 ? brl(val) : '—'}</td><td>{m?.nome || '—'}</td></tr>
                 ) })}</tbody></table>}
           </div>
 

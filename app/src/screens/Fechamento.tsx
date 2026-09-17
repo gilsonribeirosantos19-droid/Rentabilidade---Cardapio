@@ -361,7 +361,7 @@ export function Fechamento() {
                   {detItens.length
                     ? detItens.map((o) => (
                       <tr key={o.id}>
-                        <td style={{ fontWeight: 500 }}>{o.nome}</td><td className="c-neg" style={{ textAlign: 'center' }}>{o.un}</td>
+                        <td>{o.nome}</td><td className="c-neg" style={{ textAlign: 'center' }}>{o.un}</td>
                         <td className="c-num">{brl(o.ei)}</td><td className="c-num">{brl(o.compras)}</td><td className="c-num">{brl(o.entT)}</td>
                         <td className="c-num c-neg">{brl(o.saiT)}</td><td className="c-num c-neg">{brl(o.consumo)}</td><td className="c-num c-neg">{brl(o.perdas)}</td>
                         <td className="c-num" style={{ fontWeight: 600 }}>{brl(o.ef)}</td><td className="c-num c-cmv">{brl(o.cmv)}</td>

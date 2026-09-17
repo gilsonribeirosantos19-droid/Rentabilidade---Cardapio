@@ -199,7 +199,7 @@ export function ConsumoInsumos() {
                   const sign = (r.dif || 0) > 0 ? '+' : ''
                   return (
                     <tr key={r.ins.id}>
-                      <td style={{ fontWeight: 600, color: '#334155' }}>{r.ins.nome}</td>
+                      <td style={{ color: '#334155' }}>{r.ins.nome}</td>
                       <td className="r" style={{ color: '#64748b', fontSize: 12 }}>{r.ins.unidade_medida || '–'}</td>
                       {r.porMes.map((v, i) => <td key={i} className="r mono" style={{ color: '#334155' }}>{fmtCell(v)}</td>)}
                       <td className="r mono" style={{ color: '#334155' }}>{fmtCell(r.media)}</td>

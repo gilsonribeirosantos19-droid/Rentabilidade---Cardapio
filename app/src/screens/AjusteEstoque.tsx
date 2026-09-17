@@ -144,7 +144,7 @@ export function AjusteEstoque() {
           <thead><tr><th>Data</th><th>Insumo</th><th>Tipo</th><th className="r">Qtd</th><th>Motivo</th></tr></thead>
           <tbody>
             {logsFiltrados.length === 0 ? <tr><td colSpan={5} className="empty">Nenhum ajuste encontrado.</td></tr>
-              : logsFiltrados.map((r, i) => <tr key={i}><td className="mono" style={{ fontSize: 12 }}>{fmtDH(r.criado_em)}</td><td style={{ fontWeight: 500 }}>{insMap[r.insumo_id || '']?.nome || '—'}</td><td><span className={'badge ' + (r.dir === 'pos' ? 'b-pos' : 'b-neg')}>{r.dir === 'pos' ? '＋ Entrada' : '－ Saída'}</span></td><td className="r mono">{fmtQ(r.quantidade)}</td><td style={{ color: '#64748b', fontSize: 12 }}>{r.motivo || '—'}</td></tr>)}
+              : logsFiltrados.map((r, i) => <tr key={i}><td className="mono" style={{ fontSize: 12 }}>{fmtDH(r.criado_em)}</td><td>{insMap[r.insumo_id || '']?.nome || '—'}</td><td><span className={'badge ' + (r.dir === 'pos' ? 'b-pos' : 'b-neg')}>{r.dir === 'pos' ? '＋ Entrada' : '－ Saída'}</span></td><td className="r mono">{fmtQ(r.quantidade)}</td><td style={{ color: '#64748b', fontSize: 12 }}>{r.motivo || '—'}</td></tr>)}
           </tbody>
         </table></div>
       </div>

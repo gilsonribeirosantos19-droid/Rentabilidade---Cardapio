@@ -171,7 +171,7 @@ export function EntradasProcessadas() {
                   <td className="c mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
                   <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.data_emissao)}</span></td>
                   <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.processada_em)}</span></td>
-                  <td className="fornec"><div style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</div></td>
+                  <td className="fornec"><div>{n.nome_emitente || '—'}</div></td>
                   <td style={{ fontSize: 12, color: '#475569', whiteSpace: 'nowrap' }}>{lojaNome[n.loja_id || ''] || '—'}</td>
                   <td className="r mono" style={{ fontWeight: 600 }}>{brl(n.valor_total)}</td>
                   <td className="c" style={{ fontWeight: 600 }}>{itensCount[n.id] || '—'}</td>

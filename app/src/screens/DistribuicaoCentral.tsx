@@ -152,7 +152,7 @@ export function DistribuicaoCentral() {
                 : lista.map((r) => { const st = ST[r.status || 'enviada'] || ST.enviada; const n = r.requisicao_itens?.[0]?.count ?? 0; return (
                   <tr key={r.id} onClick={() => abrir(r)} style={{ cursor: 'pointer' }}>
                     <td className="mono">{reqNo(r.numero)}</td>
-                    <td style={{ fontWeight: 600 }}>{lojaMap[r.loja_id || '']?.nome || '—'}</td>
+                    <td>{lojaMap[r.loja_id || '']?.nome || '—'}</td>
                     <td style={{ color: '#64748b', fontSize: 12 }}>{r.origem === 'sugestao' ? 'Sugestão' : r.origem === 'app' ? 'Manual' : 'Portal'}</td>
                     <td className="c" style={{ color: '#64748b' }}>{fmtD(r.created_at)}</td>
                     <td className="r mono">{n}</td>
@@ -183,7 +183,7 @@ export function DistribuicaoCentral() {
                 {itens.map((it) => { const disp = cdSaldoMap[it.insumo_id] ?? 0; const ins = insMap[it.insumo_id]; const falta = num(atend[it.id]) > disp
                   return (
                     <tr key={it.id}>
-                      <td style={{ fontWeight: 600 }}>{ins?.nome || '—'}</td>
+                      <td>{ins?.nome || '—'}</td>
                       <td className="c" style={{ color: '#94a3b8' }}>{it.unidade || ins?.unidade_medida || '—'}</td>
                       <td className="r mono">{fmtQ(it.qtd_pedida)}</td>
                       <td className="r mono" style={{ color: disp <= 0 ? '#dc2626' : '#0f766e' }}>{fmtQ(disp)}</td>

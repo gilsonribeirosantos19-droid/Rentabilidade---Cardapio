@@ -116,7 +116,7 @@ export function InflacaoInsumos() {
               : page.length === 0 ? <tr><td className="empty" colSpan={2 + meses.length * 2}>Nenhum dado de preço no período.</td></tr>
               : page.map(({ ins, precos }) => (
                 <tr key={ins.id}>
-                  <td style={{ fontWeight: 600 }}>{ins.nome}</td>
+                  <td>{ins.nome}</td>
                   <td style={{ color: '#94a3b8', fontSize: 10 }}>{ins.unidade_medida || ins.unidade_compra || 'un'}</td>
                   {precos.map((p, i) => {
                     const prev = [...precos].slice(0, i).reverse().find((x) => x != null)

@@ -185,7 +185,7 @@ export function ConfigPermissoes() {
                           <tr key={u.id}>
                             <td><input type="checkbox" checked={vinc.has(u.id)} onChange={() => toggleVinc(u.id)} /></td>
                             <td className="mono" style={{ fontSize: 11.5, color: '#475569' }}>{u.email || '—'}</td>
-                            <td style={{ fontWeight: 500 }}>{u.nome || '—'}</td>
+                            <td>{u.nome || '—'}</td>
                             <td style={{ fontSize: 11.5, color: '#64748b' }}>{grupoAtual[u.id] || '—'}</td>
                             <td style={{ fontSize: 11.5, color: u.ativo !== false ? '#16a34a' : '#94a3b8' }}>{u.ativo !== false ? 'Ativo' : 'Inativo'}</td>
                           </tr>

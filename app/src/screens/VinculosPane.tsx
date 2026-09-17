@@ -128,7 +128,7 @@ export function VinculosPane({ fornecedores }: { fornecedores: Fornecedor[] }) {
                   return (
                     <tr key={f.id} onClick={() => { setSelId(f.id); setForm(null); setFiltroItens('') }}>
                       <td className="td-mono" style={{ fontSize: 12 }}>{f.codigo || '—'}</td>
-                      <td style={{ fontWeight: 600, color: '#0f172a' }}>{f.nome_fantasia || f.nome || f.razao_social || '—'}</td>
+                      <td style={{ color: '#0f172a' }}>{f.nome_fantasia || f.nome || f.razao_social || '—'}</td>
                       <td className="td-mono" style={{ fontSize: 12, color: '#64748b' }}>{f.cnpj || '—'}</td>
                       <td style={{ color: '#64748b', fontSize: 12 }}>{contato}</td>
                       <td style={{ color: '#64748b', fontSize: 12 }}>{f.cidade || '—'}</td>
@@ -219,7 +219,7 @@ export function VinculosPane({ fornecedores }: { fornecedores: Fornecedor[] }) {
             {itensForn.length === 0 ? <tr><td colSpan={9} className="empty">Nenhum item vinculado a este fornecedor</td></tr>
               : itensForn.map((v) => (
                 <tr key={v.id} onClick={() => abrir(v)}>
-                  <td style={{ fontWeight: 600, color: '#0f172a' }}>{insMap[v.insumo_id]?.nome || '—'}</td>
+                  <td style={{ color: '#0f172a' }}>{insMap[v.insumo_id]?.nome || '—'}</td>
                   <td style={{ color: '#64748b' }}>{v.descricao_fornecedor || '—'}</td>
                   <td className="td-mono" style={{ color: '#64748b', fontSize: 11 }}>{v.codigo_fornecedor || '—'}</td>
                   <td style={{ color: '#64748b' }}>{v.embalagem_descricao || '—'}</td>

@@ -403,7 +403,7 @@ export function CmvTeoricoReal() {
                   {!detIns.det.length ? <tr><td colSpan={5} style={{ padding: 26, textAlign: 'center', color: '#64748b' }}>Sem consumo teórico no período.</td></tr>
                     : detIns.det.map((d, idx) => (
                       <tr key={idx} style={{ borderBottom: '1px solid #eef1f6' }}>
-                        <td style={{ padding: '6px 14px', fontWeight: 600 }}>{d.nome}</td>
+                        <td style={{ padding: '6px 14px' }}>{d.nome}</td>
                         <td style={{ padding: '6px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace" }}>{d.qtdVend.toLocaleString('pt-BR')}</td>
                         <td style={{ padding: '6px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace", color: '#64748b' }}>{d.qtdVend > 0 ? fq(d.qtd / d.qtdVend) : '—'}</td>
                         <td style={{ padding: '6px 14px', textAlign: 'right', fontFamily: "'DM Mono', monospace" }}>{fq(d.qtd)}</td>

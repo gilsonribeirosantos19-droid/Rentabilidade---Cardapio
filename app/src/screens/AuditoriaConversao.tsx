@@ -166,7 +166,7 @@ export function AuditoriaConversao() {
                 return (
                   <tr key={r.e.id}>
                     <td className="mono" style={{ fontSize: 11, color: '#334155', whiteSpace: 'nowrap' }}>{dataHora}</td>
-                    <td style={{ fontWeight: 600, color: '#334155' }}>{r.ins?.nome || '—'}</td>
+                    <td style={{ color: '#334155' }}>{r.ins?.nome || '—'}</td>
                     <td className="mono" style={{ fontSize: 12, color: '#64748b' }}>{r.codItem || '—'}</td>
                     <td className="mono" style={{ fontSize: 12, color: '#64748b' }}>{r.codForn || '—'}</td>
                     <td style={{ fontSize: 12, color: '#64748b' }}>{r.lojaNome || '—'}</td>

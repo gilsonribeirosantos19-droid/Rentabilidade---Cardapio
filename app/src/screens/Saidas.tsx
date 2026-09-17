@@ -169,7 +169,7 @@ export function Saidas() {
                 return (
                   <tr key={s.id}>
                     <td className="mono" style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{fmtDH(s.criado_em)}</td>
-                    <td style={{ fontWeight: 500 }}>{ins ? ins.nome : '—'}</td>
+                    <td>{ins ? ins.nome : '—'}</td>
                     <td className="c"><span className="badge-pill" style={{ background: tb.bg, color: tb.color }}>{tb.label}</span></td>
                     <td style={{ color: '#64748b' }}>{s.motivo || '—'}</td>
                     <td className="r mono">{qtd(s.quantidade)}</td>

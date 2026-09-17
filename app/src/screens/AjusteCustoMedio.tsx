@@ -123,7 +123,7 @@ export function AjusteCustoMedio() {
           <thead><tr><th>Data</th><th>Insumo</th><th>Loja</th><th className="r">Anterior</th><th className="r">Novo</th></tr></thead>
           <tbody>
             {logsFiltrados.length === 0 ? <tr><td colSpan={5} className="empty">Nenhum ajuste encontrado.</td></tr>
-              : logsFiltrados.map((r, i) => <tr key={i}><td className="mono" style={{ fontSize: 12 }}>{fmtDH(r.criado_em)}</td><td style={{ fontWeight: 500 }}>{insMap[r.insumo_id || ''] || '—'}</td><td style={{ fontSize: 12, color: '#64748b' }}>{lojaMap[r.loja_id || ''] || '—'}</td><td className="r mono" style={{ color: '#94a3b8' }}>{brl(r.custo_anterior)}</td><td className="r mono"><span className="badge b-cm">{brl(r.custo_novo)}</span></td></tr>)}
+              : logsFiltrados.map((r, i) => <tr key={i}><td className="mono" style={{ fontSize: 12 }}>{fmtDH(r.criado_em)}</td><td>{insMap[r.insumo_id || ''] || '—'}</td><td style={{ fontSize: 12, color: '#64748b' }}>{lojaMap[r.loja_id || ''] || '—'}</td><td className="r mono" style={{ color: '#94a3b8' }}>{brl(r.custo_anterior)}</td><td className="r mono"><span className="badge b-cm">{brl(r.custo_novo)}</span></td></tr>)}
           </tbody>
         </table></div>
       </div>

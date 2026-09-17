@@ -106,7 +106,7 @@ export function HistoricoEntradas() {
               : page.map((g) => (
                 <tr key={g.key}>
                   <td className="mono" style={{ fontSize: 12, color: '#334155' }}>{fmtD(g.data)}</td>
-                  <td style={{ fontWeight: 500, color: '#334155' }}>{g.fornNome}</td>
+                  <td style={{ color: '#334155' }}>{g.fornNome}</td>
                   <td>{g.temNFe ? <span style={{ color: '#0d9488', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => setNfeAberta(g.primeiro.nfe_numero!)}>{g.primeiro.nfe_numero}</span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>
                   <td style={{ fontSize: 12, color: '#334155' }}>{g.temNFe ? 'NF-e' : 'Manual'}</td>
                   <td style={{ fontSize: 12, color: '#64748b' }}>{g.itens.length} {g.itens.length > 1 ? 'itens' : 'item'}</td>
@@ -144,7 +144,7 @@ export function HistoricoEntradas() {
             <table className="tbl">
               <thead><tr><th>Insumo</th><th>Un.</th><th className="r">Qtd.</th><th className="r">V. Unit.</th><th className="r">V. Total</th></tr></thead>
               <tbody>
-                {itensNfe.map((e, i) => <tr key={i}><td style={{ fontWeight: 500 }}>{insMap[e.insumo_id]?.nome || '—'}</td><td style={{ color: '#94a3b8' }}>{e.unidade_compra || '—'}</td><td className="r mono">{qtd(e.quantidade)}</td><td className="r mono">{brl(e.custo_unitario)}</td><td className="r mono" style={{ fontWeight: 600 }}>{brl(totalDe(e))}</td></tr>)}
+                {itensNfe.map((e, i) => <tr key={i}><td>{insMap[e.insumo_id]?.nome || '—'}</td><td style={{ color: '#94a3b8' }}>{e.unidade_compra || '—'}</td><td className="r mono">{qtd(e.quantidade)}</td><td className="r mono">{brl(e.custo_unitario)}</td><td className="r mono" style={{ fontWeight: 600 }}>{brl(totalDe(e))}</td></tr>)}
               </tbody>
               <tfoot><tr style={{ background: '#f8fafc', fontWeight: 700 }}><td colSpan={4}>Total</td><td className="r mono">{brl(itensNfe.reduce((a, e) => a + totalDe(e), 0))}</td></tr></tfoot>
             </table>

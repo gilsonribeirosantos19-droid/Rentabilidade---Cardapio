@@ -104,7 +104,7 @@ export function Inventario() {
                 const st = i.status === 'encerrado' ? { t: 'Encerrado', bg: '#eff6ff', c: '#2563eb' } : i.status === 'cancelado' ? { t: 'Cancelado', bg: '#fff1f2', c: '#e11d48' } : { t: 'Ativo', bg: '#f0fdf4', c: '#16a34a' }
                 return (
                   <tr key={i.id}>
-                    <td style={{ fontWeight: 500 }}>{lojaMap[i.loja_id || ''] || '—'}</td>
+                    <td>{lojaMap[i.loja_id || ''] || '—'}</td>
                     <td>{TIPO_LABEL[i.tipo || ''] || i.tipo || '—'}</td>
                     <td>{fmtD(i.data_inicial)}</td>
                     <td>{fmtD(i.data_final)}</td>
@@ -217,7 +217,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
                 const cls = dif > 0.001 ? '#16a34a' : dif < -0.001 ? '#e11d48' : '#94a3b8'; const sinal = dif > 0 ? '+' : ''
                 return (
                   <tr key={it.id}>
-                    <td style={{ fontWeight: 500 }}>{ins?.nome || it.insumo_id}</td>
+                    <td>{ins?.nome || it.insumo_id}</td>
                     <td style={{ color: '#94a3b8' }}>{un}</td>
                     <td className="r mono">{qtd(sys)}</td>
                     <td className="r">{isAtivo ? <input type="number" step="0.001" min="0" className="field" style={{ width: 110, height: 32, textAlign: 'right' }} value={counts[it.id] ?? ''} onChange={(e) => setCounts((c) => ({ ...c, [it.id]: e.target.value }))} /> : <span className="mono">{qtd(parseFloat(counts[it.id]) || 0)}</span>}</td>
@@ -319,7 +319,7 @@ function GruposModal({ grupos, insumos, tenantId, onClose, onChange, showToast }
             <tbody>
               {grupos.length === 0 ? <tr><td colSpan={4} className="empty">Nenhum grupo cadastrado</td></tr>
                 : grupos.map((g) => <tr key={g.id}>
-                  <td style={{ fontWeight: 500 }}>{g.nome}</td>
+                  <td>{g.nome}</td>
                   <td style={{ color: '#94a3b8' }}>{TIPO_LABEL[g.tipo || ''] || g.tipo || '—'}</td>
                   <td className="r mono">{g.itens?.length || 0}</td>
                   <td className="c"><div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}><button className="btn-sec" style={{ height: 30 }} onClick={() => setEdit(g)}>Editar</button><button className="btn-sec" style={{ height: 30, color: '#e11d48' }} onClick={() => excluir(g.id)}>Excluir</button></div></td>

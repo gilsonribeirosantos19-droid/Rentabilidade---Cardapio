@@ -62,7 +62,7 @@ export function ResumoEstoque() {
             <tbody>
               {isLoading ? <tr><td colSpan={4} className="empty">Carregando…</td></tr>
                 : maioresCM.length === 0 ? <tr><td colSpan={4} className="empty">Sem dados</td></tr>
-                : maioresCM.map((s) => <tr key={s.insumo_id}><td style={{ fontWeight: 500 }}>{insMap[s.insumo_id]?.nome || '—'}</td><td className="r mono">{brl(s.custo_medio)}</td><td className="r mono">{fmtQ(s.quantidade)}</td><td className="r mono">{brl((s.quantidade || 0) * (s.custo_medio || 0))}</td></tr>)}
+                : maioresCM.map((s) => <tr key={s.insumo_id}><td>{insMap[s.insumo_id]?.nome || '—'}</td><td className="r mono">{brl(s.custo_medio)}</td><td className="r mono">{fmtQ(s.quantidade)}</td><td className="r mono">{brl((s.quantidade || 0) * (s.custo_medio || 0))}</td></tr>)}
             </tbody>
           </table></div>
         </div>

@@ -504,7 +504,7 @@ function VerPedido({ pedido, itens, forn, insMap, porLoja, onClose, onStatus, on
         </div>
         <div className="tbl-wrap"><table className="tbl">
           <thead><tr><th>Insumo</th><th>Código</th><th>Categoria</th><th className="r">Qtd</th><th>Un.</th><th>Por loja</th></tr></thead>
-          <tbody>{itens.map((it, i) => <tr key={i}><td style={{ fontWeight: 500 }}>{insMap[it.insumo_id]?.nome || it.insumo_id}</td><td className="mono" style={{ fontSize: 12, color: '#94a3b8' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td><td style={{ fontSize: 12, color: '#94a3b8' }}>{insMap[it.insumo_id]?.categoria || '—'}</td><td className="r mono">{fmtQtyDoc(it.quantidade)}</td><td>{it.unidade || 'un'}</td><td style={{ fontSize: 11, color: '#94a3b8' }}>{porLoja(it)}</td></tr>)}</tbody>
+          <tbody>{itens.map((it, i) => <tr key={i}><td>{insMap[it.insumo_id]?.nome || it.insumo_id}</td><td className="mono" style={{ fontSize: 12, color: '#94a3b8' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td><td style={{ fontSize: 12, color: '#94a3b8' }}>{insMap[it.insumo_id]?.categoria || '—'}</td><td className="r mono">{fmtQtyDoc(it.quantidade)}</td><td>{it.unidade || 'un'}</td><td style={{ fontSize: 11, color: '#94a3b8' }}>{porLoja(it)}</td></tr>)}</tbody>
         </table></div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
           <button className="btn-ghost" onClick={() => onPrint(forn?.nome || '—', [pedido])}>🖨 Imprimir / PDF</button>

@@ -302,7 +302,7 @@ export function MonitorNfe() {
                       <td className="c"><input type="checkbox" className="chk" checked={picked.has(n.id)} onChange={() => togglePick(n.id)} /></td>
                       <td className="c" title={es}><span className="stat-dot" style={{ background: DOT[es] || '#94a3b8', cursor: isErro ? 'pointer' : 'default' }} onClick={isErro ? () => abrirItem(n, 'erros') : undefined} /></td>
                       <td className="r mono" style={{ color: '#64748b', fontSize: 12 }}>{forn?.codigo || '—'}</td>
-                      <td className="fornec nfe-fornec" onClick={() => abrirItem(n, 'itens')} style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</td>
+                      <td className="fornec nfe-fornec" onClick={() => abrirItem(n, 'itens')}>{n.nome_emitente || '—'}</td>
                       <td style={{ color: '#64748b', fontSize: 12 }}>{lojaMap[n.loja_id || ''] || '—'}</td>
                       <td><span className="nfe-num" onClick={() => abrirItem(n, 'itens')}>{n.numero || '—'}</span></td>
                       <td className="c mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>

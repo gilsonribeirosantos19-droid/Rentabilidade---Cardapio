@@ -80,7 +80,7 @@ export function DistribuicaoNovaRequisicao() {
               {filtrados.map((i) => { const cd = cdSaldoMap[i.id] ?? 0; return (
                 <tr key={i.id} style={{ background: num(qty[i.id]) > 0 ? '#f0fdfa' : undefined }}>
                   <td className="r mono" style={{ color: '#64748b', fontSize: 12 }}>{i.codigo_interno != null ? String(i.codigo_interno).padStart(6, '0') : '—'}</td>
-                  <td style={{ fontWeight: 600 }}>{i.nome}</td>
+                  <td>{i.nome}</td>
                   <td className="c" style={{ color: '#94a3b8' }}>{defUn(i)}</td>
                   <td className="r mono" style={{ color: cd > 0 ? '#0f766e' : '#dc2626' }}>{cd > 0 ? fmtQ(cd) : '— sem estoque'}</td>
                   <td className="r"><input value={qty[i.id] ?? ''} onChange={(e) => setQty((q) => ({ ...q, [i.id]: e.target.value }))} placeholder="0" style={{ width: 96, height: 28, border: '1px solid #cbd5e1', borderRadius: 5, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12, background: '#fff' }} /></td>

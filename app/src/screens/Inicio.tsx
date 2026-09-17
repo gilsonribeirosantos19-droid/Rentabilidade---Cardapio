@@ -140,7 +140,7 @@ export function Inicio() {
                     const barPct = maxComp > 0 ? Math.round(compMes / maxComp * 100) : 0
                     return (
                       <tr key={loja.id}>
-                        <td style={{ fontWeight: 600 }}><span className="loja-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>{loja.nome}</td>
+                        <td><span className="loja-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>{loja.nome}</td>
                         <td className="r mono">{brl(a.valor_estoque)}</td>
                         <td><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div className="mini-bar-wrap"><div className="mini-bar" style={{ width: barPct + '%', background: compMes > 0 ? '#22c55e' : '#e2e8f0' }} /></div><span className="mono" style={{ fontSize: 12 }}>{brl(compMes)}</span></div></td>
                         <td className="r mono" style={{ color: perdMes > 0 ? '#e11d48' : undefined }}>{brl(perdMes)}</td>

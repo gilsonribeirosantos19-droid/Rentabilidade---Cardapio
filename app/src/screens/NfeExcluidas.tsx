@@ -91,7 +91,7 @@ export function NfeExcluidas() {
                   const dias = diasRestantes(n.excluida_em)
                   return (
                     <tr key={n.id}>
-                      <td className="fornec" style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</td>
+                      <td className="fornec">{n.nome_emitente || '—'}</td>
                       <td style={{ color: '#64748b', fontSize: 12 }}>{lojaNome(n.loja_id)}</td>
                       <td className="mono">{n.numero || '—'}</td>
                       <td className="c mono" style={{ color: '#64748b' }}>{n.serie || '—'}</td>

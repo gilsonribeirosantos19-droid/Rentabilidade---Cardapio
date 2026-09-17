@@ -184,7 +184,7 @@ export function PortalSolicitacao() {
                         <tr key={ins.id} style={{ background: sel.has(ins.id) ? '#fff7ed' : undefined }}>
                           <td className="c"><input type="checkbox" style={{ width: 16, height: 16, accentColor: '#f97316' }} checked={sel.has(ins.id)} onChange={(e) => toggle(ins.id, e.target.checked)} /></td>
                           <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(ins.codigo_interno)}</td>
-                          <td style={{ fontWeight: 600 }}>{ins.nome}</td>
+                          <td>{ins.nome}</td>
                           <td style={{ fontSize: 12, color: '#475569' }}>{embalagem(ins)}</td>
                           <td style={{ color: '#64748b' }}>{fmtV(atual)}</td>
                           <td style={{ color: '#64748b' }}>0,000</td>
@@ -220,7 +220,7 @@ export function PortalSolicitacao() {
                 <tbody>
                   {selIds.map((id) => { const ins = insMap[id]; const u = defUn(ins); return (
                     <tr key={id}>
-                      <td style={{ fontWeight: 600 }}>{ins?.nome || id}</td>
+                      <td>{ins?.nome || id}</td>
                       <td style={{ color: '#64748b' }}>{fmtV(saldoMap[id])}</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td style={{ color: '#64748b' }}>—</td>
@@ -357,7 +357,7 @@ function VerEditarSolic({ pedido, insMap, loja, onClose, onSaved }: { pedido: Pe
                 return (
                 <tr key={it.id}>
                   <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(insMap[it.insumo_id]?.codigo_interno)}</td>
-                  <td style={{ fontWeight: 600 }}>{insMap[it.insumo_id]?.nome || it.insumo_id}</td>
+                  <td>{insMap[it.insumo_id]?.nome || it.insumo_id}</td>
                   <td>{editavel
                     ? <select value={it.un} onChange={(e) => setItens((a) => a.map((x) => x.id === it.id ? { ...x, un: e.target.value } : x))} style={{ height: 26, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{optsDe(insMap[it.insumo_id], it.un).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
                     : unidLabel(it.un)}</td>
