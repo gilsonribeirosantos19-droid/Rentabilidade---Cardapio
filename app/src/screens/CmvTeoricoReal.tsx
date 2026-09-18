@@ -314,7 +314,7 @@ export function CmvTeoricoReal() {
               <tr className="th-sub">
                 <th style={{ borderLeft: '1px solid rgba(255,255,255,.06)' }}>Quantidade</th><th>Custo (R$)</th>
                 <th style={{ borderLeft: '1px solid rgba(255,255,255,.06)' }}>Quantidade</th><th>Custo (R$)</th>
-                <th style={{ borderLeft: '1px solid rgba(255,255,255,.06)' }}>Impacto (R$)</th><th>%</th>
+                <th style={{ borderLeft: '1px solid rgba(255,255,255,.06)' }}>Quantidade</th><th>Impacto (R$)</th>
               </tr>
             </thead>
             <tbody>
