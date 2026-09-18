@@ -360,10 +360,7 @@ export function CmvTeoricoReal() {
         <div className="bottom-left">
           <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>Resumo das Divergências</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#64748b' }}><span className="dot" style={{ background: '#22c55e' }} />Dentro do padrão: <strong>{foot.okC}</strong></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#64748b' }}><span className="dot" style={{ background: '#f59e0b' }} />Atenção (5% a 15%): <strong>{foot.atenC}</strong></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#64748b' }}><span className="dot" style={{ background: '#e11d48' }} />Crítico (&gt; 15%): <strong>{foot.crit}</strong></div>
-            <div style={{ marginLeft: 12, fontSize: 13, color: '#64748b' }}>Impacto financeiro total: <strong style={{ color: foot.tImp >= 0 ? '#e11d48' : '#16a34a', fontFamily: "'DM Mono', monospace" }}>{brlSigned(foot.tImp)}</strong></div>
+            <div style={{ fontSize: 13, color: '#64748b' }}>Impacto financeiro total: <strong style={{ color: foot.tImp >= 0 ? '#e11d48' : '#16a34a', fontFamily: "'DM Mono', monospace" }}>{brlSigned(foot.tImp)}</strong></div>
           </div>
         </div>
         <div className="bottom-right">
