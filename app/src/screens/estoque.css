@@ -45,7 +45,7 @@
 .est-screen .tbl thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 5; }
 .est-screen .tbl th.r, .est-screen .tbl td.r { text-align: right; }
 .est-screen .tbl th.c, .est-screen .tbl td.c { text-align: center; }
-.est-screen .tbl tbody td { padding: 2px 9px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; line-height: 1.5; }
+.est-screen .tbl tbody td { padding: 4px 9px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; line-height: 1.5; }
 .est-screen .tbl tbody tr:hover td { background: #d0dff2; }
 .est-screen .tbl .mono { font-family: 'DM Mono', monospace; }
 .est-screen .tbl tfoot td { padding: 8px 12px; border-top: 2px solid #e2e8f0; }

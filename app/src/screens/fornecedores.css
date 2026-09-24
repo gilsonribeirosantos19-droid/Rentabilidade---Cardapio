@@ -19,7 +19,7 @@
 .forn-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .forn-screen thead th { background: #f1f5f9; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
 .forn-screen thead th.r { text-align: right; }
-.forn-screen tbody td { padding: 3px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; }
+.forn-screen tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: #0f172a; white-space: nowrap; vertical-align: middle; }
 .forn-screen tbody td.r { text-align: right; }
 .forn-screen tbody tr { cursor: pointer; }
 .forn-screen tbody tr:hover td { background: #d0dff2; }

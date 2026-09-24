@@ -46,7 +46,7 @@
 .mvend-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .mvend-screen thead th { background: #f8fafc; color: #64748b; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 5px 10px; text-align: left; border-bottom: 1px solid #e7ebf0; white-space: nowrap; }
 .mvend-screen thead th.r { text-align: right; } .mvend-screen thead th.c { text-align: center; }
-.mvend-screen tbody td { padding: 3px 10px; border-bottom: 1px solid #f1f5f9; color: #0f172a; white-space: nowrap; line-height: 1.6; }
+.mvend-screen tbody td { padding: 4px 10px; border-bottom: 1px solid #f1f5f9; color: #0f172a; white-space: nowrap; line-height: 1.6; }
 .mvend-screen tbody td.r { text-align: right; font-family: 'DM Mono', monospace; } .mvend-screen tbody td.c { text-align: center; }
 .mvend-screen tbody tr { cursor: pointer; }
 .mvend-screen tbody tr:hover td { background: #d0dff2; }
