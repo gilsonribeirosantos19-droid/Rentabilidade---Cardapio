@@ -11,6 +11,7 @@ import './cotacao.css'
 
 // Cotação de Compras — compara preços de fornecedores por insumo e gera o(s) pedido(s)
 // pelo menor preço (item a item). Fase 1: você digita os preços (fornecedor responde por WhatsApp).
+// (redeploy trigger)
 type Cotacao = { id: string; titulo?: string; status?: string; prazo_resposta?: string | null; loja_id?: string | null; criado_em?: string; observacao?: string | null }
 type Forn = { id: string; nome?: string; nome_fantasia?: string; razao_social?: string }
 type Insumo = { id: string; nome?: string; unidade_medida?: string }
