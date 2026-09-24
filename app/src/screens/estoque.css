@@ -150,7 +150,7 @@
 .est-screen .inf-tbl thead th { padding: 3px 6px; font-size: 9px; letter-spacing: 0; }
 .est-screen .inf-tbl thead tr:first-child th { top: 0; height: 19px; }
 .est-screen .inf-tbl thead tr:last-child th { top: 19px; }
-.est-screen .inf-tbl tbody td { padding: 1px 6px; font-size: 10px; }
+.est-screen .inf-tbl tbody td { padding: 4px 8px; font-size: 13px; }
 .est-screen .inf-tbl tbody td.r { padding-right: 8px; }
 .est-screen .badge.b-A { background: #fee2e2; color: #e11d48; }
 .est-screen .badge.b-B { background: #ffedd5; color: #f97316; }
