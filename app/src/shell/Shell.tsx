@@ -44,6 +44,7 @@ import { MonitorVendas } from '../screens/MonitorVendas'
 import { EngenhariaCardapio } from '../screens/EngenhariaCardapio'
 import { CurvaAbcVendas } from '../screens/CurvaAbcVendas'
 import { SugestaoCompra } from '../screens/SugestaoCompra'
+import { Cotacao } from '../screens/Cotacao'
 import { ConfigGeral } from '../screens/ConfigGeral'
 import { ConfigParametros } from '../screens/ConfigParametros'
 import { ConfigUsuarios } from '../screens/ConfigUsuarios'
@@ -94,6 +95,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'ajustes/recalcular') return <Recalcular />
   if (k === 'compras/pedidos') return <Compras />
   if (k === 'compras/sugestao') return <SugestaoCompra />
+  if (k === 'compras/cotacao') return <Cotacao />
   if (k === 'config/geral') return <ConfigGeral />
   if (k === 'config/parametros') return <ConfigParametros />
   if (k === 'config/usuarios') return <ConfigUsuarios />

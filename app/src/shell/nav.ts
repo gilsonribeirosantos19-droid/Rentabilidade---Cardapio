@@ -46,6 +46,7 @@ export const MODULES: Module[] = [
     id: 'compras', label: 'Compras', icon: 'cart',
     sections: [
       { label: 'Sugestão de Compras', key: 'compras/sugestao' },
+      { label: 'Cotação de Compras', key: 'compras/cotacao' },
       { label: 'Pedidos de Compra', key: 'compras/pedidos' },
     ],
   },
