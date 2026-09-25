@@ -120,10 +120,11 @@ function NovaCotacao({ tenantId, fornecedores, insumos, onCancel, onCreated, onM
   const itensKey = useMemo(() => [...itemInsIds].sort().join(','), [itemInsIds])
   // pré-seleciona os fornecedores vinculados sempre que a lista de itens muda
   useEffect(() => {
-    const ids = new Set(vinculos.filter((v) => itemInsIds.has(v.insumo_id)).map((v) => v.fornecedor_id))
-    if (ids.size) setFornIds([...ids])
+    const valid = new Set(fornecedores.map((f) => f.id))
+    const ids = [...new Set(vinculos.filter((v) => v.fornecedor_id && itemInsIds.has(v.insumo_id) && valid.has(v.fornecedor_id)).map((v) => v.fornecedor_id))]
+    if (ids.length) setFornIds(ids)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itensKey, vinculos])
+  }, [itensKey, vinculos, fornecedores])
 
   const puxarSolicitacoes = () => {
     if (!sols.length) { onMsg('Nenhuma solicitação pendente das lojas no momento.', 'err'); return }
@@ -158,7 +159,8 @@ function NovaCotacao({ tenantId, fornecedores, insumos, onCancel, onCreated, onM
   const salvar = useMutation({
     mutationFn: async () => {
       if (!itens.length) throw new Error('Puxe as solicitações ou adicione ao menos um item.')
-      if (!fornIds.length) throw new Error('Escolha ao menos um fornecedor para cotar.')
+      const fornSel = [...new Set(fornIds.filter(Boolean))]
+      if (!fornSel.length) throw new Error('Escolha ao menos um fornecedor para cotar.')
       const { data: cot, error } = await supabase.from('cotacoes').insert({
         tenant_id: tenantId, loja_id: null, titulo: titulo.trim() || 'Cotação', status: 'aberta',
         prazo_resposta: prazo || null, origem_sol_ids: solIds.length ? solIds : null,
@@ -167,7 +169,7 @@ function NovaCotacao({ tenantId, fornecedores, insumos, onCancel, onCreated, onM
       const cid = (cot as { id: string }).id
       const ei = await supabase.from('cotacao_itens').insert(itens.map((it) => ({ tenant_id: tenantId, cotacao_id: cid, insumo_id: it.insumo_id, quantidade: it.quantidade, unidade: it.unidade, detalhe_lojas: it.detalhe_lojas })))
       if (ei.error) throw ei.error
-      const ef = await supabase.from('cotacao_fornecedores').insert(fornIds.map((fid) => ({ tenant_id: tenantId, cotacao_id: cid, fornecedor_id: fid })))
+      const ef = await supabase.from('cotacao_fornecedores').insert(fornSel.map((fid) => ({ tenant_id: tenantId, cotacao_id: cid, fornecedor_id: fid })))
       if (ef.error) throw ef.error
       return cid
     },
