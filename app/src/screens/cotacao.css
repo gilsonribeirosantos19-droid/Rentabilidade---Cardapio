@@ -46,6 +46,7 @@
 .cot-in{width:100%;height:36px;border:1px solid #cbd5e1;border-radius:9px;padding:0 11px;font:inherit;font-size:13px;color:#0f172a;background:#fff;font-family:inherit}
 .cot-in:focus{outline:0;border-color:#f97316}
 .cot-muted{color:#94a3b8;font-size:12.5px}
+.cot-linkbtn{background:none;border:0;color:#2563eb;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;text-transform:none;letter-spacing:0}
 
 .cot-chips{display:flex;flex-wrap:wrap;gap:8px}
 .cot-chip{border:1.5px solid #e2e8f0;background:#fff;color:#475569;border-radius:20px;padding:6px 13px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}

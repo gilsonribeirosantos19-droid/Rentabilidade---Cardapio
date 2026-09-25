@@ -112,6 +112,19 @@ function NovaCotacao({ tenantId, fornecedores, insumos, onCancel, onCreated, onM
   const { data: sols = [] } = useQuery({ queryKey: ['cot-sols', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Pedido>((f, t) => supabase.from('pedidos_compra').select('id,loja_id').eq('tenant_id', tenantId).eq('status', 'solicitado').not('loja_id', 'is', null).order('id').range(f, t)) })
   const { data: itensSol = [] } = useQuery({ queryKey: ['cot-solitens', tenantId, sols.map((s) => s.id).join(',')], enabled: !!tenantId && sols.length > 0, queryFn: () => fetchAll<ItemPed>((f, t) => supabase.from('itens_pedido').select('pedido_id,insumo_id,quantidade,unidade').in('pedido_id', sols.map((s) => s.id)).order('id').range(f, t)) })
 
+  // fornecedores VINCULADOS aos insumos da cotação (insumo_fornecedores) — sugeridos automaticamente
+  const { data: vinculos = [] } = useQuery({ queryKey: ['cot-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ insumo_id: string; fornecedor_id: string; principal?: boolean }>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id,principal').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const itemInsIds = useMemo(() => new Set(itens.map((i) => i.insumo_id)), [itens])
+  const relevantForns = useMemo(() => { const ids = new Set(vinculos.filter((v) => itemInsIds.has(v.insumo_id)).map((v) => v.fornecedor_id)); return fornecedores.filter((f) => ids.has(f.id)) }, [vinculos, itemInsIds, fornecedores])
+  const [showAllForns, setShowAllForns] = useState(false)
+  const itensKey = useMemo(() => [...itemInsIds].sort().join(','), [itemInsIds])
+  // pré-seleciona os fornecedores vinculados sempre que a lista de itens muda
+  useEffect(() => {
+    const ids = new Set(vinculos.filter((v) => itemInsIds.has(v.insumo_id)).map((v) => v.fornecedor_id))
+    if (ids.size) setFornIds([...ids])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itensKey, vinculos])
+
   const puxarSolicitacoes = () => {
     if (!sols.length) { onMsg('Nenhuma solicitação pendente das lojas no momento.', 'err'); return }
     const solById = Object.fromEntries(sols.map((s) => [s.id, s]))
@@ -178,13 +191,18 @@ function NovaCotacao({ tenantId, fornecedores, insumos, onCancel, onCreated, onM
           <div className="cot-fg"><label>Título</label><input className="cot-in" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Hortifruti — Semana 39" /></div>
           <div className="cot-fg"><label>Prazo p/ resposta</label><input type="date" className="cot-in" value={prazo} onChange={(e) => setPrazo(e.target.value)} /></div>
 
-          <div className="cot-sec" style={{ marginTop: 16 }}>Fornecedores a cotar *</div>
-          <div className="cot-chips">
-            {fornecedores.length === 0 ? <span className="cot-muted">Nenhum fornecedor cadastrado.</span>
-              : fornecedores.map((f) => (
-                <button key={f.id} className={'cot-chip' + (fornIds.includes(f.id) ? ' on' : '')} onClick={() => toggleForn(f.id)}>{fornNome(f)}</button>
-              ))}
+          <div className="cot-sec" style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Fornecedores a cotar *</span>
+            <button className="cot-linkbtn" onClick={() => setShowAllForns((v) => !v)}>{showAllForns ? '↩ só os sugeridos' : '+ mostrar todos'}</button>
           </div>
+          {!showAllForns && relevantForns.length === 0
+            ? <span className="cot-muted">Nenhum fornecedor vinculado a esses itens. Clique em “mostrar todos” ou cadastre o vínculo em Fornecedores.</span>
+            : <div className="cot-chips">
+                {(showAllForns ? fornecedores : relevantForns).map((f) => (
+                  <button key={f.id} className={'cot-chip' + (fornIds.includes(f.id) ? ' on' : '')} onClick={() => toggleForn(f.id)}>{fornNome(f)}</button>
+                ))}
+              </div>}
+          <div className="cot-muted" style={{ marginTop: 8, fontSize: 11 }}>Já marcamos os fornecedores ligados aos itens. Desmarque quem não quer que cote.</div>
         </div>
 
         <div className="cot-card pad">
