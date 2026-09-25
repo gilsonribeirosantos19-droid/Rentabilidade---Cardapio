@@ -73,7 +73,11 @@
 .cot-map td.item .q{font-size:11.5px;color:#94a3b8;margin-top:2px}
 .cot-map td.c{text-align:center}
 .cot-map td.pc{padding:6px 10px}
+.cot-map td.pc.na{color:#cbd5e1;text-align:center}
 .cot-map td.pc.win{background:rgba(18,161,80,.09);box-shadow:inset 2px 0 0 #12a150}
+.cot-fh{display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.cot-copy{border:0;background:none;cursor:pointer;font-size:12px;padding:2px 4px;border-radius:5px;line-height:1;opacity:.7}
+.cot-copy:hover{opacity:1;background:#e2e8f0}
 .cot-map .best .mono{color:#12a150;font-weight:700}
 .cot-map .best .q{font-size:11px;color:#94a3b8}
 .cot-map tfoot td{padding:12px;font-weight:800;background:#f8fafc;border-top:2px solid #e2e8f0}

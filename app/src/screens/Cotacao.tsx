@@ -248,6 +248,10 @@ function Detalhe({ id, tenantId, fornecedores, insumos, onBack, onMsg }: {
   const { data: cotForns = [] } = useQuery({ queryKey: ['cot-cforns', id], queryFn: async () => { const { data } = await supabase.from('cotacao_fornecedores').select('*').eq('cotacao_id', id).order('id'); return (data ?? []) as CotForn[] } })
   const { data: precos = [] } = useQuery({ queryKey: ['cot-precos', id], queryFn: async () => { const { data } = await supabase.from('cotacao_precos').select('cotacao_item_id,fornecedor_id,preco_unitario').eq('cotacao_id', id); return (data ?? []) as CotPreco[] } })
   const { data: exigirAprovacao = false } = useQuery({ queryKey: ['cot-param-aprov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'compras').eq('chave', 'exigir_aprovacao').limit(1); return (data?.[0]?.valor as string) === 'sim' } })
+  // vínculos insumo↔fornecedor: cada fornecedor só cota os itens que ele fornece
+  const { data: vinculos = [] } = useQuery({ queryKey: ['cot-det-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ insumo_id: string; fornecedor_id: string }>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const eligSet = useMemo(() => new Set(vinculos.filter((v) => v.fornecedor_id).map((v) => v.insumo_id + '|' + v.fornecedor_id)), [vinculos])
+  const elig = (insumoId: string, fornId: string) => eligSet.has(insumoId + '|' + fornId)
 
   const [px, setPx] = useState<Record<string, string>>({})
   useEffect(() => {
@@ -269,32 +273,38 @@ function Detalhe({ id, tenantId, fornecedores, insumos, onBack, onMsg }: {
     const val = (itemId: string, fornId: string) => parseNum(px[itemId + '|' + fornId] ?? '')
     const totals: Record<string, number> = {}; const complete: Record<string, boolean> = {}
     cotForns.forEach((cf) => { totals[cf.fornecedor_id] = 0; complete[cf.fornecedor_id] = true })
-    let bestTotal = 0; const winner: Record<string, string | null> = {}; let semPreco = 0
+    let bestTotal = 0; const winner: Record<string, string | null> = {}; let semForn = 0
     itens.forEach((it) => {
+      const eligs = cotForns.filter((cf) => elig(it.insumo_id, cf.fornecedor_id))
+      if (!eligs.length) { winner[it.id] = null; semForn++; return }   // nenhum fornecedor convidado vende esse item
       let min = Infinity, wf: string | null = null
-      cotForns.forEach((cf) => {
+      eligs.forEach((cf) => {
         const v = val(it.id, cf.fornecedor_id)
         if (v == null) { complete[cf.fornecedor_id] = false; return }
         totals[cf.fornecedor_id] += v * (it.quantidade || 0)
         if (v < min) { min = v; wf = cf.fornecedor_id }
       })
       winner[it.id] = wf
-      if (wf) bestTotal += min * (it.quantidade || 0); else semPreco++
+      if (wf) bestTotal += min * (it.quantidade || 0)
     })
-    const singles = cotForns.filter((cf) => complete[cf.fornecedor_id]).map((cf) => ({ id: cf.fornecedor_id, total: totals[cf.fornecedor_id] })).sort((a, b) => a.total - b.total)
-    return { val, totals, complete, bestTotal, winner, singles, semPreco }
-  }, [px, itens, cotForns])
+    const singles = cotForns.filter((cf) => complete[cf.fornecedor_id] && totals[cf.fornecedor_id] > 0).map((cf) => ({ id: cf.fornecedor_id, total: totals[cf.fornecedor_id] })).sort((a, b) => a.total - b.total)
+    const pend = itens.filter((it) => !winner[it.id]).length
+    return { val, totals, complete, bestTotal, winner, singles, semForn, pend }
+  }, [px, itens, cotForns, eligSet])
 
-  const copyWhats = () => {
-    const linhas = itens.map((it, i) => `${i + 1}. ${insMap[it.insumo_id]?.nome || '—'} — ${it.quantidade.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} ${it.unidade || ''}`).join('\n')
+  // mensagem POR FORNECEDOR — só com os itens que ele fornece
+  const copyWhatsForn = (fornId: string) => {
+    const its = itens.filter((it) => elig(it.insumo_id, fornId))
+    if (!its.length) { onMsg('Esse fornecedor não tem itens vinculados nesta cotação.', 'err'); return }
+    const linhas = its.map((it, i) => `${i + 1}. ${insMap[it.insumo_id]?.nome || '—'} — ${it.quantidade.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} ${it.unidade || ''}`).join('\n')
     const msg = `🧾 Cotação — ${cot?.titulo || ''}\nPrazo p/ resposta: ${fmtData(cot?.prazo_resposta)}\n\nItens:\n${linhas}\n\nPor favor, informe o *preço por unidade* de cada item e o prazo de entrega. Obrigado!\n— enviado pelo Aiko`
-    navigator.clipboard?.writeText(msg).then(() => onMsg('Mensagem copiada! Cole no WhatsApp do fornecedor.', 'ok'), () => onMsg('Não consegui copiar.', 'err'))
+    navigator.clipboard?.writeText(msg).then(() => onMsg(`Mensagem de ${fornNome(fornMap[fornId])} copiada!`, 'ok'), () => onMsg('Não consegui copiar.', 'err'))
   }
 
   const gerarPedido = useMutation({
     mutationFn: async () => {
       if (comp.bestTotal <= 0) throw new Error('Preencha os preços antes de gerar o pedido.')
-      if (comp.semPreco > 0) throw new Error(`${comp.semPreco} item(ns) sem nenhum preço. Preencha ou remova antes de gerar.`)
+      if (comp.pend > 0) throw new Error(`${comp.pend} item(ns) sem preço ou sem fornecedor que venda. Preencha, adicione um fornecedor (ou remova) antes de gerar.`)
       if (!confirm('Gerar o(s) pedido(s) de compra pelo menor preço? As solicitações das lojas serão baixadas.')) throw new Error('__cancel__')
       // agrupa itens vencedores por fornecedor (compra item a item)
       const porForn: Record<string, CotItem[]> = {}
@@ -335,7 +345,6 @@ function Detalhe({ id, tenantId, fornecedores, insumos, onBack, onMsg }: {
           <div className="cot-sub">prazo {fmtData(cot?.prazo_resposta)} · <span className={'cot-badge s-' + (cot?.status || 'aberta')}>{STATUS_LBL[cot?.status || 'aberta']}</span></div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button className="cot-btn" onClick={copyWhats}>📋 Copiar WhatsApp</button>
           {!fechada && <button className="cot-btn pri" disabled={gerarPedido.isPending} onClick={() => gerarPedido.mutate()}>{gerarPedido.isPending ? 'Gerando…' : '✓ Gerar pedido'}</button>}
         </div>
       </div>
@@ -348,7 +357,7 @@ function Detalhe({ id, tenantId, fornecedores, insumos, onBack, onMsg }: {
           <table className="cot-map">
             <thead><tr>
               <th className="item">Insumo</th>
-              {cotForns.map((cf) => <th key={cf.id} className="c">{fornNome(fornMap[cf.fornecedor_id])}</th>)}
+              {cotForns.map((cf) => <th key={cf.id} className="c"><div className="cot-fh"><span>{fornNome(fornMap[cf.fornecedor_id])}</span><button className="cot-copy" title="Copiar a mensagem só com os itens deste fornecedor" onClick={() => copyWhatsForn(cf.fornecedor_id)}>📋</button></div></th>)}
               <th className="c">Melhor</th>
             </tr></thead>
             <tbody>
@@ -360,6 +369,7 @@ function Detalhe({ id, tenantId, fornecedores, insumos, onBack, onMsg }: {
                       <td className="item"><div className="n">{insMap[it.insumo_id]?.nome || '—'}</div><div className="q">{it.quantidade.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} {it.unidade}</div></td>
                       {cotForns.map((cf) => {
                         const k = it.id + '|' + cf.fornecedor_id
+                        if (!elig(it.insumo_id, cf.fornecedor_id)) return <td key={cf.id} className="pc na">—</td>
                         const win = wf === cf.fornecedor_id
                         return (
                           <td key={cf.id} className={'pc' + (win ? ' win' : '')}>
