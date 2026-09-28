@@ -41,7 +41,7 @@ function calcFator(desc: string): number | null {
   return 1
 }
 
-type XmlItem = { descricao: string; codigo: string; unidade: string; quantidade: number; valorUnit: number }
+type XmlItem = { nItem: number; descricao: string; codigo: string; unidade: string; quantidade: number; valorUnit: number }
 function parseNfeXml(xml: string) {
   const doc = new DOMParser().parseFromString(xml, 'text/xml')
   if (doc.querySelector('parsererror')) throw new Error('XML inválido')
@@ -62,7 +62,7 @@ function parseNfeXml(xml: string) {
   const itens: XmlItem[] = []
   doc.querySelectorAll('det').forEach((det) => {
     const prod = det.querySelector('prod'); if (!prod) return
-    itens.push({ descricao: prod.querySelector('xProd')?.textContent?.trim() || '', codigo: prod.querySelector('cProd')?.textContent?.trim() || '', unidade: prod.querySelector('uCom')?.textContent?.trim() || '', quantidade: parseFloat(prod.querySelector('qCom')?.textContent || '0'), valorUnit: parseFloat(prod.querySelector('vUnCom')?.textContent || '0') })
+    itens.push({ nItem: Number(det.getAttribute('nItem')) || (itens.length + 1), descricao: prod.querySelector('xProd')?.textContent?.trim() || '', codigo: prod.querySelector('cProd')?.textContent?.trim() || '', unidade: prod.querySelector('uCom')?.textContent?.trim() || '', quantidade: parseFloat(prod.querySelector('qCom')?.textContent || '0'), valorUnit: parseFloat(prod.querySelector('vUnCom')?.textContent || '0') })
   })
   return { nNF, serie, emitNome, cnpjEmit, cnpjDest, chaveAcesso, dhEmi, vNF, dataVenc, valorTitulo, itens }
 }
@@ -673,8 +673,9 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
         }
         if (!skip) {
           if (!nfeId) nfeId = await criarLote(p, status, lId, dt)
-          const rows = p.itens.map((it, i) => ({ nfe_id: nfeId, tenant_id: tenantId, descricao_nfe: (it.descricao || '').toUpperCase(), codigo_item_fornecedor: it.codigo || null, quantidade: it.quantidade || 0, unidade_nfe: (it.unidade || 'UN').toUpperCase(), valor_unitario: it.valorUnit || 0, valor_total: +((it.quantidade || 0) * (it.valorUnit || 0)).toFixed(2), vinculacao_id: matchedLocal[i] }))
-          const { error } = await supabase.from('nfe_itens').insert(rows); if (error) throw error
+          const rows = p.itens.map((it, i) => ({ nfe_id: nfeId, tenant_id: tenantId, n_item: it.nItem ?? (i + 1), descricao_nfe: (it.descricao || '').toUpperCase(), codigo_item_fornecedor: it.codigo || null, quantidade: it.quantidade || 0, unidade_nfe: (it.unidade || 'UN').toUpperCase(), valor_unitario: it.valorUnit || 0, valor_total: +((it.quantidade || 0) * (it.valorUnit || 0)).toFixed(2), vinculacao_id: matchedLocal[i] }))
+          // upsert por (nfe_id, n_item): trava contra duplicação (duplo clique/corrida) — a 2ª inserção é ignorada
+          const { error } = await supabase.from('nfe_itens').upsert(rows, { onConflict: 'nfe_id,n_item', ignoreDuplicates: true }); if (error) throw error
           if (pendLocal > 0) pend++; else reg++
         }
       } catch (e) { erro++; console.error('lote xml', (e as Error).message) }
@@ -704,8 +705,9 @@ function ImportXmlModal({ tenantId, vinculos, ifv, insumos, fornecedores, lojas,
           await supabase.from('nfe_recebidas').update({ status, loja_id: lojaSel || null, numero: p.nNF || '0', serie: p.serie || '1', nome_emitente: p.emitNome, valor_total: p.vNF || 0, valor_titulo: p.valorTitulo || null, data_vencimento: p.dataVenc || null, data_emissao: p.dhEmi || (data + 'T12:00:00'), fonte: 'upload' }).eq('id', nfeId)
         } else nfeId = await criar(p, status)
       } else nfeId = await criar(p, status)
-      const batch = p.itens.map((it, i) => ({ nfe_id: nfeId, tenant_id: tenantId, descricao_nfe: (it.descricao || '').toUpperCase(), codigo_item_fornecedor: it.codigo || null, quantidade: it.quantidade || 0, unidade_nfe: (it.unidade || 'UN').toUpperCase(), valor_unitario: it.valorUnit || 0, valor_total: +((it.quantidade || 0) * (it.valorUnit || 0)).toFixed(2), vinculacao_id: matched[i] }))
-      const { error } = await supabase.from('nfe_itens').insert(batch); if (error) throw error
+      const batch = p.itens.map((it, i) => ({ nfe_id: nfeId, tenant_id: tenantId, n_item: it.nItem ?? (i + 1), descricao_nfe: (it.descricao || '').toUpperCase(), codigo_item_fornecedor: it.codigo || null, quantidade: it.quantidade || 0, unidade_nfe: (it.unidade || 'UN').toUpperCase(), valor_unitario: it.valorUnit || 0, valor_total: +((it.quantidade || 0) * (it.valorUnit || 0)).toFixed(2), vinculacao_id: matched[i] }))
+      // upsert por (nfe_id, n_item): trava contra duplicação (duplo clique/corrida) — a 2ª inserção é ignorada
+      const { error } = await supabase.from('nfe_itens').upsert(batch, { onConflict: 'nfe_id,n_item', ignoreDuplicates: true }); if (error) throw error
       onToast(pend === 0 ? `NF-e ${p.nNF} registrada e pronta para processar!` : `NF-e ${p.nNF} registrada com ${pend} item(ns) pendente(s).`, 'ok')
       onDone()
     } catch (e: any) {
