@@ -144,7 +144,7 @@ export function Inicio() {
           <div className="sec-title">Comparativo por Loja <span className="sec-sub">— mês atual</span></div>
           <div className="tbl-wrap" style={{ marginBottom: 6 }}>
             <table className="tbl">
-              <thead><tr><th>Loja</th><th className="r">Valor do Estoque</th><th>Compras do Mês</th><th className="r">Matéria-prima</th><th className="r">Outros</th><th className="r">Perdas (R$)</th><th className="r">CMV Real</th><th className="r">Inventários</th></tr></thead>
+              <thead><tr><th>Loja</th><th className="r">Valor do Estoque</th><th>Compras do Mês</th><th className="r">CMV</th><th className="r">Fora do CMV</th><th className="r">Perdas (R$)</th><th className="r">CMV Real</th><th className="r">Inventários</th></tr></thead>
               <tfoot><tr><td>TOTAL GERAL</td><td className="r mono">{brl(tot.val)}</td><td className="mono" style={{ fontSize: 12 }}>{brl(tot.comp)}</td><td className="r mono">{brl(totCmv.cmv)}</td><td className="r mono" style={{ color: '#64748b' }}>{brl(totCmv.total - totCmv.cmv)}</td><td className="r mono">{brl(tot.perd)}</td><td className="r mono">{tot.fat > 0 ? (tot.cons / tot.fat * 100).toFixed(1) + '%' : '—'}</td><td className="r">{tot.inv} / {tot.invT}</td></tr></tfoot>
               <tbody>
                 {lojasFilt.length === 0 ? <tr><td colSpan={8} className="muted" style={{ textAlign: 'center' }}>Sem lojas cadastradas</td></tr>
