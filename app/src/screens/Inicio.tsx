@@ -79,7 +79,6 @@ export function Inicio() {
     }).filter((r) => r.cob !== Infinity)
   }, [insumos, saidasL, saldos, lojaId])
   const criticos = cobertura.filter((r) => r.cob < 30).sort((a, b) => a.cob - b.cob).slice(0, 5)
-  const rupturas = cobertura.filter((r) => r.cob < 7).sort((a, b) => a.cob - b.cob).slice(0, 5)
 
   // ---- Comparativo por loja ----
   const lojasFilt = lojaId ? lojas.filter((l) => l.id === lojaId) : lojas
@@ -144,7 +143,7 @@ export function Inicio() {
           <div className="sec-title">Comparativo por Loja <span className="sec-sub">— mês atual</span></div>
           <div className="tbl-wrap" style={{ marginBottom: 6 }}>
             <table className="tbl">
-              <thead><tr><th>Loja</th><th className="r">Valor do Estoque</th><th>Compras do Mês</th><th className="r">CMV</th><th className="r">Fora do CMV</th><th className="r">Perdas (R$)</th><th className="r">CMV Real</th><th className="r">Inventários</th></tr></thead>
+              <thead><tr><th style={{ minWidth: 185 }}>Loja</th><th className="r">Valor do Estoque</th><th>Compras do Mês</th><th className="r">CMV</th><th className="r">Fora do CMV</th><th className="r">Perdas (R$)</th><th className="r">CMV Real</th><th className="r">Inventários</th></tr></thead>
               <tfoot><tr><td>TOTAL GERAL</td><td className="r mono">{brl(tot.val)}</td><td className="mono" style={{ fontSize: 12 }}>{brl(tot.comp)}</td><td className="r mono">{brl(totCmv.cmv)}</td><td className="r mono" style={{ color: '#64748b' }}>{brl(totCmv.total - totCmv.cmv)}</td><td className="r mono">{brl(tot.perd)}</td><td className="r mono">{tot.fat > 0 ? (tot.cons / tot.fat * 100).toFixed(1) + '%' : '—'}</td><td className="r">{tot.inv} / {tot.invT}</td></tr></tfoot>
               <tbody>
                 {lojasFilt.length === 0 ? <tr><td colSpan={8} className="muted" style={{ textAlign: 'center' }}>Sem lojas cadastradas</td></tr>
@@ -156,7 +155,7 @@ export function Inicio() {
                     const barPct = maxComp > 0 ? Math.round(compMes / maxComp * 100) : 0
                     return (
                       <tr key={loja.id}>
-                        <td><span className="loja-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>{loja.nome}</td>
+                        <td style={{ whiteSpace: 'nowrap' }}><span className="loja-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>{loja.nome}</td>
                         <td className="r mono">{brl(a.valor_estoque)}</td>
                         <td><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div className="mini-bar-wrap"><div className="mini-bar" style={{ width: barPct + '%', background: compMes > 0 ? '#22c55e' : '#e2e8f0' }} /></div><span className="mono" style={{ fontSize: 12 }}>{brl(compMes)}</span></div></td>
                         <td className="r mono">{brl(cc.cmv)}</td>
@@ -199,12 +198,6 @@ export function Inicio() {
             <div className="rp-title">Estoque Crítico (Cobertura)</div>
             {criticos.length === 0 ? <div className="muted">Nenhum item crítico</div>
               : criticos.map((r) => <div key={r.ins.id} className="crit-row"><span className="crit-nome">{r.ins.nome}</span><span className="crit-dias" style={{ color: covColor(r.cob) }}>{covTxt(r.cob)}</span></div>)}
-          </div>
-
-          <div className="right-panel">
-            <div className="rp-title">Ruptura Prevista</div>
-            {rupturas.length === 0 ? <div className="muted">Nenhuma ruptura prevista</div>
-              : rupturas.map((r) => { const d = r.cob; const txt = d < 1 ? 'hoje' : d < 2 ? 'amanhã' : d < 3 ? 'em 1 dia' : `em ${Math.floor(d)} dias`; const color = d < 3 ? '#e11d48' : d < 5 ? '#f97316' : '#f59e0b'; return <div key={r.ins.id} className="crit-row"><span className="crit-nome">{r.ins.nome}</span><span className="crit-dias" style={{ color }}>{txt}</span></div> })}
           </div>
         </div>
       </div>
