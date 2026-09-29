@@ -5,7 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import './inicio.css'
 
-type Insumo = { id: string; nome: string }
+type Insumo = { id: string; nome: string; participa_cmv?: string }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number; minimo?: number | null }
 type Mov = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_total?: number; tipo?: string; motivo?: string | null; criado_em?: string }
 type Inv = { loja_id?: string | null; status?: string }
@@ -20,7 +20,7 @@ export function Inicio() {
   const iniMesISO = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
   const iniMesDia = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
 
-  const { data: insumos = [] } = useQuery({ queryKey: ['inc-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['inc-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,participa_cmv').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['inc-saldos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('*').eq('tenant_id', tenantId).order('insumo_id').order('id').range(f, t)) })
   const { data: entradas = [] } = useQuery({ queryKey: ['inc-entradas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,loja_id,quantidade,custo_total,tipo,criado_em').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
   const { data: saidas = [] } = useQuery({ queryKey: ['inc-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,loja_id,quantidade,tipo,motivo,criado_em').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
@@ -87,6 +87,21 @@ export function Inicio() {
   const maxComp = Math.max(...lojasFilt.map((l) => Number(aggMap[l.id]?.compras_mes) || 0), 1)
   const tot = lojasFilt.reduce((t, l) => { const a = aggMap[l.id] || {}; t.val += +(a.valor_estoque || 0); t.comp += +(a.compras_mes || 0); t.perd += +(a.perdas_mes || 0); t.cons += +(a.consumo_mes || 0); t.fat += +(a.fat_mes || 0); t.inv += +(a.inv_ativos || 0); t.invT += +(a.inv_total || 0); return t }, { val: 0, comp: 0, perd: 0, cons: 0, fat: 0, inv: 0, invT: 0 })
 
+  // Compras do mês separadas: CMV (matéria-prima, participa_cmv != 'nao') × outros (embalagem/limpeza/EPI…)
+  const compCmv = useMemo(() => {
+    const im = new Date(now.getFullYear(), now.getMonth(), 1)
+    const cmvSet = new Set(insumos.filter((i) => (i.participa_cmv ?? 'sim') !== 'nao').map((i) => i.id))
+    const m: Record<string, { cmv: number; total: number }> = {}
+    entradas.forEach((e) => {
+      if (!e.criado_em || new Date(e.criado_em) < im) return
+      const o = (m[e.loja_id || ''] = m[e.loja_id || ''] || { cmv: 0, total: 0 })
+      const v = e.custo_total || 0; o.total += v; if (cmvSet.has(e.insumo_id)) o.cmv += v
+    })
+    return m
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entradas, insumos])
+  const totCmv = lojasFilt.reduce((s, l) => { const c = compCmv[l.id] || { cmv: 0, total: 0 }; s.cmv += c.cmv; s.total += c.total; return s }, { cmv: 0, total: 0 })
+
   const covTxt = (d: number) => d < 1 ? `${(d * 24).toFixed(0)}h` : `${d.toFixed(1)} dia${d >= 2 ? 's' : ''}`
   const covColor = (d: number) => d < 2 ? '#e11d48' : d < 7 ? '#f97316' : '#f59e0b'
 
@@ -130,11 +145,12 @@ export function Inicio() {
           <div className="tbl-wrap" style={{ marginBottom: 6 }}>
             <table className="tbl">
               <thead><tr><th>Loja</th><th className="r">Valor do Estoque</th><th>Compras do Mês</th><th className="r">Perdas (R$)</th><th className="r">CMV Real</th><th className="r">Inventários</th></tr></thead>
-              <tfoot><tr><td>TOTAL GERAL</td><td className="r mono">{brl(tot.val)}</td><td className="mono" style={{ fontSize: 12 }}>{brl(tot.comp)}</td><td className="r mono">{brl(tot.perd)}</td><td className="r mono">{tot.fat > 0 ? (tot.cons / tot.fat * 100).toFixed(1) + '%' : '—'}</td><td className="r">{tot.inv} / {tot.invT}</td></tr></tfoot>
+              <tfoot><tr><td>TOTAL GERAL</td><td className="r mono">{brl(tot.val)}</td><td className="mono" style={{ fontSize: 12 }}>{brl(tot.comp)}{totCmv.total > 0 && <div className="muted" style={{ fontSize: 10.5, fontWeight: 400 }}>Matéria-prima {brl(totCmv.cmv)} · outros {brl(totCmv.total - totCmv.cmv)}</div>}</td><td className="r mono">{brl(tot.perd)}</td><td className="r mono">{tot.fat > 0 ? (tot.cons / tot.fat * 100).toFixed(1) + '%' : '—'}</td><td className="r">{tot.inv} / {tot.invT}</td></tr></tfoot>
               <tbody>
                 {lojasFilt.length === 0 ? <tr><td colSpan={6} className="muted" style={{ textAlign: 'center' }}>Sem lojas cadastradas</td></tr>
                   : lojasFilt.map((loja) => {
                     const a = aggMap[loja.id] || {}
+                    const cc = compCmv[loja.id] || { cmv: 0, total: 0 }
                     const compMes = +(a.compras_mes || 0), perdMes = +(a.perdas_mes || 0), fat = +(a.fat_mes || 0), cons = +(a.consumo_mes || 0)
                     const cmv = fat > 0 ? (cons / fat * 100).toFixed(1) : '—'
                     const barPct = maxComp > 0 ? Math.round(compMes / maxComp * 100) : 0
@@ -142,7 +158,7 @@ export function Inicio() {
                       <tr key={loja.id}>
                         <td><span className="loja-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>{loja.nome}</td>
                         <td className="r mono">{brl(a.valor_estoque)}</td>
-                        <td><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div className="mini-bar-wrap"><div className="mini-bar" style={{ width: barPct + '%', background: compMes > 0 ? '#22c55e' : '#e2e8f0' }} /></div><span className="mono" style={{ fontSize: 12 }}>{brl(compMes)}</span></div></td>
+                        <td><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div className="mini-bar-wrap"><div className="mini-bar" style={{ width: barPct + '%', background: compMes > 0 ? '#22c55e' : '#e2e8f0' }} /></div><span className="mono" style={{ fontSize: 12 }}>{brl(compMes)}</span></div>{cc.total > 0 && <div className="muted" style={{ fontSize: 10.5, marginTop: 2 }}>Matéria-prima {brl(cc.cmv)} · outros {brl(cc.total - cc.cmv)}</div>}</td>
                         <td className="r mono" style={{ color: perdMes > 0 ? '#e11d48' : undefined }}>{brl(perdMes)}</td>
                         <td className="r mono">{cmv !== '—' ? cmv + '%' : '—'}</td>
                         <td className="r" style={{ color: (+(a.inv_ativos || 0)) > 0 ? '#f97316' : '#94a3b8', fontWeight: 600 }}>{+(a.inv_ativos || 0)} / {+(a.inv_total || 0)}</td>
