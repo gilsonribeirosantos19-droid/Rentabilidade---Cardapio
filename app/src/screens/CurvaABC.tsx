@@ -22,16 +22,16 @@ export function CurvaABC() {
   const { data: insumos = [], isLoading } = useQuery({ queryKey: ['abc-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: saldosRaw = [] } = useQuery({ queryKey: ['abc-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).order('id').range(f, t)) })
 
-  // agrega saldo por insumo (soma qtd, média do custo médio entre lojas) respeitando a loja
+  // valor em estoque por insumo = SOMA, loja a loja, de (quantidade × custo médio da loja).
+  // (antes fazia qtd_total × custo_médio_médio — errado: explode quando o custo varia entre lojas)
   const saldoMap = useMemo(() => {
-    const m: Record<string, { q: number; cm: number; n: number }> = {}
-    saldosRaw.filter((s) => !lojaId || s.loja_id === lojaId).forEach((s) => { const e = (m[s.insumo_id] ||= { q: 0, cm: 0, n: 0 }); e.q += Number(s.quantidade) || 0; e.cm += Number(s.custo_medio) || 0; e.n++ })
-    Object.values(m).forEach((e) => { if (e.n > 1) e.cm /= e.n })
+    const m: Record<string, { val: number; q: number }> = {}
+    saldosRaw.filter((s) => !lojaId || s.loja_id === lojaId).forEach((s) => { const e = (m[s.insumo_id] ||= { val: 0, q: 0 }); const q = Number(s.quantidade) || 0; e.q += q; e.val += q * (Number(s.custo_medio) || 0) })
     return m
   }, [saldosRaw, lojaId])
 
   const { todos, cats } = useMemo(() => {
-    const valTodos = insumos.map((i) => { const s = saldoMap[i.id] || { q: 0, cm: 0 }; return { id: i.id, nome: i.nome, cat: i.categoria || '—', val: s.q * s.cm } }).sort((a, b) => b.val - a.val)
+    const valTodos = insumos.map((i) => { const s = saldoMap[i.id] || { val: 0 }; return { id: i.id, nome: i.nome, cat: i.categoria || '—', val: s.val } }).sort((a, b) => b.val - a.val)
     const totalV = valTodos.reduce((s, v) => s + v.val, 0) || 1
     let acum = 0
     const withClasse = valTodos.map((v, i) => { const pct = v.val / totalV * 100; acum += pct; const cl = acum <= 80 ? 'A' : acum <= 95 ? 'B' : 'C'; return { ...v, idx: i + 1, pct, acum, cl } })
