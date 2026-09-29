@@ -144,10 +144,10 @@ export function Inicio() {
           <div className="sec-title">Comparativo por Loja <span className="sec-sub">— mês atual</span></div>
           <div className="tbl-wrap" style={{ marginBottom: 6 }}>
             <table className="tbl">
-              <thead><tr><th>Loja</th><th className="r">Valor do Estoque</th><th>Compras do Mês</th><th className="r">Perdas (R$)</th><th className="r">CMV Real</th><th className="r">Inventários</th></tr></thead>
-              <tfoot><tr><td>TOTAL GERAL</td><td className="r mono">{brl(tot.val)}</td><td className="mono" style={{ fontSize: 12 }}>{brl(tot.comp)}{totCmv.total > 0 && <div className="muted" style={{ fontSize: 10.5, fontWeight: 400 }}>Matéria-prima {brl(totCmv.cmv)} · outros {brl(totCmv.total - totCmv.cmv)}</div>}</td><td className="r mono">{brl(tot.perd)}</td><td className="r mono">{tot.fat > 0 ? (tot.cons / tot.fat * 100).toFixed(1) + '%' : '—'}</td><td className="r">{tot.inv} / {tot.invT}</td></tr></tfoot>
+              <thead><tr><th>Loja</th><th className="r">Valor do Estoque</th><th>Compras do Mês</th><th className="r">Matéria-prima</th><th className="r">Outros</th><th className="r">Perdas (R$)</th><th className="r">CMV Real</th><th className="r">Inventários</th></tr></thead>
+              <tfoot><tr><td>TOTAL GERAL</td><td className="r mono">{brl(tot.val)}</td><td className="mono" style={{ fontSize: 12 }}>{brl(tot.comp)}</td><td className="r mono">{brl(totCmv.cmv)}</td><td className="r mono" style={{ color: '#64748b' }}>{brl(totCmv.total - totCmv.cmv)}</td><td className="r mono">{brl(tot.perd)}</td><td className="r mono">{tot.fat > 0 ? (tot.cons / tot.fat * 100).toFixed(1) + '%' : '—'}</td><td className="r">{tot.inv} / {tot.invT}</td></tr></tfoot>
               <tbody>
-                {lojasFilt.length === 0 ? <tr><td colSpan={6} className="muted" style={{ textAlign: 'center' }}>Sem lojas cadastradas</td></tr>
+                {lojasFilt.length === 0 ? <tr><td colSpan={8} className="muted" style={{ textAlign: 'center' }}>Sem lojas cadastradas</td></tr>
                   : lojasFilt.map((loja) => {
                     const a = aggMap[loja.id] || {}
                     const cc = compCmv[loja.id] || { cmv: 0, total: 0 }
@@ -158,7 +158,9 @@ export function Inicio() {
                       <tr key={loja.id}>
                         <td><span className="loja-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></span>{loja.nome}</td>
                         <td className="r mono">{brl(a.valor_estoque)}</td>
-                        <td><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div className="mini-bar-wrap"><div className="mini-bar" style={{ width: barPct + '%', background: compMes > 0 ? '#22c55e' : '#e2e8f0' }} /></div><span className="mono" style={{ fontSize: 12 }}>{brl(compMes)}</span></div>{cc.total > 0 && <div className="muted" style={{ fontSize: 10.5, marginTop: 2 }}>Matéria-prima {brl(cc.cmv)} · outros {brl(cc.total - cc.cmv)}</div>}</td>
+                        <td><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div className="mini-bar-wrap"><div className="mini-bar" style={{ width: barPct + '%', background: compMes > 0 ? '#22c55e' : '#e2e8f0' }} /></div><span className="mono" style={{ fontSize: 12 }}>{brl(compMes)}</span></div></td>
+                        <td className="r mono">{brl(cc.cmv)}</td>
+                        <td className="r mono" style={{ color: '#64748b' }}>{brl(cc.total - cc.cmv)}</td>
                         <td className="r mono" style={{ color: perdMes > 0 ? '#e11d48' : undefined }}>{brl(perdMes)}</td>
                         <td className="r mono">{cmv !== '—' ? cmv + '%' : '—'}</td>
                         <td className="r" style={{ color: (+(a.inv_ativos || 0)) > 0 ? '#f97316' : '#94a3b8', fontWeight: 600 }}>{+(a.inv_ativos || 0)} / {+(a.inv_total || 0)}</td>
