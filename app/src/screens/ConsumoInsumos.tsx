@@ -17,7 +17,7 @@ const CMP_LBL: Record<string, string> = { nenhuma: 'Nenhuma comparação', anter
 const CMP_VAL: Record<string, string> = { 'Nenhuma comparação': 'nenhuma', 'Período anterior': 'anterior', 'Mesmo período do ano anterior': 'ano_anterior' }
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; categoria?: string; preco_compra?: number; ativo?: boolean }
-type Saida = { insumo_id: string; quantidade?: number; criado_em?: string }
+type Saida = { insumo_id: string; quantidade?: number; criado_em?: string; tipo?: string }
 type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
 type Forn = { id: string; nome: string }
 // 1º dia do mês SEGUINTE a 'YYYY-MM' — pra filtrar com "< proxMes" (evita datas inválidas tipo 2026-04-31)
@@ -74,11 +74,11 @@ export function ConsumoInsumos() {
   const { data: vincs = [] } = useQuery({ queryKey: ['ci-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,fornecedor_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: saidas = [], isLoading } = useQuery({
     queryKey: ['ci-sai', tenantId, lojaId, periodo.de, periodo.ate], enabled: !!tenantId,
-    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', periodo.de + '-01').lt('criado_em', proxMes1(periodo.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('id').range(f, t) }),
+    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em,tipo').eq('tenant_id', tenantId).gte('criado_em', periodo.de + '-01').lt('criado_em', proxMes1(periodo.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('id').range(f, t) }),
   })
   const { data: saidasCmp = [] } = useQuery({
     queryKey: ['ci-saiC', tenantId, lojaId, cmpP?.de, cmpP?.ate], enabled: !!tenantId && !!cmpP,
-    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lt('criado_em', proxMes1(cmpP!.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('id').range(f, t) }),
+    queryFn: () => fetchAll<Saida>((f, t) => { let q = supabase.from('saidas_estoque').select('insumo_id,quantidade,criado_em,tipo').eq('tenant_id', tenantId).gte('criado_em', cmpP!.de + '-01').lt('criado_em', proxMes1(cmpP!.ate)); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('id').range(f, t) }),
   })
 
   // custo RESPEITANDO a loja global: loja selecionada → custo dela; "Todas" → maior; senão preço de compra.
@@ -90,7 +90,7 @@ export function ConsumoInsumos() {
   }
   const cats = useMemo(() => [...new Set(insumos.map((i) => i.categoria).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'pt-BR')), [insumos])
 
-  const { rows, resumo } = useMemo(() => {
+  const { rows, resumo, breakdown } = useMemo(() => {
     const insForn = forn ? new Set(vincs.filter((v) => v.fornecedor_id === forn).map((v) => v.insumo_id)) : null
     let insFilt = insumos.filter((i) => i.ativo !== false)
     if (grupo) insFilt = insFilt.filter((i) => (i.categoria || '') === grupo)
@@ -115,7 +115,18 @@ export function ConsumoInsumos() {
       return { ins, porMes, total, media, cmpTotal, dif, difPct }
     }).filter(Boolean) as { ins: Insumo; porMes: number[]; total: number; media: number; cmpTotal: number | null; dif: number | null; difPct: number | null }[]
     evRows.sort((a, b) => b.total - a.total)
-    return { rows: evRows, resumo: resumoData }
+    // quebra do consumo real (R$): lançado (consumo) + ajuste de inventário + perdas — exclui transferência
+    const PERDA = new Set(['perda', 'vencimento', 'descarte'])
+    const breakdown = insFilt.map((ins) => {
+      const c = custo(ins.id); let lanc = 0, aju = 0, perda = 0
+      saidas.filter((s) => s.insumo_id === ins.id).forEach((s) => {
+        const q = Number(s.quantidade) || 0, tp = s.tipo || 'consumo'
+        if (tp === 'transferencia') return
+        if (tp === 'ajuste') aju += q; else if (PERDA.has(tp)) perda += q; else lanc += q
+      })
+      return { ins, lanc: lanc * c, aju: aju * c, perda: perda * c, real: (lanc + aju + perda) * c }
+    }).filter((r) => r.real !== 0).sort((a, b) => b.real - a.real)
+    return { rows: evRows, resumo: resumoData, breakdown }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [insumos, saidas, saidasCmp, meses, modo, grupo, forn, busca, vincs, saldos, compara])
 
@@ -150,6 +161,7 @@ export function ConsumoInsumos() {
   const totalValorGeral = resumo.reduce((s, r) => s + r.totalValor, 0)
   const chartData = { labels: meses.map((m) => m.label), qtd: meses.map((_, i) => resumo.reduce((s, r) => s + (r.porMesQtd[i] || 0), 0)), valor: meses.map((_, i) => resumo.reduce((s, r) => s + (r.porMesQtd[i] || 0) * r.cust, 0)) }
   const pct = (v: number, tot: number) => tot > 0 ? (v / tot * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%' : '–'
+  const bdTot = breakdown.reduce((t, r) => { t.lanc += r.lanc; t.aju += r.aju; t.perda += r.perda; t.real += r.real; return t }, { lanc: 0, aju: 0, perda: 0, real: 0 })
   const seg = (on: boolean) => (on ? 'on' : '')
 
   return (
@@ -231,6 +243,29 @@ export function ConsumoInsumos() {
             <ResumoCard titulo="Maior impacto financeiro (R$)" top={top} setTop={setTop} onVerTodos={() => setSub('consumo')}
               rows={finArr.slice(0, top === 0 ? finArr.length : top).map((r, i) => ({ i, nome: r.ins.nome, val: brl(r.totalValor), pct: pct(r.totalValor, totalValorGeral) }))} colVal="VALOR CONSUMIDO" />
           </div>
+          <div className="ci-card" style={{ marginBottom: 14 }}>
+            <div style={{ fontWeight: 700, color: '#0f172a' }}>Consumo real do período <span style={{ color: '#94a3b8', fontWeight: 500, fontSize: 12 }}>lançado + ajuste do inventário + perdas</span></div>
+            {bdTot.aju > 0 && <div style={{ fontSize: 12.5, color: '#0b7fd4', margin: '6px 0 4px' }}>O inventário corrigiu <b>{brl(bdTot.aju)}</b> ({(bdTot.aju / (bdTot.real || 1) * 100).toFixed(1)}%) de consumo que não tinha baixa lançada.</div>}
+            <div className="tbl-scroll" style={{ marginTop: 8 }}>
+              <table className="tbl">
+                <thead><tr><th>Insumo</th><th className="r">Consumo lançado</th><th className="r">+ Ajuste inventário</th><th className="r">+ Perdas</th><th className="r">= Consumo real</th></tr></thead>
+                <tbody>
+                  {breakdown.slice(0, 50).map((r) => (
+                    <tr key={r.ins.id}>
+                      <td>{r.ins.nome}</td>
+                      <td className="r mono" style={{ color: '#64748b' }}>{r.lanc ? brl(r.lanc) : '–'}</td>
+                      <td className="r mono" style={{ color: r.aju ? '#0b7fd4' : '#cbd5e1', fontWeight: r.aju ? 600 : 400 }}>{r.aju ? '+ ' + brl(r.aju) : '–'}</td>
+                      <td className="r mono" style={{ color: r.perda ? '#e11d48' : '#cbd5e1' }}>{r.perda ? '+ ' + brl(r.perda) : '–'}</td>
+                      <td className="r mono" style={{ fontWeight: 800 }}>{brl(r.real)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot><tr><td style={{ fontWeight: 700 }}>Total</td><td className="r mono" style={{ fontWeight: 700 }}>{brl(bdTot.lanc)}</td><td className="r mono" style={{ fontWeight: 700, color: '#0b7fd4' }}>+ {brl(bdTot.aju)}</td><td className="r mono" style={{ fontWeight: 700, color: '#e11d48' }}>+ {brl(bdTot.perda)}</td><td className="r mono" style={{ fontWeight: 800 }}>{brl(bdTot.real)}</td></tr></tfoot>
+              </table>
+            </div>
+            <div style={{ color: '#94a3b8', fontSize: 11.5, marginTop: 8 }}>Transferências entre lojas não entram (não é consumo). Valores em R$ (quantidade × custo médio).</div>
+          </div>
+
           <div className="ci-card" style={{ marginBottom: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
               <div style={{ fontWeight: 700, color: '#0f172a' }}>Evolução do consumo <span style={{ color: '#94a3b8', fontWeight: 500, fontSize: 12 }}>(total do período)</span></div>
