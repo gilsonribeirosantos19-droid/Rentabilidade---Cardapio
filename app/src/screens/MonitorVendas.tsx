@@ -91,7 +91,9 @@ export function MonitorVendas() {
       const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate } })
       if (error) throw error
       if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
-      setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}.`)
+      const diagCan = Array.isArray(data.diag_canais) ? data.diag_canais.join(', ') : '—'
+      const diagCampos = Array.isArray(data.caixa_campos) ? data.caixa_campos.join(', ') : '—'
+      setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}. [canais: ${diagCan}] [campos do caixa: ${diagCampos}]`)
       refetch()
     } catch (e) {
       setMsg('Erro ao puxar: ' + (e as Error).message)
