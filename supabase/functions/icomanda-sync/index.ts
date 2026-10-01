@@ -127,9 +127,14 @@ serve(async (req) => {
     if (!autorizado) return json({ status: 'erro', mensagem: 'Nao autorizado para este tenant.' }, 403)
 
     // lojas do Aiko (deste tenant) — usadas nos dois modos
-    const { data: lojas, error: eL } = await sb.from('lojas').select('id,nome').eq('tenant_id', tenant_id).eq('ativo', true)
+    const { data: lojasAll, error: eL } = await sb.from('lojas').select('id,nome').eq('tenant_id', tenant_id).eq('ativo', true)
     if (eL) throw eL
-    if (!lojas?.length) throw new Error('Nenhuma loja ativa neste tenant.')
+    if (!lojasAll?.length) throw new Error('Nenhuma loja ativa neste tenant.')
+    // FILTRO OPCIONAL por loja: body.loja_ids = [uuid,...]. Vazio/ausente = TODAS (ex.: cron noturno).
+    // Puxar só a(s) loja(s) escolhida(s) deixa a puxada MUITO mais leve (não estoura o tempo em mês inteiro).
+    const lojaIds = Array.isArray((body as Record<string, unknown>).loja_ids) ? ((body as Record<string, unknown>).loja_ids as unknown[]).map(String) : null
+    const lojas = (lojaIds && lojaIds.length) ? lojasAll.filter((l) => lojaIds.includes(l.id)) : lojasAll
+    if (!lojas.length) throw new Error('Loja(s) selecionada(s) não encontrada(s) neste tenant.')
 
     // ===== MODO CONFERÊNCIA (produtos vendidos de UM DIA, AO VIVO — NÃO grava nada) =====
     // body {modo:'conferencia', data:'YYYY-MM-DD'} → retorna, por loja, os produtos daquele dia.

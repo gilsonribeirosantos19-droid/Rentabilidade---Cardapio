@@ -88,7 +88,9 @@ export function MonitorVendas() {
     if (!tenantId || syncing || !de || !ate) return
     setSyncing(true); setMsg('Puxando do iComanda… (dia a dia, pode levar ~1 min)')
     try {
-      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate } })
+      // puxa SÓ a(s) loja(s) selecionada(s) (leve); "Todas" → não envia loja_ids (puxa todas)
+      const lojaIds = (!allSel && lojaSet.size > 0) ? [...lojaSet] : undefined
+      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate, ...(lojaIds ? { loja_ids: lojaIds } : {}) } })
       if (error) throw error
       if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
       const diagCan = Array.isArray(data.diag_canais) ? data.diag_canais.join(', ') : '—'
