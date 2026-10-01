@@ -30,6 +30,19 @@ const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[�
 const STOP = new Set(['das', 'dos', 'de', 'do', 'da', 'pq', 'e', 'com'])
 const toks = (s: string) => norm(s).split(' ').filter((t) => t.length >= 3 && !STOP.has(t))
 
+// CANAL do caixa (mesa/delivery/balcão): procura o valor em QUALQUER campo string do caixa
+// — robusto ao nome do campo (iComanda varia: tipo / tipo_comanda / tipo_caixa…).
+const canalDoCaixa = (c: Record<string, unknown>): string => {
+  for (const val of Object.values(c)) {
+    if (typeof val !== 'string') continue
+    const s = val.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+    if (s === 'mesa' || s === 'salao') return 'Salão'
+    if (s === 'delivery') return 'Delivery'
+    if (s === 'balcao') return 'Balcão'
+  }
+  return 'Outros'
+}
+
 // pega o array de OBJETOS de dentro do "dados" (filiais.listar → filiais; top_vendidos → produtos).
 // ignora arrays de primitivos como "periodo": ["2026-06-01","2026-06-30"].
 const asArray = (d: unknown): any[] => {
@@ -150,6 +163,7 @@ serve(async (req) => {
       let caixaSample: string[] | null = null   // diag: nomes dos campos de um caixa
       let diagCaixas: any[] | null = null       // diag: caixas CRUS (todos os campos) do Centro
       let diagFilial: any = null                // diag: filial CRU (todos os campos) do Centro
+      const diagCanais = new Set<string>()       // diag: canais detectados nos caixas (p/ validar o split)
       for (const dia of dias) {
         try {
           // pacote completo do dia (faturamento.total já traz TODAS as lojas em por_filial)
@@ -184,8 +198,8 @@ serve(async (req) => {
                 if (Number.isFinite(nc)) { cxComandas += nc; temCx = true }
                 if (Number.isFinite(ncan)) cxCanc += ncan
                 // TIPO do caixa (mesa/delivery/balcão) → mesmo rótulo de canal do faturamento.por_tipo
-                const tipoRaw = String(c.tipo_comanda ?? c.tipo ?? c.canal ?? c.tipo_caixa ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-                const canalC = tipoRaw === 'mesa' ? 'Salão' : tipoRaw === 'delivery' ? 'Delivery' : tipoRaw === 'balcao' ? 'Balcão' : 'Outros'
+                const canalC = canalDoCaixa(c)
+                diagCanais.add(canalC)
                 const turnoC = isAlmo ? 'almoco' : 'jantar'
                 const k = `${canalC}|${turnoC}`
                 ctMap.set(k, (ctMap.get(k) || 0) + v)
@@ -254,7 +268,7 @@ serve(async (req) => {
           comErro += linhas.length
         }
       }
-      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro, caixa_campos: caixaSample, diag_caixas: diagCaixas, diag_filial: diagFilial, aviso })
+      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro, caixa_campos: caixaSample, diag_canais: [...diagCanais], diag_caixas: diagCaixas, diag_filial: diagFilial, aviso })
     }
 
     // ===== MODO MENSAL (produtos p/ CMV + faturamento cheio): body {competencia} em YYYY-MM =====
