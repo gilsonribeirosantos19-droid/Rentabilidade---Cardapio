@@ -111,6 +111,19 @@ export function VendasDiario() {
         }
         return alm + jan > 0 ? alm / (alm + jan) : null
       }
+      // FATURAMENTO EXATO do caixa p/ (canal, turno) — bate 100% com o iComanda. '' = canal inteiro.
+      const fatExato = (canalName: string, turnoLabel: string): number | null => {
+        if (!ctReal) return null
+        let sum = 0
+        for (const x of ctReal) {
+          if (canalKey(x.canal) !== canalName) continue
+          const isAlmo = String(x.turno).toLowerCase().startsWith('almo')
+          if (turnoLabel === 'Almoço' && !isAlmo) continue
+          if (turnoLabel === 'Jantar' && isAlmo) continue
+          sum += Number(x.faturado) || 0
+        }
+        return sum
+      }
       for (const c of canais) {
         if (canalSel !== 'Todos' && c.canal !== canalSel) continue
         const pcExato = propCanal(c.canal)
@@ -118,7 +131,9 @@ export function VendasDiario() {
         const cf = (Number(c.faturado) || 0) * escala, cd = (Number(c.desconto) || 0) * escala, ct = (Number(c.taxa) || 0) * escala, cc = (Number(c.couvert) || 0) * escala
         const ccom = Number(c.comandas) || 0, cpes = Number(c.pessoas) || 0
         const mk = (turno: string, factor: number) => {
-          const faturado = +(cf * factor).toFixed(2)
+          // faturamento: valor EXATO do caixa quando houver; senão rateio (dia antigo)
+          const fx = fatExato(c.canal, turno)
+          const faturado = fx != null ? +fx.toFixed(2) : +(cf * factor).toFixed(2)
           if (!(faturado > 0)) return
           const comandas = Math.round(ccom * factor)
           out.push({ id: `${r.loja_id}|${r.data}|${c.canal}|${turno}`, loja, data: r.data, canal: c.canal, turno, dMovimento: fmtDia(r.data), comandas, pessoas: Math.round(cpes * factor), faturado, desconto: +(cd * factor).toFixed(2), taxa: +(ct * factor).toFixed(2), couvert: +(cc * factor).toFixed(2), ticket: comandas ? faturado / comandas : 0 })
