@@ -13,7 +13,8 @@ import './faturamento.css'
 // com o caixa. Filtro Turno: "Almoço + Jantar" quebra em 2 linhas; ou Consolidado / Só Almoço / Só Jantar.
 
 type Canal = { canal: string; faturado: number; comandas: number; pessoas: number; desconto: number; taxa: number; couvert: number }
-type RecRow = { loja_id: string; data: string; status: string; faturado?: number; desconto?: number; taxa?: number; couvert?: number; qtd_comandas?: number; pessoas?: number; fat_almoco?: number; fat_jantar?: number; por_canal?: Canal[] | null }
+type CanalTurno = { canal: string; turno: string; faturado: number }
+type RecRow = { loja_id: string; data: string; status: string; faturado?: number; desconto?: number; taxa?: number; couvert?: number; qtd_comandas?: number; pessoas?: number; fat_almoco?: number; fat_jantar?: number; por_canal?: Canal[] | null; por_canal_turno?: CanalTurno[] | null }
 type Row = { id: string; loja: string; data: string; canal: string; turno: string; dMovimento: string; comandas: number; pessoas: number; faturado: number; desconto: number; taxa: number; couvert: number; ticket: number }
 
 const int = (v: number) => v.toLocaleString('pt-BR')
@@ -95,11 +96,25 @@ export function VendasDiario() {
         somaCanal = Number(r.faturado) || 0
       }
       const escala = somaCanal > 0 ? (Number(r.faturado) || 0) / somaCanal : 1
-      // proporção do turno (nível loja, pelos caixas): almoço vs jantar
+      // proporção do turno (nível loja, pelos caixas): almoço vs jantar — fallback quando não há split por canal
       const fa = Number(r.fat_almoco) || 0, fj = Number(r.fat_jantar) || 0
       const propA = fa + fj > 0 ? fa / (fa + fj) : 0
+      // SPLIT REAL por canal (dos caixas): delivery = só jantar, salão separa almoço/jantar certinho.
+      // Ex.: delivery → propCanal('Delivery') = 0 → sem linha de almoço inventada.
+      const ctReal = Array.isArray(r.por_canal_turno) ? r.por_canal_turno : null
+      const propCanal = (canalName: string): number | null => {
+        if (!ctReal) return null
+        let alm = 0, jan = 0
+        for (const x of ctReal) {
+          if (canalKey(x.canal) !== canalName) continue
+          if (String(x.turno).toLowerCase().startsWith('almo')) alm += Number(x.faturado) || 0; else jan += Number(x.faturado) || 0
+        }
+        return alm + jan > 0 ? alm / (alm + jan) : null
+      }
       for (const c of canais) {
         if (canalSel !== 'Todos' && c.canal !== canalSel) continue
+        const pcExato = propCanal(c.canal)
+        const propAc = pcExato != null ? pcExato : propA   // exato (caixa) quando houver; senão rateio da loja
         const cf = (Number(c.faturado) || 0) * escala, cd = (Number(c.desconto) || 0) * escala, ct = (Number(c.taxa) || 0) * escala, cc = (Number(c.couvert) || 0) * escala
         const ccom = Number(c.comandas) || 0, cpes = Number(c.pessoas) || 0
         const mk = (turno: string, factor: number) => {
@@ -110,8 +125,8 @@ export function VendasDiario() {
         }
         if (turnoSel === 'Consolidado') mk('', 1)
         else {
-          if (turnoSel !== 'Só Jantar') mk('Almoço', propA)
-          if (turnoSel !== 'Só Almoço') mk('Jantar', 1 - propA)
+          if (turnoSel !== 'Só Jantar') mk('Almoço', propAc)
+          if (turnoSel !== 'Só Almoço') mk('Jantar', 1 - propAc)
         }
       }
     }
@@ -170,7 +185,7 @@ export function VendasDiario() {
         {msg
           ? <span className="mock-tag" style={{ background: msg.startsWith('Erro') ? '#fee2e2' : '#dcfce7', color: msg.startsWith('Erro') ? '#b91c1c' : '#166534', borderColor: 'transparent' }}>{msg}</span>
           : loading ? <span className="mock-tag">Carregando…</span>
-          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas por dia — faturamento do caixa{showTurno ? ' · turno pelo caixa (rateado por canal)' : ''}</span>}
+          : <span className="mock-tag" style={{ background: '#eef2ff', color: '#3730a3', borderColor: 'transparent' }}>● Vendas por dia — faturamento do caixa{showTurno ? ' · turno real por canal (dos caixas)' : ''}</span>}
       </div>
 
       <div className="grid-wrap">

@@ -168,6 +168,9 @@ serve(async (req) => {
             // COMANDA do CAIXA (bate com o PDV — "Histórico de Aberturas / Detalhamento de Caixa").
             // f.qtd_comandas conta as COMANDAS (maior); o caixa conta as EFETIVAS (fechadas no caixa).
             let fatAlmoco = 0, fatJantar = 0, cxComandas = 0, cxCanc = 0, temCx = false
+            // CANAL × TURNO EXATO (dos caixas): cada caixa já vem marcado com Tipo (mesa/delivery) e Turno.
+            // Alimenta o split real por canal na tela Vendas por Dia (delivery = só jantar, sem rateio chutado).
+            const ctMap = new Map<string, number>()   // chave `${canal}|${turno}` → faturado somado
             try {
               const dc = await ico('caixas.lista', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })
               const cx = (dc && Array.isArray((dc as { caixas?: unknown }).caixas) ? (dc as { caixas: any[] }).caixas : []) as any[]
@@ -175,12 +178,23 @@ serve(async (req) => {
               if (String(loja.nome).toLowerCase().includes('centro')) diagCaixas = cx   // diag: caixas CRUS (todos os campos) do Centro
               for (const c of cx) {
                 const v = Number(c.faturado_caixa_valores) || 0
-                if (String(c.tipo_turno || '').toLowerCase().startsWith('almo')) fatAlmoco += v; else fatJantar += v
+                const isAlmo = String(c.tipo_turno || '').toLowerCase().startsWith('almo')
+                if (isAlmo) fatAlmoco += v; else fatJantar += v
                 const nc = Number(c.qtd_comandas), ncan = Number(c.qtd_canceladas)   // comandas e canceladas DO CAIXA
                 if (Number.isFinite(nc)) { cxComandas += nc; temCx = true }
                 if (Number.isFinite(ncan)) cxCanc += ncan
+                // TIPO do caixa (mesa/delivery/balcão) → mesmo rótulo de canal do faturamento.por_tipo
+                const tipoRaw = String(c.tipo_comanda ?? c.tipo ?? c.canal ?? c.tipo_caixa ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+                const canalC = tipoRaw === 'mesa' ? 'Salão' : tipoRaw === 'delivery' ? 'Delivery' : tipoRaw === 'balcao' ? 'Balcão' : 'Outros'
+                const turnoC = isAlmo ? 'almoco' : 'jantar'
+                const k = `${canalC}|${turnoC}`
+                ctMap.set(k, (ctMap.get(k) || 0) + v)
               }
             } catch { /* sem caixas: turno 0/0 e comanda cai no total do filial */ }
+            // array compacto p/ gravar: [{canal, turno, faturado}] — só quando o caixa trouxe o tipo
+            const porCanalTurno = ctMap.size
+              ? [...ctMap.entries()].map(([k, fat]) => { const [canal, turno] = k.split('|'); return { canal, turno, faturado: +fat.toFixed(2) } })
+              : null
             // CANAL (salão/delivery/balcão): exato, do faturamento.por_tipo
             let porCanal: any[] | null = null
             try {
@@ -211,6 +225,7 @@ serve(async (req) => {
               ticket_medio: Number(f.ticket_medio_comanda) || 0,
               fat_almoco: +fatAlmoco.toFixed(2), fat_jantar: +fatJantar.toFixed(2),
               por_canal: porCanal,
+              por_canal_turno: porCanalTurno,
               fonte: 'icomanda',
               status: 'processado', erros: null, data_integracao: now, atualizado_em: now,
             })
