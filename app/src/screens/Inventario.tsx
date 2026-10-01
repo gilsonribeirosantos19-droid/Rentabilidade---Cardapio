@@ -140,7 +140,8 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
   const [orig, setOrig] = useState<Record<string, string>>({})
   useEffect(() => {
     const c: Record<string, string> = {}
-    itens.forEach((it) => { const v = (it.qtd_contada != null ? it.qtd_contada : (it.qtd_sistema || 0)); c[it.id] = Number(v).toFixed(3) })
+    // vem EM BRANCO: só mostra valor nos itens já contados (qtd_contada salva). Em branco = ainda não contado.
+    itens.forEach((it) => { c[it.id] = it.qtd_contada != null ? Number(it.qtd_contada).toFixed(3) : '' })
     setCounts(c); setOrig(c)
   }, [itens])
 
@@ -148,10 +149,12 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
     .sort((a, b) => (insMap[a.insumo_id]?.nome || '').localeCompare(insMap[b.insumo_id]?.nome || '', 'pt-BR', { sensitivity: 'base' }))   // ordem alfabética por nome
   const rows = visItens.map((it) => {
     const sys = it.qtd_sistema || 0
-    const cnt = parseFloat(counts[it.id] ?? String(it.qtd_contada ?? sys)) || 0
-    const dif = cnt - sys
-    const vDif = dif * (it.custo_medio || 0)
-    return { it, sys, cnt, dif, vDif }
+    const raw = counts[it.id]
+    const contado = raw != null && String(raw).trim() !== '' && !isNaN(parseFloat(raw))
+    const cnt = contado ? parseFloat(raw) : 0
+    const dif = contado ? cnt - sys : null   // em branco (não contado) = sem diferença (não vira −saldo)
+    const vDif = dif == null ? 0 : dif * (it.custo_medio || 0)
+    return { it, sys, cnt, dif, vDif, contado }
   })
   const totalDif = rows.reduce((s, r) => s + r.vDif, 0)
 
@@ -212,18 +215,18 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
           <tbody>
             {isLoading ? <tr><td colSpan={7} className="empty">Carregando…</td></tr>
               : rows.length === 0 ? <tr><td colSpan={7} className="empty">Sem itens.</td></tr>
-              : rows.map(({ it, sys, dif, vDif }) => {
+              : rows.map(({ it, sys, dif, vDif, contado }) => {
                 const ins = insMap[it.insumo_id]; const un = ins?.unidade_medida || ins?.unidade_compra || '—'
-                const cls = dif > 0.001 ? '#16a34a' : dif < -0.001 ? '#e11d48' : '#94a3b8'; const sinal = dif > 0 ? '+' : ''
+                const cls = dif == null ? '#cbd5e1' : dif > 0.001 ? '#16a34a' : dif < -0.001 ? '#e11d48' : '#94a3b8'; const sinal = (dif || 0) > 0 ? '+' : ''
                 return (
                   <tr key={it.id}>
                     <td>{ins?.nome || it.insumo_id}</td>
                     <td style={{ color: '#94a3b8' }}>{un}</td>
                     <td className="r mono">{qtd(sys)}</td>
-                    <td className="r">{isAtivo ? <input type="number" step="0.001" min="0" className="field" style={{ width: 110, height: 32, textAlign: 'right' }} value={counts[it.id] ?? ''} onChange={(e) => setCounts((c) => ({ ...c, [it.id]: e.target.value }))} /> : <span className="mono">{qtd(parseFloat(counts[it.id]) || 0)}</span>}</td>
-                    <td className="r mono" style={{ color: cls }}>{sinal}{qtd(dif)}</td>
+                    <td className="r">{isAtivo ? <input type="number" step="0.001" min="0" className="field" style={{ width: 110, height: 32, textAlign: 'right' }} placeholder="0,000" value={counts[it.id] ?? ''} onChange={(e) => setCounts((c) => ({ ...c, [it.id]: e.target.value }))} /> : <span className="mono">{contado ? qtd(parseFloat(counts[it.id])) : '—'}</span>}</td>
+                    <td className="r mono" style={{ color: cls }}>{dif == null ? '—' : sinal + qtd(dif)}</td>
                     <td className="r mono">{brl(it.custo_medio)}</td>
-                    <td className="r mono" style={{ color: cls }}>{sinal}{brl(vDif)}</td>
+                    <td className="r mono" style={{ color: cls }}>{dif == null ? '—' : sinal + brl(vDif)}</td>
                   </tr>
                 )
               })}
