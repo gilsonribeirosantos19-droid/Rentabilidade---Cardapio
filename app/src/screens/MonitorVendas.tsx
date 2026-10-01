@@ -96,7 +96,13 @@ export function MonitorVendas() {
       setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}. [canais: ${diagCan}] [campos do caixa: ${diagCampos}]`)
       refetch()
     } catch (e) {
-      setMsg('Erro ao puxar: ' + (e as Error).message)
+      // tenta extrair o MOTIVO REAL do corpo da resposta (a msg de invoke é genérica "non-2xx")
+      let real = (e as Error).message
+      try {
+        const ctx = (e as { context?: Response })?.context
+        if (ctx && typeof ctx.json === 'function') { const b = await ctx.json(); if (b?.mensagem) real = b.mensagem }
+      } catch { /* corpo não-json: mantém msg genérica */ }
+      setMsg('Erro ao puxar: ' + real)
     } finally { setSyncing(false) }
   }
 
