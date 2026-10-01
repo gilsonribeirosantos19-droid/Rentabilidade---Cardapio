@@ -184,7 +184,7 @@ serve(async (req) => {
             let fatAlmoco = 0, fatJantar = 0, cxComandas = 0, cxCanc = 0, temCx = false
             // CANAL × TURNO EXATO (dos caixas): cada caixa já vem marcado com Tipo (mesa/delivery) e Turno.
             // Alimenta o split real por canal na tela Vendas por Dia (delivery = só jantar, sem rateio chutado).
-            const ctMap = new Map<string, number>()   // chave `${canal}|${turno}` → faturado somado
+            const ctMap = new Map<string, { fat: number; com: number; pes: number }>()   // `${canal}|${turno}` → faturado+comandas+pessoas (EXATO do caixa)
             try {
               const dc = await ico('caixas.lista', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })
               const cx = (dc && Array.isArray((dc as { caixas?: unknown }).caixas) ? (dc as { caixas: any[] }).caixas : []) as any[]
@@ -197,17 +197,21 @@ serve(async (req) => {
                 const nc = Number(c.qtd_comandas), ncan = Number(c.qtd_canceladas)   // comandas e canceladas DO CAIXA
                 if (Number.isFinite(nc)) { cxComandas += nc; temCx = true }
                 if (Number.isFinite(ncan)) cxCanc += ncan
-                // TIPO do caixa (mesa/delivery/balcão) → mesmo rótulo de canal do faturamento.por_tipo
-                const canalC = canalDoCaixa(c)
+                // CANAL × TURNO EXATO: faturado + comandas EFETIVAS (comandas − canceladas) + pessoas, DO CAIXA
+                const canalC = canalDoCaixa(c)   // procura mesa/delivery/balcão em qualquer campo (robusto)
                 diagCanais.add(canalC)
                 const turnoC = isAlmo ? 'almoco' : 'jantar'
+                const comEf = Math.max(0, (Number.isFinite(nc) ? nc : 0) - (Number.isFinite(ncan) ? ncan : 0))
+                const pes = Number(c.pessoas) || 0
                 const k = `${canalC}|${turnoC}`
-                ctMap.set(k, (ctMap.get(k) || 0) + v)
+                const cur = ctMap.get(k) || { fat: 0, com: 0, pes: 0 }
+                cur.fat += v; cur.com += comEf; cur.pes += pes
+                ctMap.set(k, cur)
               }
             } catch { /* sem caixas: turno 0/0 e comanda cai no total do filial */ }
-            // array compacto p/ gravar: [{canal, turno, faturado}] — só quando o caixa trouxe o tipo
+            // array compacto p/ gravar: [{canal, turno, faturado, comandas, pessoas}] — só quando o caixa trouxe o tipo
             const porCanalTurno = ctMap.size
-              ? [...ctMap.entries()].map(([k, fat]) => { const [canal, turno] = k.split('|'); return { canal, turno, faturado: +fat.toFixed(2) } })
+              ? [...ctMap.entries()].map(([k, o]) => { const [canal, turno] = k.split('|'); return { canal, turno, faturado: +o.fat.toFixed(2), comandas: o.com, pessoas: o.pes } })
               : null
             // CANAL (salão/delivery/balcão): exato, do faturamento.por_tipo
             let porCanal: any[] | null = null

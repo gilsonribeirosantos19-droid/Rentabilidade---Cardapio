@@ -13,7 +13,7 @@ import './faturamento.css'
 // com o caixa. Filtro Turno: "Almoço + Jantar" quebra em 2 linhas; ou Consolidado / Só Almoço / Só Jantar.
 
 type Canal = { canal: string; faturado: number; comandas: number; pessoas: number; desconto: number; taxa: number; couvert: number }
-type CanalTurno = { canal: string; turno: string; faturado: number }
+type CanalTurno = { canal: string; turno: string; faturado: number; comandas?: number; pessoas?: number }
 type RecRow = { loja_id: string; data: string; status: string; faturado?: number; desconto?: number; taxa?: number; couvert?: number; qtd_comandas?: number; pessoas?: number; fat_almoco?: number; fat_jantar?: number; por_canal?: Canal[] | null; por_canal_turno?: CanalTurno[] | null }
 type Row = { id: string; loja: string; data: string; canal: string; turno: string; dMovimento: string; comandas: number; pessoas: number; faturado: number; desconto: number; taxa: number; couvert: number; ticket: number }
 
@@ -111,18 +111,18 @@ export function VendasDiario() {
         }
         return alm + jan > 0 ? alm / (alm + jan) : null
       }
-      // FATURAMENTO EXATO do caixa p/ (canal, turno) — bate 100% com o iComanda. '' = canal inteiro.
-      const fatExato = (canalName: string, turnoLabel: string): number | null => {
+      // EXATO do caixa p/ (canal, turno) — faturado+comandas+pessoas batem 100% com o iComanda. '' = canal inteiro.
+      const exatoCanalTurno = (canalName: string, turnoLabel: string): { fat: number; com: number; pes: number } | null => {
         if (!ctReal) return null
-        let sum = 0
+        let fat = 0, com = 0, pes = 0
         for (const x of ctReal) {
           if (canalKey(x.canal) !== canalName) continue
           const isAlmo = String(x.turno).toLowerCase().startsWith('almo')
           if (turnoLabel === 'Almoço' && !isAlmo) continue
           if (turnoLabel === 'Jantar' && isAlmo) continue
-          sum += Number(x.faturado) || 0
+          fat += Number(x.faturado) || 0; com += Number(x.comandas) || 0; pes += Number(x.pessoas) || 0
         }
-        return sum
+        return { fat, com, pes }
       }
       for (const c of canais) {
         if (canalSel !== 'Todos' && c.canal !== canalSel) continue
@@ -131,12 +131,13 @@ export function VendasDiario() {
         const cf = (Number(c.faturado) || 0) * escala, cd = (Number(c.desconto) || 0) * escala, ct = (Number(c.taxa) || 0) * escala, cc = (Number(c.couvert) || 0) * escala
         const ccom = Number(c.comandas) || 0, cpes = Number(c.pessoas) || 0
         const mk = (turno: string, factor: number) => {
-          // faturamento: valor EXATO do caixa quando houver; senão rateio (dia antigo)
-          const fx = fatExato(c.canal, turno)
-          const faturado = fx != null ? +fx.toFixed(2) : +(cf * factor).toFixed(2)
+          // faturamento/comandas/pessoas: EXATOS do caixa quando houver; senão rateio (dia antigo)
+          const ex = exatoCanalTurno(c.canal, turno)
+          const faturado = ex ? +ex.fat.toFixed(2) : +(cf * factor).toFixed(2)
           if (!(faturado > 0)) return
-          const comandas = Math.round(ccom * factor)
-          out.push({ id: `${r.loja_id}|${r.data}|${c.canal}|${turno}`, loja, data: r.data, canal: c.canal, turno, dMovimento: fmtDia(r.data), comandas, pessoas: Math.round(cpes * factor), faturado, desconto: +(cd * factor).toFixed(2), taxa: +(ct * factor).toFixed(2), couvert: +(cc * factor).toFixed(2), ticket: comandas ? faturado / comandas : 0 })
+          const comandas = ex ? ex.com : Math.round(ccom * factor)
+          const pessoas = ex ? ex.pes : Math.round(cpes * factor)
+          out.push({ id: `${r.loja_id}|${r.data}|${c.canal}|${turno}`, loja, data: r.data, canal: c.canal, turno, dMovimento: fmtDia(r.data), comandas, pessoas, faturado, desconto: +(cd * factor).toFixed(2), taxa: +(ct * factor).toFixed(2), couvert: +(cc * factor).toFixed(2), ticket: comandas ? faturado / comandas : 0 })
         }
         if (turnoSel === 'Consolidado') mk('', 1)
         else {
