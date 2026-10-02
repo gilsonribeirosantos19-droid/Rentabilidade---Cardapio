@@ -100,7 +100,7 @@ export function MonitorVendas() {
       cur = new Date(jFim.getTime() + 86400000)
     }
     const br = (s: string) => s.split('-').reverse().join('/')
-    let proc = 0, erro = 0; const canais = new Set<string>(); let campos: string[] = []; let falhou = ''
+    let falhou = ''
     try {
       for (let i = 0; i < janelas.length; i++) {
         const j = janelas[i]
@@ -109,9 +109,6 @@ export function MonitorVendas() {
           const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: j.ini, data_fim: j.fim, ...(lojaIds ? { loja_ids: lojaIds } : {}) } })
           if (error) throw error
           if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
-          proc += Number(data.processados) || 0; erro += Number(data.com_erro) || 0
-          ;(data.diag_canais || []).forEach((c: string) => canais.add(c))
-          if (!campos.length && Array.isArray(data.caixa_campos)) campos = data.caixa_campos
           refetch()   // atualiza a grade a cada janela concluída
         } catch (e) {
           // motivo real (corpo da resposta); segue pras próximas janelas (não aborta tudo)
@@ -120,15 +117,13 @@ export function MonitorVendas() {
           falhou = real
         }
       }
-      // mensagem final = VERDADE DO BANCO (ignora timeout de janela que já gravou os dias)
+      // mensagem final = VERDADE DO BANCO (um timeout de janela que já gravou os dias não conta como erro)
       const res = await refetch().catch(() => null)
       const rows = ((res?.data || []) as RecRow[]).filter((r) => r.data >= de && r.data <= ate && (!lojaIds || lojaIds.includes(r.loja_id)))
       const okDb = rows.filter((r) => r.status === 'processado').length
       const nLojas = lojaIds ? lojaIds.length : Math.max(1, lojas.length)
       const esperado = diasPeriodo(de, ate).length * nLojas
-      const canaisTxt = `[canais: ${[...canais].join(', ') || '—'}]`
-      void proc; void erro   // (contadores por janela não são confiáveis com timeout; usamos o banco)
-      if (okDb >= esperado) setMsg(`✓ ${okDb} dias processados. ${canaisTxt}`)
+      if (okDb >= esperado) setMsg(`✓ ${okDb} dias processados.`)
       else setMsg(`✓ ${okDb}/${esperado} dias processados. Faltou ${esperado - okDb} — clique de novo pra completar.${falhou ? ` (último aviso: ${falhou})` : ''}`)
     } finally { setSyncing(false) }
   }
