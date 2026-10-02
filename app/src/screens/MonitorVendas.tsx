@@ -142,33 +142,6 @@ export function MonitorVendas() {
       refetch()
     } finally { setSyncing(false) }
   }
-  // DIAGNÓSTICO TEMPORÁRIO: descobre se a API do iComanda aceita filtro por canal (Caminho 1)
-  const [diag, setDiag] = useState('')
-  async function testeCanal() {
-    if (!tenantId || syncing) return
-    setSyncing(true); setMsg('Testando canais no dia 19/09 (pode levar ~30s)…'); setDiag('')
-    try {
-      const lojaIds = (!allSel && lojaSet.size > 0) ? [...lojaSet] : undefined
-      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, modo: 'teste_canal', data: '2026-09-19', produto_id: 3182, ...(lojaIds ? { loja_ids: lojaIds } : {}) } })
-      if (error) throw error
-      if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro')
-      const lines: string[] = []
-      for (const l of (data.lojas || []) as any[]) {
-        lines.push(`${l.loja}: Hot P base = ${l.base_alvo} (total dia ${l.base_total}).`)
-        lines.push(`Parâmetros que o iComanda ACEITOU: ${(l.params_que_funcionam || []).join(', ') || 'NENHUM (API ignora filtro de canal)'}`)
-        for (const p of (l.params_que_funcionam || []) as string[]) {
-          const ts = (l.tentativas || []).filter((t: any) => t.param === p && t.difere_base)
-          const soma = ts.reduce((a: number, t: any) => a + (Number(t.alvo) || 0), 0)
-          lines.push(`  [${p}] ` + ts.map((t: any) => `${t.canal}=${t.alvo}`).join(' · ') + `  → soma Hot P = ${soma}`)
-        }
-      }
-      setDiag(lines.join('\n')); setMsg('')
-    } catch (e) {
-      let real = (e as Error).message
-      try { const ctx = (e as { context?: Response })?.context; if (ctx && typeof ctx.json === 'function') { const b = await ctx.json(); if (b?.mensagem) real = b.mensagem } } catch { /* */ }
-      setMsg('Erro no teste: ' + real)
-    } finally { setSyncing(false) }
-  }
   // motor de puxada conforme o PDV do tenant
   const doPuxar = usaSaipos ? puxarSaipos : puxar
   const puxarLabel = usaSaipos ? 'Puxar do Saipos' : 'Puxar do iComanda'
@@ -250,9 +223,7 @@ export function MonitorVendas() {
         <div className="toolbar">
           <button className="btn-ghost btn-sm" onClick={() => refetch()}>↻ Atualizar</button>
           <button className="btn-ghost btn-sm" onClick={doPuxar} disabled={syncing}>{syncing ? '⏳ Puxando…' : '⇩ Puxar dias do período'}</button>
-          <button className="btn-ghost btn-sm" onClick={testeCanal} disabled={syncing} title="Diagnóstico: testa filtro de canal na API">🔬 Testar canais (diag)</button>
         </div>
-        {diag && <pre style={{ margin: '8px 0', padding: 10, background: '#0f172a', color: '#e2e8f0', fontSize: 12, borderRadius: 6, whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, monospace' }}>{diag}</pre>}
         <div style={{ overflowX: 'auto', maxHeight: 'calc(100vh - 400px)' }}>
           <table>
             <thead>
