@@ -86,25 +86,43 @@ export function MonitorVendas() {
 
   async function puxar() {
     if (!tenantId || syncing || !de || !ate) return
-    setSyncing(true); setMsg('Puxando do iComanda… (dia a dia, pode levar ~1 min)')
+    setSyncing(true)
+    // puxa SÓ a(s) loja(s) selecionada(s) (leve); "Todas" → não envia loja_ids (puxa todas)
+    const lojaIds = (!allSel && lojaSet.size > 0) ? [...lojaSet] : undefined
+    // QUEBRA AUTOMÁTICA: divide o período em janelas de 7 dias → cada chamada fica leve e NÃO estoura o tempo da Edge.
+    const CHUNK = 7
+    const janelas: { ini: string; fim: string }[] = []
+    let cur = new Date(de + 'T12:00:00'); const fimAll = new Date(ate + 'T12:00:00')
+    let g = 0
+    while (cur <= fimAll && g++ < 60) {
+      const jFim = new Date(Math.min(fimAll.getTime(), cur.getTime() + (CHUNK - 1) * 86400000))
+      janelas.push({ ini: cur.toLocaleDateString('en-CA'), fim: jFim.toLocaleDateString('en-CA') })
+      cur = new Date(jFim.getTime() + 86400000)
+    }
+    const br = (s: string) => s.split('-').reverse().join('/')
+    let proc = 0, erro = 0; const canais = new Set<string>(); let campos: string[] = []; let falhou = ''
     try {
-      // puxa SÓ a(s) loja(s) selecionada(s) (leve); "Todas" → não envia loja_ids (puxa todas)
-      const lojaIds = (!allSel && lojaSet.size > 0) ? [...lojaSet] : undefined
-      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate, ...(lojaIds ? { loja_ids: lojaIds } : {}) } })
-      if (error) throw error
-      if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
-      const diagCan = Array.isArray(data.diag_canais) ? data.diag_canais.join(', ') : '—'
-      const diagCampos = Array.isArray(data.caixa_campos) ? data.caixa_campos.join(', ') : '—'
-      setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}. [canais: ${diagCan}] [campos do caixa: ${diagCampos}]`)
+      for (let i = 0; i < janelas.length; i++) {
+        const j = janelas[i]
+        setMsg(`Puxando ${i + 1}/${janelas.length} (${br(j.ini)} a ${br(j.fim)})…`)
+        try {
+          const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: j.ini, data_fim: j.fim, ...(lojaIds ? { loja_ids: lojaIds } : {}) } })
+          if (error) throw error
+          if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
+          proc += Number(data.processados) || 0; erro += Number(data.com_erro) || 0
+          ;(data.diag_canais || []).forEach((c: string) => canais.add(c))
+          if (!campos.length && Array.isArray(data.caixa_campos)) campos = data.caixa_campos
+          refetch()   // atualiza a grade a cada janela concluída
+        } catch (e) {
+          // motivo real (corpo da resposta); segue pras próximas janelas (não aborta tudo)
+          let real = (e as Error).message
+          try { const ctx = (e as { context?: Response })?.context; if (ctx && typeof ctx.json === 'function') { const b = await ctx.json(); if (b?.mensagem) real = b.mensagem } } catch { /* corpo não-json */ }
+          falhou = real
+        }
+      }
+      const resumo = `✓ ${proc} processados${erro ? ` · ${erro} com erro` : ''}. [canais: ${[...canais].join(', ') || '—'}]`
+      setMsg(falhou ? `${resumo} — ⚠️ uma janela falhou: ${falhou}` : resumo)
       refetch()
-    } catch (e) {
-      // tenta extrair o MOTIVO REAL do corpo da resposta (a msg de invoke é genérica "non-2xx")
-      let real = (e as Error).message
-      try {
-        const ctx = (e as { context?: Response })?.context
-        if (ctx && typeof ctx.json === 'function') { const b = await ctx.json(); if (b?.mensagem) real = b.mensagem }
-      } catch { /* corpo não-json: mantém msg genérica */ }
-      setMsg('Erro ao puxar: ' + real)
     } finally { setSyncing(false) }
   }
 
