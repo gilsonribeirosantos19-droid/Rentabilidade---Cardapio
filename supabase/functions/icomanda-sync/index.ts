@@ -136,6 +136,40 @@ serve(async (req) => {
     const lojas = (lojaIds && lojaIds.length) ? lojasAll.filter((l) => lojaIds.includes(l.id)) : lojasAll
     if (!lojas.length) throw new Error('Loja(s) selecionada(s) não encontrada(s) neste tenant.')
 
+    // ===== MODO TESTE_CANAL (diagnóstico — NÃO grava nada) =====
+    // body {modo:'teste_canal', data:'YYYY-MM-DD', produto_id?:number}
+    // Chama top_vendidos SEM filtro (base) e COM cada (param × canal) candidato, p/ descobrir se a API
+    // aceita filtro de canal e qual o nome do parâmetro. Mostra a qtd total e a qtd do produto alvo.
+    if (modo === 'teste_canal') {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dataDia)) throw new Error('Informe data (YYYY-MM-DD) para o teste.')
+      const alvo = Number((body as Record<string, unknown>).produto_id) || 3182   // Hot P por padrão
+      const filiaisDia = asArray(await ico('filiais.listar', { data_ini: dataDia, data_fim: dataDia })) as any[]
+      const { mapa } = matchLojas(lojas, filiaisDia)
+      const paramsTry = ['tipo_comanda', 'tipo_atendimento', 'canal', 'origem']
+      const canaisTry = ['mesa', 'delivery', 'balcao', 'ifood', '99food', 'neemo']
+      const somaQtd = (arr: any[]) => arr.reduce((a, p) => a + (Number(p.qtd) || 0), 0)
+      const qtdAlvo = (arr: any[]) => arr.filter((p) => Number(p.produto_id) === alvo).reduce((a, p) => a + (Number(p.qtd) || 0), 0)
+      const out: any[] = []
+      for (const { loja, filial } of mapa) {
+        const base = asArray(await ico('produtos.top_vendidos', { data_ini: dataDia, data_fim: dataDia, filial_id: String(filial.id), limit: '1000', ordenar_por: 'faturado' }))
+        const baseTot = somaQtd(base), baseAlvo = qtdAlvo(base)
+        const tentativas: any[] = []
+        for (const pname of paramsTry) {
+          for (const cval of canaisTry) {
+            try {
+              const r = asArray(await ico('produtos.top_vendidos', { data_ini: dataDia, data_fim: dataDia, filial_id: String(filial.id), limit: '1000', ordenar_por: 'faturado', [pname]: cval }))
+              const tot = somaQtd(r)
+              tentativas.push({ param: pname, canal: cval, total: tot, alvo: qtdAlvo(r), difere_base: tot !== baseTot })
+            } catch (e) { tentativas.push({ param: pname, canal: cval, erro: String((e as Error).message).slice(0, 60) }) }
+          }
+        }
+        // só mostra os params que REAGIRAM ao filtro (algum canal diferiu da base) — esses funcionam
+        const paramsQueFuncionam = paramsTry.filter((p) => tentativas.some((t) => t.param === p && t.difere_base))
+        out.push({ loja: loja.nome, filial: filial.nome, alvo, base_total: baseTot, base_alvo: baseAlvo, params_que_funcionam: paramsQueFuncionam, tentativas })
+      }
+      return json({ status: 'ok', modo: 'teste_canal', data: dataDia, produto_alvo: alvo, lojas: out })
+    }
+
     // ===== MODO CONFERÊNCIA (produtos vendidos de UM DIA, AO VIVO — NÃO grava nada) =====
     // body {modo:'conferencia', data:'YYYY-MM-DD'} → retorna, por loja, os produtos daquele dia.
     if (modo === 'conferencia') {
