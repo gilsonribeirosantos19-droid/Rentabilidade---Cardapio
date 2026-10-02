@@ -30,6 +30,19 @@ const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[�
 const STOP = new Set(['das', 'dos', 'de', 'do', 'da', 'pq', 'e', 'com'])
 const toks = (s: string) => norm(s).split(' ').filter((t) => t.length >= 3 && !STOP.has(t))
 
+// CANAL do caixa (mesa/delivery/balcão): procura o valor em QUALQUER campo string do caixa
+// — robusto ao nome do campo (iComanda varia: tipo / tipo_comanda / tipo_caixa…).
+const canalDoCaixa = (c: Record<string, unknown>): string => {
+  for (const val of Object.values(c)) {
+    if (typeof val !== 'string') continue
+    const s = val.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+    if (s === 'mesa' || s === 'salao') return 'Salão'
+    if (s === 'delivery') return 'Delivery'
+    if (s === 'balcao') return 'Balcão'
+  }
+  return 'Outros'
+}
+
 // pega o array de OBJETOS de dentro do "dados" (filiais.listar → filiais; top_vendidos → produtos).
 // ignora arrays de primitivos como "periodo": ["2026-06-01","2026-06-30"].
 const asArray = (d: unknown): any[] => {
@@ -114,9 +127,14 @@ serve(async (req) => {
     if (!autorizado) return json({ status: 'erro', mensagem: 'Nao autorizado para este tenant.' }, 403)
 
     // lojas do Aiko (deste tenant) — usadas nos dois modos
-    const { data: lojas, error: eL } = await sb.from('lojas').select('id,nome').eq('tenant_id', tenant_id).eq('ativo', true)
+    const { data: lojasAll, error: eL } = await sb.from('lojas').select('id,nome').eq('tenant_id', tenant_id).eq('ativo', true)
     if (eL) throw eL
-    if (!lojas?.length) throw new Error('Nenhuma loja ativa neste tenant.')
+    if (!lojasAll?.length) throw new Error('Nenhuma loja ativa neste tenant.')
+    // FILTRO OPCIONAL por loja: body.loja_ids = [uuid,...]. Vazio/ausente = TODAS (ex.: cron noturno).
+    // Puxar só a(s) loja(s) escolhida(s) deixa a puxada MUITO mais leve (não estoura o tempo em mês inteiro).
+    const lojaIds = Array.isArray((body as Record<string, unknown>).loja_ids) ? ((body as Record<string, unknown>).loja_ids as unknown[]).map(String) : null
+    const lojas = (lojaIds && lojaIds.length) ? lojasAll.filter((l) => lojaIds.includes(l.id)) : lojasAll
+    if (!lojas.length) throw new Error('Loja(s) selecionada(s) não encontrada(s) neste tenant.')
 
     // ===== MODO CONFERÊNCIA (produtos vendidos de UM DIA, AO VIVO — NÃO grava nada) =====
     // body {modo:'conferencia', data:'YYYY-MM-DD'} → retorna, por loja, os produtos daquele dia.
@@ -150,6 +168,7 @@ serve(async (req) => {
       let caixaSample: string[] | null = null   // diag: nomes dos campos de um caixa
       let diagCaixas: any[] | null = null       // diag: caixas CRUS (todos os campos) do Centro
       let diagFilial: any = null                // diag: filial CRU (todos os campos) do Centro
+      const diagCanais = new Set<string>()       // diag: canais detectados nos caixas (p/ validar o split)
       for (const dia of dias) {
         try {
           // pacote completo do dia (faturamento.total já traz TODAS as lojas em por_filial)
@@ -168,6 +187,9 @@ serve(async (req) => {
             // COMANDA do CAIXA (bate com o PDV — "Histórico de Aberturas / Detalhamento de Caixa").
             // f.qtd_comandas conta as COMANDAS (maior); o caixa conta as EFETIVAS (fechadas no caixa).
             let fatAlmoco = 0, fatJantar = 0, cxComandas = 0, cxCanc = 0, temCx = false
+            // CANAL × TURNO EXATO (dos caixas): cada caixa já vem marcado com Tipo (mesa/delivery) e Turno.
+            // Alimenta o split real por canal na tela Vendas por Dia (delivery = só jantar, sem rateio chutado).
+            const ctMap = new Map<string, { fat: number; com: number; pes: number }>()   // `${canal}|${turno}` → faturado+comandas+pessoas (EXATO do caixa)
             try {
               const dc = await ico('caixas.lista', { data_ini: dia, data_fim: dia, filial_id: String(filial.id) })
               const cx = (dc && Array.isArray((dc as { caixas?: unknown }).caixas) ? (dc as { caixas: any[] }).caixas : []) as any[]
@@ -175,12 +197,27 @@ serve(async (req) => {
               if (String(loja.nome).toLowerCase().includes('centro')) diagCaixas = cx   // diag: caixas CRUS (todos os campos) do Centro
               for (const c of cx) {
                 const v = Number(c.faturado_caixa_valores) || 0
-                if (String(c.tipo_turno || '').toLowerCase().startsWith('almo')) fatAlmoco += v; else fatJantar += v
+                const isAlmo = String(c.tipo_turno || '').toLowerCase().startsWith('almo')
+                if (isAlmo) fatAlmoco += v; else fatJantar += v
                 const nc = Number(c.qtd_comandas), ncan = Number(c.qtd_canceladas)   // comandas e canceladas DO CAIXA
                 if (Number.isFinite(nc)) { cxComandas += nc; temCx = true }
                 if (Number.isFinite(ncan)) cxCanc += ncan
+                // CANAL × TURNO EXATO: faturado + comandas EFETIVAS (comandas − canceladas) + pessoas, DO CAIXA
+                const canalC = canalDoCaixa(c)   // procura mesa/delivery/balcão em qualquer campo (robusto)
+                diagCanais.add(canalC)
+                const turnoC = isAlmo ? 'almoco' : 'jantar'
+                const comEf = Math.max(0, (Number.isFinite(nc) ? nc : 0) - (Number.isFinite(ncan) ? ncan : 0))
+                const pes = Number(c.pessoas) || 0
+                const k = `${canalC}|${turnoC}`
+                const cur = ctMap.get(k) || { fat: 0, com: 0, pes: 0 }
+                cur.fat += v; cur.com += comEf; cur.pes += pes
+                ctMap.set(k, cur)
               }
             } catch { /* sem caixas: turno 0/0 e comanda cai no total do filial */ }
+            // array compacto p/ gravar: [{canal, turno, faturado, comandas, pessoas}] — só quando o caixa trouxe o tipo
+            const porCanalTurno = ctMap.size
+              ? [...ctMap.entries()].map(([k, o]) => { const [canal, turno] = k.split('|'); return { canal, turno, faturado: +o.fat.toFixed(2), comandas: o.com, pessoas: o.pes } })
+              : null
             // CANAL (salão/delivery/balcão): exato, do faturamento.por_tipo
             let porCanal: any[] | null = null
             try {
@@ -211,6 +248,7 @@ serve(async (req) => {
               ticket_medio: Number(f.ticket_medio_comanda) || 0,
               fat_almoco: +fatAlmoco.toFixed(2), fat_jantar: +fatJantar.toFixed(2),
               por_canal: porCanal,
+              por_canal_turno: porCanalTurno,
               fonte: 'icomanda',
               status: 'processado', erros: null, data_integracao: now, atualizado_em: now,
             })
@@ -239,7 +277,7 @@ serve(async (req) => {
           comErro += linhas.length
         }
       }
-      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro, caixa_campos: caixaSample, diag_caixas: diagCaixas, diag_filial: diagFilial, aviso })
+      return json({ status: 'ok', modo: 'dia', data_ini: dDe, data_fim: dAte, dias: dias.length, lojas_casadas: mapa.length, lojas_nao_casadas: naoCasadas, processados, com_erro: comErro, caixa_campos: caixaSample, diag_canais: [...diagCanais], diag_caixas: diagCaixas, diag_filial: diagFilial, aviso })
     }
 
     // ===== MODO MENSAL (produtos p/ CMV + faturamento cheio): body {competencia} em YYYY-MM =====

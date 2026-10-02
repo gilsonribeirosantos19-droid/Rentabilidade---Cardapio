@@ -86,15 +86,45 @@ export function MonitorVendas() {
 
   async function puxar() {
     if (!tenantId || syncing || !de || !ate) return
-    setSyncing(true); setMsg('Puxando do iComanda… (dia a dia, pode levar ~1 min)')
+    setSyncing(true)
+    // puxa SÓ a(s) loja(s) selecionada(s) (leve); "Todas" → não envia loja_ids (puxa todas)
+    const lojaIds = (!allSel && lojaSet.size > 0) ? [...lojaSet] : undefined
+    // QUEBRA AUTOMÁTICA: divide o período em janelas de 5 dias → cada chamada fica leve e NÃO estoura o tempo da Edge.
+    const CHUNK = 5
+    const janelas: { ini: string; fim: string }[] = []
+    let cur = new Date(de + 'T12:00:00'); const fimAll = new Date(ate + 'T12:00:00')
+    let g = 0
+    while (cur <= fimAll && g++ < 60) {
+      const jFim = new Date(Math.min(fimAll.getTime(), cur.getTime() + (CHUNK - 1) * 86400000))
+      janelas.push({ ini: cur.toLocaleDateString('en-CA'), fim: jFim.toLocaleDateString('en-CA') })
+      cur = new Date(jFim.getTime() + 86400000)
+    }
+    const br = (s: string) => s.split('-').reverse().join('/')
+    let falhou = ''
     try {
-      const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: de, data_fim: ate } })
-      if (error) throw error
-      if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
-      setMsg(`✓ ${data.dias} dias · ${data.processados} processados${data.com_erro ? ` · ${data.com_erro} com erro` : ''}.`)
-      refetch()
-    } catch (e) {
-      setMsg('Erro ao puxar: ' + (e as Error).message)
+      for (let i = 0; i < janelas.length; i++) {
+        const j = janelas[i]
+        setMsg(`Puxando ${i + 1}/${janelas.length} (${br(j.ini)} a ${br(j.fim)})…`)
+        try {
+          const { data, error } = await supabase.functions.invoke('icomanda-sync', { body: { tenant_id: tenantId, data_ini: j.ini, data_fim: j.fim, ...(lojaIds ? { loja_ids: lojaIds } : {}) } })
+          if (error) throw error
+          if (data?.status !== 'ok') throw new Error(data?.mensagem || 'erro no iComanda')
+          refetch()   // atualiza a grade a cada janela concluída
+        } catch (e) {
+          // motivo real (corpo da resposta); segue pras próximas janelas (não aborta tudo)
+          let real = (e as Error).message
+          try { const ctx = (e as { context?: Response })?.context; if (ctx && typeof ctx.json === 'function') { const b = await ctx.json(); if (b?.mensagem) real = b.mensagem } } catch { /* corpo não-json */ }
+          falhou = real
+        }
+      }
+      // mensagem final = VERDADE DO BANCO (um timeout de janela que já gravou os dias não conta como erro)
+      const res = await refetch().catch(() => null)
+      const rows = ((res?.data || []) as RecRow[]).filter((r) => r.data >= de && r.data <= ate && (!lojaIds || lojaIds.includes(r.loja_id)))
+      const okDb = rows.filter((r) => r.status === 'processado').length
+      const nLojas = lojaIds ? lojaIds.length : Math.max(1, lojas.length)
+      const esperado = diasPeriodo(de, ate).length * nLojas
+      if (okDb >= esperado) setMsg(`✓ ${okDb} dias processados.`)
+      else setMsg(`✓ ${okDb}/${esperado} dias processados. Faltou ${esperado - okDb} — clique de novo pra completar.${falhou ? ` (último aviso: ${falhou})` : ''}`)
     } finally { setSyncing(false) }
   }
 
