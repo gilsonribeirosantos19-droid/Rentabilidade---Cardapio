@@ -89,8 +89,8 @@ export function MonitorVendas() {
     setSyncing(true)
     // puxa SÓ a(s) loja(s) selecionada(s) (leve); "Todas" → não envia loja_ids (puxa todas)
     const lojaIds = (!allSel && lojaSet.size > 0) ? [...lojaSet] : undefined
-    // QUEBRA AUTOMÁTICA: divide o período em janelas de 7 dias → cada chamada fica leve e NÃO estoura o tempo da Edge.
-    const CHUNK = 7
+    // QUEBRA AUTOMÁTICA: divide o período em janelas de 5 dias → cada chamada fica leve e NÃO estoura o tempo da Edge.
+    const CHUNK = 5
     const janelas: { ini: string; fim: string }[] = []
     let cur = new Date(de + 'T12:00:00'); const fimAll = new Date(ate + 'T12:00:00')
     let g = 0
@@ -120,9 +120,16 @@ export function MonitorVendas() {
           falhou = real
         }
       }
-      const resumo = `✓ ${proc} processados${erro ? ` · ${erro} com erro` : ''}. [canais: ${[...canais].join(', ') || '—'}]`
-      setMsg(falhou ? `${resumo} — ⚠️ uma janela falhou: ${falhou}` : resumo)
-      refetch()
+      // mensagem final = VERDADE DO BANCO (ignora timeout de janela que já gravou os dias)
+      const res = await refetch().catch(() => null)
+      const rows = ((res?.data || []) as RecRow[]).filter((r) => r.data >= de && r.data <= ate && (!lojaIds || lojaIds.includes(r.loja_id)))
+      const okDb = rows.filter((r) => r.status === 'processado').length
+      const nLojas = lojaIds ? lojaIds.length : Math.max(1, lojas.length)
+      const esperado = diasPeriodo(de, ate).length * nLojas
+      const canaisTxt = `[canais: ${[...canais].join(', ') || '—'}]`
+      void proc; void erro   // (contadores por janela não são confiáveis com timeout; usamos o banco)
+      if (okDb >= esperado) setMsg(`✓ ${okDb} dias processados. ${canaisTxt}`)
+      else setMsg(`✓ ${okDb}/${esperado} dias processados. Faltou ${esperado - okDb} — clique de novo pra completar.${falhou ? ` (último aviso: ${falhou})` : ''}`)
     } finally { setSyncing(false) }
   }
 
