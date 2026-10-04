@@ -176,18 +176,18 @@ export function PortalSolicitacao() {
               </div>
               {aberto && (
                 <table className="p-tbl psol-grade">
-                  <thead><tr><th style={{ width: 36 }}></th><th>Código</th><th>Item</th><th>Embalagem</th><th>Estoque atual</th><th>Estoque mínimo</th></tr></thead>
+                  <thead><tr><th style={{ width: 36 }}></th><th className="col-hide-mob">Código</th><th>Item</th><th>Embalagem</th><th className="col-hide-mob">Estoque atual</th><th className="col-hide-mob">Estoque mínimo</th></tr></thead>
                   <tbody>
                     {itens.map((ins) => {
                       const atual = saldoMap[ins.id]
                       return (
                         <tr key={ins.id} style={{ background: sel.has(ins.id) ? '#fff7ed' : undefined }}>
                           <td className="c"><input type="checkbox" style={{ width: 16, height: 16, accentColor: '#f97316' }} checked={sel.has(ins.id)} onChange={(e) => toggle(ins.id, e.target.checked)} /></td>
-                          <td className="mono" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(ins.codigo_interno)}</td>
+                          <td className="mono col-hide-mob" style={{ fontSize: 11, color: '#64748b' }}>{fmtCod(ins.codigo_interno)}</td>
                           <td>{ins.nome}</td>
                           <td style={{ fontSize: 12, color: '#475569' }}>{embalagem(ins)}</td>
-                          <td style={{ color: '#64748b' }}>{fmtV(atual)}</td>
-                          <td style={{ color: '#64748b' }}>0,000</td>
+                          <td className="col-hide-mob" style={{ color: '#64748b' }}>{fmtV(atual)}</td>
+                          <td className="col-hide-mob" style={{ color: '#64748b' }}>0,000</td>
                         </tr>
                       )
                     })}

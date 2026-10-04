@@ -51,6 +51,27 @@
   .portal .p-mobitem svg { width: 21px; height: 21px; }
   .portal .p-mobitem.on { color: #f97316; }
   .portal .p-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 55; }
+
+  /* ----- responsividade do MIOLO (formulários e tabelas) no celular ----- */
+  /* inputs em 16px: evita o zoom automático do iOS ao focar um campo */
+  .portal .p-field, .portal input.p-field, .portal select.p-field, .portal .p-qtd { font-size: 16px; }
+  /* barra de filtro empilha (cada campo em tela cheia) */
+  .portal .pf-bar { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px; }
+  .portal .pf-fld { width: 100%; }
+  .portal .pf-fld .p-field, .portal .pf-bar .p-field { width: 100% !important; min-width: 0 !important; }
+  .portal .pf-bar .p-btn, .portal .pf-bar .p-btn-pri { margin-left: 0 !important; width: 100%; justify-content: center; }
+  .portal .pf-chk { height: auto; }
+  /* layouts "lado a lado" (form + histórico) empilham */
+  .portal .p-split { grid-template-columns: 1fr !important; }
+  /* tabelas largas: rolagem horizontal dentro do card, sem quebrar a tela */
+  .portal .p-card { overflow-x: auto; }
+  .portal .p-tbl { min-width: 460px; }
+  /* coluna marcada p/ esconder no celular (ganha espaço nas grades de digitação) */
+  .portal .col-hide-mob { display: none; }
+  /* grades de DIGITAÇÃO (seleção/saída em lote): cabem na tela, sem rolagem horizontal
+     — evita a tela "expandir"/rolar ao focar o campo da direita */
+  .portal .psol-grade, .portal .psaida-grade { min-width: 0; }
+  .portal .psaida-grade td:first-child { white-space: normal; word-break: break-word; }
 }
 
 /* ===== Componentes comuns do portal ===== */
