@@ -297,7 +297,7 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
   const lbl: React.CSSProperties = { fontSize: 11, color: '#64748b', fontWeight: 500, display: 'block', marginBottom: 4 }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 1.2fr', gap: 16, alignItems: 'start' }}>
+    <div className="p-split" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 1.2fr', gap: 16, alignItems: 'start' }}>
       {/* form */}
       <div className="p-card" style={{ padding: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 12, marginBottom: 12 }}>
@@ -429,16 +429,16 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
 
       <div className="p-card">
         <table className="p-tbl">
-          <thead><tr><th style={{ width: 300 }}>Insumo</th><th style={{ width: 190 }}>Grupo</th><th style={{ width: 70 }}>Un.</th><th className="r" style={{ width: 130 }}>Saída</th><th aria-hidden="true"></th></tr></thead>
+          <thead><tr><th style={{ width: 300 }}>Insumo</th><th className="col-hide-mob" style={{ width: 190 }}>Grupo</th><th style={{ width: 70 }}>Un.</th><th className="r" style={{ width: 130 }}>Saída</th><th className="col-hide-mob" aria-hidden="true"></th></tr></thead>
           <tbody>
             {!lista.length ? <tr><td colSpan={5} className="p-empty">Nenhum item no filtro.</td></tr>
               : lista.map((i: Insumo) => (
                 <tr key={i.id} style={num(saida[i.id]) > 0 ? { background: '#fff7ed' } : undefined}>
                   <td>{i.nome}</td>
-                  <td style={{ fontSize: 12, color: '#64748b' }}>{i.categoria || '—'}</td>
+                  <td className="col-hide-mob" style={{ fontSize: 12, color: '#64748b' }}>{i.categoria || '—'}</td>
                   <td style={{ color: '#94a3b8', fontSize: 12 }}>{un(i)}</td>
                   <td className="r"><input inputMode="decimal" className="p-field" style={{ width: 110, height: 30, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} placeholder="0,000" value={saida[i.id] ?? ''} onChange={(e) => setQ(i.id, e.target.value)} /></td>
-                  <td aria-hidden="true"></td>
+                  <td className="col-hide-mob" aria-hidden="true"></td>
                 </tr>
               ))}
           </tbody>
