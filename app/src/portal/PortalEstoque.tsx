@@ -428,7 +428,7 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
       </div>
 
       <div className="p-card">
-        <table className="p-tbl">
+        <table className="p-tbl psaida-grade">
           <thead><tr><th style={{ width: 300 }}>Insumo</th><th className="col-hide-mob" style={{ width: 190 }}>Grupo</th><th style={{ width: 70 }}>Un.</th><th className="r" style={{ width: 130 }}>Saída</th><th className="col-hide-mob" aria-hidden="true"></th></tr></thead>
           <tbody>
             {!lista.length ? <tr><td colSpan={5} className="p-empty">Nenhum item no filtro.</td></tr>
