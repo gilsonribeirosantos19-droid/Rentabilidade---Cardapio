@@ -178,7 +178,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
       <div className="p-card">
         <table className="p-tbl p-tbl-grade">
           <thead><tr>
-            <th>Insumo</th><th className="col-hide-mob">Un.</th><th className="r col-hide-mob">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r col-hide-mob">Valor</th><th className="r col-hide-mob" title="Quantos dias o saldo atual dura no ritmo de consumo (saídas) do período selecionado. — = sem consumo no período ou saldo zerado/negativo.">Dias estoque</th><th className="col-hide-mob">Última mov.</th>
+            <th>Insumo</th><th>Un.</th><th className="r col-hide-mob">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r col-hide-mob">Valor</th><th className="r col-hide-mob" title="Quantos dias o saldo atual dura no ritmo de consumo (saídas) do período selecionado. — = sem consumo no período ou saldo zerado/negativo.">Dias estoque</th><th className="col-hide-mob">Última mov.</th>
           </tr></thead>
           <tbody>
             {isFetching ? <tr><td colSpan={9} className="p-empty">Carregando…</td></tr>
@@ -186,7 +186,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
                 : rows.map((r: any) => (
                   <tr key={r.ins.id}>
                     <td>{r.ins.nome}</td>
-                    <td className="col-hide-mob" style={{ color: '#64748b', fontSize: 12 }}>{un(r.ins)}</td>
+                    <td style={{ color: '#64748b', fontSize: 12 }}>{un(r.ins)}</td>
                     <td className="r mono col-hide-mob" style={{ color: '#0369a1' }}>{fQ(r.inicial ?? 0)}</td>
                     <td className="r mono" style={{ color: r.ent > 0 ? '#16a34a' : '#94a3b8' }}>{fQ(r.ent)}</td>
                     <td className="r mono" style={{ color: r.sai > 0 ? '#dc2626' : '#94a3b8' }}>{fQ(r.sai)}</td>

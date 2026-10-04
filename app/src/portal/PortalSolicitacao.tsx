@@ -201,11 +201,11 @@ export function PortalSolicitacao() {
 
       {/* barra inferior */}
       {nSel > 0 && aba === 'nova' && (
-        <div style={{ position: 'fixed', bottom: 0, left: 220, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 16, zIndex: 40, boxShadow: '0 -4px 16px rgba(0,0,0,.06)' }}>
+        <div className="psol-selbar" style={{ position: 'fixed', bottom: 0, left: 220, right: 0, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 16, zIndex: 40, boxShadow: '0 -4px 16px rgba(0,0,0,.06)' }}>
           <span style={{ fontSize: 13, fontWeight: 600 }}>🛒 {nSel} {nSel === 1 ? 'item selecionado' : 'itens selecionados'}</span>
-          <span style={{ fontSize: 12.5, color: '#64748b' }}>{kgTotal.toFixed(1)} kg no total</span>
-          <span style={{ fontSize: 13, color: '#64748b' }}>Total estimado: <b style={{ color: '#0f172a' }}>{brl(totalEst)}</b></span>
-          <button className="p-btn p-btn-pri" style={{ marginLeft: 'auto' }} onClick={() => { setEntrega(hoje7()); setObs(''); setSheet(true) }}>Continuar pedido →</button>
+          <span className="col-hide-mob" style={{ fontSize: 12.5, color: '#64748b' }}>{kgTotal.toFixed(1)} kg no total</span>
+          <span className="col-hide-mob" style={{ fontSize: 13, color: '#64748b' }}>Total estimado: <b style={{ color: '#0f172a' }}>{brl(totalEst)}</b></span>
+          <button className="p-btn p-btn-pri" style={{ marginLeft: 'auto' }} onClick={() => { setEntrega(hoje7()); setObs(''); setSheet(true) }}>Continuar →</button>
         </div>
       )}
 
