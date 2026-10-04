@@ -216,13 +216,13 @@ export function PortalSolicitacao() {
             <div className="mh"><h2>Finalizar solicitação</h2><button className="p-mx" onClick={() => setSheet(false)}>✕</button></div>
             <div className="mb">
               <table className="p-tbl">
-                <thead><tr><th>Item</th><th>Atual</th><th>Mínimo</th><th>Sugestão</th><th className="r">Quantidade *</th><th>Embalagem</th></tr></thead>
+                <thead><tr><th>Item</th><th>Atual</th><th className="col-hide-mob">Mínimo</th><th>Sugestão</th><th className="r">Quantidade *</th><th>Embalagem</th></tr></thead>
                 <tbody>
                   {selIds.map((id) => { const ins = insMap[id]; const u = defUn(ins); return (
                     <tr key={id}>
                       <td>{ins?.nome || id}</td>
                       <td style={{ color: '#64748b' }}>{fmtV(saldoMap[id])}</td>
-                      <td style={{ color: '#64748b' }}>—</td>
+                      <td className="col-hide-mob" style={{ color: '#64748b' }}>—</td>
                       <td style={{ color: '#64748b' }}>—</td>
                       <td className="r"><input type="text" inputMode="decimal" value={qty[id] ?? ''} onChange={(e) => onQty(id, e.target.value)} onBlur={(e) => onQty(id, fmtQtd(e.target.value))} style={{ width: 96, height: 30, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 10px', fontFamily: 'DM Mono, monospace', fontSize: 13.5, color: '#0f172a', background: '#fff' }} /></td>
                       <td><select value={un[id] || u} onChange={(e) => setUn((uu) => ({ ...uu, [id]: e.target.value }))} style={{ height: 24, border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12 }}>{optsDe(ins, un[id] || u).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
