@@ -68,6 +68,8 @@
   .portal .p-tbl { min-width: 460px; }
   /* coluna marcada p/ esconder no celular (ganha espaço nas grades de digitação) */
   .portal .col-hide-mob { display: none; }
+  /* grade de seleção da Solicitação: com poucas colunas, cabe na tela (sem rolagem) */
+  .portal .psol-grade { min-width: 0; }
 }
 
 /* ===== Componentes comuns do portal ===== */
