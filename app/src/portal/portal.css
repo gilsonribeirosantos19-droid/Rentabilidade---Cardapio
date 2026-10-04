@@ -70,7 +70,7 @@
   .portal .col-hide-mob { display: none; }
   /* grades de DIGITAÇÃO (seleção/saída em lote): cabem na tela, sem rolagem horizontal
      — evita a tela "expandir"/rolar ao focar o campo da direita */
-  .portal .psol-grade, .portal .psaida-grade { min-width: 0; }
+  .portal .psol-grade, .portal .psaida-grade, .portal .p-tbl-grade { min-width: 0; }
   .portal .psaida-grade td:first-child { white-space: normal; word-break: break-word; }
 }
 

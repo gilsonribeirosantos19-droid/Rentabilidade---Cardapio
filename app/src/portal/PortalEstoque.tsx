@@ -69,7 +69,7 @@ export function PortalEstoque() {
       <div className="p-sub">Consulte a posição, lance entradas/saídas e veja o histórico da sua loja.</div>
 
       <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid #e2e8f0', marginBottom: 14 }}>
-        {TABS.map(([k, l]) => <button key={k} onClick={() => setSub(k)} style={{ border: 0, background: 'none', padding: '8px 14px', fontSize: 13, fontWeight: sub === k ? 700 : 500, color: sub === k ? '#ea6a0a' : '#64748b', borderBottom: sub === k ? '2px solid #f97316' : '2px solid transparent', cursor: 'pointer', marginBottom: -1 }}>{l}</button>)}
+        {TABS.map(([k, l]) => <button key={k} className={(k === 'movimentacao' || k === 'historico') ? 'col-hide-mob' : undefined} onClick={() => setSub(k)} style={{ border: 0, background: 'none', padding: '8px 14px', fontSize: 13, fontWeight: sub === k ? 700 : 500, color: sub === k ? '#ea6a0a' : '#64748b', borderBottom: sub === k ? '2px solid #f97316' : '2px solid transparent', cursor: 'pointer', marginBottom: -1 }}>{l}</button>)}
       </div>
 
       {sub === 'relatorio' && <Relatorio {...{ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap, tenantId, lojaId, baselineData: baseline?.data ?? null }} />}
@@ -178,7 +178,7 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
       <div className="p-card">
         <table className="p-tbl p-tbl-grade">
           <thead><tr>
-            <th>Insumo</th><th>Un.</th><th className="r">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r">Valor</th><th className="r" title="Quantos dias o saldo atual dura no ritmo de consumo (saídas) do período selecionado. — = sem consumo no período ou saldo zerado/negativo.">Dias estoque</th><th>Última mov.</th>
+            <th>Insumo</th><th className="col-hide-mob">Un.</th><th className="r col-hide-mob">Estoque Inicial</th><th className="r">Entradas</th><th className="r">Saídas</th><th className="r">Saldo Atual</th><th className="r col-hide-mob">Valor</th><th className="r col-hide-mob" title="Quantos dias o saldo atual dura no ritmo de consumo (saídas) do período selecionado. — = sem consumo no período ou saldo zerado/negativo.">Dias estoque</th><th className="col-hide-mob">Última mov.</th>
           </tr></thead>
           <tbody>
             {isFetching ? <tr><td colSpan={9} className="p-empty">Carregando…</td></tr>
@@ -186,20 +186,20 @@ function Relatorio({ insumos, saldoMap, inicialMap, grupos, gruposItens, insMap,
                 : rows.map((r: any) => (
                   <tr key={r.ins.id}>
                     <td>{r.ins.nome}</td>
-                    <td style={{ color: '#64748b', fontSize: 12 }}>{un(r.ins)}</td>
-                    <td className="r mono" style={{ color: '#0369a1' }}>{fQ(r.inicial ?? 0)}</td>
+                    <td className="col-hide-mob" style={{ color: '#64748b', fontSize: 12 }}>{un(r.ins)}</td>
+                    <td className="r mono col-hide-mob" style={{ color: '#0369a1' }}>{fQ(r.inicial ?? 0)}</td>
                     <td className="r mono" style={{ color: r.ent > 0 ? '#16a34a' : '#94a3b8' }}>{fQ(r.ent)}</td>
                     <td className="r mono" style={{ color: r.sai > 0 ? '#dc2626' : '#94a3b8' }}>{fQ(r.sai)}</td>
                     <td className="r mono" style={r.saldo < 0 ? { color: '#dc2626', fontWeight: 700 } : undefined}>{fQ(r.saldo)}</td>
-                    <td className="r mono">{brl(r.saldo * r.cm)}</td>
-                    <td className="r mono" style={{ fontWeight: r.dias != null && r.dias < 7 ? 700 : 400, color: r.dias == null ? '#94a3b8' : r.dias < 3 ? '#dc2626' : r.dias < 7 ? '#d97706' : '#334155' }}>{r.dias == null ? '—' : r.dias.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
-                    <td style={{ fontSize: 12, color: '#64748b' }}>{r.ult ? fmtDataHora(r.ult) : '—'}</td>
+                    <td className="r mono col-hide-mob">{brl(r.saldo * r.cm)}</td>
+                    <td className="r mono col-hide-mob" style={{ fontWeight: r.dias != null && r.dias < 7 ? 700 : 400, color: r.dias == null ? '#94a3b8' : r.dias < 3 ? '#dc2626' : r.dias < 7 ? '#d97706' : '#334155' }}>{r.dias == null ? '—' : r.dias.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                    <td className="col-hide-mob" style={{ fontSize: 12, color: '#64748b' }}>{r.ult ? fmtDataHora(r.ult) : '—'}</td>
                   </tr>
                 ))}
           </tbody>
           {rows.length > 0 && (
             <tfoot>
-              <tr>
+              <tr className="col-hide-mob">
                 <td colSpan={6} className="r" style={{ borderTop: '2px solid #e2e8f0', fontWeight: 700, color: '#475569' }}>Total — {rows.length} {rows.length === 1 ? 'item' : 'itens'}</td>
                 <td className="r mono" style={{ borderTop: '2px solid #e2e8f0', fontWeight: 700 }}>{brl(rows.reduce((a: number, r: any) => a + r.saldo * r.cm, 0))}</td>
                 <td style={{ borderTop: '2px solid #e2e8f0' }} />
