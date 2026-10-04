@@ -71,6 +71,8 @@
   /* grades de DIGITAÇÃO (seleção/saída em lote): cabem na tela, sem rolagem horizontal
      — evita a tela "expandir"/rolar ao focar o campo da direita */
   .portal .psol-grade, .portal .psaida-grade, .portal .p-tbl-grade { min-width: 0; }
+  /* barra "Continuar pedido" no celular: largura total e ACIMA do menu de baixo (não some) */
+  .portal .psol-selbar { left: 0 !important; z-index: 60 !important; padding: 10px 14px !important; gap: 10px !important; }
   .portal .psaida-grade td:first-child { white-space: normal; word-break: break-word; }
 }
 
