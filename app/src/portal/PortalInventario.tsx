@@ -7,7 +7,7 @@ import { useAuth } from '../lib/auth'
 // Portal › Inventário — consulta inventários da loja e preenche a contagem.
 // Fiel ao loja.html: salvar só GRAVA a contagem (o estoque só ajusta ao FECHAR o inventário).
 
-type Inv = { id: string; numero?: number; descricao?: string; status?: string; data_inicial?: string; data_final?: string }
+type Inv = { id: string; numero?: number; descricao?: string; status?: string; data_inicial?: string; data_final?: string; contagem_concluida?: boolean; concluida_em?: string | null; concluida_por?: string | null }
 type Insumo = { id: string; nome?: string; categoria?: string; codigo_interno?: number; unidade_medida?: string; unidade_compra?: string }
 type InvItem = { id: string; inventario_id: string; insumo_id: string; qtd_contada?: number | null }
 type Linha = { id: string; insumo_id: string; codigo: string; nome: string; categoria: string; embalagem: string; unidade: string; qtd: string }
@@ -85,6 +85,26 @@ export function PortalInventario() {
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
 
+  // Concluir = salva a contagem atual E marca que o gerente terminou (vira "Contagem concluída" pro admin).
+  const concluirMut = useMutation({
+    mutationFn: async () => {
+      if (!inv) return
+      if (!lojaId) throw new Error('Sua conta não está ligada a uma loja.')
+      const num = (v: string) => parseFloat(String(v).replace(',', '.')) || 0
+      const rows = linhas.map((l) => ({ id: l.id, inventario_id: inv.id, qtd_contada: lancado(l) ? num(l.qtd) : null, tenant_id: tenantId }))
+      const { error: e1 } = await supabase.from('inventario_itens').upsert(rows, { onConflict: 'id' }); if (e1) throw e1
+      const { error: e2 } = await supabase.from('inventarios').update({ contagem_concluida: true, concluida_em: new Date().toISOString(), concluida_por: usuario?.nome || null }).eq('id', inv.id); if (e2) throw e2
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pinv-list'] }); setInv((v) => (v ? { ...v, contagem_concluida: true, concluida_em: new Date().toISOString() } : v)); showToast('Contagem concluída! O administrador já vê que está pronta pra encerrar.') },
+    onError: (e: Error) => showToast('Erro: ' + e.message, true),
+  })
+  const reabrirMut = useMutation({
+    mutationFn: async () => { if (!inv) return; const { error } = await supabase.from('inventarios').update({ contagem_concluida: false, concluida_em: null, concluida_por: null }).eq('id', inv.id); if (error) throw error },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pinv-list'] }); setInv((v) => (v ? { ...v, contagem_concluida: false } : v)); showToast('Contagem reaberta — você pode editar e concluir de novo.') },
+    onError: (e: Error) => showToast('Erro: ' + e.message, true),
+  })
+  const travada = !!inv?.contagem_concluida
+
   return (
     <div>
       <div className="p-ttl">Inventário</div>
@@ -113,7 +133,7 @@ export function PortalInventario() {
                   <table className="p-tbl">
                     <thead><tr><th>N. Inventário</th><th>Descrição</th><th>D. Inicial</th><th>D. Final</th><th>Situação</th><th className="c">Ações</th></tr></thead>
                     <tbody>
-                      {invs.map((i) => { const sc = ST[i.status || ''] || { bg: '#f1f5f9', c: '#64748b', l: i.status || '—' }; return (
+                      {invs.map((i) => { const sc = i.status === 'ativo' ? (i.contagem_concluida ? { bg: '#ecfdf5', c: '#059669', l: 'Contagem concluída' } : { bg: '#fffbeb', c: '#d97706', l: 'Em contagem' }) : (ST[i.status || ''] || { bg: '#f1f5f9', c: '#64748b', l: i.status || '—' }); return (
                         <tr key={i.id} className="clik" onClick={() => abrir(i)}>
                           <td className="mono" style={{ color: '#64748b', fontSize: 12 }}>{i.numero ? `Nº ${i.numero}` : '—'}</td>
                           <td>{i.descricao || 'Inventário'}</td>
@@ -158,7 +178,7 @@ export function PortalInventario() {
                           <td>{l.nome}</td>
                           <td style={{ fontSize: 12 }}>{l.embalagem}</td>
                           <td>{l.unidade}</td>
-                          <td className="r"><input type="number" className="p-qtd" min="0" step="0.001" placeholder="0,000" value={l.qtd} onChange={(e) => setQtd(l.id, e.target.value)} /></td>
+                          <td className="r"><input type="number" className="p-qtd" min="0" step="0.001" placeholder="0,000" value={l.qtd} readOnly={travada} onChange={(e) => setQtd(l.id, e.target.value)} style={travada ? { background: '#f1f5f9', color: '#64748b' } : undefined} /></td>
                           <td className="r mono">0,000</td>
                           <td className="r mono">{(c >= 0 ? '+' : '') + c.toFixed(3)}</td>
                         </tr>
@@ -171,8 +191,15 @@ export function PortalInventario() {
                 <div className="txt"><span>{nLanc} de {total}</span><span>{pct}% concluído</span></div>
                 <div className="p-prog-bar-wrap"><div className="p-prog-bar" style={{ width: pct + '%' }} /></div>
               </div>
-              <button className="p-btn" onClick={() => setInv(null)}>Fechar</button>
-              <button className="p-btn p-btn-pri" disabled={salvarMut.isPending || total === 0} onClick={() => salvarMut.mutate()}>{salvarMut.isPending ? 'Salvando…' : '✓ Salvar Inventário'}</button>
+              {travada ? <>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#ecfdf5', color: '#059669', fontSize: 12.5, fontWeight: 700 }}>✓ Contagem concluída{inv.concluida_em ? ` em ${fmtData(inv.concluida_em)}` : ''}</span>
+                <button className="p-btn" onClick={() => setInv(null)}>Fechar</button>
+                <button className="p-btn" disabled={reabrirMut.isPending} onClick={() => reabrirMut.mutate()}>{reabrirMut.isPending ? 'Reabrindo…' : '↺ Reabrir pra editar'}</button>
+              </> : <>
+                <button className="p-btn" onClick={() => setInv(null)}>Fechar</button>
+                <button className="p-btn" disabled={salvarMut.isPending || total === 0} onClick={() => salvarMut.mutate()}>{salvarMut.isPending ? 'Salvando…' : 'Salvar'}</button>
+                <button className="p-btn p-btn-pri" disabled={concluirMut.isPending || total === 0} onClick={() => concluirMut.mutate()}>{concluirMut.isPending ? 'Concluindo…' : '✓ Concluir contagem'}</button>
+              </>}
             </div>
           </div>
         </div>

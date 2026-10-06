@@ -11,7 +11,7 @@ import './estoque.css'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; participa_cmv?: string }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number }
-type Inv = { id: string; loja_id?: string; grupo_id?: string; status?: string; tipo?: string; data_inicial?: string; data_final?: string; criado_em?: string }
+type Inv = { id: string; loja_id?: string; grupo_id?: string; status?: string; tipo?: string; data_inicial?: string; data_final?: string; criado_em?: string; contagem_concluida?: boolean; concluida_em?: string | null; concluida_por?: string | null }
 type InvItem = { id: string; inventario_id: string; insumo_id: string; qtd_sistema?: number; qtd_contada?: number | null; custo_medio?: number }
 type Grupo = { id: string; nome: string; tipo?: string; ativo?: boolean; itens?: { insumo_id: string }[] }
 
@@ -101,7 +101,7 @@ export function Inventario() {
             {isLoading ? <tr><td colSpan={7} className="empty">Carregando…</td></tr>
               : page.length === 0 ? <tr><td colSpan={7} className="empty">Nenhum inventário encontrado.</td></tr>
               : page.map((i) => {
-                const st = i.status === 'encerrado' ? { t: 'Encerrado', bg: '#eff6ff', c: '#2563eb' } : i.status === 'cancelado' ? { t: 'Cancelado', bg: '#fff1f2', c: '#e11d48' } : { t: 'Ativo', bg: '#f0fdf4', c: '#16a34a' }
+                const st = i.status === 'encerrado' ? { t: 'Encerrado', bg: '#eff6ff', c: '#2563eb' } : i.status === 'cancelado' ? { t: 'Cancelado', bg: '#fff1f2', c: '#e11d48' } : i.contagem_concluida ? { t: 'Contagem concluída', bg: '#ecfdf5', c: '#059669' } : { t: 'Em contagem', bg: '#fffbeb', c: '#d97706' }
                 return (
                   <tr key={i.id}>
                     <td>{lojaMap[i.loja_id || ''] || '—'}</td>
