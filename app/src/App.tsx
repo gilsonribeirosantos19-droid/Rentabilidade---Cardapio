@@ -4,6 +4,7 @@ import { Login } from './screens/Login'
 import { ResetPassword } from './screens/ResetPassword'
 import { Shell } from './shell/Shell'
 import { PortalShell } from './portal/PortalShell'
+import { PortalHub } from './portal/PortalHub'
 
 function Gate() {
   const { session, loading, usuario, recovery } = useAuth()
@@ -36,6 +37,11 @@ function Gate() {
 }
 
 export default function App() {
+  // PORTAL de módulos num endereço PRÓPRIO (/portal) — separado e opcional.
+  // Não afeta o app normal: quem abre app.aikosistema.com continua caindo no login/Portal/ERP de hoje.
+  const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') : ''
+  if (path === '/portal') return <PortalHub />
+
   return (
     <AuthProvider>
       <Gate />
