@@ -8,7 +8,7 @@ import './portalhub.css'
 
 type Sistema = { id: string; nome: string; desc: string; icon: string; cor: string; url: string; interno?: boolean }
 const SISTEMAS: Sistema[] = [
-  { id: 'estoque', nome: 'Estoque', desc: 'Inventário, entradas, fichas técnicas e fechamento mensal.', icon: 'box', cor: '#e07b1a', url: 'https://app.aikosistema.com/', interno: true },
+  { id: 'estoque', nome: 'Estoque', desc: 'Inventário, entradas, fichas técnicas e fechamento mensal.', icon: 'box', cor: '#e07b1a', url: '/' },
   { id: 'avaliacoes', nome: 'Avaliações', desc: 'Pesquisa com clientes, NPS e Central de Tratativas.', icon: 'star', cor: '#2563eb', url: 'https://avaliacao.aikosistema.com/painel.html' },
   { id: 'checklist', nome: 'Checklist', desc: 'Abertura, fechamento, produção, auditoria e avaliação de garçons.', icon: 'check', cor: '#14315f', url: 'https://checklist.aikosistema.com/' },
   { id: 'manutencao', nome: 'Manutenção', desc: 'Chamados, preventivas e pendências prediais das lojas.', icon: 'wrench', cor: '#b45309', url: 'https://manutencao.aikosistema.com/' },
@@ -43,9 +43,9 @@ export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
     return `${dias[d.getDay()]}, ${d.getDate()} de ${mes[d.getMonth()]}`
   }, [])
 
-  // Estoque (interno) → abre o app normal (mesma aba; o login decide ERP x Portal do Gerente).
-  // Demais → abrem o sistema em nova aba (cada um com seu próprio login).
-  const abrir = (s: Sistema) => { if (s.interno) window.location.href = '/'; else window.open(s.url, '_blank', 'noopener,noreferrer') }
+  // Cada card abre o sistema em NOVA ABA → o portal nunca fecha (fica na aba dele).
+  // Estoque (url '/') abre o próprio app (login decide ERP x Portal do Gerente).
+  const abrir = (s: Sistema) => window.open(s.url, '_blank', 'noopener,noreferrer')
 
   return (
     <div className="phub">
