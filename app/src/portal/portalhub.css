@@ -1,0 +1,46 @@
+/* Hub de módulos — azul profundo (marca) + laranja, cards brancos. Mesmo padrão do app. */
+.phub{min-height:100%;background:#eef1f6;font-family:Inter,'Segoe UI',system-ui,sans-serif;color:#0f2744}
+.phub-hero{background:linear-gradient(160deg,#14315f,#0f2a52);color:#fff;position:relative;overflow:hidden}
+.phub-bigA{position:absolute;right:-30px;top:-50px;font-size:360px;font-weight:900;line-height:1;color:#fff;opacity:.04;pointer-events:none}
+.phub-hero-in{max-width:1120px;margin:0 auto;padding:18px 20px 32px}
+.phub-top{display:flex;align-items:center;gap:12px}
+.phub-logo{width:42px;height:42px;border-radius:11px;background:#f97316;display:grid;place-items:center;font-weight:900;font-size:24px;color:#fff;box-shadow:0 4px 12px rgba(249,115,22,.4)}
+.phub-brand b{font-size:17px;font-weight:800;display:block;line-height:1.1}
+.phub-brand span{font-size:12.5px;color:#8ea6cf}
+.phub-tr{margin-left:auto;display:flex;align-items:center;gap:12px}
+.phub-uchip{display:flex;align-items:center;gap:9px;font-size:13px;color:#cfdcf2}
+.phub-uav{width:30px;height:30px;border-radius:50%;background:#20427a;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff}
+.phub-sair{border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;border-radius:9px;padding:7px 14px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.phub-sair:hover{background:rgba(255,255,255,.1)}
+.phub-greet{margin-top:26px}
+.phub-eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;color:#f97316;text-transform:uppercase}
+.phub-greet h1{font-size:clamp(28px,5vw,44px);font-weight:900;margin:6px 0 10px;letter-spacing:-.02em;text-wrap:balance}
+.phub-lead{color:#cfdcf2;font-size:15px;max-width:52ch;line-height:1.5;margin:0}
+
+.phub-body{padding:0 20px 48px}
+.phub-wrap{max-width:1120px;margin:0 auto}
+.phub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:18px;margin-top:-26px;position:relative;z-index:2}
+.phub-card{background:#fff;border:1px solid #e3e8f0;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:transform .15s,box-shadow .15s,border-color .15s}
+.phub-card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(15,39,68,.14);border-color:transparent}
+.phub-ico{width:52px;height:52px;border-radius:13px;display:grid;place-items:center;color:#fff}
+.phub-ico svg{width:26px;height:26px}
+.phub-card h3{margin:0;font-size:19px;font-weight:800;letter-spacing:-.01em}
+.phub-card p{margin:0;color:#5b6b85;font-size:13.5px;line-height:1.45;flex:1}
+.phub-enter{color:#f97316;font-weight:700;font-size:14px;margin-top:2px}
+
+.phub-tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:28px}
+.phub-tip{background:#fff;border:1px solid #e3e8f0;border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.phub-ti{width:34px;height:34px;border-radius:9px;background:#eef2f8;display:grid;place-items:center;flex:none;font-size:17px}
+.phub-tip b{font-size:13.5px}
+.phub-tip span{display:block;font-size:12.5px;color:#5b6b85;margin-top:2px;line-height:1.4}
+
+/* pílula flutuante "voltar ao portal" quando o usuário entra num módulo interno */
+.phub-back{position:fixed;left:16px;bottom:16px;z-index:9999;display:inline-flex;align-items:center;gap:7px;background:#14315f;color:#fff;border:none;border-radius:22px;padding:10px 16px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(15,39,68,.35)}
+.phub-back:hover{background:#0f2a52}
+
+@media (max-width:700px){ .phub-back{bottom:74px} }  /* sobe acima do menu inferior do gerente */
+@media (max-width:560px){
+  .phub-grid{margin-top:-18px}
+  .phub-tr .phub-uchip span:last-child{display:none}
+}
+@media (prefers-reduced-motion:reduce){.phub-card{transition:none}}
