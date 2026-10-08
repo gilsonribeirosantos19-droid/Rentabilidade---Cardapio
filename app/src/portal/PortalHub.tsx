@@ -25,11 +25,10 @@ const ICO: Record<string, ReactNode> = {
 }
 const svg = (n: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{ICO[n]}</svg>
 
-export function PortalHub({ usuario, perfil = '', lojaNome, onEstoque, signOut }: {
+export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
   usuario?: { nome?: string } | null
   perfil?: string
   lojaNome?: string
-  onEstoque: () => void
   signOut?: () => void
 }) {
   const vis = useMemo(() => SISTEMAS.filter((s) => permitidos(perfil).includes(s.id)), [perfil])
@@ -44,7 +43,9 @@ export function PortalHub({ usuario, perfil = '', lojaNome, onEstoque, signOut }
     return `${dias[d.getDay()]}, ${d.getDate()} de ${mes[d.getMonth()]}`
   }, [])
 
-  const abrir = (s: Sistema) => { if (s.interno) onEstoque(); else window.open(s.url, '_blank', 'noopener,noreferrer') }
+  // Estoque (interno) → abre o app normal (mesma aba; o login decide ERP x Portal do Gerente).
+  // Demais → abrem o sistema em nova aba (cada um com seu próprio login).
+  const abrir = (s: Sistema) => { if (s.interno) window.location.href = '/'; else window.open(s.url, '_blank', 'noopener,noreferrer') }
 
   return (
     <div className="phub">

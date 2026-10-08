@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { AuthProvider, useAuth } from './lib/auth'
 import { LojaProvider } from './lib/loja'
 import { Login } from './screens/Login'
@@ -8,14 +7,7 @@ import { PortalShell } from './portal/PortalShell'
 import { PortalHub } from './portal/PortalHub'
 
 function Gate() {
-  const { session, loading, usuario, recovery, signOut } = useAuth()
-  // view do portal: 'hub' = tela de seleção de módulos; 'login' = clicou em Estoque e precisa logar;
-  // 'app' = dentro do módulo Estoque (ERP/Portal do Gerente, conforme o login da pessoa).
-  const [view, setView] = useState<'hub' | 'login' | 'app'>('hub')
-  // logou (na tela de login) → entra no módulo; deslogou (Sair dentro do app) → volta pro portal
-  useEffect(() => { if (session && view === 'login') setView('app') }, [session, view])
-  useEffect(() => { if (!session && view === 'app') setView('hub') }, [session, view])
-
+  const { session, loading, usuario, recovery } = useAuth()
   if (loading) {
     return (
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -24,17 +16,10 @@ function Gate() {
     )
   }
   if (recovery) return <ResetPassword />   // veio do link "esqueci minha senha" → definir nova senha
+  if (!session) return <Login />
+  // Gerente cai direto no Portal do Gerente; admin/operador seguem no app normal.
   const perfil = (usuario?.role || usuario?.perfil || '').toLowerCase()
-
-  // PORTAL (tela inicial): mostra os módulos. "Estoque" → tela de login (ou entra, se já logado);
-  // os demais abrem em nova aba (cada um com seu próprio login).
-  if (view === 'hub') return <PortalHub usuario={session ? usuario : null} perfil={perfil} signOut={signOut} onEstoque={() => setView(session ? 'app' : 'login')} />
-  if (view === 'login' && !session) return <Login />
-
-  // dentro do módulo Estoque → app atual + atalho flutuante de volta ao portal
-  const voltar = <button className="phub-back" onClick={() => setView('hub')}>⬑ Portal</button>
-  // Gerente cai no Portal do Gerente; admin/operador no app normal.
-  if (perfil === 'gerente') return <>{<PortalShell />}{voltar}</>
+  if (perfil === 'gerente') return <PortalShell />
   // Falha FECHADA: sessão válida mas o perfil ainda não resolveu (ex.: releitura vazia
   // logo após a renovação de token idle). Sem saber o perfil, NÃO liberamos o sistema
   // principal — senão um gerente cairia no ERP inteiro. Segura numa reconexão até o
@@ -48,10 +33,15 @@ function Gate() {
       </div>
     )
   }
-  return <LojaProvider><Shell />{voltar}</LojaProvider>
+  return <LojaProvider><Shell /></LojaProvider>
 }
 
 export default function App() {
+  // PORTAL de módulos num endereço PRÓPRIO (/portal) — separado e opcional.
+  // Não afeta o app normal: quem abre app.aikosistema.com continua caindo no login/Portal/ERP de hoje.
+  const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') : ''
+  if (path === '/portal') return <PortalHub />
+
   return (
     <AuthProvider>
       <Gate />
