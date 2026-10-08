@@ -25,15 +25,15 @@ const ICO: Record<string, ReactNode> = {
 }
 const svg = (n: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{ICO[n]}</svg>
 
-export function PortalHub({ usuario, perfil, lojaNome, onEstoque, signOut }: {
+export function PortalHub({ usuario, perfil = '', lojaNome, onEstoque, signOut }: {
   usuario?: { nome?: string } | null
-  perfil: string
+  perfil?: string
   lojaNome?: string
   onEstoque: () => void
-  signOut: () => void
+  signOut?: () => void
 }) {
   const vis = useMemo(() => SISTEMAS.filter((s) => permitidos(perfil).includes(s.id)), [perfil])
-  const nome = (usuario?.nome || '').split(' ')[0] || 'bem-vindo(a)'
+  const nome = (usuario?.nome || '').split(' ')[0]
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
   const h = new Date().getHours()
   const saud = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
@@ -54,14 +54,16 @@ export function PortalHub({ usuario, perfil, lojaNome, onEstoque, signOut }: {
           <div className="phub-top">
             <div className="phub-logo">A</div>
             <div className="phub-brand"><b>Aiko</b><span>{lojaNome || 'Rede'}</span></div>
-            <div className="phub-tr">
-              <div className="phub-uchip"><span className="phub-uav">{inicial}</span><span>{usuario?.nome || '—'}</span></div>
-              <button className="phub-sair" onClick={signOut}>Sair</button>
-            </div>
+            {usuario && (
+              <div className="phub-tr">
+                <div className="phub-uchip"><span className="phub-uav">{inicial}</span><span>{usuario?.nome || '—'}</span></div>
+                {signOut && <button className="phub-sair" onClick={signOut}>Sair</button>}
+              </div>
+            )}
           </div>
           <div className="phub-greet">
             <div className="phub-eyebrow">{hoje}</div>
-            <h1>{saud}, {nome}.</h1>
+            <h1>{nome ? `${saud}, ${nome}.` : `${saud}! Bem-vindo à rede Aiko.`}</h1>
             <p className="phub-lead">Estoque, avaliações, checklist e manutenção da rede num só lugar. Escolha por onde quer começar.</p>
           </div>
         </div>
