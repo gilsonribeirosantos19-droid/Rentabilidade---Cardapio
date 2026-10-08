@@ -44,8 +44,12 @@ export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
   }, [])
 
   // Estoque (interno) → abre o app normal (mesma aba; o login decide ERP x Portal do Gerente).
+  // Marca que veio do portal, p/ o app mostrar o atalho "⬑ Portal" (voltar SEM deslogar).
   // Demais → abrem o sistema em nova aba (cada um com seu próprio login).
-  const abrir = (s: Sistema) => { if (s.interno) window.location.href = '/'; else window.open(s.url, '_blank', 'noopener,noreferrer') }
+  const abrir = (s: Sistema) => {
+    if (s.interno) { try { sessionStorage.setItem('aiko_from_portal', '1') } catch { /* ignore */ } window.location.href = '/' }
+    else window.open(s.url, '_blank', 'noopener,noreferrer')
+  }
 
   return (
     <div className="phub">
