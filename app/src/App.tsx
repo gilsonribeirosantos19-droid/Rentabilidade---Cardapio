@@ -19,13 +19,7 @@ function Gate() {
   if (!session) return <Login />
   // Gerente cai direto no Portal do Gerente; admin/operador seguem no app normal.
   const perfil = (usuario?.role || usuario?.perfil || '').toLowerCase()
-  // atalho "voltar ao portal" — SÓ aparece pra quem entrou pelo /portal (volta sem deslogar)
-  let fromPortal = false
-  try { fromPortal = sessionStorage.getItem('aiko_from_portal') === '1' } catch { /* ignore */ }
-  const voltarPortal = fromPortal
-    ? <button className="phub-back" onClick={() => { try { sessionStorage.removeItem('aiko_from_portal') } catch { /* ignore */ } window.location.href = '/portal' }}>⬑ Portal</button>
-    : null
-  if (perfil === 'gerente') return <>{<PortalShell />}{voltarPortal}</>
+  if (perfil === 'gerente') return <PortalShell />
   // Falha FECHADA: sessão válida mas o perfil ainda não resolveu (ex.: releitura vazia
   // logo após a renovação de token idle). Sem saber o perfil, NÃO liberamos o sistema
   // principal — senão um gerente cairia no ERP inteiro. Segura numa reconexão até o
@@ -39,7 +33,7 @@ function Gate() {
       </div>
     )
   }
-  return <LojaProvider><Shell />{voltarPortal}</LojaProvider>
+  return <LojaProvider><Shell /></LojaProvider>
 }
 
 export default function App() {
