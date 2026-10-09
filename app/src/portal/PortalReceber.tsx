@@ -185,7 +185,13 @@ export function PortalReceber() {
   // ─────────── CONFERÊNCIA ───────────
   return (
     <div>
-      <button className="p-btn" onClick={voltar} style={{ marginBottom: 12 }}>‹ Voltar</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        <button className="p-btn" onClick={voltar}>‹ Voltar</button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="p-btn" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(true)}>Receber sem conferência</button>
+          <button className="p-btn p-btn-pri" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(false)}>{confirmar.isPending ? 'Confirmando…' : '✓ Confirmar Recebimento'}</button>
+        </div>
+      </div>
       <div className="p-card" style={{ padding: 14, marginBottom: 12, borderColor: '#d6caf5', background: '#faf7ff' }}>
         <div style={{ fontSize: 15, fontWeight: 800 }}>{sel.nome_emitente || '—'}</div>
         <div style={{ fontSize: 12, color: '#64748b', marginTop: 3 }}>NF-e {sel.numero}/{sel.serie} · {fmtData(sel.data_emissao)} · {itens.length} itens · {brl(sel.valor_total)}</div>
@@ -238,14 +244,9 @@ export function PortalReceber() {
           </div>
         )}
 
-      <div className="p-card" style={{ padding: 12, margin: '12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="p-card" style={{ padding: 12, marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 13, color: '#5b6b85' }}>{itens.length} itens</span>
         <b style={{ fontSize: 14, color: divergencias ? '#dc2626' : '#15803d' }}>{divergencias ? `${divergencias} divergência${divergencias > 1 ? 's' : ''}` : 'Tudo conferido'}</b>
-      </div>
-
-      <div style={{ display: 'grid', gap: 8 }}>
-        <button className="p-btn p-btn-pri" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(false)} style={{ padding: 14, fontSize: 15 }}>{confirmar.isPending ? 'Confirmando…' : '✓ Confirmar Recebimento'}</button>
-        <button className="p-btn" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(true)}>Receber sem conferência (igual à nota)</button>
       </div>
 
       {toast && <div className={'p-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
