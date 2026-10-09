@@ -140,33 +140,46 @@ export function PortalReceber() {
 
       {loadingItens ? <div className="p-card"><div className="p-empty">Carregando itens…</div></div>
         : (
-          <div style={{ display: 'grid', gap: 9 }}>
-            {itens.map((it) => {
-              const l = linha(it)
-              return (
-                <div key={it.id} className="p-card" style={{ padding: 12, border: '1px solid ' + (l.dif !== 0 ? '#f3c6c6' : '#e3e8f0') }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700 }}>{l.nome}</div>
-                      <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 1 }}>Na nota: {fmtQ(l.nota)} {l.unc.toUpperCase()}{l.fator !== 1 ? ` · 1 ${l.unc.toUpperCase()} = ${fmtQ(l.fator)} ${l.une}` : ''}</div>
-                    </div>
-                    <input className="p-field" type="number" inputMode="decimal" step="0.001" min="0" style={{ width: 78, textAlign: 'right', fontFamily: 'DM Mono, monospace' }}
-                      value={l.rq !== undefined ? l.rq : String(l.nota)} onChange={(e) => setQ(it.id, e.target.value)} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', width: 34 }}>{l.unc.toUpperCase()}</span>
-                  </div>
-                  <div style={{ marginTop: 9, paddingTop: 9, borderTop: '1px dashed #e3e8f0', fontSize: 12, color: '#5b6b85', fontWeight: 600 }}>
-                    = <b style={{ fontFamily: 'DM Mono, monospace', color: '#14315f' }}>{fmtQ(l.est)} {l.une}</b> no estoque
-                    {l.dif !== 0 && <span style={{ color: '#dc2626', marginLeft: 8 }}>· {l.dif > 0 ? 'Sobra +' : 'Falta '}{fmtQ(Math.abs(l.dif))} {l.unc.toUpperCase()}</span>}
-                  </div>
-                  {l.dif !== 0 && (
-                    <select className="p-field" style={{ width: '100%', marginTop: 9, borderColor: '#f3c6c6' }} value={receb[it.id]?.m || ''} onChange={(e) => setM(it.id, e.target.value)}>
-                      <option value="">Motivo da divergência…</option>
-                      {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                  )}
-                </div>
-              )
-            })}
+          <div className="p-card" style={{ overflowX: 'auto' }}>
+            <table className="p-tbl prec-tbl">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th className="r">Na nota</th>
+                  <th className="r">Q. Recebida</th>
+                  <th className="r">No estoque</th>
+                  <th className="r">Diferença</th>
+                  <th>Não Conformidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {itens.map((it) => {
+                  const l = linha(it)
+                  const unc = l.unc.toUpperCase()
+                  return (
+                    <tr key={it.id} style={l.dif !== 0 ? { background: '#fff7f7' } : undefined}>
+                      <td>
+                        <div style={{ fontWeight: 700 }}>{l.nome}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{l.fator !== 1 ? `1 ${unc} = ${fmtQ(l.fator)} ${l.une}` : `em ${l.une}`}</div>
+                      </td>
+                      <td className="r mono" style={{ whiteSpace: 'nowrap' }}>{fmtQ(l.nota)} {unc}</td>
+                      <td className="r" style={{ whiteSpace: 'nowrap' }}>
+                        <input className="p-field" type="number" inputMode="decimal" step="0.001" min="0" style={{ width: 74, textAlign: 'right', fontFamily: 'DM Mono, monospace' }}
+                          value={l.rq !== undefined ? l.rq : String(l.nota)} onChange={(e) => setQ(it.id, e.target.value)} /> <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>{unc}</span>
+                      </td>
+                      <td className="r mono" style={{ fontWeight: 700, color: '#14315f', whiteSpace: 'nowrap' }}>{fmtQ(l.est)} {l.une}</td>
+                      <td className="r mono" style={{ whiteSpace: 'nowrap', color: l.dif !== 0 ? '#dc2626' : '#16a34a', fontWeight: 600 }}>{l.dif === 0 ? 'ok' : `${l.dif > 0 ? '+' : ''}${fmtQ(l.dif)} ${unc}`}</td>
+                      <td>{l.dif !== 0
+                        ? <select className="p-field" style={{ minWidth: 150, borderColor: '#f3c6c6' }} value={receb[it.id]?.m || ''} onChange={(e) => setM(it.id, e.target.value)}>
+                            <option value="">Motivo…</option>
+                            {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                        : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
 
