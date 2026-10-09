@@ -24,7 +24,12 @@ export function PortalLojaProvider({ children }: { children: ReactNode }) {
     queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Loja[] },
   })
 
-  const lojas = useMemo(() => (lojaProprio ? todas.filter((l) => l.id === lojaProprio) : todas), [todas, lojaProprio])
+  const grants = usuario?.lojas_acesso
+  const lojas = useMemo(() => {
+    if (lojaProprio) return todas.filter((l) => l.id === lojaProprio)                    // gerente: só a dele
+    if (grants && grants.length) return todas.filter((l) => grants.includes(l.id))        // supervisor com lojas concedidas
+    return todas                                                                          // admin / supervisor sem concessão = todas
+  }, [todas, lojaProprio, grants])
   const [sel, setSel] = useState('')
   const lojaAtual = sel || lojaProprio || lojas[0]?.id || ''
   const travada = !!lojaProprio
