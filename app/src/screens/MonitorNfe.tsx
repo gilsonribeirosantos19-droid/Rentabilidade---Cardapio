@@ -15,8 +15,8 @@ const PER_OPTS = ['Todos', 'Mês Atual', 'Mês Anterior', 'Período']
 const PER_LBL: Record<string, string> = { todos: 'Todos', mes_atual: 'Mês Atual', mes_anterior: 'Mês Anterior', periodo: 'Período' }
 const PER_VAL: Record<string, string> = { 'Todos': 'todos', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior', 'Período': 'periodo' }
 
-type Nfe = { id: string; numero?: string; serie?: string; chave_acesso?: string; cnpj_emitente?: string; nome_emitente?: string; data_emissao?: string; data_integracao?: string; valor_total?: number; valor_titulo?: number; data_vencimento?: string; portador?: string; status?: string; loja_id?: string | null }
-type Item = { id: string; nfe_id: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; vinculacao_id?: string | null }
+type Nfe = { id: string; numero?: string; serie?: string; chave_acesso?: string; cnpj_emitente?: string; nome_emitente?: string; data_emissao?: string; data_integracao?: string; valor_total?: number; valor_titulo?: number; data_vencimento?: string; portador?: string; status?: string; loja_id?: string | null; recebida_em?: string | null; recebida_por?: string | null; recebida_sem_conf?: boolean }
+type Item = { id: string; nfe_id: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; vinculacao_id?: string | null; qtd_recebida?: number | null; divergencia_motivo?: string | null }
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; codigo_interno?: string }
 type Forn = { id: string; nome: string; cnpj?: string; codigo?: string }
 type IFV = { id: string; insumo_id: string; fornecedor_id?: string | null; descricao_fornecedor?: string; codigo_fornecedor?: string; embalagem_descricao?: string; qtd_por_embalagem?: number; preco_unitario?: number }
@@ -27,8 +27,8 @@ const fmtD = (iso?: string | null) => iso ? new Date(iso.length === 10 ? iso + '
 const norm = (s?: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 const fmtCod = (c?: any) => (c != null && c !== '' ? String(c).padStart(6, '0') : '')
 
-const DOT: Record<string, string> = { pendente: '#f59e0b', em_transito: '#f59e0b', aguard_vinculacao: '#dc2626', pronta: '#2563eb', processada: '#16a34a', com_erro: '#dc2626', recusada: '#94a3b8', cancelada: '#94a3b8' }
-const G_PEND = ['pendente', 'em_transito'], G_PROC = ['pronta'], G_ERRO = ['aguard_vinculacao', 'com_erro'], G_CANC = ['cancelada', 'recusada']
+const DOT: Record<string, string> = { pendente: '#f59e0b', em_transito: '#f59e0b', aguard_vinculacao: '#dc2626', aguard_recebimento: '#7c3aed', pronta: '#2563eb', processada: '#16a34a', com_erro: '#dc2626', recusada: '#94a3b8', cancelada: '#94a3b8' }
+const G_PEND = ['pendente', 'em_transito'], G_PROC = ['pronta'], G_RECEBER = ['aguard_recebimento'], G_ERRO = ['aguard_vinculacao', 'com_erro'], G_CANC = ['cancelada', 'recusada']
 
 function calcFator(desc: string): number | null {
   const d = desc.trim(); if (!d) return null
@@ -68,14 +68,17 @@ function parseNfeXml(xml: string) {
 }
 
 export function MonitorNfe() {
-  const { tenantId } = useAuth()
+  const { tenantId, usuario } = useAuth()
+  const usuarioNome = usuario?.nome || null
   const { lojas, lojaId, setLojaId } = useLoja()
   const qc = useQueryClient()
   const now = new Date()
   const [fForn, setFForn] = useState('')
   const [busca, setBusca] = useState('')
   const [periodo, setPeriodo] = useState('todos'); const [de, setDe] = useState(''); const [ate, setAte] = useState('')
-  const [chkPend, setChkPend] = useState(true), [chkProc, setChkProc] = useState(true), [chkErro, setChkErro] = useState(true), [chkCanc, setChkCanc] = useState(false)
+  const [chkPend, setChkPend] = useState(true), [chkProc, setChkProc] = useState(true), [chkErro, setChkErro] = useState(true), [chkCanc, setChkCanc] = useState(false), [chkReceber, setChkReceber] = useState(true)
+  const [receb, setReceb] = useState<Record<string, { q: string; m: string }>>({})   // conferência em edição (por item)
+  const [confBusy, setConfBusy] = useState(false)
   const [tab, setTab] = useState<'nfe' | 'itens' | 'erros'>('nfe')
   const [sel, setSel] = useState<string | null>(null)
   const [picked, setPicked] = useState<Set<string>>(new Set())
@@ -87,6 +90,9 @@ export function MonitorNfe() {
   const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   // Parâmetro Estoque › "Data de movimentação" (emissao | processamento | manual): em que data a entrada afeta o estoque/CMV
   const { data: critDataMov = 'emissao' } = useQuery({ queryKey: ['mon-param-datamov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'data_movimentacao').limit(1); return (data?.[0]?.valor as string) || 'emissao' } })
+  // Parâmetro Estoque › "Recebimento pela loja (Portal)": quando 'sim', a nota pronta espera a
+  // CONFERÊNCIA física (status "A receber") antes de entrar no estoque. Desligado = fluxo de hoje.
+  const { data: recebimentoOn = false } = useQuery({ queryKey: ['mon-param-receb', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'recebimento_portal').limit(1); return (data?.[0]?.valor as string) === 'sim' } })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['mon-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome,cnpj,codigo').eq('tenant_id', tenantId); return (data ?? []) as Forn[] } })
   const { data: ifv = [] } = useQuery({ queryKey: ['mon-ifv', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<IFV>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: vinculos = [] } = useQuery({ queryKey: ['mon-vinc', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Vinc>((f, t) => supabase.from('vinculos_nfe').select('*').eq('tenant_id', tenantId).order('id').range(f, t)) })
@@ -112,7 +118,11 @@ export function MonitorNfe() {
     const its = itemsByNfe[n.id] || []
     if (!its.length) return s
     const fornId = fornByCnpj(n.cnpj_emitente)?.id || null
-    return its.every((it) => resolveVinc(it, fornId)) ? 'pronta' : 'aguard_vinculacao'
+    const vinculada = its.every((it) => resolveVinc(it, fornId))
+    if (!vinculada) return 'aguard_vinculacao'
+    // recebimento pela loja ligado: nota vinculada mas ainda SEM conferência física → "A receber"
+    if (recebimentoOn && !n.recebida_em) return 'aguard_recebimento'
+    return 'pronta'
   }
   const fornOpts = useMemo(() => { const m: Record<string, string> = {}; nfes.forEach((n) => { if (n.cnpj_emitente && n.nome_emitente) m[n.cnpj_emitente] = n.nome_emitente }); return Object.entries(m).sort((a, b) => a[1].localeCompare(b[1])) }, [nfes])
   const fornNomeByCnpj = useMemo(() => Object.fromEntries(fornOpts) as Record<string, string>, [fornOpts])
@@ -137,24 +147,28 @@ export function MonitorNfe() {
   }), [nfes, lojaId, fForn, periodo, de, ate, busca, fornecedores])
   const cnt = useMemo(() => ({
     pend: baseFiltered.filter((n) => inGroup(effStatus(n), G_PEND)).length,
+    receber: baseFiltered.filter((n) => inGroup(effStatus(n), G_RECEBER)).length,
     proc: baseFiltered.filter((n) => inGroup(effStatus(n), G_PROC)).length,
     erro: baseFiltered.filter((n) => inGroup(effStatus(n), G_ERRO)).length,
     canc: baseFiltered.filter((n) => inGroup(effStatus(n), G_CANC)).length,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [baseFiltered, itemsByNfe, ifv, ifvMap, fornecedores])
+  }), [baseFiltered, itemsByNfe, ifv, ifvMap, fornecedores, recebimentoOn])
 
   const lista = useMemo(() => {
-    const allowed = [...(chkPend ? G_PEND : []), ...(chkProc ? G_PROC : []), ...(chkErro ? G_ERRO : []), ...(chkCanc ? G_CANC : [])]
+    const allowed = [...(chkPend ? G_PEND : []), ...(chkReceber ? G_RECEBER : []), ...(chkProc ? G_PROC : []), ...(chkErro ? G_ERRO : []), ...(chkCanc ? G_CANC : [])]
     return baseFiltered.filter((n) => allowed.includes(effStatus(n)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseFiltered, chkPend, chkProc, chkErro, chkCanc, itemsByNfe, ifv, ifvMap, fornecedores])
+  }, [baseFiltered, chkPend, chkReceber, chkProc, chkErro, chkCanc, itemsByNfe, ifv, ifvMap, fornecedores, recebimentoOn])
 
   const selNfe = nfes.find((n) => n.id === sel) || null
+  const modoReceber = !!(recebimentoOn && selNfe && effStatus(selNfe) === 'aguard_recebimento')
+  const setRecebQ = (id: string, q: string) => setReceb((p) => ({ ...p, [id]: { q, m: p[id]?.m || '' } }))
+  const setRecebM = (id: string, m: string) => setReceb((p) => ({ ...p, [id]: { q: p[id]?.q ?? '', m } }))
   const erros = itens.filter((i) => !resolveVinc(i, fornByCnpj(selNfe?.cnpj_emitente)?.id || null))
   const nErros = sel ? erros.length : lista.filter((n) => inGroup(effStatus(n), G_ERRO)).length
 
   const setPreset = (v: string) => { setPeriodo(v); const d = new Date(); if (v === 'mes_atual') { setDe(isoD(new Date(d.getFullYear(), d.getMonth(), 1))); setAte(isoD(d)) } else if (v === 'mes_anterior') { setDe(isoD(new Date(d.getFullYear(), d.getMonth() - 1, 1))); setAte(isoD(new Date(d.getFullYear(), d.getMonth(), 0))) } else { setDe(''); setAte('') } }
-  const limpar = () => { setFForn(''); setBusca(''); setPreset('todos'); setChkPend(true); setChkProc(true); setChkErro(true); setChkCanc(false) }
+  const limpar = () => { setFForn(''); setBusca(''); setPreset('todos'); setChkPend(true); setChkReceber(true); setChkProc(true); setChkErro(true); setChkCanc(false) }
   const toggleAll = (on: boolean) => setPicked(on ? new Set(lista.map((n) => n.id)) : new Set())
   const togglePick = (id: string) => setPicked((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
   const nSel = picked.size
@@ -194,13 +208,17 @@ export function MonitorNfe() {
     const f = fornByCnpj(n.cnpj_emitente); const fornId = f?.id || null, fornNome = f?.nome || n.nome_emitente
     // data que a entrada usa no estoque, conforme o parâmetro (emissão = padrão; processamento = hoje)
     const dataEmis = n.data_emissao ? new Date(n.data_emissao).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : new Date().toISOString().split('T')[0]
-    const dataStr = critDataMov === 'processamento' ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : dataEmis
+    // nota recebida pela loja → usa a DATA DA CHEGADA (recebida_em). Senão, segue o parâmetro (emissão/processamento).
+    const dataReceb = n.recebida_em ? new Date(n.recebida_em).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : null
+    const dataStr = dataReceb || (critDataMov === 'processamento' ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : dataEmis)
     let okItens = 0
     for (const it of items) {
       const v = resolveVinc(it, fornId)
       if (!v) continue
       const fator = v.qtd_por_embalagem || 1
-      const qtdEst = +((it.quantidade || 0) * fator).toFixed(6)
+      // se a loja conferiu, entra a QUANTIDADE RECEBIDA (na unid. de compra) × fator; senão, a da nota
+      const qtdCompra = it.qtd_recebida != null ? Number(it.qtd_recebida) : (it.quantidade || 0)
+      const qtdEst = +(qtdCompra * fator).toFixed(6)
       const custoUnit = +((it.valor_unitario || 0) / fator).toFixed(6)
       try {
         await registrarEntradaNfe(v.insumo_id, loja, fornId, fornNome, { quantidade: qtdEst, unidade_compra: it.unidade_nfe || null, fator_conversao: fator, custo_unitario: custoUnit, tipo: 'nfe', nfe_numero: `${n.numero}/${n.serie}`, chave_acesso: n.chave_acesso || null, observacao: `NF-e ${n.numero}/${n.serie}`, criado_em: dataStr + 'T12:00:00.000Z' })
@@ -234,6 +252,32 @@ export function MonitorNfe() {
     if (!confirm(`Mover ${nSel} nota(s) para a lixeira (Fiscal › Excluídas)? Ficam lá 30 dias e podem ser restauradas.`)) return
     setBusy(true)
     try { const { error } = await supabase.from('nfe_recebidas').update({ excluida_em: new Date().toISOString() }).in('id', Array.from(picked)); if (error) throw error; setPicked(new Set()); await invalidarTudo(); showToast(`${nSel} nota(s) movida(s) para Excluídas.`, 'ok') } catch (e: any) { showToast('Erro: ' + e.message, 'err') } finally { setBusy(false) }
+  }
+
+  // Confirma o recebimento FÍSICO da nota selecionada (admin, pelo Monitor): grava a quantidade
+  // recebida + motivo por item, marca o cabeçalho como recebido e lança no estoque (processarUma
+  // lê a qtd_recebida e usa a data da chegada). semConf=true → aceita tudo igual à nota.
+  const confirmarRecebimento = async (semConf: boolean) => {
+    if (!selNfe) return
+    if (!(selNfe.loja_id || lojaId)) { showToast('NF-e sem loja — selecione uma loja no topo.', 'err'); return }
+    const agora = new Date().toISOString()
+    setConfBusy(true)
+    try {
+      for (const it of itens) {
+        const r = receb[it.id]
+        const q = semConf || !r || r.q === '' || r.q == null ? (it.quantidade ?? 0) : Number(r.q)
+        const divergente = Math.abs(Number(q) - (it.quantidade ?? 0)) > 1e-9
+        const motivo = !semConf && divergente ? (r?.m || null) : null
+        const { error } = await supabase.from('nfe_itens').update({ qtd_recebida: q, divergencia_motivo: motivo, recebido_em: agora, recebido_por: usuarioNome }).eq('id', it.id)
+        if (error) throw error
+      }
+      const { error: eh } = await supabase.from('nfe_recebidas').update({ recebida_em: agora, recebida_por: usuarioNome, recebida_sem_conf: semConf }).eq('id', selNfe.id)
+      if (eh) throw eh
+      // lança no estoque lendo a qtd_recebida recém-gravada (passo a nota já com recebida_em)
+      const r = await processarUma({ ...selNfe, recebida_em: agora })
+      setReceb({}); await invalidarTudo()
+      showToast(r.ok ? 'Recebimento confirmado — entrou no estoque!' : ('Recebido, mas: ' + (r.msg || 'falha ao lançar')), r.ok ? 'ok' : 'err')
+    } catch (e: any) { showToast('Erro: ' + e.message, 'err') } finally { setConfBusy(false) }
   }
   void now
 
@@ -269,6 +313,7 @@ export function MonitorNfe() {
 
       <div className="sit-row">
         <label className="sit-chip"><input type="checkbox" checked={chkPend} style={{ accentColor: '#f59e0b' }} onChange={(e) => setChkPend(e.target.checked)} /><span className="dot" style={{ background: '#f59e0b' }} />Pendente SEFAZ <span className="cnt" style={{ color: '#f59e0b' }}>({cnt.pend})</span></label>
+        {recebimentoOn && <label className="sit-chip"><input type="checkbox" checked={chkReceber} style={{ accentColor: '#7c3aed' }} onChange={(e) => setChkReceber(e.target.checked)} /><span className="dot" style={{ background: '#7c3aed' }} />A receber <span className="cnt" style={{ color: '#7c3aed' }}>({cnt.receber})</span></label>}
         <label className="sit-chip"><input type="checkbox" checked={chkProc} style={{ accentColor: '#2563eb' }} onChange={(e) => setChkProc(e.target.checked)} /><span className="dot" style={{ background: '#2563eb' }} />Para processar <span className="cnt" style={{ color: '#2563eb' }}>({cnt.proc})</span></label>
         <label className="sit-chip"><input type="checkbox" checked={chkErro} style={{ accentColor: '#dc2626' }} onChange={(e) => setChkErro(e.target.checked)} /><span className="dot" style={{ background: '#dc2626' }} />Com Erro <span className="cnt" style={{ color: '#dc2626' }}>({cnt.erro})</span></label>
         <label className="sit-chip"><input type="checkbox" checked={chkCanc} style={{ accentColor: '#94a3b8' }} onChange={(e) => setChkCanc(e.target.checked)} /><span className="dot" style={{ background: '#94a3b8' }} />Cancelada <span className="cnt" style={{ color: '#94a3b8' }}>({cnt.canc})</span></label>
@@ -330,7 +375,11 @@ export function MonitorNfe() {
               <span>Emissão: <b style={{ color: '#334155' }}>{fmtD(selNfe.data_emissao)}</b></span>
               <span>Total: <b style={{ color: '#334155' }}>{brl(selNfe.valor_total)}</b></span>
               <span>{itens.length} {itens.length === 1 ? 'item' : 'itens'}</span>
-              {selNfe.chave_acesso && <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              {modoReceber && <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                <button className="b-proc on" disabled={confBusy} onClick={() => confirmarRecebimento(false)}>{confBusy ? 'Confirmando…' : '✓ Confirmar Recebimento'}</button>
+                <button className="btn-g" disabled={confBusy} onClick={() => confirmarRecebimento(true)}>Receber sem conferência</button>
+              </div>}
+              {selNfe.chave_acesso && <div style={{ marginLeft: modoReceber ? 0 : 'auto', display: 'flex', gap: 8 }}>
                 <button className="det-danfe" style={{ border: '1.5px solid #e2e8f0', background: '#fff', color: '#475569' }} onClick={() => imprimirDanfeOuLocal(selNfe, itens, (selNfe as any).xml ?? null, showToast)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>Imprimir DANFE</button>
                 <button className="det-danfe" style={{ border: '1.5px solid #f97316', background: '#fff7ed', color: '#ea6c00' }} onClick={() => { const _x = (selNfe as any).xml; _x ? gerarDanfeXml(_x, showToast) : gerarDanfeAiko(selNfe.chave_acesso!, showToast) }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>Visualizar DANFE</button>
               </div>}
@@ -338,7 +387,7 @@ export function MonitorNfe() {
           </div>
           <div className="tbl-wrap"><div className="tbl-scroll">
             <table className="tbl">
-              <thead><tr><th className="c">Seq.</th><th>Item Fornecedor</th><th>Descrição</th><th>Item Interno</th><th>Embalagem</th><th className="c">UM</th><th className="r">Q. na Emb.</th><th className="r">Q. de Embalagens</th><th className="r">V. Unitário</th><th className="r">V. Total</th><th className="r">Q. Estoque</th></tr></thead>
+              <thead><tr><th className="c">Seq.</th><th>Item Fornecedor</th><th>Descrição</th><th>Item Interno</th><th>Embalagem</th><th className="c">UM</th><th className="r">Q. na Emb.</th><th className="r">Q. de Embalagens</th><th className="r">V. Unitário</th><th className="r">V. Total</th><th className="r">Q. Estoque</th>{modoReceber && <><th className="r">Q. Recebida</th><th className="r">Diferença</th><th>Não Conformidade</th></>}</tr></thead>
               <tbody>
                 {!selNfe ? <tr><td colSpan={11} className="empty">Selecione uma NF-e na aba DANFE.</td></tr>
                   : itens.length === 0 ? <tr><td colSpan={11} className="empty">Sem itens.</td></tr>
@@ -359,6 +408,17 @@ export function MonitorNfe() {
                         <td className="r mono">{brl(it.valor_unitario)}</td>
                         <td className="r mono">{brl((it.quantidade || 0) * (it.valor_unitario || 0))}</td>
                         <td className="r mono" style={{ fontWeight: 600 }}>{qEst != null ? `${fmtQ(qEst)} ${ins?.unidade_medida || ''}` : '—'}</td>
+                        {modoReceber && (() => {
+                          const notaQ = it.quantidade || 0
+                          const rq = receb[it.id]?.q
+                          const val = rq !== undefined && rq !== '' ? Number(rq) : notaQ
+                          const dif = +(val - notaQ).toFixed(3)
+                          return <>
+                            <td className="r"><input className="field" style={{ width: 84, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} type="number" step="0.001" min="0" value={rq !== undefined ? rq : String(notaQ)} onChange={(e) => setRecebQ(it.id, e.target.value)} /></td>
+                            <td className="r mono" style={{ color: dif !== 0 ? '#dc2626' : '#94a3b8', fontWeight: 600 }}>{dif > 0 ? '+' : ''}{fmtQ(dif)}</td>
+                            <td>{dif !== 0 ? <select className="field" value={receb[it.id]?.m || ''} onChange={(e) => setRecebM(it.id, e.target.value)}><option value="">Motivo…</option><option>Avaria / quebra</option><option>Falta na entrega</option><option>Sobra</option><option>Validade curta</option><option>Divergência de preço</option><option>Outro</option></select> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                          </>
+                        })()}
                       </tr>
                     )
                   })}

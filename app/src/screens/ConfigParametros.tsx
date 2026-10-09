@@ -21,6 +21,8 @@ const MODULOS: Modulo[] = [
     fields: [
       { chave: 'permitir_negativo', label: 'Permitir estoque negativo', type: 'radio', def: 'nao' },
       { chave: 'data_movimentacao', label: 'Data de movimentação do estoque (entrada de NF-e)', type: 'select', def: 'emissao', options: [{ v: 'emissao', l: 'Data de emissão da nota' }, { v: 'processamento', l: 'Data de processamento (lançamento)' }, { v: 'manual', l: 'Manual (informar ao processar)' }], hint: 'Em que data a entrada afeta o estoque/CMV.' },
+      { chave: 'recebimento_portal', label: 'Recebimento pela loja (Portal)', type: 'radio', def: 'nao', hint: 'A loja confere a mercadoria no Portal antes de entrar no estoque (status "A receber" no Monitor NF-e). Desligado = o admin processa direto no Monitor (fluxo atual).' },
+      { chave: 'receb_sem_conferencia', label: 'Permitir "receber sem conferência"', type: 'radio', def: 'sim', hint: 'Mostra o atalho pra aceitar tudo igual à nota, sem conferir item a item.' },
       { chave: 'controla_validade', label: 'Controla validade', type: 'radio', def: 'nao', embreve: true },
       { chave: 'obrigar_lote', label: 'Obrigar lote', type: 'radio', def: 'nao' },
       { chave: 'dias_alerta_validade', label: 'Dias para alerta de validade', type: 'input', def: '7', min: 1, max: 365, embreve: true },
