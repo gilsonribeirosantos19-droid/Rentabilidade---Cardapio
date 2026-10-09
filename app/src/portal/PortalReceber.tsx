@@ -58,6 +58,8 @@ export function PortalReceber() {
   const [itens, setItens] = useState<Item[]>([])
   const [receb, setReceb] = useState<Record<string, { q: string; m: string }>>({})
   const [loadingItens, setLoadingItens] = useState(false)
+  // filtros da lista
+  const [fForn, setFForn] = useState(''); const [fNum, setFNum] = useState(''); const [fDe, setFDe] = useState(''); const [fAte, setFAte] = useState('')
 
   const abrir = async (n: Nfe) => {
     setSel(n); setLoadingItens(true); setReceb({})
@@ -88,6 +90,18 @@ export function PortalReceber() {
 
   const divergencias = useMemo(() => itens.filter((it) => linha(it).dif !== 0).length, [itens, receb, sel])
 
+  const fornOpts = useMemo(() => [...new Set(notas.map((n) => n.nome_emitente || '').filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [notas])
+  const notasFil = useMemo(() => notas.filter((n) => {
+    if (fForn && (n.nome_emitente || '') !== fForn) return false
+    if (fNum.trim() && !String(n.numero || '').includes(fNum.trim())) return false
+    const d = (n.data_emissao || '').split('T')[0]
+    if (fDe && d && d < fDe) return false
+    if (fAte && d && d > fAte) return false
+    return true
+  }), [notas, fForn, fNum, fDe, fAte])
+  const temFiltro = !!(fForn || fNum.trim() || fDe || fAte)
+  const limparFiltros = () => { setFForn(''); setFNum(''); setFDe(''); setFAte('') }
+
   const confirmar = useMutation({
     mutationFn: async (semConf: boolean) => {
       if (!sel) return
@@ -112,17 +126,32 @@ export function PortalReceber() {
           : isLoading ? <div className="p-card"><div className="p-empty">Carregando…</div></div>
             : notas.length === 0 ? <div className="p-card"><div className="p-empty">Nenhuma mercadoria para receber no momento. 👍</div></div>
               : (
-                <div style={{ display: 'grid', gap: 10 }}>
-                  {notas.map((n) => (
-                    <button key={n.id} className="p-card prec-card" onClick={() => abrir(n)} style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid #e3e8f0', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 15, fontWeight: 800 }}>{n.nome_emitente || '—'}</div>
-                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 3 }}>NF-e {n.numero}/{n.serie} · {fmtData(n.data_emissao)} · {brl(n.valor_total)}</div>
+                <>
+                  <div className="pf-bar">
+                    <div className="pf-fld"><label>Fornecedor</label>
+                      <select className="p-field" value={fForn} onChange={(e) => setFForn(e.target.value)}><option value="">Todos</option>{fornOpts.map((f) => <option key={f} value={f}>{f}</option>)}</select>
+                    </div>
+                    <div className="pf-fld"><label>Número</label><input className="p-field" value={fNum} onChange={(e) => setFNum(e.target.value)} placeholder="Nº da NF-e" /></div>
+                    <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={fDe} onChange={(e) => setFDe(e.target.value)} /></div>
+                    <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={fAte} onChange={(e) => setFAte(e.target.value)} /></div>
+                    {temFiltro && <button className="p-btn" onClick={limparFiltros} style={{ alignSelf: 'flex-end' }}>▽ Limpar</button>}
+                  </div>
+                  {notasFil.length === 0
+                    ? <div className="p-card"><div className="p-empty">Nenhuma nota com esse filtro.</div></div>
+                    : (
+                      <div style={{ display: 'grid', gap: 10 }}>
+                        {notasFil.map((n) => (
+                          <button key={n.id} className="p-card prec-card" onClick={() => abrir(n)} style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid #e3e8f0', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 15, fontWeight: 800 }}>{n.nome_emitente || '—'}</div>
+                              <div style={{ fontSize: 12, color: '#64748b', marginTop: 3 }}>NF-e {n.numero}/{n.serie} · {fmtData(n.data_emissao)} · {brl(n.valor_total)}</div>
+                            </div>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', background: '#ede9fe', padding: '4px 10px', borderRadius: 20 }}>A receber ›</span>
+                          </button>
+                        ))}
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', background: '#ede9fe', padding: '4px 10px', borderRadius: 20 }}>A receber ›</span>
-                    </button>
-                  ))}
-                </div>
+                    )}
+                </>
               )}
         {toast && <div className={'p-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
       </div>
