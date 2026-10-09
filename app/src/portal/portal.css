@@ -147,8 +147,9 @@
 .portal .p-toast.err { background: #b91c1c; }
 
 /* conferência do recebimento: realça a linha que está sendo digitada (efeito estilo Everest) */
-.portal .prec-tbl tbody tr { transition: background .15s ease; }
-.portal .prec-tbl tbody tr:focus-within { background: #fff7ed !important; box-shadow: inset 3px 0 0 #f97316; }
+.portal .prec-tbl tbody td { transition: background .12s ease; }
+.portal .prec-tbl tbody tr:focus-within td { background: #fff7ed; }
+.portal .prec-tbl tbody tr:focus-within td:first-child { box-shadow: inset 3px 0 0 #f97316; }
 
 /* Requisição ao CD — selos de situação */
 .portal .req-chip { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; display: inline-block; }
