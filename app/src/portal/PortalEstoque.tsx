@@ -281,11 +281,14 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
         const { error: eu } = await supabase.from('saldo_estoque').upsert({ tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: parseFloat(novaQtd.toFixed(4)), custo_medio: parseFloat(novoCm.toFixed(6)), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,insumo_id,loja_id' })
         if (eu) throw eu
       } else {
-        // ATÔMICO (M2/M3): saída (consumo) + débito do saldo com clamp em 0, numa transação com trava no banco.
+        // ATÔMICO (M2/M3): saída (consumo) + débito do saldo numa transação com trava no banco.
+        // permite_negativo: o Portal é CEGO (o gerente não vê saldo), então registra o consumo REAL
+        // mesmo que falte saldo — vira negativo e a entrada de nota (muitas vezes atrasada) autocorrige
+        // o saldo. Travar no zero (clamp) escondia o furo e impedia essa autocorreção.
         const { error } = await supabase.rpc('registrar_saida_estoque', { p_saida: {
           tenant_id: tenantId, loja_id: lojaId, insumo_id: insumoId, quantidade: num(qtd),
           tipo: 'consumo', motivo: obs.trim() || null, responsavel: usuario?.nome || null,
-          criado_em: criadoEm, clamp_zero: true,
+          criado_em: criadoEm, permite_negativo: true,
         } })
         if (error) throw error
       }
@@ -401,10 +404,12 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
       if (!itens.length) throw new Error('Digite a saída de ao menos um item.')
       const criadoEm = data + 'T12:00:00.000Z'
       for (const it of itens) {
-        // ATÔMICO (M2/M3): saída + débito do saldo (clamp em 0) numa transação com trava no banco.
+        // ATÔMICO (M2/M3): saída + débito do saldo numa transação com trava no banco.
+        // permite_negativo (ver nota na saída avulsa): batch CEGO registra o consumo real; se faltar
+        // saldo vira negativo e a entrada de nota autocorrige — não trava no zero (não esconde o furo).
         const { error } = await supabase.rpc('registrar_saida_estoque', { p_saida: {
           tenant_id: tenantId, loja_id: lojaId, insumo_id: it.id, quantidade: it.qtd,
-          tipo: 'consumo', motivo, responsavel: usuario?.nome || null, criado_em: criadoEm, clamp_zero: true,
+          tipo: 'consumo', motivo, responsavel: usuario?.nome || null, criado_em: criadoEm, permite_negativo: true,
         } })
         if (error) throw error
       }

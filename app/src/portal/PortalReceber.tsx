@@ -1,0 +1,257 @@
+import { useMemo, useState } from 'react'
+import { useToastErr } from '../lib/toast'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/auth'
+
+// Portal › Receber Mercadoria — o gerente confere as NF-e que chegaram (status "A receber" =
+// status 'pronta' + ainda sem recebimento) e confirma. O lançamento no estoque roda na RPC
+// `processar_recebimento_nfe` (atômica, server-side): grava qtd recebida + lança a entrada.
+// Só aparece quando o parâmetro estoque.recebimento_portal = 'sim' (a casca decide).
+
+type Nfe = { id: string; numero?: string; serie?: string; cnpj_emitente?: string; nome_emitente?: string; data_emissao?: string; valor_total?: number }
+type Item = { id: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; vinculacao_id?: string | null }
+type Insumo = { id: string; nome?: string; unidade_medida?: string }
+type IFV = { id: string; insumo_id: string; fornecedor_id?: string | null; codigo_fornecedor?: string; qtd_por_embalagem?: number }
+type Forn = { id: string; cnpj?: string }
+
+const fmtData = (d?: string) => (d ? d.split('T')[0].split('-').reverse().join('/') : '—')
+const brl = (v?: number) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+const fmtQ = (v: number) => (Math.round(v * 1000) / 1000).toLocaleString('pt-BR')
+const fmt3 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })   // sempre 3 casas (0,000)
+const onlyDigits = (s?: string) => (s || '').replace(/\D/g, '')
+const MOTIVOS = ['Avaria / quebra', 'Falta na entrega', 'Sobra', 'Validade curta', 'Divergência de preço', 'Outro']
+
+export function PortalReceber() {
+  const { tenantId, usuario } = useAuth()
+  const lojaProprio = usuario?.loja_id ?? null   // loja fixa do gerente (null = admin/supervisor vê todas)
+  const qc = useQueryClient()
+  const { toast, setToast, showToast } = useToastErr(3200, 6000)
+
+  const { data: insumos = [] } = useQuery({ queryKey: ['prec-ins', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,unidade_medida').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })
+  const { data: ifv = [] } = useQuery({ queryKey: ['prec-ifv', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumo_fornecedores').select('id,insumo_id,fornecedor_id,codigo_fornecedor,qtd_por_embalagem').eq('tenant_id', tenantId); return (data ?? []) as IFV[] } })
+  const { data: fornecedores = [] } = useQuery({ queryKey: ['prec-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', tenantId); return (data ?? []) as Forn[] } })
+  // parâmetro: só mostra o atalho "Receber sem conferência" se o cliente tiver ligado (padrão = não)
+  const { data: semConfOn = false } = useQuery({ queryKey: ['prec-param-semconf', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'receb_sem_conferencia').limit(1); return (data?.[0]?.valor as string) === 'sim' } })
+
+  const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
+  const ifvMap = useMemo(() => Object.fromEntries(ifv.map((v) => [v.id, v])) as Record<string, IFV>, [ifv])
+  const fornByCnpj = (cnpj?: string) => fornecedores.find((f) => onlyDigits(f.cnpj) === onlyDigits(cnpj))
+  // resolve o vínculo de um item (pelo vinculacao_id, senão por fornecedor+código) → fator + insumo
+  const resolve = (it: Item, cnpj?: string): IFV | null => {
+    if (it.vinculacao_id && ifvMap[it.vinculacao_id]) return ifvMap[it.vinculacao_id]
+    const f = fornByCnpj(cnpj)
+    if (f && it.codigo_item_fornecedor) return ifv.find((v) => v.fornecedor_id === f.id && (v.codigo_fornecedor || '') === it.codigo_item_fornecedor) || null
+    return null
+  }
+
+  // lojas que o usuário pode acessar: gerente = só a dele; admin/supervisor (sem loja fixa) = todas
+  // (no futuro, um mapa supervisor→lojas restringe esse conjunto a um subconjunto)
+  const { data: lojas = [] } = useQuery({ queryKey: ['prec-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome?: string }[] } })
+  const lojasAcess = useMemo(() => (lojaProprio ? lojas.filter((l) => l.id === lojaProprio) : lojas), [lojas, lojaProprio])
+  const [lojaSel, setLojaSel] = useState('')
+  const efLoja = lojaSel || lojaProprio || lojasAcess[0]?.id || ''
+  const lojaNomeEf = useMemo(() => lojas.find((l) => l.id === efLoja)?.nome || '', [lojas, efLoja])
+
+  // notas "A receber" da loja selecionada: prontas (itens vinculados) e ainda sem recebimento
+  const { data: notas = [], isLoading } = useQuery({
+    queryKey: ['prec-notas', tenantId, efLoja], enabled: !!tenantId && !!efLoja,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('nfe_recebidas').select('id,numero,serie,cnpj_emitente,nome_emitente,data_emissao,valor_total')
+        .eq('tenant_id', tenantId).eq('loja_id', efLoja).eq('status', 'pronta').is('recebida_em', null).is('excluida_em', null)
+        .order('data_emissao', { ascending: false })
+      if (error) throw error; return (data ?? []) as Nfe[]
+    },
+  })
+
+  // ---- conferência ----
+  const [sel, setSel] = useState<Nfe | null>(null)
+  const [itens, setItens] = useState<Item[]>([])
+  const [receb, setReceb] = useState<Record<string, { q: string; m: string }>>({})
+  const [loadingItens, setLoadingItens] = useState(false)
+  // filtros da lista
+  const [fForn, setFForn] = useState(''); const [fNum, setFNum] = useState(''); const [fDe, setFDe] = useState(''); const [fAte, setFAte] = useState('')
+
+  const abrir = async (n: Nfe) => {
+    setSel(n); setLoadingItens(true); setReceb({})
+    const { data } = await supabase.from('nfe_itens').select('id,descricao_nfe,codigo_item_fornecedor,quantidade,unidade_nfe,valor_unitario,vinculacao_id').eq('nfe_id', n.id).order('id')
+    setItens((data ?? []) as Item[])
+    setLoadingItens(false)
+  }
+  const voltar = () => { setSel(null); setItens([]); setReceb({}) }
+
+  const setQ = (id: string, q: string) => setReceb((p) => ({ ...p, [id]: { q, m: p[id]?.m || '' } }))
+  const setM = (id: string, m: string) => setReceb((p) => ({ ...p, [id]: { q: p[id]?.q ?? '', m } }))
+  const num = (v?: string) => parseFloat(String(v ?? '').replace(',', '.'))
+
+  // dados por item pra exibir (fator, unidades, conversão, diferença)
+  const linha = (it: Item) => {
+    const v = resolve(it, sel?.cnpj_emitente)
+    const fator = v?.qtd_por_embalagem || 1
+    const ins = v ? insMap[v.insumo_id] : null
+    const unc = (it.unidade_nfe || 'un').toLowerCase()
+    const une = (ins?.unidade_medida || unc).toLowerCase()
+    const nota = it.quantidade || 0
+    const rq = receb[it.id]?.q
+    const val = rq !== undefined && rq !== '' && !isNaN(num(rq)) ? num(rq) : nota
+    const dif = Math.round((val - nota) * 1000) / 1000
+    const est = Math.round(val * fator * 1000) / 1000
+    return { v, fator, ins, unc, une, nota, rq, val, dif, est, nome: ins?.nome || it.descricao_nfe || '—' }
+  }
+
+  const divergencias = useMemo(() => itens.filter((it) => linha(it).dif !== 0).length, [itens, receb, sel])
+
+  const fornOpts = useMemo(() => [...new Set(notas.map((n) => n.nome_emitente || '').filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [notas])
+  const notasFil = useMemo(() => notas.filter((n) => {
+    if (fForn && (n.nome_emitente || '') !== fForn) return false
+    if (fNum.trim() && !String(n.numero || '').includes(fNum.trim())) return false
+    const d = (n.data_emissao || '').split('T')[0]
+    if (fDe && d && d < fDe) return false
+    if (fAte && d && d > fAte) return false
+    return true
+  }), [notas, fForn, fNum, fDe, fAte])
+  const temFiltro = !!(fForn || fNum.trim() || fDe || fAte)
+  const limparFiltros = () => { setFForn(''); setFNum(''); setFDe(''); setFAte('') }
+
+  const confirmar = useMutation({
+    mutationFn: async (semConf: boolean) => {
+      if (!sel) return
+      if (!efLoja) throw new Error('Selecione uma loja.')
+      const p_recebido: Record<string, { q: number; m: string }> = {}
+      if (!semConf) for (const it of itens) { const l = linha(it); p_recebido[it.id] = { q: l.val, m: l.dif !== 0 ? (receb[it.id]?.m || '') : '' } }
+      const { data, error } = await supabase.rpc('processar_recebimento_nfe', { p_nfe_id: sel.id, p_recebido, p_sem_conf: semConf, p_usuario: usuario?.nome || null })
+      if (error) throw error
+      return data as { ok?: boolean }
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['prec-notas'] }); showToast('Recebimento confirmado — entrou no estoque! ✅'); voltar() },
+    onError: (e: Error) => showToast('Erro: ' + e.message, true),
+  })
+
+  // ─────────── LISTA ───────────
+  if (!sel) {
+    return (
+      <div>
+        <div className="p-ttl">Receber Mercadoria</div>
+        <div className="p-sub">Confira o que chegou e dê entrada no estoque da sua loja.</div>
+        {!efLoja ? <div className="p-card"><div className="p-empty">Nenhuma loja disponível para o seu acesso.</div></div>
+          : (
+            <>
+              <div className="pf-bar">
+                <div className="pf-fld"><label>Loja</label>
+                  <select className="p-field" value={efLoja} onChange={(e) => setLojaSel(e.target.value)} disabled={lojasAcess.length <= 1} title={lojasAcess.length <= 1 ? 'Você só tem acesso a esta loja' : undefined}>
+                    {lojasAcess.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+                  </select>
+                </div>
+                <div className="pf-fld"><label>Fornecedor</label>
+                  <select className="p-field" value={fForn} onChange={(e) => setFForn(e.target.value)}><option value="">Todos</option>{fornOpts.map((f) => <option key={f} value={f}>{f}</option>)}</select>
+                </div>
+                <div className="pf-fld"><label>Número</label><input className="p-field" value={fNum} onChange={(e) => setFNum(e.target.value)} placeholder="Nº da NF-e" /></div>
+                <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={fDe} onChange={(e) => setFDe(e.target.value)} /></div>
+                <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={fAte} onChange={(e) => setFAte(e.target.value)} /></div>
+                {temFiltro && <button className="p-btn" onClick={limparFiltros} style={{ alignSelf: 'flex-end' }}>▽ Limpar</button>}
+              </div>
+              {isLoading ? <div className="p-card"><div className="p-empty">Carregando…</div></div>
+                : notas.length === 0 ? <div className="p-card"><div className="p-empty">Nenhuma mercadoria para receber nesta loja. 👍</div></div>
+                  : notasFil.length === 0 ? <div className="p-card"><div className="p-empty">Nenhuma nota com esse filtro.</div></div>
+                    : (
+                      <div className="p-card" style={{ overflowX: 'auto' }}>
+                        <table className="p-tbl">
+                          <thead>
+                            <tr>
+                              <th>Número</th><th>Série</th><th>Fornecedor</th><th>Data</th><th className="r">Valor</th><th>Loja</th><th className="r">Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {notasFil.map((n) => (
+                              <tr key={n.id} style={{ cursor: 'pointer' }} onClick={() => abrir(n)}>
+                                <td className="mono" style={{ fontWeight: 700 }}>{n.numero}</td>
+                                <td className="mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
+                                <td style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</td>
+                                <td className="mono" style={{ whiteSpace: 'nowrap' }}>{fmtData(n.data_emissao)}</td>
+                                <td className="r mono" style={{ whiteSpace: 'nowrap' }}>{brl(n.valor_total)}</td>
+                                <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{lojaNomeEf}</td>
+                                <td className="r"><button className="p-btn p-btn-pri" style={{ padding: '6px 12px', fontSize: 12, whiteSpace: 'nowrap' }} onClick={(e) => { e.stopPropagation(); abrir(n) }}>Receber ›</button></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+            </>
+          )}
+        {toast && <div className={'p-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
+      </div>
+    )
+  }
+
+  // ─────────── CONFERÊNCIA ───────────
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        <button className="p-btn" onClick={voltar}>‹ Voltar</button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {semConfOn && <button className="p-btn" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(true)}>Receber sem conferência</button>}
+          <button className="p-btn p-btn-pri" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(false)}>{confirmar.isPending ? 'Confirmando…' : '✓ Confirmar Recebimento'}</button>
+        </div>
+      </div>
+      <div className="p-card" style={{ padding: 14, marginBottom: 12, borderColor: '#d6caf5', background: '#faf7ff' }}>
+        <div style={{ fontSize: 15, fontWeight: 800 }}>{sel.nome_emitente || '—'}</div>
+        <div style={{ fontSize: 12, color: '#64748b', marginTop: 3 }}>NF-e {sel.numero}/{sel.serie} · {fmtData(sel.data_emissao)} · {itens.length} itens · {brl(sel.valor_total)}</div>
+      </div>
+
+      {loadingItens ? <div className="p-card"><div className="p-empty">Carregando itens…</div></div>
+        : (
+          <div className="p-card" style={{ overflowX: 'auto' }}>
+            <table className="p-tbl prec-tbl">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th className="r">Na nota</th>
+                  <th className="r">Q. Recebida</th>
+                  <th className="r">No estoque</th>
+                  <th className="r">Diferença</th>
+                  <th>Não Conformidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {itens.map((it) => {
+                  const l = linha(it)
+                  const unc = l.unc.toUpperCase()
+                  return (
+                    <tr key={it.id} style={l.dif !== 0 ? { background: '#fff7f7' } : undefined}>
+                      <td>
+                        <div style={{ fontWeight: 700 }}>{l.nome}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>{l.fator !== 1 ? `1 ${unc} = ${fmtQ(l.fator)} ${l.une}` : `em ${l.une}`}</div>
+                      </td>
+                      <td className="r mono" style={{ whiteSpace: 'nowrap' }}>{fmtQ(l.nota)} {unc}</td>
+                      <td className="r" style={{ whiteSpace: 'nowrap' }}>
+                        <input type="number" inputMode="decimal" step="0.001" min="0" style={{ width: 80, textAlign: 'right', fontFamily: 'DM Mono, monospace', fontWeight: 600, fontSize: 13, color: '#0f2744', padding: '7px 10px', borderRadius: 8, border: '1px solid #eef1f6', background: '#fff', outline: 'none' }}
+                          value={l.rq !== undefined ? l.rq : String(l.nota)} onChange={(e) => setQ(it.id, e.target.value)} /> <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>{unc}</span>
+                      </td>
+                      <td className="r mono" style={{ fontWeight: 700, color: '#14315f', whiteSpace: 'nowrap' }}>{fmtQ(l.est)} {l.une}</td>
+                      <td className="r">
+                        <span style={{ display: 'inline-block', minWidth: 80, textAlign: 'right', fontFamily: 'DM Mono, monospace', fontWeight: 600, padding: '7px 10px', borderRadius: 8, border: '1px solid #eef1f6', background: '#fafbfd', color: l.dif !== 0 ? '#dc2626' : '#94a3b8' }}>{l.dif > 0 ? '+' : ''}{fmt3(l.dif)}</span>
+                      </td>
+                      <td>{l.dif !== 0
+                        ? <select className="p-field" style={{ minWidth: 150, borderColor: '#f3c6c6' }} value={receb[it.id]?.m || ''} onChange={(e) => setM(it.id, e.target.value)}>
+                            <option value="">Motivo…</option>
+                            {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                        : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+      <div className="p-card" style={{ padding: 12, marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, color: '#5b6b85' }}>{itens.length} itens</span>
+        <b style={{ fontSize: 14, color: divergencias ? '#dc2626' : '#15803d' }}>{divergencias ? `${divergencias} divergência${divergencias > 1 ? 's' : ''}` : 'Tudo conferido'}</b>
+      </div>
+
+      {toast && <div className={'p-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
+    </div>
+  )
+}

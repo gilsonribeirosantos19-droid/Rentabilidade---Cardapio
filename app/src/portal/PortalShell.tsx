@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { PortalInventario } from './PortalInventario'
+import { PortalReceber } from './PortalReceber'
 import { PortalSolicitacao } from './PortalSolicitacao'
 import { PortalPerdas } from './PortalPerdas'
 import { PortalEstoque } from './PortalEstoque'
@@ -14,11 +15,12 @@ import './portal.css'
 // Portal do Gerente — casca (sidebar escura + navegação). Migração fiel do loja.html.
 // As abas são preenchidas uma a uma; por enquanto mostram um placeholder.
 
-type TabKey = 'inventario' | 'solicitacao' | 'requisicao-cd' | 'indicadores' | 'perdas' | 'estoque' | 'pcp-porcionamento' | 'pcp-producao'
-const LABEL: Record<TabKey, string> = { inventario: 'Inventário', solicitacao: 'Solicitação de Compra', 'requisicao-cd': 'Requisição ao CD', indicadores: 'Indicadores', perdas: 'Perdas', estoque: 'Estoque', 'pcp-porcionamento': 'Ordem de Porcionamento', 'pcp-producao': 'Ordem de Produção' }
+type TabKey = 'inventario' | 'receber' | 'solicitacao' | 'requisicao-cd' | 'indicadores' | 'perdas' | 'estoque' | 'pcp-porcionamento' | 'pcp-producao'
+const LABEL: Record<TabKey, string> = { inventario: 'Inventário', receber: 'Receber Mercadoria', solicitacao: 'Solicitação de Compra', 'requisicao-cd': 'Requisição ao CD', indicadores: 'Indicadores', perdas: 'Perdas', estoque: 'Estoque', 'pcp-porcionamento': 'Ordem de Porcionamento', 'pcp-producao': 'Ordem de Produção' }
 // descrição de cada tela — exibida no cabeçalho fixo (no lugar de "Portal do Gerente — loja")
 const DESC: Record<TabKey, string> = {
   inventario: 'Consulte os inventários da sua loja e preencha a contagem dos itens.',
+  receber: 'Confira as notas que chegaram e dê entrada no estoque da sua loja.',
   solicitacao: 'Selecione os itens por grupo, informe as quantidades e envie para Compras.',
   'requisicao-cd': 'Peça ao Centro de Distribuição o que a sua loja precisa. O CD separa e envia.',
   indicadores: 'Lance os números que aparecem no painel de metas da TV.',
@@ -31,6 +33,7 @@ const DESC: Record<TabKey, string> = {
 const ico = (d: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>{d.split('|').map((p, i) => <path key={i} d={p} />)}</svg>
 const ICONS: Record<string, ReactNode> = {
   inventario: ico('M9 11l3 3L22 4|M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'),
+  receber: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="1" y="3" width="15" height="13" /><path d="M16 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>,
   solicitacao: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>,
   perdas: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>,
   estoque: ico('M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'),
@@ -38,7 +41,6 @@ const ICONS: Record<string, ReactNode> = {
   'requisicao-cd': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="1" y="3" width="15" height="13" /><path d="M16 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>,
   indicadores: ico('M3 3v18h18|M18 17V9|M13 17V5|M8 17v-3'),
 }
-const OPS: TabKey[] = ['inventario', 'solicitacao', 'indicadores', 'perdas', 'estoque']
 const PCP_SUB: TabKey[] = ['pcp-porcionamento', 'pcp-producao']
 
 export function PortalShell() {
@@ -52,7 +54,15 @@ export function PortalShell() {
   const { data: loja } = useQuery({ queryKey: ['portal-loja', lojaId], enabled: !!lojaId, queryFn: async () => { const { data } = await supabase.from('lojas').select('nome').eq('id', lojaId!).maybeSingle(); return data as { nome?: string } | null } })
   // O módulo Distribuição só aparece p/ tenants que têm um CD configurado (opcional por cliente)
   const { data: temCd = false } = useQuery({ queryKey: ['portal-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
-  const opsList: TabKey[] = temCd ? ['inventario', 'solicitacao', 'requisicao-cd', 'indicadores', 'perdas', 'estoque'] : OPS
+  // "Receber Mercadoria" só aparece se o cliente ligou o recebimento pela loja (Config › Parâmetros › Estoque)
+  const { data: recebimentoOn = false } = useQuery({ queryKey: ['portal-param-receb', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'recebimento_portal').limit(1); return (data?.[0]?.valor as string) === 'sim' } })
+  const opsList: TabKey[] = [
+    'inventario',
+    ...(recebimentoOn ? ['receber' as TabKey] : []),
+    'solicitacao',
+    ...(temCd ? ['requisicao-cd' as TabKey] : []),
+    'indicadores', 'perdas', 'estoque',
+  ]
   const lojaNome = loja?.nome || 'Minha loja'
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
 
@@ -95,7 +105,7 @@ export function PortalShell() {
           <div className="p-conn"><span className="p-dot" /> conectado</div>
         </div>
         <div className="p-content">
-          {tab === 'inventario' ? <PortalInventario /> : tab === 'solicitacao' ? <PortalSolicitacao /> : tab === 'requisicao-cd' ? <PortalRequisicaoCD /> : tab === 'indicadores' ? <PortalIndicadores /> : tab === 'perdas' ? <PortalPerdas /> : tab === 'estoque' ? <PortalEstoque /> : tab === 'pcp-porcionamento' ? <PortalPcp view="porcionamento" /> : tab === 'pcp-producao' ? <PortalPcp view="producao" /> : (
+          {tab === 'inventario' ? <PortalInventario /> : tab === 'receber' ? <PortalReceber /> : tab === 'solicitacao' ? <PortalSolicitacao /> : tab === 'requisicao-cd' ? <PortalRequisicaoCD /> : tab === 'indicadores' ? <PortalIndicadores /> : tab === 'perdas' ? <PortalPerdas /> : tab === 'estoque' ? <PortalEstoque /> : tab === 'pcp-porcionamento' ? <PortalPcp view="porcionamento" /> : tab === 'pcp-producao' ? <PortalPcp view="producao" /> : (
             <div className="p-holder">
               <div className="t">{LABEL[tab]}</div>
               <div>Esta área será migrada em seguida (fiel ao portal atual).</div>
