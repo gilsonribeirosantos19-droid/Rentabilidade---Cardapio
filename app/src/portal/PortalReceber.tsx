@@ -18,6 +18,7 @@ type Forn = { id: string; cnpj?: string }
 const fmtData = (d?: string) => (d ? d.split('T')[0].split('-').reverse().join('/') : '—')
 const brl = (v?: number) => (v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const fmtQ = (v: number) => (Math.round(v * 1000) / 1000).toLocaleString('pt-BR')
+const fmt3 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })   // sempre 3 casas (0,000)
 const onlyDigits = (s?: string) => (s || '').replace(/\D/g, '')
 const MOTIVOS = ['Avaria / quebra', 'Falta na entrega', 'Sobra', 'Validade curta', 'Divergência de preço', 'Outro']
 
@@ -220,7 +221,9 @@ export function PortalReceber() {
                           value={l.rq !== undefined ? l.rq : String(l.nota)} onChange={(e) => setQ(it.id, e.target.value)} /> <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>{unc}</span>
                       </td>
                       <td className="r mono" style={{ fontWeight: 700, color: '#14315f', whiteSpace: 'nowrap' }}>{fmtQ(l.est)} {l.une}</td>
-                      <td className="r mono" style={{ whiteSpace: 'nowrap', color: l.dif !== 0 ? '#dc2626' : '#16a34a', fontWeight: 600 }}>{l.dif === 0 ? 'ok' : `${l.dif > 0 ? '+' : ''}${fmtQ(l.dif)} ${unc}`}</td>
+                      <td className="r">
+                        <span style={{ display: 'inline-block', minWidth: 80, textAlign: 'right', fontFamily: 'DM Mono, monospace', fontWeight: 600, padding: '7px 10px', borderRadius: 8, border: '1px solid #eef1f6', background: '#fafbfd', color: l.dif !== 0 ? '#dc2626' : '#94a3b8' }}>{l.dif > 0 ? '+' : ''}{fmt3(l.dif)}</span>
+                      </td>
                       <td>{l.dif !== 0
                         ? <select className="p-field" style={{ minWidth: 150, borderColor: '#f3c6c6' }} value={receb[it.id]?.m || ''} onChange={(e) => setM(it.id, e.target.value)}>
                             <option value="">Motivo…</option>
