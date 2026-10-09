@@ -183,6 +183,7 @@ export function Shell() {
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
               </select>
             )}
+            {isAdmin && <button className="btn ghost" style={{ height: 32 }} title="Abrir o Portal das Lojas (ver/receber por loja)" onClick={() => { window.location.href = '/portal-lojas' }}>🏬 Portal das Lojas</button>}
             <span>{usuario?.nome?.trim().split(/\s+/)[0] || usuario?.email || '—'}</span>
             <button className="btn ghost" style={{ height: 32, color: 'var(--red)' }} onClick={() => signOut()}>
               ⎋ Sair

@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePortalLoja } from './portalLoja'
 
 // Portal › Receber Mercadoria — o gerente confere as NF-e que chegaram (status "A receber" =
 // status 'pronta' + ainda sem recebimento) e confirma. O lançamento no estoque roda na RPC
@@ -24,7 +25,7 @@ const MOTIVOS = ['Avaria / quebra', 'Falta na entrega', 'Sobra', 'Validade curta
 
 export function PortalReceber() {
   const { tenantId, usuario } = useAuth()
-  const lojaProprio = usuario?.loja_id ?? null   // loja fixa do gerente (null = admin/supervisor vê todas)
+  const { lojaAtual: efLoja, lojaNome: lojaNomeEf } = usePortalLoja()   // loja escolhida no topo do Portal
   const qc = useQueryClient()
   const { toast, setToast, showToast } = useToastErr(3200, 6000)
 
@@ -44,14 +45,6 @@ export function PortalReceber() {
     if (f && it.codigo_item_fornecedor) return ifv.find((v) => v.fornecedor_id === f.id && (v.codigo_fornecedor || '') === it.codigo_item_fornecedor) || null
     return null
   }
-
-  // lojas que o usuário pode acessar: gerente = só a dele; admin/supervisor (sem loja fixa) = todas
-  // (no futuro, um mapa supervisor→lojas restringe esse conjunto a um subconjunto)
-  const { data: lojas = [] } = useQuery({ queryKey: ['prec-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome?: string }[] } })
-  const lojasAcess = useMemo(() => (lojaProprio ? lojas.filter((l) => l.id === lojaProprio) : lojas), [lojas, lojaProprio])
-  const [lojaSel, setLojaSel] = useState('')
-  const efLoja = lojaSel || lojaProprio || lojasAcess[0]?.id || ''
-  const lojaNomeEf = useMemo(() => lojas.find((l) => l.id === efLoja)?.nome || '', [lojas, efLoja])
 
   // notas "A receber" da loja selecionada: prontas (itens vinculados) e ainda sem recebimento
   const { data: notas = [], isLoading } = useQuery({
@@ -137,11 +130,6 @@ export function PortalReceber() {
           : (
             <>
               <div className="pf-bar">
-                <div className="pf-fld"><label>Loja</label>
-                  <select className="p-field" value={efLoja} onChange={(e) => setLojaSel(e.target.value)} disabled={lojasAcess.length <= 1} title={lojasAcess.length <= 1 ? 'Você só tem acesso a esta loja' : undefined}>
-                    {lojasAcess.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-                  </select>
-                </div>
                 <div className="pf-fld"><label>Fornecedor</label>
                   <select className="p-field" value={fForn} onChange={(e) => setFForn(e.target.value)}><option value="">Todos</option>{fornOpts.map((f) => <option key={f} value={f}>{f}</option>)}</select>
                 </div>

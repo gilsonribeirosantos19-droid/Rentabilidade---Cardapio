@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePortalLoja } from './portalLoja'
 import { num } from '../lib/format'
 import { hojeStr } from '../lib/date'
 
@@ -31,7 +32,7 @@ const ST: Record<string, { lb: string; cls: string }> = {
 
 export function PortalRequisicaoCD() {
   const { tenantId, usuario } = useAuth()
-  const lojaId = usuario?.loja_id ?? null
+  const { lojaAtual: lojaId } = usePortalLoja()
   const qc = useQueryClient()
 
   const [busca, setBusca] = useState(''); const [filGrupo, setFilGrupo] = useState('')

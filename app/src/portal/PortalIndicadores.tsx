@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePortalLoja } from './portalLoja'
 
 // Portal › Indicadores — o gerente lança os números MANUAIS do painel de TV
 // (NPS, Google, Clube, CMV, R$/Peixe, R$/kg Camarão). Cada um com valor + meta.
@@ -27,7 +28,7 @@ const fmtTs = (iso?: string) => iso ? new Date(iso).toLocaleString('pt-BR') : '�
 
 export function PortalIndicadores() {
   const { tenantId, usuario } = useAuth()
-  const lojaId = usuario?.loja_id ?? null
+  const { lojaAtual: lojaId } = usePortalLoja()
   const qc = useQueryClient()
   const [val, setVal] = useState<Record<string, string>>({})
   const [meta, setMeta] = useState<Record<string, string>>({})

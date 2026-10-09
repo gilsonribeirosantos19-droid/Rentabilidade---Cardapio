@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePortalLoja } from './portalLoja'
 import { downloadCsv } from '../lib/csv'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl, num } from '../lib/format'
@@ -29,7 +30,7 @@ type SubTab = 'relatorio' | 'movimentacao' | 'saida_lote' | 'historico'
 
 export function PortalEstoque() {
   const { tenantId, usuario } = useAuth()
-  const lojaId = usuario?.loja_id ?? null
+  const { lojaAtual: lojaId } = usePortalLoja()
   const qc = useQueryClient()
   const [sub, setSub] = useState<SubTab>('relatorio')
   const { toast, setToast, showToast } = useToastErr(3000, 6000)

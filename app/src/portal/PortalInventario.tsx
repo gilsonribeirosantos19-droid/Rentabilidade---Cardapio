@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePortalLoja } from './portalLoja'
 
 // Portal › Inventário — consulta inventários da loja e preenche a contagem.
 // Fiel ao loja.html: salvar só GRAVA a contagem (o estoque só ajusta ao FECHAR o inventário).
@@ -22,7 +23,7 @@ const ST: Record<string, { bg: string; c: string; l: string }> = { ativo: { bg: 
 
 export function PortalInventario() {
   const { tenantId, usuario } = useAuth()
-  const lojaId = usuario?.loja_id ?? null
+  const { lojaAtual: lojaId } = usePortalLoja()
   const qc = useQueryClient()
 
   const hoje = new Date()

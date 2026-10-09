@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePortalLoja } from './portalLoja'
 import { num } from '../lib/format'
 import { hojeStr } from '../lib/date'
 
@@ -54,7 +55,7 @@ const embalagem = (i?: { unidade_compra?: string; unidade_medida?: string }) => 
 
 export function PortalSolicitacao() {
   const { tenantId, usuario } = useAuth()
-  const lojaId = usuario?.loja_id ?? null
+  const { lojaAtual: lojaId } = usePortalLoja()
   const qc = useQueryClient()
 
   const [busca, setBusca] = useState(''); const [filGrupo, setFilGrupo] = useState('')
