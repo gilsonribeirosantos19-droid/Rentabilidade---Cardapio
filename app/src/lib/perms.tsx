@@ -8,7 +8,7 @@ import { useAuth } from './auth'
 //  • grupo COM matriz                         → só os módulos marcados como "visualizar"
 // A matriz vem da tela Config › Permissões (tabela `permissoes`: perfil=nome do grupo, modulo, visualizar...).
 
-type PermRow = { modulo: string; visualizar?: boolean }
+type PermRow = { modulo: string; visualizar?: boolean; criar?: boolean; editar?: boolean; excluir?: boolean }
 
 // A matriz (tela Config › Permissões) agora guarda uma linha POR TELA — `permissoes.modulo` = a key
 // do menu (ex.: 'estoque/entradas'). O enforcement é 1:1: pode ver a tela = o visualizar daquela key.
@@ -20,19 +20,28 @@ export function usePerms() {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['rbac-perms', usuario?.tenant_id, role],
     enabled: !!usuario?.tenant_id && !!role && !isAdmin,
-    queryFn: async () => { const { data } = await supabase.from('permissoes').select('modulo,visualizar').eq('tenant_id', usuario!.tenant_id!).eq('perfil', role); return (data ?? []) as PermRow[] },
+    queryFn: async () => { const { data } = await supabase.from('permissoes').select('modulo,visualizar,criar,editar,excluir').eq('tenant_id', usuario!.tenant_id!).eq('perfil', role); return (data ?? []) as PermRow[] },
   })
 
-  const vis = new Map(rows.map((r) => [r.modulo, r.visualizar === true]))
+  const byKey = new Map(rows.map((r) => [r.modulo, r]))
   const configurado = rows.length > 0   // "só grupos configurados": sem matriz = sem restrição
 
-  // pode ver a tela? admin ou grupo não-configurado → sempre. Senão, depende do "visualizar" daquela
-  // tela na matriz do grupo. Tela que NÃO está na matriz salva (ex.: recém-criada) → não bloqueia.
+  // pode VER a tela? admin ou grupo não-configurado → sempre. Senão, "visualizar" daquela tela.
+  // Tela que NÃO está na matriz salva (ex.: recém-criada) → não bloqueia.
   const podeVer = (navKey: string): boolean => {
     if (isAdmin || !configurado) return true
-    if (!vis.has(navKey)) return true
-    return vis.get(navKey) === true
+    const r = byKey.get(navKey)
+    if (!r) return true
+    return r.visualizar === true
   }
 
-  return { podeVer, isAdmin, configurado, loading: isLoading }
+  // pode EDITAR (criar/editar/excluir)? Controle Total = sim; Somente Leitura = não.
+  const podeEditar = (navKey: string): boolean => {
+    if (isAdmin || !configurado) return true
+    const r = byKey.get(navKey)
+    if (!r) return true
+    return r.criar === true || r.editar === true || r.excluir === true
+  }
+
+  return { podeVer, podeEditar, isAdmin, configurado, loading: isLoading }
 }
