@@ -10,7 +10,7 @@ import './config.css'
 // (usuarios.role = nome do grupo) + matriz de permissões por módulo (permissoes).
 
 type Grupo = { id: string; nome: string; ativo?: boolean }
-type Usuario = { id: string; nome?: string; email?: string; role?: string; ativo?: boolean }
+type Usuario = { id: string; nome?: string; email?: string; role?: string; grupo?: string | null; ativo?: boolean }
 type Perm = { modulo: string; visualizar?: boolean; criar?: boolean; editar?: boolean; excluir?: boolean }
 
 // A matriz espelha o MENU real (nav.ts): módulo → seção → tela. Cada TELA é uma linha de permissão
@@ -71,7 +71,7 @@ export function ConfigPermissoes() {
   // init vínculos de usuário quando troca grupo
   useEffect(() => {
     if (!grp) { setVinc(new Set()); return }
-    setVinc(new Set(usuarios.filter((u) => u.role === grp.nome).map((u) => u.id)))
+    setVinc(new Set(usuarios.filter((u) => u.grupo === grp.nome).map((u) => u.id)))
   }, [grp?.nome, usuarios])
 
   const selecionar = (id: string) => { const g = grupos.find((x) => x.id === id); if (!g) return; setSelId(id); setIsNew(false); setNome(g.nome); setTab('usuarios') }
@@ -91,8 +91,8 @@ export function ConfigPermissoes() {
   const grupoDelMut = useMutation({
     mutationFn: async () => {
       if (!selId || !grp) return
-      // tira o perfil dos usuários deste grupo (senão ficam com role = nome de um grupo apagado)
-      await supabase.from('usuarios').update({ role: null }).eq('tenant_id', tenantId).eq('role', grp.nome)
+      // tira o grupo de permissão dos usuários deste grupo (a rota/role deles NÃO muda)
+      await supabase.from('usuarios').update({ grupo: null }).eq('tenant_id', tenantId).eq('grupo', grp.nome)
       const { error } = await supabase.from('grupos_acesso').delete().eq('id', selId); if (error) throw error
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-grupos'] }); qc.invalidateQueries({ queryKey: ['cfg-perm-usuarios'] }); fechar(); showToast('Grupo excluído.') },
@@ -104,9 +104,9 @@ export function ConfigPermissoes() {
     mutationFn: async () => {
       if (!grp) return
       for (const u of usuarios) {
-        const nowIn = vinc.has(u.id), wasIn = u.role === grp.nome
-        if (nowIn && !wasIn) { const { error } = await supabase.from('usuarios').update({ role: grp.nome }).eq('id', u.id); if (error) throw error }
-        else if (!nowIn && wasIn) { const { error } = await supabase.from('usuarios').update({ role: null }).eq('id', u.id); if (error) throw error }
+        const nowIn = vinc.has(u.id), wasIn = u.grupo === grp.nome
+        if (nowIn && !wasIn) { const { error } = await supabase.from('usuarios').update({ grupo: grp.nome }).eq('id', u.id); if (error) throw error }
+        else if (!nowIn && wasIn) { const { error } = await supabase.from('usuarios').update({ grupo: null }).eq('id', u.id); if (error) throw error }
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-perm-usuarios'] }); showToast('Vínculos salvos.') },
@@ -137,7 +137,7 @@ export function ConfigPermissoes() {
 
   const toggleVinc = (id: string) => setVinc((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
 
-  const grupoAtual = useMemo(() => Object.fromEntries(usuarios.map((u) => [u.id, u.role])) as Record<string, string | undefined>, [usuarios])
+  const grupoAtual = useMemo(() => Object.fromEntries(usuarios.map((u) => [u.id, u.grupo])) as Record<string, string | null | undefined>, [usuarios])
 
   return (
     <div className="cfg-screen">

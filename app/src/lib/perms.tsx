@@ -17,10 +17,11 @@ export function usePerms() {
   const { usuario } = useAuth()
   const role = usuario?.role || usuario?.perfil || ''
   const isAdmin = role.toLowerCase().startsWith('admin')
+  const grupo = usuario?.grupo || ''   // o que a pessoa PODE ver vem do GRUPO (não da rota/role)
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ['rbac-perms', usuario?.tenant_id, role],
-    enabled: !!usuario?.tenant_id && !!role && !isAdmin,
-    queryFn: async () => { const { data } = await supabase.from('permissoes').select('modulo,visualizar,criar,editar,excluir').eq('tenant_id', usuario!.tenant_id!).eq('perfil', role); return (data ?? []) as PermRow[] },
+    queryKey: ['rbac-perms', usuario?.tenant_id, grupo],
+    enabled: !!usuario?.tenant_id && !!grupo && !isAdmin,
+    queryFn: async () => { const { data } = await supabase.from('permissoes').select('modulo,visualizar,criar,editar,excluir').eq('tenant_id', usuario!.tenant_id!).eq('perfil', grupo); return (data ?? []) as PermRow[] },
   })
 
   const byKey = new Map(rows.map((r) => [r.modulo, r]))
