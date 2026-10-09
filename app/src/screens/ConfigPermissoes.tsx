@@ -135,9 +135,9 @@ export function ConfigPermissoes() {
 
   return (
     <div className="cfg-screen">
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '11px 14px', margin: '12px 0 14px', fontSize: 12.5, color: '#92400e', lineHeight: 1.5 }}>
-        <span style={{ fontSize: 16, flexShrink: 0 }}>🚧</span>
-        <div><b>Controle fino de permissões — em breve.</b> Hoje o sistema tem <b>2 níveis</b>: <b>Administrador</b> (acesso total) e <b>Gerente</b> (só a loja dele, pelo Portal). A matriz abaixo <b>ainda não bloqueia</b> os módulos — criar um grupo personalizado <b>não limita</b> o acesso por enquanto (o usuário veria o app completo). Será ativado numa próxima fase.</div>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '11px 14px', margin: '12px 0 14px', fontSize: 12.5, color: '#166534', lineHeight: 1.5 }}>
+        <span style={{ fontSize: 16, flexShrink: 0 }}>✅</span>
+        <div><b>Controle de acesso por módulo ATIVO.</b> Marque <b>“Habilitado”</b> nos módulos que o grupo pode ver — o app <b>esconde do menu e bloqueia</b> os módulos não marcados para quem está nesse grupo. <b>Administrador vê tudo</b>; grupo <b>sem matriz</b> também (nada muda até você configurar). <br/>⏳ As ações finas (<b>criar/editar/excluir</b>) ainda não são travadas — por enquanto vale a <b>visualização por módulo</b>. Vem na próxima fase.</div>
       </div>
 
       <div className="perm-wrap">

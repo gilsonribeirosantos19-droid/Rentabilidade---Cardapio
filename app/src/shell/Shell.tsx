@@ -3,6 +3,7 @@ import './shell.css'
 import { Sidebar } from './Sidebar'
 import { labelForKey, titleForKey, ADMIN_ONLY_KEYS } from './nav'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { Fornecedores } from '../screens/Fornecedores'
 import { Insumos } from '../screens/Insumos'
@@ -62,9 +63,14 @@ import { Placeholder } from '../screens/Placeholder'
 type Tab = { key: string; label: string }
 
 function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: boolean }) {
+  const { podeVer } = usePerms()
   // FAIL-CLOSED: tela restrita a admin não renderiza pra não-admin (defesa além do menu escondido).
   if (ADMIN_ONLY_KEYS.has(k) && !isAdmin) {
     return <div className="pane"><div className="scr-h">Acesso restrito</div><div className="empty" style={{ marginTop: 20 }}>Esta tela é exclusiva de administradores.</div></div>
+  }
+  // RBAC: bloqueia a tela se o grupo do usuário não tem permissão de ver o módulo dela.
+  if (!podeVer(k)) {
+    return <div className="pane"><div className="scr-h">Acesso restrito</div><div className="empty" style={{ marginTop: 20 }}>Você não tem permissão para acessar esta tela. Fale com o administrador.</div></div>
   }
   if (k === 'fornecedores') return <Fornecedores />
   if (k === 'insumos') return <Insumos />
