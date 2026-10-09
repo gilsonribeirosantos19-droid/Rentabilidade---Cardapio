@@ -73,11 +73,7 @@ function PortalShellInner() {
       {open && <div className="p-backdrop" onClick={() => setOpen(false)} />}
       <aside className={'p-sidebar' + (open ? ' open' : '')}>
         <div className="p-logo"><div className="p-brand"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /><div className="p-wm"><b>AIKO</b><span className="p-uline" /></div></div><div className="s">Portal do Gerente</div></div>
-        <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
-          {(!travada && lojas.length > 1)
-            ? <select className="p-loja-sel" value={lojaAtual} onChange={(e) => setLojaAtual(e.target.value)} aria-label="Loja">{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
-            : <span>{lojaNome}</span>}
-        </div>
+        <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
         <nav className="p-nav">
           <div>
             <div className="p-navlabel">Operações</div>
@@ -107,6 +103,11 @@ function PortalShellInner() {
             <div className="p-title">{LABEL[tab]}</div>
             <div className="p-subtitle">{DESC[tab]}</div>
           </div>
+          {(!travada && lojas.length > 1) && (
+            <select className="p-top-loja" value={lojaAtual} onChange={(e) => setLojaAtual(e.target.value)} aria-label="Loja">
+              {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+            </select>
+          )}
           <div className="p-conn"><span className="p-dot" /> conectado</div>
         </div>
         <div className="p-content">
