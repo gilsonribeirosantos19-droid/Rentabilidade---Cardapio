@@ -23,7 +23,7 @@ const MOTIVOS = ['Avaria / quebra', 'Falta na entrega', 'Sobra', 'Validade curta
 
 export function PortalReceber() {
   const { tenantId, usuario } = useAuth()
-  const lojaId = usuario?.loja_id ?? null
+  const lojaProprio = usuario?.loja_id ?? null   // loja fixa do gerente (null = admin/supervisor vê todas)
   const qc = useQueryClient()
   const { toast, setToast, showToast } = useToastErr(3200, 6000)
 
@@ -42,12 +42,19 @@ export function PortalReceber() {
     return null
   }
 
-  // notas "A receber" da loja: prontas (itens vinculados) e ainda sem recebimento
+  // lojas que o usuário pode acessar: gerente = só a dele; admin/supervisor (sem loja fixa) = todas
+  // (no futuro, um mapa supervisor→lojas restringe esse conjunto a um subconjunto)
+  const { data: lojas = [] } = useQuery({ queryKey: ['prec-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as { id: string; nome?: string }[] } })
+  const lojasAcess = useMemo(() => (lojaProprio ? lojas.filter((l) => l.id === lojaProprio) : lojas), [lojas, lojaProprio])
+  const [lojaSel, setLojaSel] = useState('')
+  const efLoja = lojaSel || lojaProprio || lojasAcess[0]?.id || ''
+
+  // notas "A receber" da loja selecionada: prontas (itens vinculados) e ainda sem recebimento
   const { data: notas = [], isLoading } = useQuery({
-    queryKey: ['prec-notas', tenantId, lojaId], enabled: !!tenantId && !!lojaId,
+    queryKey: ['prec-notas', tenantId, efLoja], enabled: !!tenantId && !!efLoja,
     queryFn: async () => {
       const { data, error } = await supabase.from('nfe_recebidas').select('id,numero,serie,cnpj_emitente,nome_emitente,data_emissao,valor_total')
-        .eq('tenant_id', tenantId).eq('loja_id', lojaId).eq('status', 'pronta').is('recebida_em', null).is('excluida_em', null)
+        .eq('tenant_id', tenantId).eq('loja_id', efLoja).eq('status', 'pronta').is('recebida_em', null).is('excluida_em', null)
         .order('data_emissao', { ascending: false })
       if (error) throw error; return (data ?? []) as Nfe[]
     },
@@ -105,7 +112,7 @@ export function PortalReceber() {
   const confirmar = useMutation({
     mutationFn: async (semConf: boolean) => {
       if (!sel) return
-      if (!lojaId) throw new Error('Sua conta não está ligada a uma loja.')
+      if (!efLoja) throw new Error('Selecione uma loja.')
       const p_recebido: Record<string, { q: number; m: string }> = {}
       if (!semConf) for (const it of itens) { const l = linha(it); p_recebido[it.id] = { q: l.val, m: l.dif !== 0 ? (receb[it.id]?.m || '') : '' } }
       const { data, error } = await supabase.rpc('processar_recebimento_nfe', { p_nfe_id: sel.id, p_recebido, p_sem_conf: semConf, p_usuario: usuario?.nome || null })
@@ -122,22 +129,26 @@ export function PortalReceber() {
       <div>
         <div className="p-ttl">Receber Mercadoria</div>
         <div className="p-sub">Confira o que chegou e dê entrada no estoque da sua loja.</div>
-        {!lojaId ? <div className="p-card"><div className="p-empty">Sua conta não está ligada a uma loja.</div></div>
-          : isLoading ? <div className="p-card"><div className="p-empty">Carregando…</div></div>
-            : notas.length === 0 ? <div className="p-card"><div className="p-empty">Nenhuma mercadoria para receber no momento. 👍</div></div>
-              : (
-                <>
-                  <div className="pf-bar">
-                    <div className="pf-fld"><label>Fornecedor</label>
-                      <select className="p-field" value={fForn} onChange={(e) => setFForn(e.target.value)}><option value="">Todos</option>{fornOpts.map((f) => <option key={f} value={f}>{f}</option>)}</select>
-                    </div>
-                    <div className="pf-fld"><label>Número</label><input className="p-field" value={fNum} onChange={(e) => setFNum(e.target.value)} placeholder="Nº da NF-e" /></div>
-                    <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={fDe} onChange={(e) => setFDe(e.target.value)} /></div>
-                    <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={fAte} onChange={(e) => setFAte(e.target.value)} /></div>
-                    {temFiltro && <button className="p-btn" onClick={limparFiltros} style={{ alignSelf: 'flex-end' }}>▽ Limpar</button>}
-                  </div>
-                  {notasFil.length === 0
-                    ? <div className="p-card"><div className="p-empty">Nenhuma nota com esse filtro.</div></div>
+        {!efLoja ? <div className="p-card"><div className="p-empty">Nenhuma loja disponível para o seu acesso.</div></div>
+          : (
+            <>
+              <div className="pf-bar">
+                <div className="pf-fld"><label>Loja</label>
+                  <select className="p-field" value={efLoja} onChange={(e) => setLojaSel(e.target.value)} disabled={lojasAcess.length <= 1} title={lojasAcess.length <= 1 ? 'Você só tem acesso a esta loja' : undefined}>
+                    {lojasAcess.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+                  </select>
+                </div>
+                <div className="pf-fld"><label>Fornecedor</label>
+                  <select className="p-field" value={fForn} onChange={(e) => setFForn(e.target.value)}><option value="">Todos</option>{fornOpts.map((f) => <option key={f} value={f}>{f}</option>)}</select>
+                </div>
+                <div className="pf-fld"><label>Número</label><input className="p-field" value={fNum} onChange={(e) => setFNum(e.target.value)} placeholder="Nº da NF-e" /></div>
+                <div className="pf-fld"><label>De</label><input type="date" className="p-field" value={fDe} onChange={(e) => setFDe(e.target.value)} /></div>
+                <div className="pf-fld"><label>Até</label><input type="date" className="p-field" value={fAte} onChange={(e) => setFAte(e.target.value)} /></div>
+                {temFiltro && <button className="p-btn" onClick={limparFiltros} style={{ alignSelf: 'flex-end' }}>▽ Limpar</button>}
+              </div>
+              {isLoading ? <div className="p-card"><div className="p-empty">Carregando…</div></div>
+                : notas.length === 0 ? <div className="p-card"><div className="p-empty">Nenhuma mercadoria para receber nesta loja. 👍</div></div>
+                  : notasFil.length === 0 ? <div className="p-card"><div className="p-empty">Nenhuma nota com esse filtro.</div></div>
                     : (
                       <div style={{ display: 'grid', gap: 10 }}>
                         {notasFil.map((n) => (
@@ -151,8 +162,8 @@ export function PortalReceber() {
                         ))}
                       </div>
                     )}
-                </>
-              )}
+            </>
+          )}
         {toast && <div className={'p-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
       </div>
     )
