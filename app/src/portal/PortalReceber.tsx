@@ -48,6 +48,7 @@ export function PortalReceber() {
   const lojasAcess = useMemo(() => (lojaProprio ? lojas.filter((l) => l.id === lojaProprio) : lojas), [lojas, lojaProprio])
   const [lojaSel, setLojaSel] = useState('')
   const efLoja = lojaSel || lojaProprio || lojasAcess[0]?.id || ''
+  const lojaNomeEf = useMemo(() => lojas.find((l) => l.id === efLoja)?.nome || '', [lojas, efLoja])
 
   // notas "A receber" da loja selecionada: prontas (itens vinculados) e ainda sem recebimento
   const { data: notas = [], isLoading } = useQuery({
@@ -150,16 +151,27 @@ export function PortalReceber() {
                 : notas.length === 0 ? <div className="p-card"><div className="p-empty">Nenhuma mercadoria para receber nesta loja. 👍</div></div>
                   : notasFil.length === 0 ? <div className="p-card"><div className="p-empty">Nenhuma nota com esse filtro.</div></div>
                     : (
-                      <div style={{ display: 'grid', gap: 10 }}>
-                        {notasFil.map((n) => (
-                          <button key={n.id} className="p-card prec-card" onClick={() => abrir(n)} style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid #e3e8f0', padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 15, fontWeight: 800 }}>{n.nome_emitente || '—'}</div>
-                              <div style={{ fontSize: 12, color: '#64748b', marginTop: 3 }}>NF-e {n.numero}/{n.serie} · {fmtData(n.data_emissao)} · {brl(n.valor_total)}</div>
-                            </div>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', background: '#ede9fe', padding: '4px 10px', borderRadius: 20 }}>A receber ›</span>
-                          </button>
-                        ))}
+                      <div className="p-card" style={{ overflowX: 'auto' }}>
+                        <table className="p-tbl">
+                          <thead>
+                            <tr>
+                              <th>Número</th><th>Série</th><th>Fornecedor</th><th>Data</th><th className="r">Valor</th><th>Loja</th><th className="r">Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {notasFil.map((n) => (
+                              <tr key={n.id} style={{ cursor: 'pointer' }} onClick={() => abrir(n)}>
+                                <td className="mono" style={{ fontWeight: 700 }}>{n.numero}</td>
+                                <td className="mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
+                                <td style={{ fontWeight: 600 }}>{n.nome_emitente || '—'}</td>
+                                <td className="mono" style={{ whiteSpace: 'nowrap' }}>{fmtData(n.data_emissao)}</td>
+                                <td className="r mono" style={{ whiteSpace: 'nowrap' }}>{brl(n.valor_total)}</td>
+                                <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{lojaNomeEf}</td>
+                                <td className="r"><button className="p-btn p-btn-pri" style={{ padding: '6px 12px', fontSize: 12, whiteSpace: 'nowrap' }} onClick={(e) => { e.stopPropagation(); abrir(n) }}>Receber ›</button></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     )}
             </>
