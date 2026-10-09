@@ -1,4 +1,4 @@
-import { useAuth } from '../lib/auth'
+import { usePortalLoja } from './portalLoja'
 import { OrdemPorcionamento } from '../screens/OrdemPorcionamento'
 import { OrdemProducao } from '../screens/OrdemProducao'
 
@@ -7,8 +7,8 @@ import { OrdemProducao } from '../screens/OrdemProducao'
 // Cadastros (Setores, Item de Porcionamento) ficam só no admin.
 
 export function PortalPcp({ view }: { view: 'porcionamento' | 'producao' }) {
-  const { usuario } = useAuth()
-  const lojaFixa = usuario?.loja_id || undefined
+  const { lojaAtual } = usePortalLoja()
+  const lojaFixa = lojaAtual || undefined
 
   return (
     <div>

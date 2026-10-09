@@ -10,6 +10,7 @@ import { PortalEstoque } from './PortalEstoque'
 import { PortalPcp } from './PortalPcp'
 import { PortalRequisicaoCD } from './PortalRequisicaoCD'
 import { PortalIndicadores } from './PortalIndicadores'
+import { PortalLojaProvider, usePortalLoja } from './portalLoja'
 import './portal.css'
 
 // Portal do Gerente — casca (sidebar escura + navegação). Migração fiel do loja.html.
@@ -43,15 +44,15 @@ const ICONS: Record<string, ReactNode> = {
 }
 const PCP_SUB: TabKey[] = ['pcp-porcionamento', 'pcp-producao']
 
-export function PortalShell() {
+function PortalShellInner() {
   const { usuario, signOut, tenantId } = useAuth()
+  const { lojas, lojaAtual, setLojaAtual, travada, lojaNome } = usePortalLoja()
+  const perfil = (usuario?.role || usuario?.perfil || '').toLowerCase()
+  const isAdmin = perfil === 'admin' || perfil === 'administrador'
   const [tab, setTab] = useState<TabKey>('inventario')
   const [open, setOpen] = useState(false)
   const [pcpOpen, setPcpOpen] = useState(false)
   const pcpAtivo = tab === 'pcp-porcionamento' || tab === 'pcp-producao'
-  const lojaId = usuario?.loja_id
-
-  const { data: loja } = useQuery({ queryKey: ['portal-loja', lojaId], enabled: !!lojaId, queryFn: async () => { const { data } = await supabase.from('lojas').select('nome').eq('id', lojaId!).maybeSingle(); return data as { nome?: string } | null } })
   // O módulo Distribuição só aparece p/ tenants que têm um CD configurado (opcional por cliente)
   const { data: temCd = false } = useQuery({ queryKey: ['portal-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
   // "Receber Mercadoria" só aparece se o cliente ligou o recebimento pela loja (Config › Parâmetros › Estoque)
@@ -63,7 +64,6 @@ export function PortalShell() {
     ...(temCd ? ['requisicao-cd' as TabKey] : []),
     'indicadores', 'perdas', 'estoque',
   ]
-  const lojaNome = loja?.nome || 'Minha loja'
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
 
   const go = (k: TabKey) => { setTab(k); setOpen(false) }
@@ -73,7 +73,7 @@ export function PortalShell() {
       {open && <div className="p-backdrop" onClick={() => setOpen(false)} />}
       <aside className={'p-sidebar' + (open ? ' open' : '')}>
         <div className="p-logo"><div className="p-brand"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /><div className="p-wm"><b>AIKO</b><span className="p-uline" /></div></div><div className="s">Portal do Gerente</div></div>
-        <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>{lojaNome}</div>
+        <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
         <nav className="p-nav">
           <div>
             <div className="p-navlabel">Operações</div>
@@ -90,7 +90,8 @@ export function PortalShell() {
           </div>
         </nav>
         <div className="p-foot">
-          <div className="p-user"><div className="p-avatar">{inicial}</div><div><div className="n">{usuario?.nome || '—'}</div><div className="p">Gerente</div></div></div>
+          <div className="p-user"><div className="p-avatar">{inicial}</div><div><div className="n">{usuario?.nome || '—'}</div><div className="p">{isAdmin ? 'Administrador' : perfil === 'supervisor' ? 'Supervisor' : 'Gerente'}</div></div></div>
+          {isAdmin && <button className="p-sair" style={{ color: '#9fb4d8' }} onClick={() => { window.location.href = '/' }}>⬑ Voltar ao ERP</button>}
           <button className="p-sair" onClick={() => signOut()}>⎋ Sair</button>
         </div>
       </aside>
@@ -102,6 +103,11 @@ export function PortalShell() {
             <div className="p-title">{LABEL[tab]}</div>
             <div className="p-subtitle">{DESC[tab]}</div>
           </div>
+          {(!travada && lojas.length > 1) && (
+            <select className="p-top-loja" value={lojaAtual} onChange={(e) => setLojaAtual(e.target.value)} aria-label="Loja">
+              {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+            </select>
+          )}
           <div className="p-conn"><span className="p-dot" /> conectado</div>
         </div>
         <div className="p-content">
@@ -121,4 +127,9 @@ export function PortalShell() {
       </nav>
     </div>
   )
+}
+
+// Portal do Gerente — envolve tudo no provider da "loja atual" (gerente travado na dele; admin/supervisor escolhem)
+export function PortalShell() {
+  return <PortalLojaProvider><PortalShellInner /></PortalLojaProvider>
 }

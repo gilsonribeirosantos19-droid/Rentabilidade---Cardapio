@@ -17,9 +17,13 @@ function Gate() {
   }
   if (recovery) return <ResetPassword />   // veio do link "esqueci minha senha" → definir nova senha
   if (!session) return <Login />
-  // Gerente cai direto no Portal do Gerente; admin/operador seguem no app normal.
+  // Gerente e Supervisor caem direto no Portal do Gerente (multi-loja); admin/operador seguem no ERP.
   const perfil = (usuario?.role || usuario?.perfil || '').toLowerCase()
-  if (perfil === 'gerente') return <PortalShell />
+  const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') : ''
+  if (perfil === 'gerente' || perfil === 'supervisor') return <PortalShell />
+  // Admin pode abrir o "Portal das Lojas" pelo atalho no ERP (rota /portal-lojas) — vê todas as lojas.
+  const isAdmin = perfil === 'admin' || perfil === 'administrador'
+  if (path === '/portal-lojas' && isAdmin && usuario?.tenant_id) return <PortalShell />
   // Falha FECHADA: sessão válida mas o perfil ainda não resolveu (ex.: releitura vazia
   // logo após a renovação de token idle). Sem saber o perfil, NÃO liberamos o sistema
   // principal — senão um gerente cairia no ERP inteiro. Segura numa reconexão até o

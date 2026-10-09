@@ -136,6 +136,7 @@ function Home() {
 export function Shell() {
   const { usuario, signOut } = useAuth()
   const isAdmin = (usuario?.role || usuario?.perfil || '').toLowerCase().startsWith('admin')
+  const [userMenu, setUserMenu] = useState(false)
   const { lojas, lojaId, setLojaId } = useLoja()
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [active, setActive] = useState('__home')
@@ -183,10 +184,21 @@ export function Shell() {
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
               </select>
             )}
-            <span>{usuario?.nome?.trim().split(/\s+/)[0] || usuario?.email || '—'}</span>
-            <button className="btn ghost" style={{ height: 32, color: 'var(--red)' }} onClick={() => signOut()}>
-              ⎋ Sair
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button className="btn ghost" style={{ height: 32, display: 'flex', alignItems: 'center', gap: 7 }} onClick={() => setUserMenu((o) => !o)}>
+                <span>{usuario?.nome?.trim().split(/\s+/)[0] || usuario?.email || '—'}</span>
+                <span style={{ fontSize: 9, opacity: 0.6 }}>▾</span>
+              </button>
+              {userMenu && (
+                <>
+                  <div onClick={() => setUserMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                  <div style={{ position: 'absolute', right: 0, top: 38, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 12px 30px rgba(15,39,68,.16)', minWidth: 200, zIndex: 50, overflow: 'hidden', padding: 4 }}>
+                    {isAdmin && <button onClick={() => { window.location.href = '/portal-lojas' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')} onMouseLeave={(e) => (e.currentTarget.style.background = 'none')} style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', textAlign: 'left', background: 'none', border: 'none', borderRadius: 7, padding: '10px 12px', font: 'inherit', fontSize: 13, fontWeight: 600, color: '#334155', cursor: 'pointer' }}>🏬 Portal das Lojas</button>}
+                    <button onClick={() => signOut()} onMouseEnter={(e) => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={(e) => (e.currentTarget.style.background = 'none')} style={{ display: 'flex', alignItems: 'center', gap: 9, width: '100%', textAlign: 'left', background: 'none', border: 'none', borderRadius: 7, padding: '10px 12px', font: 'inherit', fontSize: 13, fontWeight: 600, color: 'var(--red)', cursor: 'pointer' }}>⎋ Sair</button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>}
 

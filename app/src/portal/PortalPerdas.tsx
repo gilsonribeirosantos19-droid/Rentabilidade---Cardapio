@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePortalLoja } from './portalLoja'
 import { brl, num } from '../lib/format'
 import { hojeStr } from '../lib/date'
 
@@ -28,7 +29,7 @@ const ehContagem = (um?: string) => UN_CONTAGEM.includes((um || '').toLowerCase(
 
 export function PortalPerdas() {
   const { tenantId, usuario } = useAuth()
-  const lojaId = usuario?.loja_id ?? null
+  const { lojaAtual: lojaId } = usePortalLoja()
   const qc = useQueryClient()
 
   const [tipo, setTipo] = useState<'insumo' | 'produto'>('insumo')

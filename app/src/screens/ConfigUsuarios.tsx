@@ -9,16 +9,16 @@ import './config.css'
 // via Edge Function `admin-users` (a chave admin fica no servidor).
 // Papéis: admin / gerente / operador. Loja vinculada só para gerente.
 
-type Usuario = { id: string; nome?: string; email?: string; role?: string; loja_id?: string | null; ativo?: boolean }
+type Usuario = { id: string; nome?: string; email?: string; role?: string; loja_id?: string | null; lojas_acesso?: string[] | null; ativo?: boolean }
 type Loja = { id: string; nome: string }
-type Modal = { id?: string; nome: string; email: string; role: string; lojaId: string; senha: string }
+type Modal = { id?: string; nome: string; email: string; role: string; lojaId: string; lojasAcesso: string[]; senha: string }
 
 // "operador" removido: só admin (acesso total) e gerente (preso à loja). Enquanto não há
 // permissão fina, "operador" caía em acesso ao tenant inteiro (risco). Mantido no ROLE_LABEL
 // só p/ exibir eventual usuário legado.
-const ROLES = [{ v: 'admin', l: 'Administrador' }, { v: 'gerente', l: 'Gerente' }]
-const ROLE_LABEL: Record<string, string> = { admin: 'Administrador', gerente: 'Gerente', operador: 'Operador' }
-const roleCls = (r?: string) => (r === 'admin' ? 'role-admin' : r === 'gerente' ? 'role-gerente' : 'role-operador')
+const ROLES = [{ v: 'admin', l: 'Administrador' }, { v: 'supervisor', l: 'Supervisor' }, { v: 'gerente', l: 'Gerente' }]
+const ROLE_LABEL: Record<string, string> = { admin: 'Administrador', supervisor: 'Supervisor', gerente: 'Gerente', operador: 'Operador' }
+const roleCls = (r?: string) => (r === 'admin' ? 'role-admin' : r === 'gerente' ? 'role-gerente' : r === 'supervisor' ? 'role-gerente' : 'role-operador')
 
 // chama a Edge Function admin-users; extrai a mensagem de erro do corpo da resposta
 async function invokeAdmin(body: Record<string, unknown>): Promise<any> {
@@ -54,8 +54,8 @@ export function ConfigUsuarios() {
   })
   const lojaNome = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
 
-  const novo = () => setModal({ nome: '', email: '', role: 'gerente', lojaId: '', senha: '' })
-  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', lojaId: u.loja_id ?? '', senha: '' })
+  const novo = () => setModal({ nome: '', email: '', role: 'gerente', lojaId: '', lojasAcesso: [], senha: '' })
+  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', lojaId: u.loja_id ?? '', lojasAcesso: u.lojas_acesso ?? [], senha: '' })
 
   const saveMut = useMutation({
     mutationFn: async (m: Modal) => {
@@ -64,15 +64,17 @@ export function ConfigUsuarios() {
       if (!email) throw new Error('Informe o e-mail.')
       if (!m.id && !m.senha) throw new Error('Informe a senha inicial.')
       const lojaId = m.role === 'gerente' ? (m.lojaId || null) : null
+      // supervisor: lojas concedidas (vazio = todas). Outros perfis não usam.
+      const lojasAcesso = m.role === 'supervisor' && m.lojasAcesso.length ? m.lojasAcesso : null
       if (m.id) {
-        const { error } = await supabase.from('usuarios').update({ nome, role: m.role, tenant_id: tenantId, loja_id: lojaId }).eq('id', m.id); if (error) throw error
+        const { error } = await supabase.from('usuarios').update({ nome, role: m.role, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso }).eq('id', m.id); if (error) throw error
         if (m.senha) await invokeAdmin({ action: 'update_password', userId: m.id, password: m.senha })
       } else {
         const auth = await invokeAdmin({ action: 'create', email, password: m.senha })
         const userId = auth?.id
         if (!userId) throw new Error('A conta de acesso não retornou um ID.')
         // grava email também (coluna adicionada via SQL); se ainda não existir a coluna, cai no catch e insere sem email
-        const base = { id: userId, nome, role: m.role, tenant_id: tenantId, loja_id: lojaId, ativo: true }
+        const base = { id: userId, nome, role: m.role, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso, ativo: true }
         let ins = await supabase.from('usuarios').insert({ ...base, email })
         if (ins.error && /email/i.test(ins.error.message)) ins = await supabase.from('usuarios').insert(base)
         if (ins.error) throw ins.error
@@ -140,7 +142,7 @@ export function ConfigUsuarios() {
 
       <div className="info-card">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2} style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-        <div>O <b>perfil</b> define o nível de acesso: <b>Administrador</b> (acesso total ao tenant) e <b>Gerente</b> (vê e edita só a loja vinculada).</div>
+        <div>O <b>perfil</b> define o nível de acesso: <b>Administrador</b> (acesso total ao tenant), <b>Supervisor</b> (Portal de várias lojas — todas ou as que você marcar) e <b>Gerente</b> (vê e edita só a loja vinculada).</div>
       </div>
 
       {/* ===== modal usuário ===== */}
@@ -155,6 +157,19 @@ export function ConfigUsuarios() {
                 <div><label>Perfil *</label><select value={modal.role} onChange={(e) => setModal({ ...modal, role: e.target.value })}>{ROLES.map((r) => <option key={r.v} value={r.v}>{r.l}</option>)}</select></div>
                 {modal.role === 'gerente' && <div><label>Loja vinculada</label><select value={modal.lojaId} onChange={(e) => setModal({ ...modal, lojaId: e.target.value })}><option value="">Selecione a loja…</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>}
               </div>
+              {modal.role === 'supervisor' && (
+                <div className="cfg-fg"><label>Lojas que ele acessa <span style={{ fontWeight: 400, color: '#64748b' }}>(nenhuma marcada = todas as lojas)</span></label>
+                  <div className="usr-lojas">
+                    {lojas.length === 0 ? <span style={{ fontSize: 12, color: '#94a3b8', padding: 8 }}>Nenhuma loja cadastrada.</span>
+                      : lojas.map((l) => (
+                        <label key={l.id}>
+                          <input type="checkbox" checked={modal.lojasAcesso.includes(l.id)} onChange={(e) => setModal({ ...modal, lojasAcesso: e.target.checked ? [...modal.lojasAcesso, l.id] : modal.lojasAcesso.filter((x) => x !== l.id) })} />
+                          {l.nome}
+                        </label>
+                      ))}
+                  </div>
+                </div>
+              )}
               <div className="cfg-fg"><label>{modal.id ? 'Nova senha (deixe em branco para manter)' : 'Senha inicial *'}</label><input type="password" value={modal.senha} onChange={(e) => setModal({ ...modal, senha: e.target.value })} placeholder={modal.id ? '••••••' : ''} autoComplete="new-password" /></div>
             </div>
             <div className="mf">
