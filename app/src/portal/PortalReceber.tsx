@@ -217,7 +217,7 @@ export function PortalReceber() {
                       </td>
                       <td className="r mono" style={{ whiteSpace: 'nowrap' }}>{fmtQ(l.nota)} {unc}</td>
                       <td className="r" style={{ whiteSpace: 'nowrap' }}>
-                        <input className="p-field" type="number" inputMode="decimal" step="0.001" min="0" style={{ width: 74, textAlign: 'right', fontFamily: 'DM Mono, monospace' }}
+                        <input type="number" inputMode="decimal" step="0.001" min="0" style={{ width: 80, textAlign: 'right', fontFamily: 'DM Mono, monospace', fontWeight: 600, fontSize: 13, color: '#0f2744', padding: '7px 10px', borderRadius: 8, border: '1px solid #eef1f6', background: '#fff', outline: 'none' }}
                           value={l.rq !== undefined ? l.rq : String(l.nota)} onChange={(e) => setQ(it.id, e.target.value)} /> <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>{unc}</span>
                       </td>
                       <td className="r mono" style={{ fontWeight: 700, color: '#14315f', whiteSpace: 'nowrap' }}>{fmtQ(l.est)} {l.une}</td>
