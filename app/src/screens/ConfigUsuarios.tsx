@@ -159,10 +159,10 @@ export function ConfigUsuarios() {
               </div>
               {modal.role === 'supervisor' && (
                 <div className="cfg-fg"><label>Lojas que ele acessa <span style={{ fontWeight: 400, color: '#64748b' }}>(nenhuma marcada = todas as lojas)</span></label>
-                  <div style={{ display: 'flex', flexDirection: 'column', maxHeight: 190, overflow: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, padding: 4 }}>
+                  <div className="usr-lojas">
                     {lojas.length === 0 ? <span style={{ fontSize: 12, color: '#94a3b8', padding: 8 }}>Nenhuma loja cadastrada.</span>
                       : lojas.map((l) => (
-                        <label key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, padding: '7px 8px', borderRadius: 6, cursor: 'pointer' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')} onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}>
+                        <label key={l.id}>
                           <input type="checkbox" checked={modal.lojasAcesso.includes(l.id)} onChange={(e) => setModal({ ...modal, lojasAcesso: e.target.checked ? [...modal.lojasAcesso, l.id] : modal.lojasAcesso.filter((x) => x !== l.id) })} />
                           {l.nome}
                         </label>
