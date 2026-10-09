@@ -31,6 +31,8 @@ export function PortalReceber() {
   const { data: insumos = [] } = useQuery({ queryKey: ['prec-ins', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,unidade_medida').eq('tenant_id', tenantId); return (data ?? []) as Insumo[] } })
   const { data: ifv = [] } = useQuery({ queryKey: ['prec-ifv', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('insumo_fornecedores').select('id,insumo_id,fornecedor_id,codigo_fornecedor,qtd_por_embalagem').eq('tenant_id', tenantId); return (data ?? []) as IFV[] } })
   const { data: fornecedores = [] } = useQuery({ queryKey: ['prec-forn', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', tenantId); return (data ?? []) as Forn[] } })
+  // parâmetro: só mostra o atalho "Receber sem conferência" se o cliente tiver ligado (padrão = não)
+  const { data: semConfOn = false } = useQuery({ queryKey: ['prec-param-semconf', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'receb_sem_conferencia').limit(1); return (data?.[0]?.valor as string) === 'sim' } })
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const ifvMap = useMemo(() => Object.fromEntries(ifv.map((v) => [v.id, v])) as Record<string, IFV>, [ifv])
@@ -188,7 +190,7 @@ export function PortalReceber() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
         <button className="p-btn" onClick={voltar}>‹ Voltar</button>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button className="p-btn" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(true)}>Receber sem conferência</button>
+          {semConfOn && <button className="p-btn" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(true)}>Receber sem conferência</button>}
           <button className="p-btn p-btn-pri" disabled={confirmar.isPending || loadingItens} onClick={() => confirmar.mutate(false)}>{confirmar.isPending ? 'Confirmando…' : '✓ Confirmar Recebimento'}</button>
         </div>
       </div>
