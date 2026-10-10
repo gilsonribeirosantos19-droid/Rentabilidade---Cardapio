@@ -8,7 +8,7 @@ export type Module = { id: string; label: string; icon: string; home?: boolean; 
 
 // Telas restritas a admin (gestão de usuários/permissões). Escondidas do menu e bloqueadas
 // na renderização (fail-closed) pra quem não é admin. O RLS do banco é a trava definitiva.
-export const ADMIN_ONLY_KEYS = new Set(['config/usuarios', 'config/permissoes'])
+export const ADMIN_ONLY_KEYS = new Set(['config/usuarios', 'config/permissoes', 'config/auditoria'])
 
 export const MODULES: Module[] = [
   { id: 'inicio', label: 'Visão geral', icon: 'home', home: true },
@@ -122,6 +122,7 @@ export const MODULES: Module[] = [
       { label: 'Geral', key: 'config/geral' },
       { label: 'Usuários', key: 'config/usuarios', admin: true },
       { label: 'Permissões', key: 'config/permissoes', admin: true },
+      { label: 'Auditoria', key: 'config/auditoria', admin: true },
       { label: 'Parâmetros', key: 'config/parametros' },
     ],
   },
