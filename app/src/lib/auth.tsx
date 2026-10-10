@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
+import { setSentryUser } from './sentry'
 
 export type Usuario = {
   id: string
@@ -45,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('id', s.user.id)
       .limit(1)
       .maybeSingle()
-    if (data) { setUsuario(data as Usuario); return }
+    if (data) { setUsuario(data as Usuario); setSentryUser(data as Usuario); return }
     // Releitura falhou (erro/RLS logo após renovação de token idle). NUNCA rebaixa um
     // perfil já carregado — perder o `perfil` faria o gerente cair no sistema principal.
     // Tenta de novo algumas vezes enquanto o token novo se estabiliza.
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    setSentryUser(null)
     await supabase.auth.signOut()
   }
 
