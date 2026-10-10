@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { ChartBox } from '../components/ChartBox'
 import { SearchSelect } from '../components/SearchSelect'
@@ -53,6 +54,8 @@ const baseChart = (): ChartConfiguration['options'] => ({
 
 export function SugestaoCompra() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('compras/sugestao')   // Somente Leitura = não envia requisição ao CD
   const { lojas } = useLoja()
   const [view, setView] = useState<'sugestao' | 'pedido'>('sugestao')
   const [lojaFil, setLojaFil] = useState('')
@@ -332,7 +335,7 @@ export function SugestaoCompra() {
         <span className="info">Valor total da compra: <b>{brl(foot.val)}</b></span>
         <div className="grow" />
         <button className="btn" onClick={() => toggleAll(false)}>Limpar seleção</button>
-        {temCd && <button className="btn" onClick={abrirReqCd} title={lojaFil ? 'Requisitar os itens selecionados ao Centro de Distribuição' : 'Escolha uma loja no filtro para requisitar do CD'}>📦 Requisitar do CD</button>}
+        {temCd && canEdit && <button className="btn" onClick={abrirReqCd} title={lojaFil ? 'Requisitar os itens selecionados ao Centro de Distribuição' : 'Escolha uma loja no filtro para requisitar do CD'}>📦 Requisitar do CD</button>}
         <button className="btn btn-solid" onClick={gerarPedido}>Gerar Pedido de Compra →</button>
       </div>
 
@@ -400,7 +403,7 @@ export function SugestaoCompra() {
               <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 10 }}>Itens sem estoque no CD entram na requisição, mas o CD só envia o que tiver disponível.</div>
               <div style={{ display: 'flex', gap: 9, marginTop: 16 }}>
                 <button className="btn" style={{ flex: 1 }} onClick={() => setReqOpen(false)}>Voltar</button>
-                <button className="btn btn-solid" style={{ flex: 1 }} onClick={enviarReqCd}>📦 Enviar ao CD</button>
+                {canEdit && <button className="btn btn-solid" style={{ flex: 1 }} onClick={enviarReqCd}>📦 Enviar ao CD</button>}
               </div>
             </div>
           </div>

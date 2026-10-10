@@ -3,6 +3,7 @@ import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { DetailModal } from '../components/DetailModal'
@@ -35,6 +36,8 @@ const TIPO_BADGE: Record<string, { label: string; color: string; bg: string }> =
 
 export function Saidas() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('estoque/saidas')   // Somente Leitura = não registra saída
   const { lojaId, lojas } = useLoja()
   const qc = useQueryClient()
   const now = new Date()
@@ -138,10 +141,12 @@ export function Saidas() {
   return (
     <div className="est-screen">
       <div className="act-bar">
-        <button className="btn-pri" disabled={!lojaId} title={!lojaId ? 'Selecione uma loja específica no topo' : ''} onClick={() => { if (!lojaId) { showToast('Selecione uma loja específica no topo para registrar a saída.', 'err'); return } setModal(true) }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          Nova saída
-        </button>
+        {canEdit
+          ? <button className="btn-pri" disabled={!lojaId} title={!lojaId ? 'Selecione uma loja específica no topo' : ''} onClick={() => { if (!lojaId) { showToast('Selecione uma loja específica no topo para registrar a saída.', 'err'); return } setModal(true) }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              Nova saída
+            </button>
+          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
         <div className="srch">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />

@@ -3,6 +3,7 @@ import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
@@ -23,6 +24,8 @@ const TIPO_LABEL: Record<string, string> = { mensal: 'Mensal', quinzenal: 'Quinz
 
 export function Inventario() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('estoque/inventario')   // Somente Leitura = não cria/encerra inventário
   const { lojas } = useLoja()
   const qc = useQueryClient()
   const [view, setView] = useState<'lista' | 'detalhe'>('lista')
@@ -76,14 +79,16 @@ export function Inventario() {
   const page = filtrada.slice((pagAtual - 1) * porPag, pagAtual * porPag)
 
   if (view === 'detalhe' && selId) {
-    return <InvDetalhe invId={selId} insMap={insMap} lojaMap={lojaMap} grupoMap={grupoMap} onBack={() => { setView('lista'); setSelId(null); qc.invalidateQueries({ queryKey: ['inv-list'] }) }} showToast={showToast} toast={toast} />
+    return <InvDetalhe invId={selId} insMap={insMap} lojaMap={lojaMap} grupoMap={grupoMap} canEdit={canEdit} onBack={() => { setView('lista'); setSelId(null); qc.invalidateQueries({ queryKey: ['inv-list'] }) }} showToast={showToast} toast={toast} />
   }
 
   return (
     <div className="est-screen">
       <div className="act-bar" style={{ justifyContent: 'flex-end' }}>
-        <button className="btn-sec" onClick={() => setGruposOpen(true)}>⚙ Grupos</button>
-        <button className="btn-pri" onClick={() => setNovoOpen(true)}>+ Novo inventário</button>
+        {canEdit ? <>
+          <button className="btn-sec" onClick={() => setGruposOpen(true)}>⚙ Grupos</button>
+          <button className="btn-pri" onClick={() => setNovoOpen(true)}>+ Novo inventário</button>
+        </> : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="ds-filterbar">
@@ -130,7 +135,7 @@ export function Inventario() {
   )
 }
 
-function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast }: { invId: string; insMap: Record<string, Insumo>; lojaMap: Record<string, string>; grupoMap: Record<string, string>; onBack: () => void; showToast: (m: string, t?: 'ok' | 'err') => void; toast: { msg: string; tipo: 'ok' | 'err' } | null }) {
+function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, showToast, toast }: { invId: string; insMap: Record<string, Insumo>; lojaMap: Record<string, string>; grupoMap: Record<string, string>; canEdit?: boolean; onBack: () => void; showToast: (m: string, t?: 'ok' | 'err') => void; toast: { msg: string; tipo: 'ok' | 'err' } | null }) {
   const qc = useQueryClient()
   const { data: inv } = useQuery({ queryKey: ['inv-one', invId], queryFn: async () => { const { data } = await supabase.from('inventarios').select('*').eq('id', invId).limit(1); return (data?.[0] || null) as Inv | null } })
   const { data: itens = [], isLoading } = useQuery({ queryKey: ['inv-itens', invId], queryFn: async () => { const { data } = await supabase.from('inventario_itens').select('*').eq('inventario_id', invId).order('insumo_id'); return (data ?? []) as InvItem[] } })
@@ -203,9 +208,10 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
           <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>{inv ? `${TIPO_LABEL[inv.tipo || ''] || inv.tipo} · ${fmtD(inv.data_inicial)} a ${fmtD(inv.data_final)} · ${inv.status === 'ativo' ? 'Ativo' : 'Encerrado'}` : ''}</div>
         </div>
         <button className="btn-sec" onClick={onBack}>← Voltar</button>
-        {isAtivo && <button className="btn-sec" style={{ color: '#e11d48', borderColor: '#fecaca' }} disabled={cancelarMut.isPending} onClick={() => cancelarMut.mutate()}>{cancelarMut.isPending ? 'Cancelando…' : '✕ Cancelar inventário'}</button>}
-        {isAtivo && <button className="btn-pri" disabled={encMut.isPending} onClick={() => encMut.mutate()}>{encMut.isPending ? 'Encerrando…' : '✓ Encerrar e ajustar estoque'}</button>}
-        {inv && !isAtivo && <button className="btn-sec" disabled={reabrirMut.isPending} onClick={() => reabrirMut.mutate()}>↺ Reabrir</button>}
+        {isAtivo && canEdit && <button className="btn-sec" style={{ color: '#e11d48', borderColor: '#fecaca' }} disabled={cancelarMut.isPending} onClick={() => cancelarMut.mutate()}>{cancelarMut.isPending ? 'Cancelando…' : '✕ Cancelar inventário'}</button>}
+        {isAtivo && canEdit && <button className="btn-pri" disabled={encMut.isPending} onClick={() => encMut.mutate()}>{encMut.isPending ? 'Encerrando…' : '✓ Encerrar e ajustar estoque'}</button>}
+        {inv && !isAtivo && canEdit && <button className="btn-sec" disabled={reabrirMut.isPending} onClick={() => reabrirMut.mutate()}>↺ Reabrir</button>}
+        {!canEdit && <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">
@@ -223,7 +229,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, onBack, showToast, toast
                     <td>{ins?.nome || it.insumo_id}</td>
                     <td style={{ color: '#94a3b8' }}>{un}</td>
                     <td className="r mono">{qtd(sys)}</td>
-                    <td className="r">{isAtivo ? <input type="number" step="0.001" min="0" className="field" style={{ width: 110, height: 32, textAlign: 'right' }} placeholder="0,000" value={counts[it.id] ?? ''} onChange={(e) => setCounts((c) => ({ ...c, [it.id]: e.target.value }))} /> : <span className="mono">{contado ? qtd(parseFloat(counts[it.id])) : '—'}</span>}</td>
+                    <td className="r">{isAtivo && canEdit ? <input type="number" step="0.001" min="0" className="field" style={{ width: 110, height: 32, textAlign: 'right' }} placeholder="0,000" value={counts[it.id] ?? ''} onChange={(e) => setCounts((c) => ({ ...c, [it.id]: e.target.value }))} /> : <span className="mono">{contado ? qtd(parseFloat(counts[it.id])) : '—'}</span>}</td>
                     <td className="r mono" style={{ color: cls }}>{dif == null ? '—' : sinal + qtd(dif)}</td>
                     <td className="r mono">{brl(it.custo_medio)}</td>
                     <td className="r mono" style={{ color: cls }}>{dif == null ? '—' : sinal + brl(vDif)}</td>
