@@ -48,6 +48,7 @@ import { SugestaoCompra } from '../screens/SugestaoCompra'
 import { Cotacao } from '../screens/Cotacao'
 import { ConfigGeral } from '../screens/ConfigGeral'
 import { ConfigParametros } from '../screens/ConfigParametros'
+import { ConfigAuditoria } from '../screens/ConfigAuditoria'
 import { ConfigUsuarios } from '../screens/ConfigUsuarios'
 import { ConfigPermissoes } from '../screens/ConfigPermissoes'
 import { SetorProducao } from '../screens/SetorProducao'
@@ -103,6 +104,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'compras/sugestao') return <SugestaoCompra />
   if (k === 'compras/cotacao') return <Cotacao />
   if (k === 'config/geral') return <ConfigGeral />
+  if (k === 'config/auditoria') return <ConfigAuditoria />
   if (k === 'config/parametros') return <ConfigParametros />
   if (k === 'config/usuarios') return <ConfigUsuarios />
   if (k === 'config/permissoes') return <ConfigPermissoes />
