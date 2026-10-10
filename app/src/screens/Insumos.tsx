@@ -31,8 +31,10 @@ type Insumo = {
   participa_cmv?: string
   tipo_baixa?: string
   observacao?: string | null
+  conta_gerencial_id?: string | null   // conta gerencial do DRE (ex.: Salmão, Embalagens)
   ativo?: boolean
 }
+type Conta = { id: string; codigo: string; nome: string; parent_codigo?: string | null }
 type Saldo = { insumo_id: string; custo_medio?: number; quantidade?: number; loja_id?: string }
 type Form = Partial<Insumo>
 
@@ -92,6 +94,31 @@ export function Insumos() {
     queryKey: ['insumos-clsf', tenantId], enabled: !!tenantId,
     queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome,tipo').eq('tenant_id', tenantId); return (data ?? []) as { nome: string; tipo: string }[] },
   })
+  // contas gerenciais do DRE (folhas = Salmão, Embalagens…) — p/ classificar o insumo
+  const { data: contas = [] } = useQuery({
+    queryKey: ['dre-contas', tenantId], enabled: !!tenantId,
+    queryFn: async () => { const { data } = await supabase.from('contas_gerenciais').select('id,codigo,nome,parent_codigo').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Conta[] },
+  })
+  const contaFolhas = useMemo(() => { const pais = new Set(contas.map((c) => c.parent_codigo).filter(Boolean)); return contas.filter((c) => !pais.has(c.codigo)).sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true })) }, [contas])
+  // salva a conta de um insumo direto na lista (ou em lote)
+  const contaMut = useMutation({
+    mutationFn: async ({ ids, contaId }: { ids: string[]; contaId: string | null }) => { const { error } = await supabase.from('insumos').update({ conta_gerencial_id: contaId }).in('id', ids); if (error) throw error },
+    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ['insumos'] }); qc.invalidateQueries({ queryKey: ['dre-insumos'] }); showToast(v.ids.length > 1 ? `${v.ids.length} itens classificados.` : 'Conta salva.', 'ok') },
+    onError: (e: Error) => showToast(e.message, 'err'),
+  })
+  // Auto: casa cada item SEM conta com a conta cujo nome aparece no nome do item (Salmão Fresco → Salmão)
+  const autoClassificar = () => {
+    const sem = lista.filter((i) => !i.conta_gerencial_id && i.ativo !== false)
+    if (!sem.length) { showToast('Todos os itens já têm conta.', 'ok'); return }
+    const nrm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    const porConta: Record<string, string[]> = {}; let n = 0
+    sem.forEach((i) => { const nm = nrm(i.nome || ''); let best: Conta | null = null, len = 0; contaFolhas.forEach((c) => { const cn = nrm(c.nome); if (cn.length >= 3 && nm.includes(cn) && cn.length > len) { best = c; len = cn.length } }); if (best) { const b = best as Conta; (porConta[b.id] = porConta[b.id] || []).push(i.id); n++ } })
+    if (!n) { showToast('Nenhum item casou pelo nome — classifique manualmente.', 'err'); return }
+    if (!confirm(`Casei ${n} de ${sem.length} itens sem conta pelo nome (ex.: "Salmão Fresco" → Salmão).\nAplicar? Os já classificados não são tocados; o resto você revisa.`)) return
+    Promise.all(Object.entries(porConta).map(([contaId, ids]) => supabase.from('insumos').update({ conta_gerencial_id: contaId }).in('id', ids)))
+      .then(() => { qc.invalidateQueries({ queryKey: ['insumos'] }); qc.invalidateQueries({ queryKey: ['dre-insumos'] }); showToast(`${n} itens classificados. Revise os que sobraram.`, 'ok') })
+      .catch((e) => showToast(e.message, 'err'))
+  }
 
   const opts = useMemo(() => {
     const cad = (tipo: string) => clsf.filter((c) => c.tipo === tipo).map((c) => c.nome)
@@ -151,7 +178,7 @@ export function Insumos() {
         embalagens: embs,
         tipo_baixa: f.tipo_baixa || 'consumo', tipo_item: f.tipo_item || null, familia: f.familia || null,
         subgrupo: f.subgrupo || null, participa_cmv: f.participa_cmv === 'nao' ? 'nao' : 'sim', ativo: f.ativo !== false,
-        ncm: (f.ncm || '').trim() || null,
+        ncm: (f.ncm || '').trim() || null, conta_gerencial_id: f.conta_gerencial_id || null,
       }
       // trava: não deixa INATIVAR (ativo=true → false) um item que ainda tem vínculo de fornecedor
       if (f.id && f.ativo === false) {
@@ -243,6 +270,12 @@ export function Insumos() {
                 <Sel label="Família" value={cadForm.familia} options={opts.familias} onChange={(v) => setF('familia', v)} />
                 <Sel label="Grupo (Categoria)" value={cadForm.categoria} options={opts.grupos} onChange={(v) => setF('categoria', v)} />
                 <Sel label="Subgrupo" value={cadForm.subgrupo} options={opts.subgrupos} onChange={(v) => setF('subgrupo', v)} />
+                <div className="form-group"><label className="form-label">Conta gerencial (DRE)</label>
+                  <select className="form-select" value={cadForm.conta_gerencial_id || ''} onChange={(e) => setF('conta_gerencial_id', e.target.value)}>
+                    <option value="">— sem conta (vai p/ Custos) —</option>
+                    {contaFolhas.map((c) => <option key={c.id} value={c.id}>{c.codigo} · {c.nome}</option>)}
+                  </select>
+                </div>
                 <div className="form-group"><label className="form-label">Participa do CMV</label>
                   <select className="form-select" value={cadForm.participa_cmv === 'nao' ? 'nao' : 'sim'} onChange={(e) => setF('participa_cmv', e.target.value)}><option value="sim">Sim</option><option value="nao">Não</option></select>
                 </div>
@@ -288,22 +321,32 @@ export function Insumos() {
             <FSel value={fGrupo} onChange={setFGrupo} ph="Grupo ▾" options={opts.grupos} />
             <FSel value={fSub} onChange={setFSub} ph="Subgrupo ▾" options={opts.subgrupos} />
             <select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Status ▾</option><option value="true">Ativo</option><option value="false">Inativo</option></select>
+            {canEdit && contaFolhas.length > 0 && <button className="prod-filter" style={{ cursor: 'pointer', fontWeight: 600, color: '#b45309', whiteSpace: 'nowrap' }} title="Casa os itens sem conta com a conta de mesmo nome (ex.: Salmão Fresco → Salmão)" onClick={autoClassificar}>✨ Auto classificar (DRE)</button>}
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
             <table>
               <thead><tr>
                 <th><svg className="colgrid" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>Código Interno</th>
-                <th>Descrição</th><th>Tipo do Item</th><th>Grupo</th><th>Unidade</th><th className="r">Qtd. Emb.</th><th className="c">Calcula CMV</th><th>Ações</th>
+                <th>Descrição</th><th>Tipo do Item</th><th>Grupo</th><th>Conta (DRE)</th><th>Unidade</th><th className="r">Qtd. Emb.</th><th className="c">Calcula CMV</th><th>Ações</th>
               </tr></thead>
               <tbody>
-                {isLoading ? <tr><td colSpan={8} className="empty">Carregando…</td></tr>
-                  : produtos.length === 0 ? <tr><td colSpan={8} className="empty">Nenhum item encontrado</td></tr>
+                {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
+                  : produtos.length === 0 ? <tr><td colSpan={9} className="empty">Nenhum item encontrado</td></tr>
                   : produtos.map((i) => (
                     <tr key={i.id} onClick={() => editar(i)}>
                       <td className="td-mono" style={{ color: '#64748b', fontSize: 11 }}>{fmtCodigo(i.codigo_interno)}</td>
                       <td style={{ color: '#0f172a' }}>{i.nome}</td>
                       <td style={{ color: '#64748b' }}>{i.tipo_item || '—'}</td>
                       <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        {canEdit && contaFolhas.length > 0
+                          ? <select value={i.conta_gerencial_id || ''} onChange={(e) => contaMut.mutate({ ids: [i.id], contaId: e.target.value || null })}
+                              style={{ fontSize: 12, height: 28, maxWidth: 180, border: '1px solid ' + (i.conta_gerencial_id ? '#e2e8f0' : '#fcd9a4'), borderRadius: 6, background: i.conta_gerencial_id ? '#fff' : '#fffbf5', color: i.conta_gerencial_id ? '#1e2030' : '#b45309', padding: '0 6px' }}>
+                              <option value="">— sem conta —</option>
+                              {contaFolhas.map((c) => <option key={c.id} value={c.id}>{c.codigo} · {c.nome}</option>)}
+                            </select>
+                          : <span style={{ color: '#64748b', fontSize: 12 }}>{contaFolhas.find((c) => c.id === i.conta_gerencial_id)?.nome || '—'}</span>}
+                      </td>
                       <td style={{ color: '#64748b' }}>{i.unidade_medida || '—'}</td>
                       <td className="r td-mono" style={{ color: '#64748b' }}>—</td>
                       <td className="c">{i.participa_cmv !== 'nao' ? <span className="cmv-on">✓</span> : <span className="cmv-off" />}</td>

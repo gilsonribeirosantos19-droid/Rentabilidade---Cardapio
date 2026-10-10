@@ -2,20 +2,18 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { DreClassificar } from './DreClassificar'
 import { DreLancamentos } from './DreLancamentos'
 import './dre.css'
 
 export function Dre() {
-  const [tab, setTab] = useState<'dre' | 'classificar' | 'lancamentos'>('dre')
+  const [tab, setTab] = useState<'dre' | 'lancamentos'>('dre')
   return (
     <div className="dre-screen">
       <div className="dre-tabs">
         <button className={'dre-tab' + (tab === 'dre' ? ' on' : '')} onClick={() => setTab('dre')}>Demonstrativo</button>
-        <button className={'dre-tab' + (tab === 'classificar' ? ' on' : '')} onClick={() => setTab('classificar')}>Classificar itens</button>
         <button className={'dre-tab' + (tab === 'lancamentos' ? ' on' : '')} onClick={() => setTab('lancamentos')}>Lançamentos manuais</button>
       </div>
-      {tab === 'dre' ? <DreDemo /> : tab === 'classificar' ? <DreClassificar /> : <DreLancamentos />}
+      {tab === 'dre' ? <DreDemo /> : <DreLancamentos />}
     </div>
   )
 }
