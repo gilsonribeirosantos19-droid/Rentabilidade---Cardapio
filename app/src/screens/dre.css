@@ -1,5 +1,5 @@
 /* DRE Gerencial de Compras — matriz mês a mês, contas colapsáveis */
-.dre-screen { padding: 2px 0 30px; }
+.dre-screen { padding: 10px 18px 30px; }  /* gutter horizontal igual às telas de estoque (.est-screen) */
 
 /* abas */
 .dre-tabs { display:flex; gap:4px; border-bottom:1px solid #e6eaf2; margin-bottom:14px; }
