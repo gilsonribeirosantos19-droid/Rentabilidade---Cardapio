@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo } from '../lib/cost'
 import { FichaModal } from './FichaModal'
@@ -85,6 +86,8 @@ function printFichas(fichas: Ficha[], empresa: Record<string, string> | null, ct
 
 export function FichasTecnicas() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('fichas')   // Controle Total = edita; Somente Leitura = só vê
   const { lojas, lojaId } = useLoja()
   // custo da ficha: usa a loja GLOBAL selecionada; se estiver em "Todas", usa a Ponta Negra
   // (só a Ficha abre na Ponta Negra — o resto do app fica em "Todas", pedido do dono).
@@ -261,7 +264,9 @@ export function FichasTecnicas() {
         </div>
         <button className="fic-mais"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg> Mais filtros</button>
         <button className="fic-mais" onClick={() => imprimirLista(filtrada)} title="Imprimir / Salvar PDF de todas as fichas do filtro">🖨 Imprimir ({filtrada.length})</button>
-        <button className="fic-nova" onClick={() => setEditing('new')}>+ Nova ficha</button>
+        {canEdit
+          ? <button className="fic-nova" onClick={() => setEditing('new')}>+ Nova ficha</button>
+          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="tbl-card"><div className="tbl-scroll">
@@ -288,12 +293,12 @@ export function FichasTecnicas() {
                     <td className="r mono" style={{ color: '#334155' }}>{margem !== null ? margem.toFixed(1) + '%' : '—'}</td>
                     <td style={{ color: '#64748b' }}>{st.t}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
-                      <button className="ed-btn" onClick={(e) => { e.stopPropagation(); setEditing(f) }}>✎ Editar</button>
+                      {canEdit && <button className="ed-btn" onClick={(e) => { e.stopPropagation(); setEditing(f) }}>✎ Editar</button>}
                       <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setVer(f) }}>👁 Ver</button>
-                      <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setDup(f) }}>📋 Duplicar</button>
-                      {(f.status || 'ativa') === 'arquivada'
+                      {canEdit && <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setDup(f) }}>📋 Duplicar</button>}
+                      {canEdit && ((f.status || 'ativa') === 'arquivada'
                         ? <button className="ver-btn" onClick={(e) => { e.stopPropagation(); statusMut.mutate({ id: f.id, status: 'ativa' }) }}>↺ Reativar</button>
-                        : <button className="ver-btn" style={{ color: '#b45309' }} onClick={(e) => { e.stopPropagation(); if (confirm(`Arquivar (desativar) a ficha "${f.nome}"?`)) statusMut.mutate({ id: f.id, status: 'arquivada' }) }}>🗄 Arquivar</button>}
+                        : <button className="ver-btn" style={{ color: '#b45309' }} onClick={(e) => { e.stopPropagation(); if (confirm(`Arquivar (desativar) a ficha "${f.nome}"?`)) statusMut.mutate({ id: f.id, status: 'arquivada' }) }}>🗄 Arquivar</button>)}
                     </td>
                   </tr>
                 )
@@ -305,7 +310,7 @@ export function FichasTecnicas() {
       <div className="fic-foot">{filtrada.length} fichas</div>
 
       {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
-        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} produtoById={produtoById} params={params} tenantId={tenantId} lojaId={lojaCusto} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
+        <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} produtoById={produtoById} params={params} tenantId={tenantId} lojaId={lojaCusto} canEdit={canEdit} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
       ) })()}
       {(editing || dup) && (() => {
         // DUPLICAR: copia ingredientes/rendimento/preparo da origem, mas SEM id/produto/preço
@@ -324,7 +329,7 @@ export function FichasTecnicas() {
   )
 }
 
-function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, produtoById, params, tenantId, lojaId, onClose, onEdit }: {
+function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, produtoById, params, tenantId, lojaId, canEdit = true, onClose, onEdit }: {
   ficha: Ficha
   m: { custo: number; pv: number; cmv: number | null; margem: number | null }
   st: { t: string; bg: string; c: string }
@@ -336,6 +341,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
   params: PrecoParams
   tenantId?: string | null
   lojaId?: string | null
+  canEdit?: boolean
   onClose: () => void
   onEdit: () => void
 }) {
@@ -633,7 +639,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
         )}
         </div>
         <div className="dp-ftr">
-          <button className="dp-edit" onClick={onEdit}>✎ Editar ficha</button>
+          {canEdit && <button className="dp-edit" onClick={onEdit}>✎ Editar ficha</button>}
           <button className="dp-close" onClick={onClose}>Fechar</button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { brlCur as brl } from '../lib/format'
 import './insumos.css'
@@ -64,6 +65,8 @@ export function Insumos() {
   const [cBusca, setCBusca] = useState(''); const [cCat, setCCat] = useState(''); const [cStatus, setCStatus] = useState('')
 
   const { toast, setToast, showToast } = useToastTipo(2600)
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('insumos')   // Controle Total = edita; Somente Leitura = só vê
 
   useEffect(() => { const close = () => setMenu(null); window.addEventListener('click', close); return () => window.removeEventListener('click', close) }, [])
 
@@ -204,9 +207,10 @@ export function Insumos() {
   return (
     <div className="ins-screen">
       <div className="mod-tabs">
-        <button className={'mod-tab' + (tab === 'cadastro' ? ' active' : '')} onClick={() => { setCadForm(novoForm()); setCadSub('basico'); setTab('cadastro') }}>Cadastro de Item</button>
+        {canEdit && <button className={'mod-tab' + (tab === 'cadastro' ? ' active' : '')} onClick={() => { setCadForm(novoForm()); setCadSub('basico'); setTab('cadastro') }}>Cadastro de Item</button>}
         <button className={'mod-tab' + (tab === 'produtos' ? ' active' : '')} onClick={() => setTab('produtos')}>Produtos / Itens</button>
         <button className={'mod-tab' + (tab === 'custos' ? ' active' : '')} onClick={() => setTab('custos')}>Base de Custos da Ficha Técnica</button>
+        {!canEdit && <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       {/* ===== CADASTRO DE ITEM ===== */}
@@ -264,8 +268,8 @@ export function Insumos() {
             )}
 
             <div className="form-footer">
-              <button className="f-btn" onClick={() => { setCadForm(novoForm()); setTab('produtos') }}>Cancelar</button>
-              <button className="f-btn primary" disabled={saveMut.isPending} onClick={() => saveMut.mutate(cadForm)}>{saveMut.isPending ? 'Salvando…' : 'Salvar'}</button>
+              <button className="f-btn" onClick={() => { setCadForm(novoForm()); setTab('produtos') }}>{canEdit ? 'Cancelar' : 'Voltar'}</button>
+              {canEdit && <button className="f-btn primary" disabled={saveMut.isPending} onClick={() => saveMut.mutate(cadForm)}>{saveMut.isPending ? 'Salvando…' : 'Salvar'}</button>}
             </div>
           </div>
         </div>
@@ -354,9 +358,9 @@ export function Insumos() {
 
       {menu && (
         <div style={{ position: 'fixed', top: menu.y + 4, left: menu.x - 120, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 9, boxShadow: '0 8px 24px rgba(0,0,0,.14)', zIndex: 1000, minWidth: 130, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
-          <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) editar(ins); setMenu(null) }}>✎ Editar</button>
-          <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) duplicar(ins); setMenu(null) }}>⧉ Duplicar</button>
-          <button style={{ ...menuItemStyle, color: '#ef4444' }} onClick={async () => { const ins = lista.find((x) => x.id === menu.id); setMenu(null); if (!ins) return; const n = await contarVinc(ins.id); if (n > 0) { setTransfDest(''); setTransf({ ins, count: n }); return } if (confirm(`Desativar "${ins.nome}"?`)) delMut.mutate(ins.id) }}>🗑 Desativar</button>
+          <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) editar(ins); setMenu(null) }}>{canEdit ? '✎ Editar' : '👁 Ver'}</button>
+          {canEdit && <button style={menuItemStyle} onClick={() => { const ins = lista.find((x) => x.id === menu.id); if (ins) duplicar(ins); setMenu(null) }}>⧉ Duplicar</button>}
+          {canEdit && <button style={{ ...menuItemStyle, color: '#ef4444' }} onClick={async () => { const ins = lista.find((x) => x.id === menu.id); setMenu(null); if (!ins) return; const n = await contarVinc(ins.id); if (n > 0) { setTransfDest(''); setTransf({ ins, count: n }); return } if (confirm(`Desativar "${ins.nome}"?`)) delMut.mutate(ins.id) }}>🗑 Desativar</button>}
         </div>
       )}
 
