@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { downloadCsv } from '../lib/csv'
 import './dre.css'
 
 // DRE Gerencial de Compras — hierarquia grupo (2.1) → conta (Salmão) → insumos.
@@ -108,6 +109,18 @@ export function Dre() {
   const pc = (v: number) => (model.recT > 0 ? (v / model.recT * 100).toFixed(1).replace('.', ',') : '0') + '% da receita'
   const allKeys = () => new Set(model.linhas.map((l) => l.gkey).filter(Boolean) as string[])
 
+  // exporta a matriz mês a mês (valores em R$) pra CSV
+  function exportar() {
+    const clean = (html: string) => html.replace(/<\/span>/g, '</span> ').replace(/<[^>]*>/g, '').replace(/›/g, '').replace(/\s+/g, ' ').trim()
+    const rows: (string | number)[][] = [['Conta', ...MES, 'Total']]
+    model.linhas.forEach((ln) => {
+      const tot = ln.vals.reduce((a, b) => a + b, 0)
+      rows.push(['  '.repeat(ln.pad) + clean(ln.label), ...ln.vals.map((v) => Math.round(v)), Math.round(tot)])
+    })
+    const loja = lojaId ? (lojas.find((l) => l.id === lojaId)?.nome || 'loja') : 'todas-lojas'
+    downloadCsv(`dre-compras-${ano}-${loja}.csv`.replace(/\s+/g, '-'), rows)
+  }
+
   return (
     <div className="dre-screen">
       <div className="dre-bar">
@@ -118,6 +131,7 @@ export function Dre() {
           <select value={ano} onChange={(e) => setAno(Number(e.target.value))}>{[anoAtual, anoAtual - 1, anoAtual - 2].map((a) => <option key={a} value={a}>{a}</option>)}</select>
         </div>
         <div className="dre-grow" />
+        <button className="dre-btn" onClick={exportar}>⬇ Exportar</button>
         <button className="dre-lnk" onClick={() => setAbertos(abertos.size ? new Set() : allKeys())}>{abertos.size ? '– recolher tudo' : '+ expandir tudo'}</button>
         <div className="dre-fld"><label>Exibir</label><div className="dre-seg"><button className={modo === 'rs' ? 'on' : ''} onClick={() => setModo('rs')}>R$</button><button className={modo === 'pc' ? 'on' : ''} onClick={() => setModo('pc')}>%</button></div></div>
       </div>

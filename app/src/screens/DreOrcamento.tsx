@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useToastTipo } from '../lib/toast'
 import { isoD, fmtDia } from '../lib/date'
+import { downloadCsv } from '../lib/csv'
 
 // Orçamento (Fase 3 do DRE): teto MENSAL por conta → orçado × realizado, com semáforo.
 // Realizado = compras do PERÍODO (entradas_estoque) agrupadas pela conta do insumo.
@@ -108,6 +109,19 @@ export function DreOrcamento() {
   // agrupa folhas por pai (código do grupo)
   const grupos = useMemo(() => { const m = new Map<string, Conta[]>(); folhas.forEach((c) => { const k = c.parent_codigo || '?'; (m.get(k) || m.set(k, []).get(k)!).push(c) }); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })) }, [folhas])
 
+  // exporta orçado × realizado do período pra CSV
+  function exportar() {
+    const rows: (string | number)[][] = [['Grupo', 'Conta', 'Teto mensal', 'Esperado', 'Realizado', 'Ritmo %', 'Situacao']]
+    grupos.forEach(([paiCod, itens]) => itens.forEach((c) => {
+      const orc = orcadoDe(c.id), esp = orc * mult, real = realDaConta.get(c.id) || 0
+      const p = esp > 0 ? real / esp : 0, s = statusOf(p)
+      const sit = orc > 0 ? (s === 'bad' ? 'Acima' : s === 'warn' ? 'No limite' : 'No ritmo') : 'sem teto'
+      rows.push([`${paiCod} ${paiNome(paiCod)}`, c.nome, Math.round(orc), Math.round(esp), Math.round(real), orc > 0 ? Math.round(p * 100) : '', sit])
+    }))
+    const loja = lojaId ? (lojas.find((l) => l.id === lojaId)?.nome || 'loja') : 'geral'
+    downloadCsv(`orcamento-${loja}-${fmtDia(de)}-a-${fmtDia(ate)}.csv`.replace(/[/\s]/g, '-'), rows)
+  }
+
   return (
     <div className="dre-screen">
       <div className="dre-bar">
@@ -116,6 +130,7 @@ export function DreOrcamento() {
         <div className="dre-fld"><label>De</label><input className="dre-dt" type="date" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} /></div>
         <div className="dre-fld"><label>Até</label><input className="dre-dt" type="date" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} /></div>
         <div className="dre-grow" />
+        <button className="dre-btn" onClick={exportar}>⬇ Exportar</button>
         <div className="dre-hint" style={{ alignSelf: 'center' }}>defina o teto mensal → comparo com o ritmo esperado no período · tetos de {ano}</div>
       </div>
 
