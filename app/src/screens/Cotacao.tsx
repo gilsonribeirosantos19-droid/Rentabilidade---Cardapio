@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlZero as brl } from '../lib/format'
 import { isoD } from '../lib/date'
@@ -28,6 +29,8 @@ const fornNome = (f?: Forn) => f ? (f.nome_fantasia || f.nome || f.razao_social 
 
 export function Cotacao() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('compras/cotacao')   // Somente Leitura = não cria cotação / gera pedido
   const [view, setView] = useState<'list' | 'nova' | 'det'>('list')
   const [selId, setSelId] = useState<string | null>(null)
   const { toast, showToast } = useToastTipo(3000)
@@ -53,7 +56,9 @@ export function Cotacao() {
         <>
           <div className="cot-top">
             <div><div className="cot-h">Cotação de Compras</div><div className="cot-sub">Puxe o pedido das lojas, compare fornecedores e compre pelo menor preço.</div></div>
-            <button className="cot-btn pri" onClick={() => setView('nova')}>+ Nova cotação</button>
+            {canEdit
+              ? <button className="cot-btn pri" onClick={() => setView('nova')}>+ Nova cotação</button>
+              : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
           </div>
           <div className="cot-card">
             <table className="cot-tbl">
@@ -81,7 +86,7 @@ export function Cotacao() {
       )}
 
       {view === 'det' && selId && (
-        <Detalhe id={selId} tenantId={tenantId!} fornecedores={fornecedores} insumos={insumos}
+        <Detalhe id={selId} tenantId={tenantId!} fornecedores={fornecedores} insumos={insumos} canEdit={canEdit}
           onBack={() => setView('list')} onMsg={showToast} />
       )}
 
@@ -234,8 +239,8 @@ function NovaCotacao({ tenantId, fornecedores, insumos, onCancel, onCreated, onM
 }
 
 // ---------- Detalhe (registrar preços + mapa + gerar pedido firme) ----------
-function Detalhe({ id, tenantId, fornecedores, insumos, onBack, onMsg }: {
-  id: string; tenantId: string; fornecedores: Forn[]; insumos: Insumo[]
+function Detalhe({ id, tenantId, fornecedores, insumos, canEdit = true, onBack, onMsg }: {
+  id: string; tenantId: string; fornecedores: Forn[]; insumos: Insumo[]; canEdit?: boolean
   onBack: () => void; onMsg: (m: string, t?: 'ok' | 'err') => void
 }) {
   const qc = useQueryClient()
@@ -345,7 +350,8 @@ function Detalhe({ id, tenantId, fornecedores, insumos, onBack, onMsg }: {
           <div className="cot-sub">prazo {fmtData(cot?.prazo_resposta)} · <span className={'cot-badge s-' + (cot?.status || 'aberta')}>{STATUS_LBL[cot?.status || 'aberta']}</span></div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {!fechada && <button className="cot-btn pri" disabled={gerarPedido.isPending} onClick={() => gerarPedido.mutate()}>{gerarPedido.isPending ? 'Gerando…' : '✓ Gerar pedido'}</button>}
+          {!fechada && canEdit && <button className="cot-btn pri" disabled={gerarPedido.isPending} onClick={() => gerarPedido.mutate()}>{gerarPedido.isPending ? 'Gerando…' : '✓ Gerar pedido'}</button>}
+          {!fechada && !canEdit && <span style={{ alignSelf: 'center', fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
         </div>
       </div>
 
@@ -374,7 +380,7 @@ function Detalhe({ id, tenantId, fornecedores, insumos, onBack, onMsg }: {
                         return (
                           <td key={cf.id} className={'pc' + (win ? ' win' : '')}>
                             <div className="pin"><span>R$</span>
-                              <input className="mono" inputMode="decimal" value={px[k] ?? ''} placeholder="0,00" disabled={fechada}
+                              <input className="mono" inputMode="decimal" value={px[k] ?? ''} placeholder="0,00" disabled={fechada || !canEdit}
                                 onChange={(e) => setPx((m) => ({ ...m, [k]: e.target.value }))}
                                 onBlur={(e) => salvarPreco(it.id, cf.fornecedor_id, e.target.value)} />
                             </div>

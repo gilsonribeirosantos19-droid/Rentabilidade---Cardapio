@@ -3,6 +3,7 @@ import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlDash as brl } from '../lib/format'
@@ -52,6 +53,8 @@ function useCompras(tenantId: string) {
 
 export function Compras() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('compras/pedidos')   // Somente Leitura = não gera/envia/baixa pedido
   const [tab, setTab] = useState<'solicitacoes' | 'processar' | 'pedidos'>('solicitacoes')
   const shared = useCompras(tenantId!)
   return (
@@ -62,8 +65,8 @@ export function Compras() {
         <button className={'ci-subtab ' + (tab === 'pedidos' ? 'on' : '')} onClick={() => setTab('pedidos')}>Pedidos Gerados</button>
       </div>
       {tab === 'solicitacoes' && <Solicitacoes tenantId={tenantId!} shared={shared} />}
-      {tab === 'processar' && <Processar tenantId={tenantId!} shared={shared} onGerado={() => setTab('pedidos')} />}
-      {tab === 'pedidos' && <PedidosGerados tenantId={tenantId!} shared={shared} />}
+      {tab === 'processar' && <Processar tenantId={tenantId!} shared={shared} canEdit={canEdit} onGerado={() => setTab('pedidos')} />}
+      {tab === 'pedidos' && <PedidosGerados tenantId={tenantId!} shared={shared} canEdit={canEdit} />}
     </div>
   )
 }
@@ -136,7 +139,7 @@ function Solicitacoes({ tenantId, shared }: { tenantId: string; shared: Shared }
 }
 
 // ═══════════════════════ PROCESSAR ═══════════════════════
-function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: Shared; onGerado: () => void }) {
+function Processar({ tenantId, shared, canEdit = true, onGerado }: { tenantId: string; shared: Shared; canEdit?: boolean; onGerado: () => void }) {
   const { insumos, fornecedores, lojas, vinculos } = shared
   const { usuario } = useAuth()
   const qc = useQueryClient()
@@ -229,7 +232,9 @@ function Processar({ tenantId, shared, onGerado }: { tenantId: string; shared: S
         <div><div style={{ fontSize: 13, fontWeight: 700 }}>2. PROCESSAR</div><div style={{ fontSize: 12, color: '#94a3b8' }}>{sols.length ? `${sols.length} solicitação(ões) de ${nLojas} loja(s) · ${consolidado.length} insumo(s)` : 'Consolidação de solicitações de todas as lojas'}</div></div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn-ghost" disabled={isFetching} onClick={() => refetch()}>↻ Recalcular sugestões</button>
-          <button className="btn-primary" disabled={!consolidado.length || gerarMut.isPending} onClick={() => gerarMut.mutate()}>{gerarMut.isPending ? 'Gerando…' : 'Gerar pedidos por fornecedor'}</button>
+          {canEdit
+            ? <button className="btn-primary" disabled={!consolidado.length || gerarMut.isPending} onClick={() => gerarMut.mutate()}>{gerarMut.isPending ? 'Gerando…' : 'Gerar pedidos por fornecedor'}</button>
+            : <span style={{ alignSelf: 'center', fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
         </div>
       </div>
       <div className="tbl-wrap"><div className="tbl-scroll">
@@ -328,7 +333,7 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
 }
 
 // ═══════════════════════ PEDIDOS GERADOS ═══════════════════════
-function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared }) {
+function PedidosGerados({ tenantId, shared, canEdit = true }: { tenantId: string; shared: Shared; canEdit?: boolean }) {
   const { insumos, fornecedores, lojas, vinculos } = shared
   const qc = useQueryClient()
   // abre já filtrando por "Aguardando envio" (pendente) — enviados/baixados só ao trocar o filtro
@@ -479,7 +484,7 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
                 <td className="c" style={{ whiteSpace: 'nowrap' }}>
                   <button className="btn-ghost" style={{ height: 28, padding: '0 9px' }} onClick={() => setVerId(r.primId)}>Visualizar</button>
                   <button className="btn-ghost" style={{ height: 28, padding: '0 9px' }} onClick={() => imprimir(r.fornNome, r.peds)}>PDF</button>
-                  {r.whatsapp && <button className="btn-ghost" style={{ height: 28, padding: '0 9px' }} title="WhatsApp" onClick={() => enviarWhats(r.primId, fornMap[r.fornId])}>💬</button>}
+                  {canEdit && r.whatsapp && <button className="btn-ghost" style={{ height: 28, padding: '0 9px' }} title="WhatsApp" onClick={() => enviarWhats(r.primId, fornMap[r.fornId])}>💬</button>}
                 </td>
               </tr> })}
           </tbody>
@@ -487,13 +492,13 @@ function PedidosGerados({ tenantId, shared }: { tenantId: string; shared: Shared
         </table>
       </div></div>
 
-      {verId && <VerPedido pedido={pedidos.find((p) => p.id === verId)!} itens={itensMap[verId] || []} forn={fornMap[pedidos.find((p) => p.id === verId)?.fornecedor_id || '']} insMap={insMap} porLoja={porLojaText} onClose={() => setVerId(null)} onStatus={mudarStatus} onWhats={enviarWhats} onPrint={imprimir} />}
+      {verId && <VerPedido pedido={pedidos.find((p) => p.id === verId)!} itens={itensMap[verId] || []} forn={fornMap[pedidos.find((p) => p.id === verId)?.fornecedor_id || '']} insMap={insMap} porLoja={porLojaText} canEdit={canEdit} onClose={() => setVerId(null)} onStatus={mudarStatus} onWhats={enviarWhats} onPrint={imprimir} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </>
   )
 }
 
-function VerPedido({ pedido, itens, forn, insMap, porLoja, onClose, onStatus, onWhats, onPrint }: { pedido: Pedido; itens: ItemPedido[]; forn?: Forn; insMap: Record<string, Insumo>; porLoja: (it: ItemPedido) => string; onClose: () => void; onStatus: (id: string, s: string) => void; onWhats: (id: string, f?: Forn | null) => void; onPrint: (nome: string, peds: Pedido[]) => void }) {
+function VerPedido({ pedido, itens, forn, insMap, porLoja, canEdit = true, onClose, onStatus, onWhats, onPrint }: { pedido: Pedido; itens: ItemPedido[]; forn?: Forn; insMap: Record<string, Insumo>; porLoja: (it: ItemPedido) => string; canEdit?: boolean; onClose: () => void; onStatus: (id: string, s: string) => void; onWhats: (id: string, f?: Forn | null) => void; onPrint: (nome: string, peds: Pedido[]) => void }) {
   const si = PED_ST[pedido.status || ''] || { l: pedido.status || '', b: 'b-baixado' }
   return (
     <div className="ov" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -508,16 +513,16 @@ function VerPedido({ pedido, itens, forn, insMap, porLoja, onClose, onStatus, on
         </table></div>
         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
           <button className="btn-ghost" onClick={() => onPrint(forn?.nome || '—', [pedido])}>🖨 Imprimir / PDF</button>
-          {pedido.status === 'aguardando_aprovacao' && <>
+          {canEdit && pedido.status === 'aguardando_aprovacao' && <>
             <button className="btn-primary" style={{ background: '#16a34a' }} onClick={() => onStatus(pedido.id, 'pendente')}>✓ Aprovar</button>
             <button className="btn-ghost" style={{ color: '#e11d48' }} onClick={() => onStatus(pedido.id, 'cancelado')}>✕ Cancelar</button>
           </>}
-          {pedido.status === 'pendente' && <>
+          {canEdit && pedido.status === 'pendente' && <>
             <button className="btn-primary" style={{ background: '#16a34a' }} onClick={() => onStatus(pedido.id, 'enviado')}>📤 Marcar como Enviado</button>
             <button className="btn-ghost" style={{ color: '#e11d48' }} onClick={() => onStatus(pedido.id, 'cancelado')}>✕ Cancelar</button>
             {forn?.whatsapp && <button className="btn-primary" style={{ background: '#2563eb' }} onClick={() => onWhats(pedido.id, forn)}>💬 WhatsApp</button>}
           </>}
-          {pedido.status === 'enviado' && <button className="btn-primary" style={{ background: '#16a34a' }} onClick={() => onStatus(pedido.id, 'baixado')}>✓ Baixar Pedido</button>}
+          {canEdit && pedido.status === 'enviado' && <button className="btn-primary" style={{ background: '#16a34a' }} onClick={() => onStatus(pedido.id, 'baixado')}>✓ Baixar Pedido</button>}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { DetailModal } from '../components/DetailModal'
@@ -32,6 +33,8 @@ const TIPO_VAL: Record<string, string> = { 'Manual': 'manual', 'NF-e': 'nfe', 'A
 
 export function Entradas() {
   const { tenantId, usuario } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('estoque/entradas')   // Somente Leitura = não registra/exclui entrada
   const { lojaId } = useLoja()
   const qc = useQueryClient()
   const now = new Date()
@@ -137,10 +140,12 @@ export function Entradas() {
   return (
     <div className="est-screen">
       <div className="act-bar">
-        <button className="btn-pri" disabled={!lojaId} title={!lojaId ? 'Selecione uma loja específica no topo' : ''} onClick={() => { if (!lojaId) { showToast('Selecione uma loja específica no topo para registrar a entrada.', 'err'); return } setDup(null); setModal(true) }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-          Entrada manual
-        </button>
+        {canEdit
+          ? <button className="btn-pri" disabled={!lojaId} title={!lojaId ? 'Selecione uma loja específica no topo' : ''} onClick={() => { if (!lojaId) { showToast('Selecione uma loja específica no topo para registrar a entrada.', 'err'); return } setDup(null); setModal(true) }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              Entrada manual
+            </button>
+          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
         <div className="srch">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
@@ -182,8 +187,8 @@ export function Entradas() {
                     <td style={{ color: '#94a3b8', fontSize: 12 }}>{fmtDate(e.validade)}</td>
                     <td className="c"><div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
                       <button className="icon-btn" title="Ver detalhes" onClick={() => setDetalhe(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
-                      <button className="icon-btn" title="Duplicar" onClick={() => duplicar(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button>
-                      {podeExcluir && <button className="icon-btn" title="Excluir entrada (insumo sem saída)" onClick={() => delMut.mutate(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg></button>}
+                      {canEdit && <button className="icon-btn" title="Duplicar" onClick={() => duplicar(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></button>}
+                      {canEdit && podeExcluir && <button className="icon-btn" title="Excluir entrada (insumo sem saída)" onClick={() => delMut.mutate(e)}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg></button>}
                     </div></td>
                   </tr>
                 )

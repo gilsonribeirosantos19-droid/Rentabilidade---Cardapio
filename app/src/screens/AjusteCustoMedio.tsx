@@ -3,6 +3,7 @@ import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
 import { fmtDH, isoD } from '../lib/date'
@@ -15,6 +16,8 @@ type Log = { insumo_id?: string; loja_id?: string; custo_anterior?: number; cust
 
 export function AjusteCustoMedio() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('ajustes/custo')   // Somente Leitura = não grava ajuste
   const qc = useQueryClient()
   const [insumoId, setInsumoId] = useState('')
   const [data, setData] = useState(isoD(new Date()))
@@ -68,8 +71,10 @@ export function AjusteCustoMedio() {
   return (
     <div className="est-screen">
       <div className="adj-tbar" style={{ maxWidth: 920 }}>
-        <button className="adj-tbtn pri" title="Salvar ajuste" disabled={salvarMut.isPending} onClick={() => salvarMut.mutate()}>💾</button>
-        <button className="adj-tbtn" title="Limpar / novo" onClick={limpar}>✕</button>
+        {canEdit ? <>
+          <button className="adj-tbtn pri" title="Salvar ajuste" disabled={salvarMut.isPending} onClick={() => salvarMut.mutate()}>💾</button>
+          <button className="adj-tbtn" title="Limpar / novo" onClick={limpar}>✕</button>
+        </> : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="adj-card" style={{ maxWidth: 920 }}>
