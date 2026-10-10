@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlCur as brl } from '../lib/format'
 import './produtos.css'
@@ -72,6 +73,8 @@ export function Produtos() {
   const [incluirZerado, setIncluirZerado] = useState(false)   // por padrão esconde produtos R$0
   const [editing, setEditing] = useState<Form | null>(null)
   const { toast, setToast, showToast } = useToastTipo(2600)
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('produtos')   // Controle Total = edita; Somente Leitura = só vê
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['produtos', tenantId], enabled: !!tenantId,
@@ -157,7 +160,9 @@ export function Produtos() {
           <input type="checkbox" checked={incluirZerado} onChange={(e) => setIncluirZerado(e.target.checked)} style={{ width: 15, height: 15, accentColor: '#f97316' }} />
           Incluir itens com valor zerado
         </label>
-        <button className="pr-novo" onClick={() => setEditing(novo())}>+ Novo Produto</button>
+        {canEdit
+          ? <button className="pr-novo" onClick={() => setEditing(novo())}>+ Novo Produto</button>
+          : <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="tbl-card"><div className="tbl-scroll">
@@ -178,9 +183,9 @@ export function Produtos() {
                   <td><span className={'badge ' + (p.participa_cmv ? 'b-sim' : 'b-nao')}>{p.participa_cmv ? 'Sim' : 'Não'}</span></td>
                   <td>{sitBadge(p)}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
-                    <button className="act-btn" title="Editar" onClick={() => setEditing(p)}>✎</button>
-                    <button className="act-btn" title="Duplicar" onClick={() => duplicar(p)}>⧉</button>
-                    <button className="act-btn del" title="Inativar" onClick={() => { if (confirm(`Inativar "${p.nome}"?`)) delMut.mutate(p.id) }}>🗑</button>
+                    <button className="act-btn" title={canEdit ? 'Editar' : 'Ver'} onClick={() => setEditing(p)}>{canEdit ? '✎' : '👁'}</button>
+                    {canEdit && <button className="act-btn" title="Duplicar" onClick={() => duplicar(p)}>⧉</button>}
+                    {canEdit && <button className="act-btn del" title="Inativar" onClick={() => { if (confirm(`Inativar "${p.nome}"?`)) delMut.mutate(p.id) }}>🗑</button>}
                   </td>
                 </tr>
               ))}
@@ -188,16 +193,17 @@ export function Produtos() {
         </table>
       </div></div>
 
-      {editing && <ProdutoModal inicial={editing} opts={opts} saving={saveMut.isPending} onClose={() => setEditing(null)} onSave={(f) => saveMut.mutate(f)} />}
+      {editing && <ProdutoModal inicial={editing} opts={opts} saving={saveMut.isPending} canEdit={canEdit} onClose={() => setEditing(null)} onSave={(f) => saveMut.mutate(f)} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
 }
 
-function ProdutoModal({ inicial, opts, saving, onClose, onSave }: {
+function ProdutoModal({ inicial, opts, saving, canEdit = true, onClose, onSave }: {
   inicial: Form
   opts: { grupos: string[]; familias: string[]; subgrupos: string[] }
   saving: boolean
+  canEdit?: boolean
   onClose: () => void
   onSave: (f: Form) => void
 }) {
@@ -210,8 +216,8 @@ function ProdutoModal({ inicial, opts, saving, onClose, onSave }: {
         <div className="pm-head">
           <h2>{form.id ? 'Editar Produto' : 'Novo Produto'}</h2>
           <div className="hb">
-            <button className="pm-btn" onClick={onClose}>Cancelar</button>
-            <button className="pm-btn primary" disabled={saving} onClick={() => onSave(form)}>{saving ? 'Salvando…' : 'Salvar'}</button>
+            <button className="pm-btn" onClick={onClose}>{canEdit ? 'Cancelar' : 'Fechar'}</button>
+            {canEdit && <button className="pm-btn primary" disabled={saving} onClick={() => onSave(form)}>{saving ? 'Salvando…' : 'Salvar'}</button>}
           </div>
         </div>
         <div className="pm-body">
