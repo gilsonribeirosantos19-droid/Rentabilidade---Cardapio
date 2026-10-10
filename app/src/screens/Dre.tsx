@@ -3,17 +3,19 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { DreClassificar } from './DreClassificar'
+import { DreLancamentos } from './DreLancamentos'
 import './dre.css'
 
 export function Dre() {
-  const [tab, setTab] = useState<'dre' | 'classificar'>('dre')
+  const [tab, setTab] = useState<'dre' | 'classificar' | 'lancamentos'>('dre')
   return (
     <div className="dre-screen">
       <div className="dre-tabs">
         <button className={'dre-tab' + (tab === 'dre' ? ' on' : '')} onClick={() => setTab('dre')}>Demonstrativo</button>
         <button className={'dre-tab' + (tab === 'classificar' ? ' on' : '')} onClick={() => setTab('classificar')}>Classificar itens</button>
+        <button className={'dre-tab' + (tab === 'lancamentos' ? ' on' : '')} onClick={() => setTab('lancamentos')}>Lançamentos manuais</button>
       </div>
-      {tab === 'dre' ? <DreDemo /> : <DreClassificar />}
+      {tab === 'dre' ? <DreDemo /> : tab === 'classificar' ? <DreClassificar /> : <DreLancamentos />}
     </div>
   )
 }
@@ -27,6 +29,7 @@ type Conta = { id: string; codigo: string; nome: string; grupo: string; parent_c
 type Insumo = { id: string; nome?: string; conta_gerencial_id?: string | null }
 type Entrada = { insumo_id: string; loja_id?: string | null; custo_total?: number | null; criado_em?: string; tipo?: string }
 type Venda = { loja_id?: string | null; data?: string; faturado?: number | null }
+type Lanc = { conta_gerencial_id: string; loja_id?: string | null; data?: string; valor?: number | null }
 type Loja = { id: string; nome: string }
 
 const MES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
@@ -65,6 +68,10 @@ function DreDemo() {
   const { data: vendas = [] } = useQuery({
     queryKey: ['dre-vendas', tenantId, ano], enabled: !!tenantId,
     queryFn: () => fetchAll<Venda>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,faturado,status').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', ini.slice(0, 10)).lte('data', `${ano}-12-31`).order('data').order('id').range(f, t)),
+  })
+  const { data: lancs = [] } = useQuery({
+    queryKey: ['dre-lancamentos', tenantId, ano], enabled: !!tenantId,
+    queryFn: () => fetchAll<Lanc>((f, t) => supabase.from('lancamentos_gerenciais').select('conta_gerencial_id,loja_id,data,valor').eq('tenant_id', tenantId).gte('data', ini.slice(0, 10)).lte('data', `${ano}-12-31`).order('data').order('id').range(f, t)),
   })
 
   const model = useMemo(() => {
@@ -106,6 +113,18 @@ function DreDemo() {
     })
     insDaConta.forEach((l) => l.sort((a, b) => b.vals.reduce((x, y) => x + y, 0) - a.vals.reduce((x, y) => x + y, 0)))
 
+    // lançamentos manuais por conta × mês (compras sem nota)
+    const lancPorConta = new Map<string, number[]>()
+    lancs.forEach((l) => {
+      if (lojaId && (l.loja_id || '') !== lojaId) return
+      if (!l.data || l.data.slice(0, 4) !== String(ano)) return
+      const m = parseInt(l.data.slice(5, 7), 10) - 1
+      if (m < 0 || m > 11) return
+      const arr = lancPorConta.get(l.conta_gerencial_id) || z12()
+      arr[m] += Number(l.valor) || 0
+      lancPorConta.set(l.conta_gerencial_id, arr)
+    })
+
     // receita por mês (date 'YYYY-MM-DD' → mês sem fuso)
     const receita = z12()
     vendas.forEach((v) => {
@@ -119,7 +138,9 @@ function DreDemo() {
     const linhas: Linha[] = []
     linhas.push({ cls: 'dre-receita', label: '<span class="dre-cod">1</span>Receita de Vendas', vals: receita })
 
-    const somaConta = (cid: string) => (insDaConta.get(cid) || []).reduce((acc, it) => sum12(acc, it.vals), z12())
+    // soma de uma conta = compras dos insumos + lançamentos manuais
+    const somaConta = (cid: string) => { let s = (insDaConta.get(cid) || []).reduce((acc, it) => sum12(acc, it.vals), z12()); const lc = lancPorConta.get(cid); if (lc) s = sum12(s, lc); return s }
+    const lancItem = (cid: string, gkey: string, deep: boolean): Linha[] => { const lc = lancPorConta.get(cid); return lc && lc.some((v) => v) ? [{ cls: 'dre-item' + (deep ? ' deep' : ''), label: '➕ Lançamentos manuais (sem nota)', vals: lc, g: gkey }] : [] }
     const n1 = contas.filter((c) => !c.parent_codigo).sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
     const totGrupos = z12()
 
@@ -134,6 +155,7 @@ function DreDemo() {
         subBlocks.forEach(({ f, fMes, itens }) => {
           linhas.push({ cls: 'dre-sub', label: `<span class="dre-cod">${f.codigo}</span>${f.nome}`, vals: fMes, g: gkey })
           itens.forEach((it) => linhas.push({ cls: 'dre-item deep', label: it.nome, vals: it.vals, g: gkey }))
+          lancItem(f.id, gkey, true).forEach((ln) => linhas.push(ln))
         })
       } else {
         const itens = insDaConta.get(c1.id) || []
@@ -141,6 +163,7 @@ function DreDemo() {
         totGrupos.forEach((_, i) => totGrupos[i] += gMes[i])
         linhas.push({ cls: 'dre-grupo', label: `<span class="dre-caret">›</span><span class="dre-cod">${c1.codigo}</span>${c1.nome}`, vals: gMes, grupoKey: gkey })
         itens.forEach((it) => linhas.push({ cls: 'dre-item', label: it.nome, vals: it.vals, g: gkey }))
+        lancItem(c1.id, gkey, false).forEach((ln) => linhas.push(ln))
       }
     })
 
@@ -149,7 +172,7 @@ function DreDemo() {
 
     const tot = (a: number[]) => a.reduce((x, y) => x + y, 0)
     return { linhas, receita, totGrupos, resultado, recT: tot(receita), gruT: tot(totGrupos), resT: tot(resultado), temContas: contas.length > 0 }
-  }, [contas, insumos, entradas, vendas, lojaId, ano])
+  }, [contas, insumos, entradas, vendas, lancs, lojaId, ano])
 
   const cell = (v: number, base: number) => modo === 'rs' ? brl(v) : (base > 0 ? (v / base * 100).toFixed(2).replace('.', ',') + '%' : '0,00%')
   const toggle = (g: string) => setAbertos((s) => { const n = new Set(s); n.has(g) ? n.delete(g) : n.add(g); return n })
