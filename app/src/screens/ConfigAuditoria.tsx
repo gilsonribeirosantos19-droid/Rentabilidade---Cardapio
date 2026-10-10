@@ -18,45 +18,47 @@ type Aud = {
 }
 
 const PER = 20
-// entidades auditadas na Fase 1 (valor = nome da tabela)
-const ENT_OPTS: { v: string; l: string }[] = [
-  { v: 'insumos', l: 'Insumos / Itens' },
-  { v: 'produtos', l: 'Produtos' },
-  { v: 'fichas_tecnicas', l: 'Fichas técnicas' },
-  { v: 'entradas_estoque', l: 'Entradas de estoque' },
-  { v: 'saidas_estoque', l: 'Saídas de estoque' },
-  { v: 'nfe_recebidas', l: 'NF-e' },
-  { v: 'usuarios', l: 'Usuários' },
+// nome amigável de cada tabela auditada
+const ENT_LABEL: Record<string, string> = {
+  insumos: 'Insumo/Item', produtos: 'Produto', fichas_tecnicas: 'Ficha técnica', fornecedores: 'Fornecedor',
+  lojas: 'Loja', item_classificacoes: 'Classificação', insumo_fornecedores: 'Vínculo item×fornecedor',
+  entradas_estoque: 'Entrada de estoque', saidas_estoque: 'Saída de estoque', inventarios: 'Inventário', grupos_inventario: 'Grupo de inventário',
+  pedidos_compra: 'Pedido de compra', cotacoes: 'Cotação', requisicoes: 'Requisição (CD)', grupos_compra: 'Grupo de compra',
+  ordens_producao: 'Ordem de produção', ordens_porcionamento: 'Ordem de porcionamento', itens_porcionamento: 'Item de porcionamento',
+  setores_producao: 'Setor de produção', atividades_producao: 'Atividade de produção', calendario_producao: 'Calendário de produção', testes_rendimento: 'Teste de rendimento',
+  nfe_recebidas: 'NF-e', usuarios: 'Usuário', grupos_acesso: 'Grupo de permissão', permissoes: 'Permissão', parametros: 'Parâmetro',
+  fechamento_custo: 'Fechamento de custo', metas_semana: 'Meta', metas_excecao: 'Meta (exceção)',
+}
+// grupos amigáveis p/ o filtro "Tipo" (cada um filtra um conjunto de tabelas)
+const GRUPOS: { label: string; tabs: string[] }[] = [
+  { label: 'Cadastros', tabs: ['insumos', 'produtos', 'fichas_tecnicas', 'fornecedores', 'lojas', 'item_classificacoes', 'insumo_fornecedores'] },
+  { label: 'Estoque', tabs: ['entradas_estoque', 'saidas_estoque', 'inventarios', 'grupos_inventario'] },
+  { label: 'Compras', tabs: ['pedidos_compra', 'cotacoes', 'requisicoes', 'grupos_compra'] },
+  { label: 'Produção', tabs: ['ordens_producao', 'ordens_porcionamento', 'itens_porcionamento', 'setores_producao', 'atividades_producao', 'calendario_producao', 'testes_rendimento'] },
+  { label: 'NF-e', tabs: ['nfe_recebidas'] },
+  { label: 'Usuários e permissões', tabs: ['usuarios', 'grupos_acesso', 'permissoes'] },
+  { label: 'Configurações', tabs: ['parametros'] },
+  { label: 'Gestão', tabs: ['fechamento_custo', 'metas_semana', 'metas_excecao'] },
 ]
-const ENT_LABEL: Record<string, string> = Object.fromEntries(ENT_OPTS.map((e) => [e.v, e.l]))
 
-// traduz (entidade + operação) para uma frase amigável
+// traduz (entidade + operação) para uma frase amigável — genérico + casos especiais
 function acaoLabel(a: Aud): string {
   const ent = a.entidade || ''
+  const nome = (ENT_LABEL[ent] || ent).toLowerCase()
   const ns = (a.dados?.new?.status as string) || ''
   const os = (a.dados?.old?.status as string) || ''
   if (ent === 'nfe_recebidas') {
-    if (a.acao === 'DELETE') return 'Excluiu NF-e'
-    if (ns === 'excluida') return 'Excluiu NF-e'
+    if (a.acao === 'DELETE' || ns === 'excluida') return 'Excluiu NF-e'
     if (ns === 'estornada' || (os === 'processada' && ns === 'em_transito')) return 'Estornou NF-e'
     if (ns === 'processada') return 'Processou NF-e'
     return 'Alterou NF-e'
   }
   const wasOn = a.dados?.old?.ativo !== false, nowOff = a.dados?.new?.ativo === false
-  if (ent === 'produtos' && a.acao === 'UPDATE' && wasOn && nowOff) return 'Inativou produto'
-  if (ent === 'insumos' && a.acao === 'UPDATE' && wasOn && nowOff) return 'Inativou item'
-  if (ent === 'fichas_tecnicas' && a.acao === 'UPDATE' && a.dados?.old?.status !== 'arquivada' && a.dados?.new?.status === 'arquivada') return 'Arquivou ficha'
-  const map: Record<string, [string, string, string]> = {
-    insumos: ['Criou item', 'Editou item', 'Excluiu item'],
-    produtos: ['Criou produto', 'Editou produto', 'Excluiu produto'],
-    fichas_tecnicas: ['Criou ficha', 'Editou ficha', 'Excluiu ficha'],
-    entradas_estoque: ['Registrou entrada', 'Editou entrada', 'Excluiu entrada'],
-    saidas_estoque: ['Registrou saída', 'Editou saída', 'Excluiu saída'],
-    usuarios: ['Criou usuário', 'Editou usuário', 'Removeu usuário'],
-  }
-  const t = map[ent]
-  const idx = a.acao === 'INSERT' ? 0 : a.acao === 'UPDATE' ? 1 : 2
-  return t ? t[idx] : `${a.acao || '—'} · ${ent}`
+  if (a.acao === 'UPDATE' && wasOn && nowOff) return `Inativou ${nome}`
+  if (ent === 'fichas_tecnicas' && a.acao === 'UPDATE' && os !== 'arquivada' && ns === 'arquivada') return 'Arquivou ficha'
+  if (a.acao === 'INSERT') return (ent === 'entradas_estoque' || ent === 'saidas_estoque') ? `Registrou ${nome}` : `Criou ${nome}`
+  if (a.acao === 'DELETE') return `Excluiu ${nome}`
+  return `Editou ${nome}`
 }
 const acaoCor = (a: Aud) => a.acao === 'DELETE' ? '#e11d48' : a.acao === 'INSERT' ? '#16a34a' : '#2563eb'
 const fmtDH = (s?: string) => s ? new Date(s).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
@@ -75,7 +77,7 @@ function diffCampos(a: Aud): { campo: string; de: string; para: string }[] {
 export function ConfigAuditoria() {
   const { tenantId } = useAuth()
   const now = new Date()
-  const [fEnt, setFEnt] = useState('')
+  const [fGrupo, setFGrupo] = useState('')
   const [fUser, setFUser] = useState('')
   const [de, setDe] = useState(isoD(new Date(now.getFullYear(), now.getMonth(), 1)))
   const [ate, setAte] = useState(isoD(now))
@@ -94,7 +96,7 @@ export function ConfigAuditoria() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const aplicaFiltros = (q: any): any => {
     let qq = q
-    if (fEnt) qq = qq.eq('entidade', fEnt)
+    if (fGrupo) { const g = GRUPOS.find((x) => x.label === fGrupo); if (g) qq = qq.in('entidade', g.tabs) }
     if (fUser === 'Sistema') qq = qq.is('usuario_id', null)
     else if (fUser) qq = qq.eq('usuario_nome', fUser)
     // filtro de data no FUSO DO NAVEGADOR (criado_em é timestamptz em UTC): new Date('YYYY-MM-DDThh:mm:ss')
@@ -106,7 +108,7 @@ export function ConfigAuditoria() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ['auditoria', tenantId, fEnt, fUser, de, ate, busca, pag], enabled: !!tenantId,
+    queryKey: ['auditoria', tenantId, fGrupo, fUser, de, ate, busca, pag], enabled: !!tenantId,
     queryFn: async () => {
       const from = (pag - 1) * PER
       let q = supabase.from('auditoria').select('*', { count: 'exact' }).eq('tenant_id', tenantId)
@@ -136,7 +138,7 @@ export function ConfigAuditoria() {
     <div className="est-screen">
       <div className="ds-filterbar">
         <div className="ds-field" style={{ minWidth: 170 }}><label>Tipo</label>
-          <SearchSelect value={ENT_LABEL[fEnt] || ''} options={ENT_OPTS.map((e) => e.l)} placeholder="Todos os tipos" onChange={(l) => { setFEnt(ENT_OPTS.find((e) => e.l === l)?.v || ''); setPag(1) }} />
+          <SearchSelect value={fGrupo} options={GRUPOS.map((g) => g.label)} placeholder="Todos os tipos" onChange={(v) => { setFGrupo(v); setPag(1) }} />
         </div>
         <div className="ds-field" style={{ minWidth: 170 }}><label>Usuário</label>
           <SearchSelect value={fUser} options={userOpts} placeholder="Todos os usuários" onChange={(v) => { setFUser(v); setPag(1) }} />
@@ -145,7 +147,7 @@ export function ConfigAuditoria() {
         <div className="ds-field"><label>Até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPag(1) }} /></div>
         <div className="ds-field ds-grow"><label>Buscar registro</label><input className="field" style={{ width: '100%', minWidth: 180 }} placeholder="Nome, número, chave…" value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} /></div>
         <div className="ds-actions">
-          <button className="btn-ghost" onClick={() => { setFEnt(''); setFUser(''); setBusca(''); setDe(isoD(new Date(now.getFullYear(), now.getMonth(), 1))); setAte(isoD(now)); setPag(1) }}>Limpar filtros</button>
+          <button className="btn-ghost" onClick={() => { setFGrupo(''); setFUser(''); setBusca(''); setDe(isoD(new Date(now.getFullYear(), now.getMonth(), 1))); setAte(isoD(now)); setPag(1) }}>Limpar filtros</button>
           <button className="btn-ghost" onClick={exportar} title="Exportar o resultado filtrado em CSV">⬇ Exportar CSV</button>
         </div>
       </div>
