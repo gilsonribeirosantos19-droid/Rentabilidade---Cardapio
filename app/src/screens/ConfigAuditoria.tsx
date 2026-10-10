@@ -80,7 +80,7 @@ export function ConfigAuditoria() {
   const [fGrupo, setFGrupo] = useState('')
   const [fUser, setFUser] = useState('')
   const [de, setDe] = useState(isoD(new Date(now.getFullYear(), now.getMonth(), 1)))
-  const [ate, setAte] = useState(isoD(now))
+  const [ate, setAte] = useState('')   // vazio = até agora (evita cortar eventos recentes na virada do dia/fuso)
   const [busca, setBusca] = useState('')
   const [pag, setPag] = useState(1)
   const [ver, setVer] = useState<Aud | null>(null)
@@ -147,7 +147,7 @@ export function ConfigAuditoria() {
         <div className="ds-field"><label>Até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPag(1) }} /></div>
         <div className="ds-field ds-grow"><label>Buscar registro</label><input className="field" style={{ width: '100%', minWidth: 180 }} placeholder="Nome, número, chave…" value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} /></div>
         <div className="ds-actions">
-          <button className="btn-ghost" onClick={() => { setFGrupo(''); setFUser(''); setBusca(''); setDe(isoD(new Date(now.getFullYear(), now.getMonth(), 1))); setAte(isoD(now)); setPag(1) }}>Limpar filtros</button>
+          <button className="btn-ghost" onClick={() => { setFGrupo(''); setFUser(''); setBusca(''); setDe(isoD(new Date(now.getFullYear(), now.getMonth(), 1))); setAte(''); setPag(1) }}>Limpar filtros</button>
           <button className="btn-ghost" onClick={exportar} title="Exportar o resultado filtrado em CSV">⬇ Exportar CSV</button>
         </div>
       </div>
