@@ -1,0 +1,60 @@
+/* DRE Gerencial de Compras — matriz mês a mês, contas colapsáveis */
+.dre-screen { padding: 2px 0 30px; }
+
+.dre-bar { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; }
+.dre-fld { display:flex; flex-direction:column; gap:4px; }
+.dre-fld label { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#99a2c0; }
+.dre-bar select { font-size:13px; color:#1e2030; background:#fff; border:1px solid #e2e8f0; border-radius:9px; height:36px; padding:0 11px; cursor:pointer; min-width:180px; }
+.dre-grow { flex:1; }
+.dre-lnk { background:none; border:0; color:#ea580c; font-size:12.5px; font-weight:600; cursor:pointer; padding:0; }
+.dre-seg { display:flex; background:#fff; border:1px solid #e2e8f0; border-radius:9px; height:36px; overflow:hidden; }
+.dre-seg button { border:0; background:transparent; font-size:13px; font-weight:700; color:#586084; padding:0 15px; cursor:pointer; }
+.dre-seg button.on { background:#f97316; color:#fff; }
+
+.dre-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
+.dre-kpi { background:#fff; border:1px solid #e6eaf2; border-radius:12px; padding:13px 15px; position:relative; overflow:hidden; box-shadow:0 1px 2px rgba(20,32,64,.04); }
+.dre-kpi .k { font-size:11.5px; color:#586084; font-weight:600; }
+.dre-kpi .v { font-family:'DM Mono',monospace; font-size:20px; font-weight:500; margin-top:6px; font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
+.dre-kpi .d { font-size:11.5px; margin-top:3px; font-weight:600; color:#586084; }
+.dre-kpi .rail { position:absolute; left:0; top:0; bottom:0; width:4px; }
+
+.dre-card { background:#fff; border:1px solid #e6eaf2; border-radius:13px; box-shadow:0 1px 2px rgba(20,32,64,.04); overflow:hidden; }
+.dre-ch { padding:12px 16px; border-bottom:1px solid #eef1f7; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.dre-ch .t { font-size:14.5px; font-weight:700; color:#1e2030; }
+.dre-ch .s { font-size:12px; color:#586084; }
+.dre-hint { margin-left:auto; font-size:11.5px; color:#94a3c4; }
+
+.dre-scroll { overflow-x:auto; }
+table.dre { width:100%; border-collapse:collapse; min-width:1040px; }
+table.dre th, table.dre td { padding:8px 11px; font-size:12.5px; white-space:nowrap; }
+table.dre thead th { font-size:10.5px; text-transform:uppercase; letter-spacing:.3px; color:#99a2c0; font-weight:700; text-align:right; background:#fbfcfe; border-bottom:1px solid #e6eaf2; }
+table.dre thead th.l { text-align:left; }
+table.dre td { text-align:right; border-bottom:1px solid #eef1f7; font-family:'DM Mono',monospace; font-variant-numeric:tabular-nums; }
+table.dre td.l { text-align:left; font-family:inherit; }
+.dre-stick { position:sticky; left:0; background:#fff; z-index:2; box-shadow:1px 0 0 #eef1f7; text-align:left !important; min-width:240px; }
+table.dre thead .dre-stick { background:#fbfcfe; z-index:3; }
+.dre-tot { border-left:2px solid #e6eaf2; font-weight:600; }
+table.dre thead th.dre-tot { border-left:2px solid #e6eaf2; }
+
+tr.dre-receita td { background:#eafaf0; font-weight:700; border-bottom:1px solid #d6f0e0; }
+tr.dre-receita .dre-stick { background:#eafaf0; }
+tr.dre-grupo td { background:#e8eef9; font-weight:700; cursor:pointer; }
+tr.dre-grupo .dre-stick { background:#e8eef9; }
+tr.dre-grupo:hover td, tr.dre-grupo:hover .dre-stick { background:#dbe6f6; }
+tr.dre-sub td { background:#fbfcfe; font-weight:600; }
+tr.dre-sub .dre-stick { background:#fbfcfe; padding-left:28px; }
+tr.dre-item td { color:#586084; }
+tr.dre-item .dre-stick { padding-left:28px; font-weight:400; color:#1e2030; }
+tr.dre-item.deep .dre-stick { padding-left:46px; }
+tr.dre-result td { background:#dbe6f6; font-weight:800; border-top:2px solid #cdd9ec; font-size:13px; }
+tr.dre-result .dre-stick { background:#dbe6f6; }
+tr.dre-hidden { display:none; }
+.dre-caret { display:inline-block; width:15px; color:#99a2c0; transition:transform .15s; }
+tr.dre-grupo.open .dre-caret { transform:rotate(90deg); }
+.dre-cod { font-family:'DM Mono',monospace; color:#99a2c0; font-size:11px; margin-right:7px; }
+
+.dre-empty { padding:40px; text-align:center; color:#94a3c4; font-size:13px; }
+.dre-note { font-size:12.5px; color:#586084; line-height:1.6; background:#fff; border:1px solid #e6eaf2; border-radius:12px; padding:13px 15px; margin-top:14px; }
+.dre-note b { color:#1e2030; }
+
+@media (max-width:720px){ .dre-kpis{ grid-template-columns:repeat(2,1fr); } .dre-stick{ min-width:180px; } }
