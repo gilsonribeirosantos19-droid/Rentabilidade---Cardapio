@@ -143,7 +143,7 @@ export function ConfigPermissoes() {
     <div className="cfg-screen">
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '11px 14px', margin: '12px 0 14px', fontSize: 12.5, color: '#166534', lineHeight: 1.5 }}>
         <span style={{ fontSize: 16, flexShrink: 0 }}>✅</span>
-        <div><b>Controle de acesso por módulo ATIVO.</b> Marque <b>“Habilitado”</b> nos módulos que o grupo pode ver — o app <b>esconde do menu e bloqueia</b> os módulos não marcados para quem está nesse grupo. <b>Administrador vê tudo</b>; grupo <b>sem matriz</b> também (nada muda até você configurar). <br/>⏳ As ações finas (<b>criar/editar/excluir</b>) ainda não são travadas — por enquanto vale a <b>visualização por módulo</b>. Vem na próxima fase.</div>
+        <div><b>Controle de acesso por tela ATIVO.</b> Em cada tela escolha <b>“Somente Leitura”</b> (só vê) ou <b>“Controle Total”</b> (vê e edita) — o app <b>esconde do menu</b> as telas não marcadas e <b>esconde os botões de criar/editar/excluir</b> em quem for Somente Leitura. <b>Administrador vê tudo</b>; grupo <b>sem matriz</b> também (nada muda até você configurar). <br/>🔒 As regras também são <b>travadas no banco</b>: só o administrador altera grupos e permissões (não dá pra burlar pela API).</div>
       </div>
 
       <div className="perm-wrap">
