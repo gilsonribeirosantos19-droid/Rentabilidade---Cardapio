@@ -80,7 +80,7 @@ tr.dre-receita .dre-stick { background:#eafaf0; }
 tr.dre-grupo td { background:#e8eef9; font-weight:700; cursor:pointer; }
 tr.dre-grupo .dre-stick { background:#e8eef9; }
 tr.dre-grupo:hover td, tr.dre-grupo:hover .dre-stick { background:#dbe6f6; }
-tr.dre-sub td { background:#fbfcfe; font-weight:600; }
+tr.dre-sub td { background:#fbfcfe; font-weight:400; }
 tr.dre-sub .dre-stick { background:#fbfcfe; padding-left:28px; }
 tr.dre-item td { color:#586084; }
 tr.dre-item .dre-stick { padding-left:28px; font-weight:400; color:#1e2030; }
