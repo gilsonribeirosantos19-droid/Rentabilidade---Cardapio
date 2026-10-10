@@ -12,15 +12,6 @@ type Insumo = { id: string; nome?: string; categoria?: string | null; conta_gere
 
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
-// sugestão automática pela categoria/nome do item → código de conta
-function sugereCodigo(ins: Insumo): string {
-  const t = norm((ins.categoria || '') + ' ' + (ins.nome || ''))
-  if (/\bepi\b|uniforme|touca|avental|bota|luva/.test(t)) return '4.2'
-  if (/limpeza|higien|sanit|detergente|alcool|descart/.test(t)) return '4.1'
-  if (/equipament|informatic|manuten|predial|movel|utensil|ativo|imobiliz/.test(t)) return '6.3'
-  return '2.1'
-}
-
 export function DreClassificar() {
   const { tenantId } = useAuth()
   const qc = useQueryClient()
@@ -40,9 +31,8 @@ export function DreClassificar() {
     queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,conta_gerencial_id,ativo').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)),
   })
 
-  // contas folha = onde insumos caem (as que não são "pai" de nenhuma outra)
-  const folhas = useMemo(() => { const pais = new Set(contas.map((c) => c.parent_codigo).filter(Boolean)); return contas.filter((c) => !pais.has(c.codigo)).sort((a, b) => (a.ordem || 0) - (b.ordem || 0)) }, [contas])
-  const contaByCod = useMemo(() => new Map(contas.map((c) => [c.codigo, c])), [contas])
+  // contas folha = onde insumos caem (as que não são "pai" de nenhuma outra) = as contas analíticas
+  const folhas = useMemo(() => { const pais = new Set(contas.map((c) => c.parent_codigo).filter(Boolean)); return contas.filter((c) => !pais.has(c.codigo)).sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true })) }, [contas])
   const rotuloConta = (c: Conta) => `${c.codigo} · ${c.nome}`
 
   const categorias = useMemo(() => [...new Set(insumos.map((i) => i.categoria).filter(Boolean) as string[])].sort(), [insumos])
@@ -73,15 +63,23 @@ export function DreClassificar() {
 
   const aplicarBulk = () => { if (!sel.size || !bulkConta) return; saveMut.mutate({ ids: [...sel], contaId: bulkConta }); setSel(new Set()) }
 
+  // Auto: casa cada item SEM conta com a conta cujo nome aparece no nome do item
+  // (ex.: "Salmão Fresco kg" → conta "Salmão"; "Gás P13" → conta "Gás"). Pega o nome mais específico.
   const auto = () => {
     const semConta = insumos.filter((i) => !i.conta_gerencial_id)
     if (!semConta.length) { showToast('Todos os itens já têm conta.', 'ok'); return }
-    if (!confirm(`Sugerir conta automaticamente para ${semConta.length} itens SEM conta (pelo nome/categoria)?\nOs já classificados não são tocados. Você pode revisar depois.`)) return
-    // agrupa por código sugerido e salva em lote
-    const porCod: Record<string, string[]> = {}
-    semConta.forEach((i) => { const cod = sugereCodigo(i); const c = contaByCod.get(cod); if (c) (porCod[c.id] = porCod[c.id] || []).push(i.id) })
-    Promise.all(Object.entries(porCod).map(([contaId, ids]) => supabase.from('insumos').update({ conta_gerencial_id: contaId }).in('id', ids)))
-      .then(() => { qc.invalidateQueries({ queryKey: ['dre-classif'] }); qc.invalidateQueries({ queryKey: ['dre-insumos'] }); showToast(`${semConta.length} itens classificados automaticamente. Revise as exceções.`, 'ok') })
+    const porConta: Record<string, string[]> = {}
+    let casados = 0
+    semConta.forEach((i) => {
+      const nome = norm(i.nome || '')
+      let best: Conta | null = null, len = 0
+      folhas.forEach((c) => { const cn = norm(c.nome); if (cn.length >= 3 && nome.includes(cn) && cn.length > len) { best = c; len = cn.length } })
+      if (best) { const b = best as Conta; (porConta[b.id] = porConta[b.id] || []).push(i.id); casados++ }
+    })
+    if (!casados) { showToast('Nenhum item casou pelo nome — classifique manualmente.', 'err'); return }
+    if (!confirm(`Casei ${casados} de ${semConta.length} itens sem conta pelo nome (ex.: "Salmão Fresco" → Salmão).\nAplicar? Os demais e os já classificados não são tocados — você revisa o resto.`)) return
+    Promise.all(Object.entries(porConta).map(([contaId, ids]) => supabase.from('insumos').update({ conta_gerencial_id: contaId }).in('id', ids)))
+      .then(() => { qc.invalidateQueries({ queryKey: ['dre-classif'] }); qc.invalidateQueries({ queryKey: ['dre-insumos'] }); showToast(`${casados} itens classificados. Revise os que sobraram.`, 'ok') })
       .catch((e) => showToast(e.message, 'err'))
   }
 
@@ -103,7 +101,7 @@ export function DreClassificar() {
           </select>
         </div>
         <div className="dre-grow" />
-        <div className="dre-fld"><label>&nbsp;</label><button className="dcl-btn" onClick={auto}>✨ Auto por categoria</button></div>
+        <div className="dre-fld"><label>&nbsp;</label><button className="dcl-btn" onClick={auto}>✨ Auto pelo nome</button></div>
       </div>
 
       {sel.size > 0 && (

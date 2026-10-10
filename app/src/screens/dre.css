@@ -75,7 +75,8 @@ tr.dre-result td { background:#dbe6f6; font-weight:800; border-top:2px solid #cd
 tr.dre-result .dre-stick { background:#dbe6f6; }
 tr.dre-hidden { display:none; }
 .dre-caret { display:inline-block; width:15px; color:#99a2c0; transition:transform .15s; }
-tr.dre-grupo.open .dre-caret { transform:rotate(90deg); }
+tr.open .dre-caret { transform:rotate(90deg); }
+tr.dre-sub td { cursor:default; }
 .dre-cod { font-family:'DM Mono',monospace; color:#99a2c0; font-size:11px; margin-right:7px; }
 
 .dre-empty { padding:40px; text-align:center; color:#94a3c4; font-size:13px; }
