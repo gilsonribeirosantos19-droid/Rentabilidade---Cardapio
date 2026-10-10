@@ -1,0 +1,105 @@
+/* DRE Gerencial de Compras — matriz mês a mês, contas colapsáveis */
+.dre-screen { padding: 2px 0 30px; }
+
+/* abas */
+.dre-tabs { display:flex; gap:4px; border-bottom:1px solid #e6eaf2; margin-bottom:14px; }
+.dre-tab { appearance:none; border:0; background:transparent; font-size:13.5px; font-weight:600; color:#586084; padding:10px 16px; cursor:pointer; border-bottom:2.5px solid transparent; margin-bottom:-1px; }
+.dre-tab:hover { color:#1e2030; }
+.dre-tab.on { color:#1e2030; border-bottom-color:#f97316; }
+
+/* classificação */
+.dcl-inp { font-size:13px; color:#1e2030; background:#fff; border:1px solid #e2e8f0; border-radius:9px; height:36px; padding:0 11px; width:100%; }
+.dcl-btn { height:36px; border:1px solid #e2e8f0; background:#fff; border-radius:9px; padding:0 14px; font-size:13px; font-weight:700; color:#334155; cursor:pointer; white-space:nowrap; }
+.dcl-btn:hover { background:#f8fafc; }
+.dcl-btn.pri { background:#f97316; color:#fff; border-color:#f97316; }
+.dcl-btn.pri:disabled { opacity:.5; cursor:default; }
+.dcl-bulk { display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#fff7ed; border:1px solid #fcd9a4; border-radius:11px; padding:10px 14px; margin-bottom:12px; font-size:13px; color:#7c3a09; }
+.dcl-bulk select { font-size:13px; height:34px; border:1px solid #e2e8f0; border-radius:8px; padding:0 10px; background:#fff; color:#1e2030; }
+table.dcl { min-width:640px; }
+table.dcl tbody tr.dcl-on td { background:#fff7ed; }
+.dcl-chk { width:40px; text-align:center !important; }
+.dcl-chk input { width:15px; height:15px; accent-color:#f97316; cursor:pointer; }
+.dcl-sel { font-size:12.5px; height:32px; border:1px solid #e2e8f0; border-radius:8px; padding:0 9px; background:#fff; color:#1e2030; min-width:260px; cursor:pointer; }
+.dcl-sel.vazio { border-color:#fcd9a4; background:#fffbf5; color:#b45309; }
+
+/* lançamentos */
+.dlc-form { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; padding:14px 16px; }
+.dlc-form select { font-size:13px; height:36px; border:1px solid #e2e8f0; border-radius:9px; padding:0 10px; background:#fff; color:#1e2030; width:100%; min-width:150px; }
+
+/* plano de contas */
+.pc-grp { padding:4px 0; }
+.pc-grp-h { background:#e8eef9; font-weight:700; font-size:13px; color:#1e2030; padding:8px 16px; }
+.pc-tag { font-size:10.5px; font-weight:700; color:#586084; background:#fff; border:1px solid #d7e0ef; padding:1px 7px; border-radius:11px; margin-left:8px; }
+.pc-vazio { font-size:12px; color:#94a3c4; padding:7px 16px 7px 40px; font-style:italic; }
+.pc-row { display:flex; align-items:center; gap:8px; padding:8px 16px 8px 40px; border-bottom:1px solid #f1f5f9; font-size:13px; }
+.pc-row:hover { background:#fbfcfe; }
+.pc-row.off { opacity:.5; }
+.pc-nome { flex:1; color:#1e2030; }
+.pc-nome em { color:#94a3c4; font-size:11.5px; }
+.pc-acts { display:flex; gap:6px; }
+.pc-mini { height:28px; border:1px solid #e2e8f0; background:#fff; border-radius:7px; padding:0 10px; font-size:12px; font-weight:600; color:#334155; cursor:pointer; white-space:nowrap; }
+.pc-mini:hover { background:#f1f5f9; }
+
+/* barra de filtros — padrão do sistema (igual .ds-filterbar das telas de estoque) */
+.dre-bar { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; background:#fff; border:1px solid #e7ebf0; border-radius:12px; padding:9px 14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+.dre-fld { display:flex; flex-direction:column; gap:3px; }
+.dre-fld label { font-size:11px; font-weight:500; text-transform:none; letter-spacing:.01em; color:#64748b; }
+.dre-bar select, .dre-bar input.dre-dt { font-size:12.5px; color:#0f172a; background:#fff; border:1px solid #a7b3c4; border-radius:8px; height:34px; padding:0 10px; cursor:pointer; min-width:160px; font-family:inherit; }
+.dre-bar input.dre-dt { min-width:0; width:148px; cursor:text; }
+.dre-bar select:focus, .dre-bar input.dre-dt:focus { outline:none; border-color:#f97316; }
+.dre-grow { flex:1; }
+.dre-lnk { background:none; border:0; color:#ea580c; font-size:12.5px; font-weight:600; cursor:pointer; padding:0; }
+.dre-btn { height:34px; border:1px solid #a7b3c4; background:#fff; border-radius:8px; padding:0 13px; font-size:12.5px; font-weight:600; color:#334155; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; }
+.dre-btn:hover { background:#f8fafc; border-color:#8c9ab0; }
+.dre-seg { display:flex; background:#fff; border:1px solid #a7b3c4; border-radius:8px; height:34px; overflow:hidden; }
+.dre-seg button { border:0; background:transparent; font-size:13px; font-weight:700; color:#586084; padding:0 15px; cursor:pointer; }
+.dre-seg button.on { background:#f97316; color:#fff; }
+
+.dre-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
+.dre-kpi { background:#fff; border:1px solid #d3dbe8; border-radius:12px; padding:13px 15px 13px 18px; position:relative; overflow:hidden; box-shadow:0 1px 3px rgba(20,32,64,.07); }
+.dre-kpi .k { font-size:11.5px; color:#586084; font-weight:600; }
+.dre-kpi .v { font-family:'DM Mono',monospace; font-size:20px; font-weight:500; margin-top:6px; font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
+.dre-kpi .d { font-size:11.5px; margin-top:3px; font-weight:600; color:#586084; }
+.dre-kpi .rail { position:absolute; left:0; top:0; bottom:0; width:4px; }
+
+.dre-card { background:#fff; border:1px solid #d3dbe8; border-radius:13px; box-shadow:0 1px 3px rgba(20,32,64,.06); overflow:hidden; }
+.dre-ch { padding:12px 16px; border-bottom:1px solid #eef1f7; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.dre-ch .t { font-size:14.5px; font-weight:700; color:#1e2030; }
+.dre-ch .s { font-size:12px; color:#586084; }
+.dre-hint { margin-left:auto; font-size:11.5px; color:#94a3c4; }
+
+.dre-scroll { overflow-x:auto; }
+table.dre { width:100%; border-collapse:collapse; min-width:1040px; }
+table.dre th, table.dre td { padding:8px 11px; font-size:12.5px; white-space:nowrap; }
+table.dre thead th { font-size:10.5px; text-transform:uppercase; letter-spacing:.3px; color:#99a2c0; font-weight:700; text-align:right; background:#fbfcfe; border-bottom:1px solid #e6eaf2; }
+table.dre thead th.l { text-align:left; }
+table.dre td { text-align:right; border-bottom:1px solid #eef1f7; font-family:'DM Mono',monospace; font-variant-numeric:tabular-nums; }
+table.dre td.l { text-align:left; font-family:inherit; }
+.dre-stick { position:sticky; left:0; background:#fff; z-index:2; box-shadow:1px 0 0 #eef1f7; text-align:left !important; min-width:240px; }
+table.dre thead .dre-stick { background:#fbfcfe; z-index:3; }
+.dre-tot { border-left:2px solid #e6eaf2; font-weight:600; }
+table.dre thead th.dre-tot { border-left:2px solid #e6eaf2; }
+
+tr.dre-receita td { background:#eafaf0; font-weight:700; border-bottom:1px solid #d6f0e0; }
+tr.dre-receita .dre-stick { background:#eafaf0; }
+tr.dre-grupo td { background:#e8eef9; font-weight:700; cursor:pointer; }
+tr.dre-grupo .dre-stick { background:#e8eef9; }
+tr.dre-grupo:hover td, tr.dre-grupo:hover .dre-stick { background:#dbe6f6; }
+tr.dre-sub td { background:#fbfcfe; font-weight:400; }
+tr.dre-sub .dre-stick { background:#fbfcfe; padding-left:28px; }
+tr.dre-item td { color:#586084; }
+tr.dre-item .dre-stick { padding-left:28px; font-weight:400; color:#1e2030; }
+tr.dre-item.deep .dre-stick { padding-left:46px; }
+tr.dre-result td { background:#dbe6f6; font-weight:800; border-top:2px solid #cdd9ec; font-size:13px; }
+tr.dre-result .dre-stick { background:#dbe6f6; }
+tr.dre-hidden { display:none; }
+.dre-caret { display:inline-block; width:15px; color:#99a2c0; transition:transform .15s; }
+tr.open .dre-caret { transform:rotate(90deg); }
+tr.dre-sub td { cursor:default; }
+.dre-cod { font-family:'DM Mono',monospace; color:#99a2c0; font-size:11px; margin-right:7px; }
+
+.dre-empty { padding:40px; text-align:center; color:#94a3c4; font-size:13px; }
+.dre-note { font-size:12.5px; color:#586084; line-height:1.6; background:#fff; border:1px solid #e6eaf2; border-radius:12px; padding:13px 15px; margin-top:14px; }
+.dre-note b { color:#1e2030; }
+
+@media (max-width:720px){ .dre-kpis{ grid-template-columns:repeat(2,1fr); } .dre-stick{ min-width:180px; } }

@@ -81,6 +81,12 @@ export const MODULES: Module[] = [
     id: 'gestao', label: 'Gestão', icon: 'chart',
     sections: [
       { label: 'Metas', key: 'gestao/metas' },
+      { group: 'DRE de Compras', items: [
+        { label: 'Demonstrativo', key: 'gestao/dre' },
+        { label: 'Orçamento', key: 'gestao/dre-orcamento' },
+        { label: 'Plano de contas', key: 'gestao/dre-plano' },
+        { label: 'Lançamentos', key: 'gestao/dre-lancamentos' },
+      ] },
       { label: 'CMV Teórico × Real', key: 'gestao/cmv' },
       { label: 'Rendimentos', key: 'gestao/rendimentos' },
       { label: 'Divergências', key: 'gestao/divergencias' },

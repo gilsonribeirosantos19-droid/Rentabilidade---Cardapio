@@ -31,8 +31,10 @@ type Insumo = {
   participa_cmv?: string
   tipo_baixa?: string
   observacao?: string | null
+  conta_gerencial_id?: string | null   // conta gerencial do DRE (ex.: Salmão, Embalagens)
   ativo?: boolean
 }
+type Conta = { id: string; codigo: string; nome: string; parent_codigo?: string | null }
 type Saldo = { insumo_id: string; custo_medio?: number; quantidade?: number; loja_id?: string }
 type Form = Partial<Insumo>
 
@@ -56,6 +58,7 @@ export function Insumos() {
   const [cadSub, setCadSub] = useState<'basico' | 'emb'>('basico')   // sub-abas do cadastro (evita form muito longo)
   const [cadForm, setCadForm] = useState<Form>(novoForm())
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
+  const [pconta, setPConta] = useState<{ ins: Insumo; x: number; y: number } | null>(null); const [pbusca, setPBusca] = useState('')
   const [dup, setDup] = useState<Insumo | null>(null); const [dupNome, setDupNome] = useState('')
   const [transf, setTransf] = useState<{ ins: Insumo; count: number } | null>(null); const [transfDest, setTransfDest] = useState('')
   // filtros Produtos
@@ -68,7 +71,7 @@ export function Insumos() {
   const { podeEditar } = usePerms()
   const canEdit = podeEditar('insumos')   // Controle Total = edita; Somente Leitura = só vê
 
-  useEffect(() => { const close = () => setMenu(null); window.addEventListener('click', close); return () => window.removeEventListener('click', close) }, [])
+  useEffect(() => { const close = () => { setMenu(null); setPConta(null) }; window.addEventListener('click', close); return () => window.removeEventListener('click', close) }, [])
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['insumos', tenantId], enabled: !!tenantId,
@@ -92,6 +95,31 @@ export function Insumos() {
     queryKey: ['insumos-clsf', tenantId], enabled: !!tenantId,
     queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome,tipo').eq('tenant_id', tenantId); return (data ?? []) as { nome: string; tipo: string }[] },
   })
+  // contas gerenciais do DRE (folhas = Salmão, Embalagens…) — p/ classificar o insumo
+  const { data: contas = [] } = useQuery({
+    queryKey: ['dre-contas', tenantId], enabled: !!tenantId,
+    queryFn: async () => { const { data } = await supabase.from('contas_gerenciais').select('id,codigo,nome,parent_codigo').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Conta[] },
+  })
+  const contaFolhas = useMemo(() => { const pais = new Set(contas.map((c) => c.parent_codigo).filter(Boolean)); return contas.filter((c) => !pais.has(c.codigo)).sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true })) }, [contas])
+  // salva a conta de um insumo direto na lista (ou em lote)
+  const contaMut = useMutation({
+    mutationFn: async ({ ids, contaId }: { ids: string[]; contaId: string | null }) => { const { error } = await supabase.from('insumos').update({ conta_gerencial_id: contaId }).in('id', ids); if (error) throw error },
+    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ['insumos'] }); qc.invalidateQueries({ queryKey: ['dre-insumos'] }); showToast(v.ids.length > 1 ? `${v.ids.length} itens classificados.` : 'Conta salva.', 'ok') },
+    onError: (e: Error) => showToast(e.message, 'err'),
+  })
+  // Auto: casa cada item SEM conta com a conta cujo nome aparece no nome do item (Salmão Fresco → Salmão)
+  const autoClassificar = () => {
+    const sem = lista.filter((i) => !i.conta_gerencial_id && i.ativo !== false)
+    if (!sem.length) { showToast('Todos os itens já têm conta.', 'ok'); return }
+    const nrm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    const porConta: Record<string, string[]> = {}; let n = 0
+    sem.forEach((i) => { const nm = nrm(i.nome || ''); let best: Conta | null = null, len = 0; contaFolhas.forEach((c) => { const cn = nrm(c.nome); if (cn.length >= 3 && nm.includes(cn) && cn.length > len) { best = c; len = cn.length } }); if (best) { const b = best as Conta; (porConta[b.id] = porConta[b.id] || []).push(i.id); n++ } })
+    if (!n) { showToast('Nenhum item casou pelo nome — classifique manualmente.', 'err'); return }
+    if (!confirm(`Casei ${n} de ${sem.length} itens sem conta pelo nome (ex.: "Salmão Fresco" → Salmão).\nAplicar? Os já classificados não são tocados; o resto você revisa.`)) return
+    Promise.all(Object.entries(porConta).map(([contaId, ids]) => supabase.from('insumos').update({ conta_gerencial_id: contaId }).in('id', ids)))
+      .then(() => { qc.invalidateQueries({ queryKey: ['insumos'] }); qc.invalidateQueries({ queryKey: ['dre-insumos'] }); showToast(`${n} itens classificados. Revise os que sobraram.`, 'ok') })
+      .catch((e) => showToast(e.message, 'err'))
+  }
 
   const opts = useMemo(() => {
     const cad = (tipo: string) => clsf.filter((c) => c.tipo === tipo).map((c) => c.nome)
@@ -151,7 +179,7 @@ export function Insumos() {
         embalagens: embs,
         tipo_baixa: f.tipo_baixa || 'consumo', tipo_item: f.tipo_item || null, familia: f.familia || null,
         subgrupo: f.subgrupo || null, participa_cmv: f.participa_cmv === 'nao' ? 'nao' : 'sim', ativo: f.ativo !== false,
-        ncm: (f.ncm || '').trim() || null,
+        ncm: (f.ncm || '').trim() || null, conta_gerencial_id: f.conta_gerencial_id || null,
       }
       // trava: não deixa INATIVAR (ativo=true → false) um item que ainda tem vínculo de fornecedor
       if (f.id && f.ativo === false) {
@@ -243,6 +271,12 @@ export function Insumos() {
                 <Sel label="Família" value={cadForm.familia} options={opts.familias} onChange={(v) => setF('familia', v)} />
                 <Sel label="Grupo (Categoria)" value={cadForm.categoria} options={opts.grupos} onChange={(v) => setF('categoria', v)} />
                 <Sel label="Subgrupo" value={cadForm.subgrupo} options={opts.subgrupos} onChange={(v) => setF('subgrupo', v)} />
+                <div className="form-group"><label className="form-label">Conta gerencial (DRE)</label>
+                  <select className="form-select" value={cadForm.conta_gerencial_id || ''} onChange={(e) => setF('conta_gerencial_id', e.target.value)}>
+                    <option value="">— sem conta (vai p/ Custos) —</option>
+                    {contaFolhas.map((c) => <option key={c.id} value={c.id}>{c.codigo} · {c.nome}</option>)}
+                  </select>
+                </div>
                 <div className="form-group"><label className="form-label">Participa do CMV</label>
                   <select className="form-select" value={cadForm.participa_cmv === 'nao' ? 'nao' : 'sim'} onChange={(e) => setF('participa_cmv', e.target.value)}><option value="sim">Sim</option><option value="nao">Não</option></select>
                 </div>
@@ -288,22 +322,31 @@ export function Insumos() {
             <FSel value={fGrupo} onChange={setFGrupo} ph="Grupo ▾" options={opts.grupos} />
             <FSel value={fSub} onChange={setFSub} ph="Subgrupo ▾" options={opts.subgrupos} />
             <select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Status ▾</option><option value="true">Ativo</option><option value="false">Inativo</option></select>
+            {canEdit && contaFolhas.length > 0 && <button className="prod-filter" style={{ cursor: 'pointer', fontWeight: 600, color: '#b45309', whiteSpace: 'nowrap' }} title="Casa os itens sem conta com a conta de mesmo nome (ex.: Salmão Fresco → Salmão)" onClick={autoClassificar}>✨ Auto classificar (DRE)</button>}
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
             <table>
               <thead><tr>
                 <th><svg className="colgrid" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>Código Interno</th>
-                <th>Descrição</th><th>Tipo do Item</th><th>Grupo</th><th>Unidade</th><th className="r">Qtd. Emb.</th><th className="c">Calcula CMV</th><th>Ações</th>
+                <th>Descrição</th><th>Tipo do Item</th><th>Grupo</th><th>Conta (DRE)</th><th>Unidade</th><th className="r">Qtd. Emb.</th><th className="c">Calcula CMV</th><th>Ações</th>
               </tr></thead>
               <tbody>
-                {isLoading ? <tr><td colSpan={8} className="empty">Carregando…</td></tr>
-                  : produtos.length === 0 ? <tr><td colSpan={8} className="empty">Nenhum item encontrado</td></tr>
+                {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
+                  : produtos.length === 0 ? <tr><td colSpan={9} className="empty">Nenhum item encontrado</td></tr>
                   : produtos.map((i) => (
                     <tr key={i.id} onClick={() => editar(i)}>
                       <td className="td-mono" style={{ color: '#64748b', fontSize: 11 }}>{fmtCodigo(i.codigo_interno)}</td>
                       <td style={{ color: '#0f172a' }}>{i.nome}</td>
                       <td style={{ color: '#64748b' }}>{i.tipo_item || '—'}</td>
                       <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        {canEdit && contaFolhas.length > 0
+                          ? (() => { const c = contaFolhas.find((x) => x.id === i.conta_gerencial_id); const vazio = !c
+                            return <button onClick={(e) => { e.stopPropagation(); setPConta({ ins: i, x: e.clientX, y: e.clientY }); setPBusca('') }}
+                              style={{ fontSize: 12, height: 28, maxWidth: 190, border: '1px solid ' + (vazio ? '#fcd9a4' : '#e2e8f0'), borderRadius: 6, background: vazio ? '#fffbf5' : '#fff', color: vazio ? '#b45309' : '#334155', padding: '0 9px', cursor: 'pointer', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>
+                              {c ? `${c.codigo} · ${c.nome}` : '— classificar —'}</button> })()
+                          : <span style={{ color: '#64748b', fontSize: 12 }}>{contaFolhas.find((c) => c.id === i.conta_gerencial_id)?.nome || '—'}</span>}
+                      </td>
                       <td style={{ color: '#64748b' }}>{i.unidade_medida || '—'}</td>
                       <td className="r td-mono" style={{ color: '#64748b' }}>—</td>
                       <td className="c">{i.participa_cmv !== 'nao' ? <span className="cmv-on">✓</span> : <span className="cmv-off" />}</td>
@@ -363,6 +406,29 @@ export function Insumos() {
           {canEdit && <button style={{ ...menuItemStyle, color: '#ef4444' }} onClick={async () => { const ins = lista.find((x) => x.id === menu.id); setMenu(null); if (!ins) return; const n = await contarVinc(ins.id); if (n > 0) { setTransfDest(''); setTransf({ ins, count: n }); return } if (confirm(`Desativar "${ins.nome}"?`)) delMut.mutate(ins.id) }}>🗑 Desativar</button>}
         </div>
       )}
+
+      {/* popover de classificação da conta gerencial (padrão do sistema, com busca; abre perto do clique) */}
+      {pconta && (() => {
+        const q = pbusca.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+        const vis = contaFolhas.filter((c) => !q || (c.codigo + ' ' + c.nome).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q))
+        const left = Math.min(pconta.x, window.innerWidth - 300)
+        const top = Math.min(pconta.y + 6, window.innerHeight - 360)
+        const pick = (contaId: string | null) => { contaMut.mutate({ ids: [pconta.ins.id], contaId }); setPConta(null) }
+        return (
+          <div style={{ position: 'fixed', top, left, width: 284, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 11, boxShadow: '0 12px 34px rgba(15,23,42,.2)', zIndex: 1300, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '9px 10px', borderBottom: '1px solid #eef1f7', fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{pconta.ins.nome}</div>
+            <input autoFocus placeholder="Buscar conta…" value={pbusca} onChange={(e) => setPBusca(e.target.value)} style={{ width: '100%', border: 0, borderBottom: '1px solid #eef1f7', height: 36, padding: '0 11px', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+            <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+              <div onClick={() => pick(null)} style={{ padding: '8px 12px', fontSize: 12.5, color: '#b45309', cursor: 'pointer' }} onMouseDown={(e) => e.preventDefault()}>— sem conta (vai p/ Custos) —</div>
+              {vis.map((c) => <div key={c.id} onClick={() => pick(c.id)} onMouseDown={(e) => e.preventDefault()}
+                style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer', background: c.id === pconta.ins.conta_gerencial_id ? '#fff7ed' : undefined, fontWeight: c.id === pconta.ins.conta_gerencial_id ? 600 : 400 }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')} onMouseLeave={(e) => (e.currentTarget.style.background = c.id === pconta.ins.conta_gerencial_id ? '#fff7ed' : 'transparent')}>
+                <span style={{ color: '#94a3b8', fontSize: 11, marginRight: 6, fontFamily: 'DM Mono, monospace' }}>{c.codigo}</span>{c.nome}</div>)}
+              {vis.length === 0 && <div style={{ padding: '10px 12px', fontSize: 12.5, color: '#94a3b8' }}>Nenhuma conta encontrada.</div>}
+            </div>
+          </div>
+        )
+      })()}
 
       {dup && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }} onClick={() => setDup(null)}>
