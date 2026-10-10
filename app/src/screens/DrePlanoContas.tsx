@@ -53,7 +53,7 @@ export function DrePlanoContas() {
   })
 
   return (
-    <>
+    <div className="dre-screen">
       <div className="dre-card" style={{ marginBottom: 14 }}>
         <div className="dre-ch"><div><div className="t">Nova conta</div><div className="s">crie uma conta analítica (ex.: Tilápia, Fardamento…) dentro de um grupo</div></div></div>
         <div className="dlc-form">
@@ -92,6 +92,6 @@ export function DrePlanoContas() {
         )}
       </div>
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
-    </>
+    </div>
   )
 }

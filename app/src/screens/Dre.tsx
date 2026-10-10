@@ -2,25 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { DreLancamentos } from './DreLancamentos'
-import { DrePlanoContas } from './DrePlanoContas'
-import { DreOrcamento } from './DreOrcamento'
 import './dre.css'
-
-export function Dre() {
-  const [tab, setTab] = useState<'dre' | 'orcamento' | 'plano' | 'lancamentos'>('dre')
-  return (
-    <div className="dre-screen">
-      <div className="dre-tabs">
-        <button className={'dre-tab' + (tab === 'dre' ? ' on' : '')} onClick={() => setTab('dre')}>Demonstrativo</button>
-        <button className={'dre-tab' + (tab === 'orcamento' ? ' on' : '')} onClick={() => setTab('orcamento')}>Orçamento</button>
-        <button className={'dre-tab' + (tab === 'plano' ? ' on' : '')} onClick={() => setTab('plano')}>Plano de contas</button>
-        <button className={'dre-tab' + (tab === 'lancamentos' ? ' on' : '')} onClick={() => setTab('lancamentos')}>Lançamentos manuais</button>
-      </div>
-      {tab === 'dre' ? <DreDemo /> : tab === 'orcamento' ? <DreOrcamento /> : tab === 'plano' ? <DrePlanoContas /> : <DreLancamentos />}
-    </div>
-  )
-}
 
 // DRE Gerencial de Compras — hierarquia grupo (2.1) → conta (Salmão) → insumos.
 // Compras = entradas_estoque.custo_total (manual/nfe) por insumo×mês. Receita = recebimento_vendas.
@@ -39,7 +21,7 @@ const brl = (n: number) => 'R$ ' + Math.round(n).toLocaleString('pt-BR')
 const anoAtual = new Date().getFullYear()
 const byCod = (a: Conta, b: Conta) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true })
 
-function DreDemo() {
+export function Dre() {
   const { tenantId } = useAuth()
   const [ano, setAno] = useState(anoAtual)
   const [lojaId, setLojaId] = useState('')
@@ -127,7 +109,7 @@ function DreDemo() {
   const allKeys = () => new Set(model.linhas.map((l) => l.gkey).filter(Boolean) as string[])
 
   return (
-    <>
+    <div className="dre-screen">
       <div className="dre-bar">
         <div className="dre-fld"><label>Loja</label>
           <select value={lojaId} onChange={(e) => setLojaId(e.target.value)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
@@ -177,8 +159,8 @@ function DreDemo() {
       </div>
 
       <div className="dre-note">
-        <b>Hierarquia:</b> <b>Grupo</b> (2.1 Custos) → <b>Conta</b> (Salmão, Embalagens…) → <b>insumos</b> do estoque. As compras somam de <code>entradas_estoque</code> por insumo e sobem até a conta; a receita vem de <code>recebimento_vendas</code>. Use a aba <b>Classificar itens</b> para dizer em que conta cada insumo entra.
+        <b>Hierarquia:</b> <b>Grupo</b> (2.1 Custos) → <b>Conta</b> (Salmão, Embalagens…) → <b>insumos</b> do estoque. As compras somam de <code>entradas_estoque</code> por insumo e sobem até a conta; a receita vem de <code>recebimento_vendas</code>. A classificação de cada insumo na sua conta é feita em <b>Cadastros › Insumos</b>.
       </div>
-    </>
+    </div>
   )
 }

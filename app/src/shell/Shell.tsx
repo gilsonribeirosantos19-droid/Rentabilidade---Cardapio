@@ -40,6 +40,9 @@ import { Rendimentos } from '../screens/Rendimentos'
 import { CmvTeoricoReal } from '../screens/CmvTeoricoReal'
 import { Fechamento } from '../screens/Fechamento'
 import { Dre } from '../screens/Dre'
+import { DreOrcamento } from '../screens/DreOrcamento'
+import { DrePlanoContas } from '../screens/DrePlanoContas'
+import { DreLancamentos } from '../screens/DreLancamentos'
 import { FaturamentoVendas } from '../screens/FaturamentoVendas'
 import { VendasDiario } from '../screens/VendasDiario'
 import { MonitorVendas } from '../screens/MonitorVendas'
@@ -123,6 +126,9 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
   if (k === 'gestao/fechamento') return <Fechamento />
   if (k === 'gestao/dre') return <Dre />
+  if (k === 'gestao/dre-orcamento') return <DreOrcamento />
+  if (k === 'gestao/dre-plano') return <DrePlanoContas />
+  if (k === 'gestao/dre-lancamentos') return <DreLancamentos />
   if (k === 'pdv/faturamento') return <FaturamentoVendas />
   if (k === 'pdv/vendas-dia') return <VendasDiario />
   if (k === 'pdv/importar') return <MonitorVendas />
@@ -188,7 +194,7 @@ export function Shell() {
           </div>
           <div className="tr">
             {/* telas com filtro de loja próprio ou de config do tenant escondem o seletor global de loja */}
-            {!['pdv/importar', 'pdv/faturamento', 'pdv/vendas-dia', 'pdv/engenharia', 'pdv/abc', 'compras/sugestao', 'pcp/setores', 'pcp/itens-porc', 'pcp/calendario', 'pcp/atividades', 'gestao/dre'].includes(active) && !active.startsWith('config/') && (
+            {!['pdv/importar', 'pdv/faturamento', 'pdv/vendas-dia', 'pdv/engenharia', 'pdv/abc', 'compras/sugestao', 'pcp/setores', 'pcp/itens-porc', 'pcp/calendario', 'pcp/atividades', 'gestao/dre', 'gestao/dre-orcamento', 'gestao/dre-plano', 'gestao/dre-lancamentos'].includes(active) && !active.startsWith('config/') && (
               <select className="input" style={{ width: 150, height: 34 }} value={lojaId ?? ''} onChange={(e) => setLojaId(e.target.value || null)}>
                 <option value="">Todas as lojas</option>
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}

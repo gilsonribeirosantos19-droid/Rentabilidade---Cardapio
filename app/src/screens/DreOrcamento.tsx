@@ -9,8 +9,9 @@ import { useToastTipo } from '../lib/toast'
 
 type Conta = { id: string; codigo: string; nome: string; grupo: string; parent_codigo?: string | null }
 type Insumo = { id: string; conta_gerencial_id?: string | null }
-type Entrada = { insumo_id: string; custo_total?: number | null; criado_em?: string; tipo?: string }
+type Entrada = { insumo_id: string; loja_id?: string | null; custo_total?: number | null; criado_em?: string; tipo?: string }
 type Orc = { conta_gerencial_id: string; valor_mensal?: number | null }
+type Loja = { id: string; nome: string }
 
 const MES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 const brl = (n: number) => 'R$ ' + Math.round(n).toLocaleString('pt-BR')
@@ -26,13 +27,15 @@ export function DreOrcamento() {
   const { toast, setToast, showToast } = useToastTipo(2200)
   const [ano, setAno] = useState(anoAtual)
   const [mes, setMes] = useState(new Date().getMonth())
+  const [lojaId, setLojaId] = useState('')        // '' = todas (orçamento geral)
   const [vals, setVals] = useState<Record<string, string>>({})
 
   const ini = `${ano}-01-01`, fim = `${ano}-12-31T23:59:59`
+  const { data: lojas = [] } = useQuery({ queryKey: ['dre-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Loja[] } })
   const { data: contas = [] } = useQuery({ queryKey: ['dre-contas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('contas_gerenciais').select('*').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Conta[] } })
   const { data: insumos = [] } = useQuery({ queryKey: ['dre-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,conta_gerencial_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
-  const { data: entradas = [] } = useQuery({ queryKey: ['dre-entradas', tenantId, ano], enabled: !!tenantId, queryFn: () => fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('insumo_id,custo_total,criado_em,tipo').eq('tenant_id', tenantId).gte('criado_em', ini).lte('criado_em', fim).order('criado_em').order('id').range(f, t)) })
-  const { data: orcs = [] } = useQuery({ queryKey: ['dre-orcamentos', tenantId, ano], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('orcamentos_gerenciais').select('conta_gerencial_id,valor_mensal').eq('tenant_id', tenantId).eq('ano', ano); return (data ?? []) as Orc[] } })
+  const { data: entradas = [] } = useQuery({ queryKey: ['dre-entradas', tenantId, ano], enabled: !!tenantId, queryFn: () => fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('insumo_id,loja_id,custo_total,criado_em,tipo').eq('tenant_id', tenantId).gte('criado_em', ini).lte('criado_em', fim).order('criado_em').order('id').range(f, t)) })
+  const { data: orcs = [] } = useQuery({ queryKey: ['dre-orcamentos', tenantId, ano, lojaId], enabled: !!tenantId, queryFn: async () => { let q = supabase.from('orcamentos_gerenciais').select('conta_gerencial_id,valor_mensal').eq('tenant_id', tenantId).eq('ano', ano); q = lojaId ? q.eq('loja_id', lojaId) : q.is('loja_id', null); const { data } = await q; return (data ?? []) as Orc[] } })
 
   useEffect(() => { const m: Record<string, string> = {}; orcs.forEach((o) => { if (Number(o.valor_mensal)) m[o.conta_gerencial_id] = String(o.valor_mensal).replace('.', ',') }); setVals(m) }, [orcs, ano])
 
@@ -46,16 +49,24 @@ export function DreOrcamento() {
     const porConta = new Map<string, number>()
     entradas.forEach((e) => {
       if (e.tipo !== 'manual' && e.tipo !== 'nfe' && e.tipo !== 'nfe_importada') return
+      if (lojaId && (e.loja_id || '') !== lojaId) return
       const d = e.criado_em ? new Date(e.criado_em) : null
       if (!d || d.getFullYear() !== ano || d.getMonth() !== mes) return
       const cid = insConta.get(e.insumo_id); if (!cid) return
       porConta.set(cid, (porConta.get(cid) || 0) + (Number(e.custo_total) || 0))
     })
     return porConta
-  }, [insumos, entradas, ano, mes])
+  }, [insumos, entradas, ano, mes, lojaId])
 
   const salvar = useMutation({
-    mutationFn: async ({ contaId, valor }: { contaId: string; valor: number }) => { const { error } = await supabase.from('orcamentos_gerenciais').upsert({ tenant_id: tenantId, conta_gerencial_id: contaId, ano, valor_mensal: valor }, { onConflict: 'tenant_id,conta_gerencial_id,ano' }); if (error) throw error },
+    mutationFn: async ({ contaId, valor }: { contaId: string; valor: number }) => {
+      const lid = lojaId || null   // upsert manual (loja nula = orçamento geral)
+      let sel = supabase.from('orcamentos_gerenciais').select('id').eq('tenant_id', tenantId).eq('conta_gerencial_id', contaId).eq('ano', ano)
+      sel = lid ? sel.eq('loja_id', lid) : sel.is('loja_id', null)
+      const { data: ex } = await sel.limit(1)
+      if (ex && ex.length) { const { error } = await supabase.from('orcamentos_gerenciais').update({ valor_mensal: valor }).eq('id', (ex[0] as { id: string }).id); if (error) throw error }
+      else { const { error } = await supabase.from('orcamentos_gerenciais').insert({ tenant_id: tenantId, conta_gerencial_id: contaId, ano, loja_id: lid, valor_mensal: valor }); if (error) throw error }
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['dre-orcamentos'] }) }, onError: (e: Error) => showToast(e.message, 'err'),
   })
   const onBlur = (contaId: string) => { const v = parseNum(vals[contaId] || ''); const antes = orcs.find((o) => o.conta_gerencial_id === contaId)?.valor_mensal || 0; if (v !== Number(antes)) salvar.mutate({ contaId, valor: v }) }
@@ -69,12 +80,13 @@ export function DreOrcamento() {
   const grupos = useMemo(() => { const m = new Map<string, Conta[]>(); folhas.forEach((c) => { const k = c.parent_codigo || '?'; (m.get(k) || m.set(k, []).get(k)!).push(c) }); return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true })) }, [folhas])
 
   return (
-    <>
+    <div className="dre-screen">
       <div className="dre-bar">
+        <div className="dre-fld"><label>Loja</label><select value={lojaId} onChange={(e) => setLojaId(e.target.value)}><option value="">Todas (orçamento geral)</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>
         <div className="dre-fld"><label>Ano</label><select value={ano} onChange={(e) => setAno(Number(e.target.value))}>{[anoAtual, anoAtual - 1, anoAtual + 1].map((a) => <option key={a} value={a}>{a}</option>)}</select></div>
         <div className="dre-fld"><label>Mês (realizado)</label><select value={mes} onChange={(e) => setMes(Number(e.target.value))}>{MES.map((m, i) => <option key={i} value={i}>{m}</option>)}</select></div>
         <div className="dre-grow" />
-        <div className="dre-hint" style={{ alignSelf: 'center' }}>defina o teto mensal de cada conta → comparo com o comprado em {MES[mes]}</div>
+        <div className="dre-hint" style={{ alignSelf: 'center' }}>defina o teto mensal → comparo com o comprado em {MES[mes]}</div>
       </div>
 
       <div className="dre-kpis">
@@ -119,6 +131,6 @@ export function DreOrcamento() {
       </div>
       <div className="dre-note">O <b>teto</b> é o valor que você planeja gastar por mês em cada conta (salva ao sair do campo). O <b>realizado</b> é o que já foi comprado no mês escolhido. O semáforo compara os dois: verde (dentro), amarelo (chegando no limite), vermelho (estourou).</div>
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
-    </>
+    </div>
   )
 }

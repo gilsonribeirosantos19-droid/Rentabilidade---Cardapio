@@ -64,7 +64,7 @@ export function DreLancamentos() {
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }))
 
   return (
-    <>
+    <div className="dre-screen">
       <div className="dre-card" style={{ marginBottom: 14 }}>
         <div className="dre-ch"><div><div className="t">Novo lançamento manual</div><div className="s">para compras/custos sem nota fiscal (feira, débito…)</div></div></div>
         <div className="dlc-form">
@@ -107,6 +107,6 @@ export function DreLancamentos() {
         </div>
       </div>
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
-    </>
+    </div>
   )
 }
