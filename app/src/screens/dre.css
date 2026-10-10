@@ -40,13 +40,16 @@ table.dcl tbody tr.dcl-on td { background:#fff7ed; }
 .pc-mini { height:28px; border:1px solid #e2e8f0; background:#fff; border-radius:7px; padding:0 10px; font-size:12px; font-weight:600; color:#334155; cursor:pointer; white-space:nowrap; }
 .pc-mini:hover { background:#f1f5f9; }
 
-.dre-bar { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; }
-.dre-fld { display:flex; flex-direction:column; gap:4px; }
-.dre-fld label { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#99a2c0; }
-.dre-bar select { font-size:13px; color:#1e2030; background:#fff; border:1px solid #e2e8f0; border-radius:9px; height:36px; padding:0 11px; cursor:pointer; min-width:180px; }
+/* barra de filtros — padrão do sistema (igual .ds-filterbar das telas de estoque) */
+.dre-bar { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; background:#fff; border:1px solid #e7ebf0; border-radius:12px; padding:9px 14px; margin-bottom:12px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+.dre-fld { display:flex; flex-direction:column; gap:3px; }
+.dre-fld label { font-size:11px; font-weight:500; text-transform:none; letter-spacing:.01em; color:#64748b; }
+.dre-bar select, .dre-bar input.dre-dt { font-size:12.5px; color:#0f172a; background:#fff; border:1px solid #a7b3c4; border-radius:8px; height:34px; padding:0 10px; cursor:pointer; min-width:160px; font-family:inherit; }
+.dre-bar input.dre-dt { min-width:0; width:148px; cursor:text; }
+.dre-bar select:focus, .dre-bar input.dre-dt:focus { outline:none; border-color:#f97316; }
 .dre-grow { flex:1; }
 .dre-lnk { background:none; border:0; color:#ea580c; font-size:12.5px; font-weight:600; cursor:pointer; padding:0; }
-.dre-seg { display:flex; background:#fff; border:1px solid #e2e8f0; border-radius:9px; height:36px; overflow:hidden; }
+.dre-seg { display:flex; background:#fff; border:1px solid #a7b3c4; border-radius:8px; height:34px; overflow:hidden; }
 .dre-seg button { border:0; background:transparent; font-size:13px; font-weight:700; color:#586084; padding:0 15px; cursor:pointer; }
 .dre-seg button.on { background:#f97316; color:#fff; }
 

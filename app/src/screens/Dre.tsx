@@ -114,7 +114,7 @@ export function Dre() {
         <div className="dre-fld"><label>Loja</label>
           <select value={lojaId} onChange={(e) => setLojaId(e.target.value)}><option value="">Todas as lojas</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select>
         </div>
-        <div className="dre-fld"><label>Exercício</label>
+        <div className="dre-fld"><label>Ano</label>
           <select value={ano} onChange={(e) => setAno(Number(e.target.value))}>{[anoAtual, anoAtual - 1, anoAtual - 2].map((a) => <option key={a} value={a}>{a}</option>)}</select>
         </div>
         <div className="dre-grow" />
