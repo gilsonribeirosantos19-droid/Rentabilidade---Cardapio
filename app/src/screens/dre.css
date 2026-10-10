@@ -55,8 +55,8 @@ table.dcl tbody tr.dcl-on td { background:#fff7ed; }
 .dre-seg button { border:0; background:transparent; font-size:13px; font-weight:700; color:#586084; padding:0 15px; cursor:pointer; }
 .dre-seg button.on { background:#f97316; color:#fff; }
 
-.dre-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
-.dre-kpi { background:#fff; border:1px solid #d3dbe8; border-radius:12px; padding:13px 15px 13px 18px; position:relative; overflow:hidden; box-shadow:0 1px 3px rgba(20,32,64,.07); }
+.dre-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:14px; }
+.dre-kpi { min-width:0; background:#fff; border:1px solid #d3dbe8; border-radius:12px; padding:13px 15px 13px 18px; position:relative; overflow:hidden; box-shadow:0 1px 3px rgba(20,32,64,.07); }
 .dre-kpi .k { font-size:11.5px; color:#586084; font-weight:600; }
 .dre-kpi .v { font-family:'DM Mono',monospace; font-size:20px; font-weight:500; margin-top:6px; font-variant-numeric:tabular-nums; letter-spacing:-.5px; }
 .dre-kpi .d { font-size:11.5px; margin-top:3px; font-weight:600; color:#586084; }
@@ -102,4 +102,4 @@ tr.dre-sub td { cursor:default; }
 .dre-note { font-size:12.5px; color:#586084; line-height:1.6; background:#fff; border:1px solid #e6eaf2; border-radius:12px; padding:13px 15px; margin-top:14px; }
 .dre-note b { color:#1e2030; }
 
-@media (max-width:720px){ .dre-kpis{ grid-template-columns:repeat(2,1fr); } .dre-stick{ min-width:180px; } }
+@media (max-width:720px){ .dre-kpis{ grid-template-columns:repeat(2,minmax(0,1fr)); } .dre-stick{ min-width:180px; } }
