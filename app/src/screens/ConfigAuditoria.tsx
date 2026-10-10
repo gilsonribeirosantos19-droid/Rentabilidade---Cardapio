@@ -97,8 +97,10 @@ export function ConfigAuditoria() {
     if (fEnt) qq = qq.eq('entidade', fEnt)
     if (fUser === 'Sistema') qq = qq.is('usuario_id', null)
     else if (fUser) qq = qq.eq('usuario_nome', fUser)
-    if (de) qq = qq.gte('criado_em', de)
-    if (ate) qq = qq.lte('criado_em', ate + 'T23:59:59')
+    // filtro de data em horário de Brasília (-03): criado_em é timestamptz em UTC,
+    // então à noite o evento "vira o dia seguinte" em UTC. O offset -03:00 conserta.
+    if (de) qq = qq.gte('criado_em', de + 'T00:00:00-03:00')
+    if (ate) qq = qq.lte('criado_em', ate + 'T23:59:59-03:00')
     if (busca.trim()) qq = qq.ilike('registro_desc', `%${busca.trim()}%`)
     return qq
   }
