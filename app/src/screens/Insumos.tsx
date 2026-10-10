@@ -58,6 +58,7 @@ export function Insumos() {
   const [cadSub, setCadSub] = useState<'basico' | 'emb'>('basico')   // sub-abas do cadastro (evita form muito longo)
   const [cadForm, setCadForm] = useState<Form>(novoForm())
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
+  const [pconta, setPConta] = useState<{ ins: Insumo; x: number; y: number } | null>(null); const [pbusca, setPBusca] = useState('')
   const [dup, setDup] = useState<Insumo | null>(null); const [dupNome, setDupNome] = useState('')
   const [transf, setTransf] = useState<{ ins: Insumo; count: number } | null>(null); const [transfDest, setTransfDest] = useState('')
   // filtros Produtos
@@ -70,7 +71,7 @@ export function Insumos() {
   const { podeEditar } = usePerms()
   const canEdit = podeEditar('insumos')   // Controle Total = edita; Somente Leitura = só vê
 
-  useEffect(() => { const close = () => setMenu(null); window.addEventListener('click', close); return () => window.removeEventListener('click', close) }, [])
+  useEffect(() => { const close = () => { setMenu(null); setPConta(null) }; window.addEventListener('click', close); return () => window.removeEventListener('click', close) }, [])
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['insumos', tenantId], enabled: !!tenantId,
@@ -340,11 +341,10 @@ export function Insumos() {
                       <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         {canEdit && contaFolhas.length > 0
-                          ? <select value={i.conta_gerencial_id || ''} onChange={(e) => contaMut.mutate({ ids: [i.id], contaId: e.target.value || null })}
-                              style={{ fontSize: 12, height: 28, maxWidth: 180, border: '1px solid ' + (i.conta_gerencial_id ? '#e2e8f0' : '#fcd9a4'), borderRadius: 6, background: i.conta_gerencial_id ? '#fff' : '#fffbf5', color: i.conta_gerencial_id ? '#1e2030' : '#b45309', padding: '0 6px' }}>
-                              <option value="">— sem conta —</option>
-                              {contaFolhas.map((c) => <option key={c.id} value={c.id}>{c.codigo} · {c.nome}</option>)}
-                            </select>
+                          ? (() => { const c = contaFolhas.find((x) => x.id === i.conta_gerencial_id); const vazio = !c
+                            return <button onClick={(e) => { e.stopPropagation(); setPConta({ ins: i, x: e.clientX, y: e.clientY }); setPBusca('') }}
+                              style={{ fontSize: 12, height: 28, maxWidth: 190, border: '1px solid ' + (vazio ? '#fcd9a4' : '#e2e8f0'), borderRadius: 6, background: vazio ? '#fffbf5' : '#fff', color: vazio ? '#b45309' : '#334155', padding: '0 9px', cursor: 'pointer', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>
+                              {c ? `${c.codigo} · ${c.nome}` : '— classificar —'}</button> })()
                           : <span style={{ color: '#64748b', fontSize: 12 }}>{contaFolhas.find((c) => c.id === i.conta_gerencial_id)?.nome || '—'}</span>}
                       </td>
                       <td style={{ color: '#64748b' }}>{i.unidade_medida || '—'}</td>
@@ -406,6 +406,29 @@ export function Insumos() {
           {canEdit && <button style={{ ...menuItemStyle, color: '#ef4444' }} onClick={async () => { const ins = lista.find((x) => x.id === menu.id); setMenu(null); if (!ins) return; const n = await contarVinc(ins.id); if (n > 0) { setTransfDest(''); setTransf({ ins, count: n }); return } if (confirm(`Desativar "${ins.nome}"?`)) delMut.mutate(ins.id) }}>🗑 Desativar</button>}
         </div>
       )}
+
+      {/* popover de classificação da conta gerencial (padrão do sistema, com busca; abre perto do clique) */}
+      {pconta && (() => {
+        const q = pbusca.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+        const vis = contaFolhas.filter((c) => !q || (c.codigo + ' ' + c.nome).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').includes(q))
+        const left = Math.min(pconta.x, window.innerWidth - 300)
+        const top = Math.min(pconta.y + 6, window.innerHeight - 360)
+        const pick = (contaId: string | null) => { contaMut.mutate({ ids: [pconta.ins.id], contaId }); setPConta(null) }
+        return (
+          <div style={{ position: 'fixed', top, left, width: 284, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 11, boxShadow: '0 12px 34px rgba(15,23,42,.2)', zIndex: 1300, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '9px 10px', borderBottom: '1px solid #eef1f7', fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{pconta.ins.nome}</div>
+            <input autoFocus placeholder="Buscar conta…" value={pbusca} onChange={(e) => setPBusca(e.target.value)} style={{ width: '100%', border: 0, borderBottom: '1px solid #eef1f7', height: 36, padding: '0 11px', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+            <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+              <div onClick={() => pick(null)} style={{ padding: '8px 12px', fontSize: 12.5, color: '#b45309', cursor: 'pointer' }} onMouseDown={(e) => e.preventDefault()}>— sem conta (vai p/ Custos) —</div>
+              {vis.map((c) => <div key={c.id} onClick={() => pick(c.id)} onMouseDown={(e) => e.preventDefault()}
+                style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer', background: c.id === pconta.ins.conta_gerencial_id ? '#fff7ed' : undefined, fontWeight: c.id === pconta.ins.conta_gerencial_id ? 600 : 400 }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')} onMouseLeave={(e) => (e.currentTarget.style.background = c.id === pconta.ins.conta_gerencial_id ? '#fff7ed' : 'transparent')}>
+                <span style={{ color: '#94a3b8', fontSize: 11, marginRight: 6, fontFamily: 'DM Mono, monospace' }}>{c.codigo}</span>{c.nome}</div>)}
+              {vis.length === 0 && <div style={{ padding: '10px 12px', fontSize: 12.5, color: '#94a3b8' }}>Nenhuma conta encontrada.</div>}
+            </div>
+          </div>
+        )
+      })()}
 
       {dup && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }} onClick={() => setDup(null)}>
