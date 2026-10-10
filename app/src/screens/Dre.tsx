@@ -2,7 +2,21 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { DreClassificar } from './DreClassificar'
 import './dre.css'
+
+export function Dre() {
+  const [tab, setTab] = useState<'dre' | 'classificar'>('dre')
+  return (
+    <div className="dre-screen">
+      <div className="dre-tabs">
+        <button className={'dre-tab' + (tab === 'dre' ? ' on' : '')} onClick={() => setTab('dre')}>Demonstrativo</button>
+        <button className={'dre-tab' + (tab === 'classificar' ? ' on' : '')} onClick={() => setTab('classificar')}>Classificar itens</button>
+      </div>
+      {tab === 'dre' ? <DreDemo /> : <DreClassificar />}
+    </div>
+  )
+}
 
 // DRE Gerencial de Compras — Fase 1 (só leitura). Monta o demonstrativo mês a mês
 // a partir do que JÁ existe: compras = entradas_estoque.custo_total (tipo manual/nfe),
@@ -23,7 +37,7 @@ const anoAtual = new Date().getFullYear()
 
 type Linha = { cls: string; label: string; vals: number[]; g?: string; grupoKey?: string }
 
-export function Dre() {
+function DreDemo() {
   const { tenantId } = useAuth()
   const [ano, setAno] = useState(anoAtual)
   const [lojaId, setLojaId] = useState('')      // '' = todas
@@ -142,7 +156,7 @@ export function Dre() {
   const pc = (v: number) => (model.recT > 0 ? (v / model.recT * 100).toFixed(1).replace('.', ',') : '0') + '% da receita'
 
   return (
-    <div className="dre-screen">
+    <>
       <div className="dre-bar">
         <div className="dre-fld"><label>Loja</label>
           <select value={lojaId} onChange={(e) => setLojaId(e.target.value)}>
@@ -206,8 +220,8 @@ export function Dre() {
       </div>
 
       <div className="dre-note">
-        <b>De onde vêm os números:</b> as <b>compras</b> somam o custo das NF-e/entradas (<code>entradas_estoque</code>) de cada insumo, por mês; a <b>receita</b> vem das vendas (<code>recebimento_vendas</code>). Cada insumo cai na conta do seu cadastro — sem conta definida, entra em <b>Custos (2.1)</b>. Para reclassificar um item (ex.: material de limpeza → Despesa Administrativa), defina a conta no cadastro do insumo. Lançamentos sem nota (feira, débito) e a camada de orçamento entram nas próximas fases.
+        <b>De onde vêm os números:</b> as <b>compras</b> somam o custo das NF-e/entradas (<code>entradas_estoque</code>) de cada insumo, por mês; a <b>receita</b> vem das vendas (<code>recebimento_vendas</code>). Cada insumo cai na conta do seu cadastro — sem conta definida, entra em <b>Custos (2.1)</b>. Para reclassificar um item (ex.: EPI → Despesa com Pessoal, equipamento → Investimento), use a aba <b>Classificar itens</b>.
       </div>
-    </div>
+    </>
   )
 }
