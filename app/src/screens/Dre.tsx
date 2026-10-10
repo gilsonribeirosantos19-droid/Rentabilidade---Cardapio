@@ -4,18 +4,20 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { DreLancamentos } from './DreLancamentos'
 import { DrePlanoContas } from './DrePlanoContas'
+import { DreOrcamento } from './DreOrcamento'
 import './dre.css'
 
 export function Dre() {
-  const [tab, setTab] = useState<'dre' | 'plano' | 'lancamentos'>('dre')
+  const [tab, setTab] = useState<'dre' | 'orcamento' | 'plano' | 'lancamentos'>('dre')
   return (
     <div className="dre-screen">
       <div className="dre-tabs">
         <button className={'dre-tab' + (tab === 'dre' ? ' on' : '')} onClick={() => setTab('dre')}>Demonstrativo</button>
+        <button className={'dre-tab' + (tab === 'orcamento' ? ' on' : '')} onClick={() => setTab('orcamento')}>Orçamento</button>
         <button className={'dre-tab' + (tab === 'plano' ? ' on' : '')} onClick={() => setTab('plano')}>Plano de contas</button>
         <button className={'dre-tab' + (tab === 'lancamentos' ? ' on' : '')} onClick={() => setTab('lancamentos')}>Lançamentos manuais</button>
       </div>
-      {tab === 'dre' ? <DreDemo /> : tab === 'plano' ? <DrePlanoContas /> : <DreLancamentos />}
+      {tab === 'dre' ? <DreDemo /> : tab === 'orcamento' ? <DreOrcamento /> : tab === 'plano' ? <DrePlanoContas /> : <DreLancamentos />}
     </div>
   )
 }
