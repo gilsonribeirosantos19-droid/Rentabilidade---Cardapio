@@ -9,14 +9,14 @@ import './config.css'
 // via Edge Function `admin-users` (a chave admin fica no servidor).
 // Papéis: admin / gerente / operador. Loja vinculada só para gerente.
 
-type Usuario = { id: string; nome?: string; email?: string; role?: string; loja_id?: string | null; lojas_acesso?: string[] | null; ativo?: boolean }
+type Usuario = { id: string; nome?: string; email?: string; role?: string; grupo?: string | null; loja_id?: string | null; lojas_acesso?: string[] | null; ativo?: boolean }
 type Loja = { id: string; nome: string }
-type Modal = { id?: string; nome: string; email: string; role: string; lojaId: string; lojasAcesso: string[]; senha: string }
+type Modal = { id?: string; nome: string; email: string; role: string; grupo: string; lojaId: string; lojasAcesso: string[]; senha: string }
 
 // "operador" removido: só admin (acesso total) e gerente (preso à loja). Enquanto não há
 // permissão fina, "operador" caía em acesso ao tenant inteiro (risco). Mantido no ROLE_LABEL
 // só p/ exibir eventual usuário legado.
-const ROLES = [{ v: 'admin', l: 'Administrador' }, { v: 'supervisor', l: 'Supervisor' }, { v: 'gerente', l: 'Gerente' }]
+const ROLES = [{ v: 'admin', l: 'Administrador' }, { v: 'supervisor', l: 'Supervisor' }, { v: 'gerente', l: 'Gerente' }, { v: 'operador', l: 'Operador (ERP restrito)' }]
 const ROLE_LABEL: Record<string, string> = { admin: 'Administrador', supervisor: 'Supervisor', gerente: 'Gerente', operador: 'Operador' }
 const roleCls = (r?: string) => (r === 'admin' ? 'role-admin' : r === 'gerente' ? 'role-gerente' : r === 'supervisor' ? 'role-gerente' : 'role-operador')
 
@@ -53,9 +53,13 @@ export function ConfigUsuarios() {
     queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Loja[] },
   })
   const lojaNome = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
+  const { data: gruposAcesso = [] } = useQuery({
+    queryKey: ['cfg-usr-grupos', tenantId], enabled: !!tenantId,
+    queryFn: async () => { const { data } = await supabase.from('grupos_acesso').select('nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as { nome: string }[] },
+  })
 
-  const novo = () => setModal({ nome: '', email: '', role: 'gerente', lojaId: '', lojasAcesso: [], senha: '' })
-  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', lojaId: u.loja_id ?? '', lojasAcesso: u.lojas_acesso ?? [], senha: '' })
+  const novo = () => setModal({ nome: '', email: '', role: 'gerente', grupo: '', lojaId: '', lojasAcesso: [], senha: '' })
+  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', grupo: u.grupo ?? '', lojaId: u.loja_id ?? '', lojasAcesso: u.lojas_acesso ?? [], senha: '' })
 
   const saveMut = useMutation({
     mutationFn: async (m: Modal) => {
@@ -66,15 +70,16 @@ export function ConfigUsuarios() {
       const lojaId = m.role === 'gerente' ? (m.lojaId || null) : null
       // supervisor: lojas concedidas (vazio = todas). Outros perfis não usam.
       const lojasAcesso = m.role === 'supervisor' && m.lojasAcesso.length ? m.lojasAcesso : null
+      const grupo = m.grupo || null   // grupo de permissão (separado da rota/role)
       if (m.id) {
-        const { error } = await supabase.from('usuarios').update({ nome, role: m.role, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso }).eq('id', m.id); if (error) throw error
+        const { error } = await supabase.from('usuarios').update({ nome, role: m.role, grupo, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso }).eq('id', m.id); if (error) throw error
         if (m.senha) await invokeAdmin({ action: 'update_password', userId: m.id, password: m.senha })
       } else {
         const auth = await invokeAdmin({ action: 'create', email, password: m.senha })
         const userId = auth?.id
         if (!userId) throw new Error('A conta de acesso não retornou um ID.')
         // grava email também (coluna adicionada via SQL); se ainda não existir a coluna, cai no catch e insere sem email
-        const base = { id: userId, nome, role: m.role, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso, ativo: true }
+        const base = { id: userId, nome, role: m.role, grupo, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso, ativo: true }
         let ins = await supabase.from('usuarios').insert({ ...base, email })
         if (ins.error && /email/i.test(ins.error.message)) ins = await supabase.from('usuarios').insert(base)
         if (ins.error) throw ins.error
@@ -142,7 +147,7 @@ export function ConfigUsuarios() {
 
       <div className="info-card">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2} style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-        <div>O <b>perfil</b> define o nível de acesso: <b>Administrador</b> (acesso total ao tenant), <b>Supervisor</b> (Portal de várias lojas — todas ou as que você marcar) e <b>Gerente</b> (vê e edita só a loja vinculada).</div>
+        <div>O <b>perfil</b> define PARA ONDE a pessoa entra: <b>Administrador</b> (ERP completo), <b>Supervisor</b> (Portal de várias lojas), <b>Gerente</b> (Portal de uma loja) e <b>Operador</b> (ERP restrito ao grupo de permissão). O <b>grupo de permissão</b> define O QUE ela vê/edita dentro — monte os grupos em Permissões.</div>
       </div>
 
       {/* ===== modal usuário ===== */}
@@ -170,6 +175,12 @@ export function ConfigUsuarios() {
                   </div>
                 </div>
               )}
+              <div className="cfg-fg"><label>Grupo de permissão <span style={{ fontWeight: 400, color: '#64748b' }}>(o que ele pode ver/editar — configure em Permissões)</span></label>
+                <select value={modal.grupo} onChange={(e) => setModal({ ...modal, grupo: e.target.value })}>
+                  <option value="">Sem restrição (acesso completo do perfil)</option>
+                  {gruposAcesso.map((g) => <option key={g.nome} value={g.nome}>{g.nome}</option>)}
+                </select>
+              </div>
               <div className="cfg-fg"><label>{modal.id ? 'Nova senha (deixe em branco para manter)' : 'Senha inicial *'}</label><input type="password" value={modal.senha} onChange={(e) => setModal({ ...modal, senha: e.target.value })} placeholder={modal.id ? '••••••' : ''} autoComplete="new-password" /></div>
             </div>
             <div className="mf">

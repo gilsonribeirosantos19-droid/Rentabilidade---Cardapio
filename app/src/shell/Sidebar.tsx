@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { MODULES, type Module } from './nav'
 import { ICONS } from './icons'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { supabase } from '../lib/db'
 
 const Chevron = () => (
@@ -31,11 +32,19 @@ export function Sidebar({
   const { usuario, signOut, tenantId } = useAuth()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const isAdmin = (usuario?.role || usuario?.perfil || '').toLowerCase().startsWith('admin')
-  const podeVer = (it: { admin?: boolean }) => !it.admin || isAdmin   // item admin-only só aparece p/ admin
+  const { podeVer: podeModulo } = usePerms()   // RBAC: permissão por módulo (grupo configurado)
+  // item visível = não é admin-only (ou é admin) E o grupo pode ver o módulo daquela tela
+  const podeVer = (it: { admin?: boolean; key?: string }) => (!it.admin || isAdmin) && (!it.key || podeModulo(it.key))
 
   // Módulos com requiresCd (ex.: Distribuição) só aparecem se o tenant tiver um CD configurado
   const { data: temCd = false } = useQuery({ queryKey: ['sidebar-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
-  const modules = MODULES.filter((m) => !m.requiresCd || temCd)
+  const modules = MODULES.filter((m) => {
+    if (m.requiresCd && !temCd) return false
+    if (m.home) return true   // "Visão geral" sempre visível
+    // esconde o módulo inteiro se o grupo não pode ver nenhuma tela dele
+    const leaves = (m.sections ?? []).flatMap((s) => ('group' in s ? s.items : [s]))
+    return leaves.some((it) => podeVer(it))
+  })
 
   const active = MODULES.find((m) => m.id === dived)
   const nome = usuario?.nome || usuario?.email || '—'

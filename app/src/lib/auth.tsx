@@ -11,6 +11,7 @@ export type Usuario = {
   tenant_id?: string
   loja_id?: string | null
   lojas_acesso?: string[] | null   // supervisor: lojas concedidas (null/vazio = todas)
+  grupo?: string | null            // grupo de PERMISSÃO (separado do role/rota) — RBAC
 }
 
 type AuthCtx = {

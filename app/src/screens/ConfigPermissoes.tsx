@@ -3,24 +3,24 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { MODULES, ADMIN_ONLY_KEYS, type Module } from '../shell/nav'
 import './config.css'
 
 // Configurações › Permissões — grupos de acesso (grupos_acesso) + vincular usuários
 // (usuarios.role = nome do grupo) + matriz de permissões por módulo (permissoes).
 
 type Grupo = { id: string; nome: string; ativo?: boolean }
-type Usuario = { id: string; nome?: string; email?: string; role?: string; ativo?: boolean }
+type Usuario = { id: string; nome?: string; email?: string; role?: string; grupo?: string | null; ativo?: boolean }
 type Perm = { modulo: string; visualizar?: boolean; criar?: boolean; editar?: boolean; excluir?: boolean }
 
-const MODULO_GROUPS = [
-  { lbl: 'Operação', mods: [{ id: 'estoque', lbl: 'Estoque' }, { id: 'ajustes', lbl: 'Ajustes de Estoque' }] },
-  { lbl: 'Cadastros', mods: [{ id: 'insumos', lbl: 'Insumos' }, { id: 'fichas_tecnicas', lbl: 'Fichas Técnicas' }, { id: 'fornecedores', lbl: 'Fornecedores' }] },
-  { lbl: 'Compras', mods: [{ id: 'compras', lbl: 'Compras' }] },
-  { lbl: 'Análises', mods: [{ id: 'relatorios', lbl: 'Relatórios' }, { id: 'cmv', lbl: 'CMV Teórico × Real' }, { id: 'rendimento', lbl: 'Rendimentos' }, { id: 'pdv', lbl: 'PDV / Vendas' }] },
-  { lbl: 'PCP', mods: [{ id: 'pcp', lbl: 'PCP / Produção' }, { id: 'porcionamento', lbl: 'Porcionamento' }] },
-  { lbl: 'Portal', mods: [{ id: 'portal_gerente', lbl: 'Portal do Gerente' }, { id: 'dashboard', lbl: 'Dashboard' }, { id: 'configuracoes', lbl: 'Configurações' }] },
-]
-const ALL_MODS = MODULO_GROUPS.flatMap((g) => g.mods)
+// A matriz espelha o MENU real (nav.ts): módulo → seção → tela. Cada TELA é uma linha de permissão
+// (permissoes.modulo = a key do menu, ex.: 'estoque/entradas'). Admin-only e a Home ficam fora.
+type NavLeaf = { key: string; label: string }
+const PERM_MODULES = MODULES.filter((m) => !m.home)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const leavesOf = (s: any): NavLeaf[] => ('group' in s ? s.items : [s]).filter((l: NavLeaf) => !ADMIN_ONLY_KEYS.has(l.key))
+const modLeaves = (m: Module): NavLeaf[] => (m.sections ?? []).flatMap((s) => leavesOf(s))
+const ALL_KEYS: string[] = PERM_MODULES.flatMap((m) => modLeaves(m)).map((l) => l.key)
 
 type PState = Record<string, { hab: boolean; ct: boolean }>
 
@@ -58,12 +58,12 @@ export function ConfigPermissoes() {
   useEffect(() => {
     if (!grp) return
     const out: PState = {}
-    ALL_MODS.forEach((m) => {
-      if (isAdmin) { out[m.id] = { hab: true, ct: true }; return }
-      const p = (permData ?? []).find((x) => x.modulo === m.id)
+    ALL_KEYS.forEach((k) => {
+      if (isAdmin) { out[k] = { hab: true, ct: true }; return }
+      const p = (permData ?? []).find((x) => x.modulo === k)
       const hab = p?.visualizar === true
       const ct = !!(p?.visualizar && (p.criar || p.editar || p.excluir))
-      out[m.id] = { hab, ct }
+      out[k] = { hab, ct }
     })
     setPerms(out)
   }, [permData, grp?.nome, isAdmin])
@@ -71,7 +71,7 @@ export function ConfigPermissoes() {
   // init vínculos de usuário quando troca grupo
   useEffect(() => {
     if (!grp) { setVinc(new Set()); return }
-    setVinc(new Set(usuarios.filter((u) => u.role === grp.nome).map((u) => u.id)))
+    setVinc(new Set(usuarios.filter((u) => u.grupo === grp.nome).map((u) => u.id)))
   }, [grp?.nome, usuarios])
 
   const selecionar = (id: string) => { const g = grupos.find((x) => x.id === id); if (!g) return; setSelId(id); setIsNew(false); setNome(g.nome); setTab('usuarios') }
@@ -91,8 +91,8 @@ export function ConfigPermissoes() {
   const grupoDelMut = useMutation({
     mutationFn: async () => {
       if (!selId || !grp) return
-      // tira o perfil dos usuários deste grupo (senão ficam com role = nome de um grupo apagado)
-      await supabase.from('usuarios').update({ role: null }).eq('tenant_id', tenantId).eq('role', grp.nome)
+      // tira o grupo de permissão dos usuários deste grupo (a rota/role deles NÃO muda)
+      await supabase.from('usuarios').update({ grupo: null }).eq('tenant_id', tenantId).eq('grupo', grp.nome)
       const { error } = await supabase.from('grupos_acesso').delete().eq('id', selId); if (error) throw error
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-grupos'] }); qc.invalidateQueries({ queryKey: ['cfg-perm-usuarios'] }); fechar(); showToast('Grupo excluído.') },
@@ -104,9 +104,9 @@ export function ConfigPermissoes() {
     mutationFn: async () => {
       if (!grp) return
       for (const u of usuarios) {
-        const nowIn = vinc.has(u.id), wasIn = u.role === grp.nome
-        if (nowIn && !wasIn) { const { error } = await supabase.from('usuarios').update({ role: grp.nome }).eq('id', u.id); if (error) throw error }
-        else if (!nowIn && wasIn) { const { error } = await supabase.from('usuarios').update({ role: null }).eq('id', u.id); if (error) throw error }
+        const nowIn = vinc.has(u.id), wasIn = u.grupo === grp.nome
+        if (nowIn && !wasIn) { const { error } = await supabase.from('usuarios').update({ grupo: grp.nome }).eq('id', u.id); if (error) throw error }
+        else if (!nowIn && wasIn) { const { error } = await supabase.from('usuarios').update({ grupo: null }).eq('id', u.id); if (error) throw error }
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-perm-usuarios'] }); showToast('Vínculos salvos.') },
@@ -116,7 +116,7 @@ export function ConfigPermissoes() {
   const permSaveMut = useMutation({
     mutationFn: async () => {
       if (!grp) return
-      const rows = ALL_MODS.map((m) => { const s = perms[m.id] || { hab: false, ct: false }; return { tenant_id: tenantId, perfil: grp.nome, modulo: m.id, visualizar: s.hab, criar: s.hab && s.ct, editar: s.hab && s.ct, excluir: s.hab && s.ct } })
+      const rows = ALL_KEYS.map((k) => { const s = perms[k] || { hab: false, ct: false }; return { tenant_id: tenantId, perfil: grp.nome, modulo: k, visualizar: s.hab, criar: s.hab && s.ct, editar: s.hab && s.ct, excluir: s.hab && s.ct } })
       const { error } = await supabase.from('permissoes').upsert(rows, { onConflict: 'tenant_id,perfil,modulo' }); if (error) throw error
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-perm'] }); showToast('Permissões salvas.') },
@@ -128,16 +128,22 @@ export function ConfigPermissoes() {
   const onHab = (id: string, checked: boolean) => setMod(id, { hab: checked, ct: checked ? (perms[id]?.ct ?? false) : false })
   const onCT = (id: string, checked: boolean) => setMod(id, { hab: checked ? true : (perms[id]?.hab ?? false), ct: checked })
   const onSL = (id: string, checked: boolean) => setMod(id, { hab: checked, ct: false })
+  // "marcar tudo" no cabeçalho do módulo (igual ao Everest)
+  const setModAll = (m: Module, col: 'hab' | 'ct', val: boolean) => setPerms((p) => {
+    const n = { ...p }
+    modLeaves(m).forEach(({ key }) => { const cur = n[key] || { hab: false, ct: false }; n[key] = col === 'hab' ? { hab: val, ct: val ? cur.ct : false } : { hab: val ? true : cur.hab, ct: val } })
+    return n
+  })
 
   const toggleVinc = (id: string) => setVinc((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
 
-  const grupoAtual = useMemo(() => Object.fromEntries(usuarios.map((u) => [u.id, u.role])) as Record<string, string | undefined>, [usuarios])
+  const grupoAtual = useMemo(() => Object.fromEntries(usuarios.map((u) => [u.id, u.grupo])) as Record<string, string | null | undefined>, [usuarios])
 
   return (
     <div className="cfg-screen">
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '11px 14px', margin: '12px 0 14px', fontSize: 12.5, color: '#92400e', lineHeight: 1.5 }}>
-        <span style={{ fontSize: 16, flexShrink: 0 }}>🚧</span>
-        <div><b>Controle fino de permissões — em breve.</b> Hoje o sistema tem <b>2 níveis</b>: <b>Administrador</b> (acesso total) e <b>Gerente</b> (só a loja dele, pelo Portal). A matriz abaixo <b>ainda não bloqueia</b> os módulos — criar um grupo personalizado <b>não limita</b> o acesso por enquanto (o usuário veria o app completo). Será ativado numa próxima fase.</div>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '11px 14px', margin: '12px 0 14px', fontSize: 12.5, color: '#166534', lineHeight: 1.5 }}>
+        <span style={{ fontSize: 16, flexShrink: 0 }}>✅</span>
+        <div><b>Controle de acesso por módulo ATIVO.</b> Marque <b>“Habilitado”</b> nos módulos que o grupo pode ver — o app <b>esconde do menu e bloqueia</b> os módulos não marcados para quem está nesse grupo. <b>Administrador vê tudo</b>; grupo <b>sem matriz</b> também (nada muda até você configurar). <br/>⏳ As ações finas (<b>criar/editar/excluir</b>) ainda não são travadas — por enquanto vale a <b>visualização por módulo</b>. Vem na próxima fase.</div>
       </div>
 
       <div className="perm-wrap">
@@ -200,25 +206,45 @@ export function ConfigPermissoes() {
             {tab === 'perms' && !isNew && (
               <>
                 <table className="perm-matrix">
-                  <thead><tr><th style={{ minWidth: 220 }}>Módulo / Funcionalidade</th><th className="pc">Habilitado</th><th className="pc">Controle Total</th><th className="pc">Somente Leitura</th></tr></thead>
+                  <thead><tr><th style={{ minWidth: 240 }}>Módulo / Tela</th><th className="pc">Habilitado</th><th className="pc">Controle Total</th><th className="pc">Somente Leitura</th></tr></thead>
                   <tbody>
-                    {MODULO_GROUPS.map((g) => (
-                      <Fragment key={g.lbl}>
-                        <tr className="grp-row"><td colSpan={4}>{g.lbl}</td></tr>
-                        {g.mods.map((m) => {
-                          const s = perms[m.id] || { hab: false, ct: false }
-                          const sl = s.hab && !s.ct
-                          return (
-                            <tr key={m.id} className={isAdmin ? 'perm-disabled' : ''}>
-                              <td style={{ paddingLeft: 28 }}>{m.lbl}</td>
-                              <td className="pc"><input type="checkbox" checked={s.hab} disabled={isAdmin} onChange={(e) => onHab(m.id, e.target.checked)} /></td>
-                              <td className="pc"><input type="checkbox" checked={s.ct} disabled={isAdmin} onChange={(e) => onCT(m.id, e.target.checked)} /></td>
-                              <td className="pc"><input type="checkbox" checked={sl} disabled={isAdmin} onChange={(e) => onSL(m.id, e.target.checked)} /></td>
-                            </tr>
-                          )
-                        })}
-                      </Fragment>
-                    ))}
+                    {PERM_MODULES.map((m) => {
+                      const keys = modLeaves(m).map((l) => l.key)
+                      if (!keys.length) return null
+                      const allHab = keys.every((k) => perms[k]?.hab)
+                      const allCt = keys.every((k) => perms[k]?.ct)
+                      return (
+                        <Fragment key={m.id}>
+                          <tr className="grp-row">
+                            <td><b>{m.label}</b></td>
+                            <td className="pc"><input type="checkbox" disabled={isAdmin} checked={allHab} onChange={(e) => setModAll(m, 'hab', e.target.checked)} /></td>
+                            <td className="pc"><input type="checkbox" disabled={isAdmin} checked={allCt} onChange={(e) => setModAll(m, 'ct', e.target.checked)} /></td>
+                            <td className="pc" />
+                          </tr>
+                          {(m.sections ?? []).map((s, i) => {
+                            const items = leavesOf(s)
+                            if (!items.length) return null
+                            return (
+                              <Fragment key={i}>
+                                {'group' in s && <tr className="sub-row"><td colSpan={4} style={{ paddingLeft: 24, fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.04em' }}>{s.group}</td></tr>}
+                                {items.map((it) => {
+                                  const st = perms[it.key] || { hab: false, ct: false }
+                                  const sl = st.hab && !st.ct
+                                  return (
+                                    <tr key={it.key} className={isAdmin ? 'perm-disabled' : ''}>
+                                      <td style={{ paddingLeft: 36 }}>{it.label}</td>
+                                      <td className="pc"><input type="checkbox" checked={st.hab} disabled={isAdmin} onChange={(e) => onHab(it.key, e.target.checked)} /></td>
+                                      <td className="pc"><input type="checkbox" checked={st.ct} disabled={isAdmin} onChange={(e) => onCT(it.key, e.target.checked)} /></td>
+                                      <td className="pc"><input type="checkbox" checked={sl} disabled={isAdmin} onChange={(e) => onSL(it.key, e.target.checked)} /></td>
+                                    </tr>
+                                  )
+                                })}
+                              </Fragment>
+                            )
+                          })}
+                        </Fragment>
+                      )
+                    })}
                   </tbody>
                 </table>
                 {!isAdmin && <div className="grp-foot"><button className="cfg-btn pri" disabled={permSaveMut.isPending} onClick={() => permSaveMut.mutate()}>{permSaveMut.isPending ? 'Salvando…' : 'Salvar permissões'}</button></div>}

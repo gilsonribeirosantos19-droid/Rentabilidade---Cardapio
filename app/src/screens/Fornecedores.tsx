@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import { VinculosPane } from './VinculosPane'
 import './fornecedores.css'
@@ -108,6 +109,9 @@ export function Fornecedores() {
     onError: (e: Error) => showToast(e.message, 'err'),
   })
 
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('fornecedores')   // Controle Total = edita; Somente Leitura = só vê
+
   return (
     <div className="forn-screen">
       <div className="mod-tabs">
@@ -127,7 +131,9 @@ export function Fornecedores() {
         <select className="fl-status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
           <option value="">Status ▾</option><option value="ativo">Ativo</option><option value="inativo">Inativo</option>
         </select>
-        <button className="fl-novo" onClick={() => setEditing({ status: 'ativo' })}>+ Novo Fornecedor</button>
+        {canEdit
+          ? <button className="fl-novo" onClick={() => setEditing({ status: 'ativo' })}>+ Novo Fornecedor</button>
+          : <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="tbl-card"><div className="tbl-scroll">
@@ -154,7 +160,7 @@ export function Fornecedores() {
                     <td><span className={'badge ' + (inativo ? 'b-inativo' : 'b-ativo')}>{inativo ? 'Inativo' : 'Ativo'}</span></td>
                     <td className="r td-mono" style={{ color: '#64748b', fontSize: 12 }}>—</td>
                     <td className="r" style={{ color: '#64748b' }}>{itensPorForn[f.id] || '—'}</td>
-                    <td><button className="act-btn" title="Desativar" onClick={(e) => { e.stopPropagation(); if (confirm(`Desativar "${f.nome_fantasia || f.nome || f.razao_social}"?`)) delMut.mutate(f.id) }}>⋮</button></td>
+                    <td>{canEdit && <button className="act-btn" title="Desativar" onClick={(e) => { e.stopPropagation(); if (confirm(`Desativar "${f.nome_fantasia || f.nome || f.razao_social}"?`)) delMut.mutate(f.id) }}>⋮</button>}</td>
                   </tr>
                 )
               })}
@@ -165,13 +171,13 @@ export function Fornecedores() {
       </>
       )}
 
-      {editing && <FornModal inicial={editing} saving={saveMut.isPending} onClose={() => setEditing(null)} onSave={(f) => saveMut.mutate(f)} />}
+      {editing && <FornModal inicial={editing} saving={saveMut.isPending} canEdit={canEdit} onClose={() => setEditing(null)} onSave={(f) => saveMut.mutate(f)} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
 }
 
-function FornModal({ inicial, saving, onClose, onSave }: { inicial: Form; saving: boolean; onClose: () => void; onSave: (f: Form) => void }) {
+function FornModal({ inicial, saving, canEdit = true, onClose, onSave }: { inicial: Form; saving: boolean; canEdit?: boolean; onClose: () => void; onSave: (f: Form) => void }) {
   const [form, setForm] = useState<Form>(inicial)
   const set = (k: keyof Form, v: string) => setForm((f) => ({ ...f, [k]: v }))
   return (
@@ -241,8 +247,8 @@ function FornModal({ inicial, saving, onClose, onSave }: { inicial: Form; saving
           </div>
         </div>
         <div className="fm-foot">
-          <button className="fm-btn" onClick={onClose}>Cancelar</button>
-          <button className="fm-btn primary" disabled={saving} onClick={() => onSave(form)}>{saving ? 'Salvando…' : 'Salvar Fornecedor'}</button>
+          <button className="fm-btn" onClick={onClose}>{canEdit ? 'Cancelar' : 'Fechar'}</button>
+          {canEdit && <button className="fm-btn primary" disabled={saving} onClick={() => onSave(form)}>{saving ? 'Salvando…' : 'Salvar Fornecedor'}</button>}
         </div>
       </div>
     </div>
