@@ -20,7 +20,9 @@ type Aud = {
 const PER = 20
 // entidades auditadas na Fase 1 (valor = nome da tabela)
 const ENT_OPTS: { v: string; l: string }[] = [
+  { v: 'insumos', l: 'Insumos / Itens' },
   { v: 'produtos', l: 'Produtos' },
+  { v: 'fichas_tecnicas', l: 'Fichas técnicas' },
   { v: 'entradas_estoque', l: 'Entradas de estoque' },
   { v: 'saidas_estoque', l: 'Saídas de estoque' },
   { v: 'nfe_recebidas', l: 'NF-e' },
@@ -40,12 +42,14 @@ function acaoLabel(a: Aud): string {
     if (ns === 'processada') return 'Processou NF-e'
     return 'Alterou NF-e'
   }
-  if (ent === 'produtos' && a.acao === 'UPDATE') {
-    const wasOn = a.dados?.old?.ativo !== false, nowOff = a.dados?.new?.ativo === false
-    if (wasOn && nowOff) return 'Inativou produto'
-  }
+  const wasOn = a.dados?.old?.ativo !== false, nowOff = a.dados?.new?.ativo === false
+  if (ent === 'produtos' && a.acao === 'UPDATE' && wasOn && nowOff) return 'Inativou produto'
+  if (ent === 'insumos' && a.acao === 'UPDATE' && wasOn && nowOff) return 'Inativou item'
+  if (ent === 'fichas_tecnicas' && a.acao === 'UPDATE' && a.dados?.old?.status !== 'arquivada' && a.dados?.new?.status === 'arquivada') return 'Arquivou ficha'
   const map: Record<string, [string, string, string]> = {
+    insumos: ['Criou item', 'Editou item', 'Excluiu item'],
     produtos: ['Criou produto', 'Editou produto', 'Excluiu produto'],
+    fichas_tecnicas: ['Criou ficha', 'Editou ficha', 'Excluiu ficha'],
     entradas_estoque: ['Registrou entrada', 'Editou entrada', 'Excluiu entrada'],
     saidas_estoque: ['Registrou saída', 'Editou saída', 'Excluiu saída'],
     usuarios: ['Criou usuário', 'Editou usuário', 'Removeu usuário'],
