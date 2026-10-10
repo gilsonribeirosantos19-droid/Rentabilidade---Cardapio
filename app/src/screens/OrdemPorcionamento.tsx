@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { num } from '../lib/format'
@@ -24,6 +25,8 @@ const q3 = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 3, 
 
 export function OrdemPorcionamento({ lojaFixa }: { lojaFixa?: string } = {}) {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('pcp/oporc')   // Somente Leitura = não grava
   const { lojas, lojaId } = useLoja()
   const qc = useQueryClient()
   const [data, setData] = useState(nowLocal())
@@ -84,7 +87,9 @@ export function OrdemPorcionamento({ lojaFixa }: { lojaFixa?: string } = {}) {
     <div className="cfg-screen">
       <div className="usr-top">
         <div className="t">Abertura e apontamento — a loja pesa. Selecione o item, informe o peso e pese os derivados (que vêm do cadastro). Serve por peso (kg) ou unidade.</div>
-        <button className="cfg-btn pri" onClick={novaOrdem}>+ Abrir nova ordem</button>
+        {canEdit
+          ? <button className="cfg-btn pri" onClick={novaOrdem}>+ Abrir nova ordem</button>
+          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       {/* abertura */}
@@ -135,7 +140,7 @@ export function OrdemPorcionamento({ lojaFixa }: { lojaFixa?: string } = {}) {
 
       <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
         <button className="cfg-btn" onClick={novaOrdem}>Limpar</button>
-        <button className="cfg-btn pri" disabled={salvarMut.isPending} onClick={() => salvarMut.mutate()}>{salvarMut.isPending ? 'Salvando…' : 'Salvar apontamento'}</button>
+        {canEdit && <button className="cfg-btn pri" disabled={salvarMut.isPending} onClick={() => salvarMut.mutate()}>{salvarMut.isPending ? 'Salvando…' : 'Salvar apontamento'}</button>}
       </div>
 
       <div className="p-hint" style={{ marginTop: 10 }}>ℹ️ Por enquanto o apontamento apenas <b>registra a ordem</b>. A baixa do item original e a entrada dos derivados no estoque (com rateio de custo) serão ligadas no próximo passo.</div>

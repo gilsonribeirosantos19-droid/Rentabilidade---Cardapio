@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import './config.css'
 
 // Configurações › Parâmetros — regras de negócio (tabela `parametros`: modulo, chave, valor=string).
@@ -122,6 +123,8 @@ MODULOS.forEach((m) => m.fields.forEach((f) => { DEFAULTS[`${m.key}.${f.chave}`]
 
 export function ConfigParametros() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('config/parametros')   // Somente Leitura = não grava
   const qc = useQueryClient()
   const [busca, setBusca] = useState('')
   const [open, setOpen] = useState<Set<string>>(new Set(['estoque']))
@@ -158,6 +161,7 @@ export function ConfigParametros() {
     <div className="cfg-screen">
       <div className="cfg-top">
         <input className="cfg-search" placeholder="Buscar parâmetro..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+        {!canEdit && <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="cfg-grid">
@@ -197,9 +201,11 @@ export function ConfigParametros() {
                       )
                     })}
                   </div>
-                  <div className="p-footer">
-                    <button className="cfg-btn pri" disabled={m.embreve || salvarMut.isPending} onClick={() => salvarMut.mutate(m)}>{salvarMut.isPending && salvarMut.variables?.key === m.key ? 'Salvando…' : 'Salvar alterações'}</button>
-                  </div>
+                  {canEdit && (
+                    <div className="p-footer">
+                      <button className="cfg-btn pri" disabled={m.embreve || salvarMut.isPending} onClick={() => salvarMut.mutate(m)}>{salvarMut.isPending && salvarMut.variables?.key === m.key ? 'Salvando…' : 'Salvar alterações'}</button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

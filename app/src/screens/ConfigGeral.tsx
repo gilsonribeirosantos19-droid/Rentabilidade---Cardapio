@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import './config.css'
 
 // Configurações › Geral — cadastros auxiliares (CRUD real no Supabase).
@@ -33,6 +34,8 @@ type GModal = { id?: string; nome: string; sel: Set<string> }
 
 export function ConfigGeral() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('config/geral')   // Somente Leitura = não grava
   const qc = useQueryClient()
   const [busca, setBusca] = useState('')
   const [open, setOpen] = useState<Set<CadKey>>(new Set(['loja']))
@@ -204,6 +207,7 @@ export function ConfigGeral() {
     <div className="cfg-screen">
       <div className="cfg-top">
         <input className="cfg-search" placeholder="Buscar configuração..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+        {!canEdit && <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="cfg-grid">
@@ -216,7 +220,7 @@ export function ConfigGeral() {
                 <span className="car">▶</span>
                 <span className="ti">{c.label}</span>
                 <span className="cnt">{rows.length}</span>
-                <button className="add" onClick={(e) => { e.stopPropagation(); novo(c) }}>+ Adicionar</button>
+                {canEdit && <button className="add" onClick={(e) => { e.stopPropagation(); novo(c) }}>+ Adicionar</button>}
               </div>
               {aberto && (
                 <div className="cb">
@@ -229,8 +233,10 @@ export function ConfigGeral() {
                             <td>{r.nome}{c.special === 'unidade' && r.abreviacao ? <span className="muted"> ({r.abreviacao})</span> : null}{c.special === 'loja' && r.cnpj ? <span className="muted mono"> · {r.cnpj}</span> : null}{c.special === 'loja' && r.is_cd ? <span style={{ marginLeft: 7, fontSize: 9, fontWeight: 700, letterSpacing: '.03em', background: '#0d9488', color: '#fff', padding: '1px 6px', borderRadius: 20 }}>CD</span> : null}</td>
                             <td className="muted">{fmtData(r.created_at)}</td>
                             <td className="r">
-                              <button className="act" onClick={() => editar(c, r)}>Editar</button>
-                              <button className="act del" disabled={checando === r.id} onClick={() => pedirExcluir(c, r)}>{checando === r.id ? 'Verificando…' : 'Excluir'}</button>
+                              {canEdit && <>
+                                <button className="act" onClick={() => editar(c, r)}>Editar</button>
+                                <button className="act del" disabled={checando === r.id} onClick={() => pedirExcluir(c, r)}>{checando === r.id ? 'Verificando…' : 'Excluir'}</button>
+                              </>}
                             </td>
                           </tr>
                         ))}
@@ -269,8 +275,8 @@ export function ConfigGeral() {
               </>}
             </div>
             <div className="mf">
-              <button className="cfg-btn" onClick={() => setModal(null)}>Cancelar</button>
-              <button className="cfg-btn pri" disabled={saveMut.isPending} onClick={() => saveMut.mutate(modal)}>{saveMut.isPending ? 'Salvando…' : (modal.id ? 'Salvar alterações' : 'Salvar')}</button>
+              <button className="cfg-btn" onClick={() => setModal(null)}>{canEdit ? 'Cancelar' : 'Fechar'}</button>
+              {canEdit && <button className="cfg-btn pri" disabled={saveMut.isPending} onClick={() => saveMut.mutate(modal)}>{saveMut.isPending ? 'Salvando…' : (modal.id ? 'Salvar alterações' : 'Salvar')}</button>}
             </div>
           </div>
         </div>
@@ -308,8 +314,8 @@ export function ConfigGeral() {
               </div>
             </div>
             <div className="mf">
-              <button className="cfg-btn" onClick={() => setGModal(null)}>Cancelar</button>
-              <button className="cfg-btn pri" disabled={gSaveMut.isPending} onClick={() => gSaveMut.mutate(gModal)}>{gSaveMut.isPending ? 'Salvando…' : (gModal.id ? 'Salvar alterações' : 'Salvar')}</button>
+              <button className="cfg-btn" onClick={() => setGModal(null)}>{canEdit ? 'Cancelar' : 'Fechar'}</button>
+              {canEdit && <button className="cfg-btn pri" disabled={gSaveMut.isPending} onClick={() => gSaveMut.mutate(gModal)}>{gSaveMut.isPending ? 'Salvando…' : (gModal.id ? 'Salvar alterações' : 'Salvar')}</button>}
             </div>
           </div>
         </div>
@@ -322,8 +328,8 @@ export function ConfigGeral() {
             <div className="mh"><h2>Excluir</h2><button className="mx" onClick={() => setDel(null)}>✕</button></div>
             <div className="mb"><p style={{ fontSize: 13, color: '#334155' }}>Excluir <b>{del.nome}</b>? Esta ação não pode ser desfeita.</p></div>
             <div className="mf">
-              <button className="cfg-btn" onClick={() => setDel(null)}>Cancelar</button>
-              <button className="cfg-btn danger" disabled={delMut.isPending} onClick={() => delMut.mutate(del)}>{delMut.isPending ? 'Excluindo…' : 'Excluir'}</button>
+              <button className="cfg-btn" onClick={() => setDel(null)}>{canEdit ? 'Cancelar' : 'Fechar'}</button>
+              {canEdit && <button className="cfg-btn danger" disabled={delMut.isPending} onClick={() => delMut.mutate(del)}>{delMut.isPending ? 'Excluindo…' : 'Excluir'}</button>}
             </div>
           </div>
         </div>

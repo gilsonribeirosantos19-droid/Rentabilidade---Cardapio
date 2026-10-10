@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import './config.css'
 
@@ -21,6 +22,8 @@ const fmtCod = (c?: number) => (c != null ? String(c).padStart(6, '0') : '')
 
 export function ItemPorcionamento() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('pcp/itens-porc')   // Somente Leitura = não grava
   const qc = useQueryClient()
   const [form, setForm] = useState<Form | null>(null)
   const { toast, setToast, showToast } = useToastErr(2600, 6000)
@@ -79,7 +82,9 @@ export function ItemPorcionamento() {
     <div className="cfg-screen">
       <div className="usr-top">
         <div className="t">Define quais <b>derivados</b> cada matéria-prima gera (ex.: Salmão → Filé, Pele, Aparas). Original e derivados são <b>insumos já cadastrados</b>. É isso que "liga" o item pra aparecer na Ordem de Porcionamento.</div>
-        <button className="cfg-btn pri" onClick={novo}>+ Novo</button>
+        {canEdit
+          ? <button className="cfg-btn pri" onClick={novo}>+ Novo</button>
+          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 14, alignItems: 'start' }}>
@@ -127,21 +132,21 @@ export function ItemPorcionamento() {
                         <td><SearchSelect value={insMap[d.insumoId]?.nome || ''} options={insNomes} meta={insMeta} placeholder="Selecione o derivado…" onChange={(nm) => setD(i, { insumoId: insByNome.get(nm) || '' })} /></td>
                         <td className="c muted">{insMap[d.insumoId]?.unidade_medida || '—'}</td>
                         <td className="r"><input value={d.rend} onChange={(e) => setD(i, { rend: e.target.value })} style={{ width: 90, height: 28, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace' }} /></td>
-                        <td className="c"><button className="act del" onClick={() => rmD(i)} title="Remover">✕</button></td>
+                        <td className="c">{canEdit && <button className="act del" onClick={() => rmD(i)} title="Remover">✕</button>}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot><tr><td colSpan={2} style={{ padding: '6px 12px', background: '#f8fafc', fontWeight: 700 }}>Rendimento {somaRend.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% + perda {perdaNum}% = <span style={{ color: Math.abs(total - 100) < 0.01 ? '#166534' : '#b45309' }}>{total.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%</span></td><td colSpan={2} style={{ background: '#f8fafc' }} /></tr></tfoot>
                 </table>
-                <div style={{ padding: 8 }}><button className="cfg-btn" onClick={addD}>+ Adicionar derivado</button></div>
+                {canEdit && <div style={{ padding: 8 }}><button className="cfg-btn" onClick={addD}>+ Adicionar derivado</button></div>}
               </div>
 
               {Math.abs(total - 100) > 0.01 && <div className="p-hint" style={{ marginTop: 8, color: '#b45309' }}>Dica: rendimentos dos derivados + perda deveriam somar 100% (agora {total.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%).</div>}
 
               <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                {form.id && <button className="cfg-btn danger" onClick={() => { if (confirm('Excluir este item de porcionamento?')) delMut.mutate(form.id!) }}>Excluir</button>}
-                <button className="cfg-btn" onClick={() => setForm(null)}>Cancelar</button>
-                <button className="cfg-btn pri" disabled={saveMut.isPending} onClick={() => saveMut.mutate(form)}>{saveMut.isPending ? 'Salvando…' : 'Salvar'}</button>
+                {canEdit && form.id && <button className="cfg-btn danger" onClick={() => { if (confirm('Excluir este item de porcionamento?')) delMut.mutate(form.id!) }}>Excluir</button>}
+                <button className="cfg-btn" onClick={() => setForm(null)}>{canEdit ? 'Cancelar' : 'Fechar'}</button>
+                {canEdit && <button className="cfg-btn pri" disabled={saveMut.isPending} onClick={() => saveMut.mutate(form)}>{saveMut.isPending ? 'Salvando…' : 'Salvar'}</button>}
               </div>
             </div>
           </div>
