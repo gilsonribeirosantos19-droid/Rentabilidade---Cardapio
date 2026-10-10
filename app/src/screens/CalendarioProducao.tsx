@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useItensProduziveis } from '../lib/pcp'
 import './config.css'
 
@@ -13,6 +14,8 @@ const DIAS: { k: keyof Omit<Cal, 'insumo_id'>; l: string }[] = [{ k: 'seg', l: '
 
 export function CalendarioProducao() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('pcp/calendario')   // Somente Leitura = não grava
   const { itens } = useItensProduziveis()
   const qc = useQueryClient()
   const [toast, setToast] = useState('')
@@ -31,7 +34,8 @@ export function CalendarioProducao() {
 
   return (
     <div className="cfg-screen">
-      <div className="usr-top"><div className="t">Define o que se produz em cada dia da semana (nem tudo é diário — molho pode ser 2×/semana, Shari é diário). Alimenta a sugestão do Planejamento.</div></div>
+      <div className="usr-top"><div className="t">Define o que se produz em cada dia da semana (nem tudo é diário — molho pode ser 2×/semana, Shari é diário). Alimenta a sugestão do Planejamento.</div>
+        {!canEdit && <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}</div>
 
       <div className="cfg-card">
         <table>
@@ -46,7 +50,7 @@ export function CalendarioProducao() {
                     <td className="c"><span className="badge" style={{ background: it.tipo === 'producao' ? '#eff6ff' : '#fff7ed', color: it.tipo === 'producao' ? '#2563eb' : '#ea6a0a' }}>{it.tipo === 'producao' ? 'Prod.' : 'Porc.'}</span></td>
                     {DIAS.map((d) => (
                       <td key={d.k} className="c">
-                        <input type="checkbox" checked={!!cal?.[d.k]} onChange={() => toggle(it.insumoId, d.k)} style={{ width: 16, height: 16, accentColor: '#f97316', cursor: 'pointer' }} />
+                        <input type="checkbox" checked={!!cal?.[d.k]} disabled={!canEdit} onChange={() => toggle(it.insumoId, d.k)} style={{ width: 16, height: 16, accentColor: '#f97316', cursor: canEdit ? 'pointer' : 'not-allowed' }} />
                       </td>
                     ))}
                   </tr>

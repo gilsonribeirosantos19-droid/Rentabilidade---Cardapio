@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { useItensProduziveis, type ItemProd } from '../lib/pcp'
 import { num } from '../lib/format'
@@ -17,6 +18,8 @@ const q3 = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, 
 
 export function PlanejamentoProducao() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('pcp/planejamento')   // Somente Leitura = não grava
   const { lojaId } = useLoja()
   const { itens } = useItensProduziveis()
   const qc = useQueryClient()
@@ -61,7 +64,9 @@ export function PlanejamentoProducao() {
     <div className="cfg-screen">
       <div className="usr-top">
         <div className="t">O AIKO lista os itens internos com o <b>estoque atual</b>. Informe <b>“Produzir hoje”</b> e gere as ordens (Produção ou Porcionamento) automaticamente.</div>
-        <button className="cfg-btn pri" disabled={gerando} onClick={gerarOrdens}>{gerando ? 'Gerando…' : '🍳 Gerar ordens →'}</button>
+        {canEdit
+          ? <button className="cfg-btn pri" disabled={gerando} onClick={gerarOrdens}>{gerando ? 'Gerando…' : '🍳 Gerar ordens →'}</button>
+          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="strip" style={{ display: 'flex', gap: 10, marginBottom: 12 }}>

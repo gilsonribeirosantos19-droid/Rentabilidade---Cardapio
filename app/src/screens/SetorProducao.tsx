@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import './config.css'
 
 // Produção › Setor de Produção — cadastro simples (áreas onde a produção acontece).
@@ -11,6 +12,8 @@ type Modal = { id?: string; nome: string; responsavel: string; ativo: boolean }
 
 export function SetorProducao() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('pcp/setores')   // Somente Leitura = não grava
   const qc = useQueryClient()
   const [modal, setModal] = useState<Modal | null>(null)
   const [del, setDel] = useState<{ id: string; nome: string } | null>(null)
@@ -41,7 +44,9 @@ export function SetorProducao() {
     <div className="cfg-screen">
       <div className="usr-top">
         <div className="t">Áreas onde a produção acontece (Sushi Bar, Peixaria, Cozinha Quente…). Organizam o planejamento e as ordens.</div>
-        <button className="cfg-btn pri" onClick={() => setModal({ nome: '', responsavel: '', ativo: true })}>+ Novo setor</button>
+        {canEdit
+          ? <button className="cfg-btn pri" onClick={() => setModal({ nome: '', responsavel: '', ativo: true })}>+ Novo setor</button>
+          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 
       <div className="cfg-card">
@@ -58,8 +63,10 @@ export function SetorProducao() {
                         <td className="muted">{s.responsavel || '—'}</td>
                         <td className="c"><span style={{ color: s.ativo !== false ? '#166534' : '#94a3b8', fontWeight: 600, fontSize: 11.5 }}>{s.ativo !== false ? 'Ativo' : 'Inativo'}</span></td>
                         <td className="r">
-                          <button className="act" onClick={() => setModal({ id: s.id, nome: s.nome || '', responsavel: s.responsavel || '', ativo: s.ativo !== false })}>Editar</button>
-                          <button className="act del" onClick={() => setDel({ id: s.id, nome: s.nome || '' })}>Excluir</button>
+                          {canEdit ? <>
+                            <button className="act" onClick={() => setModal({ id: s.id, nome: s.nome || '', responsavel: s.responsavel || '', ativo: s.ativo !== false })}>Editar</button>
+                            <button className="act del" onClick={() => setDel({ id: s.id, nome: s.nome || '' })}>Excluir</button>
+                          </> : <span className="muted">—</span>}
                         </td>
                       </tr>
                     ))}
@@ -78,8 +85,8 @@ export function SetorProducao() {
               <div className="cfg-fg"><label>Situação</label><select value={modal.ativo ? '1' : '0'} onChange={(e) => setModal({ ...modal, ativo: e.target.value === '1' })}><option value="1">Ativo</option><option value="0">Inativo</option></select></div>
             </div>
             <div className="mf">
-              <button className="cfg-btn" onClick={() => setModal(null)}>Cancelar</button>
-              <button className="cfg-btn pri" disabled={saveMut.isPending} onClick={() => saveMut.mutate(modal)}>{saveMut.isPending ? 'Salvando…' : (modal.id ? 'Salvar alterações' : 'Salvar')}</button>
+              <button className="cfg-btn" onClick={() => setModal(null)}>{canEdit ? 'Cancelar' : 'Fechar'}</button>
+              {canEdit && <button className="cfg-btn pri" disabled={saveMut.isPending} onClick={() => saveMut.mutate(modal)}>{saveMut.isPending ? 'Salvando…' : (modal.id ? 'Salvar alterações' : 'Salvar')}</button>}
             </div>
           </div>
         </div>

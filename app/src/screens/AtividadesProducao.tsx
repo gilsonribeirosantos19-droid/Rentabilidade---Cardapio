@@ -3,6 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { usePerms } from '../lib/perms'
 import { useItensProduziveis } from '../lib/pcp'
 import { SearchSelect } from '../components/SearchSelect'
 import { num } from '../lib/format'
@@ -15,6 +16,8 @@ type Ativ = { id?: string; descricao: string; tempo: string }
 
 export function AtividadesProducao() {
   const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('pcp/atividades')   // Somente Leitura = não grava
   const { itens } = useItensProduziveis()
   const [insumoId, setInsumoId] = useState('')
   const [linhas, setLinhas] = useState<Ativ[]>([])
@@ -55,7 +58,9 @@ export function AtividadesProducao() {
 
       {insumoId && (
         <div className="cfg-card" style={{ maxWidth: 720 }}>
-          <div className="card-h"><span>Atividades — {itemSel?.nome}</span><button className="cfg-btn" style={{ height: 28 }} onClick={add}>+ Nova</button></div>
+          <div className="card-h"><span>Atividades — {itemSel?.nome}</span>{canEdit
+            ? <button className="cfg-btn" style={{ height: 28 }} onClick={add}>+ Nova</button>
+            : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}</div>
           <table>
             <thead><tr><th className="c" style={{ width: 60 }}>Ordem</th><th>Atividade</th><th className="r" style={{ width: 120 }}>Tempo (min)</th><th style={{ width: 40 }} /></tr></thead>
             <tbody>
@@ -65,12 +70,12 @@ export function AtividadesProducao() {
                     <td className="c mono muted">{i + 1}</td>
                     <td><input value={l.descricao} onChange={(e) => set(i, { descricao: e.target.value })} placeholder="Descreva a etapa…" style={inp} /></td>
                     <td className="r"><input value={l.tempo} onChange={(e) => set(i, { tempo: e.target.value })} placeholder="—" style={{ ...inp, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></td>
-                    <td className="c"><button onClick={() => del(i)} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }} title="Remover">×</button></td>
+                    <td className="c">{canEdit && <button onClick={() => del(i)} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }} title="Remover">×</button>}</td>
                   </tr>
                 ))}
             </tbody>
           </table>
-          <div style={{ padding: 12, display: 'flex', justifyContent: 'flex-end' }}><button className="cfg-btn pri" onClick={salvar}>Salvar atividades</button></div>
+          {canEdit && <div style={{ padding: 12, display: 'flex', justifyContent: 'flex-end' }}><button className="cfg-btn pri" onClick={salvar}>Salvar atividades</button></div>}
         </div>
       )}
 
