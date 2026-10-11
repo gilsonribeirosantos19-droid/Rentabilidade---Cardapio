@@ -1,5 +1,6 @@
 // DANFE — portado FIEL do utils.js (imprimirDanfe via Focus + gerarDanfeAiko/abrirDanfeAiko interno).
 import { supabase } from './supabase'
+import { fmtDoc, fmtChave, fmtCep } from './fiscal'
 
 const NFE_WEBHOOK = 'https://trczpnjidqfippbfxtpe.supabase.co/functions/v1/nfe-webhook'
 const esc = (s: any) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -45,9 +46,9 @@ export function gerarDanfeLocal(nfe: any, itens: any[], onMsg: (m: string, t?: '
   const v2 = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const vu = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
   const qt = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-  const docf = (v: any) => { const s = String(v || '').replace(/\D/g, ''); if (s.length === 14) return s.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); if (s.length === 11) return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); return v ? String(v) : '—' }
+  const docf = fmtDoc
   const dtm = (v: any) => { if (!v) return '—'; const s = String(v); const d = s.slice(0, 10).split('-'); const hm = s.slice(11, 16); return (d.length === 3 ? `${d[2]}/${d[1]}/${d[0]}` : s) + (hm ? ` ${hm}` : '') }
-  const chaveF = (c: any) => String(c || '').replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ').trim()
+  const chaveF = fmtChave
   const its = Array.isArray(itens) ? itens : []
   const totalItens = its.reduce((a, it) => a + Number(it.valor_total || 0), 0)
   const linhas = its.map((it: any) => `<tr><td class="mono">${E(it.codigo_item_fornecedor)}</td><td class="pdesc">${E(it.descricao_nfe)}</td><td class="c">${E((it.unidade_nfe || '').toUpperCase())}</td><td class="r">${qt(it.quantidade)}</td><td class="r">${vu(it.valor_unitario)}</td><td class="r">${v2(it.valor_total)}</td></tr>`).join('')
@@ -198,10 +199,10 @@ function abrirDanfeAiko(nota: any, onMsg: (m: string, t?: 'ok' | 'err') => void)
   const v2 = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const vu = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
   const qt = (v: any) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 4 })
-  const docf = (v: any) => { const s = String(v || '').replace(/\D/g, ''); if (s.length === 14) return s.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5'); if (s.length === 11) return s.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); return v ? String(v) : '—' }
+  const docf = fmtDoc
   const dt = (v: any) => { if (!v) return ''; const s = String(v).slice(0, 10).split('-'); return s.length === 3 ? `${s[2]}/${s[1]}/${s[0]}` : String(v) }
-  const cepf = (v: any) => { const s = String(v || '').replace(/\D/g, ''); return s.length === 8 ? s.replace(/(\d{5})(\d{3})/, '$1-$2') : (v || '') }
-  const chaveF = (c: any) => String(c || '').replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ').trim()
+  const cepf = fmtCep
+  const chaveF = fmtChave
   const FRETE: Record<string, string> = { '0': '0 - Emitente', '1': '1 - Destinatário', '2': '2 - Terceiros', '3': '3 - Próprio (Rem.)', '4': '4 - Próprio (Dest.)', '9': '9 - Sem Frete' }
   const vol = (req.volumes && req.volumes[0]) || {}
   const dups = Array.isArray(req.duplicatas) ? req.duplicatas : (req.duplicatas ? [req.duplicatas] : [])
