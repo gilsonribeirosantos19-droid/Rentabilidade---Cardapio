@@ -1,4 +1,17 @@
 import { defineConfig } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+
+// Carrega app/.env.local no process.env (o Playwright, diferente do Vite, não lê .env sozinho).
+// Precisa p/ E2E_EMAIL / E2E_SENHA chegarem aos testes. Não sobrescreve o que já veio do ambiente
+// (ex.: GitHub Secrets no CI). Sem o arquivo, segue em frente (testes com login se pulam).
+try {
+  for (const line of readFileSync(new URL('.env.local', import.meta.url), 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)$/)
+    if (m && !line.trimStart().startsWith('#') && !process.env[m[1]]) {
+      process.env[m[1]] = m[2].replace(/\s+$/, '').replace(/^["']|["']$/g, '')
+    }
+  }
+} catch { /* sem .env.local → ok */ }
 
 // E2E do Aiko. Roda contra a versão de PRODUÇÃO servida localmente (vite build + preview),
 // pra pegar o pesadelo "build passa mas o site abre em branco" — que o unitário e o tsc não pegam.
