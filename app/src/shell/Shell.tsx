@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { Novidades } from './Novidades'
+import { Ajuda } from './Ajuda'
 import { Fornecedores } from '../screens/Fornecedores'
 import { Insumos } from '../screens/Insumos'
 import { Produtos } from '../screens/Produtos'
@@ -201,6 +202,7 @@ export function Shell() {
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
               </select>
             )}
+            <Ajuda />
             <Novidades />
             <div style={{ position: 'relative' }}>
               <button className="btn ghost" style={{ height: 32, display: 'flex', alignItems: 'center', gap: 7 }} onClick={() => setUserMenu((o) => !o)}>
