@@ -18,6 +18,7 @@ type Loja = { id: string; nome: string }
 
 const brl = (n: number) => 'R$ ' + Math.round(n).toLocaleString('pt-BR')
 const parseNum = (s: string) => { const n = parseFloat((s || '').replace(/\./g, '').replace(',', '.')); return isFinite(n) ? n : 0 }
+const fmtTeto = (n: number) => n ? n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''  // 35301 → "35.301,00"
 const GRUPO_LBL: Record<string, string> = { custo: 'Custo', despesa: 'Despesa', investimento: 'Investimento' }
 const statusOf = (p: number) => p > 1.05 ? 'bad' : p >= 0.95 ? 'warn' : 'good'
 const cor = (s: string) => s === 'bad' ? '#e11d48' : s === 'warn' ? '#d97706' : '#16a34a'
@@ -70,7 +71,7 @@ export function DreOrcamento() {
 
   const consolidado = !lojaId   // "Todas as lojas" → soma dos tetos (só-leitura; edita por loja)
   const tetoByConta = useMemo(() => { const m = new Map<string, number>(); orcs.forEach((o) => m.set(o.conta_gerencial_id, (m.get(o.conta_gerencial_id) || 0) + (Number(o.valor_mensal) || 0))); return m }, [orcs])
-  useEffect(() => { if (consolidado) { setVals({}); return } const m: Record<string, string> = {}; orcs.forEach((o) => { if (Number(o.valor_mensal)) m[o.conta_gerencial_id] = String(o.valor_mensal).replace('.', ',') }); setVals(m) }, [orcs, ano, consolidado])
+  useEffect(() => { if (consolidado) { setVals({}); return } const m: Record<string, string> = {}; orcs.forEach((o) => { if (Number(o.valor_mensal)) m[o.conta_gerencial_id] = fmtTeto(Number(o.valor_mensal)) }); setVals(m) }, [orcs, ano, consolidado])
 
   // contas folha (analíticas), agrupadas por pai
   const folhas = useMemo(() => { const pais = new Set(contas.map((c) => c.parent_codigo).filter(Boolean)); return contas.filter((c) => !pais.has(c.codigo)).sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true })) }, [contas])
@@ -100,7 +101,7 @@ export function DreOrcamento() {
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['dre-orcamentos'] }) }, onError: (e: Error) => showToast(e.message, 'err'),
   })
-  const onBlur = (contaId: string) => { const v = parseNum(vals[contaId] || ''); const antes = orcs.find((o) => o.conta_gerencial_id === contaId)?.valor_mensal || 0; if (v !== Number(antes)) salvar.mutate({ contaId, valor: v }) }
+  const onBlur = (contaId: string) => { const v = parseNum(vals[contaId] || ''); const antes = orcs.find((o) => o.conta_gerencial_id === contaId)?.valor_mensal || 0; if (v !== Number(antes)) salvar.mutate({ contaId, valor: v }); setVals((m) => ({ ...m, [contaId]: fmtTeto(v) })) }  // reformata ao sair
 
   const orcadoDe = (cid: string) => consolidado ? (tetoByConta.get(cid) || 0) : parseNum(vals[cid] || '')
   const totOrc = folhas.reduce((a, c) => a + orcadoDe(c.id), 0)   // soma dos tetos mensais
@@ -163,8 +164,8 @@ export function DreOrcamento() {
                           <td className="l dre-stick" style={{ paddingLeft: 30, fontWeight: 400 }}>{c.nome}</td>
                           <td>{consolidado
                             ? <span className="mono" style={{ display: 'inline-block', width: 96, textAlign: 'right', fontSize: 12.5, color: orc > 0 ? '#1e2030' : '#cbd5e1' }}>{orc > 0 ? brl(orc) : '—'}</span>
-                            : <input value={vals[c.id] ?? ''} placeholder="0" onChange={(e) => setVals((m) => ({ ...m, [c.id]: e.target.value }))} onBlur={() => onBlur(c.id)}
-                              style={{ width: 96, height: 28, textAlign: 'right', border: '1px solid #e2e8f0', borderRadius: 6, padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12.5 }} />}</td>
+                            : <input value={vals[c.id] ?? ''} placeholder="0,00" inputMode="decimal" onFocus={(e) => e.target.select()} onChange={(e) => setVals((m) => ({ ...m, [c.id]: e.target.value }))} onBlur={() => onBlur(c.id)}
+                              style={{ width: 104, height: 28, textAlign: 'right', border: '1px solid #e2e8f0', borderRadius: 6, padding: '0 8px', fontFamily: 'DM Mono, monospace', fontSize: 12.5 }} />}</td>
                           <td className="mono" style={{ color: orc > 0 ? '#586084' : '#cbd5e1' }}>{orc > 0 ? brl(esp) : '—'}</td>
                           <td className="mono">{real > 0 ? brl(real) : '—'}</td>
                           <td className="l">{orc > 0 ? <><span style={{ display: 'inline-block', width: 120, height: 8, borderRadius: 5, background: '#eceff5', position: 'relative', verticalAlign: 'middle', overflow: 'hidden' }}><span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: w + '%', background: cor(s), borderRadius: 5 }} /></span> <span className="mono" style={{ fontSize: 12, color: cor(s) }}>{Math.round(p * 100)}%</span></> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
