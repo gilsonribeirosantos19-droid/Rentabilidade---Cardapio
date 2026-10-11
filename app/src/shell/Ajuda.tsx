@@ -7,7 +7,7 @@ import { supabase } from '../lib/db'
 type Artigo = { id: string; modulo: string; titulo: string; conteudo: string; ordem?: number }
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
-export function Ajuda() {
+export function Ajuda({ onOpenCentral }: { onOpenCentral?: () => void }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [aberto, setAberto] = useState<string | null>(null)
@@ -62,6 +62,12 @@ export function Ajuda() {
                 </div>
               ))}
             </div>
+            {onOpenCentral && (
+              <button onClick={() => { setOpen(false); onOpenCentral() }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', border: 0, borderTop: '1px solid #eef1f7', background: '#f6f8fb', padding: '11px', font: 'inherit', fontSize: 12.5, fontWeight: 700, color: '#ea580c', cursor: 'pointer' }}>
+                📖 Abrir central completa
+              </button>
+            )}
           </div>
         </>
       )}

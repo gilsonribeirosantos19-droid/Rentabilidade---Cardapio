@@ -130,6 +130,7 @@ export const MODULES: Module[] = [
       { label: 'Permissões', key: 'config/permissoes', admin: true },
       { label: 'Auditoria', key: 'config/auditoria', admin: true },
       { label: 'Parâmetros', key: 'config/parametros' },
+      { label: 'Central de Ajuda', key: 'ajuda' },
     ],
   },
 ]
