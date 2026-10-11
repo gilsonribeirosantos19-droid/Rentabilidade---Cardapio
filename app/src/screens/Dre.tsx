@@ -10,6 +10,8 @@ import './dre.css'
 type Conta = { id: string; codigo: string; nome: string; grupo: string; parent_codigo?: string | null; ordem?: number }
 type Insumo = { id: string; nome?: string; conta_gerencial_id?: string | null }
 type Entrada = { insumo_id: string; loja_id?: string | null; custo_total?: number | null; criado_em?: string; tipo?: string }
+type AggRow = { insumo_id: string; mes: number; total?: number | null }  // retorno da RPC dre_compras_mensal
+type Compras = { mode: 'rpc'; rows: AggRow[] } | { mode: 'raw'; rows: Entrada[] }
 type Venda = { loja_id?: string | null; data?: string; faturado?: number | null }
 type Lanc = { conta_gerencial_id: string; loja_id?: string | null; data?: string; valor?: number | null }
 type Loja = { id: string; nome: string }
@@ -34,7 +36,17 @@ export function Dre() {
   const { data: lojas = [] } = useQuery({ queryKey: ['dre-lojas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Loja[] } })
   const { data: contas = [] } = useQuery({ queryKey: ['dre-contas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('contas_gerenciais').select('*').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as Conta[] } })
   const { data: insumos = [] } = useQuery({ queryKey: ['dre-insumos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,conta_gerencial_id').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)) })
-  const { data: entradas = [], isLoading: loadE } = useQuery({ queryKey: ['dre-entradas', tenantId, ano], enabled: !!tenantId, queryFn: () => fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('insumo_id,loja_id,custo_total,criado_em,tipo').eq('tenant_id', tenantId).gte('criado_em', ini).lte('criado_em', fim).order('criado_em').order('id').range(f, t)) })
+  // Compras do ano somadas NO SERVIDOR (RPC) → devolve poucas linhas (insumo × mês), evita baixar dezenas de milhares de entradas.
+  // Fallback: se a RPC ainda não existir no banco, cai no método antigo (busca crua) pra não quebrar.
+  const { data: compras, isLoading: loadE } = useQuery<Compras>({
+    queryKey: ['dre-compras', tenantId, ano, lojaId], enabled: !!tenantId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('dre_compras_mensal', { p_ano: ano, p_loja: lojaId || null })
+      if (!error && Array.isArray(data)) return { mode: 'rpc', rows: data as AggRow[] }
+      const raw = await fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('insumo_id,loja_id,custo_total,criado_em,tipo').eq('tenant_id', tenantId).gte('criado_em', ini).lte('criado_em', fim).order('criado_em').order('id').range(f, t))
+      return { mode: 'raw', rows: raw }
+    },
+  })
   const { data: vendas = [] } = useQuery({ queryKey: ['dre-vendas', tenantId, ano], enabled: !!tenantId, queryFn: () => fetchAll<Venda>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,faturado,status').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', ini.slice(0, 10)).lte('data', `${ano}-12-31`).order('data').order('loja_id').range(f, t)) })
   const { data: lancs = [] } = useQuery({ queryKey: ['dre-lancamentos', tenantId, ano], enabled: !!tenantId, queryFn: () => fetchAll<Lanc>((f, t) => supabase.from('lancamentos_gerenciais').select('conta_gerencial_id,loja_id,data,valor').eq('tenant_id', tenantId).gte('data', ini.slice(0, 10)).lte('data', `${ano}-12-31`).order('data').order('id').range(f, t)) })
 
@@ -47,13 +59,21 @@ export function Dre() {
 
     // compras por insumo × mês
     const porInsumo = new Map<string, number[]>()
-    entradas.forEach((e) => {
-      if (e.tipo !== 'manual' && e.tipo !== 'nfe' && e.tipo !== 'nfe_importada') return
-      if (lojaId && (e.loja_id || '') !== lojaId) return
-      const d = e.criado_em ? new Date(e.criado_em) : null
-      if (!d || d.getFullYear() !== ano) return
-      const arr = porInsumo.get(e.insumo_id) || z12(); arr[d.getMonth()] += Number(e.custo_total) || 0; porInsumo.set(e.insumo_id, arr)
-    })
+    if (compras?.mode === 'rpc') {
+      // servidor já filtrou tipo/loja/ano e somou — só distribui no mês
+      compras.rows.forEach((r) => {
+        const m = (r.mes || 0) - 1; if (m < 0 || m > 11 || !r.insumo_id) return
+        const arr = porInsumo.get(r.insumo_id) || z12(); arr[m] += Number(r.total) || 0; porInsumo.set(r.insumo_id, arr)
+      })
+    } else {
+      (compras?.rows ?? []).forEach((e) => {
+        if (e.tipo !== 'manual' && e.tipo !== 'nfe' && e.tipo !== 'nfe_importada') return
+        if (lojaId && (e.loja_id || '') !== lojaId) return
+        const d = e.criado_em ? new Date(e.criado_em) : null
+        if (!d || d.getFullYear() !== ano) return
+        const arr = porInsumo.get(e.insumo_id) || z12(); arr[d.getMonth()] += Number(e.custo_total) || 0; porInsumo.set(e.insumo_id, arr)
+      })
+    }
     // insumos (com compra) agrupados por conta
     const insDaConta = new Map<string, { nome: string; vals: number[] }[]>()
     porInsumo.forEach((vals, insId) => {
@@ -102,7 +122,7 @@ export function Dre() {
 
     const tot = (a: number[]) => a.reduce((x, y) => x + y, 0)
     return { linhas, receita, recT: tot(receita), gruT: tot(totGrupos), resT: tot(resultado), temContas: contas.length > 0 }
-  }, [contas, insumos, entradas, vendas, lancs, lojaId, ano])
+  }, [contas, insumos, compras, vendas, lancs, lojaId, ano])
 
   const cell = (v: number, base: number) => modo === 'rs' ? brl(v) : (base > 0 ? (v / base * 100).toFixed(2).replace('.', ',') + '%' : '0,00%')
   const toggle = (g: string) => setAbertos((s) => { const n = new Set(s); n.has(g) ? n.delete(g) : n.add(g); return n })
