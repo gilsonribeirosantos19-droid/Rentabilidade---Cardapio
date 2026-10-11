@@ -8,7 +8,6 @@ import { useLoja } from '../lib/loja'
 import { Novidades } from './Novidades'
 import { Ajuda } from './Ajuda'
 import { AjudaPage } from '../screens/AjudaPage'
-import { Onboarding } from './Onboarding'
 import { Fornecedores } from '../screens/Fornecedores'
 import { Insumos } from '../screens/Insumos'
 import { Produtos } from '../screens/Produtos'
@@ -162,8 +161,6 @@ export function Shell() {
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [active, setActive] = useState('__home')
   const [dived, setDived] = useState<string | null>(null)
-  const [tour, setTour] = useState(() => { try { return !localStorage.getItem('aiko_onboarding_v1') } catch { return false } })
-  const fecharTour = () => { try { localStorage.setItem('aiko_onboarding_v1', '1') } catch { /* ignore */ } setTour(false) }
 
   function openScreen(key: string, label: string) {
     if (key === '__home') {
@@ -191,7 +188,6 @@ export function Shell() {
   return (
     <div className={'shell' + (dived ? ' dived' : '')}>
       <Sidebar activeKey={active} onOpen={openScreen} dived={dived} setDived={setDived} />
-      {tour && <Onboarding onClose={fecharTour} />}
 
       <div className="main">
         {!isFull && <div className="topbar">
@@ -208,7 +204,7 @@ export function Shell() {
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
               </select>
             )}
-            <Ajuda onOpenCentral={() => openScreen('ajuda', 'Central de Ajuda')} onStartTour={() => setTour(true)} />
+            <Ajuda onOpenCentral={() => openScreen('ajuda', 'Central de Ajuda')} />
             <Novidades />
             <div style={{ position: 'relative' }}>
               <button className="btn ghost" style={{ height: 32, display: 'flex', alignItems: 'center', gap: 7 }} onClick={() => setUserMenu((o) => !o)}>
