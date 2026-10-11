@@ -9,7 +9,7 @@ const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[�
 const MOD_ORDER = ['Primeiros passos', 'Cadastros', 'Estoque', 'Fiscal', 'Compras', 'Gestão', 'PDV', 'Produção', 'Configurações', 'Conceitos', 'Geral', 'Sistema', 'Acesso', 'Vendas']
 const modRank = (m: string) => { const i = MOD_ORDER.indexOf(m); return i < 0 ? MOD_ORDER.length + 1 : i }
 
-export function Ajuda({ onOpenCentral }: { onOpenCentral?: () => void }) {
+export function Ajuda({ onOpenCentral, onStartTour }: { onOpenCentral?: () => void; onStartTour?: () => void }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [aberto, setAberto] = useState<string | null>(null)
@@ -23,7 +23,7 @@ export function Ajuda({ onOpenCentral }: { onOpenCentral?: () => void }) {
 
   return (
     <div style={{ position: 'relative' }}>
-      <button className="btn ghost" title="Ajuda" onClick={() => setOpen((o) => !o)}
+      <button id="tour-help" className="btn ghost" title="Ajuda" onClick={() => setOpen((o) => !o)}
         style={{ height: 32, width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
@@ -64,12 +64,20 @@ export function Ajuda({ onOpenCentral }: { onOpenCentral?: () => void }) {
                 </div>
               ))}
             </div>
-            {onOpenCentral && (
-              <button onClick={() => { setOpen(false); onOpenCentral() }}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', border: 0, borderTop: '1px solid #eef1f7', background: '#f6f8fb', padding: '11px', font: 'inherit', fontSize: 12.5, fontWeight: 700, color: '#ea580c', cursor: 'pointer' }}>
-                📖 Abrir central completa
-              </button>
-            )}
+            <div style={{ display: 'flex', borderTop: '1px solid #eef1f7' }}>
+              {onOpenCentral && (
+                <button onClick={() => { setOpen(false); onOpenCentral() }}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, border: 0, background: '#f6f8fb', padding: '11px', font: 'inherit', fontSize: 12.5, fontWeight: 700, color: '#ea580c', cursor: 'pointer' }}>
+                  📖 Central completa
+                </button>
+              )}
+              {onStartTour && (
+                <button onClick={() => { setOpen(false); onStartTour() }}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, border: 0, borderLeft: onOpenCentral ? '1px solid #eef1f7' : 0, background: '#f6f8fb', padding: '11px', font: 'inherit', fontSize: 12.5, fontWeight: 700, color: '#334155', cursor: 'pointer' }}>
+                  🚀 Refazer tour
+                </button>
+              )}
+            </div>
           </div>
         </>
       )}
