@@ -6,6 +6,8 @@ import { supabase } from '../lib/db'
 
 type Artigo = { id: string; modulo: string; titulo: string; conteudo: string; ordem?: number }
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+const MOD_ORDER = ['Primeiros passos', 'Cadastros', 'Estoque', 'Fiscal', 'Compras', 'Gestão', 'PDV', 'Produção', 'Configurações', 'Conceitos', 'Geral', 'Sistema', 'Acesso', 'Vendas']
+const modRank = (m: string) => { const i = MOD_ORDER.indexOf(m); return i < 0 ? MOD_ORDER.length + 1 : i }
 
 export function Ajuda({ onOpenCentral }: { onOpenCentral?: () => void }) {
   const [open, setOpen] = useState(false)
@@ -17,7 +19,7 @@ export function Ajuda({ onOpenCentral }: { onOpenCentral?: () => void }) {
     queryFn: async () => { const { data } = await supabase.from('ajuda_artigos').select('*').order('modulo').order('ordem'); return (data ?? []) as Artigo[] },
   })
   const filtrados = useMemo(() => { const t = norm(q); if (!t) return artigos; return artigos.filter((a) => norm(a.titulo + ' ' + a.conteudo + ' ' + a.modulo).includes(t)) }, [artigos, q])
-  const grupos = useMemo(() => { const m = new Map<string, Artigo[]>(); filtrados.forEach((a) => { const k = a.modulo || 'Geral'; (m.get(k) || m.set(k, []).get(k)!).push(a) }); return [...m.entries()] }, [filtrados])
+  const grupos = useMemo(() => { const m = new Map<string, Artigo[]>(); filtrados.forEach((a) => { const k = a.modulo || 'Geral'; (m.get(k) || m.set(k, []).get(k)!).push(a) }); return [...m.entries()].sort((x, y) => modRank(x[0]) - modRank(y[0]) || x[0].localeCompare(y[0])) }, [filtrados])
 
   return (
     <div style={{ position: 'relative' }}>

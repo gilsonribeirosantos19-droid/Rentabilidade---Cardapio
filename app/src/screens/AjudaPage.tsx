@@ -7,6 +7,9 @@ import { useAuth } from '../lib/auth'
 
 type Artigo = { id: string; modulo: string; titulo: string; conteudo: string; ordem?: number }
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+// ordem lógica dos módulos no índice (o que não estiver na lista vai pro fim, alfabético)
+const MOD_ORDER = ['Primeiros passos', 'Cadastros', 'Estoque', 'Fiscal', 'Compras', 'Gestão', 'PDV', 'Produção', 'Configurações', 'Conceitos', 'Geral', 'Sistema', 'Acesso', 'Vendas']
+const modRank = (m: string) => { const i = MOD_ORDER.indexOf(m); return i < 0 ? MOD_ORDER.length + 1 : i }
 
 export function AjudaPage() {
   const { tenantId } = useAuth()
@@ -19,7 +22,7 @@ export function AjudaPage() {
   })
 
   const filtrados = useMemo(() => { const t = norm(q); if (!t) return artigos; return artigos.filter((a) => norm(a.titulo + ' ' + a.conteudo + ' ' + a.modulo).includes(t)) }, [artigos, q])
-  const grupos = useMemo(() => { const m = new Map<string, Artigo[]>(); filtrados.forEach((a) => { const k = a.modulo || 'Geral'; (m.get(k) || m.set(k, []).get(k)!).push(a) }); return [...m.entries()] }, [filtrados])
+  const grupos = useMemo(() => { const m = new Map<string, Artigo[]>(); filtrados.forEach((a) => { const k = a.modulo || 'Geral'; (m.get(k) || m.set(k, []).get(k)!).push(a) }); return [...m.entries()].sort((x, y) => modRank(x[0]) - modRank(y[0]) || x[0].localeCompare(y[0])) }, [filtrados])
   const atual = useMemo(() => artigos.find((a) => a.id === sel) || filtrados[0] || null, [artigos, filtrados, sel])
   useEffect(() => { if (filtrados.length && (!sel || !filtrados.find((a) => a.id === sel))) setSel(filtrados[0].id) }, [filtrados, sel])
 
