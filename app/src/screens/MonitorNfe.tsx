@@ -16,8 +16,9 @@ const PER_LBL: Record<string, string> = { todos: 'Todos', mes_atual: 'Mês Atual
 const PER_VAL: Record<string, string> = { 'Todos': 'todos', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior', 'Período': 'periodo' }
 
 type Nfe = { id: string; numero?: string; serie?: string; chave_acesso?: string; cnpj_emitente?: string; nome_emitente?: string; data_emissao?: string; data_integracao?: string; valor_total?: number; valor_titulo?: number; data_vencimento?: string; portador?: string; status?: string; loja_id?: string | null; recebida_em?: string | null; recebida_por?: string | null; recebida_sem_conf?: boolean }
-type Item = { id: string; nfe_id: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; vinculacao_id?: string | null; qtd_recebida?: number | null; divergencia_motivo?: string | null }
-type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; codigo_interno?: string }
+type Item = { id: string; nfe_id: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; vinculacao_id?: string | null; qtd_recebida?: number | null; divergencia_motivo?: string | null; conta_gerencial_id?: string | null }
+type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; codigo_interno?: string; conta_gerencial_id?: string | null }
+type ContaG = { id: string; codigo: string; nome: string; parent_codigo?: string | null }
 type Forn = { id: string; nome: string; cnpj?: string; codigo?: string }
 type IFV = { id: string; insumo_id: string; fornecedor_id?: string | null; descricao_fornecedor?: string; codigo_fornecedor?: string; embalagem_descricao?: string; qtd_por_embalagem?: number; preco_unitario?: number }
 type Vinc = { id: string; descricao_nfe?: string; codigo_nfe?: string; insumo_id?: string; fator_conversao?: number }
@@ -79,7 +80,7 @@ export function MonitorNfe() {
   const [chkPend, setChkPend] = useState(true), [chkProc, setChkProc] = useState(true), [chkErro, setChkErro] = useState(true), [chkCanc, setChkCanc] = useState(false), [chkReceber, setChkReceber] = useState(true)
   const [receb, setReceb] = useState<Record<string, { q: string; m: string }>>({})   // conferência em edição (por item)
   const [confBusy, setConfBusy] = useState(false)
-  const [tab, setTab] = useState<'nfe' | 'itens' | 'erros'>('nfe')
+  const [tab, setTab] = useState<'nfe' | 'itens' | 'apr' | 'erros'>('nfe')
   const [sel, setSel] = useState<string | null>(null)
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [vinc, setVinc] = useState<Item | null>(null)
@@ -87,7 +88,8 @@ export function MonitorNfe() {
   const { toast, setToast, showToast } = useToastTipo(3000)
 
   const { data: nfes = [], isLoading } = useQuery({ queryKey: ['mon-nfe', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Nfe>((f, t) => supabase.from('nfe_recebidas').select('*').eq('tenant_id', tenantId).is('excluida_em', null).order('data_emissao', { ascending: false }).order('id').range(f, t)) })
-  const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: insumos = [] } = useQuery({ queryKey: ['mon-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,codigo_interno,conta_gerencial_id').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: contasG = [] } = useQuery({ queryKey: ['mon-contas', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('contas_gerenciais').select('id,codigo,nome,parent_codigo').eq('tenant_id', tenantId).eq('ativo', true); return (data ?? []) as ContaG[] } })
   // Parâmetro Estoque › "Data de movimentação" (emissao | processamento | manual): em que data a entrada afeta o estoque/CMV
   const { data: critDataMov = 'emissao' } = useQuery({ queryKey: ['mon-param-datamov', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'data_movimentacao').limit(1); return (data?.[0]?.valor as string) || 'emissao' } })
   // Parâmetro Estoque › "Recebimento pela loja (Portal)": quando 'sim', a nota pronta espera a
@@ -102,6 +104,10 @@ export function MonitorNfe() {
 
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
+  const contaById = useMemo(() => Object.fromEntries(contasG.map((c) => [c.id, c])) as Record<string, ContaG>, [contasG])
+  const contasFolha = useMemo(() => { const pais = new Set(contasG.map((c) => c.parent_codigo).filter(Boolean)); return contasG.filter((c) => !pais.has(c.codigo)).sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true })) }, [contasG])
+  const contaByLabel = useMemo(() => { const m: Record<string, string> = {}; contasFolha.forEach((c) => { m[`${c.codigo} · ${c.nome}`] = c.id }); return m }, [contasFolha])
+  const labelOfConta = (id?: string | null) => { const c = id ? contaById[id] : null; return c ? `${c.codigo} · ${c.nome}` : '' }
   const ifvMap = useMemo(() => Object.fromEntries(ifv.map((v) => [v.id, v])) as Record<string, IFV>, [ifv])
   const fornByCnpj = (cnpj?: string) => { const c = (cnpj || '').replace(/\D/g, ''); return fornecedores.find((f) => (f.cnpj || '').replace(/\D/g, '') === c) }
   const itemsByNfe = useMemo(() => { const m: Record<string, { codigo_item_fornecedor?: string; vinculacao_id?: string | null }[]> = {}; allItens.forEach((it) => (m[it.nfe_id] ||= []).push(it)); return m }, [allItens])
@@ -223,6 +229,12 @@ export function MonitorNfe() {
       try {
         await registrarEntradaNfe(v.insumo_id, loja, fornId, fornNome, { quantidade: qtdEst, unidade_compra: it.unidade_nfe || null, fator_conversao: fator, custo_unitario: custoUnit, tipo: 'nfe', nfe_numero: `${n.numero}/${n.serie}`, chave_acesso: n.chave_acesso || null, observacao: `NF-e ${n.numero}/${n.serie}`, criado_em: dataStr + 'T12:00:00.000Z' })
         okItens++
+        // override de conta gerencial (aba Apropriação) → grava na entrada p/ o DRE usar a conta efetiva
+        if (it.conta_gerencial_id) {
+          let uq = supabase.from('entradas_estoque').update({ conta_gerencial_id: it.conta_gerencial_id }).eq('tenant_id', tenantId).eq('insumo_id', v.insumo_id)
+          uq = n.chave_acesso ? uq.eq('chave_acesso', n.chave_acesso) : uq.eq('nfe_numero', `${n.numero}/${n.serie}`)
+          await uq
+        }
       } catch (e) { console.warn('item falhou', it.descricao_nfe, e) }
     }
     if (okItens < items.length) { await supabase.rpc('estornar_nfe', { p_nfe_id: n.id }).then(() => {}, () => {}); return { ok: false, msg: `NF-e ${n.numero}: falha em ${items.length - okItens} item(ns), revertida.` } }
@@ -281,6 +293,41 @@ export function MonitorNfe() {
   }
   void now
 
+  // ---- Apropriação (conta gerencial do DRE por item) ----
+  const insumoDoItem = (it: Item): string | null => { const v = resolveVinc(it, fornByCnpj(selNfe?.cnpj_emitente)?.id || null); return v?.insumo_id || null }
+  const contaHerdada = (it: Item): string | null => { const iid = insumoDoItem(it); return iid ? (insMap[iid]?.conta_gerencial_id || null) : null }
+  const contaEfetivaItem = (it: Item): string | null => it.conta_gerencial_id || contaHerdada(it)
+
+  // propaga uma conta (ou null) pra entrada já lançada desta nota+insumo (pra refletir no DRE de notas processadas)
+  const propagarEntrada = async (insId: string, contaId: string | null) => {
+    if (!selNfe) return
+    let uq = supabase.from('entradas_estoque').update({ conta_gerencial_id: contaId }).eq('tenant_id', tenantId).eq('insumo_id', insId)
+    uq = selNfe.chave_acesso ? uq.eq('chave_acesso', selNfe.chave_acesso) : uq.eq('nfe_numero', `${selNfe.numero}/${selNfe.serie}`)
+    await uq
+  }
+  // grava/limpa o override da conta SÓ nesta nota
+  const setContaItem = async (it: Item, contaId: string | null) => {
+    try {
+      const { error } = await supabase.from('nfe_itens').update({ conta_gerencial_id: contaId }).eq('id', it.id); if (error) throw error
+      const iid = insumoDoItem(it); if (iid) await propagarEntrada(iid, contaId)
+      await qc.invalidateQueries({ queryKey: ['mon-itens'] }); await qc.invalidateQueries({ queryKey: ['mon-allitens'] })
+      showToast(contaId ? 'Conta ajustada nesta nota.' : 'Voltou ao padrão do insumo.', 'ok')
+    } catch (e: any) { showToast('Erro: ' + e.message, 'err') }
+  }
+  // torna o override o PADRÃO do insumo (grava no cadastro) e limpa o override do item
+  const tornarPadraoItem = async (it: Item) => {
+    const iid = insumoDoItem(it); const nova = it.conta_gerencial_id
+    if (!iid || !nova) return
+    if (!confirm(`Tornar "${labelOfConta(nova)}" o padrão do insumo "${insMap[iid]?.nome || ''}"? Vale para as próximas notas.`)) return
+    try {
+      const { error } = await supabase.from('insumos').update({ conta_gerencial_id: nova }).eq('id', iid); if (error) throw error
+      await supabase.from('nfe_itens').update({ conta_gerencial_id: null }).eq('id', it.id)
+      await propagarEntrada(iid, null)   // a entrada volta a herdar o novo padrão
+      await qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && /^mon-/i.test(q.queryKey[0] as string) })
+      showToast(`Padrão do insumo atualizado para ${labelOfConta(nova)}.`, 'ok')
+    } catch (e: any) { showToast('Erro: ' + e.message, 'err') }
+  }
+
   return (
     <div className="fiscal-screen">
       <div className="mon-top">
@@ -326,6 +373,7 @@ export function MonitorNfe() {
       <div className="tabs">
         <button className={'tab-btn' + (tab === 'nfe' ? ' active' : '')} onClick={() => setTab('nfe')}>📄 DANFE <span className="tab-cnt">{lista.length}</span></button>
         <button className={'tab-btn' + (tab === 'itens' ? ' active' : '')} onClick={() => setTab('itens')}>≣ ITENS NF <span className="tab-cnt">{sel ? itens.length : 0}</span></button>
+        <button className={'tab-btn' + (tab === 'apr' ? ' active' : '')} onClick={() => setTab('apr')}>🏷 APROPRIAÇÃO <span className="tab-cnt">{sel ? itens.length : 0}</span></button>
         <button className={'tab-btn' + (tab === 'erros' ? ' active' : '')} onClick={() => setTab('erros')}>⊙ ERROS <span className="tab-cnt">{nErros}</span></button>
       </div>
 
@@ -419,6 +467,54 @@ export function MonitorNfe() {
                             <td>{dif !== 0 ? <select className="field" value={receb[it.id]?.m || ''} onChange={(e) => setRecebM(it.id, e.target.value)}><option value="">Motivo…</option><option>Avaria / quebra</option><option>Falta na entrega</option><option>Sobra</option><option>Validade curta</option><option>Divergência de preço</option><option>Outro</option></select> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                           </>
                         })()}
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div></div>
+        </>
+      )}
+
+      {tab === 'apr' && (
+        <>
+          <div className="det-bar" style={{ flexWrap: 'wrap' }}>
+            <span>🏷</span>
+            {selNfe ? <>
+              <span style={{ color: '#0f172a', fontWeight: 700 }}>NF-e {selNfe.numero}/{selNfe.serie}</span>
+              <span>Emitente: <b style={{ color: '#334155' }}>{selNfe.nome_emitente || '—'}</b></span>
+              <span>{itens.length} {itens.length === 1 ? 'item' : 'itens'}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: '#64748b' }}>Cada item já vem na conta do insumo · troque só nesta nota; "tornar padrão" grava no cadastro</span>
+            </> : <span>Selecione uma NF-e na aba DANFE para apropriar</span>}
+          </div>
+          <div className="tbl-wrap"><div className="tbl-scroll">
+            <table className="tbl">
+              <thead><tr><th className="c">Seq.</th><th>Item Interno</th><th>Descrição NF-e</th><th className="r">V. Total</th><th>Conta (DRE)</th></tr></thead>
+              <tbody>
+                {!selNfe ? <tr><td colSpan={5} className="empty">Selecione uma NF-e na aba DANFE.</td></tr>
+                  : itens.length === 0 ? <tr><td colSpan={5} className="empty">Sem itens.</td></tr>
+                  : itens.map((it, i) => {
+                    const iid = insumoDoItem(it); const ins = iid ? insMap[iid] : null
+                    const herda = contaHerdada(it); const ef = contaEfetivaItem(it); const over = !!it.conta_gerencial_id
+                    return (
+                      <tr key={it.id}>
+                        <td className="c" style={{ color: '#94a3b8' }}>{i + 1}</td>
+                        <td>{ins ? ins.nome : <span style={{ color: '#dc2626' }}>— sem vínculo —</span>}</td>
+                        <td style={{ color: '#64748b', fontSize: 12 }}>{it.descricao_nfe || '—'}</td>
+                        <td className="r mono" style={{ fontWeight: 600 }}>{brl((it.quantidade || 0) * (it.valor_unitario || 0))}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <div style={{ minWidth: 240 }}>
+                              <SearchSelect value={labelOfConta(ef)} options={contasFolha.map((c) => `${c.codigo} · ${c.nome}`)} placeholder={ins ? 'Escolher conta…' : 'Vincule o item primeiro'}
+                                onChange={(lbl) => { const id = contaByLabel[lbl] || null; setContaItem(it, id && id === herda ? null : id) }} />
+                            </div>
+                            {over ? <>
+                              <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', color: '#fff', background: '#f97316', borderRadius: 5, padding: '2px 6px' }}>nesta nota</span>
+                              <button onClick={() => tornarPadraoItem(it)} title="Gravar no cadastro do insumo" style={{ fontSize: 11, fontWeight: 700, color: '#16a34a', background: 'rgba(22,163,74,.12)', border: '1px solid #16a34a', borderRadius: 7, padding: '3px 9px', cursor: 'pointer' }}>✓ tornar padrão</button>
+                              <button onClick={() => setContaItem(it, null)} style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 0, textDecoration: 'underline', cursor: 'pointer' }}>voltar ao padrão</button>
+                            </> : <span style={{ fontSize: 10.5, color: '#94a3b8' }}>{herda ? 'herda do insumo' : 'sem conta no insumo'}</span>}
+                          </div>
+                        </td>
                       </tr>
                     )
                   })}

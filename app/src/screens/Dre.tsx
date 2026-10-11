@@ -9,8 +9,8 @@ import './dre.css'
 // Compras = entradas_estoque.custo_total (manual/nfe) por insumo×mês. Receita = recebimento_vendas.
 type Conta = { id: string; codigo: string; nome: string; grupo: string; parent_codigo?: string | null; ordem?: number }
 type Insumo = { id: string; nome?: string; conta_gerencial_id?: string | null }
-type Entrada = { insumo_id: string; loja_id?: string | null; custo_total?: number | null; criado_em?: string; tipo?: string }
-type AggRow = { insumo_id: string; mes: number; total?: number | null }  // retorno da RPC dre_compras_mensal
+type Entrada = { insumo_id: string; loja_id?: string | null; custo_total?: number | null; criado_em?: string; tipo?: string; conta_gerencial_id?: string | null }
+type AggRow = { insumo_id: string; conta_gerencial_id?: string | null; mes: number; total?: number | null }  // retorno da RPC (conta EFETIVA)
 type Compras = { mode: 'rpc'; rows: AggRow[] } | { mode: 'raw'; rows: Entrada[] }
 type Venda = { loja_id?: string | null; data?: string; faturado?: number | null }
 type Lanc = { conta_gerencial_id: string; loja_id?: string | null; data?: string; valor?: number | null }
@@ -43,7 +43,7 @@ export function Dre() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('dre_compras_mensal', { p_ano: ano, p_loja: lojaId || null })
       if (!error && Array.isArray(data)) return { mode: 'rpc', rows: data as AggRow[] }
-      const raw = await fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('insumo_id,loja_id,custo_total,criado_em,tipo').eq('tenant_id', tenantId).gte('criado_em', ini).lte('criado_em', fim).order('criado_em').order('id').range(f, t))
+      const raw = await fetchAll<Entrada>((f, t) => supabase.from('entradas_estoque').select('insumo_id,loja_id,custo_total,criado_em,tipo,conta_gerencial_id').eq('tenant_id', tenantId).gte('criado_em', ini).lte('criado_em', fim).order('criado_em').order('id').range(f, t))
       return { mode: 'raw', rows: raw }
     },
   })
@@ -59,33 +59,40 @@ export function Dre() {
       || contas.find((c) => !c.parent_codigo)
       || contas.find((c) => c.grupo === 'custo')
     const insById = new Map(insumos.map((i) => [i.id, i]))
-    const contaDoInsumo = (insId: string) => { const cid = insById.get(insId)?.conta_gerencial_id; return (cid && contaById.has(cid)) ? cid : grupoCusto?.id }
+    // conta EFETIVA: override da entrada (RPC já traz coalesce) → senão a do insumo → senão grupo raiz de sobra
+    const contaEfetiva = (contaRaw: string | null | undefined, insId: string): string | undefined => {
+      if (contaRaw && contaById.has(contaRaw)) return contaRaw
+      const ci = insById.get(insId)?.conta_gerencial_id
+      if (ci && contaById.has(ci)) return ci
+      return grupoCusto?.id
+    }
 
-    // compras por insumo × mês
-    const porInsumo = new Map<string, number[]>()
+    // compras por insumo × CONTA EFETIVA × mês. Um insumo pode cair em + de uma conta (override por nota).
+    const byConta = new Map<string, Map<string, number[]>>()   // conta -> (insumo_id -> 12 meses)
+    const add = (contaRaw: string | null | undefined, insId: string, m: number, val: number) => {
+      if (m < 0 || m > 11 || !insId) return
+      const cid = contaEfetiva(contaRaw, insId); if (!cid) return
+      const mp = byConta.get(cid) || new Map<string, number[]>()
+      const arr = mp.get(insId) || z12(); arr[m] += val; mp.set(insId, arr); byConta.set(cid, mp)
+    }
     if (compras?.mode === 'rpc') {
-      // servidor já filtrou tipo/loja/ano e somou — só distribui no mês
-      compras.rows.forEach((r) => {
-        const m = (r.mes || 0) - 1; if (m < 0 || m > 11 || !r.insumo_id) return
-        const arr = porInsumo.get(r.insumo_id) || z12(); arr[m] += Number(r.total) || 0; porInsumo.set(r.insumo_id, arr)
-      })
+      compras.rows.forEach((r) => add(r.conta_gerencial_id, r.insumo_id, (r.mes || 0) - 1, Number(r.total) || 0))
     } else {
       (compras?.rows ?? []).forEach((e) => {
         if (e.tipo !== 'manual' && e.tipo !== 'nfe' && e.tipo !== 'nfe_importada') return
         if (lojaId && (e.loja_id || '') !== lojaId) return
         const d = e.criado_em ? new Date(e.criado_em) : null
         if (!d || d.getFullYear() !== ano) return
-        const arr = porInsumo.get(e.insumo_id) || z12(); arr[d.getMonth()] += Number(e.custo_total) || 0; porInsumo.set(e.insumo_id, arr)
+        add(e.conta_gerencial_id, e.insumo_id, d.getMonth(), Number(e.custo_total) || 0)
       })
     }
-    // insumos (com compra) agrupados por conta
+    // vira conta -> [{nome, vals}] (ordenado por maior compra)
     const insDaConta = new Map<string, { nome: string; vals: number[] }[]>()
-    porInsumo.forEach((vals, insId) => {
-      if (vals.every((v) => v === 0)) return
-      const cid = contaDoInsumo(insId); if (!cid) return
-      const l = insDaConta.get(cid) || []; l.push({ nome: insById.get(insId)?.nome || '⚠ insumo sem cadastro', vals }); insDaConta.set(cid, l)
+    byConta.forEach((mp, cid) => {
+      const l: { nome: string; vals: number[] }[] = []
+      mp.forEach((vals, insId) => { if (!vals.every((v) => v === 0)) l.push({ nome: insById.get(insId)?.nome || '⚠ insumo sem cadastro', vals }) })
+      if (l.length) { l.sort((a, b) => b.vals.reduce((x, y) => x + y, 0) - a.vals.reduce((x, y) => x + y, 0)); insDaConta.set(cid, l) }
     })
-    insDaConta.forEach((l) => l.sort((a, b) => b.vals.reduce((x, y) => x + y, 0) - a.vals.reduce((x, y) => x + y, 0)))
 
     // lançamentos por conta × mês
     const lancPorConta = new Map<string, number[]>()
