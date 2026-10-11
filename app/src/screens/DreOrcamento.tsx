@@ -4,6 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useToastTipo } from '../lib/toast'
 import { isoD, fmtDia } from '../lib/date'
+import { mesesEquivalentes } from '../lib/periodo'
 import { downloadCsv } from '../lib/csv'
 
 // Orçamento (Fase 3 do DRE): teto MENSAL por conta → orçado × realizado, com semáforo.
@@ -23,22 +24,7 @@ const GRUPO_LBL: Record<string, string> = { custo: 'Custo', despesa: 'Despesa', 
 const statusOf = (p: number) => p > 1.05 ? 'bad' : p >= 0.95 ? 'warn' : 'good'
 const cor = (s: string) => s === 'bad' ? '#e11d48' : s === 'warn' ? '#d97706' : '#16a34a'
 
-// quantos "meses cheios" o período [de,ate] representa: soma, por mês tocado,
-// (dias do mês dentro do intervalo ÷ dias totais do mês). Mês inteiro = 1; metade = 0,5.
-function mesesEquivalentes(de: string, ate: string): number {
-  if (!de || !ate) return 0
-  const d0 = new Date(de + 'T00:00:00'), d1 = new Date(ate + 'T00:00:00')
-  if (d1 < d0) return 0
-  let mult = 0, y = d0.getFullYear(), m = d0.getMonth()
-  while (y < d1.getFullYear() || (y === d1.getFullYear() && m <= d1.getMonth())) {
-    const diasNoMes = new Date(y, m + 1, 0).getDate()
-    const ini = Math.max(d0.getTime(), new Date(y, m, 1).getTime())
-    const fim = Math.min(d1.getTime(), new Date(y, m, diasNoMes).getTime())
-    mult += (Math.floor((fim - ini) / 86400000) + 1) / diasNoMes
-    m++; if (m > 11) { m = 0; y++ }
-  }
-  return mult
-}
+// mesesEquivalentes (pró-rata do período) foi extraída p/ ../lib/periodo (testável isolada).
 
 export function DreOrcamento() {
   const { tenantId } = useAuth()
