@@ -53,7 +53,11 @@ export function Dre() {
   const model = useMemo(() => {
     const contaById = new Map(contas.map((c) => [c.id, c]))
     const childrenOf = (codigo: string | null) => contas.filter((c) => (c.parent_codigo || null) === codigo).sort(byCod)
-    const grupoCusto = contas.find((c) => c.codigo === '2.1') || contas.find((c) => c.grupo === 'custo')
+    // conta "de sobra" p/ insumo sem classificação ou órfão: SEMPRE um grupo RAIZ (nunca uma conta analítica/folha)
+    const grupoCusto = contas.find((c) => c.codigo === '2.1')
+      || contas.find((c) => c.grupo === 'custo' && !c.parent_codigo)
+      || contas.find((c) => !c.parent_codigo)
+      || contas.find((c) => c.grupo === 'custo')
     const insById = new Map(insumos.map((i) => [i.id, i]))
     const contaDoInsumo = (insId: string) => { const cid = insById.get(insId)?.conta_gerencial_id; return (cid && contaById.has(cid)) ? cid : grupoCusto?.id }
 
@@ -79,7 +83,7 @@ export function Dre() {
     porInsumo.forEach((vals, insId) => {
       if (vals.every((v) => v === 0)) return
       const cid = contaDoInsumo(insId); if (!cid) return
-      const l = insDaConta.get(cid) || []; l.push({ nome: insById.get(insId)?.nome || '(insumo)', vals }); insDaConta.set(cid, l)
+      const l = insDaConta.get(cid) || []; l.push({ nome: insById.get(insId)?.nome || '⚠ insumo sem cadastro', vals }); insDaConta.set(cid, l)
     })
     insDaConta.forEach((l) => l.sort((a, b) => b.vals.reduce((x, y) => x + y, 0) - a.vals.reduce((x, y) => x + y, 0)))
 
