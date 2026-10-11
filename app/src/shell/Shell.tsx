@@ -6,6 +6,8 @@ import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { Novidades } from './Novidades'
+import { Ajuda } from './Ajuda'
+import { AjudaPage } from '../screens/AjudaPage'
 import { Fornecedores } from '../screens/Fornecedores'
 import { Insumos } from '../screens/Insumos'
 import { Produtos } from '../screens/Produtos'
@@ -108,6 +110,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'compras/pedidos') return <Compras />
   if (k === 'compras/sugestao') return <SugestaoCompra />
   if (k === 'compras/cotacao') return <Cotacao />
+  if (k === 'ajuda') return <AjudaPage />
   if (k === 'config/geral') return <ConfigGeral />
   if (k === 'config/auditoria') return <ConfigAuditoria />
   if (k === 'config/parametros') return <ConfigParametros />
@@ -201,6 +204,7 @@ export function Shell() {
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
               </select>
             )}
+            <Ajuda onOpenCentral={() => openScreen('ajuda', 'Central de Ajuda')} />
             <Novidades />
             <div style={{ position: 'relative' }}>
               <button className="btn ghost" style={{ height: 32, display: 'flex', alignItems: 'center', gap: 7 }} onClick={() => setUserMenu((o) => !o)}>
