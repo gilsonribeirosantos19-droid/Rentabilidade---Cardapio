@@ -131,7 +131,6 @@ export function DreOrcamento() {
         <div className="dre-fld"><label>Até</label><input className="dre-dt" type="date" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} /></div>
         <div className="dre-grow" />
         <button className="dre-btn" onClick={exportar}>⬇ Exportar</button>
-        <div className="dre-hint" style={{ alignSelf: 'center' }}>defina o teto mensal → comparo com o ritmo esperado no período · tetos de {ano}</div>
       </div>
 
       <div className="dre-kpis">
