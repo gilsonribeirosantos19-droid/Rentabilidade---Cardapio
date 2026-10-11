@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import { useAuth } from './auth'
+import { ALWAYS_KEYS } from '../shell/nav'
 
 // RBAC — enforcement de "visualizar" por módulo (Fase 1). Modelo SEGURO ("só grupos configurados"):
 //  • admin (role começa com 'admin')         → vê tudo (nunca trava)
@@ -30,7 +31,7 @@ export function usePerms() {
   // pode VER a tela? admin ou grupo não-configurado → sempre. Senão, "visualizar" daquela tela.
   // Tela que NÃO está na matriz salva (ex.: recém-criada) → não bloqueia.
   const podeVer = (navKey: string): boolean => {
-    if (isAdmin || !configurado) return true
+    if (isAdmin || !configurado || ALWAYS_KEYS.has(navKey)) return true
     const r = byKey.get(navKey)
     if (!r) return true
     return r.visualizar === true

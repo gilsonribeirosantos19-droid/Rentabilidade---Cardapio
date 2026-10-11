@@ -3,7 +3,7 @@ import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
-import { MODULES, ADMIN_ONLY_KEYS, type Module } from '../shell/nav'
+import { MODULES, ADMIN_ONLY_KEYS, ALWAYS_KEYS, type Module } from '../shell/nav'
 import './config.css'
 
 // Configurações › Permissões — grupos de acesso (grupos_acesso) + vincular usuários
@@ -18,7 +18,7 @@ type Perm = { modulo: string; visualizar?: boolean; criar?: boolean; editar?: bo
 type NavLeaf = { key: string; label: string }
 const PERM_MODULES = MODULES.filter((m) => !m.home)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const leavesOf = (s: any): NavLeaf[] => ('group' in s ? s.items : [s]).filter((l: NavLeaf) => !ADMIN_ONLY_KEYS.has(l.key))
+const leavesOf = (s: any): NavLeaf[] => ('group' in s ? s.items : [s]).filter((l: NavLeaf) => !ADMIN_ONLY_KEYS.has(l.key) && !ALWAYS_KEYS.has(l.key))
 const modLeaves = (m: Module): NavLeaf[] => (m.sections ?? []).flatMap((s) => leavesOf(s))
 const ALL_KEYS: string[] = PERM_MODULES.flatMap((m) => modLeaves(m)).map((l) => l.key)
 
