@@ -153,9 +153,20 @@ export function DreOrcamento() {
             <thead><tr><th className="l dre-stick">Conta</th><th>Teto / mês</th><th>Esperado</th><th>Realizado</th><th className="l" style={{ textAlign: 'left' }}>Ritmo</th><th>Situação</th></tr></thead>
             <tbody>
               {grupos.length === 0 ? <tr><td colSpan={6} className="dre-empty">Sem contas. Monte o plano de contas primeiro.</td></tr>
-                : grupos.map(([paiCod, itens]) => (
+                : grupos.map(([paiCod, itens]) => {
+                  const tetoG = itens.reduce((a, c) => a + orcadoDe(c.id), 0), espG = tetoG * mult
+                  const realG = itens.reduce((a, c) => a + (realDaConta.get(c.id) || 0), 0)
+                  const pG = espG > 0 ? realG / espG : 0, sG = statusOf(pG), wG = Math.min(pG, 1.5) / 1.5 * 100
+                  return (
                   <>
-                    <tr key={'g' + paiCod} className="dre-grupo" style={{ cursor: 'default' }}><td className="l dre-stick" colSpan={6}><span className="dre-cod">{paiCod}</span>{paiNome(paiCod)} <span style={{ fontSize: 10.5, color: '#586084', fontWeight: 400 }}>· {GRUPO_LBL[itens[0]?.grupo] || ''}</span></td></tr>
+                    <tr key={'g' + paiCod} className="dre-grupo" style={{ cursor: 'default' }}>
+                      <td className="l dre-stick"><span className="dre-cod">{paiCod}</span>{paiNome(paiCod)} <span style={{ fontSize: 10.5, color: '#586084', fontWeight: 400 }}>· {GRUPO_LBL[itens[0]?.grupo] || ''}</span></td>
+                      <td className="mono" style={{ fontWeight: 700 }}>{tetoG > 0 ? brl(tetoG) : '—'}</td>
+                      <td className="mono" style={{ fontWeight: 700, color: tetoG > 0 ? '#1e2030' : '#cbd5e1' }}>{tetoG > 0 ? brl(espG) : '—'}</td>
+                      <td className="mono" style={{ fontWeight: 700 }}>{realG > 0 ? brl(realG) : '—'}</td>
+                      <td className="l">{tetoG > 0 ? <><span style={{ display: 'inline-block', width: 120, height: 8, borderRadius: 5, background: '#dde3ee', position: 'relative', verticalAlign: 'middle', overflow: 'hidden' }}><span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: wG + '%', background: cor(sG), borderRadius: 5 }} /></span> <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: cor(sG) }}>{Math.round(pG * 100)}%</span></> : <span style={{ color: '#94a3c4' }}>—</span>}</td>
+                      <td>{tetoG > 0 ? <span className={'pill p-' + sG} style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, color: cor(sG), background: sG === 'bad' ? 'rgba(225,29,72,.1)' : sG === 'warn' ? 'rgba(217,119,6,.14)' : 'rgba(22,163,74,.12)' }}>{sG === 'bad' ? 'Acima' : sG === 'warn' ? 'No limite' : 'No ritmo'}</span> : <span style={{ color: '#94a3c4', fontSize: 12 }}>sem teto</span>}</td>
+                    </tr>
                     {itens.map((c) => {
                       const orc = orcadoDe(c.id), esp = orc * mult, real = realDaConta.get(c.id) || 0
                       const p = esp > 0 ? real / esp : 0, s = statusOf(p), w = Math.min(p, 1.5) / 1.5 * 100
@@ -174,7 +185,8 @@ export function DreOrcamento() {
                       )
                     })}
                   </>
-                ))}
+                  )
+                })}
             </tbody>
           </table>
         </div>
