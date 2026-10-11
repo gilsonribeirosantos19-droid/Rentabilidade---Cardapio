@@ -18,7 +18,11 @@ alter table public.entradas_estoque  add column if not exists conta_gerencial_id
 
 -- DRE: soma por insumo × CONTA EFETIVA × mês (no servidor).
 -- Retorna também a conta_gerencial_id (efetiva) p/ a tela montar a árvore.
-create or replace function public.dre_compras_mensal(p_ano int, p_loja uuid default null)
+-- drop necessário: o retorno mudou (ganhou a coluna conta_gerencial_id) e o Postgres
+-- não deixa trocar o tipo de retorno via create or replace.
+drop function if exists public.dre_compras_mensal(int, uuid);
+
+create function public.dre_compras_mensal(p_ano int, p_loja uuid default null)
 returns table (insumo_id uuid, conta_gerencial_id uuid, mes int, total numeric)
 language sql
 stable
