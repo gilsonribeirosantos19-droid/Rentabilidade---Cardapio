@@ -154,10 +154,9 @@ export function Dre() {
         <div className="dre-fld"><label>Ano</label>
           <select value={ano} onChange={(e) => setAno(Number(e.target.value))}>{[anoAtual, anoAtual - 1, anoAtual - 2].map((a) => <option key={a} value={a}>{a}</option>)}</select>
         </div>
+        <div className="dre-fld"><label>Exibir</label><div className="dre-seg"><button className={modo === 'rs' ? 'on' : ''} onClick={() => setModo('rs')}>R$</button><button className={modo === 'pc' ? 'on' : ''} onClick={() => setModo('pc')}>%</button></div></div>
         <div className="dre-grow" />
         <button className="dre-btn" onClick={exportar}>⬇ Exportar</button>
-        <button className="dre-lnk" onClick={() => setAbertos(abertos.size ? new Set() : allKeys())}>{abertos.size ? '– recolher tudo' : '+ expandir tudo'}</button>
-        <div className="dre-fld"><label>Exibir</label><div className="dre-seg"><button className={modo === 'rs' ? 'on' : ''} onClick={() => setModo('rs')}>R$</button><button className={modo === 'pc' ? 'on' : ''} onClick={() => setModo('pc')}>%</button></div></div>
       </div>
 
       <div className="dre-kpis">
@@ -169,7 +168,9 @@ export function Dre() {
 
       <div className="dre-card">
         <div className="dre-ch"><div><div className="t">Demonstrativo por conta</div><div className="s">{lojaId ? (lojas.find((l) => l.id === lojaId)?.nome) : 'Todas as lojas'} · {ano}</div></div>
-          <div className="dre-hint">clique numa conta para abrir</div>
+          <div className="dre-grow" />
+          <button className="dre-lnk" onClick={() => setAbertos(abertos.size ? new Set() : allKeys())}>{abertos.size ? '– recolher tudo' : '+ expandir tudo'}</button>
+          <div className="dre-hint" style={{ marginLeft: 0 }}>clique numa conta para abrir</div>
         </div>
         {!model.temContas ? (
           <div className="dre-empty">Plano de contas ainda não criado. Rode os SQL <b>dre_fase1_fundacao.sql</b> e <b>dre_contas_analiticas.sql</b>.</div>
