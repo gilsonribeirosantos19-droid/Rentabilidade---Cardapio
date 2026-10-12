@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './shell.css'
 import { Sidebar } from './Sidebar'
 import { labelForKey, titleForKey, ADMIN_ONLY_KEYS } from './nav'
@@ -170,6 +170,13 @@ export function Shell() {
     setOpenTabs((t) => (t.find((x) => x.key === key) ? t : [...t, { key, label }]))
     setActive(key)
   }
+
+  // Canal p/ uma tela pedir pra abrir outra (ex.: clicar numa divergência → vai resolver).
+  useEffect(() => {
+    const h = (e: Event) => { const d = (e as CustomEvent).detail; if (d?.key) openScreen(d.key, d.label || d.key) }
+    window.addEventListener('aiko:open-screen', h as EventListener)
+    return () => window.removeEventListener('aiko:open-screen', h as EventListener)
+  }, [])
 
   function closeTab(key: string) {
     setOpenTabs((t) => {

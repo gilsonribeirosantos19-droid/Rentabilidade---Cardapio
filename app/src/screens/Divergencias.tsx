@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
+import { downloadCsv } from '../lib/csv'
 import './estoque.css'
 
 type Insumo = { id: string; nome: string }
@@ -15,7 +16,9 @@ type Forn = { id: string; cnpj?: string }
 
 const num = (v?: number) => (+((v ?? 0)) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 const fmtHa = (h: number | null) => (h == null ? 'sem notas' : h < 1 ? 'agora há pouco' : h < 24 ? `há ${Math.floor(h)}h` : `há ${Math.floor(h / 24)}d`)
-type Check = { key: string; titulo: string; cols: [string, string]; rows: { a: string; b: string }[] }
+type Check = { key: string; titulo: string; cols: [string, string]; rows: { a: string; b: string }[]; sev: number; destino?: [string, string] }
+// pede ao Shell pra abrir outra tela (aba), p/ ir resolver a divergência.
+const irResolver = (key: string, label: string) => window.dispatchEvent(new CustomEvent('aiko:open-screen', { detail: { key, label } }))
 
 export function Divergencias() {
   const { tenantId } = useAuth()
@@ -102,15 +105,17 @@ export function Divergencias() {
       return vincSet.has(forn.id + '|' + it.codigo_item_fornecedor)
     }
     const c: Check[] = []
-    c.push({ key: 'nfe', titulo: 'Itens de NF-e sem vínculo', cols: ['NF-e', 'Produto da nota'], rows: nfeItens.filter((it) => { const n = recMap[it.nfe_id || '']; return n && n.status !== 'processada' && !resolvido(it) }).map((it) => ({ a: recMap[it.nfe_id || '']?.numero || '—', b: it.descricao_nfe || '—' })) })
-    c.push({ key: 'custo', titulo: 'Saldo com custo médio zerado', cols: ['Insumo', 'Saldo · Loja'], rows: saldos.filter((s) => (+(s.quantidade || 0) > 0) && !(+(s.custo_medio || 0) > 0)).map((s) => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) + ' · ' + comLoja(s.loja_id) })) })
-    c.push({ key: 'neg', titulo: 'Estoque negativo', cols: ['Insumo', 'Saldo · Loja'], rows: saldos.filter((s) => +(s.quantidade || 0) < 0).map((s) => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) + ' · ' + comLoja(s.loja_id) })) })
+    c.push({ key: 'nfe', titulo: 'Itens de NF-e sem vínculo', sev: 4, destino: ['fiscal/monitor', 'Monitor NF-e'], cols: ['NF-e', 'Produto da nota'], rows: nfeItens.filter((it) => { const n = recMap[it.nfe_id || '']; return n && n.status !== 'processada' && !resolvido(it) }).map((it) => ({ a: recMap[it.nfe_id || '']?.numero || '—', b: it.descricao_nfe || '—' })) })
+    c.push({ key: 'custo', titulo: 'Saldo com custo médio zerado', sev: 2, destino: ['ajustes/custo', 'Ajuste de Custo Médio'], cols: ['Insumo', 'Saldo · Loja'], rows: saldos.filter((s) => (+(s.quantidade || 0) > 0) && !(+(s.custo_medio || 0) > 0)).map((s) => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) + ' · ' + comLoja(s.loja_id) })) })
+    c.push({ key: 'neg', titulo: 'Estoque negativo', sev: 1, destino: ['ajustes/estoque', 'Ajuste de Estoque'], cols: ['Insumo', 'Saldo · Loja'], rows: saldos.filter((s) => +(s.quantidade || 0) < 0).map((s) => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) + ' · ' + comLoja(s.loja_id) })) })
     const vMap: Record<string, number> = {}; vendas.forEach((v) => { vMap[v.produto_nome || '—'] = (vMap[v.produto_nome || '—'] || 0) + (+(v.qtd || 0)) })
-    c.push({ key: 'venda', titulo: 'Produtos vendidos sem ficha técnica', cols: ['Produto', 'Qtd vendida'], rows: Object.entries(vMap).map(([n, q]) => ({ a: n, b: num(q) })) })
-    c.push({ key: 'ficha', titulo: 'Fichas ativas sem preço de venda', cols: ['Ficha', 'Preço'], rows: fichas.filter((f) => f.status === 'ativa' && !(+(f.preco_venda || 0) > 0)).map((f) => ({ a: f.nome || '—', b: '—' })) })
-    c.push({ key: 'conv', titulo: 'Vínculos sem conversão (qtd na embalagem)', cols: ['Insumo', 'Embalagem'], rows: vinc.filter((v) => !(+(v.qtd_por_embalagem || 0) > 0)).map((v) => ({ a: insMap[v.insumo_id] || '—', b: v.embalagem_descricao || '—' })) })
+    c.push({ key: 'venda', titulo: 'Produtos vendidos sem ficha técnica', sev: 7, destino: ['fichas', 'Fichas Técnicas'], cols: ['Produto', 'Qtd vendida'], rows: Object.entries(vMap).map(([n, q]) => ({ a: n, b: num(q) })) })
+    c.push({ key: 'ficha', titulo: 'Fichas ativas sem preço de venda', sev: 6, destino: ['fichas', 'Fichas Técnicas'], cols: ['Ficha', 'Preço'], rows: fichas.filter((f) => f.status === 'ativa' && !(+(f.preco_venda || 0) > 0)).map((f) => ({ a: f.nome || '—', b: '—' })) })
+    c.push({ key: 'conv', titulo: 'Vínculos sem conversão (qtd na embalagem)', sev: 3, destino: ['insumos', 'Insumos'], cols: ['Insumo', 'Embalagem'], rows: vinc.filter((v) => !(+(v.qtd_por_embalagem || 0) > 0)).map((v) => ({ a: insMap[v.insumo_id] || '—', b: v.embalagem_descricao || '—' })) })
     const LIM = 6, agora = Date.now()
-    c.push({ key: 'transito', titulo: `NF-e presas há +${LIM}h (XML não baixou)`, cols: ['NF-e / Fornecedor', 'Parada há'], rows: nfePresas.filter((n) => n.created_at && (agora - new Date(n.created_at).getTime()) / 3600000 >= LIM).sort((a, b) => +new Date(a.created_at!) - +new Date(b.created_at!)).map((n) => { const h = Math.floor((agora - new Date(n.created_at!).getTime()) / 3600000); return { a: `${n.numero}/${n.serie} · ${n.nome_emitente || '—'}`, b: `há ${h}h · R$ ${(+(n.valor_total || 0)).toFixed(2)}` } }) })
+    c.push({ key: 'transito', titulo: `NF-e presas há +${LIM}h (XML não baixou)`, sev: 5, destino: ['fiscal/monitor', 'Monitor NF-e'], cols: ['NF-e / Fornecedor', 'Parada há'], rows: nfePresas.filter((n) => n.created_at && (agora - new Date(n.created_at).getTime()) / 3600000 >= LIM).sort((a, b) => +new Date(a.created_at!) - +new Date(b.created_at!)).map((n) => { const h = Math.floor((agora - new Date(n.created_at!).getTime()) / 3600000); return { a: `${n.numero}/${n.serie} · ${n.nome_emitente || '—'}`, b: `há ${h}h · R$ ${(+(n.valor_total || 0)).toFixed(2)}` } }) })
+    // ORDENA POR GRAVIDADE: quem tem pendência vem primeiro; entre eles, erro de dinheiro (sev menor) na frente.
+    c.sort((a, b) => (a.rows.length ? 0 : 1) - (b.rows.length ? 0 : 1) || a.sev - b.sev)
     return c
   }, [data])
 
@@ -153,11 +158,17 @@ export function Divergencias() {
         <div key={c.key} className="dv-sec" id={'dv-sec-' + c.key}>
           <div className="dv-sec-h" onClick={() => toggle(c.key)}>
             <span style={{ fontSize: 15 }}>{c.rows.length ? '⚠️' : '✅'}</span>{c.titulo}
-            <span style={{ marginLeft: 'auto', fontWeight: 600, color: c.rows.length ? '#dc2626' : '#16a34a' }}>{c.rows.length}</span>
+            <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+              {c.rows.length > 0 && <button className="dv-exp" onClick={(e) => { e.stopPropagation(); downloadCsv(`divergencias_${c.key}.csv`, [[c.cols[0], c.cols[1]], ...c.rows.map((r) => [r.a, r.b])]) }}>⬇ CSV</button>}
+              <span style={{ fontWeight: 700, color: c.rows.length ? '#dc2626' : '#16a34a' }}>{c.rows.length}</span>
+            </span>
           </div>
           {open.has(c.key) && <div style={{ borderTop: '1px solid #f1f5f9' }}>
             {c.rows.length
-              ? <div className="tbl-scroll" style={{ maxHeight: 320 }}><table className="tbl"><thead><tr><th>{c.cols[0]}</th><th>{c.cols[1]}</th></tr></thead><tbody>{c.rows.map((r, i) => <tr key={i}><td>{r.a}</td><td>{r.b}</td></tr>)}</tbody></table></div>
+              ? <>
+                  <div className="tbl-scroll" style={{ maxHeight: 320 }}><table className="tbl"><thead><tr><th>{c.cols[0]}</th><th>{c.cols[1]}</th></tr></thead><tbody>{c.rows.map((r, i) => <tr key={i} className={c.destino ? 'dv-clic' : ''} onClick={() => c.destino && irResolver(c.destino[0], c.destino[1])} title={c.destino ? `Ir para ${c.destino[1]} para resolver` : undefined}><td>{r.a}</td><td>{r.b}</td></tr>)}</tbody></table></div>
+                  {c.destino && <div style={{ padding: '7px 14px', fontSize: 11, color: '#94a3b8' }}>💡 Clique numa linha para resolver em <b style={{ color: '#64748b' }}>{c.destino[1]}</b>.</div>}
+                </>
               : <div className="dv-empty-ok">✓ Nenhuma divergência aqui</div>}
           </div>}
         </div>
