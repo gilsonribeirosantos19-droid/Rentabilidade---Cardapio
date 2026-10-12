@@ -47,10 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .limit(1)
       .maybeSingle()
     if (data) { setUsuario(data as Usuario); setSentryUser(data as Usuario); return }
-    // Releitura falhou (erro/RLS logo após renovação de token idle). NUNCA rebaixa um
-    // perfil já carregado — perder o `perfil` faria o gerente cair no sistema principal.
-    // Tenta de novo algumas vezes enquanto o token novo se estabiliza.
-    if (error && attempt < 3) {
+    // Não veio a linha. Dois motivos logo após login / renovação de token idle:
+    //  • ERRO (RLS/rede enquanto o token novo se estabiliza), ou
+    //  • VAZIO sem erro (a leitura correu na frente do token → RLS devolveu nada).
+    // Nos DOIS casos tentamos de novo (o perfil já carregado NUNCA é rebaixado — perder o
+    // `perfil` faria o gerente cair no sistema principal). Sem o retry no caso VAZIO, em conexão
+    // fria a pessoa caía numa tela sem tenant_id (sem menu) até dar F5.
+    if (attempt < 3) {
       await new Promise((r) => setTimeout(r, 600 * (attempt + 1)))
       return loadUsuario(s, attempt + 1)
     }
