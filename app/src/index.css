@@ -1,26 +1,77 @@
 :root {
-  /* Marca / navegação */
-  --orange: #f97316;
-  --orange-2: #ea6a0a;
-  --orange-dim: #fff3e9;
-  --nav: #14315F;      /* sidebar 1 (rail) — azul profundo AIKO (antes: navy #1e293b) */
-  --nav-deep: #0F2A52; /* sidebar 2 (painel) — azul profundo + escuro (antes: #0f1a2e) */
+  /* ============================================================
+     AIKO — DESIGN TOKENS (fonte única de cores do app)
+     Mudou a marca / fez um white-label? Mude os valores AQUI —
+     o app inteiro acompanha. Nenhuma tela guarda cor "na mão".
+     ============================================================ */
 
-  /* Superfícies / texto */
+  /* Escala neutra (cinzas azulados — base slate 50→900) */
+  --n-50:  #f8fafc;
+  --n-100: #f1f5f9;
+  --n-200: #e2e8f0;
+  --n-300: #cbd5e1;
+  --n-400: #94a3b8;
+  --n-500: #64748b;
+  --n-600: #475569;
+  --n-700: #334155;
+  --n-900: #0f172a;
+
+  /* Marca (laranja AIKO) */
+  --brand:        #f97316;
+  --brand-strong: #ea6a0a;
+  --brand-ink:    #c2410c;  /* texto escuro sobre tint claro */
+  --brand-tint:   #fff7ed;
+  --brand-tint-2: #ffedd5;
+  --brand-dim:    #fff3e9;
+
+  /* Navegação (azul profundo AIKO) */
+  --nav: #14315F;      /* sidebar 1 (rail) — antes: navy #1e293b */
+  --nav-deep: #0F2A52; /* sidebar 2 (painel) — antes: #0f1a2e */
+
+  /* Informação / links (azul) */
+  --info:        #2563eb;
+  --info-strong: #1d4ed8;
+  --info-tint:   #eff6ff;
+  --info-tint-2: #dbeafe;
+
+  /* Estado: perigo / erro (vermelho) */
+  --danger:        #dc2626;
+  --danger-strong: #b91c1c;
+  --danger-border: #fecaca;
+  --danger-tint:   #fef2f2;
+  --danger-tint-2: #fee2e2;
+
+  /* Estado: ok / sucesso (verde) */
+  --ok:        #16a34a;
+  --ok-strong: #15803d;
+  --ok-tint:   #f0fdf4;
+  --ok-tint-2: #dcfce7;
+  --emerald:      #059669; /* verde alternativo em uso no app */
+  --emerald-tint: #ecfdf5;
+
+  /* Estado: aviso (âmbar) */
+  --warn:      #f59e0b;
+  --warn-ink:  #b45309;
+  --warn-tint: #fef9ec;
+
+  /* ---- Papéis semânticos (apontam pra escala acima) ---- */
   --bg: #eef1f4;
   --surface: #ffffff;
-  --surface-2: #f4f6fa;  /* fundo da área de trabalho (canvas cinza — cards brancos flutuam nele) */
-  --text1: #0f172a;
-  --text2: #475569;
-  --text3: #94a3b8;
-  --border: #e2e8f0;
+  --surface-2: #f4f6fa;  /* canvas cinza — cards brancos flutuam nele */
+  --text1: var(--n-900);
+  --text2: var(--n-600);
+  --text3: var(--n-400);
+  --border: var(--n-200);
   --border-2: #d3dae3;
 
-  /* Estados */
-  --red: #ef4444;
-  --green: #10b981;
-  --amber: #f59e0b;
-  --blue: #3b82f6;
+  /* ---- Aliases de compatibilidade (nomes antigos) ---- */
+  --orange:     var(--brand);
+  --orange-2:   var(--brand-strong);
+  --orange-dim: var(--brand-dim);
+  --red:   #ef4444;   /* distinto do --danger (#dc2626) */
+  --green: #10b981;   /* distinto do --ok (#16a34a) */
+  --amber: var(--warn);
+  --blue:  #3b82f6;   /* distinto do --info (#2563eb) */
 }
 
 * {

@@ -9,7 +9,7 @@
 .shell.dived .mlogo { justify-content: center; padding: 2px 0 14px; }
 .mlogo .mk-img { height: 38px; width: auto; flex: none; }
 .shell.dived .mlogo .mk-img { height: 32px; }
-.mlogo b { font-size: 18px; color: #f1f5f9; font-weight: 800; line-height: 1; letter-spacing: .1em; }
+.mlogo b { font-size: 18px; color: var(--n-100); font-weight: 800; line-height: 1; letter-spacing: .1em; }
 .mlogo small { display: block; font-size: 11px; color: var(--orange); font-weight: 600; }
 .mlogo .m-uline { display: block; width: 28px; height: 3px; background: var(--orange); border-radius: 3px; margin-top: 5px; }
 .shell.dived .mlogo .txt { display: none; }
@@ -27,7 +27,7 @@
 .muser { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 8px; }
 .shell.dived .muser { justify-content: center; padding: 10px 0; }
 .mavatar { width: 30px; height: 30px; background: var(--orange); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; font-size: 12px; font-weight: 700; color: #fff; }
-.muname { font-size: 12px; font-weight: 600; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+.muname { font-size: 12px; font-weight: 600; color: var(--n-100); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
 .murole { font-size: 10px; color: rgba(255,255,255,.4); }
 .shell.dived .muinfo { display: none; }
 
@@ -35,13 +35,13 @@
 .secbar { width: 168px; background: var(--nav-deep); flex-shrink: 0; display: none; flex-direction: column; padding: 14px 0; overflow-y: auto; border-right: 1px solid rgba(0,0,0,.25); }
 .shell.dived .secbar { display: flex; }
 .secbar::-webkit-scrollbar { width: 6px; } .secbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 4px; }
-.sback { display: flex; align-items: center; gap: 9px; padding: 4px 14px 13px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 8px; cursor: pointer; color: #f1f5f9; }
+.sback { display: flex; align-items: center; gap: 9px; padding: 4px 14px 13px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 8px; cursor: pointer; color: var(--n-100); }
 .sback:hover .sbk { background: var(--orange); color: #fff; border-color: var(--orange); }
-.sbk { width: 24px; height: 24px; border-radius: 7px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex: none; color: #cbd5e1; }
+.sbk { width: 24px; height: 24px; border-radius: 7px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex: none; color: var(--n-300); }
 .sback b { font-size: 16px; font-weight: 800; }
 .sitem { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; margin: 3px 9px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 13px; font-weight: 500; }
 .sitem:hover { background: rgba(255,255,255,.07); color: #fff; }
-.sitem.on { background: rgba(249,115,22,.15); color: #f97316; font-weight: 600; }
+.sitem.on { background: rgba(249,115,22,.15); color: var(--brand); font-weight: 600; }
 .sdot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .5; flex: none; }
 .sgrp { margin-top: 6px; }
 .sgrp-h { display: flex; align-items: center; gap: 10px; padding: 11px 14px 8px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 13px; font-weight: 600; }
@@ -73,7 +73,7 @@
 
 /* ====== UI genérica ====== */
 .btn { height: 38px; padding: 0 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; border: 1px solid var(--border-2); background: var(--surface); color: var(--text2); display: inline-flex; align-items: center; gap: 7px; }
-.btn:hover { background: #f8fafc; }
+.btn:hover { background: var(--n-50); }
 .btn.primary { background: var(--orange); border: none; color: #fff; }
 .btn.primary:hover { background: var(--orange-2); }
 .btn.ghost { background: transparent; }
@@ -87,13 +87,13 @@ textarea.input { height: auto; padding: 9px 12px; min-height: 70px; resize: vert
 .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 
 .table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; font-size: 13px; background: var(--surface); }
-.table th { background: #f1f5f9; color: var(--text2); font-weight: 700; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table th { background: var(--n-100); color: var(--text2); font-weight: 700; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .table td { padding: 0 14px; height: 46px; border-bottom: 1px solid #eef1f5; color: var(--text1); }
 .table tr:last-child td { border-bottom: none; }
 .table tr:hover td { background: #d7e4f7; }
 .badge { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
-.badge.ok { background: #ecfdf5; color: #059669; }
-.badge.off { background: #f1f5f9; color: #64748b; }
+.badge.ok { background: var(--emerald-tint); color: var(--emerald); }
+.badge.off { background: var(--n-100); color: var(--n-500); }
 .icon-btn { width: 30px; height: 30px; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; cursor: pointer; color: var(--text2); display: inline-flex; align-items: center; justify-content: center; }
 .icon-btn:hover { border-color: var(--orange); color: var(--orange); }
 
@@ -112,4 +112,4 @@ textarea.input { height: auto; padding: 9px 12px; min-height: 70px; resize: vert
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 13px; font-weight: 600; padding: 11px 18px; border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 200; }
-.toast.ok { background: #059669; } .toast.err { background: var(--red); }
+.toast.ok { background: var(--emerald); } .toast.err { background: var(--red); }
