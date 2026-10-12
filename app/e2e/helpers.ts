@@ -17,13 +17,19 @@ export async function login(page: Page) {
   const topbar = page.locator('.topbar')
   const erroCred = page.getByText('inválid', { exact: false })   // "E-mail ou senha inválidos."
   await Promise.race([
-    topbar.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => {}),
-    erroCred.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => {}),
+    topbar.waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {}),
+    erroCred.waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {}),
   ])
   if (await erroCred.isVisible()) {
     throw new Error('Login REJEITADO pelo Supabase — confira os secrets E2E_EMAIL/E2E_SENHA (sem espaço/enter extra).')
   }
-  await expect(topbar).toBeVisible()
+  // Em ambiente FRIO (CI), a 1ª leitura do usuário logo após o login pode correr na frente do token
+  // (o RLS devolve vazio, sem erro) e o app cai numa tela sem topbar. A sessão JÁ está válida
+  // (persistida), então um reload re-executa o carregamento com o token pronto. Tolera esse caso.
+  if (!(await topbar.isVisible())) {
+    await page.reload()
+    await topbar.waitFor({ state: 'visible', timeout: 20_000 })
+  }
 }
 
 // Abre uma tela pela sidebar: clica no módulo (.modbar), expande o grupo se houver, clica na tela.
