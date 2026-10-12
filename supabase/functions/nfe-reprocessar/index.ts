@@ -103,13 +103,15 @@ Deno.serve(async (_req) => {
     const cnpjEmit  = String(nfe.chave_acesso || '').substring(6, 20)
     const fornNotaId = (fornAll || []).find((f: any) => String(f.cnpj || '').replace(/\D/g, '') === cnpjEmit)?.id || null
 
-    const itensBatch = itensNfe.map((item: any) => {
+    const itensBatch = itensNfe.map((item: any, i: number) => {
       const codigo = String(item.codigo_produto || '')
       // SÓ auto-vincula se o vínculo for do fornecedor DESTA nota (casa código + fornecedor_id)
       const vinc   = fornNotaId ? vincExist?.find(v => v.codigo_fornecedor === codigo && v.fornecedor_id === fornNotaId) : null
+      const linha  = Number(item.numero_item) || (i + 1)   // nº da linha do XML (fallback = posição)
       return {
         nfe_id:                 nfe.id,
         tenant_id:              TENANT_ID,
+        n_item:                 linha,   // trava de banco: índice único (nfe_id,n_item) barra a 2ª cópia
         descricao_nfe:          String(item.descricao || '').toUpperCase(),
         codigo_item_fornecedor: codigo,
         quantidade:             parseFloat(item.quantidade_comercial || '0'),

@@ -230,10 +230,11 @@ async function rodarPull(tenant: string, dias: number, jwt: string) {
           const nfeId = (nova as any).id
 
           const fornId = (fornAll || []).find((f: any) => onlyDigits(f.cnpj) === nf.cnpjEmit)?.id || null
-          const batch = nf.itens.map((it) => {
+          const batch = nf.itens.map((it, i) => {
             const vinc = fornId ? (vincAll || []).find((v: any) => v.codigo_fornecedor === it.codigo && v.fornecedor_id === fornId) : null
+            const linha = Number((it as any).numero_item ?? (it as any).nItem) || (i + 1)   // nº da linha (fallback = posição)
             return {
-              nfe_id: nfeId, tenant_id: tenant, descricao_nfe: it.descricao, codigo_item_fornecedor: it.codigo,
+              nfe_id: nfeId, tenant_id: tenant, n_item: linha, descricao_nfe: it.descricao, codigo_item_fornecedor: it.codigo,
               quantidade: it.quantidade, unidade_nfe: it.unidade, valor_unitario: it.valorUnit,
               valor_total: it.valorTotal, vinculacao_id: (vinc as any)?.id || null,
             }
