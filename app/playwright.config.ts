@@ -21,7 +21,7 @@ const BASE = `http://localhost:${PORT}`
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 30_000,
+  timeout: 90_000,              // folga p/ o CI (mais lento): login espera até 30s + navegação abre 10 telas
   expect: { timeout: 10_000 },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

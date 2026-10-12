@@ -1,17 +1,41 @@
 import { type Page, expect } from '@playwright/test'
 
 // Credenciais do usuário de teste (tenant 0001). Vêm do .env.local (local) ou de Secrets (CI).
-export const E2E_EMAIL = process.env.E2E_EMAIL
-export const E2E_SENHA = process.env.E2E_SENHA
+// .trim() defende contra espaço/enter invisível colado no valor do segredo (gotcha clássico de CI).
+export const E2E_EMAIL = process.env.E2E_EMAIL?.trim()
+export const E2E_SENHA = process.env.E2E_SENHA?.trim()
 export const temCredenciais = !!E2E_EMAIL && !!E2E_SENHA
 
-// Faz login e espera cair no sistema (a barra de topo só existe logado).
+// Faz login e espera cair no sistema (a barra de topo só existe logado). Robusto p/ o CI (mais
+// lento): espera até 30s pela .topbar OU detecta o banner de erro e falha com mensagem clara.
 export async function login(page: Page) {
   await page.goto('/')
   await page.locator('input[type="email"]').fill(E2E_EMAIL!)
   await page.locator('input[type="password"]').fill(E2E_SENHA!)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page.locator('.topbar')).toBeVisible()
+
+  const topbar = page.locator('.topbar')
+  const erroCred = page.getByText('inválid', { exact: false })   // "E-mail ou senha inválidos."
+  await Promise.race([
+    topbar.waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {}),
+    erroCred.waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {}),
+  ])
+  if (await erroCred.isVisible()) {
+    throw new Error('Login REJEITADO pelo Supabase — confira os secrets E2E_EMAIL/E2E_SENHA (sem espaço/enter extra).')
+  }
+  // Em ambiente FRIO (CI), a 1ª leitura do usuário logo após o login pode correr na frente do token
+  // (o RLS devolve vazio, sem erro) e o app cai numa tela sem topbar. A sessão JÁ está válida
+  // (persistida), então um reload re-executa o carregamento com o token pronto. Tolera esse caso.
+  if (!(await topbar.isVisible())) {
+    await page.reload()
+    await topbar.waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {})
+  }
+  // Se AINDA não chegou, dá o diagnóstico: o que está na tela? (login? tela sem menu? spinner?)
+  if (!(await topbar.isVisible())) {
+    const url = page.url()
+    const txt = (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 500)
+    throw new Error(`Login não chegou na topbar. URL=${url} | TELA="${txt}"`)
+  }
 }
 
 // Abre uma tela pela sidebar: clica no módulo (.modbar), expande o grupo se houver, clica na tela.
