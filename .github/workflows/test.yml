@@ -34,11 +34,16 @@ jobs:
     defaults:
       run:
         working-directory: app
-    # URL pública do Supabase + chave PLACEHOLDER (o smoke só abre a tela de login, não faz
-    # requisição). NÃO são segredo. Testes COM login (degrau 2) usarão GitHub Secrets.
+    # URL + chave PUBLISHABLE do Supabase são PÚBLICAS (já vão no bundle do front / repo).
+    # A senha do robô é SECRET: sem os 2 secrets E2E_EMAIL/E2E_SENHA, os testes COM login
+    # (login, navegação, paridade) se PULAM sozinhos e só o smoke roda — CI continua verde.
+    # Pra ativá-los: Settings > Secrets and variables > Actions > New repository secret:
+    #   E2E_EMAIL = e2e@teste.aiko     E2E_SENHA = (a senha do robô)
     env:
       VITE_SUPA_URL: https://trczpnjidqfippbfxtpe.supabase.co
-      VITE_SUPA_KEY: sb_publishable_PLACEHOLDER_CI_SMOKE
+      VITE_SUPA_KEY: sb_publishable_GJqQ_qWVg5Y8GWaKy1qe7w_VvZiIQ3i
+      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+      E2E_SENHA: ${{ secrets.E2E_SENHA }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
