@@ -147,7 +147,7 @@ export function Divergencias() {
         </div>
       )}
       <div className="dv-kpis">
-        {checks.map((c) => <div key={c.key} className={'dv-kpi ' + (c.rows.length ? 'warn' : 'ok')} onClick={() => abrirSec(c.key)}><div className="l">{c.titulo}</div><div className="v">{c.rows.length}</div></div>)}
+        {checks.map((c) => <div key={c.key} className={'dv-kpi ' + (c.rows.length ? 'warn' : 'ok')} onClick={() => abrirSec(c.key)}><div className="l">{c.titulo}</div><div className="v">{c.rows.length}</div><div className="st">{c.rows.length ? ('pendência' + (c.rows.length > 1 ? 's' : '')) : 'tudo ok'}</div></div>)}
       </div>
       {checks.map((c) => (
         <div key={c.key} className="dv-sec" id={'dv-sec-' + c.key}>
