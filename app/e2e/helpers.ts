@@ -28,7 +28,13 @@ export async function login(page: Page) {
   // (persistida), então um reload re-executa o carregamento com o token pronto. Tolera esse caso.
   if (!(await topbar.isVisible())) {
     await page.reload()
-    await topbar.waitFor({ state: 'visible', timeout: 20_000 })
+    await topbar.waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {})
+  }
+  // Se AINDA não chegou, dá o diagnóstico: o que está na tela? (login? tela sem menu? spinner?)
+  if (!(await topbar.isVisible())) {
+    const url = page.url()
+    const txt = (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 500)
+    throw new Error(`Login não chegou na topbar. URL=${url} | TELA="${txt}"`)
   }
 }
 
