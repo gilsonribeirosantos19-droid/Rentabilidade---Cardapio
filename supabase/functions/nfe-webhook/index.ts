@@ -266,11 +266,13 @@ async function rodarReprocessar(tenant?: string) {
       await supabase.from('nfe_itens').delete().eq('nfe_id', n.id)
 
       // grava itens (mesma lógica do fluxo normal)
-      const batch = itensNfe.map((item: any) => {
+      const batch = itensNfe.map((item: any, i: number) => {
         const codigo = String(item.codigo_produto || '')
         const vinc = _fornNotaId ? vincCache[n.tenant_id].find((v: any) => v.codigo_fornecedor === codigo && v.fornecedor_id === _fornNotaId) : null
+        const linha = Number(item.numero_item) || (i + 1)   // nº da linha do XML (fallback = posição)
         return {
           nfe_id: n.id, tenant_id: n.tenant_id,
+          n_item: linha,                                     // trava de banco: índice único (nfe_id,n_item) barra a 2ª cópia
           descricao_nfe: String(item.descricao || '').toUpperCase(),
           codigo_item_fornecedor: codigo,
           quantidade: parseFloat(item.quantidade_comercial || '0'),
@@ -689,12 +691,14 @@ Deno.serve(async (req) => {
         fornNotaId = (fdata || []).find((f: any) => String(f.cnpj || '').replace(/\D/g, '') === cnpjEmitDigits)?.id || null
       }
 
-      const itensBatch = itensNfe.map((item: any) => {
+      const itensBatch = itensNfe.map((item: any, i: number) => {
         const codigo = String(item.codigo_produto || '')
         const vinc   = fornNotaId ? vincExist?.find((v: any) => v.codigo_fornecedor === codigo && v.fornecedor_id === fornNotaId) : null
+        const linha  = Number(item.numero_item) || (i + 1)   // nº da linha do XML (fallback = posição)
         return {
           nfe_id:                 nfe!.id,
           tenant_id:              TENANT_ID,
+          n_item:                 linha,   // trava de banco: índice único (nfe_id,n_item) barra a 2ª cópia (mesmo em corrida de 2 disparos)
           descricao_nfe:          String(item.descricao || '').toUpperCase(),
           codigo_item_fornecedor: codigo,
           quantidade:             parseFloat(item.quantidade_comercial || '0'),
