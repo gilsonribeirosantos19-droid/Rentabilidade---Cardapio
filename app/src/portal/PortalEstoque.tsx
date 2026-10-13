@@ -447,7 +447,7 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
                   <td className="col-hide-mob" style={{ fontSize: 12, color: '#64748b' }}>{i.categoria || '—'}</td>
                   <td style={{ color: '#94a3b8', fontSize: 12 }}>{un(i)}</td>
                   <td className="r"><input inputMode="decimal" className="p-field" style={{ width: 110, height: 30, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} placeholder="0,000" value={saida[i.id] ?? ''} onChange={(e) => setQ(i.id, e.target.value)} /></td>
-                  <td className="col-hide-mob c">{i.participa_cmv !== 'nao' ? <input type="checkbox" checked readOnly disabled style={{ accentColor: '#f97316', cursor: 'default' }} /> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
+                  <td className="col-hide-mob c"><input type="checkbox" checked={i.participa_cmv !== 'nao'} readOnly style={{ accentColor: '#f97316', pointerEvents: 'none', cursor: 'default' }} /></td>
                   <td className="col-hide-mob" aria-hidden="true"></td>
                 </tr>
               ))}
