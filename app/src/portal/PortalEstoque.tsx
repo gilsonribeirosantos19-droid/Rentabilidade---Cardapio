@@ -12,7 +12,7 @@ import { hojeStr, fmtDH as fmtDataHora } from '../lib/date'
 // Portal › Estoque — 3 sub-abas: Relatório (posição atual + estoque inicial da
 // última contagem), Movimentação (lança entrada/saída) e Histórico. Fiel ao loja.html.
 
-type Insumo = { id: string; nome?: string; categoria?: string; ativo?: boolean; participa_cmv?: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; minimo?: number }
+type Insumo = { id: string; nome?: string; categoria?: string; ativo?: boolean; participa_cmv?: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; minimo?: number; codigo_interno?: string | number; tipo_item?: string }
 type Grupo = { id: string; nome?: string; ativo?: boolean }
 type GI = { grupo_id: string; insumo_id: string }
 type Saldo = { insumo_id: string; quantidade?: number; custo_medio?: number; minimo?: number | null; maximo?: number | null }
@@ -25,6 +25,7 @@ const primeiroDiaMes = () => { const d = new Date(); return `${d.getFullYear()}-
 // Dia seguinte a uma data (YYYY-MM-DD) — usado p/ ancorar o relatório logo APÓS a contagem
 const proxDia = (d: string) => { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + 1); return dt.toLocaleDateString('en-CA') }
 const un = (i?: Insumo) => i?.unidade_medida || i?.unidade_compra || 'un'
+const fmtCod = (c?: string | number | null) => (c != null && c !== '' ? String(c).padStart(6, '0') : '—')
 
 type SubTab = 'relatorio' | 'movimentacao' | 'saida_lote' | 'historico'
 
@@ -435,15 +436,18 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
 
       <div className="p-card">
         <table className="p-tbl psaida-grade">
-          <thead><tr><th style={{ width: 300 }}>Insumo</th><th className="col-hide-mob" style={{ width: 190 }}>Grupo</th><th style={{ width: 70 }}>Un.</th><th className="r" style={{ width: 130 }}>Saída</th><th className="col-hide-mob" aria-hidden="true"></th></tr></thead>
+          <thead><tr><th style={{ width: 300 }}>Insumo</th><th className="col-hide-mob" style={{ width: 190 }}>Grupo</th><th style={{ width: 70 }}>Un.</th><th className="r" style={{ width: 130 }}>Saída</th><th className="col-hide-mob" style={{ width: 110 }}>Código</th><th className="col-hide-mob" style={{ width: 150 }}>Tipo</th><th className="col-hide-mob c" style={{ width: 110 }}>Calcula CMV</th><th className="col-hide-mob" aria-hidden="true"></th></tr></thead>
           <tbody>
-            {!lista.length ? <tr><td colSpan={5} className="p-empty">Nenhum item no filtro.</td></tr>
+            {!lista.length ? <tr><td colSpan={8} className="p-empty">Nenhum item no filtro.</td></tr>
               : lista.map((i: Insumo) => (
                 <tr key={i.id} style={num(saida[i.id]) > 0 ? { background: '#fff7ed' } : undefined}>
                   <td>{i.nome}</td>
                   <td className="col-hide-mob" style={{ fontSize: 12, color: '#64748b' }}>{i.categoria || '—'}</td>
                   <td style={{ color: '#94a3b8', fontSize: 12 }}>{un(i)}</td>
                   <td className="r"><input inputMode="decimal" className="p-field" style={{ width: 110, height: 30, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} placeholder="0,000" value={saida[i.id] ?? ''} onChange={(e) => setQ(i.id, e.target.value)} /></td>
+                  <td className="col-hide-mob mono" style={{ fontSize: 12, color: '#64748b' }}>{fmtCod(i.codigo_interno)}</td>
+                  <td className="col-hide-mob" style={{ fontSize: 12, color: '#64748b' }}>{i.tipo_item || '—'}</td>
+                  <td className="col-hide-mob c">{i.participa_cmv !== 'nao' ? <input type="checkbox" checked readOnly disabled style={{ accentColor: '#f97316', cursor: 'default' }} /> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                   <td className="col-hide-mob" aria-hidden="true"></td>
                 </tr>
               ))}
