@@ -436,14 +436,14 @@ function SaidaLote({ insumos, saldoMap, tenantId, lojaId, usuario, showToast, on
 
       <div className="p-card">
         <table className="p-tbl psaida-grade">
-          <thead><tr><th className="col-hide-mob" style={{ width: 90 }}>Código</th><th style={{ width: 280 }}>Insumo</th><th className="col-hide-mob" style={{ width: 150 }}>Tipo</th><th className="col-hide-mob" style={{ width: 170 }}>Grupo</th><th style={{ width: 70 }}>Un.</th><th className="r" style={{ width: 130 }}>Saída</th><th className="col-hide-mob c" style={{ width: 110 }}>Calcula CMV</th><th className="col-hide-mob" aria-hidden="true"></th></tr></thead>
+          <thead><tr><th className="col-hide-mob" style={{ width: 90 }}>Código</th><th style={{ width: 280 }}>Insumo</th><th className="col-hide-mob" style={{ width: 200, whiteSpace: 'nowrap' }}>Tipo</th><th className="col-hide-mob" style={{ width: 170 }}>Grupo</th><th style={{ width: 70 }}>Un.</th><th className="r" style={{ width: 130 }}>Saída</th><th className="col-hide-mob c" style={{ width: 110 }}>Calcula CMV</th><th className="col-hide-mob" aria-hidden="true"></th></tr></thead>
           <tbody>
             {!lista.length ? <tr><td colSpan={8} className="p-empty">Nenhum item no filtro.</td></tr>
               : lista.map((i: Insumo) => (
                 <tr key={i.id} style={num(saida[i.id]) > 0 ? { background: '#fff7ed' } : undefined}>
                   <td className="col-hide-mob mono" style={{ fontSize: 12, color: '#64748b' }}>{fmtCod(i.codigo_interno)}</td>
                   <td>{i.nome}</td>
-                  <td className="col-hide-mob" style={{ fontSize: 12, color: '#64748b' }}>{i.tipo_item || '—'}</td>
+                  <td className="col-hide-mob" style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{i.tipo_item || '—'}</td>
                   <td className="col-hide-mob" style={{ fontSize: 12, color: '#64748b' }}>{i.categoria || '—'}</td>
                   <td style={{ color: '#94a3b8', fontSize: 12 }}>{un(i)}</td>
                   <td className="r"><input inputMode="decimal" className="p-field" style={{ width: 110, height: 30, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} placeholder="0,000" value={saida[i.id] ?? ''} onChange={(e) => setQ(i.id, e.target.value)} /></td>
