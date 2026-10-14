@@ -321,7 +321,7 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
           <div><label style={lbl}>Data</label><input type="date" className="p-field" style={{ width: '100%' }} value={data} onChange={(e) => setData(e.target.value)} /></div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-          <div><label style={lbl}>Grupo (filtro)</label><select className="p-field" style={{ width: '100%' }} value={grupoFiltro} onChange={(e) => { setGrupoFiltro(e.target.value); setInsumoId('') }}><option value="">Todos</option>{categorias.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+          <div><label style={lbl}>Grupo (filtro)</label><SearchSelect value={grupoFiltro} onChange={(c) => { setGrupoFiltro(c); setInsumoId('') }} options={categorias} placeholder="Todos" /></div>
           <div><label style={lbl}>Unidade</label><input className="p-field" style={{ width: '100%', background: '#f1f5f9' }} readOnly value={unSel} /></div>
         </div>
         <div style={{ marginBottom: 12 }}><label style={lbl}>Insumo *</label>
@@ -335,7 +335,7 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 12 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 8 }}>Dados da entrada</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-              <div><label style={lbl}>Fornecedor</label><select className="p-field" style={{ width: '100%' }} value={fornId} onChange={(e) => setFornId(e.target.value)}><option value="">Sem fornecedor</option>{(fornecedores as Forn[]).map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</select></div>
+              <div><label style={lbl}>Fornecedor</label><SearchSelect value={(fornecedores as Forn[]).find((x) => x.id === fornId)?.nome || ''} onChange={(nm) => setFornId((fornecedores as Forn[]).find((x) => x.nome === nm)?.id || '')} options={(fornecedores as Forn[]).map((x) => x.nome || '').filter(Boolean)} placeholder="Sem fornecedor" /></div>
               <div><label style={lbl}>Quantidade na embalagem</label><SearchSelect value={unidCompra} onChange={onEmb} options={embOpts} placeholder="Escolha a embalagem..." /></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
