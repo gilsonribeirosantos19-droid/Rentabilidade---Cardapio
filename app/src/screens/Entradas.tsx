@@ -241,23 +241,23 @@ function EntradaModal({ tenantId, insumos, fornecedores, getSaldo, inicial, savi
 
   return (
     <div className="ov" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(740px, 96vw)' }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(740px, 96vw)', padding: '28px 22px' }}>
         <h2>Entrada Manual</h2>
-        <div className="fg"><label>Insumo *</label><SearchSelect value={insSel?.nome || ''} onChange={(nm) => set('insumo_id', insByName.get(nm) || '')} options={insumos.map((i) => i.nome)} placeholder="Selecione..." /></div>
+        <div className="fg" style={{ marginBottom: 18 }}><label>Insumo *</label><SearchSelect value={insSel?.nome || ''} onChange={(nm) => set('insumo_id', insByName.get(nm) || '')} options={insumos.map((i) => i.nome)} placeholder="Selecione..." /></div>
         {s && <div className="saldo-info">Saldo atual: {qtd(s.quantidade || 0)} · Custo médio: {brl(s.custo_medio)}</div>}
-        <div className="row2" style={{ marginBottom: 14 }}>
-          <div className="fg" style={{ margin: 0 }}><label>Fornecedor</label><select value={f.fornecedor_id} onChange={(e) => set('fornecedor_id', e.target.value)}><option value="">Sem fornecedor</option>{fornecedores.map((x) => <option key={x.id} value={x.id}>{x.nome}</option>)}</select></div>
+        <div className="row2" style={{ marginBottom: 18 }}>
+          <div className="fg" style={{ margin: 0 }}><label>Fornecedor</label><SearchSelect value={fornecedores.find((x) => x.id === f.fornecedor_id)?.nome || ''} onChange={(nm) => set('fornecedor_id', fornecedores.find((x) => x.nome === nm)?.id || '')} options={fornecedores.map((x) => x.nome)} placeholder="Sem fornecedor" /></div>
           <div className="fg" style={{ margin: 0 }}><label>Data *</label><input type="date" value={f.data} onChange={(e) => set('data', e.target.value)} /></div>
         </div>
-        <div className="row3" style={{ marginBottom: showConv ? 0 : 14 }}>
+        <div className="row3" style={{ marginBottom: showConv ? 0 : 18 }}>
           <div className="fg" style={{ margin: 0 }}><label>Quantas embalagens *</label><input type="number" min="0" step="0.001" placeholder="1" value={f.qtd} onChange={(e) => set('qtd', e.target.value)} /></div>
           <div className="fg" style={{ margin: 0 }}><label>Quantidade na embalagem *</label>
             <SearchSelect value={f.unidade} onChange={onEmb} options={embOpts} placeholder="Escolha a embalagem..." />
           </div>
           <div className="fg" style={{ margin: 0 }}><label>Preço por embalagem (R$) *</label><input type="number" min="0" step="0.01" placeholder="0,00" value={f.custo} onChange={(e) => set('custo', e.target.value)} /></div>
         </div>
-        {showConv && <div className="conv-box" style={{ marginTop: 12 }}>{qtd(q)} × {fator.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} = <b>{qtd(q * fator)} {unBase}</b> no estoque · <b>{brl0(custo / fator)}/{unBase}</b> · Total: <b>{brl0(custo * q)}</b></div>}
-        <div className="row3" style={{ marginBottom: 14 }}>
+        {showConv && <div className="conv-box" style={{ marginTop: 16, marginBottom: 4 }}>{qtd(q)} × {fator.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} = <b>{qtd(q * fator)} {unBase}</b> no estoque · <b>{brl0(custo / fator)}/{unBase}</b> · Total: <b>{brl0(custo * q)}</b></div>}
+        <div className="row3" style={{ marginTop: 18, marginBottom: 18 }}>
           <div className="fg" style={{ margin: 0 }}><label>Lote</label><input type="text" placeholder="Ex: L2025-01" value={f.lote} onChange={(e) => set('lote', e.target.value)} /></div>
           <div className="fg" style={{ margin: 0 }}><label>Validade</label><input type="date" value={f.validade} onChange={(e) => set('validade', e.target.value)} /></div>
           <div className="fg" style={{ margin: 0 }}><label>Observação</label><input type="text" placeholder="Opcional..." value={f.obs} onChange={(e) => set('obs', e.target.value)} /></div>
