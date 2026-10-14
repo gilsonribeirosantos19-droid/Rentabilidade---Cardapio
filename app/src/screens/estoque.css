@@ -96,6 +96,12 @@
 .est-screen .fg input:focus, .est-screen .fg select:focus, .est-screen .fg textarea:focus { outline: none; border-color: var(--brand); }
 .est-screen .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .est-screen .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+/* deixa as colunas do modal encolherem (select com nome longo não pode empurrar p/ fora = sem scroll horizontal) */
+.est-screen .modal .row2 > *, .est-screen .modal .row3 > * { min-width: 0; }
+.est-screen .modal .fg select, .est-screen .modal .fg input { max-width: 100%; }
+/* Entrada Manual: campos mais altos (modal "mais comprido") */
+.est-screen .ent-modal .fg input, .est-screen .ent-modal .fg select, .est-screen .ent-modal .ass-btn { height: 46px; }
+.est-screen .ent-modal h2 { margin-bottom: 24px; }
 .est-screen .conv-box { margin: 0 0 14px; padding: 9px 12px; background: var(--emerald-tint); border: 1px solid #a7f3d0; border-radius: 8px; font-size: 12px; color: var(--emerald); font-family: 'DM Mono', monospace; }
 .est-screen .kpi-bar { display: flex; background: #fff; border: 1px solid var(--n-200); border-radius: 10px; overflow: hidden; margin-bottom: 14px; flex-wrap: wrap; }
 .est-screen .kpi-cell { padding: 12px 18px; border-right: 1px solid var(--n-200); min-width: 0; }

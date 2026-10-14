@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
+import { calcFator } from '../lib/embalagem'
 import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
@@ -207,14 +208,14 @@ export function Entradas() {
         <select className="field" style={{ height: 30, fontSize: 11 }} value={porPag} onChange={(e) => { setPorPag(Number(e.target.value)); setPag(1) }}><option value={20}>20 por página</option><option value={50}>50 por página</option><option value={100}>100 por página</option></select>
       </div>
 
-      {modal && <EntradaModal insumos={insumos} fornecedores={fornecedores} getSaldo={getSaldo} inicial={dup} saving={saveMut.isPending} onClose={() => { setModal(false); setDup(null) }} onSave={(f) => saveMut.mutate(f)} />}
+      {modal && <EntradaModal tenantId={tenantId!} insumos={insumos} fornecedores={fornecedores} getSaldo={getSaldo} inicial={dup} saving={saveMut.isPending} onClose={() => { setModal(false); setDup(null) }} onSave={(f) => saveMut.mutate(f)} />}
       {detalhe && <DetailModal title="Entrada" rows={detRows(detalhe)} onClose={() => setDetalhe(null)} />}
       {toast && <div className={'toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
 }
 
-function EntradaModal({ insumos, fornecedores, getSaldo, inicial, saving, onClose, onSave }: { insumos: Insumo[]; fornecedores: Forn[]; getSaldo: (id: string) => Saldo; inicial: EntForm | null; saving: boolean; onClose: () => void; onSave: (f: EntForm) => void }) {
+function EntradaModal({ tenantId, insumos, fornecedores, getSaldo, inicial, saving, onClose, onSave }: { tenantId: string; insumos: Insumo[]; fornecedores: Forn[]; getSaldo: (id: string) => Saldo; inicial: EntForm | null; saving: boolean; onClose: () => void; onSave: (f: EntForm) => void }) {
   const [f, setF] = useState<EntForm>(inicial || { insumo_id: '', fornecedor_id: '', data: hojeStr(), qtd: '', unidade: '', fator: '1', custo: '', lote: '', validade: '', obs: '' })
   const set = (k: keyof EntForm, v: string) => setF((p) => ({ ...p, [k]: v }))
   const insSel = insumos.find((i) => i.id === f.insumo_id)
@@ -222,28 +223,42 @@ function EntradaModal({ insumos, fornecedores, getSaldo, inicial, saving, onClos
   const s = f.insumo_id ? getSaldo(f.insumo_id) : null
   const q = parseFloat(f.qtd) || 0, fator = parseFloat(f.fator) || 1, custo = parseFloat(f.custo) || 0
   const showConv = q > 0 && custo > 0
+  const unBase = (insSel?.unidade_medida || 'un').toLowerCase()
+
+  // catálogo de embalagens (mesma lista do Monitor) + vínculos do fornecedor escolhido
+  const { data: embOpts = [] } = useQuery({ queryKey: ['ent-emb', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome').eq('tenant_id', tenantId).eq('tipo', 'embalagem').order('nome'); return ((data ?? []) as { nome: string }[]).map((e) => e.nome) } })
+  const { data: fornVinc = [] } = useQuery({ queryKey: ['ent-fv', tenantId, f.fornecedor_id], enabled: !!tenantId && !!f.fornecedor_id, queryFn: async () => { const { data } = await supabase.from('insumo_fornecedores').select('insumo_id,embalagem_descricao,qtd_por_embalagem').eq('tenant_id', tenantId).eq('fornecedor_id', f.fornecedor_id); return (data ?? []) as { insumo_id: string; embalagem_descricao?: string; qtd_por_embalagem?: number }[] } })
+
+  // insumo + fornecedor que JÁ têm vínculo → traz embalagem + fator prontos (como o Monitor guardou)
+  useEffect(() => {
+    if (!f.insumo_id || !f.fornecedor_id) return
+    const v = fornVinc.find((x) => x.insumo_id === f.insumo_id)
+    if (v && Number(v.qtd_por_embalagem) > 0) setF((p) => ({ ...p, unidade: v.embalagem_descricao || p.unidade, fator: String(v.qtd_por_embalagem) }))
+  }, [f.insumo_id, f.fornecedor_id, fornVinc])
+
+  // escolheu/digitou a embalagem → lê o número do nome e preenche o fator (igual ao Monitor)
+  const onEmb = (nome: string) => { const c = calcFator(nome); setF((p) => ({ ...p, unidade: nome, ...(c != null ? { fator: String(c) } : {}) })) }
 
   return (
     <div className="ov" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(600px, 95vw)' }}>
+      <div className="modal ent-modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(940px, 95vw)', padding: '30px 26px' }}>
         <h2>Entrada Manual</h2>
-        <div className="fg"><label>Insumo *</label><SearchSelect value={insSel?.nome || ''} onChange={(nm) => set('insumo_id', insByName.get(nm) || '')} options={insumos.map((i) => i.nome)} placeholder="Selecione..." /></div>
+        <div className="fg" style={{ marginBottom: 22 }}><label>Insumo *</label><SearchSelect value={insSel?.nome || ''} onChange={(nm) => set('insumo_id', insByName.get(nm) || '')} options={insumos.map((i) => i.nome)} placeholder="Selecione..." /></div>
         {s && <div className="saldo-info">Saldo atual: {qtd(s.quantidade || 0)} · Custo médio: {brl(s.custo_medio)}</div>}
-        <div className="row2" style={{ marginBottom: 14 }}>
-          <div className="fg" style={{ margin: 0 }}><label>Fornecedor</label><select value={f.fornecedor_id} onChange={(e) => set('fornecedor_id', e.target.value)}><option value="">Sem fornecedor</option>{fornecedores.map((x) => <option key={x.id} value={x.id}>{x.nome}</option>)}</select></div>
+        <div className="row2" style={{ marginBottom: 22 }}>
+          <div className="fg" style={{ margin: 0 }}><label>Fornecedor</label><SearchSelect value={fornecedores.find((x) => x.id === f.fornecedor_id)?.nome || ''} onChange={(nm) => set('fornecedor_id', fornecedores.find((x) => x.nome === nm)?.id || '')} options={fornecedores.map((x) => x.nome)} placeholder="Sem fornecedor" /></div>
           <div className="fg" style={{ margin: 0 }}><label>Data *</label><input type="date" value={f.data} onChange={(e) => set('data', e.target.value)} /></div>
         </div>
-        <div className="row3" style={{ marginBottom: showConv ? 0 : 14 }}>
-          <div className="fg" style={{ margin: 0 }}><label>Quantidade (na embalagem) *</label><input type="number" min="0" step="0.001" placeholder="1.000" value={f.qtd} onChange={(e) => set('qtd', e.target.value)} /></div>
-          <div className="fg" style={{ margin: 0 }}><label>Unidade compra</label><input type="text" placeholder="CX, KG, UN..." value={f.unidade} onChange={(e) => set('unidade', e.target.value)} /></div>
-          <div className="fg" style={{ margin: 0 }}><label>Fator conversão *</label><input type="number" min="0.001" step="0.001" value={f.fator} onChange={(e) => set('fator', e.target.value)} /></div>
+        <div className="row3" style={{ marginBottom: showConv ? 0 : 22 }}>
+          <div className="fg" style={{ margin: 0 }}><label>Quantas embalagens *</label><input type="number" min="0" step="0.001" placeholder="1" value={f.qtd} onChange={(e) => set('qtd', e.target.value)} /></div>
+          <div className="fg" style={{ margin: 0 }}><label>Quantidade na embalagem *</label>
+            <SearchSelect value={f.unidade} onChange={onEmb} options={embOpts} placeholder="Escolha a embalagem..." />
+          </div>
+          <div className="fg" style={{ margin: 0 }}><label>Preço por embalagem (R$) *</label><input type="number" min="0" step="0.01" placeholder="0,00" value={f.custo} onChange={(e) => set('custo', e.target.value)} /></div>
         </div>
-        {showConv && <div className="conv-box" style={{ marginTop: 12 }}>{qtd(q)} {f.unidade || 'un'} × {fator} = {qtd(q * fator)} no estoque · Custo/un: {brl0(custo / fator)} · Total: {brl0(custo * q)}</div>}
-        <div className="row2" style={{ marginBottom: 14 }}>
-          <div className="fg" style={{ margin: 0 }}><label>Custo unitário (por embalagem) *</label><input type="number" min="0" step="0.01" placeholder="0.00" value={f.custo} onChange={(e) => set('custo', e.target.value)} /></div>
+        {showConv && <div className="conv-box" style={{ marginTop: 16, marginBottom: 4 }}>{qtd(q)} × {fator.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} = <b>{qtd(q * fator)} {unBase}</b> no estoque · <b>{brl0(custo / fator)}/{unBase}</b> · Total: <b>{brl0(custo * q)}</b></div>}
+        <div className="row3" style={{ marginTop: 22, marginBottom: 22 }}>
           <div className="fg" style={{ margin: 0 }}><label>Lote</label><input type="text" placeholder="Ex: L2025-01" value={f.lote} onChange={(e) => set('lote', e.target.value)} /></div>
-        </div>
-        <div className="row2">
           <div className="fg" style={{ margin: 0 }}><label>Validade</label><input type="date" value={f.validade} onChange={(e) => set('validade', e.target.value)} /></div>
           <div className="fg" style={{ margin: 0 }}><label>Observação</label><input type="text" placeholder="Opcional..." value={f.obs} onChange={(e) => set('obs', e.target.value)} /></div>
         </div>

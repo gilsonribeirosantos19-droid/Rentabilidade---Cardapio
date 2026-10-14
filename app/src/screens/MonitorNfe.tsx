@@ -8,6 +8,7 @@ import { SearchSelect } from '../components/SearchSelect'
 import { imprimirDanfeOuLocal, gerarDanfeXml, gerarDanfeAiko } from '../lib/danfe'
 import { brl } from '../lib/format'
 import { isoD } from '../lib/date'
+import { calcFator } from '../lib/embalagem'
 import './fiscal.css'
 
 // Período: rótulos do dropdown com busca ↔ valor interno
@@ -30,17 +31,6 @@ const fmtCod = (c?: any) => (c != null && c !== '' ? String(c).padStart(6, '0') 
 
 const DOT: Record<string, string> = { pendente: '#f59e0b', em_transito: '#f59e0b', aguard_vinculacao: '#dc2626', aguard_recebimento: '#7c3aed', pronta: '#2563eb', processada: '#16a34a', com_erro: '#dc2626', recusada: '#94a3b8', cancelada: '#94a3b8' }
 const G_PEND = ['pendente', 'em_transito'], G_PROC = ['pronta'], G_RECEBER = ['aguard_recebimento'], G_ERRO = ['aguard_vinculacao', 'com_erro'], G_CANC = ['cancelada', 'recusada']
-
-function calcFator(desc: string): number | null {
-  const d = desc.trim(); if (!d) return null
-  const mult = d.replace(/,/g, '.').match(/(\d+\.?\d*)\s*[xX×]\s*(\d+\.?\d*)/)
-  if (mult) return Math.round(parseFloat(mult[1]) * parseFloat(mult[2]) * 1000) / 1000
-  const withU = d.match(/(\d+(?:[.,]\d+)?)\s*(ml|g)\s*$/i)
-  if (withU) return Math.round(parseFloat(withU[1].replace(',', '.')) / 1000 * 1000) / 1000
-  const nums = d.replace(/,/g, '.').match(/\d+\.?\d*/g)
-  if (nums && nums.length) return parseFloat(nums[nums.length - 1])
-  return 1
-}
 
 type XmlItem = { nItem: number; descricao: string; codigo: string; unidade: string; quantidade: number; valorUnit: number }
 function parseNfeXml(xml: string) {

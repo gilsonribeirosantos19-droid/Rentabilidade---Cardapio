@@ -18,7 +18,7 @@ export function SearchSelect({
 }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
-  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width: number } | null>(null)
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width: number; maxH?: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
 
@@ -35,12 +35,15 @@ export function SearchSelect({
   function toggle() {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect()
-      const POP = 300                                  // altura aprox. do popup (busca + lista) p/ decidir o lado
-      const abaixo = window.innerHeight - r.bottom
-      if (abaixo < POP && r.top > abaixo)              // pouco espaço embaixo → abre pra CIMA (ancora acima do botão)
-        setPos({ bottom: window.innerHeight - r.top + 4, left: r.left, width: r.width })
+      const MARG = 10, MINLIST = 150, MAXPOP = 300     // altura máx. do popup (busca + lista)
+      const abaixo = window.innerHeight - r.bottom - MARG
+      const acima = r.top - MARG
+      // PREFERE abrir pra BAIXO; só vira pra cima se embaixo não cabe o mínimo E em cima cabe mais.
+      // Em ambos os casos a lista encolhe pro espaço disponível (scrolla) em vez de ser cortada.
+      if (abaixo < MINLIST && acima > abaixo)
+        setPos({ bottom: window.innerHeight - r.top + 4, left: r.left, width: r.width, maxH: Math.min(MAXPOP, acima) })
       else
-        setPos({ top: r.bottom + 4, left: r.left, width: r.width })
+        setPos({ top: r.bottom + 4, left: r.left, width: r.width, maxH: Math.min(MAXPOP, abaixo) })
     }
     setQ('')
     setOpen((o) => !o)
@@ -56,7 +59,7 @@ export function SearchSelect({
       {open && pos && (
         <div className="ass-pop" style={{ top: pos.top, bottom: pos.bottom, left: pos.left, minWidth: Math.max(pos.width, 200) }}>
           <input className="ass-q" autoFocus placeholder="Digite para buscar..." value={q} onChange={(e) => setQ(e.target.value)} />
-          <div className="ass-list">
+          <div className="ass-list" style={pos.maxH ? { maxHeight: Math.max(110, pos.maxH - 46) } : undefined}>
             <div className="ass-opt" onClick={() => { onChange(''); setOpen(false) }}>{placeholder}</div>
             {filtered.map((o) => (
               <div key={o} className={'ass-opt' + (o === value ? ' on' : '')} onClick={() => { onChange(o); setOpen(false) }}><span>{o}</span>{meta?.[o] ? <span className="ass-meta">{meta[o]}</span> : null}</div>
