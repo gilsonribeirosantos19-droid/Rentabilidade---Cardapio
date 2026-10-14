@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { usePortalLoja } from './portalLoja'
 import { downloadCsv } from '../lib/csv'
 import { SearchSelect } from '../components/SearchSelect'
+import { calcFator } from '../lib/embalagem'
 import { brl, num } from '../lib/format'
 import { hojeStr, fmtDH as fmtDataHora } from '../lib/date'
 
@@ -244,8 +245,16 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
 
   // pré-preenche o custo com o PREÇO DA EMBALAGEM = preco_compra(por unid. estoque) × fator.
   // (o submit faz custoUnit = custo/fator; se pré-preencher com preco_compra puro, o custo médio despenca)
-  const onInsumo = (id: string) => { setInsumoId(id); const i = insMap[id]; setUnidCompra(i?.unidade_compra || ''); setCusto(i?.preco_compra ? String(+((Number(i.preco_compra) || 0) * (num(fator) || 1)).toFixed(4)) : '') }
-  const onFator = (f: string) => { setFator(f); if (insSel?.preco_compra) setCusto(String(+((Number(insSel.preco_compra) || 0) * (num(f) || 1)).toFixed(4))) }
+  const onInsumo = (id: string) => { setInsumoId(id); const i = insMap[id]; setCusto(i?.preco_compra ? String(+((Number(i.preco_compra) || 0) * (num(fator) || 1)).toFixed(4)) : '') }
+  // embalagem (catálogo) + vínculo do fornecedor → fator automático, igual ao Monitor/admin
+  const { data: embOpts = [] } = useQuery({ queryKey: ['pmov-emb', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('item_classificacoes').select('nome').eq('tenant_id', tenantId).eq('tipo', 'embalagem').order('nome'); return ((data ?? []) as { nome: string }[]).map((e) => e.nome) } })
+  const { data: fornVinc = [] } = useQuery({ queryKey: ['pmov-fv', tenantId, fornId], enabled: !!tenantId && !!fornId, queryFn: async () => { const { data } = await supabase.from('insumo_fornecedores').select('insumo_id,embalagem_descricao,qtd_por_embalagem').eq('tenant_id', tenantId).eq('fornecedor_id', fornId); return (data ?? []) as { insumo_id: string; embalagem_descricao?: string; qtd_por_embalagem?: number }[] } })
+  const onEmb = (nome: string) => { const c = calcFator(nome); setUnidCompra(nome); if (c != null) { setFator(String(c)); if (insSel?.preco_compra) setCusto(String(+((Number(insSel.preco_compra) || 0) * (c || 1)).toFixed(4))) } }
+  useEffect(() => {
+    if (!insumoId || !fornId) return
+    const v = fornVinc.find((x) => x.insumo_id === insumoId)
+    if (v && Number(v.qtd_por_embalagem) > 0) { setUnidCompra(v.embalagem_descricao || ''); setFator(String(v.qtd_por_embalagem)); if (insSel?.preco_compra) setCusto(String(+((Number(insSel.preco_compra) || 0) * Number(v.qtd_por_embalagem)).toFixed(4))) }
+  }, [insumoId, fornId, fornVinc])
 
   const { data: dia, isFetching } = useQuery({
     queryKey: ['pest-mov', tenantId, lojaId, data, tipoFil], enabled: !!tenantId && !!lojaId && !!data,
@@ -312,13 +321,13 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
           <div><label style={lbl}>Data</label><input type="date" className="p-field" style={{ width: '100%' }} value={data} onChange={(e) => setData(e.target.value)} /></div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-          <div><label style={lbl}>Grupo (filtro)</label><select className="p-field" style={{ width: '100%' }} value={grupoFiltro} onChange={(e) => { setGrupoFiltro(e.target.value); setInsumoId('') }}><option value="">Todos</option>{categorias.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+          <div><label style={lbl}>Grupo (filtro)</label><SearchSelect value={grupoFiltro} onChange={(c) => { setGrupoFiltro(c); setInsumoId('') }} options={categorias} placeholder="Todos" /></div>
           <div><label style={lbl}>Unidade</label><input className="p-field" style={{ width: '100%', background: '#f1f5f9' }} readOnly value={unSel} /></div>
         </div>
         <div style={{ marginBottom: 12 }}><label style={lbl}>Insumo *</label>
           <SearchSelect value={insSel?.nome || ''} placeholder="Buscar insumo…" options={[...new Set(listaInsumos.map((i) => i.nome || '').filter(Boolean))]} onChange={(nome) => { const found = listaInsumos.find((i) => (i.nome || '') === nome); onInsumo(found?.id || '') }} />
         </div>
-        <div style={{ marginBottom: 12 }}><label style={lbl}>{tipo === 'entrada' ? 'Quantidade (na embalagem) *' : 'Quantidade *'}</label>
+        <div style={{ marginBottom: 12 }}><label style={lbl}>{tipo === 'entrada' ? 'Quantas embalagens *' : 'Quantidade *'}</label>
           <input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" />
         </div>
 
@@ -326,14 +335,14 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
           <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, marginBottom: 12 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 8 }}>Dados da entrada</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-              <div><label style={lbl}>Fornecedor</label><select className="p-field" style={{ width: '100%' }} value={fornId} onChange={(e) => setFornId(e.target.value)}><option value="">Sem fornecedor</option>{(fornecedores as Forn[]).map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}</select></div>
-              <div><label style={lbl}>Unid. de compra</label><input className="p-field" style={{ width: '100%' }} value={unidCompra} onChange={(e) => setUnidCompra(e.target.value)} placeholder="cx, fardo…" /></div>
+              <div><label style={lbl}>Fornecedor</label><SearchSelect value={(fornecedores as Forn[]).find((x) => x.id === fornId)?.nome || ''} onChange={(nm) => setFornId((fornecedores as Forn[]).find((x) => x.nome === nm)?.id || '')} options={(fornecedores as Forn[]).map((x) => x.nome || '').filter(Boolean)} placeholder="Sem fornecedor" /></div>
+              <div><label style={lbl}>Quantidade na embalagem</label><SearchSelect value={unidCompra} onChange={onEmb} options={embOpts} placeholder="Escolha a embalagem..." /></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
-              <div><label style={lbl}>Fator conversão</label><input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={fator} onChange={(e) => onFator(e.target.value)} /></div>
-              <div><label style={lbl}>Custo da compra (R${unidCompra ? '/' + unidCompra : ''})</label><input type="number" min="0" step="0.01" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={custo} onChange={(e) => setCusto(e.target.value)} /></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div><label style={lbl}>Preço por embalagem (R$)</label><input type="number" min="0" step="0.01" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={custo} onChange={(e) => setCusto(e.target.value)} /></div>
               <div><label style={lbl}>Valor total</label><div style={{ fontSize: 14, fontWeight: 700, height: 34, display: 'flex', alignItems: 'center', color: '#f97316' }}>{brl(valorTotal)}</div></div>
             </div>
+            {num(qtd) > 0 && num(custo) > 0 && <div style={{ fontSize: 12, color: '#166534', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '7px 10px', marginBottom: 10 }}>{num(qtd)} × {num(fator) || 1} = <b>{(num(qtd) * (num(fator) || 1)).toLocaleString('pt-BR', { maximumFractionDigits: 3 })} {unSel}</b> no estoque · <b>{brl(num(custo) / (num(fator) || 1))}/{unSel}</b></div>}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div><label style={lbl}>Lote</label><input className="p-field" style={{ width: '100%' }} value={lote} onChange={(e) => setLote(e.target.value)} /></div>
               <div><label style={lbl}>Validade</label><input type="date" className="p-field" style={{ width: '100%' }} value={validade} onChange={(e) => setValidade(e.target.value)} /></div>
