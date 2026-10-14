@@ -249,18 +249,15 @@ function EntradaModal({ tenantId, insumos, fornecedores, getSaldo, inicial, savi
           <div className="fg" style={{ margin: 0 }}><label>Fornecedor</label><select value={f.fornecedor_id} onChange={(e) => set('fornecedor_id', e.target.value)}><option value="">Sem fornecedor</option>{fornecedores.map((x) => <option key={x.id} value={x.id}>{x.nome}</option>)}</select></div>
           <div className="fg" style={{ margin: 0 }}><label>Data *</label><input type="date" value={f.data} onChange={(e) => set('data', e.target.value)} /></div>
         </div>
-        {/* Embalagem: escolhe do catálogo (ou digita); o fator vem do nome — ex.: "CAIXA C/ 9 KG" → 9 */}
-        <div className="fg">
-          <label>Embalagem (como você compra)</label>
-          <input type="text" list="ent-emb-cat" placeholder="Escolha ou digite (ex.: CAIXA C/ 9 KG, Pote 400 g)…" value={f.unidade} onChange={(e) => onEmb(e.target.value)} />
-          <datalist id="ent-emb-cat">{embOpts.map((o) => <option key={o} value={o} />)}</datalist>
-        </div>
         <div className="row3" style={{ marginBottom: showConv ? 0 : 14 }}>
           <div className="fg" style={{ margin: 0 }}><label>Quantas embalagens *</label><input type="number" min="0" step="0.001" placeholder="1" value={f.qtd} onChange={(e) => set('qtd', e.target.value)} /></div>
-          <div className="fg" style={{ margin: 0 }}><label>Qtd por embalagem ({unBase}) *</label><input type="number" min="0.001" step="0.001" value={f.fator} onChange={(e) => set('fator', e.target.value)} /></div>
+          <div className="fg" style={{ margin: 0 }}><label>Quantidade na embalagem *</label>
+            <input type="text" list="ent-emb-cat" placeholder="ex.: PACOTE C/ 50 UNI" value={f.unidade} onChange={(e) => onEmb(e.target.value)} />
+            <datalist id="ent-emb-cat">{embOpts.map((o) => <option key={o} value={o} />)}</datalist>
+          </div>
           <div className="fg" style={{ margin: 0 }}><label>Preço por embalagem (R$) *</label><input type="number" min="0" step="0.01" placeholder="0,00" value={f.custo} onChange={(e) => set('custo', e.target.value)} /></div>
         </div>
-        {showConv && <div className="conv-box" style={{ marginTop: 12 }}>{qtd(q)} × {fator.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} {unBase} = <b>{qtd(q * fator)} {unBase}</b> no estoque · <b>{brl0(custo / fator)}/{unBase}</b> · Total: <b>{brl0(custo * q)}</b></div>}
+        {showConv && <div className="conv-box" style={{ marginTop: 12 }}>{qtd(q)} × {fator.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} = <b>{qtd(q * fator)} {unBase}</b> no estoque · <b>{brl0(custo / fator)}/{unBase}</b> · Total: <b>{brl0(custo * q)}</b></div>}
         <div className="row3" style={{ marginBottom: 14 }}>
           <div className="fg" style={{ margin: 0 }}><label>Lote</label><input type="text" placeholder="Ex: L2025-01" value={f.lote} onChange={(e) => set('lote', e.target.value)} /></div>
           <div className="fg" style={{ margin: 0 }}><label>Validade</label><input type="date" value={f.validade} onChange={(e) => set('validade', e.target.value)} /></div>
