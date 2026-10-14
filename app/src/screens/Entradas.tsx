@@ -252,8 +252,7 @@ function EntradaModal({ tenantId, insumos, fornecedores, getSaldo, inicial, savi
         <div className="row3" style={{ marginBottom: showConv ? 0 : 14 }}>
           <div className="fg" style={{ margin: 0 }}><label>Quantas embalagens *</label><input type="number" min="0" step="0.001" placeholder="1" value={f.qtd} onChange={(e) => set('qtd', e.target.value)} /></div>
           <div className="fg" style={{ margin: 0 }}><label>Quantidade na embalagem *</label>
-            <input type="text" list="ent-emb-cat" placeholder="ex.: PACOTE C/ 50 UNI" value={f.unidade} onChange={(e) => onEmb(e.target.value)} />
-            <datalist id="ent-emb-cat">{embOpts.map((o) => <option key={o} value={o} />)}</datalist>
+            <SearchSelect value={f.unidade} onChange={onEmb} options={embOpts} placeholder="Escolha a embalagem..." />
           </div>
           <div className="fg" style={{ margin: 0 }}><label>Preço por embalagem (R$) *</label><input type="number" min="0" step="0.01" placeholder="0,00" value={f.custo} onChange={(e) => set('custo', e.target.value)} /></div>
         </div>
