@@ -241,7 +241,7 @@ function EntradaModal({ tenantId, insumos, fornecedores, getSaldo, inicial, savi
 
   return (
     <div className="ov" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(740px, 96vw)', padding: '28px 22px' }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(940px, 95vw)', padding: '28px 26px' }}>
         <h2>Entrada Manual</h2>
         <div className="fg" style={{ marginBottom: 18 }}><label>Insumo *</label><SearchSelect value={insSel?.nome || ''} onChange={(nm) => set('insumo_id', insByName.get(nm) || '')} options={insumos.map((i) => i.nome)} placeholder="Selecione..." /></div>
         {s && <div className="saldo-info">Saldo atual: {qtd(s.quantidade || 0)} · Custo médio: {brl(s.custo_medio)}</div>}
