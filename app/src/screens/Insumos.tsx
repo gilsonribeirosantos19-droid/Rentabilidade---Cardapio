@@ -50,6 +50,16 @@ const ST_TXT: Record<string, string> = { ativo: 'Ativo', atencao: 'Estoque baixo
 const uniq = (arr: (string | undefined)[]) => [...new Set(arr.filter(Boolean) as string[])].sort()
 const novoForm = (): Form => ({ participa_cmv: 'sim', tipo_baixa: 'consumo', ativo: true })
 
+// colunas da grade de Produtos que dá pra mostrar/ocultar (Código, Descrição e Ações ficam sempre)
+const COLS_INS = [
+  { key: 'tipo', label: 'Tipo do Item' },
+  { key: 'grupo', label: 'Grupo' },
+  { key: 'conta', label: 'Conta (DRE)' },
+  { key: 'unidade', label: 'Unidade' },
+  { key: 'qtdemb', label: 'Qtd. Emb.' },
+  { key: 'cmv', label: 'Calcula CMV' },
+]
+
 export function Insumos() {
   const { tenantId } = useAuth()
   const { lojaId } = useLoja()   // custo respeita a loja global (Todas = maior, só visão geral)
@@ -66,12 +76,18 @@ export function Insumos() {
   const [fGrupo, setFGrupo] = useState(''); const [fSub, setFSub] = useState(''); const [fStatus, setFStatus] = useState('')
   // filtros Custos
   const [cBusca, setCBusca] = useState(''); const [cCat, setCCat] = useState(''); const [cStatus, setCStatus] = useState('')
+  // colunas visíveis da grade de Produtos (mostrar/ocultar; lembra no navegador)
+  const [cols, setCols] = useState<Record<string, boolean>>(() => { try { const s = localStorage.getItem('insumos-cols'); if (s) return JSON.parse(s) } catch { /* ignore */ } return {} })
+  const [colOpen, setColOpen] = useState(false)
+  useEffect(() => { try { localStorage.setItem('insumos-cols', JSON.stringify(cols)) } catch { /* ignore */ } }, [cols])
+  const vis = (k: string) => cols[k] !== false   // padrão = visível
+  const colCount = 3 + COLS_INS.filter((c) => vis(c.key)).length   // Código + Descrição + Ações sempre
 
   const { toast, setToast, showToast } = useToastTipo(2600)
   const { podeEditar } = usePerms()
   const canEdit = podeEditar('insumos')   // Controle Total = edita; Somente Leitura = só vê
 
-  useEffect(() => { const close = () => { setMenu(null); setPConta(null) }; window.addEventListener('click', close); return () => window.removeEventListener('click', close) }, [])
+  useEffect(() => { const close = () => { setMenu(null); setPConta(null); setColOpen(false) }; window.addEventListener('click', close); return () => window.removeEventListener('click', close) }, [])
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['insumos', tenantId], enabled: !!tenantId,
@@ -327,29 +343,47 @@ export function Insumos() {
           <div className="tbl-card"><div className="tbl-scroll">
             <table>
               <thead><tr>
-                <th><svg className="colgrid" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>Código Interno</th>
-                <th>Descrição</th><th>Tipo do Item</th><th>Grupo</th><th>Conta (DRE)</th><th>Unidade</th><th className="r">Qtd. Emb.</th><th className="c">Calcula CMV</th><th>Ações</th>
+                <th>
+                  <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                    <button type="button" title="Mostrar / ocultar colunas" onClick={(e) => { e.stopPropagation(); setColOpen((o) => !o) }} style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', color: 'inherit', display: 'inline-flex' }}>
+                      <svg className="colgrid" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
+                    </button>
+                    Código Interno
+                    {colOpen && (
+                      <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: 0, marginTop: 7, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 10px 30px rgba(15,23,42,.16)', zIndex: 60, padding: '6px 0', minWidth: 190, textTransform: 'none', fontWeight: 400, letterSpacing: 0 }}>
+                        <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, padding: '4px 14px 7px' }}>Mostrar colunas</div>
+                        {COLS_INS.map((c) => (
+                          <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 14px', fontSize: 13, color: '#334155', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={vis(c.key)} onChange={(e) => setCols((s) => ({ ...s, [c.key]: e.target.checked }))} style={{ accentColor: '#f97316' }} />
+                            {c.label}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </span>
+                </th>
+                <th>Descrição</th>{vis('tipo') && <th>Tipo do Item</th>}{vis('grupo') && <th>Grupo</th>}{vis('conta') && <th>Conta (DRE)</th>}{vis('unidade') && <th>Unidade</th>}{vis('qtdemb') && <th className="r">Qtd. Emb.</th>}{vis('cmv') && <th className="c">Calcula CMV</th>}<th>Ações</th>
               </tr></thead>
               <tbody>
-                {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
-                  : produtos.length === 0 ? <tr><td colSpan={9} className="empty">Nenhum item encontrado</td></tr>
+                {isLoading ? <tr><td colSpan={colCount} className="empty">Carregando…</td></tr>
+                  : produtos.length === 0 ? <tr><td colSpan={colCount} className="empty">Nenhum item encontrado</td></tr>
                   : produtos.map((i) => (
                     <tr key={i.id} onClick={() => editar(i)}>
                       <td className="td-mono" style={{ color: '#64748b', fontSize: 11 }}>{fmtCodigo(i.codigo_interno)}</td>
                       <td style={{ color: '#0f172a' }}>{i.nome}</td>
-                      <td style={{ color: '#64748b' }}>{i.tipo_item || '—'}</td>
-                      <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>
-                      <td onClick={(e) => e.stopPropagation()}>
+                      {vis('tipo') && <td style={{ color: '#64748b' }}>{i.tipo_item || '—'}</td>}
+                      {vis('grupo') && <td style={{ color: '#475569' }}>{i.categoria || '—'}</td>}
+                      {vis('conta') && <td onClick={(e) => e.stopPropagation()}>
                         {canEdit && contaFolhas.length > 0
                           ? (() => { const c = contaFolhas.find((x) => x.id === i.conta_gerencial_id); const vazio = !c
                             return <button onClick={(e) => { e.stopPropagation(); setPConta({ ins: i, x: e.clientX, y: e.clientY }); setPBusca('') }}
                               style={{ fontSize: 12, height: 28, maxWidth: 190, border: '1px solid ' + (vazio ? '#fcd9a4' : '#e2e8f0'), borderRadius: 6, background: vazio ? '#fffbf5' : '#fff', color: vazio ? '#b45309' : '#334155', padding: '0 9px', cursor: 'pointer', textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>
                               {c ? `${c.codigo} · ${c.nome}` : '— classificar —'}</button> })()
                           : <span style={{ color: '#64748b', fontSize: 12 }}>{contaFolhas.find((c) => c.id === i.conta_gerencial_id)?.nome || '—'}</span>}
-                      </td>
-                      <td style={{ color: '#64748b' }}>{i.unidade_medida || '—'}</td>
-                      <td className="r td-mono" style={{ color: '#64748b' }}>—</td>
-                      <td className="c">{i.participa_cmv !== 'nao' ? <span className="cmv-on">✓</span> : <span className="cmv-off" />}</td>
+                      </td>}
+                      {vis('unidade') && <td style={{ color: '#64748b' }}>{i.unidade_medida || '—'}</td>}
+                      {vis('qtdemb') && <td className="r td-mono" style={{ color: '#64748b' }}>—</td>}
+                      {vis('cmv') && <td className="c">{i.participa_cmv !== 'nao' ? <span className="cmv-on">✓</span> : <span className="cmv-off" />}</td>}
                       <td><button className="acoes-btn" onClick={(e) => { e.stopPropagation(); setMenu({ id: i.id, x: e.clientX, y: e.clientY }) }}>⋮</button></td>
                     </tr>
                   ))}
