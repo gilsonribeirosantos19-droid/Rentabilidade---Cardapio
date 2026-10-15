@@ -159,9 +159,13 @@ export function ConfigGeral() {
   // — a checagem de uso não deixa excluir por diferença de grafia (evita órfão).
   const norm = (s: unknown) => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
   // conta linhas de `table` onde norm(col) casa com norm(alvo); inclui inativos; sem limite de 1000
-  const cntNorm = async (table: string, col: string, alvo: string | (string | undefined)[]): Promise<number> => {
+  const cntNorm = async (table: string, col: string, alvo: string | (string | undefined)[], soAtivos = false): Promise<number> => {
     try {
-      const rows = await fetchAll<Record<string, unknown>>((f, t) => supabase.from(table).select(col).eq('tenant_id', tenantId).order('id').range(f, t))
+      const rows = await fetchAll<Record<string, unknown>>((f, t) => {
+        let q = supabase.from(table).select(col).eq('tenant_id', tenantId)
+        if (soAtivos) q = q.eq('ativo', true)   // item INATIVO (oculto) não trava a exclusão do cadastro
+        return q.order('id').range(f, t)
+      })
       const want = new Set((Array.isArray(alvo) ? alvo : [alvo]).map(norm).filter(Boolean))
       return rows.filter((x) => want.has(norm(x[col]))).length
     } catch { return 0 }
@@ -170,14 +174,14 @@ export function ConfigGeral() {
     const nome = r.nome ?? ''
     const T = (q: any) => q.eq('tenant_id', tenantId)
     switch (c.key) {
-      case 'tipo_item': return { qtd: await cntNorm('insumos', 'tipo_item', nome), onde: 'insumo(s)' }
-      case 'familia': return { qtd: await cntNorm('insumos', 'familia', nome), onde: 'insumo(s)' }
-      case 'grupo': return { qtd: await cntNorm('insumos', 'categoria', nome), onde: 'insumo(s)' }
-      case 'subgrupo': return { qtd: await cntNorm('insumos', 'subgrupo', nome), onde: 'insumo(s)' }
+      case 'tipo_item': return { qtd: await cntNorm('insumos', 'tipo_item', nome, true), onde: 'insumo(s)' }
+      case 'familia': return { qtd: await cntNorm('insumos', 'familia', nome, true), onde: 'insumo(s)' }
+      case 'grupo': return { qtd: await cntNorm('insumos', 'categoria', nome, true), onde: 'insumo(s)' }
+      case 'subgrupo': return { qtd: await cntNorm('insumos', 'subgrupo', nome, true), onde: 'insumo(s)' }
       case 'embalagem': return { qtd: await cntNorm('insumo_fornecedores', 'embalagem_descricao', nome), onde: 'vínculo(s) de fornecedor' }
       case 'cat_ficha': return { qtd: await cntNorm('fichas_tecnicas', 'categoria', nome), onde: 'ficha(s)' }
       case 'motivo_perda': return { qtd: await cnt('perdas', (q) => T(q).eq('motivo_id', r.id)), onde: 'perda(s)' }
-      case 'unidade': return { qtd: (await cntNorm('insumos', 'unidade_medida', [nome, r.abreviacao])) + (await cntNorm('insumos', 'unidade_compra', [nome, r.abreviacao])), onde: 'insumo(s)' }
+      case 'unidade': return { qtd: (await cntNorm('insumos', 'unidade_medida', [nome, r.abreviacao], true)) + (await cntNorm('insumos', 'unidade_compra', [nome, r.abreviacao], true)), onde: 'insumo(s)' }
       case 'grupo_compra': return { qtd: await cnt('grupos_compra_itens', (q) => q.eq('grupo_id', r.id)), onde: 'item(ns) no grupo' }
       case 'loja': {
         let total = 0
