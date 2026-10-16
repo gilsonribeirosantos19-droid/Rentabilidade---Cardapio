@@ -26,9 +26,9 @@ const ALL_KEYS: string[] = PERM_MODULES.flatMap((m) => modLeaves(m)).map((l) => 
 // Guardado em `permissoes_sistemas` (tenant·perfil·sistema·modulo·nivel). Nível: 0 oculto · 1 ver · 2 editar.
 // 1º incremento ADITIVO: só CONFIGURA (ainda não bloqueia nada). Cada sistema passa a obedecer quando ligarmos.
 const SISTEMAS_EXT: { key: string; nome: string; cor: string; mods: string[] }[] = [
-  { key: 'checklist', nome: 'Checklist', cor: '#14315F', mods: ['Abertura', 'Fechamento', 'Produção', 'Auditoria', 'Avaliação de Garçons'] },
-  { key: 'avaliacoes', nome: 'Avaliações', cor: '#2563eb', mods: ['Pesquisa (NPS)', 'Central de Tratativas', 'Relatórios'] },
-  { key: 'manutencao', nome: 'Manutenção', cor: '#b45309', mods: ['Chamados', 'Preventivas', 'Pendências Prediais'] },
+  { key: 'checklist', nome: 'Checklist', cor: '#14315F', mods: ['Hoje', 'Painel', 'Não Conformidades', 'Avaliações', 'Histórico', 'Equipe', 'Modelos', 'Usuários e Lojas', 'Empresas'] },
+  { key: 'avaliacoes', nome: 'Avaliações', cor: '#2563eb', mods: ['Início', 'Avaliações', 'Comentários', 'Tratativas', 'Relatórios', 'Exportações', 'QR Codes', 'Configurações'] },
+  { key: 'manutencao', nome: 'Manutenção', cor: '#b45309', mods: ['Painel', 'Programação Anual', 'Pendências por Loja', 'Solicitações', 'Histórico', 'Cadastros', 'Configurações'] },
 ]
 const SEG: [number, string][] = [[0, '—'], [1, '👁 Ver'], [2, '✎ Editar']]
 const skey = (sis: string, mod: string) => sis + '|' + mod
