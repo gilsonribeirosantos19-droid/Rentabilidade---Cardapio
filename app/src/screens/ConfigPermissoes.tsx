@@ -22,6 +22,17 @@ const leavesOf = (s: any): NavLeaf[] => ('group' in s ? s.items : [s]).filter((l
 const modLeaves = (m: Module): NavLeaf[] => (m.sections ?? []).flatMap((s) => leavesOf(s))
 const ALL_KEYS: string[] = PERM_MODULES.flatMap((m) => modLeaves(m)).map((l) => l.key)
 
+// === Central de Permissões: os OUTROS sistemas da rede (Checklist/Avaliações/Manutenção).
+// Guardado em `permissoes_sistemas` (tenant·perfil·sistema·modulo·nivel). Nível: 0 oculto · 1 ver · 2 editar.
+// 1º incremento ADITIVO: só CONFIGURA (ainda não bloqueia nada). Cada sistema passa a obedecer quando ligarmos.
+const SISTEMAS_EXT: { key: string; nome: string; cor: string; mods: string[] }[] = [
+  { key: 'checklist', nome: 'Checklist', cor: '#14315F', mods: ['Abertura', 'Fechamento', 'Produção', 'Auditoria', 'Avaliação de Garçons'] },
+  { key: 'avaliacoes', nome: 'Avaliações', cor: '#2563eb', mods: ['Pesquisa (NPS)', 'Central de Tratativas', 'Relatórios'] },
+  { key: 'manutencao', nome: 'Manutenção', cor: '#b45309', mods: ['Chamados', 'Preventivas', 'Pendências Prediais'] },
+]
+const SEG: [number, string][] = [[0, '—'], [1, '👁 Ver'], [2, '✎ Editar']]
+const skey = (sis: string, mod: string) => sis + '|' + mod
+
 type PState = Record<string, { hab: boolean; ct: boolean }>
 
 export function ConfigPermissoes() {
@@ -30,9 +41,10 @@ export function ConfigPermissoes() {
   const [selId, setSelId] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [nome, setNome] = useState('')
-  const [tab, setTab] = useState<'usuarios' | 'perms'>('usuarios')
+  const [tab, setTab] = useState<'usuarios' | 'perms' | 'sistemas'>('usuarios')
   const [vinc, setVinc] = useState<Set<string>>(new Set())
   const [perms, setPerms] = useState<PState>({})
+  const [sysPerms, setSysPerms] = useState<Record<string, number>>({})   // Central: sistema|modulo → nível (0/1/2)
   const { toast, setToast, showToast } = useToastErr(2600, 7000)
 
   const { data: grupos = [] } = useQuery({
@@ -54,6 +66,12 @@ export function ConfigPermissoes() {
     queryFn: async () => { const { data } = await supabase.from('permissoes').select('modulo,visualizar,criar,editar,excluir').eq('tenant_id', tenantId).eq('perfil', grp!.nome); return (data ?? []) as Perm[] },
   })
 
+  // Central: acesso do grupo aos OUTROS sistemas (tabela nova permissoes_sistemas)
+  const { data: sysData } = useQuery({
+    queryKey: ['cfg-perm-sys', tenantId, grp?.nome], enabled: !!tenantId && !!grp,
+    queryFn: async () => { const { data } = await supabase.from('permissoes_sistemas').select('sistema,modulo,nivel').eq('tenant_id', tenantId).eq('perfil', grp!.nome); return (data ?? []) as { sistema: string; modulo: string; nivel: number }[] },
+  })
+
   // init matriz quando carrega permissões / troca grupo
   useEffect(() => {
     if (!grp) return
@@ -67,6 +85,18 @@ export function ConfigPermissoes() {
     })
     setPerms(out)
   }, [permData, grp?.nome, isAdmin])
+
+  // init matriz dos OUTROS sistemas (Central)
+  useEffect(() => {
+    if (!grp) return
+    const out: Record<string, number> = {}
+    SISTEMAS_EXT.forEach((s) => s.mods.forEach((m) => {
+      if (isAdmin) { out[skey(s.key, m)] = 2; return }
+      const r = (sysData ?? []).find((x) => x.sistema === s.key && x.modulo === m)
+      out[skey(s.key, m)] = r ? Number(r.nivel) : 0
+    }))
+    setSysPerms(out)
+  }, [sysData, grp?.nome, isAdmin])
 
   // init vínculos de usuário quando troca grupo
   useEffect(() => {
@@ -123,6 +153,16 @@ export function ConfigPermissoes() {
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
 
+  const sysSaveMut = useMutation({
+    mutationFn: async () => {
+      if (!grp) return
+      const rows = SISTEMAS_EXT.flatMap((s) => s.mods.map((m) => ({ tenant_id: tenantId, perfil: grp.nome, sistema: s.key, modulo: m, nivel: sysPerms[skey(s.key, m)] || 0 })))
+      const { error } = await supabase.from('permissoes_sistemas').upsert(rows, { onConflict: 'tenant_id,perfil,sistema,modulo' }); if (error) throw error
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-perm-sys'] }); showToast('Acesso aos sistemas salvo.') },
+    onError: (e: Error) => showToast('Erro: ' + e.message, true),
+  })
+
   // handlers da matriz
   const setMod = (id: string, next: { hab: boolean; ct: boolean }) => setPerms((p) => ({ ...p, [id]: next }))
   const onHab = (id: string, checked: boolean) => setMod(id, { hab: checked, ct: checked ? (perms[id]?.ct ?? false) : false })
@@ -176,6 +216,7 @@ export function ConfigPermissoes() {
             <div className="grp-tabs">
               <button className={tab === 'usuarios' ? 'on' : ''} onClick={() => setTab('usuarios')}>Vincular Usuários</button>
               <button className={tab === 'perms' ? 'on' : ''} onClick={() => setTab('perms')} disabled={isNew}>Permissões / Acesso</button>
+              <button className={tab === 'sistemas' ? 'on' : ''} onClick={() => setTab('sistemas')} disabled={isNew}>Outros Sistemas</button>
             </div>
 
             {/* ABA USUÁRIOS */}
@@ -249,6 +290,39 @@ export function ConfigPermissoes() {
                 </table>
                 {!isAdmin && <div className="grp-foot"><button className="cfg-btn pri" disabled={permSaveMut.isPending} onClick={() => permSaveMut.mutate()}>{permSaveMut.isPending ? 'Salvando…' : 'Salvar permissões'}</button></div>}
                 {isAdmin && <div className="grp-note">O grupo <b>Administrador</b> tem acesso total e não pode ser editado.</div>}
+              </>
+            )}
+
+            {/* ABA OUTROS SISTEMAS (Central de Permissões) */}
+            {tab === 'sistemas' && !isNew && (
+              <>
+                <div className="grp-note">Acesso deste grupo aos <b>outros sistemas da rede</b> (Checklist, Avaliações, Manutenção). Por módulo: <b>— (oculto) · 👁 Ver · ✎ Editar</b>. ⚠️ <b>Ainda não bloqueia</b> — por enquanto é só a configuração; cada sistema passa a obedecer conforme a gente liga ele.</div>
+                {SISTEMAS_EXT.map((s) => (
+                  <div key={s.key} style={{ border: '1px solid #e2e8f0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #eef2f7' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: s.cor, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 800 }}>{s.nome[0]}</div>
+                      <b style={{ fontSize: 13.5 }}>{s.nome}</b>
+                      <span style={{ marginLeft: 'auto', fontSize: 11.5, color: '#64748b' }}>{s.mods.filter((m) => (sysPerms[skey(s.key, m)] || 0) > 0).length} de {s.mods.length} módulos</span>
+                    </div>
+                    <table className="perm-matrix"><tbody>
+                      {s.mods.map((m) => { const key = skey(s.key, m); const lvl = sysPerms[key] ?? 0; return (
+                        <tr key={m}>
+                          <td style={{ paddingLeft: 20 }}>{m}</td>
+                          <td className="pc" style={{ textAlign: 'right', paddingRight: 14 }}>
+                            <div style={{ display: 'inline-flex', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+                              {SEG.map(([v, lab]) => (
+                                <button key={v} type="button" disabled={isAdmin} onClick={() => setSysPerms((p) => ({ ...p, [key]: v }))}
+                                  style={{ border: 0, borderRight: v !== 2 ? '1px solid #e2e8f0' : '0', background: lvl === v ? (v === 1 ? '#2563eb' : v === 2 ? '#f97316' : '#64748b') : '#fff', color: lvl === v ? '#fff' : '#64748b', font: 'inherit', fontSize: 11.5, fontWeight: 600, padding: '5px 11px', cursor: isAdmin ? 'default' : 'pointer' }}>{lab}</button>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ) })}
+                    </tbody></table>
+                  </div>
+                ))}
+                {!isAdmin && <div className="grp-foot"><button className="cfg-btn pri" disabled={sysSaveMut.isPending} onClick={() => sysSaveMut.mutate()}>{sysSaveMut.isPending ? 'Salvando…' : 'Salvar acesso aos sistemas'}</button></div>}
+                {isAdmin && <div className="grp-note">O grupo <b>Administrador</b> vê todos os sistemas.</div>}
               </>
             )}
           </div>
