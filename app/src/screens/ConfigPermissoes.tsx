@@ -45,6 +45,7 @@ export function ConfigPermissoes() {
   const [vinc, setVinc] = useState<Set<string>>(new Set())
   const [perms, setPerms] = useState<PState>({})
   const [sysPerms, setSysPerms] = useState<Record<string, number>>({})   // Central: sistema|modulo → nível (0/1/2)
+  const [sysOpen, setSysOpen] = useState<Set<string>>(new Set())         // cards de sistema recolhidos por padrão
   const { toast, setToast, showToast } = useToastErr(2600, 7000)
 
   const { data: grupos = [] } = useQuery({
@@ -97,6 +98,9 @@ export function ConfigPermissoes() {
     }))
     setSysPerms(out)
   }, [sysData, grp?.nome, isAdmin])
+
+  // sempre que trocar de grupo, começa com os sistemas RECOLHIDOS
+  useEffect(() => { setSysOpen(new Set()) }, [grp?.nome])
 
   // init vínculos de usuário quando troca grupo
   useEffect(() => {
@@ -297,14 +301,16 @@ export function ConfigPermissoes() {
             {tab === 'sistemas' && !isNew && (
               <>
                 <div className="grp-note">Acesso deste grupo aos <b>outros sistemas da rede</b> (Checklist, Avaliações, Manutenção). Por módulo: <b>— (oculto) · 👁 Ver · ✎ Editar</b>. ⚠️ <b>Ainda não bloqueia</b> — por enquanto é só a configuração; cada sistema passa a obedecer conforme a gente liga ele.</div>
-                {SISTEMAS_EXT.map((s) => (
+                {SISTEMAS_EXT.map((s) => { const aberto = sysOpen.has(s.key); const liberados = s.mods.filter((m) => (sysPerms[skey(s.key, m)] || 0) > 0).length; return (
                   <div key={s.key} style={{ border: '1px solid #e2e8f0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f8fafc', borderBottom: '1px solid #eef2f7' }}>
+                    <div onClick={() => setSysOpen((o) => { const n = new Set(o); n.has(s.key) ? n.delete(s.key) : n.add(s.key); return n })}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f8fafc', borderBottom: aberto ? '1px solid #eef2f7' : '0', cursor: 'pointer', userSelect: 'none' }}>
+                      <span style={{ fontSize: 10, color: '#94a3b8', display: 'inline-block', transform: aberto ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>▶</span>
                       <div style={{ width: 28, height: 28, borderRadius: 7, background: s.cor, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 800 }}>{s.nome[0]}</div>
                       <b style={{ fontSize: 13.5 }}>{s.nome}</b>
-                      <span style={{ marginLeft: 'auto', fontSize: 11.5, color: '#64748b' }}>{s.mods.filter((m) => (sysPerms[skey(s.key, m)] || 0) > 0).length} de {s.mods.length} módulos</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 11.5, color: liberados > 0 ? '#16a34a' : '#94a3b8', fontWeight: liberados > 0 ? 600 : 400 }}>{liberados} de {s.mods.length} módulos</span>
                     </div>
-                    <table className="perm-matrix"><tbody>
+                    {aberto && <table className="perm-matrix"><tbody>
                       {s.mods.map((m) => { const key = skey(s.key, m); const lvl = sysPerms[key] ?? 0; return (
                         <tr key={m}>
                           <td style={{ paddingLeft: 20 }}>{m}</td>
@@ -318,9 +324,9 @@ export function ConfigPermissoes() {
                           </td>
                         </tr>
                       ) })}
-                    </tbody></table>
+                    </tbody></table>}
                   </div>
-                ))}
+                ) })}
                 {!isAdmin && <div className="grp-foot"><button className="cfg-btn pri" disabled={sysSaveMut.isPending} onClick={() => sysSaveMut.mutate()}>{sysSaveMut.isPending ? 'Salvando…' : 'Salvar acesso aos sistemas'}</button></div>}
                 {isAdmin && <div className="grp-note">O grupo <b>Administrador</b> vê todos os sistemas.</div>}
               </>
