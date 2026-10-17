@@ -154,9 +154,14 @@ export function ConfigPermissoes() {
       // 1) permissões do AIKO (tabela permissoes)
       const rows = ALL_KEYS.map((k) => { const s = perms[k] || { hab: false, ct: false }; return { tenant_id: tenantId, perfil: grp.nome, modulo: k, visualizar: s.hab, criar: s.hab && s.ct, editar: s.hab && s.ct, excluir: s.hab && s.ct } })
       const { error } = await supabase.from('permissoes').upsert(rows, { onConflict: 'tenant_id,perfil,modulo' }); if (error) throw error
-      // 2) permissões dos OUTROS sistemas (tabela permissoes_sistemas) — o mesmo botão salva tudo
-      const sysRows = SISTEMAS_EXT.flatMap((s) => s.mods.map((m) => ({ tenant_id: tenantId, perfil: grp.nome, sistema: s.key, modulo: m, nivel: sysPerms[skey(s.key, m)] || 0 })))
-      const { error: e2 } = await supabase.from('permissoes_sistemas').upsert(sysRows, { onConflict: 'tenant_id,perfil,sistema,modulo' }); if (e2) throw e2
+      // 2) permissões dos OUTROS sistemas (tabela permissoes_sistemas) — o mesmo botão salva tudo.
+      //    SEGURANÇA: só grava um sistema se o grupo tem ALGO liberado nele. Sistema sem nada marcado
+      //    = NÃO controlado (apaga as linhas) → cai no fallback, pra NÃO trancar gerente real sem querer.
+      const grants = SISTEMAS_EXT.map((s) => ({ s, has: s.mods.some((m) => (sysPerms[skey(s.key, m)] || 0) > 0) }))
+      const sysRows = grants.filter((g) => g.has).flatMap(({ s }) => s.mods.map((m) => ({ tenant_id: tenantId, perfil: grp.nome, sistema: s.key, modulo: m, nivel: sysPerms[skey(s.key, m)] || 0 })))
+      if (sysRows.length) { const { error: e2 } = await supabase.from('permissoes_sistemas').upsert(sysRows, { onConflict: 'tenant_id,perfil,sistema,modulo' }); if (e2) throw e2 }
+      const semNada = grants.filter((g) => !g.has).map((g) => g.s.key)
+      if (semNada.length) { const { error: e3 } = await supabase.from('permissoes_sistemas').delete().eq('tenant_id', tenantId).eq('perfil', grp.nome).in('sistema', semNada); if (e3) throw e3 }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-perm'] }); qc.invalidateQueries({ queryKey: ['cfg-perm-sys'] }); showToast('Permissões salvas.') },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
@@ -276,7 +281,7 @@ export function ConfigPermissoes() {
             {/* ABA PERMISSÕES — AIKO + outros sistemas da rede, tudo numa aba só */}
             {tab === 'perms' && !isNew && (
               <>
-                <div className="grp-note">O que o grupo <b>{grp?.nome}</b> acessa em cada sistema. Por tela: <b>Habilitado</b> (vê) · <b>Controle Total</b> (vê e edita) · <b>Somente Leitura</b>. O app esconde do menu o que não estiver habilitado. ⚠️ Nos <b>outros sistemas</b> ainda é só configuração — cada um passa a obedecer conforme a gente liga.</div>
+                <div className="grp-note">O que o grupo <b>{grp?.nome}</b> acessa em cada sistema. Por tela: <b>Habilitado</b> (vê) · <b>Controle Total</b> (vê e edita) · <b>Somente Leitura</b>. O app esconde do menu o que não estiver habilitado. <br/>💡 Nos <b>outros sistemas</b>: deixar um sistema <b>sem nenhum módulo marcado = NÃO controlado</b> (a pessoa vê tudo, como hoje). Marque ao menos um módulo para o AIKO passar a mandar naquele sistema.</div>
 
                 {/* CARD AIKO (sistema principal) */}
                 {(() => {
@@ -348,7 +353,7 @@ export function ConfigPermissoes() {
                       <span style={{ fontSize: 10, color: '#94a3b8', display: 'inline-block', transform: aberto ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>▶</span>
                       <div style={{ width: 28, height: 28, borderRadius: 7, background: s.cor, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 800 }}>{s.nome[0]}</div>
                       <b style={{ fontSize: 13.5 }}>{s.nome}</b>
-                      <span style={{ marginLeft: 'auto', fontSize: 11.5, color: liberados > 0 ? '#16a34a' : '#94a3b8', fontWeight: liberados > 0 ? 600 : 400 }}>{liberados} de {s.mods.length} módulos</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 11.5, color: liberados > 0 ? '#16a34a' : '#94a3b8', fontWeight: liberados > 0 ? 600 : 400 }}>{liberados > 0 ? `${liberados} de ${s.mods.length} módulos` : 'não controlado (vê tudo)'}</span>
                     </div>
                     {aberto && <table className="perm-matrix">
                       <thead><tr><th style={{ minWidth: 200 }}>Módulo</th><th className="pc">Habilitado</th><th className="pc">Controle Total</th><th className="pc">Somente Leitura</th></tr></thead>
