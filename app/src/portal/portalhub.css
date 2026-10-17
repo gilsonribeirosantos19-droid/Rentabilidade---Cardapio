@@ -7,7 +7,7 @@
 .phub-logo{width:42px;height:42px;border-radius:11px;background:var(--brand);display:grid;place-items:center;font-weight:900;font-size:24px;color:#fff;box-shadow:0 4px 12px rgba(249,115,22,.4)}
 .phub-brand b{font-size:17px;font-weight:800;display:block;line-height:1.1}
 .phub-brand span{font-size:12.5px;color:#8ea6cf}
-.phub-tr{margin-left:auto;display:flex;align-items:center;gap:12px}
+.phub-tr{position:absolute;top:14px;right:22px;z-index:4;display:flex;align-items:center;gap:12px}
 .phub-uchip{display:flex;align-items:center;gap:9px;font-size:13px;color:#cfdcf2}
 .phub-uav{width:30px;height:30px;border-radius:50%;background:#20427a;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff}
 .phub-sair{border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;border-radius:9px;padding:7px 14px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
