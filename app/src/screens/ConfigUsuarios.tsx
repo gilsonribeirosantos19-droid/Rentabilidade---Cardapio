@@ -11,7 +11,11 @@ import './config.css'
 
 type Usuario = { id: string; nome?: string; email?: string; role?: string; grupo?: string | null; loja_id?: string | null; lojas_acesso?: string[] | null; ativo?: boolean }
 type Loja = { id: string; nome: string }
-type Modal = { id?: string; nome: string; email: string; role: string; grupo: string; lojaId: string; lojasAcesso: string[]; senha: string }
+type Modal = { id?: string; nome: string; email: string; role: string; grupo: string; lojaId: string; lojasAcesso: string[]; senha: string; redes: string[]; redeLojaId: string }
+
+// Login único (Nível 1): os outros sistemas da rede que podem receber o mesmo usuário
+const SIS: [string, string][] = [['avaliacoes', 'Avaliações'], ['checklist', 'Checklist'], ['manutencao', 'Manutenção']]
+const SIS_LABEL: Record<string, string> = { avaliacoes: 'Avaliações', checklist: 'Checklist', manutencao: 'Manutenção' }
 
 // "operador" removido: só admin (acesso total) e gerente (preso à loja). Enquanto não há
 // permissão fina, "operador" caía em acesso ao tenant inteiro (risco). Mantido no ROLE_LABEL
@@ -58,8 +62,8 @@ export function ConfigUsuarios() {
     queryFn: async () => { const { data } = await supabase.from('grupos_acesso').select('nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as { nome: string }[] },
   })
 
-  const novo = () => setModal({ nome: '', email: '', role: 'gerente', grupo: '', lojaId: '', lojasAcesso: [], senha: '' })
-  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', grupo: u.grupo ?? '', lojaId: u.loja_id ?? '', lojasAcesso: u.lojas_acesso ?? [], senha: '' })
+  const novo = () => setModal({ nome: '', email: '', role: 'gerente', grupo: '', lojaId: '', lojasAcesso: [], senha: '', redes: [], redeLojaId: '' })
+  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', grupo: u.grupo ?? '', lojaId: u.loja_id ?? '', lojasAcesso: u.lojas_acesso ?? [], senha: '', redes: [], redeLojaId: '' })
 
   const saveMut = useMutation({
     mutationFn: async (m: Modal) => {
@@ -67,10 +71,12 @@ export function ConfigUsuarios() {
       if (!nome) throw new Error('Informe o nome.')
       if (!email) throw new Error('Informe o e-mail.')
       if (!m.id && !m.senha) throw new Error('Informe a senha inicial.')
+      if (!m.id && m.redes.length && !(m.redeLojaId || m.lojaId)) throw new Error('Escolha a loja para os outros sistemas da rede.')
       const lojaId = m.role === 'gerente' ? (m.lojaId || null) : null
       // supervisor: lojas concedidas (vazio = todas). Outros perfis não usam.
       const lojasAcesso = m.role === 'supervisor' && m.lojasAcesso.length ? m.lojasAcesso : null
       const grupo = m.grupo || null   // grupo de permissão (separado da rota/role)
+      let redeMsg = ''
       if (m.id) {
         const { error } = await supabase.from('usuarios').update({ nome, role: m.role, grupo, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso }).eq('id', m.id); if (error) throw error
         if (m.senha) await invokeAdmin({ action: 'update_password', userId: m.id, password: m.senha })
@@ -83,9 +89,28 @@ export function ConfigUsuarios() {
         let ins = await supabase.from('usuarios').insert({ ...base, email })
         if (ins.error && /email/i.test(ins.error.message)) ins = await supabase.from('usuarios').insert(base)
         if (ins.error) throw ins.error
+        // Login único (Nível 1): cria o MESMO usuário nos outros sistemas marcados (via Edge provisionar-rede).
+        // Aditivo: se algum sistema falhar, o usuário do AIKO já está criado — só reporta no toast.
+        if (m.redes.length) {
+          try {
+            const lojaRede = lojaNome[m.redeLojaId || m.lojaId] || ''
+            const { data: pr, error: prErr } = await supabase.functions.invoke('provisionar-rede', { body: { email, nome, senha: m.senha, papel: m.role, loja: lojaRede, sistemas: m.redes } })
+            if (prErr) throw new Error(prErr.message)
+            const res = ((pr as { resultados?: { sistema: string; ok: boolean; erro?: string }[] })?.resultados) || []
+            redeMsg = res.map((r) => `${SIS_LABEL[r.sistema] || r.sistema} ${r.ok ? '✅' : '⚠️' + (r.erro ? ' (' + r.erro + ')' : '')}`).join(' · ')
+          } catch (e) {
+            redeMsg = 'falha ao criar na rede (' + (e as Error).message + ')'
+          }
+        }
       }
+      return { redeMsg }
     },
-    onSuccess: (_d, m) => { qc.invalidateQueries({ queryKey: ['cfg-usuarios'] }); setModal(null); showToast(m.id ? 'Usuário atualizado.' : 'Usuário criado.') },
+    onSuccess: (data, m) => {
+      qc.invalidateQueries({ queryKey: ['cfg-usuarios'] }); setModal(null)
+      const base = m.id ? 'Usuário atualizado.' : 'Usuário criado.'
+      const rm = (data as { redeMsg?: string })?.redeMsg
+      showToast(rm ? base + ' Rede → ' + rm : base, !!rm && rm.includes('⚠️'))
+    },
     onError: (e: Error) => { console.error('[ConfigUsuarios]', e); showToast('Erro: ' + e.message, true) },
   })
   const delMut = useMutation({
@@ -182,6 +207,30 @@ export function ConfigUsuarios() {
                 </select>
               </div>
               <div className="cfg-fg"><label>{modal.id ? 'Nova senha (deixe em branco para manter)' : 'Senha inicial *'}</label><input type="password" value={modal.senha} onChange={(e) => setModal({ ...modal, senha: e.target.value })} placeholder={modal.id ? '••••••' : ''} autoComplete="new-password" /></div>
+
+              {!modal.id && (
+                <div className="cfg-fg" style={{ borderTop: '1px solid #eef2f7', paddingTop: 12, marginTop: 4 }}>
+                  <label>Também criar acesso em <span style={{ fontWeight: 400, color: '#64748b' }}>(login único — cria o mesmo usuário, com a mesma senha, nos sistemas marcados)</span></label>
+                  <div className="usr-lojas">
+                    {SIS.map(([k, l]) => (
+                      <label key={k}>
+                        <input type="checkbox" checked={modal.redes.includes(k)} onChange={(e) => setModal({ ...modal, redes: e.target.checked ? [...modal.redes, k] : modal.redes.filter((x) => x !== k) })} />
+                        {l}
+                      </label>
+                    ))}
+                  </div>
+                  {modal.redes.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <label>Loja nos outros sistemas *</label>
+                      <select value={modal.redeLojaId || modal.lojaId} onChange={(e) => setModal({ ...modal, redeLojaId: e.target.value })}>
+                        <option value="">Selecione a loja…</option>
+                        {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+                      </select>
+                      <div className="p-hint">Nos outros sistemas a pessoa é criada como <b>gerente</b> da loja escolhida (papéis mais altos só na criação manual de cada sistema). A senha nasce provisória lá.</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="mf">
               <button className="cfg-btn" onClick={() => setModal(null)}>Cancelar</button>
