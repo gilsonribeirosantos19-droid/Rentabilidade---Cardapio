@@ -13,9 +13,6 @@ const SISTEMAS: Sistema[] = [
   { id: 'checklist', nome: 'Checklist', desc: 'Abertura, fechamento, produção, auditoria e avaliação de garçons.', icon: 'check', cor: '#14315f', url: 'https://checklist.aikosistema.com/' },
   { id: 'manutencao', nome: 'Manutenção', desc: 'Chamados, preventivas e pendências prediais das lojas.', icon: 'wrench', cor: '#b45309', url: 'https://manutencao.aikosistema.com/' },
 ]
-// mapa perfil → módulos. Vazio = vê todos (v1). Ex. futuro: { garçom: ['checklist'] }
-const PERM: Record<string, string[]> = {}
-const permitidos = (perfil: string) => PERM[perfil] ?? SISTEMAS.map((s) => s.id)
 
 const ICO: Record<string, ReactNode> = {
   box: <path d="M20 7 12 3 4 7m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
@@ -26,12 +23,19 @@ const ICO: Record<string, ReactNode> = {
 const svg = (n: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{ICO[n]}</svg>
 
 export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
-  usuario?: { nome?: string } | null
+  usuario?: { nome?: string; sistemas_rede?: string[] | null } | null
   perfil?: string
   lojaNome?: string
   signOut?: () => void
 }) {
-  const vis = useMemo(() => SISTEMAS.filter((s) => permitidos(perfil).includes(s.id)), [perfil])
+  // mostra Estoque (o próprio AIKO) sempre + os sistemas em que a pessoa foi provisionada.
+  // admin ou usuário sem lista (legado) = vê todos (fallback seguro). Lista vazia = só Estoque.
+  const redes = usuario?.sistemas_rede
+  const vis = useMemo(() => {
+    const isAdmin = (perfil || '').toLowerCase().startsWith('admin')
+    if (isAdmin || redes == null) return SISTEMAS
+    return SISTEMAS.filter((s) => s.id === 'estoque' || redes.includes(s.id))
+  }, [perfil, redes])
   const nome = (usuario?.nome || '').split(' ')[0]
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
   const h = new Date().getHours()

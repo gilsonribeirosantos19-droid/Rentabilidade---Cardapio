@@ -7,7 +7,7 @@ import { PortalShell } from './portal/PortalShell'
 import { PortalHub } from './portal/PortalHub'
 
 function Gate() {
-  const { session, loading, usuario, recovery } = useAuth()
+  const { session, loading, usuario, recovery, signOut } = useAuth()
   if (loading) {
     return (
       <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -20,6 +20,8 @@ function Gate() {
   // Gerente e Supervisor caem direto no Portal do Gerente (multi-loja); admin/operador seguem no ERP.
   const perfil = (usuario?.role || usuario?.perfil || '').toLowerCase()
   const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') : ''
+  // Hub da rede (/portal) — agora EXIGE login; vale pra TODOS os perfis (vem antes do redirect do gerente).
+  if (path === '/portal' && usuario?.tenant_id) return <PortalHub usuario={usuario} perfil={perfil} signOut={signOut} />
   if (perfil === 'gerente' || perfil === 'supervisor') return <PortalShell />
   // Admin pode abrir o "Portal das Lojas" pelo atalho no ERP (rota /portal-lojas) — vê todas as lojas.
   const isAdmin = perfil === 'admin' || perfil === 'administrador'
@@ -41,11 +43,7 @@ function Gate() {
 }
 
 export default function App() {
-  // PORTAL de módulos num endereço PRÓPRIO (/portal) — separado e opcional.
-  // Não afeta o app normal: quem abre app.aikosistema.com continua caindo no login/Portal/ERP de hoje.
-  const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') : ''
-  if (path === '/portal') return <PortalHub />
-
+  // O hub da rede (/portal) agora é tratado DENTRO do Gate — exige login (ver Gate()).
   return (
     <AuthProvider>
       <Gate />
