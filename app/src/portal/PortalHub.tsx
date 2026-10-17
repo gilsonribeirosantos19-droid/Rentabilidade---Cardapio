@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
+import { supabase } from '../lib/supabase'
 import './portalhub.css'
 
 // Portal / Hub de módulos — primeira tela após o login. Mostra os sistemas da rede
@@ -6,16 +7,15 @@ import './portalhub.css'
 // v1: todos os perfis veem todos os módulos. Restrição por perfil entra depois
 // (tabela portal_sistemas/portal_permissoes + tela de admin).
 
-type Sistema = { id: string; nome: string; desc: string; icon: string; cor: string; url: string; interno?: boolean }
+// url = pra onde ir no fallback (login normal). sso = página /sso do sistema que recebe o crachá
+// (entrar direto). Estoque é o próprio AIKO (já logado) → sem sso.
+type Sistema = { id: string; nome: string; desc: string; icon: string; cor: string; url: string; sso?: string; interno?: boolean }
 const SISTEMAS: Sistema[] = [
-  { id: 'estoque', nome: 'Estoque', desc: 'Inventário, entradas, fichas técnicas e fechamento mensal.', icon: 'box', cor: '#e07b1a', url: '/' },
-  { id: 'avaliacoes', nome: 'Avaliações', desc: 'Pesquisa com clientes, NPS e Central de Tratativas.', icon: 'star', cor: '#2563eb', url: 'https://avaliacao.aikosistema.com/painel.html' },
-  { id: 'checklist', nome: 'Checklist', desc: 'Abertura, fechamento, produção, auditoria e avaliação de garçons.', icon: 'check', cor: '#14315f', url: 'https://checklist.aikosistema.com/' },
-  { id: 'manutencao', nome: 'Manutenção', desc: 'Chamados, preventivas e pendências prediais das lojas.', icon: 'wrench', cor: '#b45309', url: 'https://manutencao.aikosistema.com/' },
+  { id: 'estoque', nome: 'Estoque', desc: 'Inventário, entradas, fichas técnicas e fechamento mensal.', icon: 'box', cor: '#e07b1a', url: '/app' },
+  { id: 'avaliacoes', nome: 'Avaliações', desc: 'Pesquisa com clientes, NPS e Central de Tratativas.', icon: 'star', cor: '#2563eb', url: 'https://avaliacao.aikosistema.com/', sso: 'https://avaliacao.aikosistema.com/sso' },
+  { id: 'checklist', nome: 'Checklist', desc: 'Abertura, fechamento, produção, auditoria e avaliação de garçons.', icon: 'check', cor: '#14315f', url: 'https://checklist.aikosistema.com/', sso: 'https://checklist.aikosistema.com/sso' },
+  { id: 'manutencao', nome: 'Manutenção', desc: 'Chamados, preventivas e pendências prediais das lojas.', icon: 'wrench', cor: '#b45309', url: 'https://manutencao.aikosistema.com/', sso: 'https://manutencao.aikosistema.com/sso' },
 ]
-// mapa perfil → módulos. Vazio = vê todos (v1). Ex. futuro: { garçom: ['checklist'] }
-const PERM: Record<string, string[]> = {}
-const permitidos = (perfil: string) => PERM[perfil] ?? SISTEMAS.map((s) => s.id)
 
 const ICO: Record<string, ReactNode> = {
   box: <path d="M20 7 12 3 4 7m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
@@ -26,12 +26,19 @@ const ICO: Record<string, ReactNode> = {
 const svg = (n: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{ICO[n]}</svg>
 
 export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
-  usuario?: { nome?: string } | null
+  usuario?: { nome?: string; sistemas_rede?: string[] | null } | null
   perfil?: string
   lojaNome?: string
   signOut?: () => void
 }) {
-  const vis = useMemo(() => SISTEMAS.filter((s) => permitidos(perfil).includes(s.id)), [perfil])
+  // mostra Estoque (o próprio AIKO) sempre + os sistemas em que a pessoa foi provisionada.
+  // admin ou usuário sem lista (legado) = vê todos (fallback seguro). Lista vazia = só Estoque.
+  const redes = usuario?.sistemas_rede
+  const vis = useMemo(() => {
+    const isAdmin = (perfil || '').toLowerCase().startsWith('admin')
+    if (isAdmin || redes == null) return SISTEMAS
+    return SISTEMAS.filter((s) => s.id === 'estoque' || redes.includes(s.id))
+  }, [perfil, redes])
   const nome = (usuario?.nome || '').split(' ')[0]
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
   const h = new Date().getHours()
@@ -43,9 +50,19 @@ export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
     return `${dias[d.getDay()]}, ${d.getDate()} de ${mes[d.getMonth()]}`
   }, [])
 
-  // Cada card abre o sistema em NOVA ABA → o portal nunca fecha (fica na aba dele).
-  // Estoque (url '/') abre o próprio app (login decide ERP x Portal do Gerente).
-  const abrir = (s: Sistema) => window.open(s.url, '_blank', 'noopener,noreferrer')
+  // Todos os cards abrem em NOVA aba → o hub nunca fecha (fica na aba dele).
+  // ENTRAR DIRETO: pede um crachá (sso-emitir) e abre o sistema já com ele (/sso#t=...).
+  // Estoque é o próprio AIKO (já logado) → abre direto. Qualquer falha cai no login normal.
+  const abrir = async (s: Sistema) => {
+    if (!s.sso) { window.open(s.url, '_blank', 'noopener,noreferrer'); return }
+    const w = window.open('about:blank', '_blank')   // abre JÁ (gesto do usuário) p/ não ser bloqueado
+    try {
+      const { data } = await supabase.functions.invoke('sso-emitir', { body: { sistema: s.id } })
+      const token = (data as { ok?: boolean; token?: string })?.token
+      if (token) { if (w) w.location.href = `${s.sso}#t=${encodeURIComponent(token)}`; return }
+    } catch { /* cai no fallback abaixo */ }
+    if (w) w.location.href = s.url   // fallback: login normal do sistema
+  }
 
   return (
     <div className="phub">

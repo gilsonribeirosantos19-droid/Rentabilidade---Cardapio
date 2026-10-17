@@ -85,8 +85,11 @@ export function ConfigUsuarios() {
         const userId = auth?.id
         if (!userId) throw new Error('A conta de acesso não retornou um ID.')
         // grava email também (coluna adicionada via SQL); se ainda não existir a coluna, cai no catch e insere sem email
-        const base = { id: userId, nome, role: m.role, grupo, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso, ativo: true }
+        // sistemas_rede = em quais sistemas da rede a pessoa foi provisionada (o hub usa pra filtrar os cards).
+        // sempre gravado (lista vazia = só Estoque no hub); null fica só pros usuários antigos (= vê todos).
+        const base: Record<string, unknown> = { id: userId, nome, role: m.role, grupo, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso, ativo: true, sistemas_rede: m.redes }
         let ins = await supabase.from('usuarios').insert({ ...base, email })
+        if (ins.error && /sistemas_rede/i.test(ins.error.message)) { delete base.sistemas_rede; ins = await supabase.from('usuarios').insert({ ...base, email }) }
         if (ins.error && /email/i.test(ins.error.message)) ins = await supabase.from('usuarios').insert(base)
         if (ins.error) throw ins.error
         // Login único (Nível 1): cria o MESMO usuário nos outros sistemas marcados (via Edge provisionar-rede).
