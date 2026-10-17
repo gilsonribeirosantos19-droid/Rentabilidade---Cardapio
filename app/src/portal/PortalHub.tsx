@@ -8,7 +8,7 @@ import './portalhub.css'
 
 type Sistema = { id: string; nome: string; desc: string; icon: string; cor: string; url: string; interno?: boolean }
 const SISTEMAS: Sistema[] = [
-  { id: 'estoque', nome: 'Estoque', desc: 'Inventário, entradas, fichas técnicas e fechamento mensal.', icon: 'box', cor: '#e07b1a', url: '/app', interno: true },
+  { id: 'estoque', nome: 'Estoque', desc: 'Inventário, entradas, fichas técnicas e fechamento mensal.', icon: 'box', cor: '#e07b1a', url: '/app' },
   { id: 'avaliacoes', nome: 'Avaliações', desc: 'Pesquisa com clientes, NPS e Central de Tratativas.', icon: 'star', cor: '#2563eb', url: 'https://avaliacao.aikosistema.com/painel.html' },
   { id: 'checklist', nome: 'Checklist', desc: 'Abertura, fechamento, produção, auditoria e avaliação de garçons.', icon: 'check', cor: '#14315f', url: 'https://checklist.aikosistema.com/' },
   { id: 'manutencao', nome: 'Manutenção', desc: 'Chamados, preventivas e pendências prediais das lojas.', icon: 'wrench', cor: '#b45309', url: 'https://manutencao.aikosistema.com/' },
@@ -47,12 +47,9 @@ export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
     return `${dias[d.getDay()]}, ${d.getDate()} de ${mes[d.getMonth()]}`
   }, [])
 
-  // Estoque (interno) abre o app de trabalho na MESMA aba (/app → ERP ou Portal do gerente).
-  // Os demais abrem em NOVA aba → o hub nunca fecha (fica na aba dele).
-  const abrir = (s: Sistema) => {
-    if (s.interno) { window.location.href = s.url; return }
-    window.open(s.url, '_blank', 'noopener,noreferrer')
-  }
+  // Todos os cards abrem em NOVA aba → o hub nunca fecha (fica na aba dele).
+  // Estoque (url '/app') abre o ERP/Portal do gerente; os demais, os sistemas externos.
+  const abrir = (s: Sistema) => window.open(s.url, '_blank', 'noopener,noreferrer')
 
   return (
     <div className="phub">
