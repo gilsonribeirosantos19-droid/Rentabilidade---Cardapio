@@ -30,7 +30,6 @@ const SISTEMAS_EXT: { key: string; nome: string; cor: string; mods: string[] }[]
   { key: 'avaliacoes', nome: 'Avaliações', cor: '#2563eb', mods: ['Início', 'Avaliações', 'Comentários', 'Tratativas', 'Relatórios', 'Exportações', 'QR Codes', 'Configurações'] },
   { key: 'manutencao', nome: 'Manutenção', cor: '#b45309', mods: ['Painel', 'Programação Anual', 'Pendências por Loja', 'Solicitações', 'Histórico', 'Cadastros', 'Configurações'] },
 ]
-const SEG: [number, string][] = [[0, '—'], [1, '👁 Ver'], [2, '✎ Editar']]
 const skey = (sis: string, mod: string) => sis + '|' + mod
 
 type PState = Record<string, { hab: boolean; ct: boolean }>
@@ -179,6 +178,18 @@ export function ConfigPermissoes() {
     return n
   })
 
+  // handlers da matriz dos OUTROS sistemas — MESMA semântica do AIKO, guardada em nível 0/1/2:
+  // 0 = oculto · 1 = Habilitado+Somente Leitura (só vê) · 2 = Habilitado+Controle Total (vê e edita)
+  const setSys = (key: string, nivel: number) => setSysPerms((p) => ({ ...p, [key]: nivel }))
+  const onHabSys = (key: string, checked: boolean) => setSys(key, checked ? ((sysPerms[key] ?? 0) === 2 ? 2 : 1) : 0)
+  const onCTSys = (key: string, checked: boolean) => setSys(key, checked ? 2 : ((sysPerms[key] ?? 0) >= 1 ? 1 : 0))
+  const onSLSys = (key: string, checked: boolean) => setSys(key, checked ? 1 : 0)
+  const setSysAll = (s: (typeof SISTEMAS_EXT)[number], col: 'hab' | 'ct', val: boolean) => setSysPerms((p) => {
+    const n = { ...p }
+    s.mods.forEach((m) => { const key = skey(s.key, m); const cur = n[key] ?? 0; n[key] = col === 'hab' ? (val ? (cur === 2 ? 2 : 1) : 0) : (val ? 2 : (cur >= 1 ? 1 : 0)) })
+    return n
+  })
+
   const toggleVinc = (id: string) => setVinc((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
 
   const grupoAtual = useMemo(() => Object.fromEntries(usuarios.map((u) => [u.id, u.grupo])) as Record<string, string | null | undefined>, [usuarios])
@@ -300,7 +311,7 @@ export function ConfigPermissoes() {
             {/* ABA OUTROS SISTEMAS (Central de Permissões) */}
             {tab === 'sistemas' && !isNew && (
               <>
-                <div className="grp-note">Acesso deste grupo aos <b>outros sistemas da rede</b> (Checklist, Avaliações, Manutenção). Por módulo: <b>— (oculto) · 👁 Ver · ✎ Editar</b>. ⚠️ <b>Ainda não bloqueia</b> — por enquanto é só a configuração; cada sistema passa a obedecer conforme a gente liga ele.</div>
+                <div className="grp-note">Acesso deste grupo aos <b>outros sistemas da rede</b> (Checklist, Avaliações, Manutenção). Em cada módulo marque <b>Habilitado</b> (só vê) ou <b>Controle Total</b> (vê e edita) — <b>igual à tela de Permissões do AIKO</b>. ⚠️ <b>Ainda não bloqueia</b> — por enquanto é só a configuração; cada sistema passa a obedecer conforme a gente liga ele.</div>
                 {SISTEMAS_EXT.map((s) => { const aberto = sysOpen.has(s.key); const liberados = s.mods.filter((m) => (sysPerms[skey(s.key, m)] || 0) > 0).length; return (
                   <div key={s.key} style={{ border: '1px solid #e2e8f0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
                     <div onClick={() => setSysOpen((o) => { const n = new Set(o); n.has(s.key) ? n.delete(s.key) : n.add(s.key); return n })}
@@ -310,21 +321,25 @@ export function ConfigPermissoes() {
                       <b style={{ fontSize: 13.5 }}>{s.nome}</b>
                       <span style={{ marginLeft: 'auto', fontSize: 11.5, color: liberados > 0 ? '#16a34a' : '#94a3b8', fontWeight: liberados > 0 ? 600 : 400 }}>{liberados} de {s.mods.length} módulos</span>
                     </div>
-                    {aberto && <table className="perm-matrix"><tbody>
-                      {s.mods.map((m) => { const key = skey(s.key, m); const lvl = sysPerms[key] ?? 0; return (
-                        <tr key={m}>
-                          <td style={{ paddingLeft: 20 }}>{m}</td>
-                          <td className="pc" style={{ textAlign: 'right', paddingRight: 14 }}>
-                            <div style={{ display: 'inline-flex', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
-                              {SEG.map(([v, lab]) => (
-                                <button key={v} type="button" disabled={isAdmin} onClick={() => setSysPerms((p) => ({ ...p, [key]: v }))}
-                                  style={{ border: 0, borderRight: v !== 2 ? '1px solid #e2e8f0' : '0', background: lvl === v ? (v === 1 ? '#2563eb' : v === 2 ? '#f97316' : '#64748b') : '#fff', color: lvl === v ? '#fff' : '#64748b', font: 'inherit', fontSize: 11.5, fontWeight: 600, padding: '5px 11px', cursor: isAdmin ? 'default' : 'pointer' }}>{lab}</button>
-                              ))}
-                            </div>
-                          </td>
+                    {aberto && <table className="perm-matrix">
+                      <thead><tr><th style={{ minWidth: 200 }}>Módulo</th><th className="pc">Habilitado</th><th className="pc">Controle Total</th><th className="pc">Somente Leitura</th></tr></thead>
+                      <tbody>
+                        <tr className="grp-row">
+                          <td><b>Todos os módulos</b></td>
+                          <td className="pc"><input type="checkbox" disabled={isAdmin} checked={s.mods.every((m) => (sysPerms[skey(s.key, m)] ?? 0) >= 1)} onChange={(e) => setSysAll(s, 'hab', e.target.checked)} /></td>
+                          <td className="pc"><input type="checkbox" disabled={isAdmin} checked={s.mods.every((m) => (sysPerms[skey(s.key, m)] ?? 0) >= 2)} onChange={(e) => setSysAll(s, 'ct', e.target.checked)} /></td>
+                          <td className="pc" />
                         </tr>
-                      ) })}
-                    </tbody></table>}
+                        {s.mods.map((m) => { const key = skey(s.key, m); const lvl = sysPerms[key] ?? 0; const hab = lvl >= 1, ct = lvl >= 2, sl = lvl === 1; return (
+                          <tr key={m} className={isAdmin ? 'perm-disabled' : ''}>
+                            <td style={{ paddingLeft: 28 }}>{m}</td>
+                            <td className="pc"><input type="checkbox" checked={hab} disabled={isAdmin} onChange={(e) => onHabSys(key, e.target.checked)} /></td>
+                            <td className="pc"><input type="checkbox" checked={ct} disabled={isAdmin} onChange={(e) => onCTSys(key, e.target.checked)} /></td>
+                            <td className="pc"><input type="checkbox" checked={sl} disabled={isAdmin} onChange={(e) => onSLSys(key, e.target.checked)} /></td>
+                          </tr>
+                        ) })}
+                      </tbody>
+                    </table>}
                   </div>
                 ) })}
                 {!isAdmin && <div className="grp-foot"><button className="cfg-btn pri" disabled={sysSaveMut.isPending} onClick={() => sysSaveMut.mutate()}>{sysSaveMut.isPending ? 'Salvando…' : 'Salvar acesso aos sistemas'}</button></div>}
