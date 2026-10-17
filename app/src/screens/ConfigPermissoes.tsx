@@ -40,7 +40,7 @@ export function ConfigPermissoes() {
   const [selId, setSelId] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [nome, setNome] = useState('')
-  const [tab, setTab] = useState<'usuarios' | 'perms' | 'sistemas'>('usuarios')
+  const [tab, setTab] = useState<'usuarios' | 'perms'>('usuarios')
   const [vinc, setVinc] = useState<Set<string>>(new Set())
   const [perms, setPerms] = useState<PState>({})
   const [sysPerms, setSysPerms] = useState<Record<string, number>>({})   // Central: sistema|modulo → nível (0/1/2)
@@ -98,8 +98,8 @@ export function ConfigPermissoes() {
     setSysPerms(out)
   }, [sysData, grp?.nome, isAdmin])
 
-  // sempre que trocar de grupo, começa com os sistemas RECOLHIDOS
-  useEffect(() => { setSysOpen(new Set()) }, [grp?.nome])
+  // ao trocar de grupo: AIKO aberto, os outros sistemas recolhidos
+  useEffect(() => { setSysOpen(new Set(['aiko'])) }, [grp?.nome])
 
   // init vínculos de usuário quando troca grupo
   useEffect(() => {
@@ -149,20 +149,14 @@ export function ConfigPermissoes() {
   const permSaveMut = useMutation({
     mutationFn: async () => {
       if (!grp) return
+      // 1) permissões do AIKO (tabela permissoes)
       const rows = ALL_KEYS.map((k) => { const s = perms[k] || { hab: false, ct: false }; return { tenant_id: tenantId, perfil: grp.nome, modulo: k, visualizar: s.hab, criar: s.hab && s.ct, editar: s.hab && s.ct, excluir: s.hab && s.ct } })
       const { error } = await supabase.from('permissoes').upsert(rows, { onConflict: 'tenant_id,perfil,modulo' }); if (error) throw error
+      // 2) permissões dos OUTROS sistemas (tabela permissoes_sistemas) — o mesmo botão salva tudo
+      const sysRows = SISTEMAS_EXT.flatMap((s) => s.mods.map((m) => ({ tenant_id: tenantId, perfil: grp.nome, sistema: s.key, modulo: m, nivel: sysPerms[skey(s.key, m)] || 0 })))
+      const { error: e2 } = await supabase.from('permissoes_sistemas').upsert(sysRows, { onConflict: 'tenant_id,perfil,sistema,modulo' }); if (e2) throw e2
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-perm'] }); showToast('Permissões salvas.') },
-    onError: (e: Error) => showToast('Erro: ' + e.message, true),
-  })
-
-  const sysSaveMut = useMutation({
-    mutationFn: async () => {
-      if (!grp) return
-      const rows = SISTEMAS_EXT.flatMap((s) => s.mods.map((m) => ({ tenant_id: tenantId, perfil: grp.nome, sistema: s.key, modulo: m, nivel: sysPerms[skey(s.key, m)] || 0 })))
-      const { error } = await supabase.from('permissoes_sistemas').upsert(rows, { onConflict: 'tenant_id,perfil,sistema,modulo' }); if (error) throw error
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-perm-sys'] }); showToast('Acesso aos sistemas salvo.') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['cfg-perm'] }); qc.invalidateQueries({ queryKey: ['cfg-perm-sys'] }); showToast('Permissões salvas.') },
     onError: (e: Error) => showToast('Erro: ' + e.message, true),
   })
 
@@ -229,9 +223,8 @@ export function ConfigPermissoes() {
             </div>
 
             <div className="grp-tabs">
-              <button className={tab === 'usuarios' ? 'on' : ''} onClick={() => setTab('usuarios')}>Vincular Usuários</button>
-              <button className={tab === 'perms' ? 'on' : ''} onClick={() => setTab('perms')} disabled={isNew}>Permissões / Acesso</button>
-              <button className={tab === 'sistemas' ? 'on' : ''} onClick={() => setTab('sistemas')} disabled={isNew}>Outros Sistemas</button>
+              <button className={tab === 'usuarios' ? 'on' : ''} onClick={() => setTab('usuarios')}>Membros</button>
+              <button className={tab === 'perms' ? 'on' : ''} onClick={() => setTab('perms')} disabled={isNew}>Permissões</button>
             </div>
 
             {/* ABA USUÁRIOS */}
@@ -258,60 +251,74 @@ export function ConfigPermissoes() {
                 </>
             )}
 
-            {/* ABA PERMISSÕES */}
+            {/* ABA PERMISSÕES — AIKO + outros sistemas da rede, tudo numa aba só */}
             {tab === 'perms' && !isNew && (
               <>
-                <table className="perm-matrix">
-                  <thead><tr><th style={{ minWidth: 240 }}>Módulo / Tela</th><th className="pc">Habilitado</th><th className="pc">Controle Total</th><th className="pc">Somente Leitura</th></tr></thead>
-                  <tbody>
-                    {PERM_MODULES.map((m) => {
-                      const keys = modLeaves(m).map((l) => l.key)
-                      if (!keys.length) return null
-                      const allHab = keys.every((k) => perms[k]?.hab)
-                      const allCt = keys.every((k) => perms[k]?.ct)
-                      return (
-                        <Fragment key={m.id}>
-                          <tr className="grp-row">
-                            <td><b>{m.label}</b></td>
-                            <td className="pc"><input type="checkbox" disabled={isAdmin} checked={allHab} onChange={(e) => setModAll(m, 'hab', e.target.checked)} /></td>
-                            <td className="pc"><input type="checkbox" disabled={isAdmin} checked={allCt} onChange={(e) => setModAll(m, 'ct', e.target.checked)} /></td>
-                            <td className="pc" />
-                          </tr>
-                          {(m.sections ?? []).map((s, i) => {
-                            const items = leavesOf(s)
-                            if (!items.length) return null
-                            return (
-                              <Fragment key={i}>
-                                {'group' in s && <tr className="sub-row"><td colSpan={4} style={{ paddingLeft: 24, fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.04em' }}>{s.group}</td></tr>}
-                                {items.map((it) => {
-                                  const st = perms[it.key] || { hab: false, ct: false }
-                                  const sl = st.hab && !st.ct
-                                  return (
-                                    <tr key={it.key} className={isAdmin ? 'perm-disabled' : ''}>
-                                      <td style={{ paddingLeft: 36 }}>{it.label}</td>
-                                      <td className="pc"><input type="checkbox" checked={st.hab} disabled={isAdmin} onChange={(e) => onHab(it.key, e.target.checked)} /></td>
-                                      <td className="pc"><input type="checkbox" checked={st.ct} disabled={isAdmin} onChange={(e) => onCT(it.key, e.target.checked)} /></td>
-                                      <td className="pc"><input type="checkbox" checked={sl} disabled={isAdmin} onChange={(e) => onSL(it.key, e.target.checked)} /></td>
-                                    </tr>
-                                  )
-                                })}
-                              </Fragment>
-                            )
-                          })}
-                        </Fragment>
-                      )
-                    })}
-                  </tbody>
-                </table>
-                {!isAdmin && <div className="grp-foot"><button className="cfg-btn pri" disabled={permSaveMut.isPending} onClick={() => permSaveMut.mutate()}>{permSaveMut.isPending ? 'Salvando…' : 'Salvar permissões'}</button></div>}
-                {isAdmin && <div className="grp-note">O grupo <b>Administrador</b> tem acesso total e não pode ser editado.</div>}
-              </>
-            )}
+                <div className="grp-note">O que o grupo <b>{grp?.nome}</b> acessa em cada sistema. Por tela: <b>Habilitado</b> (vê) · <b>Controle Total</b> (vê e edita) · <b>Somente Leitura</b>. O app esconde do menu o que não estiver habilitado. ⚠️ Nos <b>outros sistemas</b> ainda é só configuração — cada um passa a obedecer conforme a gente liga.</div>
 
-            {/* ABA OUTROS SISTEMAS (Central de Permissões) */}
-            {tab === 'sistemas' && !isNew && (
-              <>
-                <div className="grp-note">Acesso deste grupo aos <b>outros sistemas da rede</b> (Checklist, Avaliações, Manutenção). Em cada módulo marque <b>Habilitado</b> (só vê) ou <b>Controle Total</b> (vê e edita) — <b>igual à tela de Permissões do AIKO</b>. ⚠️ <b>Ainda não bloqueia</b> — por enquanto é só a configuração; cada sistema passa a obedecer conforme a gente liga ele.</div>
+                {/* CARD AIKO (sistema principal) */}
+                {(() => {
+                  const aikoOpen = sysOpen.has('aiko')
+                  const libTelas = ALL_KEYS.filter((k) => perms[k]?.hab).length
+                  return (
+                    <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
+                      <div onClick={() => setSysOpen((o) => { const n = new Set(o); n.has('aiko') ? n.delete('aiko') : n.add('aiko'); return n })}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#f8fafc', borderBottom: aikoOpen ? '1px solid #eef2f7' : '0', cursor: 'pointer', userSelect: 'none' }}>
+                        <span style={{ fontSize: 10, color: '#94a3b8', display: 'inline-block', transform: aikoOpen ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>▶</span>
+                        <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg,#14315F,#f97316)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 800 }}>A</div>
+                        <b style={{ fontSize: 13.5 }}>AIKO — Estoque / ERP</b>
+                        <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#f97316', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 20, padding: '2px 8px' }}>sistema principal</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 11.5, color: libTelas > 0 ? '#16a34a' : '#94a3b8', fontWeight: libTelas > 0 ? 600 : 400 }}>{libTelas} telas liberadas</span>
+                      </div>
+                      {aikoOpen && (
+                        <table className="perm-matrix">
+                          <thead><tr><th style={{ minWidth: 240 }}>Módulo / Tela</th><th className="pc">Habilitado</th><th className="pc">Controle Total</th><th className="pc">Somente Leitura</th></tr></thead>
+                          <tbody>
+                            {PERM_MODULES.map((m) => {
+                              const keys = modLeaves(m).map((l) => l.key)
+                              if (!keys.length) return null
+                              const allHab = keys.every((k) => perms[k]?.hab)
+                              const allCt = keys.every((k) => perms[k]?.ct)
+                              return (
+                                <Fragment key={m.id}>
+                                  <tr className="grp-row">
+                                    <td><b>{m.label}</b></td>
+                                    <td className="pc"><input type="checkbox" disabled={isAdmin} checked={allHab} onChange={(e) => setModAll(m, 'hab', e.target.checked)} /></td>
+                                    <td className="pc"><input type="checkbox" disabled={isAdmin} checked={allCt} onChange={(e) => setModAll(m, 'ct', e.target.checked)} /></td>
+                                    <td className="pc" />
+                                  </tr>
+                                  {(m.sections ?? []).map((s, i) => {
+                                    const items = leavesOf(s)
+                                    if (!items.length) return null
+                                    return (
+                                      <Fragment key={i}>
+                                        {'group' in s && <tr className="sub-row"><td colSpan={4} style={{ paddingLeft: 24, fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.04em' }}>{s.group}</td></tr>}
+                                        {items.map((it) => {
+                                          const st = perms[it.key] || { hab: false, ct: false }
+                                          const sl = st.hab && !st.ct
+                                          return (
+                                            <tr key={it.key} className={isAdmin ? 'perm-disabled' : ''}>
+                                              <td style={{ paddingLeft: 36 }}>{it.label}</td>
+                                              <td className="pc"><input type="checkbox" checked={st.hab} disabled={isAdmin} onChange={(e) => onHab(it.key, e.target.checked)} /></td>
+                                              <td className="pc"><input type="checkbox" checked={st.ct} disabled={isAdmin} onChange={(e) => onCT(it.key, e.target.checked)} /></td>
+                                              <td className="pc"><input type="checkbox" checked={sl} disabled={isAdmin} onChange={(e) => onSL(it.key, e.target.checked)} /></td>
+                                            </tr>
+                                          )
+                                        })}
+                                      </Fragment>
+                                    )
+                                  })}
+                                </Fragment>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  )
+                })()}
+
+                {/* CARDS dos outros sistemas da rede */}
                 {SISTEMAS_EXT.map((s) => { const aberto = sysOpen.has(s.key); const liberados = s.mods.filter((m) => (sysPerms[skey(s.key, m)] || 0) > 0).length; return (
                   <div key={s.key} style={{ border: '1px solid #e2e8f0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
                     <div onClick={() => setSysOpen((o) => { const n = new Set(o); n.has(s.key) ? n.delete(s.key) : n.add(s.key); return n })}
@@ -342,8 +349,9 @@ export function ConfigPermissoes() {
                     </table>}
                   </div>
                 ) })}
-                {!isAdmin && <div className="grp-foot"><button className="cfg-btn pri" disabled={sysSaveMut.isPending} onClick={() => sysSaveMut.mutate()}>{sysSaveMut.isPending ? 'Salvando…' : 'Salvar acesso aos sistemas'}</button></div>}
-                {isAdmin && <div className="grp-note">O grupo <b>Administrador</b> vê todos os sistemas.</div>}
+
+                {!isAdmin && <div className="grp-foot"><button className="cfg-btn pri" disabled={permSaveMut.isPending} onClick={() => permSaveMut.mutate()}>{permSaveMut.isPending ? 'Salvando…' : 'Salvar permissões'}</button></div>}
+                {isAdmin && <div className="grp-note">O grupo <b>Administrador</b> tem acesso total e não pode ser editado.</div>}
               </>
             )}
           </div>
