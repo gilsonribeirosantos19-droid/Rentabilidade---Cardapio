@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useToastErr } from '../lib/toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
@@ -42,6 +42,8 @@ export function ConfigPermissoes() {
   const [nome, setNome] = useState('')
   const [tab, setTab] = useState<'usuarios' | 'perms'>('usuarios')
   const [vinc, setVinc] = useState<Set<string>>(new Set())
+  const [buscaUser, setBuscaUser] = useState('')          // Membros: busca por nome/e-mail
+  const [soGrupo, setSoGrupo] = useState(true)            // Membros: mostrar só quem é do grupo
   const [perms, setPerms] = useState<PState>({})
   const [sysPerms, setSysPerms] = useState<Record<string, number>>({})   // Central: sistema|modulo → nível (0/1/2)
   const [sysOpen, setSysOpen] = useState<Set<string>>(new Set())         // cards de sistema recolhidos por padrão
@@ -227,28 +229,48 @@ export function ConfigPermissoes() {
               <button className={tab === 'perms' ? 'on' : ''} onClick={() => setTab('perms')} disabled={isNew}>Permissões</button>
             </div>
 
-            {/* ABA USUÁRIOS */}
+            {/* ABA MEMBROS */}
             {tab === 'usuarios' && (
               isNew ? <div className="grp-note">Salve o grupo primeiro para vincular usuários.</div>
-                : <>
-                  <div className="grp-note">Usuários marcados pertencem a este grupo.</div>
-                  <table className="vinc-tbl">
-                    <thead><tr><th style={{ width: 40 }}>Sel.</th><th>Login / E-mail</th><th>Nome</th><th>Grupo Atual</th><th>Situação</th></tr></thead>
-                    <tbody>
-                      {usuarios.length === 0 ? <tr><td colSpan={5} style={{ color: '#94a3b8', padding: 14 }}>Nenhum usuário cadastrado.</td></tr>
-                        : usuarios.map((u) => (
-                          <tr key={u.id}>
-                            <td><input type="checkbox" checked={vinc.has(u.id)} onChange={() => toggleVinc(u.id)} /></td>
-                            <td className="mono" style={{ fontSize: 11.5, color: '#475569' }}>{u.email || '—'}</td>
-                            <td>{u.nome || '—'}</td>
-                            <td style={{ fontSize: 11.5, color: '#64748b' }}>{grupoAtual[u.id] || '—'}</td>
-                            <td style={{ fontSize: 11.5, color: u.ativo !== false ? '#16a34a' : '#94a3b8' }}>{u.ativo !== false ? 'Ativo' : 'Inativo'}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                  <div className="grp-foot"><button className="cfg-btn pri" disabled={vincSaveMut.isPending} onClick={() => vincSaveMut.mutate()}>{vincSaveMut.isPending ? 'Salvando…' : 'Salvar vínculos'}</button></div>
-                </>
+                : (() => {
+                  const membroDe = (u: Usuario) => vinc.has(u.id) || grupoAtual[u.id] === grp?.nome
+                  const termo = buscaUser.trim().toLowerCase()
+                  const lista = usuarios
+                    .filter((u) => !termo || (u.nome || '').toLowerCase().includes(termo) || (u.email || '').toLowerCase().includes(termo))
+                    .filter((u) => !soGrupo || membroDe(u))
+                    .sort((a, b) => (membroDe(b) ? 1 : 0) - (membroDe(a) ? 1 : 0) || (a.nome || '').localeCompare(b.nome || ''))
+                  const noGrupo = usuarios.filter(membroDe).length
+                  const segBtn = (on: boolean, left: boolean): CSSProperties => ({ border: 0, borderRight: left ? '1px solid #e2e8f0' : '0', background: on ? '#f97316' : '#fff', color: on ? '#fff' : '#64748b', font: 'inherit', fontSize: 12, fontWeight: 600, padding: '7px 13px', cursor: 'pointer' })
+                  return (
+                    <>
+                      <div className="grp-note">Usuários marcados pertencem ao grupo <b>{grp?.nome}</b> — <b>{noGrupo}</b> no grupo. Marque para adicionar, desmarque para remover.</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px', flexWrap: 'wrap' }}>
+                        <input value={buscaUser} onChange={(e) => setBuscaUser(e.target.value)} placeholder="Buscar por nome ou e-mail…"
+                          style={{ flex: 1, minWidth: 180, border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 11px', font: 'inherit', fontSize: 13 }} />
+                        <div style={{ display: 'inline-flex', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
+                          <button type="button" onClick={() => setSoGrupo(true)} style={segBtn(soGrupo, true)}>Do grupo</button>
+                          <button type="button" onClick={() => setSoGrupo(false)} style={segBtn(!soGrupo, false)}>Todos</button>
+                        </div>
+                      </div>
+                      <table className="vinc-tbl">
+                        <thead><tr><th style={{ width: 40 }}>Sel.</th><th>Login / E-mail</th><th>Nome</th><th>Grupo Atual</th><th>Situação</th></tr></thead>
+                        <tbody>
+                          {lista.length === 0 ? <tr><td colSpan={5} style={{ color: '#94a3b8', padding: 14 }}>{soGrupo ? 'Nenhum usuário neste grupo ainda. Use “Todos” para adicionar.' : 'Nenhum usuário encontrado.'}</td></tr>
+                            : lista.map((u) => (
+                              <tr key={u.id}>
+                                <td><input type="checkbox" checked={vinc.has(u.id)} onChange={() => toggleVinc(u.id)} /></td>
+                                <td className="mono" style={{ fontSize: 11.5, color: '#475569' }}>{u.email || '—'}</td>
+                                <td>{u.nome || '—'}</td>
+                                <td style={{ fontSize: 11.5, color: '#64748b' }}>{grupoAtual[u.id] || '—'}</td>
+                                <td style={{ fontSize: 11.5, color: u.ativo !== false ? '#16a34a' : '#94a3b8' }}>{u.ativo !== false ? 'Ativo' : 'Inativo'}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                      <div className="grp-foot"><button className="cfg-btn pri" disabled={vincSaveMut.isPending} onClick={() => vincSaveMut.mutate()}>{vincSaveMut.isPending ? 'Salvando…' : 'Salvar membros'}</button></div>
+                    </>
+                  )
+                })()
             )}
 
             {/* ABA PERMISSÕES — AIKO + outros sistemas da rede, tudo numa aba só */}
