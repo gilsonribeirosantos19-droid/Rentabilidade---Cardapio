@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
+import { supabase } from '../lib/supabase'
 import './portalhub.css'
 
 // Portal / Hub de módulos — primeira tela após o login. Mostra os sistemas da rede
@@ -6,12 +7,14 @@ import './portalhub.css'
 // v1: todos os perfis veem todos os módulos. Restrição por perfil entra depois
 // (tabela portal_sistemas/portal_permissoes + tela de admin).
 
-type Sistema = { id: string; nome: string; desc: string; icon: string; cor: string; url: string; interno?: boolean }
+// url = pra onde ir no fallback (login normal). sso = página /sso do sistema que recebe o crachá
+// (entrar direto). Estoque é o próprio AIKO (já logado) → sem sso.
+type Sistema = { id: string; nome: string; desc: string; icon: string; cor: string; url: string; sso?: string; interno?: boolean }
 const SISTEMAS: Sistema[] = [
   { id: 'estoque', nome: 'Estoque', desc: 'Inventário, entradas, fichas técnicas e fechamento mensal.', icon: 'box', cor: '#e07b1a', url: '/app' },
-  { id: 'avaliacoes', nome: 'Avaliações', desc: 'Pesquisa com clientes, NPS e Central de Tratativas.', icon: 'star', cor: '#2563eb', url: 'https://avaliacao.aikosistema.com/painel.html' },
-  { id: 'checklist', nome: 'Checklist', desc: 'Abertura, fechamento, produção, auditoria e avaliação de garçons.', icon: 'check', cor: '#14315f', url: 'https://checklist.aikosistema.com/' },
-  { id: 'manutencao', nome: 'Manutenção', desc: 'Chamados, preventivas e pendências prediais das lojas.', icon: 'wrench', cor: '#b45309', url: 'https://manutencao.aikosistema.com/' },
+  { id: 'avaliacoes', nome: 'Avaliações', desc: 'Pesquisa com clientes, NPS e Central de Tratativas.', icon: 'star', cor: '#2563eb', url: 'https://avaliacao.aikosistema.com/', sso: 'https://avaliacao.aikosistema.com/sso' },
+  { id: 'checklist', nome: 'Checklist', desc: 'Abertura, fechamento, produção, auditoria e avaliação de garçons.', icon: 'check', cor: '#14315f', url: 'https://checklist.aikosistema.com/', sso: 'https://checklist.aikosistema.com/sso' },
+  { id: 'manutencao', nome: 'Manutenção', desc: 'Chamados, preventivas e pendências prediais das lojas.', icon: 'wrench', cor: '#b45309', url: 'https://manutencao.aikosistema.com/', sso: 'https://manutencao.aikosistema.com/sso' },
 ]
 
 const ICO: Record<string, ReactNode> = {
@@ -48,8 +51,18 @@ export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
   }, [])
 
   // Todos os cards abrem em NOVA aba → o hub nunca fecha (fica na aba dele).
-  // Estoque (url '/app') abre o ERP/Portal do gerente; os demais, os sistemas externos.
-  const abrir = (s: Sistema) => window.open(s.url, '_blank', 'noopener,noreferrer')
+  // ENTRAR DIRETO: pede um crachá (sso-emitir) e abre o sistema já com ele (/sso#t=...).
+  // Estoque é o próprio AIKO (já logado) → abre direto. Qualquer falha cai no login normal.
+  const abrir = async (s: Sistema) => {
+    if (!s.sso) { window.open(s.url, '_blank', 'noopener,noreferrer'); return }
+    const w = window.open('about:blank', '_blank')   // abre JÁ (gesto do usuário) p/ não ser bloqueado
+    try {
+      const { data } = await supabase.functions.invoke('sso-emitir', { body: { sistema: s.id } })
+      const token = (data as { ok?: boolean; token?: string })?.token
+      if (token) { if (w) w.location.href = `${s.sso}#t=${encodeURIComponent(token)}`; return }
+    } catch { /* cai no fallback abaixo */ }
+    if (w) w.location.href = s.url   // fallback: login normal do sistema
+  }
 
   return (
     <div className="phub">
