@@ -20,16 +20,9 @@ function Gate() {
   // Gerente e Supervisor caem direto no Portal do Gerente (multi-loja); admin/operador seguem no ERP.
   const perfil = (usuario?.role || usuario?.perfil || '').toLowerCase()
   const path = typeof window !== 'undefined' ? window.location.pathname.replace(/\/+$/, '') : ''
-  // Hub da rede (/portal) — agora EXIGE login; vale pra TODOS os perfis (vem antes do redirect do gerente).
-  if (path === '/portal' && usuario?.tenant_id) return <PortalHub usuario={usuario} perfil={perfil} signOut={signOut} />
-  if (perfil === 'gerente' || perfil === 'supervisor') return <PortalShell />
-  // Admin pode abrir o "Portal das Lojas" pelo atalho no ERP (rota /portal-lojas) — vê todas as lojas.
-  const isAdmin = perfil === 'admin' || perfil === 'administrador'
-  if (path === '/portal-lojas' && isAdmin && usuario?.tenant_id) return <PortalShell />
-  // Falha FECHADA: sessão válida mas o perfil ainda não resolveu (ex.: releitura vazia
-  // logo após a renovação de token idle). Sem saber o perfil, NÃO liberamos o sistema
-  // principal — senão um gerente cairia no ERP inteiro. Segura numa reconexão até o
-  // perfil (com tenant) carregar. Todo usuário legítimo tem tenant_id.
+  // Falha FECHADA: sessão válida mas o perfil/tenant ainda não resolveu (ex.: releitura vazia logo
+  // após a renovação de token idle). Sem saber quem é, NÃO liberamos nada — segura numa reconexão.
+  // Todo usuário legítimo tem tenant_id. Vem ANTES de qualquer rota.
   if (!usuario?.tenant_id) {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', justifyContent: 'center' }}>
@@ -39,6 +32,14 @@ function Gate() {
       </div>
     )
   }
+  // O HUB é a ENTRADA: raiz ("") e /portal mostram o hub pra TODOS os perfis (depois do login).
+  // O app de trabalho fica em /app (e nas rotas internas); o card "Estoque" do hub leva pra lá.
+  if (path === '' || path === '/portal') return <PortalHub usuario={usuario} perfil={perfil} signOut={signOut} />
+  // Gerente/Supervisor: app de trabalho = Portal do gerente (multi-loja). Admin/operador = ERP.
+  if (perfil === 'gerente' || perfil === 'supervisor') return <PortalShell />
+  // Admin pode abrir o "Portal das Lojas" pelo atalho no ERP (rota /portal-lojas) — vê todas as lojas.
+  const isAdmin = perfil === 'admin' || perfil === 'administrador'
+  if (path === '/portal-lojas' && isAdmin) return <PortalShell />
   return <LojaProvider><Shell /></LojaProvider>
 }
 
