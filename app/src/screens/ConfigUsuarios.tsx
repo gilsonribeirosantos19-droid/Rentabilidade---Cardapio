@@ -93,7 +93,9 @@ export function ConfigUsuarios() {
         // Aditivo: se algum sistema falhar, o usuário do AIKO já está criado — só reporta no toast.
         if (m.redes.length) {
           try {
-            const lojaRede = lojaNome[m.redeLojaId || m.lojaId] || ''
+            // o AIKO nomeia as lojas como "Sushi Centro"; os outros sistemas usam só "Centro".
+            // manda sem o prefixo da marca pra casar o nome (comparação lá é sem acento/maiúscula).
+            const lojaRede = (lojaNome[m.redeLojaId || m.lojaId] || '').replace(/^sushi\s+/i, '').trim()
             const { data: pr, error: prErr } = await supabase.functions.invoke('provisionar-rede', { body: { email, nome, senha: m.senha, papel: m.role, loja: lojaRede, sistemas: m.redes } })
             if (prErr) throw new Error(prErr.message)
             const res = ((pr as { resultados?: { sistema: string; ok: boolean; erro?: string }[] })?.resultados) || []
