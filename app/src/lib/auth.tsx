@@ -76,6 +76,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe()
   }, [])
 
+  // Logout automático por INATIVIDADE (15 min sem atividade) — segurança: se a pessoa esquecer
+  // logada no computador, a sessão cai sozinha e cobra senha de novo.
+  useEffect(() => {
+    if (!session) return
+    const LIMITE = 15 * 60 * 1000   // 15 minutos
+    let timer: ReturnType<typeof setTimeout>
+    const reset = () => { clearTimeout(timer); timer = setTimeout(() => { void signOut() }, LIMITE) }
+    const eventos: (keyof WindowEventMap)[] = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'wheel']
+    eventos.forEach((e) => window.addEventListener(e, reset, { passive: true }))
+    reset()
+    return () => { clearTimeout(timer); eventos.forEach((e) => window.removeEventListener(e, reset)) }
+  }, [session])
+
   async function signIn(email: string, senha: string) {
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
     if (error) return { error: error.message }
