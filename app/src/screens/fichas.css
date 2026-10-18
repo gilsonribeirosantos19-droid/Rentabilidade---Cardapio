@@ -1,17 +1,21 @@
 /* Tela de Fichas Técnicas — fiel ao original (escopado .fic-screen) */
 .fic-screen { padding: 10px 18px; }
 
-.fic-screen .fic-toolbar { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
-.fic-screen .fic-search { position: relative; width: 280px; }
-.fic-screen .fic-search svg { position: absolute; left: 13px; top: 12px; }
-.fic-screen .fic-search input { width: 100%; height: 40px; border: 1px solid var(--n-200); border-radius: 9px; padding: 0 12px 0 36px; font-size: 13px; font-family: inherit; color: var(--n-900); background: #fff; }
-.fic-screen .fic-search input:focus { outline: none; border-color: var(--brand); }
-.fic-screen .fic-field { display: flex; flex-direction: column; gap: 5px; }
-.fic-screen .fic-label { font-size: 11px; font-weight: 600; color: var(--n-400); text-transform: uppercase; letter-spacing: .04em; }
-.fic-screen .fic-sel { height: 40px; min-width: 150px; border: 1px solid var(--n-200); border-radius: 9px; padding: 0 12px; font-size: 13px; font-family: inherit; color: var(--n-900); background: #fff; cursor: pointer; }
-.fic-screen .fic-sel:focus { outline: none; border-color: var(--brand); }
-.fic-screen .fic-mais { height: 40px; padding: 0 14px; border: 1px solid var(--n-200); border-radius: 9px; background: #fff; color: var(--n-600); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
-.fic-screen .fic-nova { margin-left: auto; height: 40px; padding: 0 18px; border: none; border-radius: 9px; background: var(--info); color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+/* Barra de filtros no padrão do sistema (ds-filterbar) — igual às demais telas */
+.fic-screen .ds-filterbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+.fic-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
+.fic-screen .ds-field > label { font-size: 11px; font-weight: 500; color: var(--n-500); text-transform: none; letter-spacing: .01em; }
+.fic-screen .ds-grow { flex: 1; }
+.fic-screen .ds-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.fic-screen .field { height: 34px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: var(--n-900); background: #fff; }
+.fic-screen .field:focus { outline: none; border-color: var(--brand); }
+.fic-screen select.field { cursor: pointer; min-width: 150px; }
+.fic-screen .srch { position: relative; }
+.fic-screen .srch input { height: 34px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 12px 0 32px; font-size: 12.5px; font-family: inherit; color: var(--n-900); }
+.fic-screen .srch svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.fic-screen .btn-ghost { height: 34px; padding: 0 14px; border: 1px solid var(--n-200); border-radius: 8px; background: #fff; color: var(--n-600); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.fic-screen .btn-ghost:hover { background: var(--n-50); }
+.fic-screen .fic-nova { height: 34px; padding: 0 16px; border: none; border-radius: 8px; background: var(--info); color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
 .fic-screen .fic-nova:hover { background: var(--info-strong); }
 .fic-screen .fic-foot { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 12px 18px; margin-top: 14px; font-size: 13px; color: var(--n-500); }
 

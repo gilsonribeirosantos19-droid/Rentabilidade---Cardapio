@@ -237,24 +237,26 @@ export function FichasTecnicas() {
 
   return (
     <div className="fic-screen">
-      <div className="fic-toolbar">
-        <div className="fic-search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <input placeholder="Buscar ficha..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+      <div className="ds-filterbar">
+        <div className="ds-field" style={{ minWidth: 240 }}><label>Buscar</label>
+          <div className="srch">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            <input className="field" style={{ width: '100%' }} placeholder="Buscar ficha..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+          </div>
         </div>
-        <div className="fic-field"><span className="fic-label">Categoria</span>
-          <select className="fic-sel" value={fCat} onChange={(e) => setFCat(e.target.value)}>
+        <div className="ds-field"><label>Categoria</label>
+          <select className="field" value={fCat} onChange={(e) => setFCat(e.target.value)}>
             <option value="">Todas categorias</option>
             {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
-        <div className="fic-field"><span className="fic-label">Status</span>
-          <select className="fic-sel" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+        <div className="ds-field"><label>Status</label>
+          <select className="field" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
             <option value="">Todos</option><option value="ativa">Ativa</option><option value="rascunho">Rascunho</option><option value="arquivada">Arquivada</option>
           </select>
         </div>
-        <div className="fic-field"><span className="fic-label">CMV</span>
-          <select className="fic-sel" value={fCmv} onChange={(e) => setFCmv(e.target.value)}>
+        <div className="ds-field"><label>CMV</label>
+          <select className="field" value={fCmv} onChange={(e) => setFCmv(e.target.value)}>
             <option value="">Todos</option>
             <option value="verde">🟢 Bom (≤30%)</option>
             <option value="amarelo">🟡 Atenção (≤38%)</option>
@@ -262,11 +264,13 @@ export function FichasTecnicas() {
             <option value="sem">Sem preço</option>
           </select>
         </div>
-        <button className="fic-mais"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg> Mais filtros</button>
-        <button className="fic-mais" onClick={() => imprimirLista(filtrada)} title="Imprimir / Salvar PDF de todas as fichas do filtro">🖨 Imprimir ({filtrada.length})</button>
-        {canEdit
-          ? <button className="fic-nova" onClick={() => setEditing('new')}>+ Nova ficha</button>
-          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
+        <div className="ds-actions">
+          <button className="btn-ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg> Mais filtros</button>
+          <button className="btn-ghost" onClick={() => imprimirLista(filtrada)} title="Imprimir / Salvar PDF de todas as fichas do filtro">🖨 Imprimir ({filtrada.length})</button>
+          {canEdit
+            ? <button className="fic-nova" onClick={() => setEditing('new')}>+ Nova ficha</button>
+            : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
+        </div>
       </div>
 
       <div className="tbl-card"><div className="tbl-scroll">
