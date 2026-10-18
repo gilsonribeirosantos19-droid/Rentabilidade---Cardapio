@@ -20,9 +20,9 @@
 .fic-screen .fic-foot { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 12px 18px; margin-top: 14px; font-size: 13px; color: var(--n-500); }
 
 .fic-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
-.fic-screen .tbl-scroll { overflow-x: auto; }
+.fic-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 230px); }
 .fic-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.fic-screen thead th { background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid var(--n-200); white-space: nowrap; }
+.fic-screen thead th { background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid var(--n-200); white-space: nowrap; position: sticky; top: 0; z-index: 5; }
 .fic-screen thead th.r { text-align: right; }
 .fic-screen tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: var(--n-900); white-space: nowrap; vertical-align: middle; }
 .fic-screen tbody td.r { text-align: right; }
@@ -33,6 +33,15 @@
 .fic-screen .st-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .fic-screen .ver-btn { border: 1px solid var(--n-200); background: #fff; border-radius: 7px; padding: 4px 10px; font-size: 12px; font-family: inherit; color: var(--n-600); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
 .fic-screen .ver-btn:hover { border-color: var(--brand); color: var(--brand); }
+/* menu de ações "⋮" (três pontinhos) */
+.fic-screen .kebab-btn { border: none; background: none; cursor: pointer; color: var(--n-500); font-size: 20px; line-height: 1; padding: 2px 8px; border-radius: 7px; }
+.fic-screen .kebab-btn:hover { background: var(--n-100); color: var(--n-700); }
+.kebab-backdrop { position: fixed; inset: 0; z-index: 200; }
+.kebab-menu { position: fixed; z-index: 201; min-width: 168px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 30px rgba(15,23,42,.18); padding: 5px; display: flex; flex-direction: column; }
+.kebab-item { border: none; background: none; text-align: left; font-family: inherit; font-size: 13px; color: var(--n-700); padding: 8px 11px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.kebab-item:hover { background: var(--n-50); }
+.kebab-item.danger { color: #b45309; }
+.kebab-item.danger:hover { background: #fff7ed; }
 .fic-screen .empty { text-align: center; color: var(--n-400); padding: 50px 20px; font-size: 14px; }
 
 /* modal de visualização */
