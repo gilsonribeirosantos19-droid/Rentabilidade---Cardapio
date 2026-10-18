@@ -147,7 +147,7 @@
 .fic-screen .dp-edit:hover { background: #163157; }
 .fic-screen .dp-close { flex: 1; height: 42px; border: 1px solid var(--n-200); border-radius: 9px; background: #fff; color: var(--n-600); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
 .fic-screen .dp-close:hover { background: var(--n-50); }
-.fic-screen .dp-sec { font-size: 10.5px; font-weight: 700; color: var(--n-400); text-transform: uppercase; letter-spacing: .07em; margin: 24px 0 11px; }
+.fic-screen .dp-sec { font-size: 10.5px; font-weight: 700; color: var(--n-400); text-transform: uppercase; letter-spacing: .07em; margin: 16px 0 8px; }
 .fic-screen .dp-sec:first-child { margin-top: 2px; }
 .fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .fic-screen .vg-tbl th { text-align: left; padding: 6px 10px; font-size: 10px; color: var(--n-400); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--n-100); white-space: nowrap; }
@@ -155,10 +155,10 @@
 .fic-screen .vg-tbl td { padding: 7px 10px; font-size: 13px; border-bottom: 1px solid #f5f7fa; color: var(--n-900); white-space: nowrap; }
 .fic-screen .vg-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
 .fic-screen .vg-tbl tfoot td { border-top: 2px solid var(--n-100); border-bottom: none; font-weight: 700; color: #00b890; }
-.fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-.fic-screen .fin-card { background: var(--n-50); border: 1px solid #eef1f5; border-radius: 9px; padding: 13px 14px; }
-.fic-screen .fin-card .l { font-size: 11px; color: var(--n-400); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-.fic-screen .fin-card .v { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--n-900); }
+.fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+.fic-screen .fin-card { background: var(--n-50); border: 1px solid #eef1f5; border-radius: 9px; padding: 8px 12px; }
+.fic-screen .fin-card .l { font-size: 10.5px; color: var(--n-400); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+.fic-screen .fin-card .v { font-size: 16px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--n-900); }
 .fic-screen .fin-card.salao { background: var(--brand-tint); border-color: #fed7aa; }
 .fic-screen .fin-card.salao .l { color: #9a3412; }
 .fic-screen .fin-card.deliv { background: var(--danger-tint); border-color: var(--danger-border); }
