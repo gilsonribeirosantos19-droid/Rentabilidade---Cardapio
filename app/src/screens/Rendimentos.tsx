@@ -16,31 +16,16 @@ type Vinc = { insumo_id: string; preco_unitario?: number }
 
 const fmtKg = (v?: number | null) => (v == null || v === undefined) ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + ' kg'
 const fmtBRL = (v?: number | null) => (v == null) ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const localDate = (iso?: string) => iso ? new Date(iso).toLocaleDateString('en-CA') : ''
 const brDate = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
-
-function periodoRange(tipo: string): { de: string; ate: string } | null {
-  const d = new Date()
-  if (tipo === 'mes_atual') return { de: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`, ate: d.toLocaleDateString('en-CA') }
-  if (tipo === 'mes_anterior') { const p = new Date(d.getFullYear(), d.getMonth() - 1, 1); const l = new Date(d.getFullYear(), d.getMonth(), 0); return { de: `${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, '0')}-01`, ate: l.toLocaleDateString('en-CA') } }
-  return null
-}
 
 type Form = { insumo_id: string; peso_bruto: string; peso_liquido: string; observacao: string }
 const novoForm = (): Form => ({ insumo_id: '', peso_bruto: '', peso_liquido: '', observacao: '' })
-
-const PERIODO_OPTS = ['Personalizado', 'Mês Atual', 'Mês Anterior']
-const PERIODO_TIPO: Record<string, string> = { 'Personalizado': 'periodo', 'Mês Atual': 'mes_atual', 'Mês Anterior': 'mes_anterior' }
 
 export function Rendimentos() {
   const { tenantId } = useAuth()
   const { lojaId } = useLoja()
   const qc = useQueryClient()
   const [fInsumo, setFInsumo] = useState('')
-  const ini = periodoRange('mes_atual')!
-  const [de, setDe] = useState(ini.de)
-  const [ate, setAte] = useState(ini.ate)
-  const [periodoSel, setPeriodoSel] = useState('Mês Atual')
   const [pag, setPag] = useState(1)
   const [porPag, setPorPag] = useState(10)
   const [modal, setModal] = useState<{ id: string | null; form: Form } | null>(null)
@@ -71,19 +56,11 @@ export function Rendimentos() {
   const nomeToId = useMemo(() => { const m: Record<string, string> = {}; ativos.forEach((i) => { m[`${i.nome} (${i.unidade_medida || i.unidade_compra || 'kg'})`] = i.id }); return m }, [ativos])
   const idToNome = useMemo(() => { const m: Record<string, string> = {}; ativos.forEach((i) => { m[i.id] = `${i.nome} (${i.unidade_medida || i.unidade_compra || 'kg'})` }); return m }, [ativos])
 
-  const filtrado = useMemo(() => testes.filter((t) => {
-    if (fInsumo && t.insumo_id !== fInsumo) return false
-    const d = localDate(t.criado_em)
-    if (de && d < de) return false
-    if (ate && d > ate) return false
-    return true
-  }), [testes, fInsumo, de, ate])
+  const filtrado = useMemo(() => fInsumo ? testes.filter((t) => t.insumo_id === fInsumo) : testes, [testes, fInsumo])
 
   const totalPags = Math.max(1, Math.ceil(filtrado.length / porPag))
   const pagAtual = Math.min(pag, totalPags)
   const slice = filtrado.slice((pagAtual - 1) * porPag, (pagAtual - 1) * porPag + porPag)
-
-  const setPeriodo = (label: string) => { const l = label || 'Personalizado'; setPeriodoSel(l); const r = periodoRange(PERIODO_TIPO[l]); if (r) { setDe(r.de); setAte(r.ate); setPag(1) } else { setDe(''); setAte(''); setPag(1) } }
 
   const saveMut = useMutation({
     mutationFn: async ({ id, form }: { id: string | null; form: Form }) => {
@@ -167,18 +144,6 @@ export function Rendimentos() {
         <div className="ds-field" style={{ minWidth: 200 }}>
           <label>Insumo</label>
           <SearchSelect value={fInsumo ? (idToNome[fInsumo] || '') : ''} onChange={(n) => { setFInsumo(n ? (nomeToId[n] || '') : ''); setPag(1) }} options={nomes} placeholder="Todos os insumos" />
-        </div>
-        <div className="ds-field" style={{ minWidth: 130 }}>
-          <label>Período</label>
-          <SearchSelect value={periodoSel} options={PERIODO_OPTS} placeholder="Período" onChange={setPeriodo} />
-        </div>
-        <div className="ds-field">
-          <label>De</label>
-          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPag(1); setPeriodoSel('Personalizado') }} />
-        </div>
-        <div className="ds-field">
-          <label>Até</label>
-          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPag(1); setPeriodoSel('Personalizado') }} />
         </div>
         <div className="ds-actions">
           <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>{filtrado.length} registro{filtrado.length !== 1 ? 's' : ''}</span>
