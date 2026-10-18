@@ -474,7 +474,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
           <>
             <div className="dp-sec">Ingredientes (rendimento: {ficha.rendimento_porcoes || 1} un)</div>
             <div style={{ overflowX: 'auto' }}>
-            <table className="vg-tbl" style={{ minWidth: 760 }}>
+            <table className="vg-tbl" style={{ minWidth: 820 }}>
               <thead><tr>
                 <th>Ingrediente</th><th>Tipo do item</th>
                 <th className="r">% Aprov.</th><th className="r">Preço (R$)</th>
@@ -487,11 +487,11 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     if (it.produto_id) {   // meia porção / combo: aponta pra outro produto (× multiplicador), não é insumo
                       const p = produtoById[it.produto_id]
                       const mult = Number(it.quantidade_g) || 0
-                      const rotuloQtd = mult.toLocaleString('pt-BR')   // ex.: 0,5
+                      const rotuloQtd = mult.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })   // ex.: 1,000 / 0,500
                       return (
                         <tr key={it.id || idx}>
                           <td>{p?.nome || '(produto)'}</td>
-                          <td style={{ color: '#64748b', fontSize: 11.5 }}>Produto</td>
+                          <td style={{ color: '#64748b', fontSize: 12.5 }}>Produto</td>
                           <td className="r">—</td>
                           <td className="r">—</td>
                           <td className="r">{rotuloQtd}</td>
@@ -512,7 +512,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     return (
                       <tr key={it.id || idx}>
                         <td>{ins?.nome || '—'}</td>
-                        <td style={{ color: '#64748b', fontSize: 11.5 }}>{tipoItem}</td>
+                        <td style={{ color: '#64748b', fontSize: 12.5 }}>{tipoItem}</td>
                         <td className="r">{rendPct}%</td>
                         <td className="r">{brl(preco)}</td>
                         <td className="r">{fmtQ(netQ, um)}</td>

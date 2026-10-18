@@ -131,7 +131,7 @@
 
 /* ===== painel lateral de visualização (dockado, inline na página) ===== */
 .fic-screen .dp-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.18); z-index: 100; display: flex; justify-content: flex-end; }
-.fic-screen .dp { width: 900px; max-width: 96vw; background: #fff; height: 100%; box-shadow: -12px 0 40px rgba(15,23,42,.2); display: flex; flex-direction: column; }
+.fic-screen .dp { width: 1000px; max-width: 96vw; background: #fff; height: 100%; box-shadow: -12px 0 40px rgba(15,23,42,.2); display: flex; flex-direction: column; }
 .fic-screen .dp-hdr { padding: 22px 26px 16px; display: flex; align-items: center; gap: 11px; }
 .fic-screen .dp-hdr h2 { font-size: 19px; font-weight: 800; color: var(--n-900); }
 .fic-screen .dp-badge { font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; }
@@ -149,16 +149,16 @@
 .fic-screen .dp-close:hover { background: var(--n-50); }
 .fic-screen .dp-sec { font-size: 10.5px; font-weight: 700; color: var(--n-400); text-transform: uppercase; letter-spacing: .07em; margin: 24px 0 11px; }
 .fic-screen .dp-sec:first-child { margin-top: 2px; }
-.fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
-.fic-screen .vg-tbl th { text-align: left; padding: 5px 6px; font-size: 9px; color: var(--n-400); font-weight: 700; text-transform: uppercase; border-bottom: 2px solid var(--n-100); white-space: nowrap; }
+.fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fic-screen .vg-tbl th { text-align: left; padding: 6px 10px; font-size: 10px; color: var(--n-400); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--n-100); white-space: nowrap; }
 .fic-screen .vg-tbl th.r { text-align: right; }
-.fic-screen .vg-tbl td { padding: 8px 6px; font-size: 10.5px; border-bottom: 1px solid #f5f7fa; color: var(--n-900); white-space: nowrap; }
+.fic-screen .vg-tbl td { padding: 7px 10px; font-size: 13px; border-bottom: 1px solid #f5f7fa; color: var(--n-900); white-space: nowrap; }
 .fic-screen .vg-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
 .fic-screen .vg-tbl tfoot td { border-top: 2px solid var(--n-100); border-bottom: none; font-weight: 700; color: #00b890; }
 .fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .fic-screen .fin-card { background: var(--n-50); border: 1px solid #eef1f5; border-radius: 9px; padding: 13px 14px; }
-.fic-screen .fin-card .l { font-size: 10px; color: var(--n-400); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-.fic-screen .fin-card .v { font-size: 16px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--n-900); }
+.fic-screen .fin-card .l { font-size: 11px; color: var(--n-400); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.fic-screen .fin-card .v { font-size: 18px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--n-900); }
 .fic-screen .fin-card.salao { background: var(--brand-tint); border-color: #fed7aa; }
 .fic-screen .fin-card.salao .l { color: #9a3412; }
 .fic-screen .fin-card.deliv { background: var(--danger-tint); border-color: var(--danger-border); }
