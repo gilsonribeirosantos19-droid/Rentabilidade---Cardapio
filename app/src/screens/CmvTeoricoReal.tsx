@@ -16,7 +16,7 @@ type Ficha = { id: string; rendimento_porcoes?: number; produto_id?: string | nu
 type Venda = { ficha_id?: string; produto_id?: string; quantidade?: number; valor_total?: number; loja_id?: string | null }
 type ProdMin = { id: string; codigo_pdv?: string | null; nome?: string }
 type IcoVenda = { produto_id?: number | string; qtd?: number; faturado?: number; loja_id?: string | null; ficha_id?: string | null }
-type Fat = { valor?: number; total?: number; valor_total?: number }
+type Rec = { loja_id?: string | null; faturado?: number; data?: string; status?: string }
 type Saida = { insumo_id: string; quantidade?: number; tipo?: string; loja_id?: string | null; criado_em?: string }
 type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: number; loja_id?: string | null; criado_em?: string; created_at?: string }
 type Saldo = { insumo_id: string; loja_id?: string | null; custo_medio?: number }
@@ -74,8 +74,9 @@ export function CmvTeoricoReal() {
     queryFn: async () => {
       const catEq = (q: any) => cat ? q.eq('categoria', cat) : q
       const comps = compsRange(de, ate)   // meses do período, p/ o fallback mensal
-      const [fats, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes] = await Promise.all([
-        supabase.from('faturamento').select('*').eq('tenant_id', tenantId).gte('data', de).lte('data', ate).then((r) => (r.data ?? []) as Fat[], () => [] as Fat[]),
+      const [recebimento, vendas, fichas, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes] = await Promise.all([
+        // Faturamento = CAIXA (recebimento_vendas, 'processado'), a MESMA fonte exata da tela "Vendas por dia"/Fechamento.
+        fetchAll<Rec>((f, t) => supabase.from('recebimento_vendas').select('loja_id,faturado,data,status').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', de).lte('data', ate).order('loja_id').order('data').range(f, t)).catch(() => [] as Rec[]),
         // vendas_item NÃO é mais usado no CMV: a fonte única virou vendas_produto_dia (iComanda + Saipos).
         // Placeholder [] só p/ manter o shape do Promise.all.
         Promise.resolve([] as Venda[]),
@@ -100,7 +101,7 @@ export function CmvTeoricoReal() {
       ])
       // itens já vêm embutidos na busca de fichas (embed acima) — sem .in() gigante estourando a URL
       const itensFicha = fichas.flatMap((f) => f.itens_ficha ?? [])
-      return { fats, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes }
+      return { recebimento, vendas, fichas, itensFicha, insumos, saldos, entradas, saidas, produtos, icomandaVendas, icomandaVendasMes }
     },
   })
 
@@ -135,17 +136,17 @@ export function CmvTeoricoReal() {
     const vendas = byLoja(icoVendas)
     const saidas = byLoja(data.saidas)
     const saldos = byLoja(data.saldos)
-    const { insumos, fichas, itensFicha, fats } = data
+    const { insumos, fichas, itensFicha } = data
     // C2: custo médio (por insumo) já pronto do banco, pra a loja selecionada. Fallback (saldo/preço) se vier 0.
     const cmMap = new Map(cmRows.map((r) => [r.insumo_id, Number(r.custo_medio) || 0]))
 
-    // Faturamento: usa a tabela `faturamento` (total diário) quando houver; senão, cai pro
-    // somatório das vendas por item. Antes somava os dois → duplicava quando havia as 2 fontes.
-    const fatSum = fats.reduce((s, f) => s + (f.valor ?? f.total ?? f.valor_total ?? 0), 0)
+    // Faturamento = CAIXA (recebimento_vendas, 'processado') — valor EXATO, igual à tela "Vendas por dia"
+    // e ao Fechamento. Filtra pela loja selecionada (byLoja). Fallback = soma das vendas por produto,
+    // só se o caixa não estiver preenchido (nunca zera).
+    const recebimento = byLoja(data.recebimento)
+    const recFat = recebimento.reduce((s, r) => s + (r.faturado || 0), 0)
     const vendaFat = vendas.reduce((s, v) => s + (v.valor_total || 0), 0)
-    // a tabela `faturamento` NÃO tem loja_id (é do tenant inteiro). Com uma loja selecionada,
-    // usar o faturamento das VENDAS daquela loja; só sem loja (Todas) usar a tabela.
-    const totalFat = lojaId ? vendaFat : (fatSum > 0 ? fatSum : vendaFat)
+    const totalFat = recFat > 0 ? recFat : vendaFat
 
     // mapas p/ EXPLOSÃO recursiva: processado tem ficha própria (insumo_vinculado_id) e
     // meia porção/combo aponta pra outro produto (produto_id). Descemos até o insumo CRU —
