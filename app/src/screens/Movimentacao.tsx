@@ -143,10 +143,11 @@ export function Movimentacao() {
     const baseCtx = { saldos, vinculos, insumos }
     let rows = insFilt.map((ins): Row => {
       const cmFim = custoDoInsumo(ins.id, null, { ...baseCtx, entradas: entByIns[ins.id] || [], saidas: saiByIns[ins.id] || [], dataLimite: ate })
-      const cmIni = custoDoInsumo(ins.id, null, { ...baseCtx, entradas: entByIns[ins.id] || [], saidas: saiByIns[ins.id] || [], dataLimite: de })
       const antItens = invIni.filter((i) => i.insumo_id === ins.id)   // "Todas as lojas" → 1 item por loja; soma
       const qAnt = antItens.reduce((a, i) => a + (i.qtd_contada || 0), 0)
-      const vAnt = antItens.reduce((a, i) => a + (i.qtd_contada || 0) * (i.custo_medio || cmIni), 0)
+      // Valoriza pelo custo médio GRAVADO no inventário (igual ao Fechamento: custo faltando = R$ 0).
+      // Antes usava uma estimativa (cmIni) p/ itens sem custo → inflava o V.Anterior vs o Fechamento.
+      const vAnt = antItens.reduce((a, i) => a + (i.qtd_contada || 0) * (i.custo_medio || 0), 0)
       const entsI = entsPerByIns[ins.id] || []
       // M7: ajuste/transferência NÃO são compras — saem da coluna Entradas pra uma coluna própria (qFin não muda)
       const isAjuste = (e: Mov) => { const t = (e as Saida).tipo; return t === 'ajuste' || t === 'transferencia' }
