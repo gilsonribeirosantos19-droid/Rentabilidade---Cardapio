@@ -77,11 +77,22 @@ export function Movimentacao() {
   const { data: forns = [] } = useQuery({ queryKey: ['mov-forns', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('fornecedores').select('id,nome').eq('tenant_id', tenantId).order('nome'); return (data ?? []) as { id: string; nome: string }[] } })
   // inventário anterior + perdas de gerentes (dependem do período)
   const { data: invPerdas } = useQuery({
-    queryKey: ['mov-invperdas', tenantId, de, ate], enabled: !!tenantId && !!de && !!ate,
+    queryKey: ['mov-invperdas', tenantId, de, ate, lojaId], enabled: !!tenantId && !!de && !!ate,
     queryFn: async () => {
       let invIni: InvItem[] = []
-      const inv = await supabase.from('inventarios').select('id').eq('tenant_id', tenantId).lt('criado_em', de).eq('status', 'encerrado').order('criado_em', { ascending: false }).limit(1)
-      if (inv.data?.length) { invIni = await fetchAll<InvItem>((f, t) => supabase.from('inventario_itens').select('*').eq('inventario_id', inv.data![0].id).order('id').range(f, t)) }
+      // Inventário de ABERTURA (Q. Anterior) = POR LOJA, o encerrado mais recente antes do período.
+      // BUG corrigido: antes pegava 1 inventário de QUALQUER loja (sem filtro de loja) → o "Q. Anterior"
+      // de uma loja vinha da contagem de OUTRA (ex.: Centro mostrava a contagem da Paraíba). Agora:
+      // loja selecionada → só ela; "Todas as lojas" → 1 inventário por loja, somando as contagens.
+      let invQ = supabase.from('inventarios').select('id,loja_id').eq('tenant_id', tenantId).lt('criado_em', de).eq('status', 'encerrado').order('criado_em', { ascending: false })
+      if (lojaId) invQ = invQ.eq('loja_id', lojaId)
+      const { data: invs } = await invQ
+      if (invs?.length) {
+        const porLoja: Record<string, string> = {}            // mantém só o mais recente (1º) de cada loja
+        invs.forEach((iv: any) => { if (iv.loja_id && !porLoja[iv.loja_id]) porLoja[iv.loja_id] = iv.id })
+        const invIds = Object.values(porLoja)
+        invIni = await fetchAll<InvItem>((f, t) => supabase.from('inventario_itens').select('*').in('inventario_id', invIds).order('id').range(f, t))
+      }
       const perdasMap: Record<string, number> = {}
       const perdas = await supabase.from('perdas').select('id').eq('tenant_id', tenantId).gte('data_perda', de).lte('data_perda', ate)
       if (perdas.data?.length) {
@@ -132,10 +143,11 @@ export function Movimentacao() {
     const baseCtx = { saldos, vinculos, insumos }
     let rows = insFilt.map((ins): Row => {
       const cmFim = custoDoInsumo(ins.id, null, { ...baseCtx, entradas: entByIns[ins.id] || [], saidas: saiByIns[ins.id] || [], dataLimite: ate })
-      const cmIni = custoDoInsumo(ins.id, null, { ...baseCtx, entradas: entByIns[ins.id] || [], saidas: saiByIns[ins.id] || [], dataLimite: de })
-      const antIt = invIni.find((i) => i.insumo_id === ins.id)
-      const qAnt = antIt?.qtd_contada || 0
-      const vAnt = qAnt * (antIt?.custo_medio || cmIni)
+      const antItens = invIni.filter((i) => i.insumo_id === ins.id)   // "Todas as lojas" → 1 item por loja; soma
+      const qAnt = antItens.reduce((a, i) => a + (i.qtd_contada || 0), 0)
+      // Valoriza pelo custo médio GRAVADO no inventário (igual ao Fechamento: custo faltando = R$ 0).
+      // Antes usava uma estimativa (cmIni) p/ itens sem custo → inflava o V.Anterior vs o Fechamento.
+      const vAnt = antItens.reduce((a, i) => a + (i.qtd_contada || 0) * (i.custo_medio || 0), 0)
       const entsI = entsPerByIns[ins.id] || []
       // M7: ajuste/transferência NÃO são compras — saem da coluna Entradas pra uma coluna própria (qFin não muda)
       const isAjuste = (e: Mov) => { const t = (e as Saida).tipo; return t === 'ajuste' || t === 'transferencia' }

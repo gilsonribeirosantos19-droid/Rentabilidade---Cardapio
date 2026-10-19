@@ -106,6 +106,7 @@ export function FichasTecnicas() {
   const [ver, setVer] = useState<Ficha | null>(null)
   const [editing, setEditing] = useState<Ficha | 'new' | null>(null)
   const [dup, setDup] = useState<Ficha | null>(null)   // ficha ORIGEM da duplicação
+  const [menu, setMenu] = useState<{ f: Ficha; x: number; y: number } | null>(null)   // menu "⋮" de ações da linha
 
   const { data: fichas = [], isLoading } = useQuery({
     queryKey: ['fichas', tenantId], enabled: !!tenantId,
@@ -219,7 +220,7 @@ export function FichasTecnicas() {
   const imprimirLista = (fs: Ficha[]) => printFichas(fs, empresa ?? null, printCtx)
   const filtrada = useMemo(() => {
     const q = norm(busca.trim())
-    return fichas.filter((f) => {
+    const arr = fichas.filter((f) => {
       if (q && !norm(f.nome || '').includes(q)) return false
       if (fCat && (f.categoria || '') !== fCat) return false
       if (fStatus) { if ((f.status || 'ativa') !== fStatus) return false }
@@ -232,6 +233,13 @@ export function FichasTecnicas() {
         if (fCmv === 'vermelho' && !(cmv !== null && cmv > 38)) return false
       }
       return true
+    })
+    // fichas COM preço de venda aparecem primeiro; depois ordem alfabética por nome
+    return arr.sort((a, b) => {
+      const pa = (metricas(a).pv || 0) > 0 ? 1 : 0
+      const pb = (metricas(b).pv || 0) > 0 ? 1 : 0
+      if (pa !== pb) return pb - pa
+      return (a.nome || '').localeCompare(b.nome || '', 'pt-BR')
     })
   }, [fichas, busca, fCat, fStatus, fCmv]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -296,13 +304,10 @@ export function FichasTecnicas() {
                     <td className="r mono" style={{ color: '#334155' }}>{cmv !== null ? cmv.toFixed(1) + '%' : '—'}</td>
                     <td className="r mono" style={{ color: '#334155' }}>{margem !== null ? margem.toFixed(1) + '%' : '—'}</td>
                     <td style={{ color: '#64748b' }}>{st.t}</td>
-                    <td style={{ whiteSpace: 'nowrap' }}>
-                      {canEdit && <button className="ed-btn" onClick={(e) => { e.stopPropagation(); setEditing(f) }}>✎ Editar</button>}
-                      <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setVer(f) }}>👁 Ver</button>
-                      {canEdit && <button className="ver-btn" onClick={(e) => { e.stopPropagation(); setDup(f) }}>📋 Duplicar</button>}
-                      {canEdit && ((f.status || 'ativa') === 'arquivada'
-                        ? <button className="ver-btn" onClick={(e) => { e.stopPropagation(); statusMut.mutate({ id: f.id, status: 'ativa' }) }}>↺ Reativar</button>
-                        : <button className="ver-btn" style={{ color: '#b45309' }} onClick={(e) => { e.stopPropagation(); if (confirm(`Arquivar (desativar) a ficha "${f.nome}"?`)) statusMut.mutate({ id: f.id, status: 'arquivada' }) }}>🗄 Arquivar</button>)}
+                    <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      {canEdit
+                        ? <button className="kebab-btn" title="Ações" onClick={(e) => { const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setMenu(menu && menu.f.id === f.id ? null : { f, x: r.right, y: r.bottom }) }}>⋮</button>
+                        : <span style={{ color: '#cbd5e1' }}>—</span>}
                     </td>
                   </tr>
                 )
@@ -312,6 +317,17 @@ export function FichasTecnicas() {
       </div></div>
 
       <div className="fic-foot">{filtrada.length} fichas</div>
+
+      {menu && (<>
+        <div className="kebab-backdrop" onClick={() => setMenu(null)} />
+        <div className="kebab-menu" style={{ top: menu.y + 4, left: menu.x - 168 }}>
+          <button className="kebab-item" onClick={() => { setEditing(menu.f); setMenu(null) }}>✎ Editar</button>
+          <button className="kebab-item" onClick={() => { setDup(menu.f); setMenu(null) }}>📋 Duplicar</button>
+          {(menu.f.status || 'ativa') === 'arquivada'
+            ? <button className="kebab-item" onClick={() => { statusMut.mutate({ id: menu.f.id, status: 'ativa' }); setMenu(null) }}>↺ Reativar</button>
+            : <button className="kebab-item danger" onClick={() => { const nome = menu.f.nome; const id = menu.f.id; setMenu(null); if (confirm(`Arquivar (desativar) a ficha "${nome}"?`)) statusMut.mutate({ id, status: 'arquivada' }) }}>🗄 Arquivar</button>}
+        </div>
+      </>)}
 
       {ver && (() => { const mm = metricas(ver); const st = statusPill(ver, mm.cmv, mm.pv); return (
         <VerFicha ficha={ver} m={mm} st={st} insMap={insMap} custoItem={(it) => custoItem(it, new Set())} custoBase={custoBase} processadoIds={processadoIds} produtoById={produtoById} params={params} tenantId={tenantId} lojaId={lojaCusto} canEdit={canEdit} onClose={() => setVer(null)} onEdit={() => { setEditing(ver); setVer(null) }} />
@@ -474,7 +490,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
           <>
             <div className="dp-sec">Ingredientes (rendimento: {ficha.rendimento_porcoes || 1} un)</div>
             <div style={{ overflowX: 'auto' }}>
-            <table className="vg-tbl" style={{ minWidth: 760 }}>
+            <table className="vg-tbl" style={{ minWidth: 820 }}>
               <thead><tr>
                 <th>Ingrediente</th><th>Tipo do item</th>
                 <th className="r">% Aprov.</th><th className="r">Preço (R$)</th>
@@ -487,11 +503,11 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     if (it.produto_id) {   // meia porção / combo: aponta pra outro produto (× multiplicador), não é insumo
                       const p = produtoById[it.produto_id]
                       const mult = Number(it.quantidade_g) || 0
-                      const rotuloQtd = mult.toLocaleString('pt-BR')   // ex.: 0,5
+                      const rotuloQtd = mult.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })   // ex.: 1,000 / 0,500
                       return (
                         <tr key={it.id || idx}>
                           <td>{p?.nome || '(produto)'}</td>
-                          <td style={{ color: '#64748b', fontSize: 11.5 }}>Produto</td>
+                          <td style={{ color: '#64748b', fontSize: 12.5 }}>Produto</td>
                           <td className="r">—</td>
                           <td className="r">—</td>
                           <td className="r">{rotuloQtd}</td>
@@ -512,7 +528,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
                     return (
                       <tr key={it.id || idx}>
                         <td>{ins?.nome || '—'}</td>
-                        <td style={{ color: '#64748b', fontSize: 11.5 }}>{tipoItem}</td>
+                        <td style={{ color: '#64748b', fontSize: 12.5 }}>{tipoItem}</td>
                         <td className="r">{rendPct}%</td>
                         <td className="r">{brl(preco)}</td>
                         <td className="r">{fmtQ(netQ, um)}</td>

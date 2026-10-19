@@ -20,9 +20,9 @@
 .fic-screen .fic-foot { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 12px 18px; margin-top: 14px; font-size: 13px; color: var(--n-500); }
 
 .fic-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
-.fic-screen .tbl-scroll { overflow-x: auto; }
+.fic-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 230px); }
 .fic-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.fic-screen thead th { background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid var(--n-200); white-space: nowrap; }
+.fic-screen thead th { background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid var(--n-200); white-space: nowrap; position: sticky; top: 0; z-index: 5; }
 .fic-screen thead th.r { text-align: right; }
 .fic-screen tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: var(--n-900); white-space: nowrap; vertical-align: middle; }
 .fic-screen tbody td.r { text-align: right; }
@@ -33,6 +33,15 @@
 .fic-screen .st-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .fic-screen .ver-btn { border: 1px solid var(--n-200); background: #fff; border-radius: 7px; padding: 4px 10px; font-size: 12px; font-family: inherit; color: var(--n-600); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
 .fic-screen .ver-btn:hover { border-color: var(--brand); color: var(--brand); }
+/* menu de ações "⋮" (três pontinhos) */
+.fic-screen .kebab-btn { border: none; background: none; cursor: pointer; color: var(--n-500); font-size: 20px; line-height: 1; padding: 2px 8px; border-radius: 7px; }
+.fic-screen .kebab-btn:hover { background: var(--n-100); color: var(--n-700); }
+.kebab-backdrop { position: fixed; inset: 0; z-index: 200; }
+.kebab-menu { position: fixed; z-index: 201; min-width: 168px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 30px rgba(15,23,42,.18); padding: 5px; display: flex; flex-direction: column; }
+.kebab-item { border: none; background: none; text-align: left; font-family: inherit; font-size: 13px; color: var(--n-700); padding: 8px 11px; border-radius: 7px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.kebab-item:hover { background: var(--n-50); }
+.kebab-item.danger { color: #b45309; }
+.kebab-item.danger:hover { background: #fff7ed; }
 .fic-screen .empty { text-align: center; color: var(--n-400); padding: 50px 20px; font-size: 14px; }
 
 /* modal de visualização */
@@ -131,7 +140,7 @@
 
 /* ===== painel lateral de visualização (dockado, inline na página) ===== */
 .fic-screen .dp-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.18); z-index: 100; display: flex; justify-content: flex-end; }
-.fic-screen .dp { width: 900px; max-width: 96vw; background: #fff; height: 100%; box-shadow: -12px 0 40px rgba(15,23,42,.2); display: flex; flex-direction: column; }
+.fic-screen .dp { width: 1000px; max-width: 96vw; background: #fff; height: 100%; box-shadow: -12px 0 40px rgba(15,23,42,.2); display: flex; flex-direction: column; }
 .fic-screen .dp-hdr { padding: 22px 26px 16px; display: flex; align-items: center; gap: 11px; }
 .fic-screen .dp-hdr h2 { font-size: 19px; font-weight: 800; color: var(--n-900); }
 .fic-screen .dp-badge { font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; }
@@ -147,17 +156,17 @@
 .fic-screen .dp-edit:hover { background: #163157; }
 .fic-screen .dp-close { flex: 1; height: 42px; border: 1px solid var(--n-200); border-radius: 9px; background: #fff; color: var(--n-600); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
 .fic-screen .dp-close:hover { background: var(--n-50); }
-.fic-screen .dp-sec { font-size: 10.5px; font-weight: 700; color: var(--n-400); text-transform: uppercase; letter-spacing: .07em; margin: 24px 0 11px; }
+.fic-screen .dp-sec { font-size: 10.5px; font-weight: 700; color: var(--n-400); text-transform: uppercase; letter-spacing: .07em; margin: 16px 0 8px; }
 .fic-screen .dp-sec:first-child { margin-top: 2px; }
-.fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
-.fic-screen .vg-tbl th { text-align: left; padding: 5px 6px; font-size: 9px; color: var(--n-400); font-weight: 700; text-transform: uppercase; border-bottom: 2px solid var(--n-100); white-space: nowrap; }
+.fic-screen .vg-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fic-screen .vg-tbl th { text-align: left; padding: 6px 10px; font-size: 10px; color: var(--n-400); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; border-bottom: 2px solid var(--n-100); white-space: nowrap; }
 .fic-screen .vg-tbl th.r { text-align: right; }
-.fic-screen .vg-tbl td { padding: 8px 6px; font-size: 10.5px; border-bottom: 1px solid #f5f7fa; color: var(--n-900); white-space: nowrap; }
+.fic-screen .vg-tbl td { padding: 7px 10px; font-size: 13px; border-bottom: 1px solid #f5f7fa; color: var(--n-900); white-space: nowrap; }
 .fic-screen .vg-tbl td.r { text-align: right; font-family: 'DM Mono', monospace; }
 .fic-screen .vg-tbl tfoot td { border-top: 2px solid var(--n-100); border-bottom: none; font-weight: 700; color: #00b890; }
-.fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-.fic-screen .fin-card { background: var(--n-50); border: 1px solid #eef1f5; border-radius: 9px; padding: 13px 14px; }
-.fic-screen .fin-card .l { font-size: 10px; color: var(--n-400); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.fic-screen .fin-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+.fic-screen .fin-card { background: var(--n-50); border: 1px solid #eef1f5; border-radius: 9px; padding: 8px 12px; }
+.fic-screen .fin-card .l { font-size: 10.5px; color: var(--n-400); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
 .fic-screen .fin-card .v { font-size: 16px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--n-900); }
 .fic-screen .fin-card.salao { background: var(--brand-tint); border-color: #fed7aa; }
 .fic-screen .fin-card.salao .l { color: #9a3412; }
