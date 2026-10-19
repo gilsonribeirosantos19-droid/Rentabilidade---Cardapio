@@ -27,6 +27,12 @@
 .phub-card h3{margin:0;font-size:19px;font-weight:800;letter-spacing:-.01em}
 .phub-card p{margin:0;color:#5b6b85;font-size:13.5px;line-height:1.45;flex:1}
 .phub-enter{color:var(--brand);font-weight:700;font-size:14px;margin-top:2px}
+/* card de sistema SEM acesso: cadeado, cinza, não clicável */
+.phub-card.locked{cursor:not-allowed;opacity:.6}
+.phub-card.locked:hover{transform:none;box-shadow:none;border-color:#e3e8f0}
+.phub-card.locked .phub-ico{filter:grayscale(1)}
+.phub-card.locked .phub-enter{color:#94a3b8;display:inline-flex;align-items:center;gap:5px}
+.phub-card.locked .phub-enter svg{width:13px;height:13px}
 
 .phub-tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:28px}
 .phub-tip{background:#fff;border:1px solid #e3e8f0;border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}

@@ -25,20 +25,18 @@ const ICO: Record<string, ReactNode> = {
 }
 const svg = (n: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{ICO[n]}</svg>
 
-export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
+export function PortalHub({ usuario, lojaNome, signOut }: {
   usuario?: { nome?: string; sistemas_rede?: string[] | null } | null
   perfil?: string
   lojaNome?: string
   signOut?: () => void
 }) {
-  // mostra Estoque (o próprio AIKO) sempre + os sistemas em que a pessoa foi provisionada.
-  // admin ou usuário sem lista (legado) = vê todos (fallback seguro). Lista vazia = só Estoque.
+  // LIBERADO: Estoque (o próprio AIKO) sempre + os sistemas em que a pessoa foi CADASTRADA
+  // (sistemas_rede). Sem lista (legado/dono) = tudo liberado (fallback seguro). Admin segue
+  // a MESMA regra — não vê tudo automaticamente. Sistema NÃO liberado = card com cadeado,
+  // não clicável → a pessoa nem chega na tela de login daquele sistema.
   const redes = usuario?.sistemas_rede
-  const vis = useMemo(() => {
-    const isAdmin = (perfil || '').toLowerCase().startsWith('admin')
-    if (isAdmin || redes == null) return SISTEMAS
-    return SISTEMAS.filter((s) => s.id === 'estoque' || redes.includes(s.id))
-  }, [perfil, redes])
+  const liberado = (s: Sistema) => s.id === 'estoque' || redes == null || redes.includes(s.id)
   const nome = (usuario?.nome || '').split(' ')[0]
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
   const h = new Date().getHours()
@@ -90,13 +88,20 @@ export function PortalHub({ usuario, perfil = '', lojaNome, signOut }: {
       <div className="phub-body">
         <div className="phub-wrap">
           <div className="phub-grid">
-            {vis.map((s) => (
+            {SISTEMAS.map((s) => liberado(s) ? (
               <button key={s.id} className="phub-card" onClick={() => abrir(s)}>
                 <div className="phub-ico" style={{ background: s.cor }}>{svg(s.icon)}</div>
                 <h3>{s.nome}</h3>
                 <p>{s.desc}</p>
                 <span className="phub-enter">Entrar →</span>
               </button>
+            ) : (
+              <div key={s.id} className="phub-card locked" aria-disabled="true" title="Você não tem acesso a este sistema. Fale com o suporte da gestão.">
+                <div className="phub-ico" style={{ background: s.cor }}>{svg(s.icon)}</div>
+                <h3>{s.nome}</h3>
+                <p>{s.desc}</p>
+                <span className="phub-enter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg> Sem acesso</span>
+              </div>
             ))}
           </div>
 
