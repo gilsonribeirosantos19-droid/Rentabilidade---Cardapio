@@ -31,12 +31,12 @@ export function PortalHub({ usuario, lojaNome, signOut }: {
   lojaNome?: string
   signOut?: () => void
 }) {
-  // LIBERADO: Estoque (o próprio AIKO) sempre + os sistemas em que a pessoa foi CADASTRADA
-  // (sistemas_rede). Sem lista (legado/dono) = tudo liberado (fallback seguro). Admin segue
-  // a MESMA regra — não vê tudo automaticamente. Sistema NÃO liberado = card com cadeado,
-  // não clicável → a pessoa nem chega na tela de login daquele sistema.
+  // LIBERADO: Estoque (o próprio AIKO / portal do gerente) sempre + os sistemas em que a pessoa
+  // foi CADASTRADA (sistemas_rede). REGRA "na dúvida NEGA": sem o sistema na lista (null/vazio
+  // incluídos) = NÃO liberado → card com cadeado, não clicável → a pessoa nem chega no login.
+  // Admin segue a MESMA regra (o acesso dele é preenchido no cadastro, não por ser admin).
   const redes = usuario?.sistemas_rede
-  const liberado = (s: Sistema) => s.id === 'estoque' || redes == null || redes.includes(s.id)
+  const liberado = (s: Sistema) => s.id === 'estoque' || (redes?.includes(s.id) ?? false)
   const nome = (usuario?.nome || '').split(' ')[0]
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
   const h = new Date().getHours()
