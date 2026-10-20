@@ -9,10 +9,12 @@ import { brl } from '../lib/format'
 import { isoD } from '../lib/date'
 import './fiscal.css'
 
-type Nfe = { id: string; numero?: string; serie?: string; data_emissao?: string; processada_em?: string; nome_emitente?: string; cnpj_emitente?: string; valor_total?: number; chave_acesso?: string; loja_id?: string | null }
+type Nfe = { id: string; numero?: string; serie?: string; data_emissao?: string; processada_em?: string; data_vencimento?: string; nome_emitente?: string; cnpj_emitente?: string; valor_total?: number; chave_acesso?: string; loja_id?: string | null }
 type NfeItem = { id?: string; descricao_nfe?: string; codigo_item_fornecedor?: string; quantidade?: number; unidade_nfe?: string; valor_unitario?: number; valor_total?: number }
 
 const fmtDate = (iso?: string) => iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'
+// data PURA (AAAA-MM-DD, ex.: vencimento) — formata sem converter fuso (evita cair no dia anterior)
+const fmtDateOnly = (s?: string) => { if (!s) return '—'; const m = String(s).slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : fmtDate(s) }
 const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''
 const fmtCnpj = (c?: string) => { const d = (c || '').replace(/\D/g, ''); return d.length === 14 ? d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : (c || '—') }
 const fmtChave = (c?: string) => { const d = (c || '').replace(/\D/g, ''); return d ? d.replace(/(.{4})/g, '$1 ').trim() : '' }
@@ -45,7 +47,7 @@ export function EntradasProcessadas() {
     queryKey: ['ep-nfe', tenantId, periodo, de, ate, campoData], enabled: !!tenantId,
     queryFn: () => fetchAll<Nfe>((f, t) => {
       // colunas explícitas (SEM o xml, que é grande) — o XML é buscado só no detalhe da nota
-      let q = supabase.from('nfe_recebidas').select('id,numero,serie,data_emissao,processada_em,nome_emitente,cnpj_emitente,valor_total,chave_acesso,loja_id').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).order('id').range(f, t)
+      let q = supabase.from('nfe_recebidas').select('id,numero,serie,data_emissao,processada_em,data_vencimento,nome_emitente,cnpj_emitente,valor_total,chave_acesso,loja_id').eq('tenant_id', tenantId).eq('status', 'processada').order(campoData, { ascending: false }).order('id').range(f, t)
       // limites no fuso de Brasília (−03:00), o MESMO que o estoque usa p/ datar a entrada.
       // Sem isso, a comparação sai em UTC e uma nota da virada de mês (ex.: 30/06 à noite) cai no mês errado.
       if (periodo !== 'todos') { if (de) q = q.gte(campoData, de + 'T00:00:00-03:00'); if (ate) q = q.lte(campoData, ate + 'T23:59:59-03:00') }
@@ -122,8 +124,8 @@ export function EntradasProcessadas() {
 
   const exportCSV = (rows: Nfe[]) => {
     if (!rows.length) { showToast('Nenhum dado para exportar.', 'err'); return }
-    const head = ['NF-e', 'Série', 'D. Emissão', 'D. Processamento', 'Fornecedor', 'CNPJ', 'Loja', 'V. Total', 'Itens']
-    const body = rows.map((n) => [n.numero || '', n.serie || '1', fmtDate(n.data_emissao), fmtDate(n.processada_em), n.nome_emitente || '', n.cnpj_emitente || '', lojaNome[n.loja_id || ''] || '', (n.valor_total || 0).toFixed(2).replace('.', ','), itensCount[n.id] || 0])
+    const head = ['NF-e', 'Série', 'D. Emissão', 'D. Processamento', 'Vencimento', 'Fornecedor', 'CNPJ', 'Loja', 'V. Total', 'Itens']
+    const body = rows.map((n) => [n.numero || '', n.serie || '1', fmtDate(n.data_emissao), fmtDate(n.processada_em), fmtDateOnly(n.data_vencimento), n.nome_emitente || '', n.cnpj_emitente || '', lojaNome[n.loja_id || ''] || '', (n.valor_total || 0).toFixed(2).replace('.', ','), itensCount[n.id] || 0])
     const csv = [head, ...body].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `entradas_processadas_${isoD(new Date())}.csv`; a.click(); URL.revokeObjectURL(a.href)
@@ -157,20 +159,22 @@ export function EntradasProcessadas() {
             <th className="c">Série</th>
             <th className="sortable" onClick={() => sortBy('data_emissao')}>D. Emissão{arrow('data_emissao')}</th>
             <th className="sortable" onClick={() => sortBy('processada_em')}>D. Processamento{arrow('processada_em')}</th>
+            <th className="sortable" onClick={() => sortBy('data_vencimento')}>Vencimento{arrow('data_vencimento')}</th>
             <th>Fornecedor / Razão Social</th>
             <th>Loja</th>
             <th className="r sortable" onClick={() => sortBy('valor_total')}>V. Total{arrow('valor_total')}</th>
             <th className="c">Itens</th><th className="c">Ações</th>
           </tr></thead>
           <tbody>
-            {isLoading ? <tr><td colSpan={9} className="empty">Carregando…</td></tr>
-              : page.length === 0 ? <tr><td colSpan={9} className="empty">Nenhuma NF-e processada encontrada.</td></tr>
+            {isLoading ? <tr><td colSpan={10} className="empty">Carregando…</td></tr>
+              : page.length === 0 ? <tr><td colSpan={10} className="empty">Nenhuma NF-e processada encontrada.</td></tr>
               : page.map((n) => (
                 <tr key={n.id}>
                   <td><span className="nfe-link" title={n.chave_acesso || ''}>{n.numero || '—'}</span></td>
                   <td className="c mono" style={{ color: '#94a3b8' }}>{n.serie || '1'}</td>
                   <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.data_emissao)}</span></td>
                   <td><span className="mono" style={{ fontSize: 12 }}>{fmtDate(n.processada_em)}</span></td>
+                  <td><span className="mono" style={{ fontSize: 12 }}>{fmtDateOnly(n.data_vencimento)}</span></td>
                   <td className="fornec"><div>{n.nome_emitente || '—'}</div></td>
                   <td style={{ fontSize: 12, color: '#475569', whiteSpace: 'nowrap' }}>{lojaNome[n.loja_id || ''] || '—'}</td>
                   <td className="r mono" style={{ fontWeight: 600 }}>{brl(n.valor_total)}</td>
