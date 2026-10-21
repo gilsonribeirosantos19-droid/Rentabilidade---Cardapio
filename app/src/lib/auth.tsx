@@ -76,11 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe()
   }, [])
 
-  // Logout automático por INATIVIDADE (15 min sem atividade) — segurança: se a pessoa esquecer
+  // Logout automático por INATIVIDADE (30 min sem atividade) — segurança: se a pessoa esquecer
   // logada no computador, a sessão cai sozinha e cobra senha de novo.
   useEffect(() => {
     if (!session) return
-    const LIMITE = 15 * 60 * 1000   // 15 minutos
+    const LIMITE = 30 * 60 * 1000   // 30 minutos
     let timer: ReturnType<typeof setTimeout>
     const reset = () => { clearTimeout(timer); timer = setTimeout(() => { void signOut() }, LIMITE) }
     const eventos: (keyof WindowEventMap)[] = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'wheel']
