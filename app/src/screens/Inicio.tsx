@@ -77,7 +77,6 @@ export function Inicio() {
 
   // ---- Pendências ----
   const pedPend = byLoja(pedidos as any).filter((p: any) => p.status === 'pendente' || p.status === 'aprovado').length
-  const diverg = saidasL.filter((s) => !s.motivo).length
   const invAbertos = byLoja(inventarios).filter((i) => i.status === 'ativo').length
 
   // ---- Alertas ----
@@ -146,7 +145,6 @@ export function Inicio() {
               <tbody>
                 {[
                   { ic: '#fff7ed', col: '#f97316', label: 'Pedidos pendentes para enviar', n: pedPend, nc: '#22c55e' },
-                  { ic: '#fff7ed', col: '#f97316', label: 'Divergências de estoque', n: diverg, nc: '#f97316' },
                   { ic: '#f0fdf4', col: '#16a34a', label: 'Inventários em aberto', n: invAbertos, nc: '#22c55e' },
                   { ic: '#eff6ff', col: '#2563eb', label: 'Solicitações pendentes aguardando aprovação', n: 0, nc: '#22c55e' },
                 ].map((r, i) => (
