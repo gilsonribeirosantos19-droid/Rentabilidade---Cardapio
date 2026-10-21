@@ -54,6 +54,8 @@ export function Inicio() {
     if (!a) return { insumo_id: id, quantidade: 0, custo_medio: 0, minimo: null }
     return { insumo_id: id, quantidade: a.quantidade, custo_medio: a.quantidade > 0 ? a.valor / a.quantidade : 0, minimo: a.minimo }
   }
+  // Só MATÉRIA-PRIMA (CMV) nos indicadores de estoque — tira EPI, limpeza, embalagem, equipamento.
+  const insumosCmv = useMemo(() => insumos.filter((i) => (i.participa_cmv ?? 'sim') !== 'nao'), [insumos])
 
   // ---- KPIs ----
   const k = useMemo(() => {
@@ -68,9 +70,11 @@ export function Inicio() {
     const perdSem = saidasL.filter((s) => isPerda(s) && dt(s) >= iniSem).length
     const perdSemAnt = saidasL.filter((s) => isPerda(s) && dt(s) >= iniSemAnt && dt(s) < iniSem).length
     const perdMes = saidasL.filter((s) => isPerda(s) && dt(s) >= iniMes).length
-    const valEst = insumos.reduce((s, i) => { const sd = getSaldo(i.id); return s + (sd.quantidade || 0) * (sd.custo_medio || 0) }, 0)
-    return { compSem, compSemAnt, compMes, perdSem, perdSemAnt, perdMes, valEst }
-  }, [entradasL, saidasL, insumos, saldos, lojaId])
+    const valorDe = (lista: Insumo[]) => lista.reduce((s, i) => { const sd = getSaldo(i.id); return s + (sd.quantidade || 0) * (sd.custo_medio || 0) }, 0)
+    const valEst = valorDe(insumosCmv)     // matéria-prima = número principal
+    const valEstTotal = valorDe(insumos)   // tudo (embalagem/limpeza/EPI/equipamento) = texto menor
+    return { compSem, compSemAnt, compMes, perdSem, perdSemAnt, perdMes, valEst, valEstTotal }
+  }, [entradasL, saidasL, insumos, insumosCmv, saldos, lojaId])
 
   const cmpSem = k.compSemAnt === 0 ? null : { pct: Math.abs(((k.compSem - k.compSemAnt) / k.compSemAnt) * 100).toFixed(1), up: k.compSem >= k.compSemAnt }
   const cmpPerd = k.perdSemAnt === 0 ? null : { pct: Math.abs(((k.perdSem - k.perdSemAnt) / k.perdSemAnt) * 100).toFixed(1), good: k.perdSem <= k.perdSemAnt }
@@ -80,8 +84,8 @@ export function Inicio() {
   const invAbertos = byLoja(inventarios).filter((i) => i.status === 'ativo').length
 
   // ---- Alertas ----
-  const ruptura = insumos.filter((i) => (getSaldo(i.id).quantidade || 0) <= 0).length
-  const critico = insumos.filter((i) => { const s = getSaldo(i.id); return (s.quantidade || 0) > 0 && s.minimo != null && (s.quantidade || 0) <= (s.minimo || 0) }).length
+  const ruptura = insumosCmv.filter((i) => (getSaldo(i.id).quantidade || 0) <= 0).length
+  const critico = insumosCmv.filter((i) => { const s = getSaldo(i.id); return (s.quantidade || 0) > 0 && s.minimo != null && (s.quantidade || 0) <= (s.minimo || 0) }).length
   const vSaidaMes = saidasL.filter((s) => (s.criado_em || '') >= iniMesISO && s.tipo === 'consumo').reduce((acc, s) => acc + (s.quantidade || 0) * (getSaldo(s.insumo_id).custo_medio || 0), 0)
   const fatMes = byLoja(faturamentos as { loja_id?: string | null; faturado?: number }[]).reduce((s, f) => s + (f.faturado || 0), 0)
   const cmvPct = fatMes > 0 ? (vSaidaMes / fatMes * 100).toFixed(1) : null
@@ -90,14 +94,14 @@ export function Inicio() {
   const cobertura = useMemo(() => {
     const iniMes = new Date(now.getFullYear(), now.getMonth(), 1)
     const dias = now.getDate()
-    return insumos.map((ins) => {
+    return insumosCmv.map((ins) => {
       const est = getSaldo(ins.id).quantidade || 0
       const consumo = saidasL.filter((x) => x.insumo_id === ins.id && x.tipo === 'consumo' && new Date(x.criado_em || '') >= iniMes).reduce((a, x) => a + (x.quantidade || 0), 0)
       const media = consumo / Math.max(dias, 1)
       const cob = media > 0 ? est / media : Infinity
       return { ins, cob }
     }).filter((r) => r.cob !== Infinity)
-  }, [insumos, saidasL, saldos, lojaId])
+  }, [insumosCmv, saidasL, saldos, lojaId])
   const criticos = cobertura.filter((r) => r.cob < 30).sort((a, b) => a.cob - b.cob).slice(0, 5)
 
   // ---- Comparativo por loja ----
@@ -132,7 +136,7 @@ export function Inicio() {
           <div className="kpi-5">
             <div className="kpi-card"><div className="kpi-label">Compras da Semana</div><div className="kpi-icon-row"><div className="kpi-icon" style={{ background: '#f0fdf4' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2}><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg></div><div><div className="kpi-val">{k.compSem}</div><div className="kpi-unit">entradas</div></div></div><div className={'kpi-cmp ' + (cmpSem ? (cmpSem.up ? 'up' : 'down') : 'neutral')}>{cmpSem ? `${cmpSem.up ? '↑' : '↓'} ${cmpSem.pct}% vs período anterior` : '— sem período anterior'}</div></div>
             <div className="kpi-card"><div className="kpi-label">Compras do Mês</div><div className="kpi-icon-row"><div className="kpi-icon" style={{ background: '#eff6ff' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth={2}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg></div><div><div className="kpi-val" style={{ fontSize: 16 }}>{brl(k.compMes)}</div></div></div><div className="kpi-cmp neutral">total de entradas no mês</div></div>
-            <div className="kpi-card"><div className="kpi-label">Valor do Estoque</div><div className="kpi-icon-row"><div className="kpi-icon" style={{ background: '#fff7ed' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth={2}><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 3H8" /></svg></div><div><div className="kpi-val" style={{ fontSize: 16 }}>{brl(k.valEst)}</div></div></div><div className="kpi-cmp neutral">custo médio × saldo</div></div>
+            <div className="kpi-card"><div className="kpi-label">Valor do Estoque</div><div className="kpi-icon-row"><div className="kpi-icon" style={{ background: '#fff7ed' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth={2}><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 3H8" /></svg></div><div><div className="kpi-val" style={{ fontSize: 16 }}>{brl(k.valEst)}</div></div></div><div className="kpi-cmp neutral">matéria-prima · total {brl(k.valEstTotal)}</div></div>
             <div className="kpi-card"><div className="kpi-label">Perdas da Semana</div><div className="kpi-icon-row"><div className="kpi-icon" style={{ background: '#fff1f2' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth={2}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /></svg></div><div><div className="kpi-val">{k.perdSem}</div><div className="kpi-unit">registros</div></div></div><div className={'kpi-cmp ' + (cmpPerd ? (cmpPerd.good ? 'up' : 'down') : 'neutral')}>{cmpPerd ? `${cmpPerd.good ? '↓' : '↑'} ${cmpPerd.pct}% vs período anterior` : '— sem período anterior'}</div></div>
             <div className="kpi-card"><div className="kpi-label">Perdas do Mês</div><div className="kpi-icon-row"><div className="kpi-icon" style={{ background: '#fff1f2' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth={2}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg></div><div><div className="kpi-val">{k.perdMes}</div><div className="kpi-unit">registro(s)</div></div></div><div className="kpi-cmp neutral">perdas registradas no mês</div></div>
           </div>
