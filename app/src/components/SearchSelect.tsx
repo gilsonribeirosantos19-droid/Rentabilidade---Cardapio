@@ -24,8 +24,9 @@ export function SearchSelect({
 
   useEffect(() => {
     if (!open) return
-    const onDown = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
-    const onScroll = (e: Event) => { if (ref.current && ref.current.contains(e.target as Node)) return; setOpen(false) }
+    // e.target pode NÃO ser um Node (ex.: no 'resize' é o window) → guardar antes do .contains (senão estoura)
+    const onDown = (e: MouseEvent) => { const t = e.target; if (ref.current && (!(t instanceof Node) || !ref.current.contains(t))) setOpen(false) }
+    const onScroll = (e: Event) => { const t = e.target; if (ref.current && t instanceof Node && ref.current.contains(t)) return; setOpen(false) }
     document.addEventListener('mousedown', onDown)
     window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', onScroll)
