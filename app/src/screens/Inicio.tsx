@@ -26,13 +26,34 @@ export function Inicio() {
   const { data: saidas = [] } = useQuery({ queryKey: ['inc-saidas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,loja_id,quantidade,tipo,motivo,criado_em').eq('tenant_id', tenantId).order('criado_em').order('id').range(f, t)) })
   const { data: inventarios = [] } = useQuery({ queryKey: ['inc-inv', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('inventarios').select('loja_id,status').eq('tenant_id', tenantId); return (data ?? []) as Inv[] } })
   const { data: pedidos = [] } = useQuery({ queryKey: ['inc-pedidos', tenantId], enabled: !!tenantId, queryFn: async () => { try { const { data } = await supabase.from('pedidos_compra').select('status,loja_id').eq('tenant_id', tenantId); return (data ?? []) as { status?: string; loja_id?: string }[] } catch { return [] } } })
-  const { data: faturamentos = [] } = useQuery({ queryKey: ['inc-fat', tenantId, iniMesDia], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('faturamento').select('valor,data').eq('tenant_id', tenantId).gte('data', iniMesDia); return (data ?? []) as { valor?: number; data?: string }[] } })
+  // Faturamento do mês = CAIXA (recebimento_vendas, só dias 'processado'), a MESMA fonte do CMV/Fechamento.
+  // (Antes lia a tabela 'faturamento', vazia/legada → o CMV aparecia "sem dados".)
+  const { data: faturamentos = [] } = useQuery({ queryKey: ['inc-fat', tenantId, iniMesDia], enabled: !!tenantId, queryFn: () => fetchAll<{ loja_id?: string; faturado?: number; data?: string }>((f, t) => supabase.from('recebimento_vendas').select('loja_id,faturado,data').eq('tenant_id', tenantId).eq('status', 'processado').gte('data', iniMesDia).order('loja_id').order('data').range(f, t)).catch(() => [] as { loja_id?: string; faturado?: number; data?: string }[]) })
   const { data: cmp = [] } = useQuery({ queryKey: ['inc-cmp', tenantId, iniMesISO], enabled: !!tenantId, queryFn: async () => { const { data, error } = await supabase.rpc('comparativo_lojas', { p_tenant: tenantId, p_inicio: iniMesISO }); if (error) throw error; return (data ?? []) as Cmp[] } })
 
   const byLoja = <T extends { loja_id?: string | null }>(arr: T[]) => lojaId ? arr.filter((x) => (x.loja_id || null) === lojaId) : arr
   const entradasL = useMemo(() => byLoja(entradas), [entradas, lojaId])
   const saidasL = useMemo(() => byLoja(saidas), [saidas, lojaId])
-  const getSaldo = (id: string): Saldo => saldos.find((s) => s.insumo_id === id && (!lojaId || s.loja_id === lojaId)) || { insumo_id: id, quantidade: 0, custo_medio: 0, minimo: null }
+  // Saldo agregado por insumo: "Todas as lojas" SOMA todas as lojas (qtd e mínimo); custo_medio = média
+  // PONDERADA (valor/qtd) → qtd×custo = valor TOTAL. Loja selecionada = só ela. (Antes pegava 1 loja só →
+  // Valor do Estoque/Ruptura/Crítico subcontavam no modo "Todas as lojas".)
+  const saldoMap = useMemo(() => {
+    const m: Record<string, { quantidade: number; valor: number; minimo: number | null }> = {}
+    saldos.forEach((s) => {
+      if (lojaId && (s.loja_id || null) !== lojaId) return
+      const o = (m[s.insumo_id] = m[s.insumo_id] || { quantidade: 0, valor: 0, minimo: null })
+      const q = s.quantidade || 0
+      o.quantidade += q
+      o.valor += q * (s.custo_medio || 0)
+      if (s.minimo != null) o.minimo = (o.minimo || 0) + s.minimo
+    })
+    return m
+  }, [saldos, lojaId])
+  const getSaldo = (id: string): Saldo => {
+    const a = saldoMap[id]
+    if (!a) return { insumo_id: id, quantidade: 0, custo_medio: 0, minimo: null }
+    return { insumo_id: id, quantidade: a.quantidade, custo_medio: a.quantidade > 0 ? a.valor / a.quantidade : 0, minimo: a.minimo }
+  }
 
   // ---- KPIs ----
   const k = useMemo(() => {
@@ -56,14 +77,13 @@ export function Inicio() {
 
   // ---- Pendências ----
   const pedPend = byLoja(pedidos as any).filter((p: any) => p.status === 'pendente' || p.status === 'aprovado').length
-  const diverg = saidasL.filter((s) => !s.motivo).length
   const invAbertos = byLoja(inventarios).filter((i) => i.status === 'ativo').length
 
   // ---- Alertas ----
   const ruptura = insumos.filter((i) => (getSaldo(i.id).quantidade || 0) <= 0).length
   const critico = insumos.filter((i) => { const s = getSaldo(i.id); return (s.quantidade || 0) > 0 && s.minimo != null && (s.quantidade || 0) <= (s.minimo || 0) }).length
   const vSaidaMes = saidasL.filter((s) => (s.criado_em || '') >= iniMesISO && s.tipo === 'consumo').reduce((acc, s) => acc + (s.quantidade || 0) * (getSaldo(s.insumo_id).custo_medio || 0), 0)
-  const fatMes = (faturamentos as any[]).filter((f: any) => (f.data || '') >= iniMesDia).reduce((s: number, f: any) => s + (f.valor || 0), 0)
+  const fatMes = byLoja(faturamentos as { loja_id?: string | null; faturado?: number }[]).reduce((s, f) => s + (f.faturado || 0), 0)
   const cmvPct = fatMes > 0 ? (vSaidaMes / fatMes * 100).toFixed(1) : null
 
   // ---- Cobertura (Estoque Crítico / Ruptura Prevista) ----
@@ -125,7 +145,6 @@ export function Inicio() {
               <tbody>
                 {[
                   { ic: '#fff7ed', col: '#f97316', label: 'Pedidos pendentes para enviar', n: pedPend, nc: '#22c55e' },
-                  { ic: '#fff7ed', col: '#f97316', label: 'Divergências de estoque', n: diverg, nc: '#f97316' },
                   { ic: '#f0fdf4', col: '#16a34a', label: 'Inventários em aberto', n: invAbertos, nc: '#22c55e' },
                   { ic: '#eff6ff', col: '#2563eb', label: 'Solicitações pendentes aguardando aprovação', n: 0, nc: '#22c55e' },
                 ].map((r, i) => (
@@ -186,7 +205,7 @@ export function Inicio() {
             </div>
             <div className="alert-row" style={{ background: '#eff6ff' }}>
               <div className="alert-dot" style={{ background: '#dbeafe' }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth={2.5}><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></div>
-              <div><div className="alert-row-title">CMV {cmvPct ? cmvPct + '%' : 'sem dados'}</div><div className="alert-row-sub">{cmvPct && +cmvPct > 30 ? 'Acima da meta (28,0%)' : 'Dentro da meta'}</div></div><span className="alert-row-arrow">›</span>
+              <div><div className="alert-row-title">CMV {cmvPct ? cmvPct + '%' : 'sem dados'}</div><div className="alert-row-sub">{cmvPct == null ? 'Sem faturamento lançado no mês' : (+cmvPct > 30 ? 'Acima da meta (28,0%)' : 'Dentro da meta (28,0%)')}</div></div><span className="alert-row-arrow">›</span>
             </div>
             <div className="alert-row" style={{ background: '#f0fdf4' }}>
               <div className="alert-dot" style={{ background: '#dcfce7', color: '#16a34a', fontFamily: 'DM Mono, monospace', fontWeight: 800 }}>0</div>
