@@ -9,7 +9,7 @@ import './config.css'
 // via Edge Function `admin-users` (a chave admin fica no servidor).
 // Papéis: admin / gerente / operador. Loja vinculada só para gerente.
 
-type Usuario = { id: string; nome?: string; email?: string; role?: string; grupo?: string | null; loja_id?: string | null; lojas_acesso?: string[] | null; ativo?: boolean }
+type Usuario = { id: string; nome?: string; email?: string; role?: string; grupo?: string | null; loja_id?: string | null; lojas_acesso?: string[] | null; sistemas_rede?: string[] | null; ativo?: boolean }
 type Loja = { id: string; nome: string }
 type Modal = { id?: string; nome: string; email: string; role: string; grupo: string; lojaId: string; lojasAcesso: string[]; senha: string; redes: string[]; redeLojaId: string }
 
@@ -63,7 +63,7 @@ export function ConfigUsuarios() {
   })
 
   const novo = () => setModal({ nome: '', email: '', role: 'gerente', grupo: '', lojaId: '', lojasAcesso: [], senha: '', redes: [], redeLojaId: '' })
-  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', grupo: u.grupo ?? '', lojaId: u.loja_id ?? '', lojasAcesso: u.lojas_acesso ?? [], senha: '', redes: [], redeLojaId: '' })
+  const editar = (u: Usuario) => setModal({ id: u.id, nome: u.nome ?? '', email: u.email ?? '', role: u.role ?? 'gerente', grupo: u.grupo ?? '', lojaId: u.loja_id ?? '', lojasAcesso: u.lojas_acesso ?? [], senha: '', redes: u.sistemas_rede ?? [], redeLojaId: '' })
 
   const saveMut = useMutation({
     mutationFn: async (m: Modal) => {
@@ -78,7 +78,12 @@ export function ConfigUsuarios() {
       const grupo = m.grupo || null   // grupo de permissão (separado da rota/role)
       let redeMsg = ''
       if (m.id) {
-        const { error } = await supabase.from('usuarios').update({ nome, role: m.role, grupo, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso }).eq('id', m.id); if (error) throw error
+        // sistemas_rede = quais sistemas aparecem no Portal desta pessoa. Na EDIÇÃO só atualiza a LISTA
+        // (não provisiona/mexe em login) — pra não rebaixar admin já criado manualmente em cada sistema.
+        const upd: Record<string, unknown> = { nome, role: m.role, grupo, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso, sistemas_rede: m.redes }
+        let r = await supabase.from('usuarios').update(upd).eq('id', m.id)
+        if (r.error && /sistemas_rede/i.test(r.error.message)) { delete upd.sistemas_rede; r = await supabase.from('usuarios').update(upd).eq('id', m.id) }
+        if (r.error) throw r.error
         if (m.senha) await invokeAdmin({ action: 'update_password', userId: m.id, password: m.senha })
       } else {
         const auth = await invokeAdmin({ action: 'create', email, password: m.senha })
@@ -213,29 +218,30 @@ export function ConfigUsuarios() {
               </div>
               <div className="cfg-fg"><label>{modal.id ? 'Nova senha (deixe em branco para manter)' : 'Senha inicial *'}</label><input type="password" value={modal.senha} onChange={(e) => setModal({ ...modal, senha: e.target.value })} placeholder={modal.id ? '••••••' : ''} autoComplete="new-password" /></div>
 
-              {!modal.id && (
-                <div className="cfg-fg" style={{ borderTop: '1px solid #eef2f7', paddingTop: 12, marginTop: 4 }}>
-                  <label>Também criar acesso em <span style={{ fontWeight: 400, color: '#64748b' }}>(login único — cria o mesmo usuário, com a mesma senha, nos sistemas marcados)</span></label>
-                  <div className="usr-lojas">
-                    {SIS.map(([k, l]) => (
-                      <label key={k}>
-                        <input type="checkbox" checked={modal.redes.includes(k)} onChange={(e) => setModal({ ...modal, redes: e.target.checked ? [...modal.redes, k] : modal.redes.filter((x) => x !== k) })} />
-                        {l}
-                      </label>
-                    ))}
-                  </div>
-                  {modal.redes.length > 0 && (
-                    <div style={{ marginTop: 10 }}>
-                      <label>Loja nos outros sistemas *</label>
-                      <select value={modal.redeLojaId || modal.lojaId} onChange={(e) => setModal({ ...modal, redeLojaId: e.target.value })}>
-                        <option value="">Selecione a loja…</option>
-                        {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-                      </select>
-                      <div className="p-hint">Nos outros sistemas a pessoa é criada como <b>gerente</b> da loja escolhida (papéis mais altos só na criação manual de cada sistema). A senha nasce provisória lá.</div>
-                    </div>
-                  )}
+              <div className="cfg-fg" style={{ borderTop: '1px solid #eef2f7', paddingTop: 12, marginTop: 4 }}>
+                <label>{modal.id ? 'Acesso aos sistemas ' : 'Também criar acesso em '}<span style={{ fontWeight: 400, color: '#64748b' }}>{modal.id ? '(quais sistemas aparecem no Portal desta pessoa)' : '(login único — cria o mesmo usuário, com a mesma senha, nos sistemas marcados)'}</span></label>
+                <div className="usr-lojas">
+                  {SIS.map(([k, l]) => (
+                    <label key={k}>
+                      <input type="checkbox" checked={modal.redes.includes(k)} onChange={(e) => setModal({ ...modal, redes: e.target.checked ? [...modal.redes, k] : modal.redes.filter((x) => x !== k) })} />
+                      {l}
+                    </label>
+                  ))}
                 </div>
-              )}
+                {!modal.id && modal.redes.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <label>Loja nos outros sistemas *</label>
+                    <select value={modal.redeLojaId || modal.lojaId} onChange={(e) => setModal({ ...modal, redeLojaId: e.target.value })}>
+                      <option value="">Selecione a loja…</option>
+                      {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+                    </select>
+                    <div className="p-hint">Nos outros sistemas a pessoa é criada como <b>gerente</b> da loja escolhida (papéis mais altos só na criação manual de cada sistema). A senha nasce provisória lá.</div>
+                  </div>
+                )}
+                {modal.id && (
+                  <div className="p-hint" style={{ marginTop: 8 }}>Marca o que aparece no <b>Portal</b> pra essa pessoa. O login dela já precisa existir em cada sistema (criado lá dentro) — aqui você só diz ao Portal o que mostrar.</div>
+                )}
+              </div>
             </div>
             <div className="mf">
               <button className="cfg-btn" onClick={() => setModal(null)}>Cancelar</button>
