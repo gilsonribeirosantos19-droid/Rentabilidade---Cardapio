@@ -335,7 +335,6 @@ export function CmvTeoricoReal() {
                         <td className="r mono">{brl(r.cReal)}</td>
                         <td className="c">
                           <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{psign}{r.dPct.toFixed(1)}%</div>
-                          <div style={{ fontSize: 10, color: '#94a3b8', fontFamily: "'DM Mono', monospace" }}>{r.cReal > 0 ? brl(r.cReal).replace('R$ ', '') : ''}</div>
                         </td>
                         <td className="r mono" style={{ fontWeight: 600 }}>{sign}{fq(r.dQtd)}</td>
                         <td className="r mono" style={{ fontWeight: 600 }}>{isign}{brl(Math.abs(r.imp))}</td>
