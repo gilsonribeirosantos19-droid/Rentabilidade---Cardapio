@@ -74,10 +74,15 @@ async function manifestarCiencia(chave: string) {
     })
     const txt = await res.text()
     console.log('Manifestar ciência - status:', res.status, '- resposta:', txt.substring(0, 300))
-    return res.ok
+    // cStat 650 = NF-e Cancelada/Denegada (ciência rejeitada, o XML completo nunca é liberado).
+    // Devolvemos o cStat pra quem chama poder tirar a nota da fila. Os demais chamadores só dão
+    // await e ignoram o retorno — então mudar de boolean p/ objeto não quebra nada.
+    let cStat: string | null = null
+    try { const j = JSON.parse(txt); cStat = (j?.status_sefaz != null ? String(j.status_sefaz) : null) } catch { /* corpo não-JSON */ }
+    return { ok: res.ok, cStat }
   } catch (e) {
     console.error('Erro manifestarCiencia:', e)
-    return false
+    return { ok: false, cStat: null }
   }
 }
 
@@ -228,13 +233,20 @@ async function rodarReprocessar(tenant?: string) {
   const vincCache: Record<string, any[]> = {}
   const fornCache: Record<string, any[]> = {}
   const inicio = Date.now()
-  let processadas = 0, completadas = 0, semXml = 0, erros = 0
+  let processadas = 0, completadas = 0, semXml = 0, erros = 0, canceladas = 0
 
   for (const n of notas || []) {
     if (Date.now() - inicio > 40000) break
     processadas++
     try {
-      await manifestarCiencia(n.chave_acesso)
+      const m = await manifestarCiencia(n.chave_acesso)
+      // cStat 650 = NF-e CANCELADA/DENEGADA na SEFAZ: a ciência é rejeitada e o XML nunca vem.
+      // Tira da fila (senão fica tentando pra sempre e entope o orçamento de 40s das rodadas) →
+      // marca 'cancelada'. A chave fica guardada (auditável/reversível).
+      if (m.cStat === '650') {
+        await supabase.from('nfe_recebidas').update({ status: 'cancelada' }).eq('id', n.id)
+        canceladas++; continue
+      }
       const completa = await fetchNfeCompleta(n.chave_acesso)
       const itensNfe: any[] = completa?.requisicao_nota_fiscal?.itens || []
       if (!itensNfe.length) { semXml++; continue }   // XML da SEFAZ ainda não disponível
@@ -297,8 +309,8 @@ async function rodarReprocessar(tenant?: string) {
   let rq = supabase.from('nfe_recebidas').select('id', { count: 'exact', head: true }).eq('status', 'em_transito')
   if (tenant && _uuid.test(tenant)) rq = rq.eq('tenant_id', tenant)
   const { count: restantes } = await rq
-  console.log('Reprocessar:', { processadas, completadas, semXml, erros, restantes })
-  return json({ ok: true, processadas, completadas, semXml, erros, restantes })
+  console.log('Reprocessar:', { processadas, completadas, canceladas, semXml, erros, restantes })
+  return json({ ok: true, processadas, completadas, canceladas, semXml, erros, restantes })
 }
 
 // ── PULL: busca no Focus as notas recebidas de cada filial e importa as que faltam no banco ──
@@ -462,8 +474,11 @@ Deno.serve(async (req) => {
 
     // Modos administrativos (mexem em massa no Focus/banco de um ou de TODOS os tenants):
     // exigem o segredo compartilhado. Sem WEBHOOK_SECRET configurado, secretOk() é true (compat).
+    // REPROCESSAR é idempotente e NÃO expõe dado (só completa/cancela notas presas e devolve
+    // contadores) — era público na origem (smart-action). Fica FORA do gate de segredo pra o
+    // cron (jobid 19) funcionar mesmo que o WEBHOOK_SECRET não bata com o segredo que ele manda.
     const _adminMode = body.backfill === true || body.pull === true
-      || body.backfill_venc === true || body.reprocessar === true || body.amostra === true
+      || body.backfill_venc === true || body.amostra === true
       || body.verificar_situacao === true
     if (_adminMode && !secretOk(req, body)) {
       return new Response(JSON.stringify({ error: 'não autorizado (segredo inválido)' }), {

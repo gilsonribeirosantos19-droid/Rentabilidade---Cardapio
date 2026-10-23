@@ -6,12 +6,15 @@ const supabase = createClient(
   Deno.env.get('APP_SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
-const TENANT_ID   = '33e81daf-662f-43d1-8684-0702e959c4f9'
+// MULTI-TENANT: resgata as notas 'em_transito' de QUALQUER tenant (Mori, Joya, Sushi PN, novos...).
+// Antes o tenant estava FIXO no Mori — por isso as notas da Joya nunca completavam o XML e ficavam
+// presas em "Pendente SEFAZ" pra sempre (nada manifestava ciência nem baixava o XML pra elas).
 const FOCUS_TOKEN = Deno.env.get('FOCUS_NFE_TOKEN')!
 const FOCUS_URL   = 'https://api.focusnfe.com.br'
 const FOCUS_AUTH  = 'Basic ' + btoa(FOCUS_TOKEN + ':')
 
-// Manifesta ciência. Loga o status + resposta (pra rastrear se a SEFAZ aceitou).
+// Manifesta ciência. Devolve o HTTP do Focus + o cStat da SEFAZ (status_sefaz) e a mensagem.
+// cStat 650 = NF-e Cancelada ou Denegada: a ciência é rejeitada e o XML completo nunca é liberado.
 async function manifestarCiencia(chave: string) {
   try {
     const res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas/${chave}/manifesto`, {
@@ -21,10 +24,12 @@ async function manifestarCiencia(chave: string) {
     })
     const txt = await res.text()
     console.log(`[manifesto] ${chave} -> HTTP ${res.status} | ${txt.substring(0, 200)}`)
-    return res.status
+    let cStat: string | null = null, msg = ''
+    try { const j = JSON.parse(txt); cStat = (j?.status_sefaz != null ? String(j.status_sefaz) : null); msg = String(j?.mensagem_sefaz ?? '') } catch { /* corpo não-JSON: ignora */ }
+    return { http: res.status, cStat, msg }
   } catch (e) {
     console.error(`[manifesto] ${chave} -> ERRO: ${(e as Error).message}`)
-    return 0
+    return { http: 0, cStat: null, msg: '' }
   }
 }
 
@@ -52,11 +57,13 @@ async function fetchNfeCompleta(chave: string) {
 
 // Roda periodicamente (cron). Pega as notas "em_transito", tenta buscar os itens e completa.
 Deno.serve(async (_req) => {
+  // MULTI-TENANT: pega TODAS as notas presas em 'em_transito' (de qualquer tenant), trazendo o
+  // tenant_id de cada uma pra escopar os vínculos/fornecedores corretos por nota.
   const { data: pendentes } = await supabase
     .from('nfe_recebidas')
-    .select('id, chave_acesso, numero')
-    .eq('tenant_id', TENANT_ID)
+    .select('id, chave_acesso, numero, tenant_id')
     .eq('status', 'em_transito')
+    .limit(300)
 
   console.log(`[reprocessar] inicio — ${pendentes?.length || 0} nota(s) em transito`)
 
@@ -66,19 +73,18 @@ Deno.serve(async (_req) => {
     })
   }
 
-  const { data: vincExist } = await supabase
-    .from('insumo_fornecedores')
-    .select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id')
-    .eq('tenant_id', TENANT_ID)
-
-  // Fornecedores do tenant (p/ casar o emitente da nota pelo CNPJ) — evita o mis-link:
-  // código sozinho (ex.: genéricos 2000000000xxx) colide entre fornecedores. Só auto-vincula
-  // se o vínculo for DO fornecedor da nota (mesma regra do nfe-webhook).
-  const { data: fornAll } = await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', TENANT_ID)
+  // Caches POR TENANT: carrega os vínculos e fornecedores de cada tenant uma única vez (evita
+  // uma query por nota). Fornecedores servem pra casar o emitente da nota pelo CNPJ e evitar o
+  // mis-link: código sozinho (ex.: genéricos 2000000000xxx) colide entre fornecedores — só
+  // auto-vincula se o vínculo for DO fornecedor da nota (mesma regra do nfe-webhook).
+  const vincCache: Record<string, any[]> = {}
+  const fornCache: Record<string, any[]> = {}
 
   let completadas = 0
+  let canceladas = 0
 
   for (const nfe of pendentes) {
+    const TEN = nfe.tenant_id as string
     if (!nfe.chave_acesso) { console.log(`[reprocessar] nota ${nfe.numero} sem chave — pulando`); continue }
 
     const { count } = await supabase
@@ -91,11 +97,25 @@ Deno.serve(async (_req) => {
       continue
     }
 
-    const mStatus = await manifestarCiencia(nfe.chave_acesso)
+    if (!vincCache[TEN]) vincCache[TEN] = (await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id').eq('tenant_id', TEN)).data || []
+    if (!fornCache[TEN]) fornCache[TEN] = (await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', TEN)).data || []
+    const vincExist = vincCache[TEN]
+    const fornAll = fornCache[TEN]
+
+    const m = await manifestarCiencia(nfe.chave_acesso)
+    // cStat 650 = NF-e CANCELADA ou DENEGADA na SEFAZ. A ciência é rejeitada e o XML completo
+    // nunca vem — então tira da fila de pendentes: marca como 'cancelada' (não fica tentando à toa).
+    // A chave fica guardada (auditável/reversível). Guiado pela resposta REAL da SEFAZ, nota a nota.
+    if (m.cStat === '650') {
+      await supabase.from('nfe_recebidas').update({ status: 'cancelada' }).eq('id', nfe.id)
+      canceladas++
+      console.log(`[reprocessar] nota ${nfe.numero} -> CANCELADA/DENEGADA na SEFAZ (cStat 650) | ${m.msg.substring(0, 120)}`)
+      continue
+    }
     const completa = await fetchNfeCompleta(nfe.chave_acesso)
     const itensNfe = completa?.requisicao_nota_fiscal?.itens || []
     if (!itensNfe.length) {
-      console.log(`[reprocessar] nota ${nfe.numero} -> XML sem itens ainda (manifesto HTTP ${mStatus}). Tenta na proxima rodada.`)
+      console.log(`[reprocessar] nota ${nfe.numero} -> XML sem itens ainda (manifesto HTTP ${m.http}). Tenta na proxima rodada.`)
       continue
     }
 
@@ -110,7 +130,7 @@ Deno.serve(async (_req) => {
       const linha  = Number(item.numero_item) || (i + 1)   // nº da linha do XML (fallback = posição)
       return {
         nfe_id:                 nfe.id,
-        tenant_id:              TENANT_ID,
+        tenant_id:              TEN,
         n_item:                 linha,   // trava de banco: índice único (nfe_id,n_item) barra a 2ª cópia
         descricao_nfe:          String(item.descricao || '').toUpperCase(),
         codigo_item_fornecedor: codigo,
@@ -136,8 +156,8 @@ Deno.serve(async (_req) => {
     console.log(`[reprocessar] nota ${nfe.numero} -> COMPLETADA (${itensBatch.length} itens) -> ${novoStatus}`)
   }
 
-  console.log(`[reprocessar] fim — ${completadas} de ${pendentes.length} completada(s)`)
-  return new Response(JSON.stringify({ ok: true, pendentes: pendentes.length, completadas }), {
+  console.log(`[reprocessar] fim — ${completadas} completada(s), ${canceladas} cancelada(s) de ${pendentes.length}`)
+  return new Response(JSON.stringify({ ok: true, pendentes: pendentes.length, completadas, canceladas }), {
     headers: { 'Content-Type': 'application/json' }
   })
 })
