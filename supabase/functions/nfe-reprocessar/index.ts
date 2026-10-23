@@ -13,7 +13,8 @@ const FOCUS_TOKEN = Deno.env.get('FOCUS_NFE_TOKEN')!
 const FOCUS_URL   = 'https://api.focusnfe.com.br'
 const FOCUS_AUTH  = 'Basic ' + btoa(FOCUS_TOKEN + ':')
 
-// Manifesta ciência. Loga o status + resposta (pra rastrear se a SEFAZ aceitou).
+// Manifesta ciência. Devolve o HTTP do Focus + o cStat da SEFAZ (status_sefaz) e a mensagem.
+// cStat 650 = NF-e Cancelada ou Denegada: a ciência é rejeitada e o XML completo nunca é liberado.
 async function manifestarCiencia(chave: string) {
   try {
     const res = await fetch(`${FOCUS_URL}/v2/nfes_recebidas/${chave}/manifesto`, {
@@ -23,10 +24,12 @@ async function manifestarCiencia(chave: string) {
     })
     const txt = await res.text()
     console.log(`[manifesto] ${chave} -> HTTP ${res.status} | ${txt.substring(0, 200)}`)
-    return res.status
+    let cStat: string | null = null, msg = ''
+    try { const j = JSON.parse(txt); cStat = (j?.status_sefaz != null ? String(j.status_sefaz) : null); msg = String(j?.mensagem_sefaz ?? '') } catch { /* corpo não-JSON: ignora */ }
+    return { http: res.status, cStat, msg }
   } catch (e) {
     console.error(`[manifesto] ${chave} -> ERRO: ${(e as Error).message}`)
-    return 0
+    return { http: 0, cStat: null, msg: '' }
   }
 }
 
@@ -78,6 +81,7 @@ Deno.serve(async (_req) => {
   const fornCache: Record<string, any[]> = {}
 
   let completadas = 0
+  let canceladas = 0
 
   for (const nfe of pendentes) {
     const TEN = nfe.tenant_id as string
@@ -98,11 +102,20 @@ Deno.serve(async (_req) => {
     const vincExist = vincCache[TEN]
     const fornAll = fornCache[TEN]
 
-    const mStatus = await manifestarCiencia(nfe.chave_acesso)
+    const m = await manifestarCiencia(nfe.chave_acesso)
+    // cStat 650 = NF-e CANCELADA ou DENEGADA na SEFAZ. A ciência é rejeitada e o XML completo
+    // nunca vem — então tira da fila de pendentes: marca como 'cancelada' (não fica tentando à toa).
+    // A chave fica guardada (auditável/reversível). Guiado pela resposta REAL da SEFAZ, nota a nota.
+    if (m.cStat === '650') {
+      await supabase.from('nfe_recebidas').update({ status: 'cancelada' }).eq('id', nfe.id)
+      canceladas++
+      console.log(`[reprocessar] nota ${nfe.numero} -> CANCELADA/DENEGADA na SEFAZ (cStat 650) | ${m.msg.substring(0, 120)}`)
+      continue
+    }
     const completa = await fetchNfeCompleta(nfe.chave_acesso)
     const itensNfe = completa?.requisicao_nota_fiscal?.itens || []
     if (!itensNfe.length) {
-      console.log(`[reprocessar] nota ${nfe.numero} -> XML sem itens ainda (manifesto HTTP ${mStatus}). Tenta na proxima rodada.`)
+      console.log(`[reprocessar] nota ${nfe.numero} -> XML sem itens ainda (manifesto HTTP ${m.http}). Tenta na proxima rodada.`)
       continue
     }
 
@@ -143,8 +156,8 @@ Deno.serve(async (_req) => {
     console.log(`[reprocessar] nota ${nfe.numero} -> COMPLETADA (${itensBatch.length} itens) -> ${novoStatus}`)
   }
 
-  console.log(`[reprocessar] fim — ${completadas} de ${pendentes.length} completada(s)`)
-  return new Response(JSON.stringify({ ok: true, pendentes: pendentes.length, completadas }), {
+  console.log(`[reprocessar] fim — ${completadas} completada(s), ${canceladas} cancelada(s) de ${pendentes.length}`)
+  return new Response(JSON.stringify({ ok: true, pendentes: pendentes.length, completadas, canceladas }), {
     headers: { 'Content-Type': 'application/json' }
   })
 })
