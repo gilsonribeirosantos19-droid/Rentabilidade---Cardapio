@@ -474,8 +474,11 @@ Deno.serve(async (req) => {
 
     // Modos administrativos (mexem em massa no Focus/banco de um ou de TODOS os tenants):
     // exigem o segredo compartilhado. Sem WEBHOOK_SECRET configurado, secretOk() é true (compat).
+    // REPROCESSAR é idempotente e NÃO expõe dado (só completa/cancela notas presas e devolve
+    // contadores) — era público na origem (smart-action). Fica FORA do gate de segredo pra o
+    // cron (jobid 19) funcionar mesmo que o WEBHOOK_SECRET não bata com o segredo que ele manda.
     const _adminMode = body.backfill === true || body.pull === true
-      || body.backfill_venc === true || body.reprocessar === true || body.amostra === true
+      || body.backfill_venc === true || body.amostra === true
       || body.verificar_situacao === true
     if (_adminMode && !secretOk(req, body)) {
       return new Response(JSON.stringify({ error: 'não autorizado (segredo inválido)' }), {
