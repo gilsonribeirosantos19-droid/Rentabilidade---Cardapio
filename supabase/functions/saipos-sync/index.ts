@@ -106,6 +106,23 @@ Deno.serve(async (req) => {
   const de = String(body.de || ''), ate = String(body.ate || '')
   const listaDias = (/^\d{4}-\d{2}-\d{2}$/.test(de) && /^\d{4}-\d{2}-\d{2}$/.test(ate)) ? diasNoIntervalo(de, ate) : ultimosDias(dias)
 
+  // ---- AUTORIZAÇÃO (impede escrita/leitura cross-tenant) — esta função usa service_role (ignora RLS) ----
+  // 1) CRON: header x-cron-secret == env CRON_SECRET.  2) usuário logado: JWT válido E tenant dele == tenant do body.
+  // (mesmo padrão do icomanda-sync; antes NÃO havia gate algum = qualquer um apagava/sobrescrevia vendas de qualquer tenant)
+  const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
+  const CRON_SECRET = Deno.env.get('CRON_SECRET') || ''
+  const cronHdr = req.headers.get('x-cron-secret') || ''
+  let autorizado = false
+  if (CRON_SECRET && cronHdr === CRON_SECRET) autorizado = true
+  else {
+    const { data: ud } = await supabase.auth.getUser(jwt)
+    if (ud?.user) {
+      const { data: caller } = await supabase.from('usuarios').select('tenant_id').eq('id', ud.user.id).maybeSingle()
+      if (caller?.tenant_id && caller.tenant_id === tenant) autorizado = true
+    }
+  }
+  if (!autorizado) return json({ error: 'nao autorizado para este tenant' }, 403)
+
   // de-para p/ os ITENS: codigo_pdv (== integration_code) → produto (id/nome/grupo) → ficha_id
   const { data: prods } = await supabase.from('produtos').select('id,codigo_pdv,nome,grupo').eq('tenant_id', tenant)
   const prodByCod = new Map<string, { id: string; nome: string | null; grupo: string | null }>()
