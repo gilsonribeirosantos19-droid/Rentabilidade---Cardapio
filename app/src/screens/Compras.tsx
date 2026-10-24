@@ -6,7 +6,7 @@ import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
-import { brlDash as brl } from '../lib/format'
+import { brlDash as brl, escapeHtml } from '../lib/format'
 import { isoD } from '../lib/date'
 import './estoque.css'
 
@@ -302,17 +302,17 @@ function gerarImpressaoPorLoja(porLoja: PorLoja, dataRef: string, fornecedor?: s
     return `<div class="pagina">
       <div class="brand">Aiko <span>· pedido de compra</span></div>
       <table class="doc">
-      <tr><td class="cel-loja" colspan="2">${nomeLoja.toUpperCase()}</td><td class="cel-data-label">DATA</td><td class="cel-data">${dataFormatada}</td></tr>
-      <tr><td colspan="4" class="cel-info"><b>RAZÃO SOCIAL:</b> ${razao}${cnpj ? ' &nbsp;·&nbsp; <b>CNPJ:</b> ' + cnpj : ''}</td></tr>
-      <tr><td colspan="4" class="cel-info"><b>ENDEREÇO:</b> ${ende}</td></tr>
-      ${fornecedor ? `<tr><td colspan="4" class="cel-forn">PEDIDO PARA O FORNECEDOR: ${fornecedor.toUpperCase()}</td></tr>` : ''}
+      <tr><td class="cel-loja" colspan="2">${escapeHtml(nomeLoja.toUpperCase())}</td><td class="cel-data-label">DATA</td><td class="cel-data">${dataFormatada}</td></tr>
+      <tr><td colspan="4" class="cel-info"><b>RAZÃO SOCIAL:</b> ${escapeHtml(razao)}${cnpj ? ' &nbsp;·&nbsp; <b>CNPJ:</b> ' + escapeHtml(cnpj) : ''}</td></tr>
+      <tr><td colspan="4" class="cel-info"><b>ENDEREÇO:</b> ${escapeHtml(ende)}</td></tr>
+      ${fornecedor ? `<tr><td colspan="4" class="cel-forn">PEDIDO PARA O FORNECEDOR: ${escapeHtml(fornecedor.toUpperCase())}</td></tr>` : ''}
       <tr><td class="cel-th cel-th-cod">CÓD. FORN.</td><td class="cel-th">ITENS</td><td class="cel-th cel-th-e">EMBALAGEM</td><td class="cel-th cel-th-q">QUANTIDADE</td></tr>
-      ${linhas.map((it) => it ? `<tr><td class="cel-cod">${it.codForn || '—'}</td><td class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-emb">${embLabel(it.un)}</td><td class="cel-qty">${fmtQtyDoc(it.qty)}</td></tr>` : `<tr><td class="cel-cod">&nbsp;</td><td class="cel-item">&nbsp;</td><td class="cel-emb">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
+      ${linhas.map((it) => it ? `<tr><td class="cel-cod">${escapeHtml(it.codForn || '—')}</td><td class="cel-item">${escapeHtml(it.nome.toUpperCase())}</td><td class="cel-emb">${escapeHtml(embLabel(it.un))}</td><td class="cel-qty">${fmtQtyDoc(it.qty)}</td></tr>` : `<tr><td class="cel-cod">&nbsp;</td><td class="cel-item">&nbsp;</td><td class="cel-emb">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')}
       <tr><td class="cel-footer cel-footer-l" colspan="2">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">${hrManha}</td></tr>
       <tr><td class="cel-footer" colspan="2">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">${hrTarde}</td></tr>
     </table></div>`
   }).join('')
-  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${fornecedor ? 'Pedido ' + fornecedor : 'Pedidos por Loja'} — ${dataFormatada}</title><style>
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${fornecedor ? 'Pedido ' + escapeHtml(fornecedor) : 'Pedidos por Loja'} — ${dataFormatada}</title><style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}body{background:#fff;color:#0f172a}
     .pagina{page-break-after:always;padding:22px;max-width:720px;margin:0 auto}.pagina:last-child{page-break-after:avoid}
     .brand{font-weight:800;font-size:16px;color:#00b890;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #00d4aa}.brand span{color:#94a3b8;font-weight:600;font-size:12px}
