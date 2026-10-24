@@ -14,6 +14,10 @@ const ICOMANDA_TOKEN = Deno.env.get('ICOMANDA_TOKEN') ?? ''
 const ICOMANDA_BASE = (Deno.env.get('ICOMANDA_BASE') ?? '').replace(/\/+$/, '')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_ANON = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+// A integração iComanda (token único) pertence a UM tenant (Sushi PN). Só usuários DESSE tenant
+// podem usar o proxy — senão qualquer usuário logado de qualquer cliente lia o faturamento e a
+// base de clientes (PII) do Sushi PN. Configurável por env; fallback = tenant do Sushi PN.
+const ICOMANDA_TENANT = Deno.env.get('ICOMANDA_TENANT_ID') || 'ad59e5f2-1c1f-4abb-b816-44a1c4f9cfb5'
 
 const CORS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
@@ -52,6 +56,12 @@ serve(async (req) => {
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON, { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } })
     const { data: u, error: uErr } = await sb.auth.getUser(token)
     if (uErr || !u?.user) return json({ status: 'erro', mensagem: 'Sessão inválida.' }, 401)
+    // AUTORIZAÇÃO POR TENANT: só o dono da integração iComanda (Sushi PN) pode usar. Lê o tenant do
+    // próprio chamador (RLS deixa o usuário ver a própria linha de usuarios) e compara.
+    const { data: caller } = await sb.from('usuarios').select('tenant_id').eq('id', u.user.id).maybeSingle()
+    if (!caller?.tenant_id || caller.tenant_id !== ICOMANDA_TENANT) {
+      return json({ status: 'erro', mensagem: 'Sem acesso à integração iComanda.' }, 403)
+    }
   } catch { return json({ status: 'erro', mensagem: 'Falha ao validar a sessão.' }, 401) }
 
   try {
