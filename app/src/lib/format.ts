@@ -41,3 +41,14 @@ export function brlCur(v?: number | null): string {
 // (mata a cópia idêntica de `num` espalhada em ~10 telas de entrada/produção.)
 // OBS: não confundir com o `num` FORMATADOR (número→texto) de Divergencias/VinculosPane — outra função.
 export const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
+
+// Escapa HTML — SEMPRE usar ao interpolar texto vindo de DADO (nome de insumo, fornecedor, loja,
+// razão social, endereço, descrição de NF-e do fornecedor) dentro de uma string HTML (geradores de
+// PDF/impressão via document.write) ou em `dangerouslySetInnerHTML`. Sem isso = XSS armazenado:
+// um nome como `<img src=x onerror=...>` roda script no contexto do app e rouba o token de sessão.
+// Fonte única — substitui as cópias de `esc`/`_esc` (danfe, FichasTecnicas, PortalSolicitacao).
+export function escapeHtml(s: unknown): string {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => (
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c]
+  ))
+}

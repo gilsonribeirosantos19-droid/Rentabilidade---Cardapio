@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { downloadCsv } from '../lib/csv'
+import { escapeHtml } from '../lib/format'
 import './dre.css'
 
 // DRE Gerencial de Compras — hierarquia grupo (2.1) → conta (Salmão) → insumos.
@@ -119,8 +120,8 @@ export function Dre() {
       if (myLanc) vals = sum12(vals, myLanc)
       const colaps = kids.length > 0 || myIns.length > 0 || !!(myLanc && myLanc.some((v) => v))
       const caret = colaps ? '<span class="dre-caret">›</span>' : '<span style="display:inline-block;width:15px"></span>'
-      const self: Linha = { cls: nivel === 0 ? 'dre-grupo' : 'dre-sub', label: `${caret}<span class="dre-cod">${c.codigo}</span>${c.nome}`, vals, anc, gkey: colaps ? gkey : undefined, pad: nivel }
-      const insLines: Linha[] = myIns.map((it) => ({ cls: 'dre-item', label: it.nome, vals: it.vals, anc: childAnc, pad: nivel + 1 }))
+      const self: Linha = { cls: nivel === 0 ? 'dre-grupo' : 'dre-sub', label: `${caret}<span class="dre-cod">${escapeHtml(c.codigo)}</span>${escapeHtml(c.nome)}`, vals, anc, gkey: colaps ? gkey : undefined, pad: nivel }
+      const insLines: Linha[] = myIns.map((it) => ({ cls: 'dre-item', label: escapeHtml(it.nome), vals: it.vals, anc: childAnc, pad: nivel + 1 }))
       const lancLine: Linha[] = (myLanc && myLanc.some((v) => v)) ? [{ cls: 'dre-item', label: '➕ Lançamentos manuais (sem nota)', vals: myLanc, anc: childAnc, pad: nivel + 1 }] : []
       return { vals, lines: [self, ...childLines, ...insLines, ...lancLine] }
     }

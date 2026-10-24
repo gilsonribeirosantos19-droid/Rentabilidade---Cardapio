@@ -20,3 +20,7 @@ Thumbs.db
 desktop.ini
 .vscode/
 *.log
+
+# rascunho antigo que continha chave service_role — nunca versionar dumps
+atual.txt
+*.dump.txt

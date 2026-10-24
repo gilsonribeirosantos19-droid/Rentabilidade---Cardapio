@@ -9,7 +9,7 @@ import { useLoja } from '../lib/loja'
 import { ChartBox } from '../components/ChartBox'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
-import { brl } from '../lib/format'
+import { brl, escapeHtml } from '../lib/format'
 import './sugestao.css'
 
 // dropdowns com busca da toolbar (rótulo ↔ valor)
@@ -427,19 +427,19 @@ function gerarPDFReal(forn: string, itens: PedItem[], lojas: Record<string, unkn
     if (!linhas.length) return ''
     const linhasP: ({ nome: string; qty: string; un: string } | null)[] = [...linhas]
     while (linhasP.length < 8) linhasP.push(null)
-    const corpo = linhasP.map((it) => it ? `<tr><td colspan="2" class="cel-item">${it.nome.toUpperCase()}</td><td class="cel-qty">${it.qty} ${it.un}</td></tr>` : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')
+    const corpo = linhasP.map((it) => it ? `<tr><td colspan="2" class="cel-item">${escapeHtml(it.nome.toUpperCase())}</td><td class="cel-qty">${it.qty} ${escapeHtml(it.un)}</td></tr>` : `<tr><td colspan="2" class="cel-item">&nbsp;</td><td class="cel-qty">&nbsp;</td></tr>`).join('')
     return `<div class="pagina"><table class="doc">
-      <tr><td class="cel-loja">${nomeLoja(loja).toUpperCase()}</td><td class="cel-data-label">DATA:</td><td class="cel-data">${data}</td></tr>
-      <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${(loja.razao_social as string) || '—'} CNPJ: ${(loja.cnpj as string) || '—'}</td></tr>
-      <tr><td colspan="3" class="cel-info">ENDEREÇO: ${enderecoLoja(loja)}</td></tr>
-      <tr><td colspan="2" class="cel-th">ITENS — ${forn.toUpperCase()}</td><td class="cel-th" style="text-align:center">QUANTIDADE</td></tr>
+      <tr><td class="cel-loja">${escapeHtml(nomeLoja(loja).toUpperCase())}</td><td class="cel-data-label">DATA:</td><td class="cel-data">${data}</td></tr>
+      <tr><td colspan="3" class="cel-info">RAZÃO SOCIAL: ${escapeHtml((loja.razao_social as string) || '—')} CNPJ: ${escapeHtml((loja.cnpj as string) || '—')}</td></tr>
+      <tr><td colspan="3" class="cel-info">ENDEREÇO: ${escapeHtml(enderecoLoja(loja))}</td></tr>
+      <tr><td colspan="2" class="cel-th">ITENS — ${escapeHtml(forn.toUpperCase())}</td><td class="cel-th" style="text-align:center">QUANTIDADE</td></tr>
       ${corpo}
       <tr><td class="cel-footer">HORÁRIO DE RECEBIMENTO</td><td class="cel-footer">MANHÃ</td><td class="cel-footer">-</td></tr>
       <tr><td class="cel-footer">&nbsp;</td><td class="cel-footer">TARDE</td><td class="cel-footer">-</td></tr>
     </table></div>`
   }).filter(Boolean).join('')
   if (!paginas) { alert('Nenhuma quantidade distribuída para este fornecedor.'); return }
-  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Pedido — ${forn}</title>
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Pedido — ${escapeHtml(forn)}</title>
     <style>
       *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif;color:#000}
       body{background:#fff}
