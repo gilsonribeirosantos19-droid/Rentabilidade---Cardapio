@@ -26,9 +26,11 @@ const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_SECRET') || ''
 const APP_PUBLISHABLE_KEY = Deno.env.get('APP_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || ''
 
 // Confere o segredo (query ?secret=, header x-webhook-secret ou body.secret).
-// Sem WEBHOOK_SECRET configurado → retorna true (compat, não quebra nada).
+// FAIL-CLOSED: sem WEBHOOK_SECRET configurado → NEGA (nunca libera modo admin por falta de config).
+// Antes retornava true por ausência de config ("compat") → se o secret caísse, modos admin (pull/
+// backfill/amostra) ficariam públicos e o 'amostra' vazaria NF-e completa de qualquer tenant.
 function secretOk(req: Request, body: any): boolean {
-  if (!WEBHOOK_SECRET) return true
+  if (!WEBHOOK_SECRET) return false
   const provided = new URL(req.url).searchParams.get('secret')
     || req.headers.get('x-webhook-secret')
     || (body && body.secret) || ''
@@ -568,7 +570,7 @@ Deno.serve(async (req) => {
 
     const cnpjEmitente = (body.documento_emitente || '').replace(/\D/g, '')
     const nomeEmitente = body.nome_emitente || ''
-    const chaveAcesso  = body.chave_nfe || ''
+    const chaveAcesso  = String(body.chave_nfe || '').replace(/\D/g, '')   // só dígitos: anti-forjação de path/SSRF contra o Focus (manifesto/completa usam a chave na URL)
     const valorTotal   = parseFloat(body.valor_total || '0')
     const dataEmissao  = body.data_emissao || new Date().toISOString()
 
