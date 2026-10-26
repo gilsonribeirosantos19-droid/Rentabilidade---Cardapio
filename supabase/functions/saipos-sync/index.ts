@@ -19,8 +19,15 @@ const supabase = createClient(
 )
 
 const TENANT_MORI = '33e81daf-662f-43d1-8684-0702e959c4f9' // piloto Saipos
+const TENANT_JOYA = 'a9b68882-5e10-4999-8fa9-4cf104625c0d'
 const SAIPOS_BASE = 'https://data.saipos.io/v1'
 const SAIPOS_TOKEN = Deno.env.get('SAIPOS_TOKEN') || ''
+// Token do Saipos POR TENANT (cada rede tem a sua conta Saipos → secret separado).
+// Mori = SAIPOS_TOKEN (compat); Joya = SAIPOS_TOKEN_JOYA. Tenant sem token = recusado.
+const SAIPOS_TOKENS: Record<string, string> = {
+  [TENANT_MORI]: SAIPOS_TOKEN,
+  [TENANT_JOYA]: Deno.env.get('SAIPOS_TOKEN_JOYA') || '',
+}
 const BUDGET_MS = 110000
 const CORTE_ALMOCO_H = 17     // fallback de turno se o pedido não trouxer store_shift
 
@@ -49,7 +56,7 @@ function diasNoIntervalo(de: string, ate: string): string[] {
 }
 
 // GET genérico de um recurso do Saipos p/ UM dia. Até 3 tentativas (504 sob carga).
-async function buscar(recurso: string, dia: string, offset: number) {
+async function buscar(recurso: string, dia: string, offset: number, token: string) {
   const qs = new URLSearchParams({
     p_date_column_filter: 'shift_date',
     p_filter_date_start: `${dia} 00:00:00`,
@@ -59,7 +66,7 @@ async function buscar(recurso: string, dia: string, offset: number) {
   })
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await fetch(`${SAIPOS_BASE}/${recurso}?${qs}`, { headers: { Authorization: `Bearer ${SAIPOS_TOKEN}` } })
+      const res = await fetch(`${SAIPOS_BASE}/${recurso}?${qs}`, { headers: { Authorization: `Bearer ${token}` } })
       const raw = await res.text()
       if (res.status === 200) {
         let data: unknown = null
@@ -77,12 +84,12 @@ async function buscar(recurso: string, dia: string, offset: number) {
 }
 
 // lê TODAS as páginas de um recurso p/ um dia (respeitando o budget). ok=false se algum fetch falhar.
-async function buscarTudo(recurso: string, dia: string, inicio: number) {
+async function buscarTudo(recurso: string, dia: string, inicio: number, token: string) {
   const rows: any[] = []
   let ok = true, status = 0
   for (let off = 0; off < 200000; off += 1000) {
     if (Date.now() - inicio > BUDGET_MS) { ok = false; break }
-    const r = await buscar(recurso, dia, off)
+    const r = await buscar(recurso, dia, off, token)
     status = r.status
     if (r.status !== 200) { ok = false; break }
     if (!r.rows.length) break
@@ -95,10 +102,10 @@ async function buscarTudo(recurso: string, dia: string, inicio: number) {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })   // preflight do navegador
   if (req.method !== 'POST') return new Response('OK', { status: 200, headers: CORS })
-  if (!SAIPOS_TOKEN) return json({ error: 'falta o secret SAIPOS_TOKEN' }, 400)
-
   const body = await req.json().catch(() => ({})) as any
   const tenant = body.tenant || TENANT_MORI
+  const token = SAIPOS_TOKENS[tenant] || ''
+  if (!token) return json({ error: `falta o secret do Saipos para este tenant (${tenant === TENANT_JOYA ? 'SAIPOS_TOKEN_JOYA' : 'SAIPOS_TOKEN'})` }, 400)
   const dias = Number(body.dias) || 15
   const modo = body.mode || 'diag'
   const corte = Number(body.corte) || CORTE_ALMOCO_H
@@ -145,7 +152,7 @@ Deno.serve(async (req) => {
     if (Date.now() - inicio > BUDGET_MS) break
 
     // ═══ 1) PEDIDOS (search_sales) → recebimento_vendas ═══
-    const ped = await buscarTudo('search_sales', dia, inicio)
+    const ped = await buscarTudo('search_sales', dia, inicio, token)
     ultimoStatus = ped.status
     if (ped.ok && ped.rows.length) {
       let fat = 0, almoco = 0, jantar = 0, desconto = 0, taxa = 0, subtotal = 0, pessoas = 0, comandas = 0, canceladas = 0
@@ -180,7 +187,7 @@ Deno.serve(async (req) => {
 
     // ═══ 2) ITENS (sales_items) → vendas_produto_dia + vendas_item ═══
     if (Date.now() - inicio > BUDGET_MS) break
-    const its = await buscarTudo('sales_items', dia, inicio)
+    const its = await buscarTudo('sales_items', dia, inicio, token)
     if (its.ok && its.rows.length) {
       const pd = new Map<number, { produto_nome: string | null; grupo: string | null; ficha_id: string | null; qtd: number; faturado: number }>()
       const itemRows: any[] = []
