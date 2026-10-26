@@ -207,10 +207,10 @@ export function MonitorNfe() {
     // nota recebida pela loja → usa a DATA DA CHEGADA (recebida_em). Senão, segue o parâmetro (emissão/processamento).
     const dataReceb = n.recebida_em ? new Date(n.recebida_em).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : null
     const dataStr = dataReceb || (critDataMov === 'processamento' ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : dataEmis)
-    let okItens = 0
+    let okItens = 0; const falhas: string[] = []
     for (const it of items) {
       const v = resolveVinc(it, fornId)
-      if (!v) continue
+      if (!v) { falhas.push(`• ${it.descricao_nfe || 'item'}: sem vínculo com um insumo`); continue }
       const fator = v.qtd_por_embalagem || 1
       // se a loja conferiu, entra a QUANTIDADE RECEBIDA (na unid. de compra) × fator; senão, a da nota
       const qtdCompra = it.qtd_recebida != null ? Number(it.qtd_recebida) : (it.quantidade || 0)
@@ -225,9 +225,9 @@ export function MonitorNfe() {
           uq = n.chave_acesso ? uq.eq('chave_acesso', n.chave_acesso) : uq.eq('nfe_numero', `${n.numero}/${n.serie}`)
           await uq
         }
-      } catch (e) { console.warn('item falhou', it.descricao_nfe, e) }
+      } catch (e) { falhas.push(`• ${it.descricao_nfe || 'item'}: ${(e as Error).message}`); console.warn('item falhou', it.descricao_nfe, e) }
     }
-    if (okItens < items.length) { await supabase.rpc('estornar_nfe', { p_nfe_id: n.id }).then(() => {}, () => {}); return { ok: false, msg: `NF-e ${n.numero}: falha em ${items.length - okItens} item(ns), revertida.` } }
+    if (okItens < items.length) { await supabase.rpc('estornar_nfe', { p_nfe_id: n.id }).then(() => {}, () => {}); return { ok: false, msg: `NF-e ${n.numero}: falha em ${items.length - okItens} item(ns), revertida.\n${falhas.join('\n')}` } }
     await supabase.from('nfe_recebidas').update({ status: 'processada', processada_em: new Date().toISOString() }).eq('id', n.id)
     return { ok: true }
   }
@@ -244,6 +244,7 @@ export function MonitorNfe() {
     setPicked(new Set()); await invalidarTudo(); setBusy(false); setProg(null)
     showToast(`${ok} processada(s)${fail ? ` · ${fail} com problema` : ''}.`, fail ? 'err' : 'ok')
     if (msgs.length) console.warn('Monitor:\n' + msgs.join('\n'))
+    if (fail && msgs.length) alert('Por que não processou:\n\n' + msgs.join('\n\n'))
   }
 
   // Soft-delete: não apaga de vez — move p/ a lixeira (aba Fiscal › Excluídas), onde
