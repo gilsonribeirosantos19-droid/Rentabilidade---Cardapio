@@ -304,7 +304,7 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
               </>}
           </div>
 
-          <div style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
+          <div className="fm-custos" style={{ display: 'flex', gap: 12, marginTop: 14, marginBottom: 16 }}>
             <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #eef1f5', borderRadius: 10, padding: '9px 14px' }}>
               <div style={{ fontSize: 10.5, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>Custo {vincId ? 'por unidade (kg/L)' : 'unitário da receita'}</div>
               <div style={{ fontSize: 19, fontWeight: 400, fontFamily: 'DM Mono, monospace', marginTop: 2, color: '#1e293b' }}>{brl(custoUnit)}</div>
