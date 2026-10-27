@@ -205,7 +205,7 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
 
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="vm" style={{ width: 'min(1080px, 94vw)' }} onClick={(e) => e.stopPropagation()}>
+      <div className="vm vm-fill" style={{ width: 'min(1080px, 94vw)' }} onClick={(e) => e.stopPropagation()}>
         <div className="vm-head">
           <h2>{titulo || (ficha?.id ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica')}</h2>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
