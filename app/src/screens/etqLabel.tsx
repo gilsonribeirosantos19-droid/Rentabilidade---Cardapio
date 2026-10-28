@@ -34,7 +34,6 @@ export function applyFormato() {
 
 // área de impressão (só aparece no print, via CSS) — rótulo 60x60
 export function EtqPrintArea({ data }: { data: PrintData }) {
-  const loja = data?.loja ?? null
   return (
     <div id="etq-print" className="etq-print">
       {(data?.items ?? []).map(({ r, qr }, i) => (
@@ -53,7 +52,6 @@ export function EtqPrintArea({ data }: { data: PrintData }) {
               <div className="pl-code">#{r.codigo}</div>
             </div>
           </div>
-          <div className="pl-foot">{[loja?.razao_social || loja?.nome, loja?.cnpj ? 'CNPJ ' + loja.cnpj : ''].filter(Boolean).join(' · ')}</div>
         </div>
       ))}
     </div>
