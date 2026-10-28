@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { useLoja } from '../lib/loja'
 import './etiquetas.css'
 
 type Row = {
@@ -27,9 +26,8 @@ function situacao(e: Row): string {
   return new Date(e.validade_em).getTime() < Date.now() ? 'Vencida' : 'Ativa'
 }
 
-export function EtiquetasRelatorios() {
+export function EtiquetasRelatorios({ lojaId, lojas }: { lojaId: string | null; lojas: { id: string; nome?: string }[] }) {
   const { tenantId } = useAuth()
-  const { lojas, lojaId } = useLoja()
   const [de, setDe] = useState(diasAtras(30))
   const [ate, setAte] = useState(hojeYmd())
   const [aba, setAba] = useState<'resumo' | 'detalhado'>('resumo')

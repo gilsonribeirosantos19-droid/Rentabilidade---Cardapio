@@ -3,7 +3,6 @@ import { buildQrItems, EtqPrintArea, applyFormato, type EtqForLabel, type LojaFu
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { useLoja } from '../lib/loja'
 import { usePerms } from '../lib/perms'
 import { useToastTipo } from '../lib/toast'
 import './etiquetas.css'
@@ -19,9 +18,8 @@ const MODO_LABEL: Record<string, string> = {
 const fmtPrazo = (h: number) => { const d = Math.floor(h / 24), r = h % 24; return [d ? `${d}d` : '', r ? `${r}h` : ''].filter(Boolean).join(' ') || '0h' }
 const fmtDT = (iso?: string | null) => iso ? new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Manaus', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(',', ' -') : '—'
 
-export function EtiquetasEmitir() {
+export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
   const { tenantId } = useAuth()
-  const { lojas, lojaId } = useLoja()
   const { podeEditar } = usePerms()
   const canEmit = podeEditar('etiquetas/emitir')
   const { toast, showToast } = useToastTipo(2800)

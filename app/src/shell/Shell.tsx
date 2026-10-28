@@ -79,6 +79,7 @@ type Tab = { key: string; label: string }
 
 function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: boolean }) {
   const { podeVer } = usePerms()
+  const { lojaId, lojas } = useLoja()
   // FAIL-CLOSED: tela restrita a admin não renderiza pra não-admin (defesa além do menu escondido).
   if (ADMIN_ONLY_KEYS.has(k) && !isAdmin) {
     return <div className="pane"><div className="scr-h">Acesso restrito</div><div className="empty" style={{ marginTop: 20 }}>Esta tela é exclusiva de administradores.</div></div>
@@ -146,12 +147,12 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'pdv/engenharia') return <EngenhariaCardapio />
   if (k === 'pdv/abc') return <CurvaAbcVendas />
   if (k === 'etiquetas/prazos') return <EtiquetasPrazos />
-  if (k === 'etiquetas/emitir') return <EtiquetasEmitir />
+  if (k === 'etiquetas/emitir') return <EtiquetasEmitir lojaId={lojaId} />
   if (k === 'etiquetas/baixa') return <EtiquetasBaixa />
-  if (k === 'etiquetas/lista') return <EtiquetasLista />
-  if (k === 'etiquetas/dashboard') return <EtiquetasDashboard />
-  if (k === 'etiquetas/relatorios') return <EtiquetasRelatorios />
-  if (k === 'etiquetas/config') return <EtiquetasConfig />
+  if (k === 'etiquetas/lista') return <EtiquetasLista lojaId={lojaId} />
+  if (k === 'etiquetas/dashboard') return <EtiquetasDashboard lojaId={lojaId} />
+  if (k === 'etiquetas/relatorios') return <EtiquetasRelatorios lojaId={lojaId} lojas={lojas} />
+  if (k === 'etiquetas/config') return <EtiquetasConfig lojas={lojas} />
   return <Placeholder label={label} />
 }
 
