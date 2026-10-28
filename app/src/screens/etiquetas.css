@@ -145,7 +145,7 @@
 
 /* ---- impressão térmica 60x60 ---- */
 .etq-print { display: none; }
-.etq-plabel { width: 60mm; height: 40mm; box-sizing: border-box; padding: 2mm 2.4mm; font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif; color: #000; display: flex; flex-direction: column; line-height: 1.22; overflow: hidden; }
+.etq-plabel { width: 60mm; height: 40mm; box-sizing: border-box; padding: 2mm 2.4mm; font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif; color: #000; background: #fff; display: flex; flex-direction: column; line-height: 1.22; overflow: hidden; }
 .etq-plabel .pl-top { display: flex; gap: 2mm; flex: 1; min-height: 0; }
 .etq-plabel .pl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .etq-plabel .pl-nome { font-size: 12.5pt; font-weight: 700; text-transform: uppercase; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -161,9 +161,10 @@
 .etq-plabel .pl-code { font-size: 6.5pt; font-weight: 700; letter-spacing: .2px; margin-top: .4mm; text-align: center; }
 .etq-plabel .pl-foot { font-size: 6pt; border-top: 1px solid #000; padding-top: .6mm; margin-top: .6mm; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media print {
+  html, body { background: #fff !important; }
   body * { visibility: hidden !important; }
   #etq-print, #etq-print * { visibility: visible !important; }
-  #etq-print { display: block !important; position: absolute; left: 0; top: 0; }
-  .etq-plabel { page-break-after: always; }
+  #etq-print { display: block !important; position: absolute; left: 0; top: 0; background: #fff; }
+  .etq-plabel { page-break-after: always; background: #fff !important; }
   @page { size: 60mm 40mm; margin: 0; }
 }
