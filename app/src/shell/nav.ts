@@ -125,6 +125,18 @@ export const MODULES: Module[] = [
     ],
   },
   {
+    id: 'etiquetas', label: 'Etiquetas', icon: 'tag',
+    sections: [
+      { label: 'Emitir', key: 'etiquetas/emitir' },
+      { label: 'Etiquetas', key: 'etiquetas/lista' },
+      { label: 'Baixa', key: 'etiquetas/baixa' },
+      { label: 'Dashboard', key: 'etiquetas/dashboard' },
+      { label: 'Relatórios', key: 'etiquetas/relatorios' },
+      { label: 'Prazos por produto', key: 'etiquetas/prazos' },
+      { label: 'Configurações', key: 'etiquetas/config' },
+    ],
+  },
+  {
     id: 'config', label: 'Configurações', icon: 'gear',
     sections: [
       { label: 'Geral', key: 'config/geral' },
