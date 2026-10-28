@@ -67,10 +67,7 @@ function PortalShellInner() {
   const isAdmin = perfil === 'admin' || perfil === 'administrador'
   const [tab, setTab] = useState<TabKey>('inventario')
   const [open, setOpen] = useState(false)
-  const [pcpOpen, setPcpOpen] = useState(false)
-  const [etqOpen, setEtqOpen] = useState(false)
-  const pcpAtivo = tab === 'pcp-porcionamento' || tab === 'pcp-producao'
-  const etqAtivo = ETQ_SUB.includes(tab)
+  const [dived, setDived] = useState<string | null>(null)   // null = lista de módulos; senão o módulo "mergulhado"
   // O módulo Distribuição só aparece p/ tenants que têm um CD configurado (opcional por cliente)
   const { data: temCd = false } = useQuery({ queryKey: ['portal-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
   // "Receber Mercadoria" só aparece se o cliente ligou o recebimento pela loja (Config › Parâmetros › Estoque)
@@ -82,6 +79,12 @@ function PortalShellInner() {
     ...(temCd ? ['requisicao-cd' as TabKey] : []),
     'indicadores', 'perdas', 'estoque',
   ]
+  const MODULES = [
+    { id: 'ops', label: 'Operações', icon: ICONS.inventario, items: opsList },
+    { id: 'prod', label: 'Produção', icon: ICONS.pcp, items: PCP_SUB },
+    { id: 'etq', label: 'Etiquetas', icon: ICONS.etiquetas, items: ETQ_SUB },
+  ]
+  const active = MODULES.find((m) => m.id === dived)
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
 
   const go = (k: TabKey) => { setTab(k); setOpen(false) }
@@ -89,36 +92,44 @@ function PortalShellInner() {
   return (
     <div className="portal">
       {open && <div className="p-backdrop" onClick={() => setOpen(false)} />}
-      <aside className={'p-sidebar' + (open ? ' open' : '')}>
-        <div className="p-logo"><div className="p-brand"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /><div className="p-wm"><b>AIKO</b><span className="p-uline" /></div></div><div className="s">Portal do Gerente</div></div>
-        <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
-        <nav className="p-nav">
-          <div>
-            <div className="p-navlabel">Operações</div>
-            {opsList.map((k) => (
-              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} onClick={() => go(k)}>{ICONS[k]}{LABEL[k]}</button>
-            ))}
-          </div>
-          <div>
-            <div className="p-navlabel">Produção</div>
-            <button className={'p-navitem' + (pcpAtivo ? ' on' : '')} onClick={() => setPcpOpen((o) => !o)}>{ICONS.pcp}PCP<span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.7 }}>{(pcpOpen || pcpAtivo) ? '▾' : '▸'}</span></button>
-            {(pcpOpen || pcpAtivo) && PCP_SUB.map((k) => (
-              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} style={{ paddingLeft: 34, fontSize: 12 }} onClick={() => go(k)}>{LABEL[k]}</button>
-            ))}
-          </div>
-          <div>
-            <div className="p-navlabel">Etiquetas</div>
-            <button className={'p-navitem' + (etqAtivo ? ' on' : '')} onClick={() => setEtqOpen((o) => !o)}>{ICONS.etiquetas}Etiquetas<span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.7 }}>{(etqOpen || etqAtivo) ? '▾' : '▸'}</span></button>
-            {(etqOpen || etqAtivo) && ETQ_SUB.map((k) => (
-              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} style={{ paddingLeft: 34, fontSize: 12 }} onClick={() => go(k)}>{LABEL[k]}</button>
-            ))}
-          </div>
-        </nav>
-        <div className="p-foot">
-          <div className="p-user"><div className="p-avatar">{inicial}</div><div><div className="n">{usuario?.nome || '—'}</div><div className="p">{isAdmin ? 'Administrador' : perfil === 'supervisor' ? 'Supervisor' : 'Gerente'}</div></div></div>
-          {isAdmin && <button className="p-sair" style={{ color: '#9fb4d8' }} onClick={() => { window.location.href = '/' }}>⬑ Voltar ao ERP</button>}
-          <button className="p-sair" onClick={() => signOut()}>⎋ Sair</button>
-        </div>
+      <aside className={'p-sidebar' + (dived ? ' dived' : '') + (open ? ' open' : '')}>
+        {!dived ? (
+          <>
+            <div className="p-logo"><div className="p-brand"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /><div className="p-wm"><b>AIKO</b><span className="p-uline" /></div></div><div className="s">Portal do Gerente</div></div>
+            <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
+            <nav className="p-nav">
+              {MODULES.map((m) => (
+                <button key={m.id} className="p-navitem" onClick={() => setDived(m.id)}>{m.icon}{m.label}<span className="p-ch">›</span></button>
+              ))}
+            </nav>
+            <div className="p-foot">
+              <div className="p-user"><div className="p-avatar">{inicial}</div><div><div className="n">{usuario?.nome || '—'}</div><div className="p">{isAdmin ? 'Administrador' : perfil === 'supervisor' ? 'Supervisor' : 'Gerente'}</div></div></div>
+              {isAdmin && <button className="p-sair" style={{ color: '#9fb4d8' }} onClick={() => { window.location.href = '/' }}>⬑ Voltar ao ERP</button>}
+              <button className="p-sair" onClick={() => signOut()}>⎋ Sair</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="p-rail">
+              <div className="p-rail-logo"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /></div>
+              {MODULES.map((m) => (
+                <button key={m.id} className={'p-rail-item' + (dived === m.id ? ' on' : '')} onClick={() => setDived(m.id)} title={m.label}>{m.icon}</button>
+              ))}
+              <div style={{ flex: 1 }} />
+              <div className="p-avatar" style={{ width: 30, height: 30, fontSize: 12, marginBottom: 6 }}>{inicial}</div>
+              <button className="p-rail-item" onClick={() => signOut()} title="Sair">⎋</button>
+            </div>
+            <div className="p-sec">
+              <button className="p-sback" onClick={() => setDived(null)}><span>‹</span><b>{active?.label}</b></button>
+              <div className="p-loja" style={{ margin: '0 10px 6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
+              <nav className="p-sec-nav">
+                {active?.items.map((k) => (
+                  <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} onClick={() => go(k)}>{LABEL[k]}</button>
+                ))}
+              </nav>
+            </div>
+          </>
+        )}
       </aside>
 
       <div className="p-main">

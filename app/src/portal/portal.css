@@ -160,3 +160,20 @@
 .portal .req-chip.st-cam { background: #f0fdfa; color: #0f766e; }
 .portal .req-chip.st-rec { background: var(--ok-tint); color: var(--ok-strong); }
 .portal .req-chip.st-can { background: var(--n-100); color: var(--n-500); }
+
+/* ===== Portal nav 2 estados: lista de módulos ↔ rail + sub-painel (padrão ERP) ===== */
+.portal .p-navitem .p-ch { margin-left: auto; font-size: 16px; opacity: .5; }
+.portal .p-sidebar.dived { flex-direction: row; width: auto; }
+.portal .p-rail { width: 56px; background: #0f2446; display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 4px; flex: none; }
+.portal .p-rail-logo { margin-bottom: 10px; }
+.portal .p-rail-logo img { height: 28px; width: auto; }
+.portal .p-rail-item { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: none; border: none; color: rgba(159,180,216,.9); cursor: pointer; font-size: 16px; }
+.portal .p-rail-item svg { width: 20px; height: 20px; }
+.portal .p-rail-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+.portal .p-rail-item.on { background: rgba(249,115,22,.18); color: var(--brand); }
+.portal .p-sec { width: 192px; background: var(--nav); display: flex; flex-direction: column; flex: none; }
+.portal .p-sback { display: flex; align-items: center; gap: 8px; padding: 16px 12px 8px; background: none; border: none; color: #fff; cursor: pointer; font-family: inherit; text-align: left; }
+.portal .p-sback span { font-size: 20px; line-height: 1; color: rgba(255,255,255,.55); }
+.portal .p-sback b { font-size: 15px; font-weight: 800; }
+.portal .p-sback:hover b { color: var(--brand); }
+.portal .p-sec-nav { flex: 1; padding: 6px 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
