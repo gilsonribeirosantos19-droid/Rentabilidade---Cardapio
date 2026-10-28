@@ -22,6 +22,16 @@ export async function buildQrItems<T extends { codigo: string }>(ets: T[]): Prom
   return Promise.all(ets.map(async (r) => ({ r, qr: await QRCode.toDataURL(r.codigo, { margin: 0, width: 140 }) })))
 }
 
+// formato da etiqueta (por dispositivo): aplica o tamanho ao @page e ao rótulo antes de imprimir
+export function applyFormato() {
+  let f = '60x60'
+  try { f = localStorage.getItem('etq_formato') || '60x60' } catch { /* ignore */ }
+  const [w, h] = f.split('x')
+  let st = document.getElementById('etq-fmt') as HTMLStyleElement | null
+  if (!st) { st = document.createElement('style'); st.id = 'etq-fmt'; document.head.appendChild(st) }
+  st.textContent = `@media print{@page{size:${w}mm ${h}mm;margin:0}}#etq-print .etq-plabel{width:${w}mm;height:${h}mm}`
+}
+
 // área de impressão (só aparece no print, via CSS) — rótulo 60x60
 export function EtqPrintArea({ data }: { data: PrintData }) {
   const loja = data?.loja ?? null

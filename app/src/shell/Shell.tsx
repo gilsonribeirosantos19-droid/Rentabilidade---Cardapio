@@ -72,6 +72,7 @@ import { EtiquetasBaixa } from '../screens/EtiquetasBaixa'
 import { EtiquetasLista } from '../screens/EtiquetasLista'
 import { EtiquetasDashboard } from '../screens/EtiquetasDashboard'
 import { EtiquetasRelatorios } from '../screens/EtiquetasRelatorios'
+import { EtiquetasConfig } from '../screens/EtiquetasConfig'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -150,6 +151,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'etiquetas/lista') return <EtiquetasLista />
   if (k === 'etiquetas/dashboard') return <EtiquetasDashboard />
   if (k === 'etiquetas/relatorios') return <EtiquetasRelatorios />
+  if (k === 'etiquetas/config') return <EtiquetasConfig />
   return <Placeholder label={label} />
 }
 

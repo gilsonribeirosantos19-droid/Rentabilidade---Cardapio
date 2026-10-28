@@ -5,7 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { usePerms } from '../lib/perms'
 import { useToastTipo } from '../lib/toast'
-import { buildQrItems, EtqPrintArea, type LojaFull, type PrintData } from './etqLabel'
+import { buildQrItems, EtqPrintArea, applyFormato, type LojaFull, type PrintData } from './etqLabel'
 import './etiquetas.css'
 
 type Row = {
@@ -68,7 +68,7 @@ export function EtiquetasLista() {
       const items = await buildQrItems([r])
       setPrintData({ loja, items })
       await supabase.rpc('registrar_reimpressao', { p_etiqueta_id: r.id })
-      setTimeout(() => { window.print(); setTimeout(() => setPrintData(null), 500) }, 120)
+      setTimeout(() => { applyFormato(); window.print(); setTimeout(() => setPrintData(null), 500) }, 120)
     } catch (e) { showToast('Erro: ' + (e as Error).message, 'err') }
   }
 

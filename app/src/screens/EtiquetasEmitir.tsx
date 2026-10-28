@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { buildQrItems, EtqPrintArea, type EtqForLabel, type LojaFull, type PrintData } from './etqLabel'
+import { buildQrItems, EtqPrintArea, applyFormato, type EtqForLabel, type LojaFull, type PrintData } from './etqLabel'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -66,7 +66,7 @@ export function EtiquetasEmitir() {
       setPrintData({ loja, items })
       setDrawer(null)
       showToast(`${etiquetas.length} etiqueta(s) gerada(s).`, 'ok')
-      setTimeout(() => { window.print(); setTimeout(() => setPrintData(null), 500) }, 120)
+      setTimeout(() => { applyFormato(); window.print(); setTimeout(() => setPrintData(null), 500) }, 120)
     } catch (e) { showToast('Erro: ' + (e as Error).message, 'err') } finally { setEmitindo(false) }
   }
 

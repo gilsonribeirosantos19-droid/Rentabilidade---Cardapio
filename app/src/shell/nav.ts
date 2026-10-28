@@ -133,6 +133,7 @@ export const MODULES: Module[] = [
       { label: 'Dashboard', key: 'etiquetas/dashboard' },
       { label: 'Relatórios', key: 'etiquetas/relatorios' },
       { label: 'Prazos por produto', key: 'etiquetas/prazos' },
+      { label: 'Configurações', key: 'etiquetas/config' },
     ],
   },
   {
