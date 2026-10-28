@@ -67,7 +67,10 @@ function PortalShellInner() {
   const isAdmin = perfil === 'admin' || perfil === 'administrador'
   const [tab, setTab] = useState<TabKey>('inventario')
   const [open, setOpen] = useState(false)
-  // Produção e Etiquetas listam os itens direto (sem accordion), igual a "Operações".
+  const [pcpOpen, setPcpOpen] = useState(false)
+  const [etqOpen, setEtqOpen] = useState(false)
+  const pcpAtivo = tab === 'pcp-porcionamento' || tab === 'pcp-producao'
+  const etqAtivo = ETQ_SUB.includes(tab)
   // O módulo Distribuição só aparece p/ tenants que têm um CD configurado (opcional por cliente)
   const { data: temCd = false } = useQuery({ queryKey: ['portal-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
   // "Receber Mercadoria" só aparece se o cliente ligou o recebimento pela loja (Config › Parâmetros › Estoque)
@@ -98,14 +101,16 @@ function PortalShellInner() {
           </div>
           <div>
             <div className="p-navlabel">Produção</div>
-            {PCP_SUB.map((k) => (
-              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} onClick={() => go(k)}>{ICONS.pcp}{LABEL[k]}</button>
+            <button className={'p-navitem' + (pcpAtivo ? ' on' : '')} onClick={() => setPcpOpen((o) => !o)}>{ICONS.pcp}PCP<span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.7 }}>{(pcpOpen || pcpAtivo) ? '▾' : '▸'}</span></button>
+            {(pcpOpen || pcpAtivo) && PCP_SUB.map((k) => (
+              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} style={{ paddingLeft: 34, fontSize: 12 }} onClick={() => go(k)}>{LABEL[k]}</button>
             ))}
           </div>
           <div>
             <div className="p-navlabel">Etiquetas</div>
-            {ETQ_SUB.map((k) => (
-              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} onClick={() => go(k)}>{ICONS.etiquetas}{LABEL[k]}</button>
+            <button className={'p-navitem' + (etqAtivo ? ' on' : '')} onClick={() => setEtqOpen((o) => !o)}>{ICONS.etiquetas}Etiquetas<span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.7 }}>{(etqOpen || etqAtivo) ? '▾' : '▸'}</span></button>
+            {(etqOpen || etqAtivo) && ETQ_SUB.map((k) => (
+              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} style={{ paddingLeft: 34, fontSize: 12 }} onClick={() => go(k)}>{LABEL[k]}</button>
             ))}
           </div>
         </nav>
