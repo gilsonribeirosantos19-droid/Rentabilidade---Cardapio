@@ -67,7 +67,10 @@ function PortalShellInner() {
   const isAdmin = perfil === 'admin' || perfil === 'administrador'
   const [tab, setTab] = useState<TabKey>('inventario')
   const [open, setOpen] = useState(false)
-  const [grupo, setGrupo] = useState<'ops' | 'prod' | 'etq'>('ops')
+  const [pcpOpen, setPcpOpen] = useState(false)
+  const [etqOpen, setEtqOpen] = useState(false)
+  const pcpAtivo = tab === 'pcp-porcionamento' || tab === 'pcp-producao'
+  const etqAtivo = ETQ_SUB.includes(tab)
   // O módulo Distribuição só aparece p/ tenants que têm um CD configurado (opcional por cliente)
   const { data: temCd = false } = useQuery({ queryKey: ['portal-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
   // "Receber Mercadoria" só aparece se o cliente ligou o recebimento pela loja (Config › Parâmetros › Estoque)
@@ -79,12 +82,6 @@ function PortalShellInner() {
     ...(temCd ? ['requisicao-cd' as TabKey] : []),
     'indicadores', 'perdas', 'estoque',
   ]
-  const GROUPS = [
-    { id: 'ops' as const, label: 'Operações', short: 'Oper.', icon: ICONS.inventario, items: opsList },
-    { id: 'prod' as const, label: 'Produção', short: 'Prod.', icon: ICONS.pcp, items: PCP_SUB },
-    { id: 'etq' as const, label: 'Etiquetas', short: 'Etiq.', icon: ICONS.etiquetas, items: ETQ_SUB },
-  ]
-  const activeGroup = GROUPS.find((g) => g.id === grupo) ?? GROUPS[0]
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
 
   const go = (k: TabKey) => { setTab(k); setOpen(false) }
@@ -93,27 +90,34 @@ function PortalShellInner() {
     <div className="portal">
       {open && <div className="p-backdrop" onClick={() => setOpen(false)} />}
       <aside className={'p-sidebar' + (open ? ' open' : '')}>
-        <div className="p-rail">
-          <div className="p-rail-logo"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /></div>
-          {GROUPS.map((g) => (
-            <button key={g.id} className={'p-rail-item' + (grupo === g.id ? ' on' : '')} onClick={() => setGrupo(g.id)} title={g.label}>{g.icon}<span>{g.short}</span></button>
-          ))}
-        </div>
-        <div className="p-panel">
-          <div className="p-panel-head">
-            <div className="p-panel-ttl">{activeGroup.label}</div>
-            <div className="p-loja" style={{ margin: '8px 0 2px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
-          </div>
-          <nav className="p-panel-nav">
-            {activeGroup.items.map((k) => (
-              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} onClick={() => go(k)}>{LABEL[k]}</button>
+        <div className="p-logo"><div className="p-brand"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /><div className="p-wm"><b>AIKO</b><span className="p-uline" /></div></div><div className="s">Portal do Gerente</div></div>
+        <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
+        <nav className="p-nav">
+          <div>
+            <div className="p-navlabel">Operações</div>
+            {opsList.map((k) => (
+              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} onClick={() => go(k)}>{ICONS[k]}{LABEL[k]}</button>
             ))}
-          </nav>
-          <div className="p-foot">
-            <div className="p-user"><div className="p-avatar">{inicial}</div><div><div className="n">{usuario?.nome || '—'}</div><div className="p">{isAdmin ? 'Administrador' : perfil === 'supervisor' ? 'Supervisor' : 'Gerente'}</div></div></div>
-            {isAdmin && <button className="p-sair" style={{ color: '#9fb4d8' }} onClick={() => { window.location.href = '/' }}>⬑ Voltar ao ERP</button>}
-            <button className="p-sair" onClick={() => signOut()}>⎋ Sair</button>
           </div>
+          <div>
+            <div className="p-navlabel">Produção</div>
+            <button className={'p-navitem' + (pcpAtivo ? ' on' : '')} onClick={() => setPcpOpen((o) => !o)}>{ICONS.pcp}PCP<span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.7 }}>{(pcpOpen || pcpAtivo) ? '▾' : '▸'}</span></button>
+            {(pcpOpen || pcpAtivo) && PCP_SUB.map((k) => (
+              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} style={{ paddingLeft: 34, fontSize: 12 }} onClick={() => go(k)}>{LABEL[k]}</button>
+            ))}
+          </div>
+          <div>
+            <div className="p-navlabel">Etiquetas</div>
+            <button className={'p-navitem' + (etqAtivo ? ' on' : '')} onClick={() => setEtqOpen((o) => !o)}>{ICONS.etiquetas}Etiquetas<span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.7 }}>{(etqOpen || etqAtivo) ? '▾' : '▸'}</span></button>
+            {(etqOpen || etqAtivo) && ETQ_SUB.map((k) => (
+              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} style={{ paddingLeft: 34, fontSize: 12 }} onClick={() => go(k)}>{LABEL[k]}</button>
+            ))}
+          </div>
+        </nav>
+        <div className="p-foot">
+          <div className="p-user"><div className="p-avatar">{inicial}</div><div><div className="n">{usuario?.nome || '—'}</div><div className="p">{isAdmin ? 'Administrador' : perfil === 'supervisor' ? 'Supervisor' : 'Gerente'}</div></div></div>
+          {isAdmin && <button className="p-sair" style={{ color: '#9fb4d8' }} onClick={() => { window.location.href = '/' }}>⬑ Voltar ao ERP</button>}
+          <button className="p-sair" onClick={() => signOut()}>⎋ Sair</button>
         </div>
       </aside>
 
