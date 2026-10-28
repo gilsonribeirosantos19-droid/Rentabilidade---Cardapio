@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { useLoja } from '../lib/loja'
 import './etiquetas.css'
 
 type Row = {
@@ -13,9 +12,8 @@ type Row = {
 const HORA = 3600_000
 const diaManaus = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Manaus' }) : ''
 
-export function EtiquetasDashboard() {
+export function EtiquetasDashboard({ lojaId }: { lojaId: string | null }) {
   const { tenantId } = useAuth()
-  const { lojaId } = useLoja()
 
   const { data: lista = [], isLoading } = useQuery({
     queryKey: ['etq-dash', tenantId], enabled: !!tenantId,

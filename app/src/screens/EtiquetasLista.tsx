@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { useLoja } from '../lib/loja'
 import { usePerms } from '../lib/perms'
 import { useToastTipo } from '../lib/toast'
 import { buildQrItems, EtqPrintArea, applyFormato, type LojaFull, type PrintData } from './etqLabel'
@@ -32,9 +31,8 @@ function situacao(e: Row): { label: string; cls: string; bucket: string } {
   return { label: 'OK', cls: 'ok', bucket: 'ok' }
 }
 
-export function EtiquetasLista() {
+export function EtiquetasLista({ lojaId }: { lojaId: string | null }) {
   const { tenantId } = useAuth()
-  const { lojaId } = useLoja()
   const { podeEditar } = usePerms()
   const canEdit = podeEditar('etiquetas/lista')
   const { toast, showToast } = useToastTipo(2600)

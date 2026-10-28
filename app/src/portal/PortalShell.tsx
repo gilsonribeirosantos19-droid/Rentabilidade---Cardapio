@@ -10,14 +10,21 @@ import { PortalEstoque } from './PortalEstoque'
 import { PortalPcp } from './PortalPcp'
 import { PortalRequisicaoCD } from './PortalRequisicaoCD'
 import { PortalIndicadores } from './PortalIndicadores'
+import { EtiquetasEmitir } from '../screens/EtiquetasEmitir'
+import { EtiquetasBaixa } from '../screens/EtiquetasBaixa'
+import { EtiquetasLista } from '../screens/EtiquetasLista'
+import { EtiquetasDashboard } from '../screens/EtiquetasDashboard'
+import { EtiquetasRelatorios } from '../screens/EtiquetasRelatorios'
+import { EtiquetasPrazos } from '../screens/EtiquetasPrazos'
+import { EtiquetasConfig } from '../screens/EtiquetasConfig'
 import { PortalLojaProvider, usePortalLoja } from './portalLoja'
 import './portal.css'
 
 // Portal do Gerente — casca (sidebar escura + navegação). Migração fiel do loja.html.
 // As abas são preenchidas uma a uma; por enquanto mostram um placeholder.
 
-type TabKey = 'inventario' | 'receber' | 'solicitacao' | 'requisicao-cd' | 'indicadores' | 'perdas' | 'estoque' | 'pcp-porcionamento' | 'pcp-producao'
-const LABEL: Record<TabKey, string> = { inventario: 'Inventário', receber: 'Receber Mercadoria', solicitacao: 'Solicitação de Compra', 'requisicao-cd': 'Requisição ao CD', indicadores: 'Indicadores', perdas: 'Perdas', estoque: 'Estoque', 'pcp-porcionamento': 'Ordem de Porcionamento', 'pcp-producao': 'Ordem de Produção' }
+type TabKey = 'inventario' | 'receber' | 'solicitacao' | 'requisicao-cd' | 'indicadores' | 'perdas' | 'estoque' | 'pcp-porcionamento' | 'pcp-producao' | 'etq-emitir' | 'etq-lista' | 'etq-baixa' | 'etq-dashboard' | 'etq-relatorios' | 'etq-prazos' | 'etq-config'
+const LABEL: Record<TabKey, string> = { inventario: 'Inventário', receber: 'Receber Mercadoria', solicitacao: 'Solicitação de Compra', 'requisicao-cd': 'Requisição ao CD', indicadores: 'Indicadores', perdas: 'Perdas', estoque: 'Estoque', 'pcp-porcionamento': 'Ordem de Porcionamento', 'pcp-producao': 'Ordem de Produção', 'etq-emitir': 'Emitir', 'etq-lista': 'Etiquetas', 'etq-baixa': 'Baixa', 'etq-dashboard': 'Dashboard', 'etq-relatorios': 'Relatórios', 'etq-prazos': 'Produtos & Prazos', 'etq-config': 'Configurações' }
 // descrição de cada tela — exibida no cabeçalho fixo (no lugar de "Portal do Gerente — loja")
 const DESC: Record<TabKey, string> = {
   inventario: 'Consulte os inventários da sua loja e preencha a contagem dos itens.',
@@ -29,6 +36,13 @@ const DESC: Record<TabKey, string> = {
   estoque: 'Consulte a posição, lance entradas/saídas e veja o histórico da sua loja.',
   'pcp-porcionamento': 'Aponte a pesagem do porcionamento da sua loja.',
   'pcp-producao': 'Lance a produção (item com ficha técnica) da sua loja.',
+  'etq-emitir': 'Emita e imprima etiquetas de validade dos produtos.',
+  'etq-lista': 'Todas as etiquetas emitidas da sua loja — reimprima aqui.',
+  'etq-baixa': 'Leia o QR/código e dê baixa (utilizado/descartado).',
+  'etq-dashboard': 'Vencidas, vencendo, emitidas hoje e conformidade.',
+  'etq-relatorios': 'Emissões por período, com exportação CSV.',
+  'etq-prazos': 'Cadastro de produtos e prazos por modo de conservação.',
+  'etq-config': 'Operadores (PIN), formato da etiqueta e grupos.',
 }
 
 const ico = (d: string) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>{d.split('|').map((p, i) => <path key={i} d={p} />)}</svg>
@@ -41,8 +55,10 @@ const ICONS: Record<string, ReactNode> = {
   pcp: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M18 8h1a4 4 0 0 1 0 8h-1" /><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" /><line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" /></svg>,
   'requisicao-cd': <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><rect x="1" y="3" width="15" height="13" /><path d="M16 8h4l3 3v5h-7z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" /></svg>,
   indicadores: ico('M3 3v18h18|M18 17V9|M13 17V5|M8 17v-3'),
+  etiquetas: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></svg>,
 }
 const PCP_SUB: TabKey[] = ['pcp-porcionamento', 'pcp-producao']
+const ETQ_SUB: TabKey[] = ['etq-emitir', 'etq-lista', 'etq-baixa', 'etq-dashboard', 'etq-relatorios', 'etq-prazos', 'etq-config']
 
 function PortalShellInner() {
   const { usuario, signOut, tenantId } = useAuth()
@@ -51,8 +67,7 @@ function PortalShellInner() {
   const isAdmin = perfil === 'admin' || perfil === 'administrador'
   const [tab, setTab] = useState<TabKey>('inventario')
   const [open, setOpen] = useState(false)
-  const [pcpOpen, setPcpOpen] = useState(false)
-  const pcpAtivo = tab === 'pcp-porcionamento' || tab === 'pcp-producao'
+  const [dived, setDived] = useState<string | null>(null)   // null = lista de módulos; senão o módulo "mergulhado"
   // O módulo Distribuição só aparece p/ tenants que têm um CD configurado (opcional por cliente)
   const { data: temCd = false } = useQuery({ queryKey: ['portal-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
   // "Receber Mercadoria" só aparece se o cliente ligou o recebimento pela loja (Config › Parâmetros › Estoque)
@@ -64,6 +79,12 @@ function PortalShellInner() {
     ...(temCd ? ['requisicao-cd' as TabKey] : []),
     'indicadores', 'perdas', 'estoque',
   ]
+  const MODULES = [
+    { id: 'ops', label: 'Operações', icon: ICONS.inventario, items: opsList },
+    { id: 'prod', label: 'Produção', icon: ICONS.pcp, items: PCP_SUB },
+    { id: 'etq', label: 'Etiquetas', icon: ICONS.etiquetas, items: ETQ_SUB },
+  ]
+  const active = MODULES.find((m) => m.id === dived)
   const inicial = (usuario?.nome || '?')[0].toUpperCase()
 
   const go = (k: TabKey) => { setTab(k); setOpen(false) }
@@ -71,29 +92,44 @@ function PortalShellInner() {
   return (
     <div className="portal">
       {open && <div className="p-backdrop" onClick={() => setOpen(false)} />}
-      <aside className={'p-sidebar' + (open ? ' open' : '')}>
-        <div className="p-logo"><div className="p-brand"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /><div className="p-wm"><b>AIKO</b><span className="p-uline" /></div></div><div className="s">Portal do Gerente</div></div>
-        <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
-        <nav className="p-nav">
-          <div>
-            <div className="p-navlabel">Operações</div>
-            {opsList.map((k) => (
-              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} onClick={() => go(k)}>{ICONS[k]}{LABEL[k]}</button>
-            ))}
-          </div>
-          <div>
-            <div className="p-navlabel">Produção</div>
-            <button className={'p-navitem' + (pcpAtivo ? ' on' : '')} onClick={() => setPcpOpen((o) => !o)}>{ICONS.pcp}PCP<span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.7 }}>{(pcpOpen || pcpAtivo) ? '▾' : '▸'}</span></button>
-            {(pcpOpen || pcpAtivo) && PCP_SUB.map((k) => (
-              <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} style={{ paddingLeft: 34, fontSize: 12 }} onClick={() => go(k)}>{LABEL[k]}</button>
-            ))}
-          </div>
-        </nav>
-        <div className="p-foot">
-          <div className="p-user"><div className="p-avatar">{inicial}</div><div><div className="n">{usuario?.nome || '—'}</div><div className="p">{isAdmin ? 'Administrador' : perfil === 'supervisor' ? 'Supervisor' : 'Gerente'}</div></div></div>
-          {isAdmin && <button className="p-sair" style={{ color: '#9fb4d8' }} onClick={() => { window.location.href = '/' }}>⬑ Voltar ao ERP</button>}
-          <button className="p-sair" onClick={() => signOut()}>⎋ Sair</button>
-        </div>
+      <aside className={'p-sidebar' + (dived ? ' dived' : '') + (open ? ' open' : '')}>
+        {!dived ? (
+          <>
+            <div className="p-logo"><div className="p-brand"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /><div className="p-wm"><b>AIKO</b><span className="p-uline" /></div></div><div className="s">Portal do Gerente</div></div>
+            <div className="p-loja"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
+            <nav className="p-nav">
+              {MODULES.map((m) => (
+                <button key={m.id} className="p-navitem" onClick={() => setDived(m.id)}>{m.icon}{m.label}<span className="p-ch">›</span></button>
+              ))}
+            </nav>
+            <div className="p-foot">
+              <div className="p-user"><div className="p-avatar">{inicial}</div><div><div className="n">{usuario?.nome || '—'}</div><div className="p">{isAdmin ? 'Administrador' : perfil === 'supervisor' ? 'Supervisor' : 'Gerente'}</div></div></div>
+              {isAdmin && <button className="p-sair" style={{ color: '#9fb4d8' }} onClick={() => { window.location.href = '/' }}>⬑ Voltar ao ERP</button>}
+              <button className="p-sair" onClick={() => signOut()}>⎋ Sair</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="p-rail">
+              <div className="p-rail-logo"><img className="p-mk" src="/aiko_marca.png" alt="AIKO" /></div>
+              {MODULES.map((m) => (
+                <button key={m.id} className={'p-rail-item' + (dived === m.id ? ' on' : '')} onClick={() => setDived(m.id)} title={m.label}>{m.icon}</button>
+              ))}
+              <div style={{ flex: 1 }} />
+              <div className="p-avatar" style={{ width: 30, height: 30, fontSize: 12, marginBottom: 6 }}>{inicial}</div>
+              <button className="p-rail-item" onClick={() => signOut()} title="Sair">⎋</button>
+            </div>
+            <div className="p-sec">
+              <button className="p-sback" onClick={() => setDived(null)}><span>‹</span><b>{active?.label}</b></button>
+              <div className="p-loja" style={{ margin: '0 10px 6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg><span>{lojaNome}</span></div>
+              <nav className="p-sec-nav">
+                {active?.items.map((k) => (
+                  <button key={k} className={'p-navitem' + (tab === k ? ' on' : '')} onClick={() => go(k)}>{LABEL[k]}</button>
+                ))}
+              </nav>
+            </div>
+          </>
+        )}
       </aside>
 
       <div className="p-main">
@@ -111,7 +147,7 @@ function PortalShellInner() {
           <div className="p-conn"><span className="p-dot" /> conectado</div>
         </div>
         <div className="p-content">
-          {tab === 'inventario' ? <PortalInventario /> : tab === 'receber' ? <PortalReceber /> : tab === 'solicitacao' ? <PortalSolicitacao /> : tab === 'requisicao-cd' ? <PortalRequisicaoCD /> : tab === 'indicadores' ? <PortalIndicadores /> : tab === 'perdas' ? <PortalPerdas /> : tab === 'estoque' ? <PortalEstoque /> : tab === 'pcp-porcionamento' ? <PortalPcp view="porcionamento" /> : tab === 'pcp-producao' ? <PortalPcp view="producao" /> : (
+          {tab === 'inventario' ? <PortalInventario /> : tab === 'receber' ? <PortalReceber /> : tab === 'solicitacao' ? <PortalSolicitacao /> : tab === 'requisicao-cd' ? <PortalRequisicaoCD /> : tab === 'indicadores' ? <PortalIndicadores /> : tab === 'perdas' ? <PortalPerdas /> : tab === 'estoque' ? <PortalEstoque /> : tab === 'pcp-porcionamento' ? <PortalPcp view="porcionamento" /> : tab === 'pcp-producao' ? <PortalPcp view="producao" /> : tab === 'etq-emitir' ? <EtiquetasEmitir lojaId={lojaAtual || null} /> : tab === 'etq-lista' ? <EtiquetasLista lojaId={lojaAtual || null} /> : tab === 'etq-baixa' ? <EtiquetasBaixa /> : tab === 'etq-dashboard' ? <EtiquetasDashboard lojaId={lojaAtual || null} /> : tab === 'etq-relatorios' ? <EtiquetasRelatorios lojaId={lojaAtual || null} lojas={lojas} /> : tab === 'etq-prazos' ? <EtiquetasPrazos /> : tab === 'etq-config' ? <EtiquetasConfig lojas={lojas} /> : (
             <div className="p-holder">
               <div className="t">{LABEL[tab]}</div>
               <div>Esta área será migrada em seguida (fiel ao portal atual).</div>

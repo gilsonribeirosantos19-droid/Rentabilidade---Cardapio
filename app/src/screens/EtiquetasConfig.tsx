@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { useLoja } from '../lib/loja'
 import { usePerms } from '../lib/perms'
 import { useToastTipo } from '../lib/toast'
 import { buildQrItems, EtqPrintArea, applyFormato, type EtqForLabel, type PrintData } from './etqLabel'
@@ -19,7 +18,8 @@ const FORMATOS: { v: string; nm: string; sz: string; w: number; h: number }[] = 
 ]
 const getFmt = () => { try { return localStorage.getItem('etq_formato') || '60x60' } catch { return '60x60' } }
 
-export function EtiquetasConfig() {
+type Loja = { id: string; nome?: string }
+export function EtiquetasConfig({ lojas }: { lojas: Loja[] }) {
   const [aba, setAba] = useState<'operadores' | 'formato' | 'grupos'>('operadores')
   return (
     <div className="etq-screen">
@@ -29,14 +29,13 @@ export function EtiquetasConfig() {
         <button className={'etq-tab' + (aba === 'formato' ? ' on' : '')} onClick={() => setAba('formato')}>Formato da etiqueta</button>
         <button className={'etq-tab' + (aba === 'grupos' ? ' on' : '')} onClick={() => setAba('grupos')}>Grupos</button>
       </div>
-      {aba === 'operadores' ? <Operadores /> : aba === 'formato' ? <Formato /> : <Grupos />}
+      {aba === 'operadores' ? <Operadores lojas={lojas} /> : aba === 'formato' ? <Formato /> : <Grupos />}
     </div>
   )
 }
 
-function Operadores() {
+function Operadores({ lojas }: { lojas: Loja[] }) {
   const { tenantId } = useAuth()
-  const { lojas } = useLoja()
   const { podeEditar } = usePerms()
   const canEdit = podeEditar('etiquetas/config')
   const qc = useQueryClient()
