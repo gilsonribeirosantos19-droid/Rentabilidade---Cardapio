@@ -51,7 +51,7 @@ export function EtqPrintArea({ data }: { data: PrintData }) {
             <div className="txt">
               RESP: {r.responsavel_nome || ''}<br />
               {loja?.razao_social || loja?.nome || ''}{loja?.cnpj ? ' · CNPJ ' + loja.cnpj : ''}<br />
-              {[loja?.endereco, loja?.cidade].filter(Boolean).join(' · ')}
+              {[loja?.endereco, loja?.cidade, loja?.cep ? 'CEP ' + loja.cep : ''].filter(Boolean).join(' · ')}
               <div className="pl-code">#{r.codigo}</div>
             </div>
             <img className="pl-qr" src={qr} alt="QR" />
