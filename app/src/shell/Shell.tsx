@@ -68,6 +68,7 @@ import { CalendarioProducao } from '../screens/CalendarioProducao'
 import { AtividadesProducao } from '../screens/AtividadesProducao'
 import { EtiquetasPrazos } from '../screens/EtiquetasPrazos'
 import { EtiquetasEmitir } from '../screens/EtiquetasEmitir'
+import { EtiquetasBaixa } from '../screens/EtiquetasBaixa'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -142,6 +143,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'pdv/abc') return <CurvaAbcVendas />
   if (k === 'etiquetas/prazos') return <EtiquetasPrazos />
   if (k === 'etiquetas/emitir') return <EtiquetasEmitir />
+  if (k === 'etiquetas/baixa') return <EtiquetasBaixa />
   return <Placeholder label={label} />
 }
 

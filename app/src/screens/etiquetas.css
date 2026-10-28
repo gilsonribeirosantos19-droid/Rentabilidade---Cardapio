@@ -76,7 +76,35 @@
 .etq-pc-modo .ml { font-size: 12.5px; color: #475569; font-weight: 600; }
 .etq-pc-modo .ml b { color: #0f2a52; }
 .etq-pc-nomodo { padding: 10px 13px; font-size: 12px; color: #b45309; }
+
+/* ---- Baixa ---- */
+.etq-baixa { max-width: 760px; }
+.etq-scan { background: #fff; border: 1px solid #cdd7e6; border-radius: 11px; padding: 18px; box-shadow: 0 1px 3px rgba(15, 42, 82, .07); margin-bottom: 14px; }
+.etq-scan label { font-size: 11.5px; font-weight: 600; color: #475569; }
+.etq-scan .row { display: flex; gap: 10px; margin-top: 7px; }
+.etq-scan input { flex: 1; min-width: 0; border: 1px solid #cdd7e6; border-radius: 9px; padding: 11px 13px; font-size: 15px; font-family: 'Roboto Condensed', ui-monospace, monospace; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.etq-scan input:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, .15); }
+.etq-det { background: #fff; border: 1px solid #cdd7e6; border-radius: 11px; padding: 18px; box-shadow: 0 1px 3px rgba(15, 42, 82, .07); }
+.etq-det h3 { margin: 0 0 12px; font-size: 16px; font-weight: 700; color: #0f2a52; }
+.etq-det .dl { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #eef2f7; font-size: 13px; }
+.etq-det .dl .k { color: #94a3b8; font-weight: 600; }
+.etq-det .dl .v { font-weight: 600; color: #1e293b; text-align: right; }
+.etq-bacts { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.etq-bacts .etq-btn { flex: 1; padding: 12px; font-size: 14px; min-width: 130px; }
+.etq-btn-ut { background: #059669; border-color: #059669; color: #fff; }
+.etq-btn-ut:hover { background: #047857; }
+.etq-btn-ds { background: #e11d48; border-color: #e11d48; color: #fff; }
+.etq-btn-ds:hover { background: #be123c; }
+.etq-sit { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+.etq-sit.ok { background: #ecfdf5; color: #15803d; }
+.etq-sit.venc { background: #fffbeb; color: #b45309; }
+.etq-sit.vd { background: #fef2f2; color: #be123c; }
+.etq-sit.baixada { background: #eff6ff; color: #1d4ed8; }
 .etq-banner { background: #fffbeb; border: 1px solid #fcd9a4; color: #b45309; padding: 10px 14px; border-radius: 9px; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+.etq-sel { appearance: none; -webkit-appearance: none; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 11px center; border: 1px solid #cdd7e6; border-radius: 9px; padding: 9px 34px 9px 13px; font-size: 13px; font-weight: 600; color: #1e293b; cursor: pointer; min-width: 190px; }
+.etq-sel:hover { border-color: #9fb2d0; }
+.etq-sel:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, .15); }
+.etq-fg select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; padding-right: 32px; cursor: pointer; }
 
 /* ---- impressão térmica 60x60 ---- */
 .etq-print { display: none; }
