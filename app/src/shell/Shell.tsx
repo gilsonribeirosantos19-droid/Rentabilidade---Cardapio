@@ -70,6 +70,7 @@ import { EtiquetasPrazos } from '../screens/EtiquetasPrazos'
 import { EtiquetasEmitir } from '../screens/EtiquetasEmitir'
 import { EtiquetasBaixa } from '../screens/EtiquetasBaixa'
 import { EtiquetasLista } from '../screens/EtiquetasLista'
+import { EtiquetasDashboard } from '../screens/EtiquetasDashboard'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -146,6 +147,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'etiquetas/emitir') return <EtiquetasEmitir />
   if (k === 'etiquetas/baixa') return <EtiquetasBaixa />
   if (k === 'etiquetas/lista') return <EtiquetasLista />
+  if (k === 'etiquetas/dashboard') return <EtiquetasDashboard />
   return <Placeholder label={label} />
 }
 

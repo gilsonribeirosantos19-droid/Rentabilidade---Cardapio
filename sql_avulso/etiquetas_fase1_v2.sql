@@ -200,7 +200,7 @@ begin
     v_validade := least(v_validade, (p_val_original + interval '1 day' - interval '1 second'));
   end if;
   if p_operador_id is not null and not validar_operador(p_operador_id,p_pin) then raise exception 'PIN incorreto'; end if;
-  select coalesce(abreviacao,left(nome,3)) into v_prefixo from lojas where id=p_loja_id;
+  select upper(left(regexp_replace(coalesce(nome,''), '[^A-Za-z0-9]', '', 'g'), 3)) into v_prefixo from lojas where id=p_loja_id;
   v_resp := coalesce(p_responsavel, (select nome from operadores where id=p_operador_id));
   for i in 1..greatest(p_copias,1) loop
     v_cod := _etq_novo_codigo(v_tenant, v_prefixo);
@@ -236,7 +236,7 @@ begin
     v_validade := least(v_validade, (p_val_original + interval '1 day' - interval '1 second'));
   end if;
   if p_operador_id is not null and not validar_operador(p_operador_id,p_pin) then raise exception 'PIN incorreto'; end if;
-  select coalesce(abreviacao,left(nome,3)) into v_prefixo from lojas where id=p_loja_id;
+  select upper(left(regexp_replace(coalesce(nome,''), '[^A-Za-z0-9]', '', 'g'), 3)) into v_prefixo from lojas where id=p_loja_id;
   v_resp := coalesce(p_responsavel, (select nome from operadores where id=p_operador_id));
   for i in 1..greatest(p_copias,1) loop
     v_cod := _etq_novo_codigo(v_tenant, v_prefixo);
