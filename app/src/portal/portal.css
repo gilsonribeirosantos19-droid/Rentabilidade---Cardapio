@@ -44,7 +44,7 @@
 /* ===== MOBILE NAV ===== */
 .portal .p-mobnav { display: none; }
 @media (max-width: 700px) {
-  .portal .p-sidebar { position: fixed; z-index: 60; height: 100vh; left: -240px; transition: left .2s; }
+  .portal .p-sidebar { position: fixed; z-index: 60; height: 100vh; left: -300px; transition: left .2s; }
   .portal .p-sidebar.open { left: 0; }
   .portal .p-hamb { display: block; }
   .portal .p-content { padding-bottom: 78px; }
@@ -160,3 +160,17 @@
 .portal .req-chip.st-cam { background: #f0fdfa; color: #0f766e; }
 .portal .req-chip.st-rec { background: var(--ok-tint); color: var(--ok-strong); }
 .portal .req-chip.st-can { background: var(--n-100); color: var(--n-500); }
+
+/* ===== Portal nav 2 níveis: rail de ícones + painel (padrão ERP) ===== */
+.portal .p-sidebar { width: auto; flex-direction: row; }
+.portal .p-rail { width: 62px; background: #0f2446; display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 3px; flex: none; overflow-y: auto; }
+.portal .p-rail-logo { margin-bottom: 12px; }
+.portal .p-rail-logo img { height: 30px; width: auto; }
+.portal .p-rail-item { width: 50px; padding: 8px 0; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; color: rgba(159,180,216,.9); cursor: pointer; font-size: 9.5px; font-weight: 600; font-family: inherit; }
+.portal .p-rail-item svg { width: 20px; height: 20px; }
+.portal .p-rail-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+.portal .p-rail-item.on { background: rgba(249,115,22,.18); color: var(--brand); }
+.portal .p-panel { width: 200px; background: var(--nav); display: flex; flex-direction: column; flex: none; }
+.portal .p-panel-head { padding: 16px 16px 4px; }
+.portal .p-panel-ttl { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: .02em; }
+.portal .p-panel-nav { flex: 1; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
