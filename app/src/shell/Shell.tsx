@@ -66,6 +66,7 @@ import { MonitorProducao } from '../screens/MonitorProducao'
 import { PlanejamentoProducao } from '../screens/PlanejamentoProducao'
 import { CalendarioProducao } from '../screens/CalendarioProducao'
 import { AtividadesProducao } from '../screens/AtividadesProducao'
+import { EtiquetasPrazos } from '../screens/EtiquetasPrazos'
 import { Placeholder } from '../screens/Placeholder'
 
 type Tab = { key: string; label: string }
@@ -138,6 +139,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'pdv/importar') return <MonitorVendas />
   if (k === 'pdv/engenharia') return <EngenhariaCardapio />
   if (k === 'pdv/abc') return <CurvaAbcVendas />
+  if (k === 'etiquetas/prazos') return <EtiquetasPrazos />
   return <Placeholder label={label} />
 }
 
