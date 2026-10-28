@@ -7,18 +7,18 @@ import { useToastTipo } from '../lib/toast'
 import { SearchSelect } from '../components/SearchSelect'
 import './etiquetas.css'
 
+type Grupo = { id: string; nome: string }
 type Item = {
-  id: string; tenant_id?: string
+  id: string; tenant_id?: string; nome: string; grupo_id?: string | null
   insumo_id?: string | null; ficha_id?: string | null
-  categoria?: string | null; marca_forn_default?: string | null
-  sif_default?: string | null; alergenicos?: string | null; ativo?: boolean
+  marca_forn_default?: string | null; sif_default?: string | null; alergenicos?: string | null; ativo?: boolean
 }
 type Prazo = { id: string; item_id: string; modo: string; prazo_horas: number; temperatura?: string | null }
 type Cat = { id: string; nome: string }
 
 const MODOS: [string, string][] = [
-  ['resfriado', 'Resfriado'], ['congelado', 'Congelado'],
-  ['descongelando', 'Descongelando'], ['ambiente', 'Ambiente'], ['aberto', 'Aberto'],
+  ['resfriado', 'Resfriado'], ['congelado', 'Congelado'], ['ambiente', 'Temperatura Ambiente'],
+  ['quente', 'Quente'], ['descongelado', 'Descongelado'], ['aberto', 'Aberto'],
 ]
 const MODO_LABEL = Object.fromEntries(MODOS) as Record<string, string>
 
@@ -29,8 +29,9 @@ function fmtPrazo(h: number) {
 
 type PrazoForm = Record<string, { dias: string; horas: string; temp: string }>
 type Form = {
-  id?: string; tipo: 'insumo' | 'ficha'; produtoId: string
-  categoria: string; marca: string; sif: string; alerg: string; prazos: PrazoForm
+  id?: string; nome: string; grupoNome: string
+  tipoVinc: 'nenhum' | 'insumo' | 'ficha'; produtoId: string
+  marca: string; sif: string; alerg: string; prazos: PrazoForm
 }
 const emptyPrazos = (): PrazoForm =>
   Object.fromEntries(MODOS.map(([k]) => [k, { dias: '', horas: '', temp: '' }])) as PrazoForm
@@ -42,11 +43,16 @@ export function EtiquetasPrazos() {
   const qc = useQueryClient()
   const { toast, showToast } = useToastTipo(2600)
   const [busca, setBusca] = useState('')
+  const [fGrupo, setFGrupo] = useState('')
   const [editing, setEditing] = useState<Form | null>(null)
 
+  const { data: grupos = [] } = useQuery({
+    queryKey: ['etq-grupos', tenantId], enabled: !!tenantId,
+    queryFn: () => fetchAll<Grupo>((f, t) => supabase.from('etiqueta_grupos').select('id,nome').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
+  })
   const { data: itens = [], isLoading } = useQuery({
     queryKey: ['etq-itens', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Item>((f, t) => supabase.from('etiqueta_itens').select('*').eq('tenant_id', tenantId).order('id').range(f, t)),
+    queryFn: () => fetchAll<Item>((f, t) => supabase.from('etiqueta_itens').select('*').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
   })
   const { data: prazos = [] } = useQuery({
     queryKey: ['etq-prazos', tenantId], enabled: !!tenantId,
@@ -61,8 +67,7 @@ export function EtiquetasPrazos() {
     queryFn: () => fetchAll<Cat>((f, t) => supabase.from('fichas_tecnicas').select('id,nome').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
   })
 
-  const insById = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i.nome])) as Record<string, string>, [insumos])
-  const ficById = useMemo(() => Object.fromEntries(fichas.map((f) => [f.id, f.nome])) as Record<string, string>, [fichas])
+  const grupoById = useMemo(() => Object.fromEntries(grupos.map((g) => [g.id, g.nome])) as Record<string, string>, [grupos])
   const prazosByItem = useMemo(() => {
     const m: Record<string, Prazo[]> = {}
     prazos.forEach((p) => { (m[p.item_id] ||= []).push(p) })
@@ -72,19 +77,29 @@ export function EtiquetasPrazos() {
   const rows = useMemo(() => {
     const q = busca.trim().toLowerCase()
     return itens
-      .map((it) => ({ it, nome: it.insumo_id ? (insById[it.insumo_id] || '—') : (ficById[it.ficha_id || ''] || '—') }))
-      .filter((r) => !q || r.nome.toLowerCase().includes(q))
+      .filter((it) => (!q || it.nome.toLowerCase().includes(q)) && (!fGrupo || it.grupo_id === fGrupo))
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-  }, [itens, insById, ficById, busca])
+  }, [itens, busca, fGrupo])
 
   const save = useMutation({
     mutationFn: async (form: Form) => {
-      if (!form.produtoId) throw new Error('Escolha o produto do catálogo.')
+      const nome = form.nome.trim()
+      if (!nome) throw new Error('Informe o nome do produto.')
+      // resolve/cria o grupo
+      let grupoId: string | null = null
+      const gNome = form.grupoNome.trim()
+      if (gNome) {
+        const existente = grupos.find((g) => g.nome.toLowerCase() === gNome.toLowerCase())
+        if (existente) grupoId = existente.id
+        else {
+          const { data, error } = await supabase.from('etiqueta_grupos').insert({ tenant_id: tenantId, nome: gNome }).select('id'); if (error) throw error
+          grupoId = data?.[0]?.id ?? null
+        }
+      }
       const payload = {
-        tenant_id: tenantId,
-        insumo_id: form.tipo === 'insumo' ? form.produtoId : null,
-        ficha_id: form.tipo === 'ficha' ? form.produtoId : null,
-        categoria: form.categoria.trim() || null,
+        tenant_id: tenantId, nome, grupo_id: grupoId,
+        insumo_id: form.tipoVinc === 'insumo' ? form.produtoId || null : null,
+        ficha_id: form.tipoVinc === 'ficha' ? form.produtoId || null : null,
         marca_forn_default: form.marca.trim() || null,
         sif_default: form.sif.trim() || null,
         alergenicos: form.alerg.trim() || null,
@@ -95,9 +110,8 @@ export function EtiquetasPrazos() {
         const { error } = await supabase.from('etiqueta_itens').update(payload).eq('id', itemId); if (error) throw error
       } else {
         const { data, error } = await supabase.from('etiqueta_itens').insert(payload).select('id'); if (error) throw error
-        itemId = data?.[0]?.id; if (!itemId) throw new Error('Falha ao salvar o item.')
+        itemId = data?.[0]?.id; if (!itemId) throw new Error('Falha ao salvar o produto.')
       }
-      // substitui os prazos do item
       await supabase.from('etiqueta_prazos').delete().eq('item_id', itemId)
       const linhas = MODOS.map(([k]) => {
         const p = form.prazos[k]
@@ -107,16 +121,17 @@ export function EtiquetasPrazos() {
       if (linhas.length) { const { error } = await supabase.from('etiqueta_prazos').insert(linhas as object[]); if (error) throw error }
     },
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['etq-grupos'] })
       qc.invalidateQueries({ queryKey: ['etq-itens'] })
       qc.invalidateQueries({ queryKey: ['etq-prazos'] })
-      setEditing(null); showToast('Prazos salvos.', 'ok')
+      setEditing(null); showToast('Produto salvo.', 'ok')
     },
     onError: (e: Error) => showToast(e.message, 'err'),
   })
 
   const del = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from('etiqueta_itens').delete().eq('id', id); if (error) throw error },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-itens'] }); qc.invalidateQueries({ queryKey: ['etq-prazos'] }); showToast('Vínculo removido.', 'ok') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-itens'] }); qc.invalidateQueries({ queryKey: ['etq-prazos'] }); showToast('Produto removido.', 'ok') },
     onError: (e: Error) => showToast(e.message, 'err'),
   })
 
@@ -126,16 +141,18 @@ export function EtiquetasPrazos() {
       pf[p.modo] = { dias: String(Math.floor(p.prazo_horas / 24) || ''), horas: String(p.prazo_horas % 24 || ''), temp: p.temperatura || '' }
     }
     setEditing({
-      id: it.id, tipo: it.insumo_id ? 'insumo' : 'ficha', produtoId: it.insumo_id || it.ficha_id || '',
-      categoria: it.categoria || '', marca: it.marca_forn_default || '', sif: it.sif_default || '', alerg: it.alergenicos || '', prazos: pf,
+      id: it.id, nome: it.nome, grupoNome: it.grupo_id ? (grupoById[it.grupo_id] || '') : '',
+      tipoVinc: it.insumo_id ? 'insumo' : it.ficha_id ? 'ficha' : 'nenhum',
+      produtoId: it.insumo_id || it.ficha_id || '',
+      marca: it.marca_forn_default || '', sif: it.sif_default || '', alerg: it.alergenicos || '', prazos: pf,
     })
   }
 
   return (
     <div className="etq-screen">
       <div className="etq-head">
-        <h1>Prazos por produto</h1>
-        <span className="sub">Cada produto vem do catálogo do Aiko (insumos/fichas) — aqui você só define os prazos por modo de conservação</span>
+        <h1>Produtos & Prazos</h1>
+        <span className="sub">Cadastro dos produtos de etiqueta: nome + grupo + prazos por modo de conservação</span>
       </div>
 
       <div className="etq-toolbar">
@@ -143,23 +160,27 @@ export function EtiquetasPrazos() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar produto..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
+        <select className="etq-sel" value={fGrupo} onChange={(e) => setFGrupo(e.target.value)}>
+          <option value="">Todos os grupos</option>
+          {grupos.map((g) => <option key={g.id} value={g.id}>{g.nome}</option>)}
+        </select>
         {canEdit
-          ? <button className="etq-btn etq-btn-pri" onClick={() => setEditing({ id: undefined, tipo: 'insumo', produtoId: '', categoria: '', marca: '', sif: '', alerg: '', prazos: emptyPrazos() })}>+ Vincular produto</button>
+          ? <button className="etq-btn etq-btn-pri" onClick={() => setEditing({ nome: '', grupoNome: '', tipoVinc: 'nenhum', produtoId: '', marca: '', sif: '', alerg: '', prazos: emptyPrazos() })}>+ Novo produto</button>
           : <span className="etq-ro">👁 Somente leitura</span>}
       </div>
 
       <div className="etq-card">
         <table className="etq-tbl">
-          <thead><tr><th>Produto (catálogo Aiko)</th><th>Tipo</th><th>Prazos por modo</th><th className="r">Ações</th></tr></thead>
+          <thead><tr><th>Produto</th><th>Grupo</th><th>Prazos por modo</th><th className="r">Ações</th></tr></thead>
           <tbody>
             {isLoading ? <tr><td colSpan={4} className="etq-empty">Carregando…</td></tr>
-              : rows.length === 0 ? <tr><td colSpan={4} className="etq-empty">Nenhum produto vinculado ainda. Clique em “+ Vincular produto”.</td></tr>
-              : rows.map(({ it, nome }) => {
+              : rows.length === 0 ? <tr><td colSpan={4} className="etq-empty">Nenhum produto. Clique em “+ Novo produto”.</td></tr>
+              : rows.map((it) => {
                 const ps = prazosByItem[it.id] || []
                 return (
                   <tr key={it.id} onClick={() => canEdit && abrirEdit(it)}>
-                    <td>{nome}</td>
-                    <td><span className={'etq-tag ' + (it.insumo_id ? 'ins' : 'proc')}>{it.insumo_id ? 'Insumo' : 'Processado'}</span></td>
+                    <td>{it.nome}</td>
+                    <td style={{ color: '#64748b' }}>{it.grupo_id ? (grupoById[it.grupo_id] || '—') : '—'}</td>
                     <td>
                       {ps.length === 0
                         ? <span className="etq-chip none">sem prazo</span>
@@ -167,55 +188,70 @@ export function EtiquetasPrazos() {
                           <span key={p.id} className="etq-chip">{MODO_LABEL[p.modo] || p.modo} <b>{fmtPrazo(p.prazo_horas)}</b></span>
                         ))}
                     </td>
-                    <td className="r">{canEdit && <button className="etq-btn etq-btn-sm" onClick={(e) => { e.stopPropagation(); if (confirm(`Remover o vínculo de "${nome}"?`)) del.mutate(it.id) }}>Remover</button>}</td>
+                    <td className="r">{canEdit && <button className="etq-btn etq-btn-sm" onClick={(e) => { e.stopPropagation(); if (confirm(`Remover "${it.nome}"?`)) del.mutate(it.id) }}>Remover</button>}</td>
                   </tr>
                 )
               })}
           </tbody>
         </table>
       </div>
+      <div className="etq-hint" style={{ marginTop: 10 }}>{rows.length} produto(s){fGrupo ? ' no grupo selecionado' : ''}.</div>
 
-      {editing && <PrazoModal form={editing} insumos={insumos} fichas={fichas} saving={save.isPending} onClose={() => setEditing(null)} onSave={(f) => save.mutate(f)} />}
+      {editing && <ProdModal form={editing} grupos={grupos} insumos={insumos} fichas={fichas} saving={save.isPending} onClose={() => setEditing(null)} onSave={(f) => save.mutate(f)} />}
       {toast && <div className={'etq-toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
   )
 }
 
-function PrazoModal({ form: inicial, insumos, fichas, saving, onClose, onSave }: {
-  form: Form; insumos: Cat[]; fichas: Cat[]; saving: boolean; onClose: () => void; onSave: (f: Form) => void
+function ProdModal({ form: inicial, grupos, insumos, fichas, saving, onClose, onSave }: {
+  form: Form; grupos: Grupo[]; insumos: Cat[]; fichas: Cat[]; saving: boolean; onClose: () => void; onSave: (f: Form) => void
 }) {
   const [form, setForm] = useState<Form>(inicial)
+  const [novoGrupo, setNovoGrupo] = useState(false)
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }))
   const setPrazo = (modo: string, campo: 'dias' | 'horas' | 'temp', v: string) =>
     setForm((f) => ({ ...f, prazos: { ...f.prazos, [modo]: { ...f.prazos[modo], [campo]: v } } }))
 
-  const lista = form.tipo === 'insumo' ? insumos : fichas
-  const nomeSel = lista.find((x) => x.id === form.produtoId)?.nome || ''
+  const lista = form.tipoVinc === 'ficha' ? fichas : insumos
+  const nomeVinc = lista.find((x) => x.id === form.produtoId)?.nome || ''
 
   return (
     <div className="etq-ov" onClick={onClose}>
       <div className="etq-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="etq-mh"><h2>{form.id ? 'Editar prazos' : 'Vincular produto'}</h2><button className="x" onClick={onClose}>✕</button></div>
+        <div className="etq-mh"><h2>{form.id ? 'Editar produto' : 'Novo produto'}</h2><button className="x" onClick={onClose}>✕</button></div>
         <div className="etq-mb">
-          <div className="etq-fg">
-            <label>Origem do produto</label>
-            <div className="etq-seg">
-              <button className={form.tipo === 'insumo' ? 'on' : ''} onClick={() => { set('tipo', 'insumo'); set('produtoId', '') }}>Insumo</button>
-              <button className={form.tipo === 'ficha' ? 'on' : ''} onClick={() => { set('tipo', 'ficha'); set('produtoId', '') }}>Ficha / Processado</button>
+          <div className="etq-row2">
+            <div className="etq-fg"><label>Nome do produto *</label><input value={form.nome} onChange={(e) => set('nome', e.target.value)} placeholder="Ex.: Shari (Arroz)" autoFocus /></div>
+            <div className="etq-fg">
+              <label>Grupo</label>
+              {novoGrupo
+                ? <input value={form.grupoNome} onChange={(e) => set('grupoNome', e.target.value)} placeholder="Nome do novo grupo" />
+                : <select value={form.grupoNome} onChange={(e) => { if (e.target.value === '__novo') { setNovoGrupo(true); set('grupoNome', '') } else set('grupoNome', e.target.value) }}>
+                    <option value="">Sem grupo</option>
+                    {grupos.map((g) => <option key={g.id} value={g.nome}>{g.nome}</option>)}
+                    <option value="__novo">+ Novo grupo…</option>
+                  </select>}
             </div>
           </div>
+
           <div className="etq-fg">
-            <label>Produto do catálogo *</label>
-            <SearchSelect value={nomeSel} options={lista.map((x) => x.nome)} placeholder="Buscar no catálogo..."
-              onChange={(nm) => set('produtoId', lista.find((x) => x.nome === nm)?.id || '')} />
+            <label>Vínculo com o catálogo do Aiko (opcional — puxa custo/previsão)</label>
+            <div className="etq-seg">
+              <button className={form.tipoVinc === 'nenhum' ? 'on' : ''} onClick={() => { set('tipoVinc', 'nenhum'); set('produtoId', '') }}>Nenhum</button>
+              <button className={form.tipoVinc === 'insumo' ? 'on' : ''} onClick={() => { set('tipoVinc', 'insumo'); set('produtoId', '') }}>Insumo</button>
+              <button className={form.tipoVinc === 'ficha' ? 'on' : ''} onClick={() => { set('tipoVinc', 'ficha'); set('produtoId', '') }}>Ficha</button>
+            </div>
           </div>
+          {form.tipoVinc !== 'nenhum' && (
+            <div className="etq-fg">
+              <SearchSelect value={nomeVinc} options={lista.map((x) => x.nome)} placeholder="Buscar no catálogo..."
+                onChange={(nm) => set('produtoId', lista.find((x) => x.nome === nm)?.id || '')} />
+            </div>
+          )}
+
           <div className="etq-row2">
-            <div className="etq-fg"><label>Categoria (rótulo)</label><input value={form.categoria} onChange={(e) => set('categoria', e.target.value)} placeholder="Ex.: Molhos" /></div>
             <div className="etq-fg"><label>Marca / fornecedor padrão</label><input value={form.marca} onChange={(e) => set('marca', e.target.value)} placeholder="Ex.: Produção própria" /></div>
-          </div>
-          <div className="etq-row2">
             <div className="etq-fg"><label>SIF padrão</label><input value={form.sif} onChange={(e) => set('sif', e.target.value)} placeholder="—" /></div>
-            <div className="etq-fg"><label>Alergênicos (só cadastro)</label><input value={form.alerg} onChange={(e) => set('alerg', e.target.value)} placeholder="Ex.: peixe, soja" /></div>
           </div>
 
           <div className="etq-fg">
@@ -233,7 +269,7 @@ function PrazoModal({ form: inicial, insumos, fichas, saving, onClose, onSave }:
                 </div>
               ))}
             </div>
-            <div className="etq-hint">Só os modos com prazo (dias e/ou horas) aparecem na hora de emitir a etiqueta.</div>
+            <div className="etq-hint">Só os modos com prazo (dias e/ou horas) aparecem na emissão.</div>
           </div>
         </div>
         <div className="etq-mf">
