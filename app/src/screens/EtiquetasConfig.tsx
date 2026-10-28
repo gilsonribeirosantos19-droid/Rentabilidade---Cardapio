@@ -16,7 +16,7 @@ const FORMATOS: { v: string; nm: string; sz: string; w: number; h: number }[] = 
   { v: '60x80', nm: 'Grande', sz: '60 × 80 mm', w: 60, h: 80 },
   { v: '60x40', nm: 'Compacta', sz: '60 × 40 mm', w: 60, h: 40 },
 ]
-const getFmt = () => { try { return localStorage.getItem('etq_formato') || '60x60' } catch { return '60x60' } }
+const getFmt = () => { try { return localStorage.getItem('etq_formato') || '60x40' } catch { return '60x40' } }
 
 type Loja = { id: string; nome?: string }
 export function EtiquetasConfig({ lojas }: { lojas: Loja[] }) {
