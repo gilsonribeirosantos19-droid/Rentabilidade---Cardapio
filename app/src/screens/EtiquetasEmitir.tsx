@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import QRCode from 'qrcode'
+import { buildQrItems, EtqPrintArea, type EtqForLabel, type LojaFull, type PrintData } from './etqLabel'
 import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
@@ -11,14 +11,6 @@ import './etiquetas.css'
 type Grupo = { id: string; nome: string }
 type Item = { id: string; nome: string; grupo_id?: string | null }
 type Prazo = { item_id: string; modo: string; prazo_horas: number; temperatura?: string | null }
-type LojaFull = { id: string; nome?: string; razao_social?: string; cnpj?: string; endereco?: string; cidade?: string; cep?: string }
-type Etiqueta = {
-  codigo: string; nome_snap: string; grupo_snap?: string | null; modo: string
-  quantidade?: number | null; unidade?: string | null
-  manipulacao_em: string; validade_em: string; val_original?: string | null
-  lote?: string | null; fabricacao?: string | null; marca_forn?: string | null; sif?: string | null
-  responsavel_nome?: string | null
-}
 
 const MODO_LABEL: Record<string, string> = {
   resfriado: 'Resfriado', congelado: 'Congelado', ambiente: 'Temperatura Ambiente',
@@ -26,7 +18,6 @@ const MODO_LABEL: Record<string, string> = {
 }
 const fmtPrazo = (h: number) => { const d = Math.floor(h / 24), r = h % 24; return [d ? `${d}d` : '', r ? `${r}h` : ''].filter(Boolean).join(' ') || '0h' }
 const fmtDT = (iso?: string | null) => iso ? new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Manaus', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(',', ' -') : '—'
-const fmtD = (d?: string | null) => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('pt-BR', { timeZone: 'America/Manaus' }) : ''
 
 export function EtiquetasEmitir() {
   const { tenantId } = useAuth()
@@ -37,7 +28,7 @@ export function EtiquetasEmitir() {
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
   const [drawer, setDrawer] = useState<Item | null>(null)
-  const [printData, setPrintData] = useState<{ loja: LojaFull | null; items: { r: Etiqueta; qr: string }[] } | null>(null)
+  const [printData, setPrintData] = useState<PrintData>(null)
   const [emitindo, setEmitindo] = useState(false)
 
   const { data: grupos = [] } = useQuery({ queryKey: ['etq-grupos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Grupo>((f, t) => supabase.from('etiqueta_grupos').select('id,nome').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)) })
@@ -68,10 +59,10 @@ export function EtiquetasEmitir() {
         p_lote: opts?.lote || null, p_val_original: opts?.valOriginal || null,
       })
       if (error) throw error
-      const etiquetas = (data ?? []) as Etiqueta[]
+      const etiquetas = (data ?? []) as EtqForLabel[]
       if (!etiquetas.length) throw new Error('Nada foi gerado.')
       const loja = lojasFull.find((l) => l.id === lojaId) || null
-      const items = await Promise.all(etiquetas.map(async (r) => ({ r, qr: await QRCode.toDataURL(r.codigo, { margin: 0, width: 140 }) })))
+      const items = await buildQrItems(etiquetas)
       setPrintData({ loja, items })
       setDrawer(null)
       showToast(`${etiquetas.length} etiqueta(s) gerada(s).`, 'ok')
@@ -126,29 +117,7 @@ export function EtiquetasEmitir() {
       {drawer && <EmitDrawer item={drawer} prazos={prazosByItem[drawer.id] || []} grupo={drawer.grupo_id ? grupoById[drawer.grupo_id] : ''} emitindo={emitindo} onClose={() => setDrawer(null)} onEmit={(modo, opts) => emitir(drawer, modo, opts)} />}
 
       {/* área de impressão (só aparece no print) */}
-      <div id="etq-print" className="etq-print">
-        {printData?.items.map(({ r, qr }, i) => (
-          <div className="etq-plabel" key={i}>
-            <div className="pl-nome">{r.nome_snap}</div>
-            <div className="pl-modo"><span>{(MODO_LABEL[r.modo] || r.modo).toUpperCase()}</span><span>{r.quantidade ? `${r.quantidade}${r.unidade || ''}` : ''}</span></div>
-            {r.val_original && <div className="pl-row"><span>VAL. ORIGINAL</span><b>{fmtD(r.val_original)}</b></div>}
-            <div className="pl-row"><span>MANIPULAÇÃO</span><b>{fmtDT(r.manipulacao_em)}</b></div>
-            <div className="pl-row big"><span>VALIDADE</span><b>{fmtDT(r.validade_em)}</b></div>
-            <div className="pl-row"><span>MARCA / FORN</span><b>{r.marca_forn || ''}</b></div>
-            <div className="pl-row"><span>SIF</span><b>{r.sif || ''}</b></div>
-            {r.lote && <div className="pl-row"><span>LOTE</span><b>{r.lote}</b></div>}
-            <div className="pl-foot">
-              <div className="txt">
-                RESP: {r.responsavel_nome || ''}<br />
-                {printData.loja?.razao_social || printData.loja?.nome || ''}{printData.loja?.cnpj ? ' · CNPJ ' + printData.loja.cnpj : ''}<br />
-                {[printData.loja?.endereco, printData.loja?.cidade].filter(Boolean).join(' · ')}
-                <div className="pl-code">#{r.codigo}</div>
-              </div>
-              <img className="pl-qr" src={qr} alt="QR" />
-            </div>
-          </div>
-        ))}
-      </div>
+      <EtqPrintArea data={printData} />
 
       {toast && <div className={'etq-toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
