@@ -64,12 +64,14 @@
 
 /* ---- Emitir: grade de cards ---- */
 .etq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-.etq-pcard { background: #fff; border: 1px solid #cdd7e6; border-radius: 11px; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 42, 82, .07); transition: box-shadow .12s, border-color .12s; }
+.etq-pcard { background: #fff; border: 1px solid #cdd7e6; border-radius: 11px; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 42, 82, .07); transition: box-shadow .12s, border-color .12s; display: flex; flex-direction: column; min-height: 118px; }
 .etq-pcard:hover { box-shadow: 0 8px 22px rgba(15, 42, 82, .13); border-color: #9fb2d0; }
-.etq-pc-head { padding: 11px 13px; border-bottom: 1.5px solid #dbe3ef; cursor: pointer; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; background: #fafbfe; }
+.etq-pc-head { padding: 11px 13px; border-bottom: 1.5px solid #dbe3ef; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fafbfe; }
 .etq-pc-head:hover { background: #eef3fb; }
-.etq-pc-head .nm { font-weight: 700; font-size: 13.5px; color: #0f2a52; }
+.etq-pc-head .nm { font-weight: 700; font-size: 13.5px; color: #0f2a52; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .etq-pc-head .gr { font-size: 10.5px; color: #8897b4; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; }
+.etq-del { flex: none; width: 27px; height: 27px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: #ef4444; color: #fff; cursor: pointer; transition: background .12s; }
+.etq-del:hover { background: #dc2626; }
 .etq-pc-modo { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 13px; border-top: 1px solid #e6ecf5; }
 .etq-pc-modo:hover { background: #f6f9fe; }
 .etq-pc-modo:first-of-type { border-top: 0; }

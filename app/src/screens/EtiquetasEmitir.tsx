@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { buildQrItems, EtqPrintArea, applyFormato, type EtqForLabel, type LojaFull, type PrintData } from './etqLabel'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
@@ -26,6 +26,8 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
   const { tenantId } = useAuth()
   const { podeEditar } = usePerms()
   const canEmit = podeEditar('etiquetas/emitir')
+  const canDel = podeEditar('etiquetas/prazos')
+  const qc = useQueryClient()
   const { toast, showToast } = useToastTipo(2800)
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
@@ -58,6 +60,12 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
     return itens.filter((it) => (!q || it.nome.toLowerCase().includes(q)) && (!fGrupo || it.grupo_id === fGrupo)
       && (!fModo || (prazosByItem[it.id] || []).some((p) => p.modo === fModo)))
   }, [itens, busca, fGrupo, fModo, prazosByItem])
+
+  const excluir = useMutation({
+    mutationFn: async (id: string) => { const { error } = await supabase.from('etiqueta_itens').delete().eq('id', id); if (error) throw error },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-itens'] }); qc.invalidateQueries({ queryKey: ['etq-prazos'] }); showToast('Produto excluído.', 'ok') },
+    onError: (e: Error) => showToast('Erro: ' + e.message, 'err'),
+  })
 
   async function emitir(item: Item, modo: string, opts?: { copias?: number; quantidade?: string; unidade?: string; marca?: string; sif?: string; lote?: string; valOriginal?: string }) {
     if (!lojaId) { showToast('Selecione uma loja no topo para emitir.', 'err'); return }
@@ -93,8 +101,6 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
         <span className="sub">Clique em Imprimir no modo desejado (rápido) ou no produto para mais opções</span>
       </div>
 
-      {!lojaId && <div className="etq-banner">⚠️ Selecione uma <b>loja</b> no seletor do topo para poder emitir.</div>}
-
       <div className="etq-toolbar">
         <div className="etq-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
@@ -124,6 +130,9 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
                 <div className="etq-pc-head" onClick={() => canEmit && ps.length > 0 && setDrawer(it)} title={ps.length ? 'Mais opções' : ''}>
                   <span className="nm">{it.nome}</span>
                   <span className="gr">{it.grupo_id ? (grupoById[it.grupo_id] || '') : ''}</span>
+                  {canDel && <button className="etq-del" title="Excluir produto" onClick={(e) => { e.stopPropagation(); if (confirm(`Excluir o produto "${it.nome}"? As etiquetas já emitidas são mantidas.`)) excluir.mutate(it.id) }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                  </button>}
                 </div>
                 {ps.length === 0
                   ? <div className="etq-pc-nomodo">sem prazo cadastrado</div>
