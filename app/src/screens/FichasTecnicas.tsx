@@ -375,11 +375,11 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
   const markup = custo > 0 && pv > 0 ? pv / custo : null
   const margemRs = pv > 0 && custo > 0 ? pv - custo : null
   const margemPct = m.margem
-  const { txDel, txCar, txImp, txIfood, margMin } = params
+  const { txCar, txImp, txIfood, margMin } = params
+  // Salão (= também entrega própria): só cartão + imposto
   const margSalao = pv > 0 && custo > 0 ? ((pv - custo - pv * (txCar + txImp) / 100) / pv) * 100 : null
-  const margDeliv = pvDel > 0 && custo > 0 ? ((pvDel - custo - pvDel * (txDel + txImp) / 100) / pvDel) * 100 : null
-  // iFood: usa o preço dos apps (= preço delivery da ficha, ou salão se vazio) e desconta a comissão do iFood + imposto
-  const margIfood = pvDel > 0 && custo > 0 ? ((pvDel - custo - pvDel * (txIfood + txImp) / 100) / pvDel) * 100 : null
+  // Delivery = entrega por app (iFood): desconta a comissão do iFood + imposto, sobre o preço dos apps (preço delivery da ficha, ou salão se vazio)
+  const margDeliv = pvDel > 0 && custo > 0 ? ((pvDel - custo - pvDel * (txIfood + txImp) / 100) / pvDel) * 100 : null
   const corMarg = (v: number | null) => (v === null ? '#64748b' : v < margMin ? '#e11d48' : '#16a34a')
   const cmvColor = cmv === null ? '#64748b' : cmv <= 30 ? '#16a34a' : cmv <= 38 ? '#f59e0b' : '#e11d48'
 
@@ -469,7 +469,6 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
       <div className="fin-card"><div className="l">Markup</div><div className="v">{markup !== null ? markup.toFixed(2) + 'x' : '—'}</div></div>
       <div className="fin-card salao"><div className="l">Margem Salão</div><div className="v" style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</div></div>
       <div className="fin-card deliv"><div className="l">Margem Delivery</div><div className="v" style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</div></div>
-      <div className="fin-card ifood"><div className="l">Margem iFood</div><div className="v" style={{ color: corMarg(margIfood) }}>{margIfood !== null ? margIfood.toFixed(1) + '%' : '—'}</div></div>
     </div>
   )
 
@@ -609,16 +608,14 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
               <div className="dp-sec">Taxas aplicadas (parâmetros)</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Cartão (salão)</span><b>{txCar}%</b></div>
-                <div className="fin-row"><span>Delivery próprio</span><b>{txDel}%</b></div>
-                <div className="fin-row"><span>iFood</span><b>{txIfood}%</b></div>
+                <div className="fin-row"><span>Delivery (iFood)</span><b>{txIfood}%</b></div>
                 <div className="fin-row"><span>Imposto sobre venda</span><b>{txImp}%</b></div>
                 <div className="fin-row"><span>Margem mínima alvo</span><b>{margMin}%</b></div>
               </div>
               <div className="dp-sec">Resultado (margem real)</div>
               <div className="fin-rows">
-                <div className="fin-row"><span>Margem · salão</span><b style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</b></div>
-                <div className="fin-row"><span>Margem · delivery próprio</span><b style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</b></div>
-                <div className="fin-row"><span>Margem · iFood</span><b style={{ color: corMarg(margIfood) }}>{margIfood !== null ? margIfood.toFixed(1) + '%' : '—'}</b></div>
+                <div className="fin-row"><span>Margem · salão (e entrega própria)</span><b style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</b></div>
+                <div className="fin-row"><span>Margem · delivery (iFood)</span><b style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</b></div>
               </div>
             </div>
           </div>

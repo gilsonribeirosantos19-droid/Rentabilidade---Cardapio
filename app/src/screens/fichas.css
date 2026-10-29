@@ -172,8 +172,6 @@
 .fic-screen .fin-card.salao .l { color: #9a3412; }
 .fic-screen .fin-card.deliv { background: var(--danger-tint); border-color: var(--danger-border); }
 .fic-screen .fin-card.deliv .l { color: #991b1b; }
-.fic-screen .fin-card.ifood { background: #fff1f2; border-color: #fecdd3; }
-.fic-screen .fin-card.ifood .l { color: #be123c; }
 .fic-screen .fin-rows { display: flex; flex-direction: column; gap: 1px; background: #eef1f5; border: 1px solid #eef1f5; border-radius: 9px; overflow: hidden; }
 .fic-screen .fin-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: #fff; font-size: 13px; color: var(--n-600); }
 .fic-screen .fin-row b { font-family: 'DM Mono', monospace; color: var(--n-900); font-weight: 700; }
