@@ -53,6 +53,7 @@ export function Precificacao() {
   const [q, setQ] = useState('')
   const [fCat, setFCat] = useState('')
   const [fCmv, setFCmv] = useState('')
+  const [soPreco, setSoPreco] = useState(true)   // só com preço de venda (exclui rodízios sem preço próprio)
   const [cmvAlvo, setCmvAlvo] = useState('30')
   const [canal, setCanal] = useState<'salao' | 'ifood'>('ifood')
   const [dDv, setDDv] = useState('17')
@@ -143,12 +144,13 @@ export function Precificacao() {
   const vis = useMemo(() => {
     const qq = norm(q)
     return rows.filter((r) => {
+      if (soPreco && !(r.precoAtual > 0)) return false
       if (qq && !norm(r.nome).includes(qq)) return false
       if (fCat && r.cat !== fCat) return false
       if (fCmv) { const c = tab === 'trad' ? r.tCmv : r.cmv; if (!r.precoAtual && tab === 'cmv') return false; if (cls(c) !== fCmv) return false }
       return true
     })
-  }, [rows, q, fCat, fCmv, tab])
+  }, [rows, q, fCat, fCmv, soPreco, tab])
 
   const setTrad = (id: string, k: 'dv' | 'df' | 'ml', v: number, row: (typeof rows)[number]) =>
     setTradById((p) => ({ ...p, [id]: { dv: row.tp.dv, df: row.tp.df, ml: row.tp.ml, [k]: v } }))
@@ -191,6 +193,7 @@ export function Precificacao() {
         <div className="fld"><label>Buscar produto</label><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome do produto..." style={{ width: 200 }} /></div>
         <div className="fld"><label>Categoria</label><select value={fCat} onChange={(e) => setFCat(e.target.value)} style={{ width: 160 }}><option value="">Todas categorias</option>{categorias.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
         <div className="fld"><label>CMV</label><select value={fCmv} onChange={(e) => setFCmv(e.target.value)} style={{ width: 160 }}><option value="">Todos</option><option value="g">🟢 Bom (≤30%)</option><option value="a">🟡 Atenção (≤38%)</option><option value="r">🔴 Crítico (&gt;38%)</option></select></div>
+        <label className="prec-check" title="Esconde produtos sem preço (ex.: rodízios que apontam pro RP)"><input type="checkbox" checked={soPreco} onChange={(e) => setSoPreco(e.target.checked)} /> Somente com preço de venda</label>
         <div className="prec-spacer" />
         <div className="prec-loja">Custo da loja: <b>{lojaNome}</b></div>
         <div className="prec-count">{vis.length} de {base.length} produtos</div>

@@ -16,6 +16,8 @@
 .prec-bar .fld input,.prec-bar .fld select{height:34px;border:1px solid var(--prec-bd);border-radius:8px;padding:0 9px;font-size:13.5px;font-family:inherit;color:var(--prec-t1);background:#fff}
 .prec-bar .fld input:focus,.prec-bar .fld select:focus{outline:none;border-color:var(--prec-orange);box-shadow:0 0 0 3px var(--prec-orange-tint)}
 .prec-spacer{flex:1 1 auto}
+.prec-check{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--prec-t2);cursor:pointer;height:34px;user-select:none}
+.prec-check input{width:16px;height:16px;accent-color:var(--prec-orange);cursor:pointer}
 .prec-loja{font-size:12px;color:var(--prec-t3);align-self:center}.prec-loja b{color:var(--prec-t2)}
 .prec-count{font-size:12px;color:var(--prec-t3);align-self:center}
 
