@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
-import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
-import { useToastErr } from '../lib/toast'
 import { custoFichaPorcao, type CostCtx, type FichasByProduto, type FichaItem } from '../lib/cost'
 import { brlCur as brl } from '../lib/format'
 import './precificacao.css'
@@ -40,15 +38,11 @@ const to90 = (v: number) => {
 
 export function Precificacao() {
   const { tenantId } = useAuth()
-  const { podeEditar } = usePerms()
-  const canEdit = podeEditar('gestao/precificacao')
   const { lojas, lojaId } = useLoja()
   // custo por loja: respeita a loja global selecionada. Em "Todas" → MÉDIA entre as lojas.
   const isTodas = !lojaId
   const custoLoja = isTodas ? '__all__' : lojaId
   const lojaNome = isTodas ? 'Todas (média)' : (lojas.find((l) => l.id === lojaId)?.nome || '—')
-  const qc = useQueryClient()
-  const { toast, showToast } = useToastErr(2600, 7000)
 
   const [tab, setTab] = useState<'cmv' | 'trad'>('cmv')
   const [q, setQ] = useState('')
@@ -172,27 +166,6 @@ export function Precificacao() {
   }
   const arredondar = () => setNovoById((p) => { const n = { ...p }; vis.forEach((r) => { n[r.id] = to90(r.novo) }); return n })
 
-  const salvarMut = useMutation({
-    mutationFn: async (changes: { id: string; preco: number }[]) => {
-      for (const c of changes) { const { error } = await supabase.from('fichas_tecnicas').update({ preco_venda: c.preco }).eq('id', c.id); if (error) throw error }
-      return changes.length
-    },
-    onSuccess: (n) => { qc.invalidateQueries({ queryKey: ['fichas'] }); setNovoById({}); setTradById({}); showToast(`${n} preço(s) salvos nas fichas.`) },
-    onError: (e: Error) => { console.error('[Precificacao]', e); showToast('Erro ao salvar: ' + e.message, true) },
-  })
-  const salvar = () => {
-    const alvo = tab === 'cmv'
-      ? vis.filter((r) => r.novo > 0 && Math.abs(r.novo - r.precoAtual) > 0.001).map((r) => ({ id: r.id, preco: +r.novo.toFixed(2) }))
-      : vis.filter((r) => r.tOk && r.tPreco > 0 && Math.abs(r.tPreco - r.precoAtual) > 0.001).map((r) => ({ id: r.id, preco: +r.tPreco.toFixed(2) }))
-    if (!alvo.length) { showToast('Nenhum preço alterado pra salvar.'); return }
-    if (!window.confirm(`Salvar ${alvo.length} novo(s) preço(s) de venda nas fichas? Isso altera o preço real (CMV, Engenharia etc.).`)) return
-    salvarMut.mutate(alvo)
-  }
-
-  const alterados = tab === 'cmv'
-    ? vis.filter((r) => r.novo > 0 && Math.abs(r.novo - r.precoAtual) > 0.001).length
-    : vis.filter((r) => r.tOk && r.tPreco > 0 && Math.abs(r.tPreco - r.precoAtual) > 0.001).length
-
   return (
     <div className="prec-screen">
       {/* filtros comuns */}
@@ -229,7 +202,7 @@ export function Precificacao() {
           </>
         )}
         <div className="prec-spacer" />
-        {canEdit && <button className="prec-btn pri" disabled={salvarMut.isPending || !alterados} onClick={salvar}>{salvarMut.isPending ? 'Salvando…' : `Salvar preços${alterados ? ' (' + alterados + ')' : ''}`}</button>}
+        <span className="prec-simtag">🔒 Simulação — não altera preços</span>
       </div>
 
       <div className="prec-hint">
@@ -301,8 +274,6 @@ export function Precificacao() {
         <span>· Margem R$ = preço − custo · Markup = preço ÷ custo · Margem mínima alvo: {P.margMin}%</span>
         {tab === 'trad' && <span>· linha vermelha = DV+DF+ML ≥ 100% (impossível)</span>}
       </div>
-
-      {toast && <div className={'prec-toast' + (toast.err ? ' err' : '')}>{toast.msg}</div>}
     </div>
   )
 }

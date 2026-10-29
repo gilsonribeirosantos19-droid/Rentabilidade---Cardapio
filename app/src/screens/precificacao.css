@@ -25,6 +25,7 @@
 .prec-btn.pri{background:var(--prec-nav);color:#fff}.prec-btn.pri:hover{background:#0f2a52}
 .prec-btn.pri:disabled{opacity:.5;cursor:not-allowed}
 .prec-btn.ghost{background:#fff;border:1px solid var(--prec-bd);color:var(--prec-t2)}.prec-btn.ghost:hover{border-color:var(--prec-orange);color:var(--prec-orange-d)}
+.prec-simtag{align-self:center;font-size:12px;font-weight:600;color:#1e6b4f;background:#eafaf3;border:1px solid #bbf0d4;border-radius:20px;padding:5px 12px}
 
 .prec-tabs{display:flex;gap:4px;margin:18px 0 0;border-bottom:1px solid var(--prec-bd)}
 .prec-tab{appearance:none;border:0;background:none;padding:11px 16px 12px;font-size:14px;font-weight:600;color:var(--prec-t3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
