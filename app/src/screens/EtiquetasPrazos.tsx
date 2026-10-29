@@ -17,7 +17,7 @@ type Prazo = { id: string; item_id: string; modo: string; prazo_horas: number; t
 type Cat = { id: string; nome: string }
 
 const MODOS: [string, string][] = [
-  ['resfriado', 'Resfriado'], ['congelado', 'Congelado'], ['ambiente', 'Temperatura Ambiente'],
+  ['resfriado', 'Refrigerado'], ['congelado', 'Congelado'], ['ambiente', 'Temperatura Ambiente'],
   ['quente', 'Quente'], ['descongelado', 'Descongelado'], ['aberto', 'Aberto'],
 ]
 const MODO_LABEL = Object.fromEntries(MODOS) as Record<string, string>
