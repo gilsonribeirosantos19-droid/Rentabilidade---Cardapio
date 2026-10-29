@@ -16,7 +16,7 @@ type Ficha = {
   preco_delivery?: number | null; observacoes?: string | null; created_at?: string; atualizado_em?: string
   itens_ficha?: Item[]
 }
-type PrecoParams = { txDel: number; txCar: number; txImp: number; margMin: number }
+type PrecoParams = { txDel: number; txCar: number; txImp: number; txIfood: number; margMin: number }
 type Insumo = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string; codigo_interno?: number }
 type ProdutoMin = { id: string; nome?: string; grupo?: string; categoria?: string; situacao?: string; ativo?: boolean; codigo_pdv?: string; preco_venda?: number | null }
 type Saldo = { insumo_id: string; custo_medio?: number; loja_id?: string }
@@ -135,10 +135,10 @@ export function FichasTecnicas() {
     queryFn: async () => {
       const { data } = await supabase.from('parametros').select('chave,valor').eq('tenant_id', tenantId).eq('modulo', 'precificacao')
       const mp = Object.fromEntries((data ?? []).map((r: { chave: string; valor: string }) => [r.chave, parseFloat(r.valor)]))
-      return { txDel: mp.taxa_delivery ?? 27, txCar: mp.taxa_cartao ?? 3, txImp: mp.imposto ?? 6, margMin: mp.margem_minima ?? 20 } as PrecoParams
+      return { txDel: mp.taxa_delivery ?? 27, txCar: mp.taxa_cartao ?? 3, txImp: mp.imposto ?? 6, txIfood: mp.taxa_ifood ?? 27, margMin: mp.margem_minima ?? 20 } as PrecoParams
     },
   })
-  const params: PrecoParams = precoParams ?? { txDel: 27, txCar: 3, txImp: 6, margMin: 20 }
+  const params: PrecoParams = precoParams ?? { txDel: 27, txCar: 3, txImp: 6, txIfood: 27, margMin: 20 }
 
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])), [insumos])
   const produtoById = useMemo(() => Object.fromEntries(produtos.map((p) => [p.id, p])) as Record<string, ProdutoMin>, [produtos])
@@ -375,9 +375,11 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
   const markup = custo > 0 && pv > 0 ? pv / custo : null
   const margemRs = pv > 0 && custo > 0 ? pv - custo : null
   const margemPct = m.margem
-  const { txDel, txCar, txImp, margMin } = params
+  const { txDel, txCar, txImp, txIfood, margMin } = params
   const margSalao = pv > 0 && custo > 0 ? ((pv - custo - pv * (txCar + txImp) / 100) / pv) * 100 : null
   const margDeliv = pvDel > 0 && custo > 0 ? ((pvDel - custo - pvDel * (txDel + txImp) / 100) / pvDel) * 100 : null
+  // iFood: usa o preço dos apps (= preço delivery da ficha, ou salão se vazio) e desconta a comissão do iFood + imposto
+  const margIfood = pvDel > 0 && custo > 0 ? ((pvDel - custo - pvDel * (txIfood + txImp) / 100) / pvDel) * 100 : null
   const corMarg = (v: number | null) => (v === null ? '#64748b' : v < margMin ? '#e11d48' : '#16a34a')
   const cmvColor = cmv === null ? '#64748b' : cmv <= 30 ? '#16a34a' : cmv <= 38 ? '#f59e0b' : '#e11d48'
 
@@ -467,6 +469,7 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
       <div className="fin-card"><div className="l">Markup</div><div className="v">{markup !== null ? markup.toFixed(2) + 'x' : '—'}</div></div>
       <div className="fin-card salao"><div className="l">Margem Salão</div><div className="v" style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</div></div>
       <div className="fin-card deliv"><div className="l">Margem Delivery</div><div className="v" style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</div></div>
+      <div className="fin-card ifood"><div className="l">Margem iFood</div><div className="v" style={{ color: corMarg(margIfood) }}>{margIfood !== null ? margIfood.toFixed(1) + '%' : '—'}</div></div>
     </div>
   )
 
@@ -606,14 +609,16 @@ function VerFicha({ ficha, m, st, insMap, custoItem, custoBase, processadoIds, p
               <div className="dp-sec">Taxas aplicadas (parâmetros)</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Cartão (salão)</span><b>{txCar}%</b></div>
-                <div className="fin-row"><span>Delivery / iFood</span><b>{txDel}%</b></div>
+                <div className="fin-row"><span>Delivery próprio</span><b>{txDel}%</b></div>
+                <div className="fin-row"><span>iFood</span><b>{txIfood}%</b></div>
                 <div className="fin-row"><span>Imposto sobre venda</span><b>{txImp}%</b></div>
                 <div className="fin-row"><span>Margem mínima alvo</span><b>{margMin}%</b></div>
               </div>
               <div className="dp-sec">Resultado (margem real)</div>
               <div className="fin-rows">
                 <div className="fin-row"><span>Margem · salão</span><b style={{ color: corMarg(margSalao) }}>{margSalao !== null ? margSalao.toFixed(1) + '%' : '—'}</b></div>
-                <div className="fin-row"><span>Margem · delivery</span><b style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</b></div>
+                <div className="fin-row"><span>Margem · delivery próprio</span><b style={{ color: corMarg(margDeliv) }}>{margDeliv !== null ? margDeliv.toFixed(1) + '%' : '—'}</b></div>
+                <div className="fin-row"><span>Margem · iFood</span><b style={{ color: corMarg(margIfood) }}>{margIfood !== null ? margIfood.toFixed(1) + '%' : '—'}</b></div>
               </div>
             </div>
           </div>
