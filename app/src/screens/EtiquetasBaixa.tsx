@@ -13,7 +13,7 @@ type Etiqueta = {
 }
 
 const MODO_LABEL: Record<string, string> = {
-  resfriado: 'Resfriado', congelado: 'Congelado', ambiente: 'Temperatura Ambiente',
+  resfriado: 'Refrigerado', congelado: 'Congelado', ambiente: 'Temperatura Ambiente',
   quente: 'Quente', descongelado: 'Descongelado', aberto: 'Aberto',
 }
 const MOTIVOS: [string, string][] = [

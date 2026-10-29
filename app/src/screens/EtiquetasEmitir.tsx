@@ -16,7 +16,7 @@ const getResp = () => { try { return localStorage.getItem('etq_resp_nome') || ''
 const setRespLS = (v: string) => { try { localStorage.setItem('etq_resp_nome', v) } catch { /* ignore */ } }
 
 const MODO_LABEL: Record<string, string> = {
-  resfriado: 'Resfriado', congelado: 'Congelado', ambiente: 'Temperatura Ambiente',
+  resfriado: 'Refrigerado', congelado: 'Congelado', ambiente: 'Temperatura Ambiente',
   quente: 'Quente', descongelado: 'Descongelado', aberto: 'Aberto',
 }
 const fmtPrazo = (h: number) => { const d = Math.floor(h / 24), r = h % 24; return [d ? `${d}d` : '', r ? `${r}h` : ''].filter(Boolean).join(' ') || '0h' }
@@ -113,7 +113,6 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
           {respNomes.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
       </div>
-      {!resp && respNomes.length > 0 && <div className="etq-banner" style={{ background: '#fff7ed', borderColor: '#fed7aa', color: '#9a3412' }}>Dica: escolha o <b>responsável</b> acima para preencher o campo RESP da etiqueta.</div>}
 
       {isLoading ? <div className="etq-empty">Carregando…</div>
         : rows.length === 0 ? <div className="etq-empty">Nenhum produto. Cadastre em “Prazos por produto”.</div>

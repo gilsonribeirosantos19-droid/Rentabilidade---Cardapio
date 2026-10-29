@@ -11,7 +11,7 @@ type Row = {
 }
 
 const MODO_LABEL: Record<string, string> = {
-  resfriado: 'Resfriado', congelado: 'Congelado', ambiente: 'Temp. Ambiente',
+  resfriado: 'Refrigerado', congelado: 'Congelado', ambiente: 'Temp. Ambiente',
   quente: 'Quente', descongelado: 'Descongelado', aberto: 'Aberto',
 }
 const fmtDT = (iso?: string | null) => iso ? new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Manaus', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''
