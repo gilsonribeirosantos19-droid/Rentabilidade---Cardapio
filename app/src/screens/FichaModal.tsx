@@ -15,7 +15,8 @@ type FichaIn = {
 }
 
 const umOf = (i?: Ins) => (i ? i.unidade_medida || i.unidade_compra || 'g' : 'g')
-const isW = (um: string) => um === 'kg' || um === 'litro'
+// unidades "grandes" (entrada em kg/L, converte p/ g/ml ×1000). Aceita abreviações (l, L) e ignora caixa.
+const isW = (um: string) => { const u = (um || '').trim().toLowerCase(); return u === 'kg' || u === 'litro' || u === 'l' }
 const nq = (s?: string) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isNaN(n) ? 0 : n }
 // exibe a quantidade com casas claras: peso/volume (kg/L) SEMPRE com 3 casas (0,200) e vírgula BR
 const showQ = (s: string | undefined, weight: boolean) => nq(s).toLocaleString('pt-BR', weight ? { minimumFractionDigits: 3, maximumFractionDigits: 3 } : { maximumFractionDigits: 3 })
