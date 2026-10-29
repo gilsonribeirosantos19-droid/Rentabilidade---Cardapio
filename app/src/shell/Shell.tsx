@@ -41,6 +41,7 @@ import { Compras } from '../screens/Compras'
 import { Divergencias } from '../screens/Divergencias'
 import { Rendimentos } from '../screens/Rendimentos'
 import { CmvTeoricoReal } from '../screens/CmvTeoricoReal'
+import { Precificacao } from '../screens/Precificacao'
 import { Fechamento } from '../screens/Fechamento'
 import { Dre } from '../screens/Dre'
 import { DreOrcamento } from '../screens/DreOrcamento'
@@ -136,6 +137,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'gestao/divergencias') return <Divergencias />
   if (k === 'gestao/rendimentos') return <Rendimentos />
   if (k === 'gestao/cmv') return <CmvTeoricoReal />
+  if (k === 'gestao/precificacao') return <Precificacao />
   if (k === 'gestao/fechamento') return <Fechamento />
   if (k === 'gestao/dre') return <Dre />
   if (k === 'gestao/dre-orcamento') return <DreOrcamento />
