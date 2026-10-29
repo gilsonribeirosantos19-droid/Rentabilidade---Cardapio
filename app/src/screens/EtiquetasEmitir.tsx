@@ -29,6 +29,7 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
   const { toast, showToast } = useToastTipo(2800)
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
+  const [fModo, setFModo] = useState('')
   const [resp, setResp] = useState(getResp())
   const [drawer, setDrawer] = useState<Item | null>(null)
   const [printData, setPrintData] = useState<PrintData>(null)
@@ -38,15 +39,17 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
   const { data: itens = [], isLoading } = useQuery({ queryKey: ['etq-itens', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Item>((f, t) => supabase.from('etiqueta_itens').select('id,nome,grupo_id').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: prazos = [] } = useQuery({ queryKey: ['etq-prazos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Prazo>((f, t) => supabase.from('etiqueta_prazos').select('item_id,modo,prazo_horas,temperatura').eq('tenant_id', tenantId).order('item_id').range(f, t)) })
   const { data: lojasFull = [] } = useQuery({ queryKey: ['etq-lojas-full', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId); return (data ?? []) as LojaFull[] } })
-  const { data: resps = [] } = useQuery({ queryKey: ['etq-resps', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Resp>((f, t) => supabase.from('etiqueta_responsaveis').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  const { data: resps = [] } = useQuery({ queryKey: ['etq-resps', tenantId, 'ativos'], enabled: !!tenantId, queryFn: () => fetchAll<Resp>((f, t) => supabase.from('etiqueta_responsaveis').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
 
   const grupoById = useMemo(() => Object.fromEntries(grupos.map((g) => [g.id, g.nome])) as Record<string, string>, [grupos])
   const prazosByItem = useMemo(() => { const m: Record<string, Prazo[]> = {}; prazos.forEach((p) => { (m[p.item_id] ||= []).push(p) }); return m }, [prazos])
+  const modosDistintos = useMemo(() => [...new Set(prazos.map((p) => p.modo))].sort(), [prazos])
 
   const rows = useMemo(() => {
     const q = busca.trim().toLowerCase()
-    return itens.filter((it) => (!q || it.nome.toLowerCase().includes(q)) && (!fGrupo || it.grupo_id === fGrupo))
-  }, [itens, busca, fGrupo])
+    return itens.filter((it) => (!q || it.nome.toLowerCase().includes(q)) && (!fGrupo || it.grupo_id === fGrupo)
+      && (!fModo || (prazosByItem[it.id] || []).some((p) => p.modo === fModo)))
+  }, [itens, busca, fGrupo, fModo, prazosByItem])
 
   async function emitir(item: Item, modo: string, opts?: { copias?: number; quantidade?: string; unidade?: string; marca?: string; sif?: string; lote?: string; valOriginal?: string }) {
     if (!lojaId) { showToast('Selecione uma loja no topo para emitir.', 'err'); return }
@@ -93,6 +96,10 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
           <option value="">Todos os grupos</option>
           {grupos.map((g) => <option key={g.id} value={g.id}>{g.nome}</option>)}
         </select>
+        <select className="etq-sel" value={fModo} onChange={(e) => setFModo(e.target.value)}>
+          <option value="">Todos os estados</option>
+          {modosDistintos.map((m) => <option key={m} value={m}>{MODO_LABEL[m] || m}</option>)}
+        </select>
         <select className="etq-sel" value={resp} onChange={(e) => { setResp(e.target.value); setRespLS(e.target.value) }} title="Responsável que vai no RESP: da etiqueta">
           <option value="">Responsável: —</option>
           {resps.map((r) => <option key={r.id} value={r.nome}>{r.nome}</option>)}
@@ -104,7 +111,7 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
         : rows.length === 0 ? <div className="etq-empty">Nenhum produto. Cadastre em “Prazos por produto”.</div>
         : <div className="etq-grid">
           {rows.map((it) => {
-            const ps = (prazosByItem[it.id] || []).slice().sort((a, b) => a.prazo_horas - b.prazo_horas)
+            const ps = (prazosByItem[it.id] || []).filter((p) => !fModo || p.modo === fModo).slice().sort((a, b) => a.prazo_horas - b.prazo_horas)
             return (
               <div className="etq-pcard" key={it.id}>
                 <div className="etq-pc-head" onClick={() => canEmit && ps.length > 0 && setDrawer(it)} title={ps.length ? 'Mais opções' : ''}>
