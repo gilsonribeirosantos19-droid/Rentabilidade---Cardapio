@@ -145,7 +145,7 @@
 
 /* ---- impressão térmica 60x60 ---- */
 .etq-print { display: none; }
-.etq-plabel { width: 60mm; height: 40mm; box-sizing: border-box; padding: 2mm 7mm 2mm 1mm; font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif; color: #000; background: #fff; display: flex; flex-direction: column; line-height: 1.22; overflow: hidden; }
+.etq-plabel { width: 60mm; height: 40mm; box-sizing: border-box; padding: 2mm 7mm 2mm 0; font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif; color: #000; background: #fff; display: flex; flex-direction: column; line-height: 1.22; overflow: hidden; }
 .etq-plabel .pl-top { display: flex; gap: 2mm; flex: 1; min-height: 0; }
 .etq-plabel .pl-nome { font-size: 13pt; font-weight: 700; text-transform: uppercase; text-align: center; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .etq-plabel .pl-modo { font-size: 8pt; font-weight: 700; border-bottom: 1px solid #000; padding-bottom: .6mm; margin-bottom: 1mm; }
@@ -162,7 +162,7 @@
   html, body { background: #fff !important; }
   body * { visibility: hidden !important; }
   #etq-print, #etq-print * { visibility: visible !important; }
-  #etq-print { display: block !important; position: absolute; left: 0; top: 0; background: #fff; }
+  #etq-print { display: block !important; position: absolute; left: -2mm; top: 0; background: #fff; }
   .etq-plabel { page-break-after: always; background: #fff !important; }
   @page { size: 60mm 40mm; margin: 0; }
 }
