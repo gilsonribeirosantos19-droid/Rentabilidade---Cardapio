@@ -111,8 +111,9 @@ export function Precificacao() {
         const custo = custoFichaPorcao((f.itens_ficha || []) as FichaItem[], f.rendimento_porcoes || 1, custoLoja, costCtx, fichasByProduto)
         const prod = f.produto_id ? produtoById[f.produto_id] : undefined
         const precoAtual = Number(f.preco_venda) || Number(prod?.preco_venda) || 0
-        // categoria: usa a do PRODUTO (fonte confiável/consistente); a da ficha às vezes está torta
-        const cat = prod?.categoria || prod?.grupo || f.categoria || '—'
+        // categoria: usa o GRUPO do produto (campo completo e correto — ~20 categorias);
+        // a categoria da ficha às vezes está torta e a categoria do produto é genérica/mal preenchida
+        const cat = prod?.grupo || f.categoria || '—'
         return { id: f.id, nome: f.nome || '—', cat, custo, precoAtual }
       })
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
