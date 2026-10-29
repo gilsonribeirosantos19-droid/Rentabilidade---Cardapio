@@ -64,7 +64,7 @@
 
 /* ---- Emitir: grade de cards ---- */
 .etq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-.etq-pcard { background: #fff; border: 1px solid #cdd7e6; border-radius: 11px; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 42, 82, .07); transition: box-shadow .12s, border-color .12s; display: flex; flex-direction: column; min-height: 118px; }
+.etq-pcard { background: #fff; border: 1px solid #cdd7e6; border-radius: 11px; overflow: hidden; box-shadow: 0 1px 3px rgba(15, 42, 82, .07); transition: box-shadow .12s, border-color .12s; display: flex; flex-direction: column; min-height: 150px; }
 .etq-pcard:hover { box-shadow: 0 8px 22px rgba(15, 42, 82, .13); border-color: #9fb2d0; }
 .etq-pc-head { padding: 11px 13px; border-bottom: 1.5px solid #dbe3ef; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fafbfe; }
 .etq-pc-head:hover { background: #eef3fb; }
