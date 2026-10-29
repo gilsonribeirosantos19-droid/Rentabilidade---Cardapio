@@ -72,7 +72,7 @@ function Responsaveis() {
 
   return (
     <>
-      <div style={{ fontSize: 12.5, color: '#64748b', marginBottom: 2 }}>Pessoas que aparecem no campo <b>RESP:</b> da etiqueta. Na tela de emitir, escolha o responsável antes de imprimir.</div>
+      <div style={{ fontSize: 12.5, color: '#64748b', marginBottom: 2 }}>Pessoas que aparecem no campo <b>RESP:</b> da etiqueta. Na tela de emitir, escolha o responsável antes de imprimir. <b>Os operadores ativos já aparecem automaticamente</b> — cadastre aqui só quem não é operador.</div>
       {canEdit && <div className="etq-toolbar">
         <div className="etq-search"><input placeholder="Nome do responsável..." value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') add.mutate(novo) }} /></div>
         <button className="etq-btn etq-btn-pri" disabled={add.isPending || !novo.trim()} onClick={() => add.mutate(novo)}>+ Cadastrar</button>
