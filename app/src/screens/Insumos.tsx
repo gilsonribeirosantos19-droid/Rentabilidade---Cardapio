@@ -140,7 +140,7 @@ export function Insumos() {
   const opts = useMemo(() => {
     const cad = (tipo: string) => clsf.filter((c) => c.tipo === tipo).map((c) => c.nome)
     return {
-      tipos: uniq(lista.map((i) => i.tipo_item)), familias: uniq([...cad('familia'), ...lista.map((i) => i.familia)]),
+      tipos: uniq([...cad('tipo_item'), ...lista.map((i) => i.tipo_item)]), familias: uniq([...cad('familia'), ...lista.map((i) => i.familia)]),
       grupos: uniq([...cad('grupo'), ...lista.map((i) => i.categoria)]), subgrupos: uniq([...cad('subgrupo'), ...lista.map((i) => i.subgrupo)]),
       unidades: uniq(lista.map((i) => i.unidade_medida)),
     }
