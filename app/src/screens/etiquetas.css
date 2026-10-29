@@ -148,7 +148,7 @@
 .etq-plabel { width: 60mm; height: 40mm; box-sizing: border-box; padding: 2mm 7mm 2mm 1.5mm; font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif; color: #000; background: #fff; display: flex; flex-direction: column; line-height: 1.22; overflow: hidden; }
 .etq-plabel .pl-top { display: flex; gap: 2mm; flex: 1; min-height: 0; }
 .etq-plabel .pl-nome { font-size: 10pt; font-weight: 700; text-transform: uppercase; text-align: center; line-height: 1.05; margin-bottom: 1.2mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.etq-plabel .pl-modo { font-size: 8pt; font-weight: 700; border-bottom: 1px solid #000; padding-bottom: .6mm; margin-bottom: 1mm; }
+.etq-plabel .pl-modo { font-size: 6.5pt; font-weight: 700; border-bottom: 1px solid #000; padding-bottom: .6mm; margin-bottom: 1mm; }
 .etq-plabel .pl-dates { display: flex; flex-direction: column; gap: .9mm; }
 .etq-plabel .pl-drow { display: flex; justify-content: flex-start; align-items: baseline; gap: 1.5mm; font-size: 8.5pt; }
 .etq-plabel .pl-drow span { font-weight: 700; flex: 0 0 23mm; }
