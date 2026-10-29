@@ -37,7 +37,6 @@ type Form = Partial<Produto>
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const TIPO_LABEL: Record<string, string> = { produto_acabado: 'Produto acabado', revenda: 'Mercadoria p/ revenda', combo: 'Combo', outro: 'Outro' }
-const uniq = (a: (string | undefined)[]) => [...new Set(a.filter(Boolean) as string[])].sort()
 // dedupe ignorando MAIÚSCULA/minúscula/acento; prefere a versão que NÃO é toda maiúscula (Title Case
 // fica mais legível). Evita "KARAAGE" e "Karaage" aparecerem repetidos no filtro (import Saipos vem maiúsculo).
 const uniqCI = (a: (string | undefined)[]) => {
@@ -94,7 +93,7 @@ export function Produtos() {
       grupos: uniqCI([...cad('grupo'), ...lista.map((p) => p.grupo || p.categoria)]),
       familias: uniqCI([...cad('familia'), ...lista.map((p) => p.familia)]),
       subgrupos: uniqCI([...cad('subgrupo'), ...lista.map((p) => p.subgrupo)]),
-      tipos: uniq(lista.map((p) => TIPO_LABEL[p.tipo_item || ''] || p.tipo_item || '')),
+      tipos: uniqCI([...cad('tipo_item'), ...lista.map((p) => TIPO_LABEL[p.tipo_item || ''] || p.tipo_item)]),
     }
   }, [lista, clsf])
 
@@ -201,7 +200,7 @@ export function Produtos() {
 
 function ProdutoModal({ inicial, opts, saving, canEdit = true, onClose, onSave }: {
   inicial: Form
-  opts: { grupos: string[]; familias: string[]; subgrupos: string[] }
+  opts: { grupos: string[]; familias: string[]; subgrupos: string[]; tipos: string[] }
   saving: boolean
   canEdit?: boolean
   onClose: () => void
@@ -225,10 +224,7 @@ function ProdutoModal({ inicial, opts, saving, canEdit = true, onClose, onSave }
           <div className="form-row cols-3">
             <div className="form-group"><label>Código Saipos</label><input value={form.codigo_pdv || ''} onChange={(e) => set('codigo_pdv', e.target.value)} placeholder="Ex: 27816895" /></div>
             <div className="form-group"><label>Tipo do item</label>
-              <select value={form.tipo_item || ''} onChange={(e) => set('tipo_item', e.target.value)}>
-                <option value="">Selecione...</option>
-                {Object.entries(TIPO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
+              <SearchSelect value={TIPO_LABEL[form.tipo_item || ''] || form.tipo_item || ''} onChange={(v) => set('tipo_item', v)} options={opts.tipos} placeholder="Selecione..." />
             </div>
             <div className="form-group"><label>Situação</label>
               <select value={form.situacao || 'ativo'} onChange={(e) => set('situacao', e.target.value)}>
