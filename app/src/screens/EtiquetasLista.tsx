@@ -123,7 +123,7 @@ export function EtiquetasLista({ lojaId }: { lojaId: string | null }) {
                   <tr key={r.id}>
                     <td style={{ fontFamily: "'Roboto Condensed', monospace", fontWeight: 600 }}>{r.codigo}</td>
                     <td>{r.nome_snap}</td>
-                    <td style={{ color: '#64748b' }}>{r.grupo_snap || '—'}</td>
+                    <td style={{ color: '#64748b', textTransform: 'lowercase' }}>{r.grupo_snap || '—'}</td>
                     <td style={{ color: '#64748b' }}>{MODO_LABEL[r.modo] || r.modo}</td>
                     <td style={{ color: '#64748b' }}>{fmtDT(r.manipulacao_em)}</td>
                     <td style={{ color: s.cls === 'vd' ? '#be123c' : s.cls === 'venc' ? '#b45309' : '#1e293b' }}>{fmtDT(r.validade_em)}</td>
