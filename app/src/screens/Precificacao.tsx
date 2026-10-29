@@ -43,9 +43,10 @@ export function Precificacao() {
   const { podeEditar } = usePerms()
   const canEdit = podeEditar('gestao/precificacao')
   const { lojas, lojaId } = useLoja()
-  // custo por loja: usa a loja global; em "Todas" cai na Ponta Negra (igual Ficha Técnica)
-  const lojaCusto = useMemo(() => lojaId || (lojas.find((l) => (l.nome || '').toLowerCase().includes('ponta negra'))?.id ?? ''), [lojaId, lojas])
-  const lojaNome = useMemo(() => lojas.find((l) => l.id === lojaCusto)?.nome || '—', [lojas, lojaCusto])
+  // custo por loja: respeita a loja global selecionada. Em "Todas" → MÉDIA entre as lojas.
+  const isTodas = !lojaId
+  const custoLoja = isTodas ? '__all__' : lojaId
+  const lojaNome = isTodas ? 'Todas (média)' : (lojas.find((l) => l.id === lojaId)?.nome || '—')
   const qc = useQueryClient()
   const { toast, showToast } = useToastErr(2600, 7000)
 
@@ -99,20 +100,26 @@ export function Precificacao() {
     fichas.forEach((f) => { if (f.produto_id) m.set(f.produto_id, { itens: f.itens_ficha || [], rendimento_porcoes: f.rendimento_porcoes }) })
     return m as FichasByProduto
   }, [fichas])
-  const costCtx: CostCtx = useMemo(() => ({ saldos, insumos, strictLoja: true }), [saldos, insumos])
+  // em "Todas": média do custo médio de cada insumo entre as lojas (onde tem custo > 0)
+  const avgSaldos = useMemo(() => {
+    const acc = new Map<string, { sum: number; n: number }>()
+    saldos.forEach((s) => { const cm = Number(s.custo_medio) || 0; if (cm > 0) { const a = acc.get(s.insumo_id) || { sum: 0, n: 0 }; a.sum += cm; a.n++; acc.set(s.insumo_id, a) } })
+    return [...acc.entries()].map(([insumo_id, a]) => ({ insumo_id, custo_medio: a.sum / a.n, loja_id: '__all__' }))
+  }, [saldos])
+  const costCtx: CostCtx = useMemo(() => ({ saldos: isTodas ? avgSaldos : saldos, insumos, strictLoja: true }), [isTodas, avgSaldos, saldos, insumos])
 
   // base: fichas vendáveis (vinculadas a um produto) e não arquivadas — custo e preço atual
   const base = useMemo(() => {
     return fichas
       .filter((f) => f.produto_id && (f.status || 'ativa') !== 'arquivada')
       .map((f) => {
-        const custo = custoFichaPorcao((f.itens_ficha || []) as FichaItem[], f.rendimento_porcoes || 1, lojaCusto || null, costCtx, fichasByProduto)
+        const custo = custoFichaPorcao((f.itens_ficha || []) as FichaItem[], f.rendimento_porcoes || 1, custoLoja, costCtx, fichasByProduto)
         const prod = f.produto_id ? produtoById[f.produto_id] : undefined
         const precoAtual = Number(f.preco_venda) || Number(prod?.preco_venda) || 0
         return { id: f.id, nome: f.nome || '—', cat: f.categoria || prod?.grupo || '—', custo, precoAtual }
       })
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-  }, [fichas, produtoById, costCtx, fichasByProduto, lojaCusto])
+  }, [fichas, produtoById, costCtx, fichasByProduto, custoLoja])
 
   const categorias = useMemo(() => uniq(base.map((r) => r.cat)), [base])
 
