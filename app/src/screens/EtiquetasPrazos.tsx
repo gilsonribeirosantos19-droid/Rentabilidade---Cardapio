@@ -180,7 +180,7 @@ export function EtiquetasPrazos() {
                 return (
                   <tr key={it.id} onClick={() => canEdit && abrirEdit(it)}>
                     <td>{it.nome}</td>
-                    <td style={{ color: '#64748b' }}>{it.grupo_id ? (grupoById[it.grupo_id] || '—') : '—'}</td>
+                    <td style={{ color: '#64748b', textTransform: 'lowercase' }}>{it.grupo_id ? (grupoById[it.grupo_id] || '—') : '—'}</td>
                     <td>
                       {ps.length === 0
                         ? <span className="etq-chip none">sem prazo</span>
