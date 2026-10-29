@@ -38,19 +38,16 @@ export function EtqPrintArea({ data }: { data: PrintData }) {
     <div id="etq-print" className="etq-print">
       {(data?.items ?? []).map(({ r, qr }, i) => (
         <div className="etq-plabel" key={i}>
-          <div className="pl-top">
-            <div className="pl-main">
-              <div className="pl-nome">{r.nome_snap}</div>
-              <div className="pl-modo"><span>{(MODO_LABEL[r.modo] || r.modo).toUpperCase()}</span><span>{r.quantidade ? `${r.quantidade}${r.unidade || ''}` : ''}</span></div>
-              {r.val_original && <div className="pl-row"><span>VAL. ORIG.</span><b>{fmtD(r.val_original)}</b></div>}
-              <div className="pl-row"><span>MANIPULAÇÃO</span><b>{fmtDT(r.manipulacao_em)}</b></div>
-              <div className="pl-util"><span>UTILIZAR ATÉ</span><b>{fmtDT(r.validade_em)}</b></div>
-              <div className="pl-resp">RESP: {r.responsavel_nome || '—'}{r.marca_forn ? ` · ${r.marca_forn}` : ''}{r.sif ? ` · SIF ${r.sif}` : ''}</div>
-            </div>
-            <div className="pl-side">
-              <img className="pl-qr" src={qr} alt="QR" />
-              <div className="pl-code">#{r.codigo}</div>
-            </div>
+          <div className="pl-nome">{r.nome_snap}</div>
+          <div className="pl-modo">{(MODO_LABEL[r.modo] || r.modo).toUpperCase()}{r.quantidade ? ` · ${r.quantidade}${r.unidade || ''}` : ''}</div>
+          <div className="pl-dates">
+            {r.val_original && <div className="pl-drow"><span>VAL. ORIG.</span><b>{fmtD(r.val_original)}</b></div>}
+            <div className="pl-drow"><span>MANIPULAÇÃO</span><b>{fmtDT(r.manipulacao_em)}</b></div>
+            <div className="pl-drow pl-util"><span>UTILIZAR ATÉ</span><b>{fmtDT(r.validade_em)}</b></div>
+          </div>
+          <div className="pl-bottom">
+            <div className="pl-resp">RESP: {r.responsavel_nome || '—'}</div>
+            <div className="pl-qrbox"><img className="pl-qr" src={qr} alt="QR" /><div className="pl-code">#{r.codigo}</div></div>
           </div>
         </div>
       ))}
