@@ -39,6 +39,8 @@ export function EtiquetasLista({ lojaId }: { lojaId: string | null }) {
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
   const [fSit, setFSit] = useState('')
+  const [fModo, setFModo] = useState('')
+  const [fResp, setFResp] = useState('')
   const [printData, setPrintData] = useState<PrintData>(null)
 
   const { data: lista = [], isLoading } = useQuery({
@@ -48,6 +50,8 @@ export function EtiquetasLista({ lojaId }: { lojaId: string | null }) {
   const { data: lojasFull = [] } = useQuery({ queryKey: ['etq-lojas-full', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId); return (data ?? []) as LojaFull[] } })
 
   const gruposDistintos = useMemo(() => [...new Set(lista.map((r) => r.grupo_snap).filter(Boolean) as string[])].sort(), [lista])
+  const respsDistintos = useMemo(() => [...new Set(lista.map((r) => r.responsavel_nome).filter(Boolean) as string[])].sort(), [lista])
+  const modosDistintos = useMemo(() => [...new Set(lista.map((r) => r.modo).filter(Boolean))].sort(), [lista])
 
   const rows = useMemo(() => {
     const q = busca.trim().toLowerCase()
@@ -55,10 +59,12 @@ export function EtiquetasLista({ lojaId }: { lojaId: string | null }) {
       if (lojaId && r.loja_id !== lojaId) return false
       if (q && !(`${r.codigo} ${r.nome_snap}`.toLowerCase().includes(q))) return false
       if (fGrupo && (r.grupo_snap || '') !== fGrupo) return false
+      if (fModo && r.modo !== fModo) return false
+      if (fResp && (r.responsavel_nome || '') !== fResp) return false
       if (fSit && situacao(r).bucket !== fSit) return false
       return true
     })
-  }, [lista, busca, fGrupo, fSit, lojaId])
+  }, [lista, busca, fGrupo, fModo, fResp, fSit, lojaId])
 
   async function reimprimir(r: Row) {
     try {
@@ -85,6 +91,14 @@ export function EtiquetasLista({ lojaId }: { lojaId: string | null }) {
         <select className="etq-sel" value={fGrupo} onChange={(e) => setFGrupo(e.target.value)}>
           <option value="">Todos os grupos</option>
           {gruposDistintos.map((g) => <option key={g} value={g}>{g}</option>)}
+        </select>
+        <select className="etq-sel" value={fModo} onChange={(e) => setFModo(e.target.value)}>
+          <option value="">Todos os estados</option>
+          {modosDistintos.map((m) => <option key={m} value={m}>{MODO_LABEL[m] || m}</option>)}
+        </select>
+        <select className="etq-sel" value={fResp} onChange={(e) => setFResp(e.target.value)}>
+          <option value="">Todos responsáveis</option>
+          {respsDistintos.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
         <select className="etq-sel" value={fSit} onChange={(e) => setFSit(e.target.value)} style={{ minWidth: 160 }}>
           <option value="">Todas situações</option>
