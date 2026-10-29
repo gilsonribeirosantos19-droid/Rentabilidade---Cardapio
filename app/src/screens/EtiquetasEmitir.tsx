@@ -40,10 +40,18 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
   const { data: prazos = [] } = useQuery({ queryKey: ['etq-prazos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Prazo>((f, t) => supabase.from('etiqueta_prazos').select('item_id,modo,prazo_horas,temperatura').eq('tenant_id', tenantId).order('item_id').range(f, t)) })
   const { data: lojasFull = [] } = useQuery({ queryKey: ['etq-lojas-full', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId); return (data ?? []) as LojaFull[] } })
   const { data: resps = [] } = useQuery({ queryKey: ['etq-resps', tenantId, 'ativos'], enabled: !!tenantId, queryFn: () => fetchAll<Resp>((f, t) => supabase.from('etiqueta_responsaveis').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
+  // operadores ativos também servem de responsáveis (evita recadastrar as mesmas pessoas)
+  const { data: operadores = [] } = useQuery({ queryKey: ['etq-ops', tenantId, 'ativos'], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; nome: string; loja_id?: string | null }>((f, t) => supabase.from('operadores').select('id,nome,loja_id').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
 
   const grupoById = useMemo(() => Object.fromEntries(grupos.map((g) => [g.id, g.nome])) as Record<string, string>, [grupos])
   const prazosByItem = useMemo(() => { const m: Record<string, Prazo[]> = {}; prazos.forEach((p) => { (m[p.item_id] ||= []).push(p) }); return m }, [prazos])
   const modosDistintos = useMemo(() => [...new Set(prazos.map((p) => p.modo))].sort(), [prazos])
+  const respNomes = useMemo(() => {
+    const set = new Set<string>()
+    operadores.forEach((o) => { if (o.nome && (!lojaId || !o.loja_id || o.loja_id === lojaId)) set.add(o.nome.trim()) })
+    resps.forEach((r) => { if (r.nome) set.add(r.nome.trim()) })
+    return [...set].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  }, [operadores, resps, lojaId])
 
   const rows = useMemo(() => {
     const q = busca.trim().toLowerCase()
@@ -102,10 +110,10 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
         </select>
         <select className="etq-sel" value={resp} onChange={(e) => { setResp(e.target.value); setRespLS(e.target.value) }} title="Responsável que vai no RESP: da etiqueta">
           <option value="">Responsável: —</option>
-          {resps.map((r) => <option key={r.id} value={r.nome}>{r.nome}</option>)}
+          {respNomes.map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
       </div>
-      {!resp && resps.length > 0 && <div className="etq-banner" style={{ background: '#fff7ed', borderColor: '#fed7aa', color: '#9a3412' }}>Dica: escolha o <b>responsável</b> acima para preencher o campo RESP da etiqueta.</div>}
+      {!resp && respNomes.length > 0 && <div className="etq-banner" style={{ background: '#fff7ed', borderColor: '#fed7aa', color: '#9a3412' }}>Dica: escolha o <b>responsável</b> acima para preencher o campo RESP da etiqueta.</div>}
 
       {isLoading ? <div className="etq-empty">Carregando…</div>
         : rows.length === 0 ? <div className="etq-empty">Nenhum produto. Cadastre em “Prazos por produto”.</div>
