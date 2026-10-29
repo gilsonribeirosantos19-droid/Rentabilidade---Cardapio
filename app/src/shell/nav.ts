@@ -89,6 +89,7 @@ export const MODULES: Module[] = [
         { label: 'Plano de contas', key: 'gestao/dre-plano' },
         { label: 'Lançamentos', key: 'gestao/dre-lancamentos' },
       ] },
+      { label: 'Precificação', key: 'gestao/precificacao' },
       { label: 'CMV Teórico × Real', key: 'gestao/cmv' },
       { label: 'Rendimentos', key: 'gestao/rendimentos' },
       { label: 'Divergências', key: 'gestao/divergencias' },
