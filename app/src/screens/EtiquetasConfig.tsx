@@ -20,17 +20,85 @@ const getFmt = () => { try { return localStorage.getItem('etq_formato') || '60x4
 
 type Loja = { id: string; nome?: string }
 export function EtiquetasConfig({ lojas }: { lojas: Loja[] }) {
-  const [aba, setAba] = useState<'operadores' | 'formato' | 'grupos'>('operadores')
+  const [aba, setAba] = useState<'operadores' | 'responsaveis' | 'formato' | 'grupos'>('operadores')
   return (
     <div className="etq-screen">
-      <div className="etq-head"><h1>Configurações</h1><span className="sub">Operadores (PIN), formato da etiqueta e grupos</span></div>
+      <div className="etq-head"><h1>Configurações</h1><span className="sub">Operadores (PIN), responsáveis, formato da etiqueta e grupos</span></div>
       <div className="etq-tabs">
         <button className={'etq-tab' + (aba === 'operadores' ? ' on' : '')} onClick={() => setAba('operadores')}>Operadores</button>
+        <button className={'etq-tab' + (aba === 'responsaveis' ? ' on' : '')} onClick={() => setAba('responsaveis')}>Responsáveis</button>
         <button className={'etq-tab' + (aba === 'formato' ? ' on' : '')} onClick={() => setAba('formato')}>Formato da etiqueta</button>
         <button className={'etq-tab' + (aba === 'grupos' ? ' on' : '')} onClick={() => setAba('grupos')}>Grupos</button>
       </div>
-      {aba === 'operadores' ? <Operadores lojas={lojas} /> : aba === 'formato' ? <Formato /> : <Grupos />}
+      {aba === 'operadores' ? <Operadores lojas={lojas} /> : aba === 'responsaveis' ? <Responsaveis /> : aba === 'formato' ? <Formato /> : <Grupos />}
     </div>
+  )
+}
+
+type Responsavel = { id: string; nome: string; ativo?: boolean }
+function Responsaveis() {
+  const { tenantId } = useAuth()
+  const { podeEditar } = usePerms()
+  const canEdit = podeEditar('etiquetas/config')
+  const qc = useQueryClient()
+  const { toast, showToast } = useToastTipo(2400)
+  const [novo, setNovo] = useState('')
+
+  const { data: resps = [], isLoading } = useQuery({
+    queryKey: ['etq-resps', tenantId], enabled: !!tenantId,
+    queryFn: () => fetchAll<Responsavel>((f, t) => supabase.from('etiqueta_responsaveis').select('id,nome,ativo').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
+  })
+
+  const add = useMutation({
+    mutationFn: async (nome: string) => { if (!nome.trim()) throw new Error('Informe o nome.'); const { error } = await supabase.from('etiqueta_responsaveis').insert({ tenant_id: tenantId, nome: nome.trim() }); if (error) throw error },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-resps'] }); setNovo(''); showToast('Responsável cadastrado.', 'ok') },
+    onError: (e: Error) => showToast(e.message, 'err'),
+  })
+  const rename = useMutation({
+    mutationFn: async ({ id, nome }: { id: string; nome: string }) => { const { error } = await supabase.from('etiqueta_responsaveis').update({ nome }).eq('id', id); if (error) throw error },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-resps'] }); showToast('Renomeado.', 'ok') },
+    onError: (e: Error) => showToast(e.message, 'err'),
+  })
+  const toggle = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => { const { error } = await supabase.from('etiqueta_responsaveis').update({ ativo }).eq('id', id); if (error) throw error },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-resps'] }); showToast('Atualizado.', 'ok') },
+    onError: (e: Error) => showToast(e.message, 'err'),
+  })
+  const del = useMutation({
+    mutationFn: async (id: string) => { const { error } = await supabase.from('etiqueta_responsaveis').delete().eq('id', id); if (error) throw error },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-resps'] }); showToast('Excluído.', 'ok') },
+    onError: (e: Error) => showToast(e.message, 'err'),
+  })
+
+  return (
+    <>
+      <div style={{ fontSize: 12.5, color: '#64748b', marginBottom: 2 }}>Pessoas que aparecem no campo <b>RESP:</b> da etiqueta. Na tela de emitir, escolha o responsável antes de imprimir.</div>
+      {canEdit && <div className="etq-toolbar">
+        <div className="etq-search"><input placeholder="Nome do responsável..." value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') add.mutate(novo) }} /></div>
+        <button className="etq-btn etq-btn-pri" disabled={add.isPending || !novo.trim()} onClick={() => add.mutate(novo)}>+ Cadastrar</button>
+      </div>}
+      <div className="etq-card">
+        <table className="etq-tbl">
+          <thead><tr><th>Nome</th><th>Situação</th><th className="r">Ações</th></tr></thead>
+          <tbody>
+            {isLoading ? <tr><td colSpan={3} className="etq-empty">Carregando…</td></tr>
+              : resps.length === 0 ? <tr><td colSpan={3} className="etq-empty">Nenhum responsável. Cadastre acima.</td></tr>
+              : resps.map((r) => (
+                <tr key={r.id}>
+                  <td>{r.nome}</td>
+                  <td><span className={'etq-sit ' + (r.ativo !== false ? 'ok' : 'baixada')}>{r.ativo !== false ? 'Ativo' : 'Inativo'}</span></td>
+                  <td className="r">{canEdit && <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <button className="etq-btn etq-btn-sm" onClick={() => { const n = prompt('Novo nome:', r.nome); if (n && n.trim() && n.trim() !== r.nome) rename.mutate({ id: r.id, nome: n.trim() }) }}>Renomear</button>
+                    <button className="etq-btn etq-btn-sm" onClick={() => toggle.mutate({ id: r.id, ativo: r.ativo === false })}>{r.ativo !== false ? 'Desativar' : 'Ativar'}</button>
+                    <button className="etq-btn etq-btn-sm" onClick={() => { if (confirm(`Excluir o responsável "${r.nome}"?`)) del.mutate(r.id) }}>Excluir</button>
+                  </div>}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+      {toast && <div className={'etq-toast ' + toast.tipo}>{toast.msg}</div>}
+    </>
   )
 }
 

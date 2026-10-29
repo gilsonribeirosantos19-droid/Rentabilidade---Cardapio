@@ -10,6 +10,10 @@ import './etiquetas.css'
 type Grupo = { id: string; nome: string }
 type Item = { id: string; nome: string; grupo_id?: string | null }
 type Prazo = { item_id: string; modo: string; prazo_horas: number; temperatura?: string | null }
+type Resp = { id: string; nome: string }
+
+const getResp = () => { try { return localStorage.getItem('etq_resp_nome') || '' } catch { return '' } }
+const setRespLS = (v: string) => { try { localStorage.setItem('etq_resp_nome', v) } catch { /* ignore */ } }
 
 const MODO_LABEL: Record<string, string> = {
   resfriado: 'Resfriado', congelado: 'Congelado', ambiente: 'Temperatura Ambiente',
@@ -25,6 +29,7 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
   const { toast, showToast } = useToastTipo(2800)
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
+  const [resp, setResp] = useState(getResp())
   const [drawer, setDrawer] = useState<Item | null>(null)
   const [printData, setPrintData] = useState<PrintData>(null)
   const [emitindo, setEmitindo] = useState(false)
@@ -33,6 +38,7 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
   const { data: itens = [], isLoading } = useQuery({ queryKey: ['etq-itens', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Item>((f, t) => supabase.from('etiqueta_itens').select('id,nome,grupo_id').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
   const { data: prazos = [] } = useQuery({ queryKey: ['etq-prazos', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Prazo>((f, t) => supabase.from('etiqueta_prazos').select('item_id,modo,prazo_horas,temperatura').eq('tenant_id', tenantId).order('item_id').range(f, t)) })
   const { data: lojasFull = [] } = useQuery({ queryKey: ['etq-lojas-full', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId); return (data ?? []) as LojaFull[] } })
+  const { data: resps = [] } = useQuery({ queryKey: ['etq-resps', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<Resp>((f, t) => supabase.from('etiqueta_responsaveis').select('id,nome').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)) })
 
   const grupoById = useMemo(() => Object.fromEntries(grupos.map((g) => [g.id, g.nome])) as Record<string, string>, [grupos])
   const prazosByItem = useMemo(() => { const m: Record<string, Prazo[]> = {}; prazos.forEach((p) => { (m[p.item_id] ||= []).push(p) }); return m }, [prazos])
@@ -55,6 +61,7 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
         p_unidade: opts?.unidade || null,
         p_marca_forn: opts?.marca || null, p_sif: opts?.sif || null,
         p_lote: opts?.lote || null, p_val_original: opts?.valOriginal || null,
+        p_responsavel: resp || null,
       })
       if (error) throw error
       const etiquetas = (data ?? []) as EtqForLabel[]
@@ -86,7 +93,12 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
           <option value="">Todos os grupos</option>
           {grupos.map((g) => <option key={g.id} value={g.id}>{g.nome}</option>)}
         </select>
+        <select className="etq-sel" value={resp} onChange={(e) => { setResp(e.target.value); setRespLS(e.target.value) }} title="Responsável que vai no RESP: da etiqueta">
+          <option value="">Responsável: —</option>
+          {resps.map((r) => <option key={r.id} value={r.nome}>{r.nome}</option>)}
+        </select>
       </div>
+      {!resp && resps.length > 0 && <div className="etq-banner" style={{ background: '#fff7ed', borderColor: '#fed7aa', color: '#9a3412' }}>Dica: escolha o <b>responsável</b> acima para preencher o campo RESP da etiqueta.</div>}
 
       {isLoading ? <div className="etq-empty">Carregando…</div>
         : rows.length === 0 ? <div className="etq-empty">Nenhum produto. Cadastre em “Prazos por produto”.</div>
