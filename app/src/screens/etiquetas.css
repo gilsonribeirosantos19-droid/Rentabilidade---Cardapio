@@ -145,19 +145,18 @@
 
 /* ---- impressão térmica 60x60 ---- */
 .etq-print { display: none; }
-.etq-plabel { width: 60mm; height: 40mm; box-sizing: border-box; padding: 2mm 2.4mm; font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif; color: #000; background: #fff; display: flex; flex-direction: column; line-height: 1.22; overflow: hidden; }
+.etq-plabel { width: 60mm; height: 40mm; box-sizing: border-box; padding: 2mm 2.8mm 2mm 1.6mm; font-family: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif; color: #000; background: #fff; display: flex; flex-direction: column; line-height: 1.22; overflow: hidden; }
 .etq-plabel .pl-top { display: flex; gap: 2mm; flex: 1; min-height: 0; }
 .etq-plabel .pl-nome { font-size: 13pt; font-weight: 700; text-transform: uppercase; text-align: center; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .etq-plabel .pl-modo { font-size: 8pt; font-weight: 700; border-bottom: 1px solid #000; padding-bottom: .6mm; margin-bottom: 1mm; }
-.etq-plabel .pl-dates { display: flex; flex-direction: column; gap: .7mm; }
-.etq-plabel .pl-drow { display: flex; justify-content: space-between; align-items: baseline; gap: 3mm; font-size: 7.5pt; }
+.etq-plabel .pl-dates { display: flex; flex-direction: column; gap: .9mm; }
+.etq-plabel .pl-drow { display: flex; justify-content: space-between; align-items: baseline; gap: 3mm; font-size: 8.5pt; }
 .etq-plabel .pl-drow span { font-weight: 700; }
-.etq-plabel .pl-drow b { font-weight: 700; white-space: nowrap; }
-.etq-plabel .pl-util b { font-size: 9pt; }
+.etq-plabel .pl-drow b { font-weight: 700; font-size: 8.5pt; white-space: nowrap; }
 .etq-plabel .pl-bottom { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 2mm; }
 .etq-plabel .pl-resp { font-size: 7pt; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .etq-plabel .pl-qrbox { flex: none; display: flex; flex-direction: column; align-items: center; }
-.etq-plabel .pl-qr { width: 15mm; height: 15mm; image-rendering: pixelated; }
+.etq-plabel .pl-qr { width: 13mm; height: 13mm; image-rendering: pixelated; }
 .etq-plabel .pl-code { font-size: 6pt; font-weight: 700; letter-spacing: .2px; margin-top: .3mm; text-align: center; }
 @media print {
   html, body { background: #fff !important; }
