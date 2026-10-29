@@ -4,7 +4,7 @@ import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoFichaPorcao, type CostCtx, type FichasByProduto, type FichaItem } from '../lib/cost'
-import { downloadCsv } from '../lib/csv'
+import { downloadXlsx } from '../lib/excel'
 import { brlCur as brl } from '../lib/format'
 import './precificacao.css'
 
@@ -169,17 +169,17 @@ export function Precificacao() {
   }
   const arredondar = () => setNovoById((p) => { const n = { ...p }; vis.forEach((r) => { n[r.id] = to90(r.novo) }); return n })
 
-  // exporta os produtos VISÍVEIS (respeita filtros) da aba atual pra CSV (abre no Excel PT-BR)
-  const exportar = () => {
+  // exporta os produtos VISÍVEIS (respeita filtros) da aba atual pra Excel (.xlsx nativo)
+  const exportar = async () => {
     const hoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')
     if (tab === 'cmv') {
       const header = ['Produto', 'Categoria', 'Custo', 'Preço atual', 'CMV %', 'Markup', 'Margem R$', 'Margem %', 'Novo preço', 'CMV novo %', 'Markup novo', 'Margem R$ nova', 'Margem % nova']
       const linhas = vis.map((r) => [r.nome, r.cat, +r.custo.toFixed(2), +r.precoAtual.toFixed(2), +r.cmv.toFixed(2), +r.mk.toFixed(2), +r.mg.toFixed(2), +r.mgp.toFixed(2), +r.novo.toFixed(2), +r.ncmv.toFixed(2), +r.nmk.toFixed(2), +r.nmg.toFixed(2), +r.nmgp.toFixed(2)])
-      downloadCsv(`precificacao-cmv-${hoje}.csv`, [header, ...linhas])
+      await downloadXlsx(`precificacao-cmv-${hoje}.xlsx`, 'Precificação CMV', [header, ...linhas])
     } else {
       const header = ['Produto', 'Categoria', 'Custo', 'DV %', 'DF %', 'ML %', 'Preço sugerido', 'Markup', 'CMV %', 'Margem %', 'Lucro R$']
       const linhas = vis.map((r) => [r.nome, r.cat, +r.custo.toFixed(2), r.tp.dv, r.tp.df, r.tp.ml, r.tOk ? +r.tPreco.toFixed(2) : 0, r.tOk ? +r.tMk.toFixed(2) : 0, r.tOk ? +r.tCmv.toFixed(2) : 0, r.tOk ? +r.tMgp.toFixed(2) : 0, r.tOk ? +r.tLuc.toFixed(2) : 0])
-      downloadCsv(`precificacao-markup-${hoje}.csv`, [header, ...linhas])
+      await downloadXlsx(`precificacao-markup-${hoje}.xlsx`, 'Precificação Markup', [header, ...linhas])
     }
   }
 
@@ -192,7 +192,7 @@ export function Precificacao() {
         <div className="fld"><label>CMV</label><select value={fCmv} onChange={(e) => setFCmv(e.target.value)} style={{ width: 160 }}><option value="">Todos</option><option value="g">🟢 Bom (≤30%)</option><option value="a">🟡 Atenção (≤38%)</option><option value="r">🔴 Crítico (&gt;38%)</option></select></div>
         <label className="prec-check" title="Esconde produtos sem preço (ex.: rodízios que apontam pro RP)"><input type="checkbox" checked={soPreco} onChange={(e) => setSoPreco(e.target.checked)} /> Somente com preço de venda</label>
         <div className="prec-spacer" />
-        <button className="prec-btn ghost" onClick={exportar} disabled={!vis.length} title="Baixar a tabela (produtos visíveis) em CSV / Excel">⬇ Exportar CSV</button>
+        <button className="prec-btn ghost" onClick={exportar} disabled={!vis.length} title="Baixar a tabela (produtos visíveis) em Excel (.xlsx)">⬇ Exportar Excel</button>
         <div className="prec-loja">Custo da loja: <b>{lojaNome}</b></div>
         <div className="prec-count">{vis.length} de {base.length} produtos</div>
       </div>
