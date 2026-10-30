@@ -39,11 +39,10 @@ const to90 = (v: number) => {
 
 export function Precificacao() {
   const { tenantId } = useAuth()
-  const { lojas, lojaId } = useLoja()
+  const { lojaId } = useLoja()
   // custo por loja: respeita a loja global selecionada. Em "Todas" → MÉDIA entre as lojas.
   const isTodas = !lojaId
   const custoLoja = isTodas ? '__all__' : lojaId
-  const lojaNome = isTodas ? 'Todas (média)' : (lojas.find((l) => l.id === lojaId)?.nome || '—')
 
   const [tab, setTab] = useState<'cmv' | 'trad'>('cmv')
   const [q, setQ] = useState('')
@@ -194,8 +193,6 @@ export function Precificacao() {
         <label className="prec-check" title="Esconde produtos sem preço (ex.: rodízios que apontam pro RP)"><input type="checkbox" checked={soPreco} onChange={(e) => setSoPreco(e.target.checked)} /> Somente com preço de venda</label>
         <div className="prec-spacer" />
         <button className="prec-btn ghost" onClick={exportar} disabled={!vis.length} title="Baixar a tabela (produtos visíveis) em Excel (.xlsx)">⬇ Exportar Excel</button>
-        <div className="prec-loja">Custo da loja: <b>{lojaNome}</b></div>
-        <div className="prec-count">{vis.length} de {base.length} produtos</div>
       </div>
 
       <div className="prec-tabs">
