@@ -169,7 +169,7 @@ export function EtiquetasEmitir({ lojaId }: { lojaId: string | null }) {
             <option value="">Responsável: —</option>
             {respNomes.map((n) => <option key={n} value={n}>{n}</option>)}
           </select>}
-        {canEmit && <button className="etq-btn" disabled={!lojaId} onClick={() => setAvulsa(true)} title="Etiqueta de um item que não está no cadastro">+ Etiqueta avulsa</button>}
+        {canEmit && <button className="etq-btn" onClick={() => { if (!lojaId) { showToast('Selecione uma loja no topo para emitir a etiqueta avulsa.', 'err'); return } setAvulsa(true) }} title="Etiqueta de um item que não está no cadastro">+ Etiqueta avulsa</button>}
       </div>
 
       {isLoading ? <div className="etq-empty">Carregando…</div>
