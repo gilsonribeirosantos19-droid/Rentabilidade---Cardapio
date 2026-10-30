@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
+import { custoFichaPorcao } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import './faturamento.css'
@@ -12,8 +14,10 @@ import './faturamento.css'
 // Agrega por produto e classifica: A = até 80% do valor, B = 80-95%, C = resto.
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
 
-type Prod = { id: string; lojaId: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number }
-type Row = Prod & { rank: number; vLiquida: number; pct: number; acum: number; classe: 'A' | 'B' | 'C' }
+type Prod = { id: string; lojaId: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number; vCustoMedio: number }
+type Row = Prod & { rank: number; vLiquida: number; pct: number; acum: number; classe: 'A' | 'B' | 'C'; margem: number | null; margemClasse: 'A' | 'B' | 'C' | '—' }
+type FichaEng = { id: string; produto_id?: string; rendimento_porcoes?: number; itens_ficha?: { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }[] }
+type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: number; loja_id?: string; criado_em?: string }
 
 const m2 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const q4 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
@@ -21,7 +25,7 @@ const p1 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const titleCase = (s: string) => s.toLowerCase().replace(/(^|[\s\-/(])(\S)/g, (_m, p, c) => p + (c as string).toUpperCase())
 
-type ColKey = 'rank' | 'loja' | 'item' | 'codigo' | 'grupo' | 'qVenda' | 'vLiquida' | 'pctPart' | 'pctAcum' | 'classe'
+type ColKey = 'rank' | 'loja' | 'item' | 'codigo' | 'grupo' | 'qVenda' | 'vLiquida' | 'pctPart' | 'pctAcum' | 'classe' | 'margem' | 'classeMargem'
 type Fmt = 'q' | 'm' | 'p'
 type Col = { key: ColKey; label: string; cls?: 'r' | 'c'; title?: boolean; def: boolean; fixed?: boolean; filt?: boolean; fmt?: Fmt; sum?: boolean }
 const COLS: Col[] = [
@@ -35,6 +39,7 @@ const COLS: Col[] = [
   { key: 'pctPart', label: '% Participação', cls: 'r', fmt: 'p', def: true },
   { key: 'pctAcum', label: '% Acumulado', cls: 'r', fmt: 'p', def: true },
   { key: 'classe', label: 'Classe', cls: 'c', def: true, filt: true },
+  { key: 'classeMargem', label: 'Classe (Margem)', cls: 'c', def: true, filt: true },
 ]
 
 const COLS_KEY = 'aiko_abc_cols'
@@ -89,7 +94,7 @@ export function CurvaAbcVendas() {
       const key = `${r.loja_id}|${r.produto_id}`
       const ex = map.get(key)
       if (ex) { ex.qVenda += Number(r.qtd) || 0; ex.vBruta += Number(r.faturado) || 0 }
-      else map.set(key, { id: key, lojaId: String(r.loja_id ?? ''), loja: lojaNome[r.loja_id as string] || '—', item: String(r.produto_nome || ''), codigo: String(r.produto_id ?? ''), grupo: String(r.grupo || ''), qVenda: Number(r.qtd) || 0, vBruta: Number(r.faturado) || 0, vDesc: 0 })
+      else map.set(key, { id: key, lojaId: String(r.loja_id ?? ''), loja: lojaNome[r.loja_id as string] || '—', item: String(r.produto_nome || ''), codigo: String(r.produto_id ?? ''), grupo: String(r.grupo || ''), qVenda: Number(r.qtd) || 0, vBruta: Number(r.faturado) || 0, vDesc: 0, vCustoMedio: 0 })
     }
     return [...map.values()]
   }
@@ -186,20 +191,59 @@ export function CurvaAbcVendas() {
     else { setDe(''); setAte('') }
   }
 
-  // 1) filtra por período/loja/busca/zerado; 2) ordena por V.Líquida desc; 3) classifica A/B/C acumulado
+  // ── custo da ficha por produto (de-para código PDV → produto → ficha), POR LOJA — mesmas queries/chaves da Engenharia (compartilha cache) ──
+  const { data: engProdutos = [] } = useQuery({ queryKey: ['eng-prod', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; codigo_pdv?: string }>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: engFichas = [] } = useQuery({ queryKey: ['eng-fichas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<FichaEng>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,rendimento_porcoes,itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: engInsumos = [] } = useQuery({ queryKey: ['eng-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }>((f, t) => supabase.from('insumos').select('id,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: engSaldos = [] } = useQuery({ queryKey: ['eng-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ insumo_id: string; custo_medio?: number; loja_id?: string }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: engEntradas = [] } = useQuery({ queryKey: ['eng-ent', tenantId, ate], enabled: !!tenantId && !!ate, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('entradas_estoque').select('insumo_id,quantidade,custo_unitario,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').order('id').range(f, t)) })
+  const { data: engSaidas = [] } = useQuery({ queryKey: ['eng-sai', tenantId, ate], enabled: !!tenantId && !!ate, queryFn: () => fetchAll<Mov>((f, t) => supabase.from('saidas_estoque').select('insumo_id,quantidade,loja_id,criado_em').eq('tenant_id', tenantId).lte('criado_em', ate + 'T23:59:59').order('criado_em').order('id').range(f, t)) })
+  const prodByCod = useMemo(() => { const m = new Map<string, string>(); engProdutos.forEach((p) => { const c = (p.codigo_pdv || '').trim(); if (c) m.set(c, p.id) }); return m }, [engProdutos])
+  const fichaByProduto = useMemo(() => { const m = new Map<string, FichaEng>(); engFichas.forEach((f) => { if (f.produto_id) m.set(f.produto_id, f) }); return m }, [engFichas])
+  const fichasCostMap = useMemo(() => { const m = new Map<string, { itens: { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }[]; rendimento_porcoes?: number }>(); engFichas.forEach((f) => { if (f.produto_id) m.set(f.produto_id, { itens: f.itens_ficha || [], rendimento_porcoes: f.rendimento_porcoes || 1 }) }); return m }, [engFichas])
+  const engEntByLoja = useMemo(() => { const m: Record<string, Mov[]> = {}; engEntradas.forEach((e) => { const k = e.loja_id || ''; (m[k] = m[k] || []).push(e) }); return m }, [engEntradas])
+  const engSaiByLoja = useMemo(() => { const m: Record<string, Mov[]> = {}; engSaidas.forEach((s) => { const k = s.loja_id || ''; (m[k] = m[k] || []).push(s) }); return m }, [engSaidas])
+  // custo unitário da ficha por loja, reconstruído na data final do período → cache por (loja, produto)
+  const rowsComCusto = useMemo(() => {
+    const cache = new Map<string, number>()
+    return rows.map((v) => {
+      const pid = prodByCod.get(String(v.codigo).trim())
+      const ficha = pid ? fichaByProduto.get(pid) : undefined
+      if (!ficha || !(ficha.itens_ficha || []).length) return v
+      const key = (v.lojaId || '') + '|' + pid
+      let custoUnit = cache.get(key)
+      if (custoUnit == null) {
+        const ctxL = { entradas: engEntByLoja[v.lojaId || ''] || [], saidas: engSaiByLoja[v.lojaId || ''] || [], insumos: engInsumos, saldos: engSaldos, dataLimite: ate, strictLoja: true }
+        custoUnit = custoFichaPorcao(ficha.itens_ficha || [], ficha.rendimento_porcoes || 1, v.lojaId || null, ctxL, fichasCostMap, new Set())
+        cache.set(key, custoUnit)
+      }
+      return custoUnit > 0 ? { ...v, vCustoMedio: custoUnit } : v
+    })
+  }, [rows, prodByCod, fichaByProduto, fichasCostMap, engEntByLoja, engSaiByLoja, engInsumos, engSaldos, ate])
+
+  // 1) filtra; 2) ordena V.Líquida desc; 3) ABC por FATURAMENTO + ABC por MARGEM (contribuição)
   const enriched = useMemo(() => {
     const q = norm(busca.trim())
     const filtraLoja = lojaSet.size > 0 && !allSel
-    const base = rows.map((v) => ({ ...v, vLiquida: v.vBruta - v.vDesc })).filter((v) => {
+    const base = rowsComCusto.map((v) => ({ ...v, vLiquida: v.vBruta - v.vDesc })).filter((v) => {
       if (!incluirZerado && v.vLiquida === 0) return false
       if (filtraLoja && !lojaSet.has(v.lojaId)) return false
       if (q && !norm([v.item, v.grupo, v.codigo].join(' ')).includes(q)) return false
       return true
     }).sort((a, b) => b.vLiquida - a.vLiquida)
+    // margem por item: só quando tem custo da ficha (senão null = "—")
+    const withM = base.map((v) => ({ ...v, margem: v.vCustoMedio > 0 ? v.vLiquida - v.vCustoMedio * v.qVenda : (null as number | null) }))
+    // ABC por MARGEM: ranqueia (desc) só os itens com margem conhecida, acumulado 80/95
+    const comM = withM.filter((v) => v.margem != null).slice().sort((a, b) => (b.margem as number) - (a.margem as number))
+    const totM = comM.reduce((s, v) => s + (v.margem as number), 0) || 1
+    let acM = 0
+    const mClasse = new Map<string, 'A' | 'B' | 'C'>()
+    comM.forEach((v) => { acM += (v.margem as number) / totM * 100; mClasse.set(v.id, acM <= 80 ? 'A' : acM <= 95 ? 'B' : 'C') })
+    // ABC por FATURAMENTO (ordem de exibição) + anexa a classe de margem
     const total = base.reduce((s, v) => s + v.vLiquida, 0) || 1
     let acum = 0
-    return base.map((v, i) => { const pct = v.vLiquida / total * 100; acum += pct; const classe = acum <= 80 ? 'A' : acum <= 95 ? 'B' : 'C'; return { ...v, rank: i + 1, pct, acum, classe } as Row })
-  }, [rows, busca, lojaSet, allSel, incluirZerado])
+    return withM.map((v, i) => { const pct = v.vLiquida / total * 100; acum += pct; const classe = acum <= 80 ? 'A' : acum <= 95 ? 'B' : 'C'; return { ...v, rank: i + 1, pct, acum, classe, margemClasse: mClasse.get(v.id) || '—' } as Row })
+  }, [rowsComCusto, busca, lojaSet, allSel, incluirZerado])
 
   const cellVal = (v: Row, c: Col): string => {
     switch (c.key) {
@@ -213,10 +257,12 @@ export function CurvaAbcVendas() {
       case 'pctPart': return p1(v.pct)
       case 'pctAcum': return p1(v.acum)
       case 'classe': return v.classe
+      case 'margem': return v.margem == null ? '—' : m2(v.margem)
+      case 'classeMargem': return v.margemClasse
       default: return ''
     }
   }
-  const num = (v: Row, k: ColKey): number => k === 'qVenda' ? v.qVenda : k === 'vLiquida' ? v.vLiquida : 0
+  const num = (v: Row, k: ColKey): number => k === 'qVenda' ? v.qVenda : k === 'vLiquida' ? v.vLiquida : k === 'margem' ? (v.margem ?? 0) : 0
 
   const lista = useMemo(() => enriched.filter((v) => Object.entries(colFilters).every(([k, set]) => set.has(cellVal(v, COLS.find((c) => c.key === k)!)))), [enriched, colFilters])
 
@@ -229,8 +275,8 @@ export function CurvaAbcVendas() {
 
   const exportCSV = () => {
     if (!lista.length) { setMsg('Nada para exportar.'); return }
-    const head = ['#', 'Fantasia', 'Descrição Item', 'Item', 'Grupo', 'Q. Venda', 'V. Venda Líquida', '% Participação', '% Acumulado', 'Classe']
-    const linhas = lista.map((v) => [v.rank, v.loja, titleCase(v.item), v.codigo, titleCase(v.grupo), +v.qVenda.toFixed(4), +v.vLiquida.toFixed(2), +v.pct.toFixed(1), +v.acum.toFixed(1), v.classe])
+    const head = ['#', 'Fantasia', 'Descrição Item', 'Item', 'Grupo', 'Q. Venda', 'V. Venda Líquida', '% Participação', '% Acumulado', 'Classe', 'Classe (Margem)']
+    const linhas = lista.map((v) => [v.rank, v.loja, titleCase(v.item), v.codigo, titleCase(v.grupo), +v.qVenda.toFixed(4), +v.vLiquida.toFixed(2), +v.pct.toFixed(1), +v.acum.toFixed(1), v.classe, v.margemClasse])
     downloadCsv(`curva_abc_${de}_${ate}.csv`, [head, ...linhas])
   }
 
@@ -295,7 +341,7 @@ export function CurvaAbcVendas() {
             {!lista.length
               ? <tr><td colSpan={visCols.length} className="empty">Nenhum produto no filtro.</td></tr>
               : <>
-                {lista.map((v) => <tr key={v.id}>{visCols.map((c) => <td key={c.key} className={c.cls}>{c.key === 'classe' ? <span className={'badge b-' + v.classe}>{v.classe}</span> : cellVal(v, c)}</td>)}</tr>)}
+                {lista.map((v) => <tr key={v.id}>{visCols.map((c) => <td key={c.key} className={c.cls}>{c.key === 'classe' ? <span className={'badge b-' + v.classe}>{v.classe}</span> : c.key === 'classeMargem' ? (v.margemClasse === '—' ? '—' : <span className={'badge b-' + v.margemClasse}>{v.margemClasse}</span>) : cellVal(v, c)}</td>)}</tr>)}
                 <tr className="fill" aria-hidden="true"><td colSpan={visCols.length} /></tr>
               </>}
           </tbody>
@@ -309,6 +355,7 @@ export function CurvaAbcVendas() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: '#e11d48', display: 'inline-block' }} />A — até 80% do faturamento <b style={{ color: '#0f172a' }}>({nA})</b></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f97316', display: 'inline-block' }} />B — de 80% a 95% <b style={{ color: '#0f172a' }}>({nB})</b></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: '#94a3b8', display: 'inline-block' }} />C — acima de 95% <b style={{ color: '#0f172a' }}>({nC})</b></div>
+        <div style={{ borderLeft: '1px solid #e5e9f0', paddingLeft: 20 }}><b style={{ color: '#0f172a' }}>Classe (Margem)</b> = ABC pela contribuição (margem R$). Itens sem ficha ficam <b style={{ color: '#0f172a' }}>“—”</b> (sem custo).</div>
       </div>
 
       {colsOpen && <>
