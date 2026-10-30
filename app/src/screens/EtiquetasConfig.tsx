@@ -104,7 +104,7 @@ function Responsaveis() {
 
 function Operadores({ lojas }: { lojas: Loja[] }) {
   const { tenantId } = useAuth()
-  const { podeEditar } = usePerms()
+  const { podeEditar, isAdmin } = usePerms()
   const canEdit = podeEditar('etiquetas/config')
   const qc = useQueryClient()
   const { toast, showToast } = useToastTipo(2600)
@@ -132,6 +132,18 @@ function Operadores({ lojas }: { lojas: Loja[] }) {
     mutationFn: async ({ id, data }: { id: string; data: object }) => { const { error } = await supabase.from('operadores').update(data).eq('id', id); if (error) throw error },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-ops'] }); showToast('Atualizado.', 'ok') },
     onError: (e: Error) => showToast('Erro: ' + e.message + ' (rode o grant de operadores)', 'err'),
+  })
+
+  // PIN obrigatório por loja (lojas.etq_exige_pin) — só admin altera (RPC confere no servidor)
+  const { data: lojasPin = [] } = useQuery({
+    queryKey: ['etq-lojas-full', tenantId], enabled: !!tenantId,
+    queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId); return (data ?? []) as { id: string; nome?: string; etq_exige_pin?: boolean }[] },
+  })
+  const exigePin = (id: string) => !!lojasPin.find((l) => l.id === id)?.etq_exige_pin
+  const setPin = useMutation({
+    mutationFn: async ({ id, v }: { id: string; v: boolean }) => { const { error } = await supabase.rpc('etq_definir_exige_pin', { p_loja_id: id, p_valor: v }); if (error) throw error },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['etq-lojas-full'] }); showToast('Exigência de PIN atualizada.', 'ok') },
+    onError: (e: Error) => showToast('Erro: ' + e.message, 'err'),
   })
 
   return (
@@ -164,6 +176,25 @@ function Operadores({ lojas }: { lojas: Loja[] }) {
           </tbody>
         </table>
       </div>
+      <div className="etq-card" style={{ marginTop: 16 }}>
+        <table className="etq-tbl">
+          <thead><tr><th>Loja</th><th>Exigir operador + PIN ao emitir</th></tr></thead>
+          <tbody>
+            {lojas.map((l) => (
+              <tr key={l.id}>
+                <td>{l.nome}</td>
+                <td>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: isAdmin ? 'pointer' : 'default' }}>
+                    <input type="checkbox" checked={exigePin(l.id)} disabled={!isAdmin || setPin.isPending} onChange={(e) => setPin.mutate({ id: l.id, v: e.target.checked })} />
+                    <span style={{ color: exigePin(l.id) ? '#0f766e' : '#64748b', fontWeight: 600 }}>{exigePin(l.id) ? 'Sim — escolhe o operador e digita o PIN' : 'Não — escolhe o responsável na lista'}</span>
+                  </label>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {!isAdmin && <div className="etq-hint" style={{ marginTop: 8 }}>Só o administrador pode mudar a exigência de PIN.</div>}
       {edit && (
         <div className="etq-ov" onClick={() => setEdit(null)}>
           <div className="etq-modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(440px,100%)' }}>

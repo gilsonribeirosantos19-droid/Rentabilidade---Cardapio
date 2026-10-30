@@ -5,6 +5,7 @@ import { ICONS } from './icons'
 import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { supabase } from '../lib/db'
+import { useEtiquetasAtivo } from '../lib/modulos'
 
 const Chevron = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -38,8 +39,10 @@ export function Sidebar({
 
   // Módulos com requiresCd (ex.: Distribuição) só aparecem se o tenant tiver um CD configurado
   const { data: temCd = false } = useQuery({ queryKey: ['sidebar-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
+  const etqAtivo = useEtiquetasAtivo(tenantId)   // Etiquetas: ligado por cliente (Config › Parâmetros)
   const modules = MODULES.filter((m) => {
     if (m.requiresCd && !temCd) return false
+    if (m.requiresEtiquetas && !etqAtivo) return false
     if (m.home) return true   // "Visão geral" sempre visível
     // esconde o módulo inteiro se o grupo não pode ver nenhuma tela dele
     const leaves = (m.sections ?? []).flatMap((s) => ('group' in s ? s.items : [s]))

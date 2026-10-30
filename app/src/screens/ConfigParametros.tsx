@@ -108,6 +108,12 @@ const MODULOS: Modulo[] = [
     ],
   },
   {
+    key: 'etiquetas', label: 'Etiquetas de validade', desc: 'Liga o módulo de etiquetas (emissão, baixa e controle de validade).', search: 'etiquetas validade rotulo modulo',
+    fields: [
+      { chave: 'modulo_ativo', label: 'Módulo Etiquetas ativo', type: 'radio', def: 'nao', hint: 'Mostra o menu Etiquetas no ERP e no Portal do Gerente. Desligado = o menu some (os dados ficam guardados).' },
+    ],
+  },
+  {
     key: 'dashboard', label: 'Dashboard', desc: 'Regras de exibição e atualização do dashboard.', search: 'dashboard indicadores', embreve: true,
     fields: [
       { chave: 'atualizacao_auto', label: 'Atualização automática', type: 'radio', def: 'sim', embreve: true },
@@ -151,7 +157,7 @@ export function ConfigParametros() {
       const { error } = await supabase.from('parametros').upsert(rows, { onConflict: 'tenant_id,modulo,chave' })
       if (error) throw error
     },
-    onSuccess: (_d, mod) => { qc.invalidateQueries({ queryKey: ['cfg-params'] }); showToast(`Parâmetros de ${mod.label} salvos.`) },
+    onSuccess: (_d, mod) => { qc.invalidateQueries({ queryKey: ['cfg-params'] }); qc.invalidateQueries({ queryKey: ['modulo-etiquetas-ativo'] }); showToast(`Parâmetros de ${mod.label} salvos.`) },
     onError: (e: Error) => { console.error('[ConfigParametros]', e); showToast('Erro ao salvar: ' + e.message, true) },
   })
 

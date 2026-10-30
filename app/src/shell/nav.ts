@@ -4,7 +4,7 @@
 
 export type Leaf = { label: string; key: string; admin?: boolean }
 export type Section = Leaf | { group: string; items: Leaf[] }
-export type Module = { id: string; label: string; icon: string; home?: boolean; sections?: Section[]; requiresCd?: boolean }
+export type Module = { id: string; label: string; icon: string; home?: boolean; sections?: Section[]; requiresCd?: boolean; requiresEtiquetas?: boolean }
 
 // Telas restritas a admin (gestão de usuários/permissões). Escondidas do menu e bloqueadas
 // na renderização (fail-closed) pra quem não é admin. O RLS do banco é a trava definitiva.
@@ -126,7 +126,7 @@ export const MODULES: Module[] = [
     ],
   },
   {
-    id: 'etiquetas', label: 'Etiquetas', icon: 'tag',
+    id: 'etiquetas', label: 'Etiquetas', icon: 'tag', requiresEtiquetas: true,
     sections: [
       { label: 'Emitir', key: 'etiquetas/emitir' },
       { label: 'Etiquetas', key: 'etiquetas/lista' },

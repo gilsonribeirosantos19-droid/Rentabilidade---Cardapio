@@ -3,6 +3,7 @@ import { supabase } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { useToastTipo } from '../lib/toast'
+import { EtqCameraScanner } from './etqCamera'
 import './etiquetas.css'
 
 type Etiqueta = {
@@ -43,6 +44,7 @@ export function EtiquetasBaixa() {
   const [busy, setBusy] = useState(false)
   const [descartando, setDescartando] = useState(false)
   const [motivo, setMotivo] = useState('vencido')
+  const [camera, setCamera] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // aceita tanto o código puro quanto uma URL "...?c=CODIGO" (leitor/câmera)
@@ -83,7 +85,7 @@ export function EtiquetasBaixa() {
     <div className="etq-screen">
       <div className="etq-head">
         <h1>Dar baixa</h1>
-        <span className="sub">Escaneie o QR (leitor USB) ou digite o código da etiqueta</span>
+        <span className="sub">Escaneie o QR (leitor USB ou câmera) ou digite o código da etiqueta</span>
       </div>
 
       <div className="etq-baixa">
@@ -93,6 +95,7 @@ export function EtiquetasBaixa() {
             <input ref={inputRef} autoFocus value={codigo} onChange={(e) => setCodigo(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') buscar() }} placeholder="SPN-XXXXXXXX" />
             <button className="etq-btn etq-btn-pri" disabled={busy || !codigo.trim()} onClick={() => buscar()}>Buscar</button>
+            <button className="etq-btn" disabled={busy} onClick={() => setCamera(true)} title="Ler o QR com a câmera do tablet/celular">📷 Câmera</button>
           </div>
         </div>
 
@@ -134,6 +137,8 @@ export function EtiquetasBaixa() {
           </div>
         )}
       </div>
+
+      {camera && <EtqCameraScanner onClose={() => setCamera(false)} onRead={(txt) => { setCamera(false); const cod = extrairCodigo(txt); setCodigo(cod); buscar(cod) }} />}
 
       {toast && <div className={'etq-toast ' + toast.tipo}>{toast.msg}</div>}
     </div>
