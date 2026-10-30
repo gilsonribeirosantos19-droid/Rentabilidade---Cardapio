@@ -161,6 +161,11 @@
 .etq-plabel .pl-qrbox { flex: none; display: flex; flex-direction: column; align-items: center; }
 .etq-plabel .pl-qr { width: 13mm; height: 13mm; image-rendering: pixelated; }
 .etq-plabel .pl-code { font-size: 6pt; font-weight: 700; letter-spacing: .2px; margin-top: .3mm; text-align: center; }
+/* nitidez na térmica (estilo Fixee): preto puro, tudo em negrito pesado + traço engrossado.
+   A térmica não imprime cinza — traço fino/antisserrilhado sai pontilhado e claro. */
+.etq-plabel, .etq-plabel * { color: #000 !important; font-weight: 800 !important; -webkit-text-stroke: .35px #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.etq-plabel .pl-modo { border-bottom-width: 1.5px; }
+.etq-plabel .pl-qr { -webkit-text-stroke: 0; }
 @media print {
   html, body { background: #fff !important; }
   body * { visibility: hidden !important; }
