@@ -112,13 +112,18 @@ export function EtiquetasPrazos() {
         const { data, error } = await supabase.from('etiqueta_itens').insert(payload).select('id'); if (error) throw error
         itemId = data?.[0]?.id; if (!itemId) throw new Error('Falha ao salvar o produto.')
       }
-      await supabase.from('etiqueta_prazos').delete().eq('item_id', itemId)
       const linhas = MODOS.map(([k]) => {
         const p = form.prazos[k]
         const horas = (parseInt(p.dias) || 0) * 24 + (parseInt(p.horas) || 0)
-        return horas > 0 ? { tenant_id: tenantId, item_id: itemId, modo: k, prazo_horas: horas, temperatura: p.temp.trim() || null } : null
-      }).filter(Boolean)
-      if (linhas.length) { const { error } = await supabase.from('etiqueta_prazos').insert(linhas as object[]); if (error) throw error }
+        return horas > 0 ? { modo: k, prazo_horas: horas, temperatura: p.temp.trim() || null } : null
+      }).filter(Boolean) as { modo: string; prazo_horas: number; temperatura: string | null }[]
+      // troca os prazos de uma vez só no banco (atômico: falhou = nada muda)
+      const { error } = await supabase.rpc('etq_salvar_prazos', { p_item_id: itemId, p_prazos: linhas })
+      if (!error) return
+      if (error.code !== 'PGRST202') throw error
+      // fallback enquanto o SQL da fase 2 não rodou (RPC ausente): caminho antigo
+      await supabase.from('etiqueta_prazos').delete().eq('item_id', itemId)
+      if (linhas.length) { const { error: e2 } = await supabase.from('etiqueta_prazos').insert(linhas.map((l) => ({ ...l, tenant_id: tenantId, item_id: itemId }))); if (e2) throw e2 }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['etq-grupos'] })

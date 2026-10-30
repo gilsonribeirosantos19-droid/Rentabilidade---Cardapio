@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { useEtiquetasAtivo } from '../lib/modulos'
 import { PortalInventario } from './PortalInventario'
 import { PortalReceber } from './PortalReceber'
 import { PortalSolicitacao } from './PortalSolicitacao'
@@ -72,6 +73,7 @@ function PortalShellInner() {
   const { data: temCd = false } = useQuery({ queryKey: ['portal-tem-cd', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('id').eq('tenant_id', tenantId).eq('is_cd', true).limit(1); return (data?.length ?? 0) > 0 } })
   // "Receber Mercadoria" só aparece se o cliente ligou o recebimento pela loja (Config › Parâmetros › Estoque)
   const { data: recebimentoOn = false } = useQuery({ queryKey: ['portal-param-receb', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('parametros').select('valor').eq('tenant_id', tenantId).eq('modulo', 'estoque').eq('chave', 'recebimento_portal').limit(1); return (data?.[0]?.valor as string) === 'sim' } })
+  const etqAtivo = useEtiquetasAtivo(tenantId)   // Etiquetas: ligado por cliente (Config › Parâmetros)
   const opsList: TabKey[] = [
     'inventario',
     ...(recebimentoOn ? ['receber' as TabKey] : []),
@@ -82,7 +84,7 @@ function PortalShellInner() {
   const MODULES = [
     { id: 'ops', label: 'Operações', icon: ICONS.inventario, items: opsList },
     { id: 'prod', label: 'Produção', icon: ICONS.pcp, items: PCP_SUB },
-    { id: 'etq', label: 'Etiquetas', icon: ICONS.etiquetas, items: ETQ_SUB },
+    ...(etqAtivo ? [{ id: 'etq', label: 'Etiquetas', icon: ICONS.etiquetas, items: ETQ_SUB }] : []),
   ]
   const active = MODULES.find((m) => m.id === dived)
   const inicial = (usuario?.nome || '?')[0].toUpperCase()

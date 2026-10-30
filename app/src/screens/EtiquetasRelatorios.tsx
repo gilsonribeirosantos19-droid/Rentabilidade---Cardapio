@@ -32,9 +32,15 @@ export function EtiquetasRelatorios({ lojaId, lojas }: { lojaId: string | null; 
   const [ate, setAte] = useState(hojeYmd())
   const [aba, setAba] = useState<'resumo' | 'detalhado'>('resumo')
 
+  // busca só o período/loja escolhidos (Manaus = UTC-4 fixo)
   const { data: lista = [], isLoading } = useQuery({
-    queryKey: ['etq-rel', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Row>((f, t) => supabase.from('etiquetas').select('id,codigo,nome_snap,grupo_snap,modo,loja_id,manipulacao_em,validade_em,status,baixado_em,responsavel_nome,motivo_descarte,created_at').eq('tenant_id', tenantId).order('created_at', { ascending: false }).order('id').range(f, t)),
+    queryKey: ['etq-rel', tenantId, de, ate, lojaId], enabled: !!tenantId && !!de && !!ate,
+    queryFn: () => fetchAll<Row>((f, t) => {
+      let q = supabase.from('etiquetas').select('id,codigo,nome_snap,grupo_snap,modo,loja_id,manipulacao_em,validade_em,status,baixado_em,responsavel_nome,motivo_descarte,created_at')
+        .eq('tenant_id', tenantId).gte('created_at', `${de}T00:00:00-04:00`).lte('created_at', `${ate}T23:59:59.999-04:00`)
+      if (lojaId) q = q.eq('loja_id', lojaId)
+      return q.order('created_at', { ascending: false }).order('id').range(f, t)
+    }),
   })
   const lojaNome = (id?: string | null) => lojas.find((l) => l.id === id)?.nome || '—'
 

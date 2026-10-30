@@ -42,10 +42,16 @@ export function EtiquetasLista({ lojaId }: { lojaId: string | null }) {
   const [fModo, setFModo] = useState('')
   const [fResp, setFResp] = useState('')
   const [printData, setPrintData] = useState<PrintData>(null)
+  const [periodo, setPeriodo] = useState('30')   // dias de emissão ('' = todo o período)
 
   const { data: lista = [], isLoading } = useQuery({
-    queryKey: ['etq-lista', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Row>((f, t) => supabase.from('etiquetas').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).order('id').range(f, t)),
+    queryKey: ['etq-lista', tenantId, lojaId, periodo], enabled: !!tenantId,
+    queryFn: () => fetchAll<Row>((f, t) => {
+      let q = supabase.from('etiquetas').select('*').eq('tenant_id', tenantId)
+      if (lojaId) q = q.eq('loja_id', lojaId)
+      if (periodo) q = q.gte('created_at', new Date(Date.now() - Number(periodo) * 86400_000).toISOString())
+      return q.order('created_at', { ascending: false }).order('id').range(f, t)
+    }),
   })
   const { data: lojasFull = [] } = useQuery({ queryKey: ['etq-lojas-full', tenantId], enabled: !!tenantId, queryFn: async () => { const { data } = await supabase.from('lojas').select('*').eq('tenant_id', tenantId); return (data ?? []) as LojaFull[] } })
 
@@ -88,6 +94,12 @@ export function EtiquetasLista({ lojaId }: { lojaId: string | null }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input placeholder="Buscar código ou produto..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         </div>
+        <select className="etq-sel" value={periodo} onChange={(e) => setPeriodo(e.target.value)} title="Emitidas no período">
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+          <option value="">Todo o período</option>
+        </select>
         <select className="etq-sel" value={fGrupo} onChange={(e) => setFGrupo(e.target.value)}>
           <option value="">Todos os grupos</option>
           {gruposDistintos.map((g) => <option key={g} value={g}>{g}</option>)}

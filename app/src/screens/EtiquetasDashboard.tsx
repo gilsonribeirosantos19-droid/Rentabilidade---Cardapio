@@ -15,15 +15,21 @@ const diaManaus = (iso?: string | null) => iso ? new Date(iso).toLocaleDateStrin
 export function EtiquetasDashboard({ lojaId }: { lojaId: string | null }) {
   const { tenantId } = useAuth()
 
-  const { data: lista = [], isLoading } = useQuery({
-    queryKey: ['etq-dash', tenantId], enabled: !!tenantId,
-    queryFn: () => fetchAll<Row>((f, t) => supabase.from('etiquetas').select('id,nome_snap,loja_id,modo,validade_em,status,baixado_em,created_at').eq('tenant_id', tenantId).order('created_at', { ascending: false }).order('id').range(f, t)),
+  // só o necessário: TODAS as ativas (vencidas/vencendo) + as emitidas nos últimos 30 dias (gráfico/conformidade)
+  const COLS = 'id,nome_snap,loja_id,modo,validade_em,status,baixado_em,created_at'
+  const { data: ativasAll = [], isLoading: l1 } = useQuery({
+    queryKey: ['etq-dash', 'ativas', tenantId, lojaId], enabled: !!tenantId,
+    queryFn: () => fetchAll<Row>((f, t) => { let q = supabase.from('etiquetas').select(COLS).eq('tenant_id', tenantId).eq('status', 'ativa'); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('created_at', { ascending: false }).order('id').range(f, t) }),
   })
+  const { data: rows = [], isLoading: l2 } = useQuery({
+    queryKey: ['etq-dash', 'recentes', tenantId, lojaId], enabled: !!tenantId,
+    queryFn: () => { const desde = new Date(Date.now() - 30 * 24 * HORA).toISOString(); return fetchAll<Row>((f, t) => { let q = supabase.from('etiquetas').select(COLS).eq('tenant_id', tenantId).gte('created_at', desde); if (lojaId) q = q.eq('loja_id', lojaId); return q.order('created_at', { ascending: false }).order('id').range(f, t) }) },
+  })
+  const isLoading = l1 || l2
 
   const d = useMemo(() => {
     const now = Date.now()
-    const rows = lojaId ? lista.filter((r) => r.loja_id === lojaId) : lista
-    const ativas = rows.filter((r) => r.status === 'ativa')
+    const ativas = ativasAll
     const vencidas = ativas.filter((r) => new Date(r.validade_em).getTime() < now)
     const vence24 = ativas.filter((r) => { const v = new Date(r.validade_em).getTime(); return v >= now && v < now + 24 * HORA })
     const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Manaus' })
@@ -60,7 +66,7 @@ export function EtiquetasDashboard({ lojaId }: { lojaId: string | null }) {
       })
 
     return { ativas: ativas.length, vencidas: vencidas.length, vence24: vence24.length, emitidasHoje, conformidade, dias, maxDia, atencao }
-  }, [lista, lojaId])
+  }, [ativasAll, rows])
 
   return (
     <div className="etq-screen">
@@ -75,7 +81,7 @@ export function EtiquetasDashboard({ lojaId }: { lojaId: string | null }) {
           <div className="etq-kpi amber"><span className="lab">Vencem em 24h</span><span className="num">{d.vence24}</span><span className="foot">atenção</span></div>
           <div className="etq-kpi"><span className="lab">Etiquetas ativas</span><span className="num">{d.ativas}</span><span className="foot">em uso</span></div>
           <div className="etq-kpi"><span className="lab">Emitidas hoje</span><span className="num">{d.emitidasHoje}</span><span className="foot">no dia</span></div>
-          <div className="etq-kpi green"><span className="lab">Conformidade</span><span className="num">{d.conformidade == null ? '—' : d.conformidade + '%'}</span><span className="foot">baixa dentro do prazo</span></div>
+          <div className="etq-kpi green"><span className="lab">Conformidade</span><span className="num">{d.conformidade == null ? '—' : d.conformidade + '%'}</span><span className="foot">baixa no prazo · 30 dias</span></div>
         </div>
 
         <div className="etq-panels">
