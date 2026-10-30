@@ -19,7 +19,11 @@ const fmtD = (d?: string | null) => d ? new Date(d.length === 10 ? d + 'T12:00:0
 
 // gera o QR (dataURL) de cada etiqueta, preservando o tipo da linha
 export async function buildQrItems<T extends { codigo: string }>(ets: T[]): Promise<{ r: T; qr: string }[]> {
-  return Promise.all(ets.map(async (r) => ({ r, qr: await QRCode.toDataURL(r.codigo, { margin: 0, width: 256 }) })))
+  // QR em SVG (vetor, já vem com crispEdges): módulos com borda reta na térmica (PNG reduzido borrava os quadradinhos)
+  return Promise.all(ets.map(async (r) => {
+    const svg = await QRCode.toString(r.codigo, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#000000', light: '#ffffff' } })
+    return { r, qr: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg) }
+  }))
 }
 
 // formato da etiqueta (por dispositivo): aplica o tamanho ao @page e ao rótulo antes de imprimir
