@@ -39,7 +39,6 @@ const COLS: Col[] = [
   { key: 'pctPart', label: '% Participação', cls: 'r', fmt: 'p', def: true },
   { key: 'pctAcum', label: '% Acumulado', cls: 'r', fmt: 'p', def: true },
   { key: 'classe', label: 'Classe', cls: 'c', def: true, filt: true },
-  { key: 'margem', label: 'Margem R$', cls: 'r', fmt: 'm', def: true, sum: true },
   { key: 'classeMargem', label: 'Classe (Margem)', cls: 'c', def: true, filt: true },
 ]
 
@@ -276,8 +275,8 @@ export function CurvaAbcVendas() {
 
   const exportCSV = () => {
     if (!lista.length) { setMsg('Nada para exportar.'); return }
-    const head = ['#', 'Fantasia', 'Descrição Item', 'Item', 'Grupo', 'Q. Venda', 'V. Venda Líquida', '% Participação', '% Acumulado', 'Classe', 'Margem R$', 'Classe (Margem)']
-    const linhas = lista.map((v) => [v.rank, v.loja, titleCase(v.item), v.codigo, titleCase(v.grupo), +v.qVenda.toFixed(4), +v.vLiquida.toFixed(2), +v.pct.toFixed(1), +v.acum.toFixed(1), v.classe, v.margem == null ? '—' : +v.margem.toFixed(2), v.margemClasse])
+    const head = ['#', 'Fantasia', 'Descrição Item', 'Item', 'Grupo', 'Q. Venda', 'V. Venda Líquida', '% Participação', '% Acumulado', 'Classe', 'Classe (Margem)']
+    const linhas = lista.map((v) => [v.rank, v.loja, titleCase(v.item), v.codigo, titleCase(v.grupo), +v.qVenda.toFixed(4), +v.vLiquida.toFixed(2), +v.pct.toFixed(1), +v.acum.toFixed(1), v.classe, v.margemClasse])
     downloadCsv(`curva_abc_${de}_${ate}.csv`, [head, ...linhas])
   }
 
