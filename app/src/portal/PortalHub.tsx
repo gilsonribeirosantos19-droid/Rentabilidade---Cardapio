@@ -51,7 +51,20 @@ export function PortalHub({ usuario, lojaNome, signOut }: {
   // Todos os cards abrem em NOVA aba → o hub nunca fecha (fica na aba dele).
   // ENTRAR DIRETO: pede um crachá (sso-emitir) e abre o sistema já com ele (/sso#t=...).
   // Estoque é o próprio AIKO (já logado) → abre direto. Qualquer falha cai no login normal.
+  // CELULAR/TABLET: abre na MESMA aba — no iPhone (Safari/WhatsApp) a aba nova nascia
+  // em about:blank e nunca recebia o endereço depois do await (tela branca).
   const abrir = async (s: Sistema) => {
+    const mobile = window.matchMedia?.('(pointer: coarse)').matches
+    if (mobile) {
+      if (!s.sso) { window.location.href = s.url; return }
+      try {
+        const { data } = await supabase.functions.invoke('sso-emitir', { body: { sistema: s.id } })
+        const token = (data as { ok?: boolean; token?: string })?.token
+        if (token) { window.location.href = `${s.sso}#t=${encodeURIComponent(token)}`; return }
+      } catch { /* cai no login normal */ }
+      window.location.href = s.url
+      return
+    }
     if (!s.sso) { window.open(s.url, '_blank', 'noopener,noreferrer'); return }
     const w = window.open('about:blank', '_blank')   // abre JÁ (gesto do usuário) p/ não ser bloqueado
     try {
