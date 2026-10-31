@@ -67,7 +67,9 @@ export function ConfigUsuarios() {
 
   const saveMut = useMutation({
     mutationFn: async (m: Modal) => {
-      const nome = m.nome.trim(), email = m.email.trim()
+      // e-mail SEMPRE minúsculo: o crachá do "entrar direto" vai em minúsculas e os outros
+      // sistemas procuram o e-mail exato (Sushi… ≠ sushi… → caía no login de novo)
+      const nome = m.nome.trim(), email = m.email.trim().toLowerCase()
       if (!nome) throw new Error('Informe o nome.')
       if (!email) throw new Error('Informe o e-mail.')
       if (!m.id && !m.senha) throw new Error('Informe a senha inicial.')
@@ -77,7 +79,25 @@ export function ConfigUsuarios() {
       const lojasAcesso = m.role === 'supervisor' && m.lojasAcesso.length ? m.lojasAcesso : null
       const grupo = m.grupo || null   // grupo de permissão (separado da rota/role)
       let redeMsg = ''
+      // REGRA: perfil não-admin marcado num sistema = login criado lá como gerente (teto no servidor).
+      // Admin fica de fora (não rebaixar admin criado manualmente em cada sistema).
+      const provisionar = async (senha: string, lojaRedeId: string) => {
+        try {
+          // o AIKO nomeia as lojas como "Sushi Centro"; os outros sistemas usam só "Centro".
+          // manda sem o prefixo da marca pra casar o nome (comparação lá é sem acento/maiúscula).
+          const lojaRede = (lojaNome[lojaRedeId] || '').replace(/^sushi\s+/i, '').trim()
+          const { data: pr, error: prErr } = await supabase.functions.invoke('provisionar-rede', { body: { email, nome, senha, papel: m.role, loja: lojaRede, sistemas: m.redes } })
+          if (prErr) throw new Error(prErr.message)
+          const res = ((pr as { resultados?: { sistema: string; ok: boolean; erro?: string }[] })?.resultados) || []
+          return res.map((r) => `${SIS_LABEL[r.sistema] || r.sistema} ${r.ok ? '✅' : '⚠️' + (r.erro ? ' (' + r.erro + ')' : '')}`).join(' · ')
+        } catch (e) {
+          return 'falha ao criar na rede (' + (e as Error).message + ')'
+        }
+      }
       if (m.id) {
+        // provisiona só quando informar SENHA (o login lá nasce com ela); sem senha = só atualiza o Portal
+        const provEdit = m.role !== 'admin' && m.redes.length > 0 && !!m.senha
+        if (provEdit && !(m.redeLojaId || m.lojaId)) throw new Error('Escolha a loja para os outros sistemas da rede.')
         // sistemas_rede = quais sistemas aparecem no Portal desta pessoa. Na EDIÇÃO só atualiza a LISTA
         // (não provisiona/mexe em login) — pra não rebaixar admin já criado manualmente em cada sistema.
         const upd: Record<string, unknown> = { nome, role: m.role, grupo, tenant_id: tenantId, loja_id: lojaId, lojas_acesso: lojasAcesso, sistemas_rede: m.redes }
@@ -85,6 +105,7 @@ export function ConfigUsuarios() {
         if (r.error && /sistemas_rede/i.test(r.error.message)) { delete upd.sistemas_rede; r = await supabase.from('usuarios').update(upd).eq('id', m.id) }
         if (r.error) throw r.error
         if (m.senha) await invokeAdmin({ action: 'update_password', userId: m.id, password: m.senha })
+        if (provEdit) redeMsg = await provisionar(m.senha, m.redeLojaId || m.lojaId)
       } else {
         const auth = await invokeAdmin({ action: 'create', email, password: m.senha })
         const userId = auth?.id
@@ -99,19 +120,7 @@ export function ConfigUsuarios() {
         if (ins.error) throw ins.error
         // Login único (Nível 1): cria o MESMO usuário nos outros sistemas marcados (via Edge provisionar-rede).
         // Aditivo: se algum sistema falhar, o usuário do AIKO já está criado — só reporta no toast.
-        if (m.redes.length) {
-          try {
-            // o AIKO nomeia as lojas como "Sushi Centro"; os outros sistemas usam só "Centro".
-            // manda sem o prefixo da marca pra casar o nome (comparação lá é sem acento/maiúscula).
-            const lojaRede = (lojaNome[m.redeLojaId || m.lojaId] || '').replace(/^sushi\s+/i, '').trim()
-            const { data: pr, error: prErr } = await supabase.functions.invoke('provisionar-rede', { body: { email, nome, senha: m.senha, papel: m.role, loja: lojaRede, sistemas: m.redes } })
-            if (prErr) throw new Error(prErr.message)
-            const res = ((pr as { resultados?: { sistema: string; ok: boolean; erro?: string }[] })?.resultados) || []
-            redeMsg = res.map((r) => `${SIS_LABEL[r.sistema] || r.sistema} ${r.ok ? '✅' : '⚠️' + (r.erro ? ' (' + r.erro + ')' : '')}`).join(' · ')
-          } catch (e) {
-            redeMsg = 'falha ao criar na rede (' + (e as Error).message + ')'
-          }
-        }
+        if (m.redes.length) redeMsg = await provisionar(m.senha, m.redeLojaId || m.lojaId)
       }
       return { redeMsg }
     },
@@ -228,7 +237,7 @@ export function ConfigUsuarios() {
                     </label>
                   ))}
                 </div>
-                {!modal.id && modal.redes.length > 0 && (
+                {(!modal.id || modal.role !== 'admin') && modal.redes.length > 0 && (
                   <div style={{ marginTop: 10 }}>
                     <label>Loja nos outros sistemas *</label>
                     <select value={modal.redeLojaId || modal.lojaId} onChange={(e) => setModal({ ...modal, redeLojaId: e.target.value })}>
@@ -238,8 +247,11 @@ export function ConfigUsuarios() {
                     <div className="p-hint">Nos outros sistemas a pessoa é criada como <b>gerente</b> da loja escolhida (papéis mais altos só na criação manual de cada sistema). A senha nasce provisória lá.</div>
                   </div>
                 )}
-                {modal.id && (
-                  <div className="p-hint" style={{ marginTop: 8 }}>Marca o que aparece no <b>Portal</b> pra essa pessoa. O login dela já precisa existir em cada sistema (criado lá dentro) — aqui você só diz ao Portal o que mostrar.</div>
+                {modal.id && modal.role !== 'admin' && (
+                  <div className="p-hint" style={{ marginTop: 8 }}>Pra <b>criar o login</b> nos sistemas marcados (como gerente), informe uma <b>nova senha</b> acima — ela passa a valer no AIKO e lá. Sem senha, só muda o que aparece no Portal.</div>
+                )}
+                {modal.id && modal.role === 'admin' && (
+                  <div className="p-hint" style={{ marginTop: 8 }}>Administrador: marca só o que aparece no <b>Portal</b>. O login de admin em cada sistema é criado lá dentro.</div>
                 )}
               </div>
             </div>
