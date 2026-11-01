@@ -277,7 +277,8 @@ export function ImpactoMargem() {
         : !base.rows.length ? <div className="imp-empty">Sem vendas processadas em {labB}{lojaId ? ' nesta loja' : ''}. Escolha outro período ou confira o Recebimento de Vendas.</div>
         : <>
           <div className="imp-kbar">
-            <div className="it"><span className="k">Faturamento analisado</span><span className="v">{brl0(real.fat)}</span></div>
+            <div className="it" title="Soma de TODOS os produtos vendidos no período (valor dos itens; não inclui taxa de serviço/entrega — por isso pode diferir do caixa)."><span className="k">Vendas em produtos</span><span className="v">{brl0(base.fatTotal)}</span></div>
+            <div className="it" title="Parte das vendas em que dá pra calcular o custo: produtos com ficha + rodízios (custo vem dos itens a R$ 0). É sobre ela que a margem é calculada."><span className="k">Analisado ({pc(cobertura)})</span><span className="v">{brl0(real.fat)}</span></div>
             <div className="it"><span className="k">Margem bruta</span><span className="v">{pc(real.mA)} → {pc(real.mB)}</span></div>
             <div className="it"><span className="k">Variação</span><span className={'v ' + (real.mB < real.mA ? 'neg' : 'pos')}>{real.mB < real.mA ? '−' : '+'}{Math.abs(real.mA - real.mB).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p.</span></div>
             <div className="it"><span className="k">{real.cuB >= real.cuA ? 'Margem perdida' : 'Margem ganha'}</span><span className={'v ' + (real.cuB > real.cuA ? 'neg' : 'pos')}>{brl0(Math.abs(real.cuB - real.cuA))}</span></div>
