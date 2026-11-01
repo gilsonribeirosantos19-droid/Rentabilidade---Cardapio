@@ -127,6 +127,10 @@ export function ImpactoMargem() {
       a.qtd += +(v.qtd || 0); a.fat += +(v.faturado || 0); agg.set(cod, a)
     }
     let fatTotal = 0, fatFicha = 0
+    // RODÍZIO: o garçom lança o "Rodízio Sushi R$ 86,90" (SEM ficha) e depois os itens do grupo rodízio a R$ 0 (COM ficha).
+    // A receita está na cabeça, o custo nos itens → a cabeça entra na receita (margem) e na cobertura.
+    const rod = { fat: 0, qtd: 0, nomes: [] as string[] }
+    const ehRod = (a: { nome: string; grupo: string }) => /rod[ií]zio/i.test(a.nome + ' ' + a.grupo)
     const rows: { cod: string; nome: string; grupo: string; qtd: number; fat: number; consumo: Consumo | null }[] = []
     agg.forEach((a) => {
       fatTotal += a.fat
@@ -134,9 +138,10 @@ export function ImpactoMargem() {
       const consumo = f ? explosao.porPorcao(f.id) : null
       const ok = !!consumo && consumo.size > 0
       if (ok) fatFicha += a.fat
+      else if (a.fat > 0 && a.qtd > 0 && ehRod(a)) { rod.fat += a.fat; rod.qtd += a.qtd; rod.nomes.push(titleCase(a.nome)) }
       if (a.qtd > 0) rows.push({ ...a, consumo: ok ? consumo : null })
     })
-    return { rows, fatTotal, fatFicha }
+    return { rows, fatTotal, fatFicha, rod }
   }, [vendas, lojaId, prodByCod, explosao])
 
   const custoCom = (c: Consumo, pr: (id: string) => number) => custoConsumo(c, insMap, pr)
@@ -159,17 +164,28 @@ export function ImpactoMargem() {
         const o = vil.get(id) || { v: 0, n: 0 }; o.v += d; o.n++; vil.set(id, o)
       })
     }
-    const fat = prods.reduce((s, p) => s + p.fat, 0)
+    // rodízio: só entra sem filtro de categoria ou com categoria de rodízio
+    const rodOk = base.rod.qtd > 0 && (!cat || /rod[ií]zio/i.test(cat))
+    const itens0 = prods.filter((p) => p.fat <= 0)
+    let rodRow: ProdRow | null = null
+    if (rodOk && itens0.length) {
+      const n = base.rod.qtd, consumo: Consumo = new Map()
+      itens0.forEach((p) => p.consumo?.forEach((q, id) => consumo.set(id, (consumo.get(id) || 0) + q * p.qtd / n)))
+      const cA = itens0.reduce((s, p) => s + p.cA * p.qtd, 0) / n, cB = itens0.reduce((s, p) => s + p.cB * p.qtd, 0) / n
+      const preco = base.rod.fat / n
+      rodRow = { cod: '__rodizio', nome: 'Rodízios (todos)', grupo: 'Rodízio', qtd: n, fat: base.rod.fat, preco, consumo, cA, cB, cmvA: cA / preco * 100, cmvB: cB / preco * 100, perda: (cB - cA) * n, sug: precoParaManter(cA, cB, preco) }
+    }
+    const fat = prods.reduce((s, p) => s + p.fat, 0) + (rodRow ? rodRow.fat : 0)
     const cuA = prods.reduce((s, p) => s + p.cA * p.qtd, 0), cuB = prods.reduce((s, p) => s + p.cB * p.qtd, 0)
     const viloes = [...vil.entries()].map(([id, o]) => ({ id, ins: insMap.get(id), a: precoA(id), b: precoB(id), ...o })).filter((x) => Math.abs(x.v) >= 0.5).sort((x, y) => y.v - x.v)
-    return { prods, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
+    return { prods, rodRow, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [base, precoA, precoB, insMap, cat])
   const cats = useMemo(() => [...new Set(base.rows.filter((r) => r.consumo).map((r) => titleCase(r.grupo)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [base])
 
   const prodsView = useMemo(() => {
     const q = norm(busca.trim())
-    const l = real.prods.filter((p) => (!soComPreco || p.preco > 0) && (!q || norm(p.nome + ' ' + p.grupo + ' ' + p.cod).includes(q)))
+    const l = [...(real.rodRow ? [real.rodRow] : []), ...real.prods].filter((p) => (!soComPreco || p.preco > 0) && (!q || norm(p.nome + ' ' + p.grupo + ' ' + p.cod).includes(q)))
     const k = ord.k
     return l.sort((x, y) => { const a = x[k] as number | string, b = y[k] as number | string; const r = typeof a === 'string' ? String(a).localeCompare(String(b)) : (a as number) - (b as number); return ord.desc ? -r : r })
   }, [real.prods, busca, ord, soComPreco])
@@ -179,7 +195,12 @@ export function ImpactoMargem() {
   const simulado = useMemo(() => {
     const prods = real.prods.map((p) => { const cS = custoCom(p.consumo as Consumo, pS); return { ...p, cS, cmvS: p.preco > 0 ? cS / p.preco * 100 : 0, perdaS: (cS - p.cB) * p.qtd, sugS: precoParaManter(p.cB, cS, p.preco) } })
     const cuS = prods.reduce((s, p) => s + p.cS * p.qtd, 0)
-    return { prods: prods.filter((p) => Math.abs(p.perdaS) >= 0.5).sort((a, b) => b.perdaS - a.perdaS), cuS, mS: real.fat > 0 ? (real.fat - cuS) / real.fat * 100 : 0, viram: prods.filter((p) => p.preco > 0 && p.cmvS > 38 && p.cmvB <= 38) }
+    const r = real.rodRow, lista = [...prods]
+    if (r) {
+      const it0 = prods.filter((p) => p.fat <= 0), cS = it0.reduce((s, p) => s + p.cS * p.qtd, 0) / r.qtd
+      lista.push({ ...r, cS, cmvS: cS / r.preco * 100, perdaS: (cS - r.cB) * r.qtd, sugS: precoParaManter(r.cB, cS, r.preco) })
+    }
+    return { prods: lista.filter((p) => Math.abs(p.perdaS) >= 0.5).sort((a, b) => b.perdaS - a.perdaS), cuS, mS: real.fat > 0 ? (real.fat - cuS) / real.fat * 100 : 0, viram: lista.filter((p) => p.preco > 0 && p.cmvS > 38 && p.cmvB <= 38) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [real, sim, precoB])
   // insumos usados nas vendas, por peso no custo do mês
@@ -216,9 +237,9 @@ export function ImpactoMargem() {
   }, [aba, evoMeses, entradas, fallback, real, usados, insMap])
   const mesCurto = (k: string) => rotuloPeriodo(k, true)
 
-  const cobertura = base.fatTotal > 0 ? base.fatFicha / base.fatTotal * 100 : 0
+  const cobertura = base.fatTotal > 0 ? (base.fatFicha + base.rod.fat) / base.fatTotal * 100 : 0
   const topVil = real.viloes[0]
-  const viraram = real.prods.filter((p) => p.preco > 0 && p.cmvB > 38 && p.cmvA <= 38)
+  const viraram = [...(real.rodRow ? [real.rodRow] : []), ...real.prods].filter((p) => p.preco > 0 && p.cmvB > 38 && p.cmvA <= 38)
   const lojaNome = lojaId ? (lojas.find((l) => l.id === lojaId)?.nome || 'loja') : 'todas as lojas'
   const th = (k: keyof ProdRow, label: string, cls = '') => <th className={cls} onClick={() => setOrd((o) => ({ k, desc: o.k === k ? !o.desc : true }))}>{label}{ord.k === k ? (ord.desc ? ' ▾' : ' ▴') : ''}</th>
 
@@ -245,7 +266,7 @@ export function ImpactoMargem() {
         <div className="imp-fg"><label htmlFor="imp-cat">Categoria</label>
           <select id="imp-cat" className="imp-field" value={cat} onChange={(e) => { setCat(e.target.value); setAberto(null) }}><option value="">Todas</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
         <div className="imp-fg"><label>Loja</label><div className="imp-ro">{titleCase(lojaNome)} <span>(seletor do topo)</span></div></div>
-        <div className="imp-cov" title="Só entram produtos vendidos que têm ficha técnica ligada pelo código do PDV">
+        <div className="imp-cov" title={'Produtos com ficha ligada pelo código do PDV + rodízios (o custo vem dos itens lançados a R$ 0).' + (base.rod.nomes.length ? '\nRodízios reconhecidos: ' + base.rod.nomes.join(', ') : '')}>
           <span>Cobertura: <b>{pc(cobertura)}</b> do faturamento tem ficha</span>
           <span className="imp-covbar"><i style={{ width: Math.min(100, cobertura) + '%' }} /></span>
         </div>
@@ -256,7 +277,7 @@ export function ImpactoMargem() {
         : !base.rows.length ? <div className="imp-empty">Sem vendas processadas em {labB}{lojaId ? ' nesta loja' : ''}. Escolha outro período ou confira o Recebimento de Vendas.</div>
         : <>
           <div className="imp-kbar">
-            <div className="it"><span className="k">Faturamento c/ ficha</span><span className="v">{brl0(real.fat)}</span></div>
+            <div className="it"><span className="k">Faturamento analisado</span><span className="v">{brl0(real.fat)}</span></div>
             <div className="it"><span className="k">Margem bruta</span><span className="v">{pc(real.mA)} → {pc(real.mB)}</span></div>
             <div className="it"><span className="k">Variação</span><span className={'v ' + (real.mB < real.mA ? 'neg' : 'pos')}>{real.mB < real.mA ? '−' : '+'}{Math.abs(real.mA - real.mB).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p.</span></div>
             <div className="it"><span className="k">{real.cuB >= real.cuA ? 'Margem perdida' : 'Margem ganha'}</span><span className={'v ' + (real.cuB > real.cuA ? 'neg' : 'pos')}>{brl0(Math.abs(real.cuB - real.cuA))}</span></div>
