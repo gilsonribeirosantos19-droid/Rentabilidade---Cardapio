@@ -154,3 +154,22 @@ export function rotuloPeriodo(key: string, curto = false): string {
   if (/-S\d$/.test(key)) { const s = +key.slice(-1); return curto ? `${s}º sem/${yy}` : `${s}º semestre ${y} (${s === 1 ? 'jan–jun' : 'jul–dez'})` }
   return String(y)
 }
+
+// ── RODÍZIO: liga a "cabeça" (ex.: "Rodízio Sushi" R$86,90, sem ficha) ao GRUPO de lançamento
+// dos itens dela (ex.: "Rodízio De Sushis", itens a R$0 com ficha) pelas palavras do nome.
+// Ignora "rodízio", artigos e plural ("sushi" casa com "sushis"). Sem par → null ("outros").
+const STOP_ROD = new Set(['rodizio', 'rodizios', 'de', 'do', 'da', 'dos', 'das', 'e', 'o', 'a', 'com', 'sem', 'r'])
+export function tokensRodizio(s: string): string[] {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .split(/[^a-z]+/).filter((w) => w.length > 1 && !STOP_ROD.has(w))
+    .map((w) => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w))
+}
+export function ligarRodizio(nomeCabeca: string, grupoCabeca: string, gruposItens: string[]): string | null {
+  const tc = new Set([...tokensRodizio(nomeCabeca), ...tokensRodizio(grupoCabeca)])
+  let melhor: string | null = null, pts = 0
+  for (const g of gruposItens) {
+    const n = tokensRodizio(g).filter((t) => tc.has(t)).length
+    if (n > pts) { pts = n; melhor = g }
+  }
+  return melhor
+}

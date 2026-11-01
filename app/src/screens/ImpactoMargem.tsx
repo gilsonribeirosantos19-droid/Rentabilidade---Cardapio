@@ -5,7 +5,7 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo, type CostCtx } from '../lib/cost'
 import { downloadCsv } from '../lib/csv'
-import { precosPeriodo, criarExplosao, custoConsumo, custoUnitario, precoParaManter, listarPeriodos, intervaloPeriodo, rotuloPeriodo, type FichaX, type InsumoUn, type Consumo, type PrecoPer, type ModoPeriodo } from '../lib/impactoMargem'
+import { precosPeriodo, criarExplosao, custoConsumo, custoUnitario, precoParaManter, ligarRodizio, listarPeriodos, intervaloPeriodo, rotuloPeriodo, type FichaX, type InsumoUn, type Consumo, type PrecoPer, type ModoPeriodo } from '../lib/impactoMargem'
 import { ImpLineChart, SERIE_CORES } from './impactoChart'
 import './impacto.css'
 
@@ -19,7 +19,7 @@ type Insumo = InsumoUn & { nome: string; categoria?: string | null; preco_compra
 type Ficha = { id: string; produto_id?: string | null; rendimento_porcoes?: number | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens_ficha?: { insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number | null }[] }
 type Venda = { loja_id: string; data: string; produto_id: string; produto_nome?: string; grupo?: string; qtd?: number; faturado?: number }
 type Ent = { insumo_id: string; quantidade?: number; custo_unitario?: number; criado_em?: string; tipo?: string | null }
-type ProdRow = { cod: string; nome: string; grupo: string; qtd: number; fat: number; preco: number; consumo: Consumo | null; cA: number; cB: number; cmvA: number; cmvB: number; perda: number; sug: number }
+type ProdRow = { cod: string; nome: string; grupo: string; qtd: number; fat: number; preco: number; consumo: Consumo | null; cA: number; cB: number; cmvA: number; cmvB: number; perda: number; sug: number; itens?: string[] }
 
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const brl0 = (v: number) => 'R$ ' + Math.round(v).toLocaleString('pt-BR')
@@ -129,7 +129,7 @@ export function ImpactoMargem() {
     let fatTotal = 0, fatFicha = 0
     // RODÍZIO: o garçom lança o "Rodízio Sushi R$ 86,90" (SEM ficha) e depois os itens do grupo rodízio a R$ 0 (COM ficha).
     // A receita está na cabeça, o custo nos itens → a cabeça entra na receita (margem) e na cobertura.
-    const rod = { fat: 0, qtd: 0, nomes: [] as string[] }
+    const rod = { fat: 0, qtd: 0, nomes: [] as string[], heads: [] as { nome: string; grupo: string; qtd: number; fat: number }[] }
     const ehRod = (a: { nome: string; grupo: string }) => /rod[ií]zio/i.test(a.nome + ' ' + a.grupo)
     const rows: { cod: string; nome: string; grupo: string; qtd: number; fat: number; consumo: Consumo | null }[] = []
     agg.forEach((a) => {
@@ -138,7 +138,7 @@ export function ImpactoMargem() {
       const consumo = f ? explosao.porPorcao(f.id) : null
       const ok = !!consumo && consumo.size > 0
       if (ok) fatFicha += a.fat
-      else if (a.fat > 0 && a.qtd > 0 && ehRod(a)) { rod.fat += a.fat; rod.qtd += a.qtd; rod.nomes.push(titleCase(a.nome)) }
+      else if (a.fat > 0 && a.qtd > 0 && ehRod(a)) { rod.fat += a.fat; rod.qtd += a.qtd; rod.nomes.push(titleCase(a.nome)); rod.heads.push({ nome: a.nome, grupo: a.grupo, qtd: a.qtd, fat: a.fat }) }
       if (a.qtd > 0) rows.push({ ...a, consumo: ok ? consumo : null })
     })
     return { rows, fatTotal, fatFicha, rod }
@@ -167,25 +167,46 @@ export function ImpactoMargem() {
     // rodízio: só entra sem filtro de categoria ou com categoria de rodízio
     const rodOk = base.rod.qtd > 0 && (!cat || /rod[ií]zio/i.test(cat))
     const itens0 = prods.filter((p) => p.fat <= 0)
+    // linha sintética de rodízio: receita das CABEÇAS × custo dos ITENS a R$0 (por rodízio vendido)
+    const mkRod = (cod: string, nome: string, grupo: string, qtd: number, fatH: number, itens: ProdRow[]): ProdRow | null => {
+      if (!(qtd > 0) || !itens.length) return null
+      const consumo: Consumo = new Map()
+      itens.forEach((p) => p.consumo?.forEach((q, id) => consumo.set(id, (consumo.get(id) || 0) + q * p.qtd / qtd)))
+      const cA = itens.reduce((s, p) => s + p.cA * p.qtd, 0) / qtd, cB = itens.reduce((s, p) => s + p.cB * p.qtd, 0) / qtd
+      const preco = fatH / qtd
+      return { cod, nome, grupo, qtd, fat: fatH, preco, consumo, cA, cB, cmvA: preco > 0 ? cA / preco * 100 : 0, cmvB: preco > 0 ? cB / preco * 100 : 0, perda: (cB - cA) * qtd, sug: precoParaManter(cA, cB, preco), itens: itens.map((p) => p.cod) }
+    }
     let rodRow: ProdRow | null = null
+    const rodRows: ProdRow[] = []
     if (rodOk && itens0.length) {
-      const n = base.rod.qtd, consumo: Consumo = new Map()
-      itens0.forEach((p) => p.consumo?.forEach((q, id) => consumo.set(id, (consumo.get(id) || 0) + q * p.qtd / n)))
-      const cA = itens0.reduce((s, p) => s + p.cA * p.qtd, 0) / n, cB = itens0.reduce((s, p) => s + p.cB * p.qtd, 0) / n
-      const preco = base.rod.fat / n
-      rodRow = { cod: '__rodizio', nome: 'Rodízios (todos)', grupo: 'Rodízio', qtd: n, fat: base.rod.fat, preco, consumo, cA, cB, cmvA: cA / preco * 100, cmvB: cB / preco * 100, perda: (cB - cA) * n, sug: precoParaManter(cA, cB, preco) }
+      rodRow = mkRod('__rodizio', 'Rodízios (todos)', 'Rodízio', base.rod.qtd, base.rod.fat, itens0)
+      // um por tipo: cabeça ligada ao grupo de lançamento dos itens dela
+      const gruposItens = [...new Set(itens0.map((p) => p.grupo))]
+      const porGrupo = new Map<string, { qtd: number; fat: number; nomes: string[] }>()
+      for (const h of base.rod.heads) {
+        const g = ligarRodizio(h.nome, h.grupo, gruposItens) ?? '__outros'
+        const o = porGrupo.get(g) || { qtd: 0, fat: 0, nomes: [] }; o.qtd += h.qtd; o.fat += h.fat; o.nomes.push(titleCase(h.nome)); porGrupo.set(g, o)
+      }
+      const semCabeca: ProdRow[] = []
+      for (const g of gruposItens) {
+        const its = itens0.filter((p) => p.grupo === g), h = porGrupo.get(g)
+        if (!h) { semCabeca.push(...its); continue }
+        const r = mkRod('__rod_' + g, 'Rodízio · ' + titleCase(g), h.nomes.join(', '), h.qtd, h.fat, its); if (r) rodRows.push(r)
+      }
+      const out = porGrupo.get('__outros')
+      if (out && semCabeca.length) { const r = mkRod('__rod_outros', 'Rodízios (outros)', out.nomes.join(', '), out.qtd, out.fat, semCabeca); if (r) rodRows.push(r) }
     }
     const fat = prods.reduce((s, p) => s + p.fat, 0) + (rodRow ? rodRow.fat : 0)
     const cuA = prods.reduce((s, p) => s + p.cA * p.qtd, 0), cuB = prods.reduce((s, p) => s + p.cB * p.qtd, 0)
     const viloes = [...vil.entries()].map(([id, o]) => ({ id, ins: insMap.get(id), a: precoA(id), b: precoB(id), ...o })).filter((x) => Math.abs(x.v) >= 0.5).sort((x, y) => y.v - x.v)
-    return { prods, rodRow, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
+    return { prods, rodRow, rodRows, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [base, precoA, precoB, insMap, cat])
   const cats = useMemo(() => [...new Set(base.rows.filter((r) => r.consumo).map((r) => titleCase(r.grupo)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [base])
 
   const prodsView = useMemo(() => {
     const q = norm(busca.trim())
-    const l = [...(real.rodRow ? [real.rodRow] : []), ...real.prods].filter((p) => (!soComPreco || p.preco > 0) && (!q || norm(p.nome + ' ' + p.grupo + ' ' + p.cod).includes(q)))
+    const l = [...(real.rodRow ? [real.rodRow] : []), ...real.rodRows, ...real.prods].filter((p) => (!soComPreco || p.preco > 0) && (!q || norm(p.nome + ' ' + p.grupo + ' ' + p.cod).includes(q)))
     const k = ord.k
     return l.sort((x, y) => { const a = x[k] as number | string, b = y[k] as number | string; const r = typeof a === 'string' ? String(a).localeCompare(String(b)) : (a as number) - (b as number); return ord.desc ? -r : r })
   }, [real.prods, busca, ord, soComPreco])
@@ -195,10 +216,10 @@ export function ImpactoMargem() {
   const simulado = useMemo(() => {
     const prods = real.prods.map((p) => { const cS = custoCom(p.consumo as Consumo, pS); return { ...p, cS, cmvS: p.preco > 0 ? cS / p.preco * 100 : 0, perdaS: (cS - p.cB) * p.qtd, sugS: precoParaManter(p.cB, cS, p.preco) } })
     const cuS = prods.reduce((s, p) => s + p.cS * p.qtd, 0)
-    const r = real.rodRow, lista = [...prods]
-    if (r) {
-      const it0 = prods.filter((p) => p.fat <= 0), cS = it0.reduce((s, p) => s + p.cS * p.qtd, 0) / r.qtd
-      lista.push({ ...r, cS, cmvS: cS / r.preco * 100, perdaS: (cS - r.cB) * r.qtd, sugS: precoParaManter(r.cB, cS, r.preco) })
+    const lista = [...prods], byCod = new Map(prods.map((p) => [p.cod, p]))
+    for (const r of [...(real.rodRow ? [real.rodRow] : []), ...real.rodRows]) {
+      const cS = (r.itens || []).reduce((s, c) => { const p = byCod.get(c); return s + (p ? p.cS * p.qtd : 0) }, 0) / r.qtd
+      lista.push({ ...r, cS, cmvS: r.preco > 0 ? cS / r.preco * 100 : 0, perdaS: (cS - r.cB) * r.qtd, sugS: precoParaManter(r.cB, cS, r.preco) })
     }
     return { prods: lista.filter((p) => Math.abs(p.perdaS) >= 0.5).sort((a, b) => b.perdaS - a.perdaS), cuS, mS: real.fat > 0 ? (real.fat - cuS) / real.fat * 100 : 0, viram: lista.filter((p) => p.preco > 0 && p.cmvS > 38 && p.cmvB <= 38) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -239,7 +260,7 @@ export function ImpactoMargem() {
 
   const cobertura = base.fatTotal > 0 ? (base.fatFicha + base.rod.fat) / base.fatTotal * 100 : 0
   const topVil = real.viloes[0]
-  const viraram = [...(real.rodRow ? [real.rodRow] : []), ...real.prods].filter((p) => p.preco > 0 && p.cmvB > 38 && p.cmvA <= 38)
+  const viraram = [...(real.rodRow ? [real.rodRow] : []), ...real.rodRows, ...real.prods].filter((p) => p.preco > 0 && p.cmvB > 38 && p.cmvA <= 38)
   const lojaNome = lojaId ? (lojas.find((l) => l.id === lojaId)?.nome || 'loja') : 'todas as lojas'
   const th = (k: keyof ProdRow, label: string, cls = '') => <th className={cls} onClick={() => setOrd((o) => ({ k, desc: o.k === k ? !o.desc : true }))}>{label}{ord.k === k ? (ord.desc ? ' ▾' : ' ▴') : ''}</th>
 

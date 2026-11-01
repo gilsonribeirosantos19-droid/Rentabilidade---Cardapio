@@ -117,3 +117,14 @@ describe('períodos (mês/tri/sem/ano)', () => {
     expect(rotuloPeriodo('2026-S2', true)).toBe('2º sem/26')
   })
 })
+
+import { ligarRodizio } from './impactoMargem'
+describe('ligarRodizio (cabeça → grupo dos itens)', () => {
+  const grupos = ['Rodízio De Sushis', 'Rodízio Festival', 'Rodízio Premium']
+  it('Rodízio Sushi → Rodízio De Sushis (plural/artigo ignorados)', () => { expect(ligarRodizio('Rodízio Sushi', 'Rodízios', grupos)).toBe('Rodízio De Sushis') })
+  it('Festival e Premium', () => {
+    expect(ligarRodizio('RODIZIO FESTIVAL 99,90', '', grupos)).toBe('Rodízio Festival')
+    expect(ligarRodizio('Rodizio Premium', 'Rodizio', grupos)).toBe('Rodízio Premium')
+  })
+  it('sem palavra em comum → null', () => { expect(ligarRodizio('Rodízio Kids', '', grupos)).toBeNull() })
+})
