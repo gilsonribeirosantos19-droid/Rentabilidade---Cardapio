@@ -95,3 +95,17 @@
 .imp-kbar .v.neg { color: var(--danger); } .imp-kbar .v.pos { color: var(--ok); } .imp-kbar .v.warn { color: var(--brand-ink); font-family: inherit; }
 .imp-cnt { display: inline-block; margin-left: 4px; font-size: 11px; font-weight: 700; background: var(--n-100); color: var(--n-500); border-radius: 999px; padding: 0 7px; }
 .imp-tabs button.on .imp-cnt { background: var(--brand-tint-2); color: var(--brand-ink); }
+
+/* período personalizado + gráficos da aba Evolução */
+.imp-field.sm { min-width: 130px; }
+.imp-dates { display: flex; align-items: center; gap: 6px; }
+.imp-dates .imp-field { min-width: 0; width: 140px; }
+.imp-dates span { font-size: 12px; color: var(--n-500); }
+.imp-chart-pad { padding: 10px 14px 4px; }
+.imp-chart { display: flex; flex-direction: column; gap: 6px; }
+.imp-chart-box { position: relative; }
+.imp-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--n-700); }
+.imp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.imp-legend i, .imp-tip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.imp-tip { position: absolute; top: 4px; transform: translateX(-50%); background: #fff; border: 1px solid var(--n-200); border-radius: 8px; box-shadow: 0 4px 14px rgba(15,23,42,.12); padding: 7px 10px; font-size: 12px; color: var(--n-700); pointer-events: none; white-space: nowrap; display: flex; flex-direction: column; gap: 3px; z-index: 3; }
+.imp-tip div { display: flex; align-items: center; gap: 6px; }
