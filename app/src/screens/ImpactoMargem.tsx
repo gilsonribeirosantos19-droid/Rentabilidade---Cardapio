@@ -50,9 +50,11 @@ const Cmv = ({ v }: { v: number }) => <span className="imp-cmv"><i className={'i
 export function ImpactoMargem() {
   const { tenantId } = useAuth()
   const { lojaId, lojas } = useLoja()
-  const [mesB, setMesB] = useState(MESES[0])
-  const [mesA, setMesA] = useState(MESES[1])
-  const [aba, setAba] = useState<'real' | 'sim'>('real')
+  // padrão = último mês FECHADO × o anterior (o mês corrente ainda está incompleto)
+  const [mesB, setMesB] = useState(MESES[1])
+  const [mesA, setMesA] = useState(MESES[2])
+  const [aba, setAba] = useState<'vil' | 'prod' | 'sim'>('vil')
+  const [cat, setCat] = useState('')   // categoria (grupo do PDV) — filtra TUDO: resumo, vilões, produtos e simulador
   const [busca, setBusca] = useState('')
   const [ord, setOrd] = useState<{ k: keyof ProdRow; desc: boolean }>({ k: 'perda', desc: true })
   const [aberto, setAberto] = useState<string | null>(null)
@@ -128,6 +130,7 @@ export function ImpactoMargem() {
     const vil = new Map<string, { v: number; n: number }>()
     for (const r of base.rows) {
       if (!r.consumo) continue
+      if (cat && titleCase(r.grupo) !== cat) continue
       const cA = custoCom(r.consumo, pA), cB = custoCom(r.consumo, pB)
       const preco = r.qtd ? r.fat / r.qtd : 0
       prods.push({ ...r, preco, cA, cB, cmvA: preco > 0 ? cA / preco * 100 : 0, cmvB: preco > 0 ? cB / preco * 100 : 0, perda: (cB - cA) * r.qtd, sug: precoParaManter(cA, cB, preco) })
@@ -142,7 +145,8 @@ export function ImpactoMargem() {
     const viloes = [...vil.entries()].map(([id, o]) => ({ id, ins: insMap.get(id), a: precoA(id), b: precoB(id), ...o })).filter((x) => Math.abs(x.v) >= 0.5).sort((x, y) => y.v - x.v)
     return { prods, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [base, precoA, precoB, insMap])
+  }, [base, precoA, precoB, insMap, cat])
+  const cats = useMemo(() => [...new Set(base.rows.filter((r) => r.consumo).map((r) => titleCase(r.grupo)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [base])
 
   const prodsView = useMemo(() => {
     const q = norm(busca.trim())
@@ -185,9 +189,11 @@ export function ImpactoMargem() {
     <div className="imp-screen">
       <div className="imp-filters">
         <div className="imp-fg"><label htmlFor="imp-mesb">Mês analisado</label>
-          <select id="imp-mesb" className="imp-field" value={mesB} onChange={(e) => setMesB(e.target.value)}>{MESES.map((m) => <option key={m} value={m}>{mesNome(m)}</option>)}</select></div>
+          <select id="imp-mesb" className="imp-field" value={mesB} onChange={(e) => { const v = e.target.value; setMesB(v); const i = MESES.indexOf(v); if (i >= 0 && MESES[i + 1]) setMesA(MESES[i + 1]) }}>{MESES.map((m) => <option key={m} value={m}>{mesNome(m)}</option>)}</select></div>
         <div className="imp-fg"><label htmlFor="imp-mesa">Comparar com</label>
-          <select id="imp-mesa" className="imp-field" value={mesA} onChange={(e) => setMesA(e.target.value)}>{MESES.map((m) => <option key={m} value={m}>{mesNome(m)}</option>)}</select></div>
+          <select id="imp-mesa" className="imp-field" value={mesA} onChange={(e) => setMesA(e.target.value)}>{MESES.filter((m) => m < mesB).map((m) => <option key={m} value={m}>{mesNome(m)}</option>)}</select></div>
+        <div className="imp-fg"><label htmlFor="imp-cat">Categoria</label>
+          <select id="imp-cat" className="imp-field" value={cat} onChange={(e) => { setCat(e.target.value); setAberto(null) }}><option value="">Todas</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
         <div className="imp-fg"><label>Loja</label><div className="imp-ro">{titleCase(lojaNome)} <span>(seletor do topo)</span></div></div>
         <div className="imp-cov" title="Só entram produtos vendidos que têm ficha técnica ligada pelo código do PDV">
           <span>Cobertura: <b>{pc(cobertura)}</b> do faturamento tem ficha</span>
@@ -199,27 +205,27 @@ export function ImpactoMargem() {
       {loading ? <div className="imp-empty">Carregando compras, fichas e vendas…</div>
         : !base.rows.length ? <div className="imp-empty">Sem vendas processadas em {mesNome(mesB)}{lojaId ? ' nesta loja' : ''}. Escolha outro mês ou confira o Recebimento de Vendas.</div>
         : <>
-          <div className="imp-kpis">
-            <div className={'imp-kpi' + (real.mB < real.mA ? ' bad' : '')}><span className="lab">Margem bruta (produtos com ficha)</span><span className="num">{pc(real.mA)} → {pc(real.mB)}</span>
-              <span className="foot"><span className={real.mB < real.mA ? 'down' : 'upg'}>{real.mB < real.mA ? '▼' : '▲'} {Math.abs(real.mA - real.mB).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} pontos</span> com os preços de {mesNome(mesB).split(' ')[0].toLowerCase()}</span></div>
-            <div className={'imp-kpi' + (real.cuB > real.cuA ? ' bad' : ' ok')}><span className="lab">{real.cuB >= real.cuA ? 'Margem perdida' : 'Margem ganha'}</span><span className="num">{brl0(Math.abs(real.cuB - real.cuA))}</span><span className="foot">sobre {brl0(real.fat)} vendidos em {mesNome(mesB).split(' ')[0].toLowerCase()}</span></div>
-            <div className="imp-kpi warn"><span className="lab">Maior vilão</span><span className="num sm">{topVil ? titleCase(topVil.ins?.nome || '—') : '—'}</span>
-              <span className="foot">{topVil && topVil.a.preco > 0 ? <><VarPill v={(topVil.b.preco / topVil.a.preco - 1) * 100} /> · {brl0(topVil.v)} do total</> : 'nenhum insumo subiu'}</span></div>
-            <div className={'imp-kpi' + (viraram.length ? ' bad' : '')}><span className="lab">Viraram vermelho</span><span className="num">{viraram.length} produto{viraram.length === 1 ? '' : 's'}</span><span className="foot">CMV passou de 38%{viraram[0] ? ' · ex.: ' + titleCase(viraram[0].nome) : ''}</span></div>
+          <div className="imp-kbar">
+            <div className="it"><span className="k">Faturamento c/ ficha</span><span className="v">{brl0(real.fat)}</span></div>
+            <div className="it"><span className="k">Margem bruta</span><span className="v">{pc(real.mA)} → {pc(real.mB)}</span></div>
+            <div className="it"><span className="k">Variação</span><span className={'v ' + (real.mB < real.mA ? 'neg' : 'pos')}>{real.mB < real.mA ? '−' : '+'}{Math.abs(real.mA - real.mB).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p.</span></div>
+            <div className="it"><span className="k">{real.cuB >= real.cuA ? 'Margem perdida' : 'Margem ganha'}</span><span className={'v ' + (real.cuB > real.cuA ? 'neg' : 'pos')}>{brl0(Math.abs(real.cuB - real.cuA))}</span></div>
+            <div className="it"><span className="k">Maior vilão</span><span className="v warn">{topVil ? titleCase(topVil.ins?.nome || '—') : '—'}</span>{topVil && topVil.a.preco > 0 && <VarPill v={(topVil.b.preco / topVil.a.preco - 1) * 100} />}</div>
+            <div className="it"><span className="k">Viraram vermelho</span><span className={'v ' + (viraram.length ? 'neg' : '')}>{viraram.length}</span></div>
           </div>
 
           <div className="imp-tabs" role="tablist">
-            <button role="tab" className={aba === 'real' ? 'on' : ''} onClick={() => setAba('real')}>Impacto real</button>
+            <button role="tab" className={aba === 'vil' ? 'on' : ''} onClick={() => setAba('vil')}>Vilões da margem <span className="imp-cnt">{real.viloes.length}</span></button>
+            <button role="tab" className={aba === 'prod' ? 'on' : ''} onClick={() => setAba('prod')}>Produtos afetados <span className="imp-cnt">{prodsView.length}</span></button>
             <button role="tab" className={aba === 'sim' ? 'on' : ''} onClick={() => setAba('sim')}>Simulador “e se…?”</button>
           </div>
 
-          {aba === 'real' ? (
-            <div className="imp-grid">
+          {aba === 'vil' ? (
               <div className="imp-card">
                 <h2>Vilões da margem <span className="hint">insumos que mais pesaram em R$</span></h2>
                 <div className="imp-scroll">
                   <table className="imp-tbl">
-                    <thead><tr><th>Insumo</th><th className="r">{mesNome(mesA).split(' ')[0]}</th><th className="r">{mesNome(mesB).split(' ')[0]}</th><th className="r">Var.</th><th className="r">Impacto</th><th /></tr></thead>
+                    <thead><tr><th>Insumo</th><th className="r">Antes ({mesNome(mesA).split(' ')[0].slice(0, 3)})</th><th className="r">Agora ({mesNome(mesB).split(' ')[0].slice(0, 3)})</th><th className="r">Var.</th><th className="r">Impacto</th><th /></tr></thead>
                     <tbody>
                       {real.viloes.length === 0 ? <tr><td colSpan={6} className="imp-empty">Nenhum insumo mudou de preço entre os dois meses.</td></tr>
                         : real.viloes.map((v) => {
@@ -238,7 +244,7 @@ export function ImpactoMargem() {
                 </div>
                 <div className="imp-note">Preço = <b>média ponderada das compras</b> do mês na rede (NF-e e entradas manuais; transferências e ajustes não contam). <b>últ.</b> = sem compra no mês, usa o último preço pago. O custo já desconta a perda na limpeza (rendimento do insumo).</div>
               </div>
-
+          ) : aba === 'prod' ? (
               <div className="imp-card">
                 <h2>Produtos afetados <label className="imp-tog" title="Itens de rodízio são vendidos a R$ 0 (o preço está no rodízio). Os totais de cima continuam contando o custo deles."><input type="checkbox" checked={soComPreco} onChange={(e) => setSoComPreco(e.target.checked)} />Só com preço de venda</label> <input className="imp-search" placeholder="Buscar produto…" value={busca} onChange={(e) => setBusca(e.target.value)} /></h2>
                 <div className="imp-scroll tall">
@@ -278,7 +284,6 @@ export function ImpactoMargem() {
                 </div>
                 <div className="imp-note">Mesmo volume vendido em {mesNome(mesB).split(' ')[0].toLowerCase()}, custeado com os preços dos dois meses. Semáforo do CMV: <Cmv v={25} /> até 30% · <Cmv v={35} /> até 38% · <Cmv v={40} /> acima. “Preço p/ manter” = preço que devolve o CMV de antes.{prodsView.length > 400 ? ` Mostrando 400 de ${prodsView.length} (use a busca ou o Exportar).` : ''}</div>
               </div>
-            </div>
           ) : (
             <div className="imp-grid">
               <div className="imp-card">
@@ -309,11 +314,11 @@ export function ImpactoMargem() {
               </div>
 
               <div className="imp-col">
-                <div className="imp-kpis three">
-                  <div className={'imp-kpi' + (simulado.mS < real.mB ? ' bad' : '')}><span className="lab">Margem hoje → simulada</span><span className="num">{pc(real.mB)} → {pc(simulado.mS)}</span>
-                    <span className="foot">{Object.keys(sim).length ? <span className={simulado.mS < real.mB ? 'down' : 'upg'}>{simulado.mS < real.mB ? '▼' : '▲'} {Math.abs(real.mB - simulado.mS).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} pontos</span> : 'monte um cenário ao lado'}</span></div>
-                  <div className={'imp-kpi' + (simulado.cuS > real.cuB ? ' bad' : '')}><span className="lab">Impacto no mês</span><span className="num">{simulado.cuS >= real.cuB ? '−' : '+'} {brl0(Math.abs(simulado.cuS - real.cuB))}</span><span className="foot">com o volume de {mesNome(mesB).split(' ')[0].toLowerCase()}</span></div>
-                  <div className={'imp-kpi' + (simulado.viram.length ? ' bad' : '')}><span className="lab">Passariam a vermelho</span><span className="num">{simulado.viram.length}</span><span className="foot">{simulado.viram.length ? simulado.viram.slice(0, 2).map((p) => titleCase(p.nome)).join(', ') + (simulado.viram.length > 2 ? '…' : '') : 'nenhum produto cruza 38%'}</span></div>
+                <div className="imp-kbar">
+                  <div className="it"><span className="k">Margem hoje → simulada</span><span className="v">{pc(real.mB)} → {pc(simulado.mS)}</span></div>
+                  <div className="it"><span className="k">Variação</span><span className={'v ' + (simulado.mS < real.mB ? 'neg' : Object.keys(sim).length ? 'pos' : '')}>{Object.keys(sim).length ? (simulado.mS < real.mB ? '−' : '+') + Math.abs(real.mB - simulado.mS).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' p.p.' : '—'}</span></div>
+                  <div className="it"><span className="k">Impacto no mês</span><span className={'v ' + (simulado.cuS > real.cuB ? 'neg' : '')}>{simulado.cuS >= real.cuB ? '−' : '+'}{brl0(Math.abs(simulado.cuS - real.cuB))}</span></div>
+                  <div className="it"><span className="k">Passariam a vermelho</span><span className={'v ' + (simulado.viram.length ? 'neg' : '')}>{simulado.viram.length}</span></div>
                 </div>
                 <div className="imp-card">
                   <h2>Produtos no cenário <label className="imp-tog" title="Itens de rodízio são vendidos a R$ 0 (o preço está no rodízio). Os totais de cima continuam contando o custo deles."><input type="checkbox" checked={soComPreco} onChange={(e) => setSoComPreco(e.target.checked)} />Só com preço de venda</label><span className="hint">o que mais perde primeiro</span></h2>
