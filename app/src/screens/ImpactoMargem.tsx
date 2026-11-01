@@ -58,6 +58,7 @@ export function ImpactoMargem() {
   const [aberto, setAberto] = useState<string | null>(null)
   const [sim, setSim] = useState<Record<string, number>>({})
   const [buscaSim, setBuscaSim] = useState('')
+  const [soComPreco, setSoComPreco] = useState(true)   // esconde itens de rodízio (vendidos a R$ 0) das TABELAS — os totais seguem incluindo
 
   const [iniB, fimB] = mesRange(mesB)
   const [iniA, fimA] = mesRange(mesA)
@@ -145,10 +146,10 @@ export function ImpactoMargem() {
 
   const prodsView = useMemo(() => {
     const q = norm(busca.trim())
-    const l = real.prods.filter((p) => !q || norm(p.nome + ' ' + p.grupo + ' ' + p.cod).includes(q))
+    const l = real.prods.filter((p) => (!soComPreco || p.preco > 0) && (!q || norm(p.nome + ' ' + p.grupo + ' ' + p.cod).includes(q)))
     const k = ord.k
     return l.sort((x, y) => { const a = x[k] as number | string, b = y[k] as number | string; const r = typeof a === 'string' ? String(a).localeCompare(String(b)) : (a as number) - (b as number); return ord.desc ? -r : r })
-  }, [real.prods, busca, ord])
+  }, [real.prods, busca, ord, soComPreco])
 
   // ── simulador (parte dos preços do mês "agora") ──
   const pS = (id: string) => pB(id) * (1 + (sim[id] || 0) / 100)
@@ -239,7 +240,7 @@ export function ImpactoMargem() {
               </div>
 
               <div className="imp-card">
-                <h2>Produtos afetados <input className="imp-search" placeholder="Buscar produto…" value={busca} onChange={(e) => setBusca(e.target.value)} /></h2>
+                <h2>Produtos afetados <label className="imp-tog" title="Itens de rodízio são vendidos a R$ 0 (o preço está no rodízio). Os totais de cima continuam contando o custo deles."><input type="checkbox" checked={soComPreco} onChange={(e) => setSoComPreco(e.target.checked)} />Só com preço de venda</label> <input className="imp-search" placeholder="Buscar produto…" value={busca} onChange={(e) => setBusca(e.target.value)} /></h2>
                 <div className="imp-scroll tall">
                   <table className="imp-tbl">
                     <thead><tr>{th('nome', 'Produto')}{th('preco', 'Preço médio', 'r')}{th('cB', 'Custo antes → agora', 'r')}{th('cmvB', 'CMV antes → agora')}{th('qtd', 'Vendidos', 'r')}{th('perda', 'Perda R$', 'r')}{th('sug', 'Preço p/ manter', 'r')}</tr></thead>
@@ -315,14 +316,14 @@ export function ImpactoMargem() {
                   <div className={'imp-kpi' + (simulado.viram.length ? ' bad' : '')}><span className="lab">Passariam a vermelho</span><span className="num">{simulado.viram.length}</span><span className="foot">{simulado.viram.length ? simulado.viram.slice(0, 2).map((p) => titleCase(p.nome)).join(', ') + (simulado.viram.length > 2 ? '…' : '') : 'nenhum produto cruza 38%'}</span></div>
                 </div>
                 <div className="imp-card">
-                  <h2>Produtos no cenário <span className="hint">o que mais perde primeiro</span></h2>
+                  <h2>Produtos no cenário <label className="imp-tog" title="Itens de rodízio são vendidos a R$ 0 (o preço está no rodízio). Os totais de cima continuam contando o custo deles."><input type="checkbox" checked={soComPreco} onChange={(e) => setSoComPreco(e.target.checked)} />Só com preço de venda</label><span className="hint">o que mais perde primeiro</span></h2>
                   <div className="imp-scroll tall">
                     <table className="imp-tbl">
                       <thead><tr><th>Produto</th><th className="r">Preço médio</th><th>CMV hoje → simulado</th><th className="r">Perda/mês</th><th className="r">Preço p/ manter</th></tr></thead>
                       <tbody>
                         {!Object.keys(sim).length ? <tr><td colSpan={5} className="imp-empty">Escolha um atalho ou digite a variação de um insumo.</td></tr>
                           : simulado.prods.length === 0 ? <tr><td colSpan={5} className="imp-empty">Nenhum produto vendido usa os insumos alterados.</td></tr>
-                          : simulado.prods.slice(0, 300).map((p) => (
+                          : simulado.prods.filter((p) => !soComPreco || p.preco > 0).slice(0, 300).map((p) => (
                             <tr key={p.cod}>
                               <td>{titleCase(p.nome)} {p.preco > 0 && p.cmvS > 38 && p.cmvB <= 38 && <span className="imp-flag">● vira vermelho</span>}</td>
                               <td className="r">{p.preco > 0 ? brl(p.preco) : <span className="muted">R$ 0</span>}</td>
