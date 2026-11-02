@@ -35,3 +35,24 @@ describe('ratearRodizio', () => {
     expect(totCab).toBeCloseTo(500 * 4 + 300 * 2, 6)
   })
 })
+
+import { mapaEfetivo } from './rodizio'
+describe('mapaEfetivo (automático pelo nome + cadastro manda)', () => {
+  const linhas = [
+    L('A', '3392', 'RODIZIOS', 80, 6952, 0), L('A', '4544', 'RODIZIOS', 10, 599, 0),
+    L('A', '3364', 'RODIZIOS', 3, 260, 0),                      // voucher
+    L('A', 'it1', 'RODÍZIO DE SUSHIS', 500, 0, 4), L('A', 'm1', 'RODÍZIO MIX', 50, 0, 3),
+    L('A', '2017', 'RODIZIOS', 9, 1034, 0),
+  ].map((l, i) => ({ ...l, nome: ['070 - Rodízio de Sushi', '070 - Rodízio de Sushi - Aniversário', 'Voucher Rodízio de Sushi', 'x', 'y', '072 - Rodízio Mix'][i] }))
+  it('liga sozinho pelo nome (variações no mesmo grupo)', () => {
+    const m = mapaEfetivo(linhas, new Map())
+    expect(m.get('3392')).toBe('RODIZIO DE SUSHIS')
+    expect(m.get('4544')).toBe('RODIZIO DE SUSHIS')
+    expect(m.get('2017')).toBe('RODIZIO MIX')
+  })
+  it('cadastro "não é rodízio" (\'\') vence o automático', () => {
+    const m = mapaEfetivo(linhas, new Map([['3364', '']]))
+    expect(m.get('3364')).toBe('')
+    expect(ratearRodizio(linhas, m).custoCabeca.has('A|3364')).toBe(false)
+  })
+})

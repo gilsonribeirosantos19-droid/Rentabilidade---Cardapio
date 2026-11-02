@@ -4,7 +4,7 @@ import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
 import { custoFichaPorcao } from '../lib/cost'
-import { ratearRodizio } from '../lib/rodizio'
+import { ratearRodizio, mapaEfetivo } from '../lib/rodizio'
 import { useRodizioMapa } from '../lib/useRodizioMapa'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
@@ -226,9 +226,10 @@ export function EngenhariaCardapio() {
       }
       return custoUnit > 0 ? { ...v, vCustoMedio: custoUnit } : v
     })
-    // RODÍZIO (Cadastros › Rodízios): a cabeça recebe o custo dos itens do grupo de lançamento dela
-    if (!rodMapa.size) return comCusto
-    const { custoCabeca, itensDoRodizio } = ratearRodizio(comCusto.map((v) => ({ lojaId: v.lojaId, codigo: v.codigo, grupo: v.grupo, qVenda: v.qVenda, vBruta: v.vBruta - v.vDesc, custoUnit: v.vCustoMedio })), rodMapa)
+    // RODÍZIO: a cabeça (com preço, sem ficha) recebe o custo dos itens do grupo de lançamento dela.
+    // Ligação automática pelo nome; o cadastro do Produto (campo "itens lançados no grupo") corrige/exclui.
+    const linhasRod = comCusto.map((v) => ({ lojaId: v.lojaId, codigo: v.codigo, nome: v.item, grupo: v.grupo, qVenda: v.qVenda, vBruta: v.vBruta - v.vDesc, custoUnit: v.vCustoMedio }))
+    const { custoCabeca, itensDoRodizio } = ratearRodizio(linhasRod, mapaEfetivo(linhasRod, rodMapa))
     return comCusto.map((v) => {
       const k = `${v.lojaId}|${v.codigo}`
       if (custoCabeca.has(k)) return { ...v, vCustoMedio: custoCabeca.get(k) as number, rodCab: true }
