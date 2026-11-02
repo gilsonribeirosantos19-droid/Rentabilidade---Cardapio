@@ -97,9 +97,12 @@ export function ImpactoMargem() {
     queryKey: ['imp-vendas', tenantId, iniB, fimB], enabled: en,
     queryFn: async () => {
       // 1º: RPC que já soma por loja×produto no banco (rápido p/ trimestre/ano). Sem a RPC → busca dia a dia (ok p/ mês).
-      const rpc = await supabase.rpc('vendas_produto_periodo', { p_ini: iniB, p_fim: fimB })
-      if (!rpc.error) return (rpc.data ?? []) as Venda[]
-      if (!['PGRST202', '42883'].includes(rpc.error.code || '')) throw rpc.error
+      // PAGINADA: o PostgREST corta em 1000 linhas por chamada (a RPC também) — sem paginar, perdia ~60% das vendas
+      try {
+        return await fetchAll<Venda>((f, t) => supabase.rpc('vendas_produto_periodo', { p_ini: iniB, p_fim: fimB }).order('loja_id').order('produto_id').range(f, t))
+      } catch (e) {
+        if (!['PGRST202', '42883'].includes((e as { code?: string }).code || '')) throw e
+      }
       const [v, gate] = await Promise.all([
         fetchAll<Venda>((f, t) => supabase.from('vendas_produto_dia').select('*').eq('tenant_id', tenantId).gte('data', iniB).lte('data', fimB).order('loja_id').order('data').order('produto_id').range(f, t)),
         fetchAll<{ loja_id: string; data: string; status: string }>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', iniB).lte('data', fimB).order('loja_id').order('data').range(f, t)),
