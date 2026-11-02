@@ -4,8 +4,6 @@ import { useLoja } from '../lib/loja'
 import { useAuth } from '../lib/auth'
 import { supabase, fetchAll } from '../lib/db'
 import { custoFichaPorcao } from '../lib/cost'
-import { ratearRodizio, mapaEfetivo } from '../lib/rodizio'
-import { useRodizioMapa } from '../lib/useRodizioMapa'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import './faturamento.css'
@@ -16,8 +14,7 @@ import './faturamento.css'
 // o produto não tem ficha, elas aparecem como "—" (aguardando ficha) e o faturamento entra normal.
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
 
-// rodCab = cabeça de rodízio (custo veio dos itens do grupo) · rodItem = item lançado DENTRO do rodízio (custo já está na cabeça)
-type Prod = { id: string; lojaId: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number; vCustoMedio: number; rodCab?: boolean; rodItem?: boolean }
+type Prod = { id: string; lojaId: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number; vCustoMedio: number }
 type FichaEng = { id: string; produto_id?: string; rendimento_porcoes?: number; itens_ficha?: { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }[] }
 type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: number; loja_id?: string; criado_em?: string }
 
@@ -162,7 +159,7 @@ export function EngenhariaCardapio() {
   const dias = diasEntre(de, ate)
   const num = (v: Prod, k: ColKey): number => {
     const vLiquida = v.vBruta - v.vDesc
-    const cmvTeo = v.rodItem ? 0 : v.vCustoMedio * v.qVenda   // item de rodízio: custo já está na cabeça (não soma 2×)
+    const cmvTeo = v.vCustoMedio * v.qVenda
     switch (k) {
       case 'qVenda': return v.qVenda
       case 'vBruta': return v.vBruta
@@ -186,8 +183,6 @@ export function EngenhariaCardapio() {
       case 'codigo': return v.codigo
       case 'grupo': return titleCase(v.grupo)
       default:
-        // item de rodízio: mostra o custo unitário, mas o CMV fica na cabeça do rodízio
-        if (v.rodItem && c.key !== 'vCustoMedio' && COST_KEYS.has(c.key)) return '↳ no rodízio'
         // custo/CMV/margem só quando o produto tem ficha (custo médio > 0); senão "—"
         if (COST_KEYS.has(c.key) && !v.vCustoMedio) return '—'
         return fmt(num(v, c.key), c.fmt)
@@ -210,10 +205,9 @@ export function EngenhariaCardapio() {
   const engEntByLoja = useMemo(() => { const m: Record<string, Mov[]> = {}; engEntradas.forEach((e) => { const k = e.loja_id || ''; (m[k] = m[k] || []).push(e) }); return m }, [engEntradas])
   const engSaiByLoja = useMemo(() => { const m: Record<string, Mov[]> = {}; engSaidas.forEach((s) => { const k = s.loja_id || ''; (m[k] = m[k] || []).push(s) }); return m }, [engSaidas])
   // custo unitário da ficha por loja, RECONSTRUÍDO na data final do período (custo do MÊS) → cache por (loja, produto)
-  const { data: rodMapa = new Map<string, string>() } = useRodizioMapa(tenantId)
   const rowsComCusto = useMemo(() => {
     const cache = new Map<string, number>()
-    const comCusto = rows.map((v) => {
+    return rows.map((v) => {
       const pid = prodByCod.get(String(v.codigo).trim())
       const ficha = pid ? fichaByProduto.get(pid) : undefined
       if (!ficha || !(ficha.itens_ficha || []).length) return v
@@ -226,17 +220,7 @@ export function EngenhariaCardapio() {
       }
       return custoUnit > 0 ? { ...v, vCustoMedio: custoUnit } : v
     })
-    // RODÍZIO: a cabeça (com preço, sem ficha) recebe o custo dos itens do grupo de lançamento dela.
-    // Ligação automática pelo nome; o cadastro do Produto (campo "itens lançados no grupo") corrige/exclui.
-    const linhasRod = comCusto.map((v) => ({ lojaId: v.lojaId, codigo: v.codigo, nome: v.item, grupo: v.grupo, qVenda: v.qVenda, vBruta: v.vBruta - v.vDesc, custoUnit: v.vCustoMedio }))
-    const { custoCabeca, itensDoRodizio } = ratearRodizio(linhasRod, mapaEfetivo(linhasRod, rodMapa))
-    return comCusto.map((v) => {
-      const k = `${v.lojaId}|${v.codigo}`
-      if (custoCabeca.has(k)) return { ...v, vCustoMedio: custoCabeca.get(k) as number, rodCab: true }
-      if (itensDoRodizio.has(k)) return { ...v, rodItem: true }
-      return v
-    })
-  }, [rows, prodByCod, fichaByProduto, fichasCostMap, engEntByLoja, engSaiByLoja, engInsumos, engSaldos, ate, rodMapa])
+  }, [rows, prodByCod, fichaByProduto, fichasCostMap, engEntByLoja, engSaiByLoja, engInsumos, engSaldos, ate])
 
   const preLista = useMemo(() => {
     const q = norm(busca.trim())
@@ -264,7 +248,6 @@ export function EngenhariaCardapio() {
       if (c.key === 'item') return titleCase(v.item)
       if (c.key === 'codigo') return v.codigo
       if (c.key === 'grupo') return titleCase(v.grupo)
-      if (v.rodItem && c.key !== 'vCustoMedio' && COST_KEYS.has(c.key)) return 'no rodízio'
       if (COST_KEYS.has(c.key) && !v.vCustoMedio) return '—'
       return +num(v, c.key).toFixed(4)
     }))
