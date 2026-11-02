@@ -6,10 +6,11 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
 import { isoD } from '../lib/date'
+import { marcarPrecoFora, PF_JANELA_DIAS, type EntPreco } from '../lib/precoFora'
 import './fiscal.css'
 
 type Insumo = { id: string; nome: string; codigo_interno?: string | number; unidade_medida?: string }
-type Ent = { id: string; criado_em?: string; insumo_id: string; loja_id?: string | null; fator_conversao?: number | null; quantidade?: number | null; quantidade_fornecedor?: number | null; unidade_compra?: string | null; fornecedor_nome?: string | null; nfe_numero?: string | null }
+type Ent = { id: string; tipo?: string | null; custo_unitario?: number | null; criado_em?: string; insumo_id: string; loja_id?: string | null; fator_conversao?: number | null; quantidade?: number | null; quantidade_fornecedor?: number | null; unidade_compra?: string | null; fornecedor_nome?: string | null; nfe_numero?: string | null }
 type Nota = { numero?: string | number | null; serie?: string | number | null; valor_total?: number | null }
 type Vinc = { insumo_id?: string; codigo_nfe?: string }
 
@@ -46,6 +47,19 @@ export function AuditoriaConversao() {
     }),
   })
 
+  // histórico de COMPRAS da rede (90 dias antes do período → fim), p/ o alerta "preço fora do padrão"
+  const histDe = useMemo(() => { if (!applied.de) return ''; const d = new Date(applied.de + 'T12:00:00'); d.setDate(d.getDate() - PF_JANELA_DIAS); return isoD(d) }, [applied.de])
+  const { data: hist = [] } = useQuery({
+    queryKey: ['aud-hist', tenantId, histDe, applied.ate, applied.insId], enabled: !!tenantId && !!histDe,
+    queryFn: () => fetchAll<EntPreco>((f, t) => {
+      let q = supabase.from('entradas_estoque').select('id,insumo_id,custo_unitario,quantidade,criado_em,tipo').eq('tenant_id', tenantId).gte('criado_em', histDe + 'T00:00:00')
+      if (applied.ate) q = q.lte('criado_em', applied.ate + 'T23:59:59')
+      if (applied.insId) q = q.eq('insumo_id', applied.insId)
+      return q.order('id').range(f, t)
+    }),
+  })
+  const pfMap = useMemo(() => marcarPrecoFora(ents as EntPreco[], hist), [ents, hist])
+
   const insMap = useMemo(() => Object.fromEntries(insumos.map((i) => [i.id, i])) as Record<string, Insumo>, [insumos])
   const lojaMap = useMemo(() => Object.fromEntries(lojas.map((l) => [l.id, l.nome])) as Record<string, string>, [lojas])
   const insOpts = useMemo(() => insumos.map((i) => i.nome), [insumos])
@@ -62,14 +76,15 @@ export function AuditoriaConversao() {
     const dif = parseFloat((qtdEst - esperado).toFixed(4))
     const suspeito = fator === 1 && !!e.unidade_compra && (e.unidade_compra || '').toLowerCase() !== (ins?.unidade_medida || '').toLowerCase()
     const erro = Math.abs(dif) > 0.001
+    const pf = pfMap.get(e.id)
     const nrDanfe = e.nfe_numero || ''
     const valorNota = notaMap[nrDanfe] != null ? notaMap[nrDanfe] : notaMap[`${nrDanfe.split('/')[0]}`]
     const codItem = fmtCod(ins?.codigo_interno)
     const codForn = codFornMap[e.insumo_id] || ''
     const unidMed = ins?.unidade_medida || ''
     const busca = [ins?.nome, e.fornecedor_nome, nrDanfe, codItem, codForn].join(' ').toLowerCase()
-    return { e, ins, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro, nrDanfe, valorNota, codItem, codForn, unidMed, busca, lojaNome: lojaMap[e.loja_id || ''] || '' }
-  }), [ents, insMap, notaMap, codFornMap, lojaMap])
+    return { e, ins, fator, qtdForn, qtdEst, esperado, dif, suspeito, erro, pf, nrDanfe, valorNota, codItem, codForn, unidMed, busca, lojaNome: lojaMap[e.loja_id || ''] || '' }
+  }), [ents, insMap, notaMap, codFornMap, lojaMap, pfMap])
 
   const fornOpts = useMemo(() => Array.from(new Set(rows.map((r) => r.e.fornecedor_nome).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b, 'pt-BR')), [rows])
 
@@ -77,8 +92,9 @@ export function AuditoriaConversao() {
     const termo = norm(busca)
     return rows.filter((r) => {
       if (statusFil === 'Erro' && !r.erro) return false
-      if (statusFil === 'Suspeito' && !(r.suspeito && !r.erro)) return false
-      if (statusFil === 'OK' && !(!r.suspeito && !r.erro)) return false
+      if (statusFil === 'Preço' && !(r.pf && !r.erro)) return false
+      if (statusFil === 'Suspeito' && !(r.suspeito && !r.erro && !r.pf)) return false
+      if (statusFil === 'OK' && !(!r.suspeito && !r.erro && !r.pf)) return false
       if (fForn && r.e.fornecedor_nome !== fForn) return false
       if (termo && !r.busca.includes(termo)) return false
       return true
@@ -87,8 +103,9 @@ export function AuditoriaConversao() {
 
   const consultar = () => { setApplied({ de, ate, insId }) }
 
-  const statusCell = (suspeito: boolean, erro: boolean) => {
+  const statusCell = (suspeito: boolean, erro: boolean, pf?: { ref: number; ratio: number }) => {
     if (erro) return <span style={{ color: '#e11d48', fontWeight: 700, fontSize: 12 }}>Erro</span>
+    if (pf) return <span style={{ color: '#7c3aed', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap' }} title={`Custo ${pf.ratio > 1 ? pf.ratio.toFixed(1) + '× acima' : (1 / pf.ratio).toFixed(1) + '× abaixo'} da mediana das compras dos ${PF_JANELA_DIAS} dias anteriores (${brl(pf.ref)}). Confira o fator de conversão.`}>Preço fora</span>
     if (suspeito) return <span style={{ color: '#f97316', fontWeight: 700, fontSize: 12 }}>Suspeito</span>
     return <span style={{ color: '#16a34a', fontWeight: 700, fontSize: 12 }}>OK</span>
   }
@@ -136,6 +153,7 @@ export function AuditoriaConversao() {
       <div style={{ fontSize: 12, color: '#64748b', margin: '4px 0 14px', display: 'flex', gap: 20, flexWrap: 'wrap' }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Suspeito' ? '' : 'Suspeito') }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', display: 'inline-block' }} />Suspeito — fator de conversão igual a 1 com embalagem declarada</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Erro' ? '' : 'Erro') }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#e11d48', display: 'inline-block' }} />Erro — diferença entre esperado e lançado</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }} onClick={() => { setStatusFil(statusFil === 'Preço' ? '' : 'Preço') }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#7c3aed', display: 'inline-block' }} />Preço fora do padrão — custo mais que o dobro ou menos da metade do normal ({PF_JANELA_DIAS} dias anteriores){(() => { const n = rows.filter((r) => r.pf && !r.erro).length; return n ? <b style={{ color: '#7c3aed' }}>&nbsp;({n})</b> : null })()}</span>
         {statusFil && <span style={{ color: '#f97316', cursor: 'pointer', fontWeight: 600 }} onClick={() => { setStatusFil('') }}>✕ limpar filtro ({statusFil})</span>}
       </div>
 
@@ -156,11 +174,12 @@ export function AuditoriaConversao() {
             <th className="r">QTD ESTOQUE</th>
             <th className="r">ESPERADO</th>
             <th className="r">DIFERENÇA</th>
+            <th className="r">CUSTO UN.</th>
             <th>STATUS</th>
           </tr></thead>
           <tbody>
-            {(isLoading || isFetching) ? <tr><td colSpan={15} className="empty">Carregando…</td></tr>
-              : filtradas.length === 0 ? <tr><td colSpan={15} className="empty">Nenhum lançamento encontrado.</td></tr>
+            {(isLoading || isFetching) ? <tr><td colSpan={16} className="empty">Carregando…</td></tr>
+              : filtradas.length === 0 ? <tr><td colSpan={16} className="empty">Nenhum lançamento encontrado.</td></tr>
               : filtradas.map((r) => {
                 const dataHora = r.e.criado_em ? new Date(r.e.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
                 return (
@@ -179,7 +198,8 @@ export function AuditoriaConversao() {
                     <td className="r mono" style={{ color: '#334155' }}>{fmt3(r.qtdEst)}</td>
                     <td className="r mono" style={{ color: '#64748b' }}>{fmt3(r.esperado)}</td>
                     <td className="r">{difCell(r.dif, r.esperado)}</td>
-                    <td>{statusCell(r.suspeito, r.erro)}</td>
+                    <td className="r mono" style={{ color: r.pf ? '#7c3aed' : '#334155', whiteSpace: 'nowrap' }}>{r.e.custo_unitario != null ? brl(Number(r.e.custo_unitario)) : '—'}{r.pf && <div style={{ fontSize: 10.5, color: '#94a3b8' }}>normal {brl(r.pf.ref)}</div>}</td>
+                    <td>{statusCell(r.suspeito, r.erro, r.pf)}</td>
                   </tr>
                 )
               })}

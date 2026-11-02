@@ -94,3 +94,39 @@ describe('impacto no produto', () => {
     expect(precoParaManter(0, 10, 50)).toBe(0)
   })
 })
+
+import { listarPeriodos, intervaloPeriodo, rotuloPeriodo } from './impactoMargem'
+describe('períodos (mês/tri/sem/ano)', () => {
+  const hoje = new Date(2026, 10, 1)   // 01/11/2026
+  it('lista do mais recente para trás', () => {
+    expect(listarPeriodos('mes', hoje).slice(0, 3)).toEqual(['2026-11', '2026-10', '2026-09'])
+    expect(listarPeriodos('tri', hoje).slice(0, 4)).toEqual(['2026-T4', '2026-T3', '2026-T2', '2026-T1'])
+    expect(listarPeriodos('tri', hoje)[4]).toBe('2025-T4')
+    expect(listarPeriodos('sem', hoje).slice(0, 3)).toEqual(['2026-S2', '2026-S1', '2025-S2'])
+    expect(listarPeriodos('ano', hoje)).toEqual(['2026', '2025', '2024'])
+  })
+  it('intervalo de datas de cada período', () => {
+    expect(intervaloPeriodo('2026-02')).toEqual(['2026-02-01', '2026-02-28'])
+    expect(intervaloPeriodo('2026-T3')).toEqual(['2026-07-01', '2026-09-30'])
+    expect(intervaloPeriodo('2026-S1')).toEqual(['2026-01-01', '2026-06-30'])
+    expect(intervaloPeriodo('2025')).toEqual(['2025-01-01', '2025-12-31'])
+  })
+  it('rótulos', () => {
+    expect(rotuloPeriodo('2026-10', true)).toBe('out/26')
+    expect(rotuloPeriodo('2026-T3')).toBe('3º trimestre 2026 (jul–set)')
+    expect(rotuloPeriodo('2026-S2', true)).toBe('2º sem/26')
+  })
+})
+
+import { ligarRodizio } from './impactoMargem'
+describe('ligarRodizio (cabeça → grupo dos itens)', () => {
+  const grupos = ['Rodízio De Sushis', 'Rodízio Festival', 'Rodízio Premium']
+  it('Rodízio Sushi → Rodízio De Sushis (plural/artigo ignorados)', () => { expect(ligarRodizio('Rodízio Sushi', 'Rodízios', grupos)).toBe('Rodízio De Sushis') })
+  it('Festival e Premium', () => {
+    expect(ligarRodizio('RODIZIO FESTIVAL 99,90', '', grupos)).toBe('Rodízio Festival')
+    expect(ligarRodizio('Rodizio Premium', 'Rodizio', grupos)).toBe('Rodízio Premium')
+  })
+  it('Rodízio Dupla → itens do Rodízio Sushi (apelido)', () => { expect(ligarRodizio('077 - Rodizio Dupla', '', grupos)).toBe('Rodízio De Sushis') })
+  it('Rodízio Em Casa → grupo Rodízio Em Casa ("em" ignorado, casa pelo "casa")', () => { expect(ligarRodizio('071 - Rodízio Em Casa', '', [...grupos, 'RODÍZIO EM CASA'])).toBe('RODÍZIO EM CASA') })
+  it('sem palavra em comum → null', () => { expect(ligarRodizio('Rodízio Kids', '', grupos)).toBeNull() })
+})

@@ -116,3 +116,63 @@ export function precoParaManter(custoAntes: number, custoAgora: number, precoVen
   if (!(custoAntes > 0) || !(precoVenda > 0)) return 0
   return custoAgora / (custoAntes / precoVenda)
 }
+
+// ── períodos de comparação (mês / trimestre / semestre / ano) ──
+// chaves: mês 'YYYY-MM' · tri 'YYYY-T1..4' · sem 'YYYY-S1|2' · ano 'YYYY'
+export type ModoPeriodo = 'mes' | 'tri' | 'sem' | 'ano'
+const MES_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+const pad2 = (n: number) => String(n).padStart(2, '0')
+const ultimoDia = (y: number, m: number) => new Date(y, m, 0).getDate()   // m = 1..12
+
+// lista do mais recente (o período corrente) para trás
+export function listarPeriodos(modo: ModoPeriodo, hoje: Date = new Date()): string[] {
+  const y = hoje.getFullYear(), m = hoje.getMonth() + 1
+  if (modo === 'mes') return Array.from({ length: 13 }, (_, i) => { const d = new Date(y, m - 1 - i, 1); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}` })
+  if (modo === 'tri') { const out: string[] = []; let yy = y, q = Math.ceil(m / 3); for (let i = 0; i < 8; i++) { out.push(`${yy}-T${q}`); q--; if (q < 1) { q = 4; yy-- } } return out }
+  if (modo === 'sem') { const out: string[] = []; let yy = y, s = m <= 6 ? 1 : 2; for (let i = 0; i < 6; i++) { out.push(`${yy}-S${s}`); s--; if (s < 1) { s = 2; yy-- } } return out }
+  return [String(y), String(y - 1), String(y - 2)]
+}
+
+export function intervaloPeriodo(key: string): [string, string] {
+  const y = +key.slice(0, 4)
+  let m1 = 1, m2 = 12
+  if (/^\d{4}-\d{2}$/.test(key)) { m1 = m2 = +key.slice(5) }
+  else if (/-T\d$/.test(key)) { const q = +key.slice(-1); m1 = (q - 1) * 3 + 1; m2 = q * 3 }
+  else if (/-S\d$/.test(key)) { const s = +key.slice(-1); m1 = s === 1 ? 1 : 7; m2 = s === 1 ? 6 : 12 }
+  return [`${y}-${pad2(m1)}-01`, `${y}-${pad2(m2)}-${pad2(ultimoDia(y, m2))}`]
+}
+
+export function rotuloPeriodo(key: string, curto = false): string {
+  const y = +key.slice(0, 4), yy = String(y).slice(2)
+  if (/^\d{4}-\d{2}$/.test(key)) {
+    const m = +key.slice(5)
+    if (curto) return `${MES_CURTO[m - 1]}/${yy}`
+    const s = new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long' })
+    return `${s.charAt(0).toUpperCase() + s.slice(1)} de ${y}`
+  }
+  if (/-T\d$/.test(key)) { const q = +key.slice(-1); return curto ? `${q}º tri/${yy}` : `${q}º trimestre ${y} (${MES_CURTO[(q - 1) * 3]}–${MES_CURTO[q * 3 - 1]})` }
+  if (/-S\d$/.test(key)) { const s = +key.slice(-1); return curto ? `${s}º sem/${yy}` : `${s}º semestre ${y} (${s === 1 ? 'jan–jun' : 'jul–dez'})` }
+  return String(y)
+}
+
+// ── RODÍZIO: liga a "cabeça" (ex.: "Rodízio Sushi" R$86,90, sem ficha) ao GRUPO de lançamento
+// dos itens dela (ex.: "Rodízio De Sushis", itens a R$0 com ficha) pelas palavras do nome.
+// Ignora "rodízio", artigos e plural ("sushi" casa com "sushis"). Sem par → null ("outros").
+const STOP_ROD = new Set(['rodizio', 'rodizios', 'de', 'do', 'da', 'dos', 'das', 'e', 'em', 'o', 'a', 'com', 'sem', 'r'])
+// apelidos: cabeça cujo nome não bate com o grupo dos itens (regra do dono: "Rodízio Dupla" usa os itens do Rodízio Sushi)
+const ALIAS_ROD: Record<string, string> = { dupla: 'sushi' }
+export function tokensRodizio(s: string): string[] {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .split(/[^a-z]+/).filter((w) => w.length > 1 && !STOP_ROD.has(w))
+    .map((w) => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w))
+    .map((w) => ALIAS_ROD[w] || w)
+}
+export function ligarRodizio(nomeCabeca: string, grupoCabeca: string, gruposItens: string[]): string | null {
+  const tc = new Set([...tokensRodizio(nomeCabeca), ...tokensRodizio(grupoCabeca)])
+  let melhor: string | null = null, pts = 0
+  for (const g of gruposItens) {
+    const n = tokensRodizio(g).filter((t) => tc.has(t)).length
+    if (n > pts) { pts = n; melhor = g }
+  }
+  return melhor
+}

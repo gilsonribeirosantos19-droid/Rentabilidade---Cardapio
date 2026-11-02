@@ -5,7 +5,8 @@ import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
 import { custoDoInsumo, type CostCtx } from '../lib/cost'
 import { downloadCsv } from '../lib/csv'
-import { precosPeriodo, criarExplosao, custoConsumo, custoUnitario, precoParaManter, type FichaX, type InsumoUn, type Consumo, type PrecoPer } from '../lib/impactoMargem'
+import { precosPeriodo, criarExplosao, custoConsumo, custoUnitario, precoParaManter, ligarRodizio, listarPeriodos, intervaloPeriodo, rotuloPeriodo, type FichaX, type InsumoUn, type Consumo, type PrecoPer, type ModoPeriodo } from '../lib/impactoMargem'
+import { ImpLineChart, SERIE_CORES } from './impactoChart'
 import './impacto.css'
 
 // Gestão › Impacto na Margem — quanto a variação do preço de COMPRA dos insumos tirou (ou devolveu)
@@ -18,7 +19,7 @@ type Insumo = InsumoUn & { nome: string; categoria?: string | null; preco_compra
 type Ficha = { id: string; produto_id?: string | null; rendimento_porcoes?: number | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens_ficha?: { insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number | null }[] }
 type Venda = { loja_id: string; data: string; produto_id: string; produto_nome?: string; grupo?: string; qtd?: number; faturado?: number }
 type Ent = { insumo_id: string; quantidade?: number; custo_unitario?: number; criado_em?: string; tipo?: string | null }
-type ProdRow = { cod: string; nome: string; grupo: string; qtd: number; fat: number; preco: number; consumo: Consumo | null; cA: number; cB: number; cmvA: number; cmvB: number; perda: number; sug: number }
+type ProdRow = { cod: string; nome: string; grupo: string; qtd: number; fat: number; preco: number; consumo: Consumo | null; cA: number; cB: number; cmvA: number; cmvB: number; perda: number; sug: number; itens?: string[]; cabecas?: string }
 
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const brl0 = (v: number) => 'R$ ' + Math.round(v).toLocaleString('pt-BR')
@@ -33,7 +34,6 @@ const discreto = (i?: Insumo) => ['un', 'pct', 'cx'].includes((i?.unidade_medida
 // meses: 'YYYY-MM' → [primeiro dia, último dia]
 const mesKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 const mesRange = (k: string): [string, string] => { const [y, m] = k.split('-').map(Number); return [`${k}-01`, new Date(y, m, 0).toLocaleDateString('en-CA')] }
-const mesNome = (k: string) => { const [y, m] = k.split('-').map(Number); const s = new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); return s.charAt(0).toUpperCase() + s.slice(1) }
 const MESES = (() => { const h = new Date(); return Array.from({ length: 13 }, (_, i) => mesKey(new Date(h.getFullYear(), h.getMonth() - i, 1))) })()
 
 function VarPill({ v }: { v: number }) {
@@ -42,7 +42,7 @@ function VarPill({ v }: { v: number }) {
 }
 function Fonte({ p }: { p: PrecoPer }) {
   if (p.fonte === 'compra') return null
-  const t = p.fonte === 'ultima' ? 'sem compra no mês — usa o último preço pago' : p.fonte === 'cadastro' ? 'nunca comprado — usa o custo do cadastro' : 'sem preço'
+  const t = p.fonte === 'ultima' ? 'sem compra no período — usa o último preço pago' : p.fonte === 'cadastro' ? 'nunca comprado — usa o custo do cadastro' : 'sem preço'
   return <span className="imp-src" title={t}>{p.fonte === 'ultima' ? 'últ.' : p.fonte === 'cadastro' ? 'cad.' : '—'}</span>
 }
 const Cmv = ({ v }: { v: number }) => <span className="imp-cmv"><i className={'imp-dot ' + dot(v)} />{pc(v)}</span>
@@ -50,20 +50,38 @@ const Cmv = ({ v }: { v: number }) => <span className="imp-cmv"><i className={'i
 export function ImpactoMargem() {
   const { tenantId } = useAuth()
   const { lojaId, lojas } = useLoja()
-  const [mesB, setMesB] = useState(MESES[0])
-  const [mesA, setMesA] = useState(MESES[1])
-  const [aba, setAba] = useState<'real' | 'sim'>('real')
+  // período: mês / trimestre / semestre / ano / personalizado.
+  // padrão = último período FECHADO × o anterior (o corrente ainda está incompleto); no ano, o ano corrente × o anterior
+  const [modo, setModo] = useState<ModoPeriodo | 'pers'>('mes')
+  const lista = useMemo(() => modo === 'pers' ? [] : listarPeriodos(modo), [modo])
+  const [keyB, setKeyB] = useState(() => listarPeriodos('mes')[1])
+  const [keyA, setKeyA] = useState(() => listarPeriodos('mes')[2])
+  const diasAtras = (n: number) => new Date(Date.now() - n * 86400000).toLocaleDateString('en-CA')
+  const [pers, setPers] = useState(() => ({ bIni: diasAtras(29), bFim: diasAtras(0), aIni: diasAtras(59), aFim: diasAtras(30) }))
+  const trocarModo = (m: ModoPeriodo | 'pers') => {
+    setModo(m)
+    if (m === 'pers') return
+    const l = listarPeriodos(m), ib = m === 'ano' ? 0 : 1
+    setKeyB(l[ib]); setKeyA(l[ib + 1])
+  }
+  const [aba, setAba] = useState<'vil' | 'prod' | 'sim' | 'evo'>('vil')
+  const [cat, setCat] = useState('')   // categoria (grupo do PDV) — filtra TUDO: resumo, vilões, produtos e simulador
   const [busca, setBusca] = useState('')
   const [ord, setOrd] = useState<{ k: keyof ProdRow; desc: boolean }>({ k: 'perda', desc: true })
   const [aberto, setAberto] = useState<string | null>(null)
   const [sim, setSim] = useState<Record<string, number>>({})
   const [buscaSim, setBuscaSim] = useState('')
+  const [soComPreco, setSoComPreco] = useState(true)   // esconde itens de rodízio (vendidos a R$ 0) das TABELAS — os totais seguem incluindo
 
-  const [iniB, fimB] = mesRange(mesB)
-  const [iniA, fimA] = mesRange(mesA)
-  const fimMax = fimA > fimB ? fimA : fimB
-  // histórico de compras até 12 meses antes do período mais antigo (p/ o "último preço pago")
-  const desde = useMemo(() => { const base = iniA < iniB ? iniA : iniB; const d = new Date(base + 'T12:00:00'); d.setFullYear(d.getFullYear() - 1); return d.toLocaleDateString('en-CA') }, [iniA, iniB])
+  const [iniB, fimB] = modo === 'pers' ? [pers.bIni, pers.bFim] : intervaloPeriodo(keyB)
+  const [iniA, fimA] = modo === 'pers' ? [pers.aIni, pers.aFim] : intervaloPeriodo(keyA)
+  const dm = (d: string) => d ? d.slice(8, 10) + '/' + d.slice(5, 7) : '?'
+  const labB = modo === 'pers' ? `${dm(iniB)}–${dm(fimB)}` : rotuloPeriodo(keyB, true)
+  const labA = modo === 'pers' ? `${dm(iniA)}–${dm(fimA)}` : rotuloPeriodo(keyA, true)
+  const evoMeses = useMemo(() => [...MESES.slice(0, 12)].reverse(), [])   // Evolução: últimos 12 meses
+  const fimMax = [fimA, fimB, mesRange(MESES[0])[1]].sort().pop() as string
+  // histórico de compras até 12 meses antes do período mais antigo (p/ o "último preço pago") — cobre a Evolução também
+  const desde = useMemo(() => { const base = [iniA, iniB, mesRange(evoMeses[0])[0]].sort()[0]; const d = new Date(base + 'T12:00:00'); d.setFullYear(d.getFullYear() - 1); return d.toLocaleDateString('en-CA') }, [iniA, iniB, evoMeses])
 
   const en = !!tenantId
   const { data: insumos = [], isLoading: l1 } = useQuery({ queryKey: ['imp-ins', tenantId], enabled: en, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct,preco_compra').eq('tenant_id', tenantId).order('id').range(f, t)) })
@@ -78,6 +96,13 @@ export function ImpactoMargem() {
   const { data: vendas = [], isLoading: l4 } = useQuery({
     queryKey: ['imp-vendas', tenantId, iniB, fimB], enabled: en,
     queryFn: async () => {
+      // 1º: RPC que já soma por loja×produto no banco (rápido p/ trimestre/ano). Sem a RPC → busca dia a dia (ok p/ mês).
+      // PAGINADA: o PostgREST corta em 1000 linhas por chamada (a RPC também) — sem paginar, perdia ~60% das vendas
+      try {
+        return await fetchAll<Venda>((f, t) => supabase.rpc('vendas_produto_periodo', { p_ini: iniB, p_fim: fimB }).order('loja_id').order('produto_id').range(f, t))
+      } catch (e) {
+        if (!['PGRST202', '42883'].includes((e as { code?: string }).code || '')) throw e
+      }
       const [v, gate] = await Promise.all([
         fetchAll<Venda>((f, t) => supabase.from('vendas_produto_dia').select('*').eq('tenant_id', tenantId).gte('data', iniB).lte('data', fimB).order('loja_id').order('data').order('produto_id').range(f, t)),
         fetchAll<{ loja_id: string; data: string; status: string }>((f, t) => supabase.from('recebimento_vendas').select('loja_id,data,status').eq('tenant_id', tenantId).gte('data', iniB).lte('data', fimB).order('loja_id').order('data').range(f, t)),
@@ -105,6 +130,10 @@ export function ImpactoMargem() {
       a.qtd += +(v.qtd || 0); a.fat += +(v.faturado || 0); agg.set(cod, a)
     }
     let fatTotal = 0, fatFicha = 0
+    // RODÍZIO: o garçom lança o "Rodízio Sushi R$ 86,90" (SEM ficha) e depois os itens do grupo rodízio a R$ 0 (COM ficha).
+    // A receita está na cabeça, o custo nos itens → a cabeça entra na receita (margem) e na cobertura.
+    const rod = { fat: 0, qtd: 0, nomes: [] as string[], heads: [] as { nome: string; grupo: string; qtd: number; fat: number }[] }
+    const ehRod = (a: { nome: string; grupo: string }) => /rod[ií]zio/i.test(a.nome + ' ' + a.grupo)
     const rows: { cod: string; nome: string; grupo: string; qtd: number; fat: number; consumo: Consumo | null }[] = []
     agg.forEach((a) => {
       fatTotal += a.fat
@@ -112,9 +141,10 @@ export function ImpactoMargem() {
       const consumo = f ? explosao.porPorcao(f.id) : null
       const ok = !!consumo && consumo.size > 0
       if (ok) fatFicha += a.fat
+      else if (a.fat > 0 && a.qtd > 0 && ehRod(a)) { rod.fat += a.fat; rod.qtd += a.qtd; rod.nomes.push(titleCase(a.nome)); rod.heads.push({ nome: a.nome, grupo: a.grupo, qtd: a.qtd, fat: a.fat }) }
       if (a.qtd > 0) rows.push({ ...a, consumo: ok ? consumo : null })
     })
-    return { rows, fatTotal, fatFicha }
+    return { rows, fatTotal, fatFicha, rod }
   }, [vendas, lojaId, prodByCod, explosao])
 
   const custoCom = (c: Consumo, pr: (id: string) => number) => custoConsumo(c, insMap, pr)
@@ -127,6 +157,7 @@ export function ImpactoMargem() {
     const vil = new Map<string, { v: number; n: number }>()
     for (const r of base.rows) {
       if (!r.consumo) continue
+      if (cat && titleCase(r.grupo) !== cat) continue
       const cA = custoCom(r.consumo, pA), cB = custoCom(r.consumo, pB)
       const preco = r.qtd ? r.fat / r.qtd : 0
       prods.push({ ...r, preco, cA, cB, cmvA: preco > 0 ? cA / preco * 100 : 0, cmvB: preco > 0 ? cB / preco * 100 : 0, perda: (cB - cA) * r.qtd, sug: precoParaManter(cA, cB, preco) })
@@ -136,26 +167,64 @@ export function ImpactoMargem() {
         const o = vil.get(id) || { v: 0, n: 0 }; o.v += d; o.n++; vil.set(id, o)
       })
     }
-    const fat = prods.reduce((s, p) => s + p.fat, 0)
+    // rodízio: só entra sem filtro de categoria ou com categoria de rodízio
+    const rodOk = base.rod.qtd > 0 && (!cat || /rod[ií]zio/i.test(cat))
+    const itens0 = prods.filter((p) => p.fat <= 0)
+    // linha sintética de rodízio: receita das CABEÇAS × custo dos ITENS a R$0 (por rodízio vendido)
+    const mkRod = (cod: string, nome: string, cabecas: string, qtd: number, fatH: number, itens: ProdRow[]): ProdRow | null => {
+      if (!(qtd > 0) || !itens.length) return null
+      const consumo: Consumo = new Map()
+      itens.forEach((p) => p.consumo?.forEach((q, id) => consumo.set(id, (consumo.get(id) || 0) + q * p.qtd / qtd)))
+      const cA = itens.reduce((s, p) => s + p.cA * p.qtd, 0) / qtd, cB = itens.reduce((s, p) => s + p.cB * p.qtd, 0) / qtd
+      const preco = fatH / qtd
+      return { cod, nome, grupo: 'Rodízio', cabecas, qtd, fat: fatH, preco, consumo, cA, cB, cmvA: preco > 0 ? cA / preco * 100 : 0, cmvB: preco > 0 ? cB / preco * 100 : 0, perda: (cB - cA) * qtd, sug: precoParaManter(cA, cB, preco), itens: itens.map((p) => p.cod) }
+    }
+    let rodRow: ProdRow | null = null
+    const rodRows: ProdRow[] = []
+    if (rodOk && itens0.length) {
+      rodRow = mkRod('__rodizio', 'Rodízios (todos)', 'Rodízio', base.rod.qtd, base.rod.fat, itens0)
+      // um por tipo: cabeça ligada ao grupo de lançamento dos itens dela
+      const gruposItens = [...new Set(itens0.map((p) => p.grupo))]
+      const porGrupo = new Map<string, { qtd: number; fat: number; nomes: string[] }>()
+      for (const h of base.rod.heads) {
+        const g = ligarRodizio(h.nome, h.grupo, gruposItens) ?? '__outros'
+        const o = porGrupo.get(g) || { qtd: 0, fat: 0, nomes: [] }; o.qtd += h.qtd; o.fat += h.fat; o.nomes.push(titleCase(h.nome)); porGrupo.set(g, o)
+      }
+      const semCabeca: ProdRow[] = []
+      for (const g of gruposItens) {
+        const its = itens0.filter((p) => p.grupo === g), h = porGrupo.get(g)
+        if (!h) { semCabeca.push(...its); continue }
+        const r = mkRod('__rod_' + g, 'Rodízio · ' + titleCase(g), h.nomes.join(', '), h.qtd, h.fat, its); if (r) rodRows.push(r)
+      }
+      const out = porGrupo.get('__outros')
+      if (out && semCabeca.length) { const r = mkRod('__rod_outros', 'Rodízios (outros)', out.nomes.join(', '), out.qtd, out.fat, semCabeca); if (r) rodRows.push(r) }
+    }
+    const fat = prods.reduce((s, p) => s + p.fat, 0) + (rodRow ? rodRow.fat : 0)
     const cuA = prods.reduce((s, p) => s + p.cA * p.qtd, 0), cuB = prods.reduce((s, p) => s + p.cB * p.qtd, 0)
     const viloes = [...vil.entries()].map(([id, o]) => ({ id, ins: insMap.get(id), a: precoA(id), b: precoB(id), ...o })).filter((x) => Math.abs(x.v) >= 0.5).sort((x, y) => y.v - x.v)
-    return { prods, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
+    return { prods, rodRow, rodRows, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [base, precoA, precoB, insMap])
+  }, [base, precoA, precoB, insMap, cat])
+  const cats = useMemo(() => [...new Set(base.rows.filter((r) => r.consumo).map((r) => titleCase(r.grupo)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [base])
 
   const prodsView = useMemo(() => {
     const q = norm(busca.trim())
-    const l = real.prods.filter((p) => !q || norm(p.nome + ' ' + p.grupo + ' ' + p.cod).includes(q))
+    const l = [...(real.rodRow ? [real.rodRow] : []), ...real.rodRows, ...real.prods].filter((p) => (!soComPreco || p.preco > 0) && (!q || norm(p.nome + ' ' + p.grupo + ' ' + p.cod).includes(q)))
     const k = ord.k
     return l.sort((x, y) => { const a = x[k] as number | string, b = y[k] as number | string; const r = typeof a === 'string' ? String(a).localeCompare(String(b)) : (a as number) - (b as number); return ord.desc ? -r : r })
-  }, [real.prods, busca, ord])
+  }, [real.prods, busca, ord, soComPreco])
 
   // ── simulador (parte dos preços do mês "agora") ──
   const pS = (id: string) => pB(id) * (1 + (sim[id] || 0) / 100)
   const simulado = useMemo(() => {
     const prods = real.prods.map((p) => { const cS = custoCom(p.consumo as Consumo, pS); return { ...p, cS, cmvS: p.preco > 0 ? cS / p.preco * 100 : 0, perdaS: (cS - p.cB) * p.qtd, sugS: precoParaManter(p.cB, cS, p.preco) } })
     const cuS = prods.reduce((s, p) => s + p.cS * p.qtd, 0)
-    return { prods: prods.filter((p) => Math.abs(p.perdaS) >= 0.5).sort((a, b) => b.perdaS - a.perdaS), cuS, mS: real.fat > 0 ? (real.fat - cuS) / real.fat * 100 : 0, viram: prods.filter((p) => p.preco > 0 && p.cmvS > 38 && p.cmvB <= 38) }
+    const lista = [...prods], byCod = new Map(prods.map((p) => [p.cod, p]))
+    for (const r of [...(real.rodRow ? [real.rodRow] : []), ...real.rodRows]) {
+      const cS = (r.itens || []).reduce((s, c) => { const p = byCod.get(c); return s + (p ? p.cS * p.qtd : 0) }, 0) / r.qtd
+      lista.push({ ...r, cS, cmvS: r.preco > 0 ? cS / r.preco * 100 : 0, perdaS: (cS - r.cB) * r.qtd, sugS: precoParaManter(r.cB, cS, r.preco) })
+    }
+    return { prods: lista.filter((p) => Math.abs(p.perdaS) >= 0.5).sort((a, b) => b.perdaS - a.perdaS), cuS, mS: real.fat > 0 ? (real.fat - cuS) / real.fat * 100 : 0, viram: lista.filter((p) => p.preco > 0 && p.cmvS > 38 && p.cmvB <= 38) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [real, sim, precoB])
   // insumos usados nas vendas, por peso no custo do mês
@@ -169,26 +238,59 @@ export function ImpactoMargem() {
   const aplicar = (fn: (i: Insumo) => boolean, v: number) => setSim((s) => { const n = { ...s }; usados.forEach((u) => { if (u.ins && fn(u.ins)) n[u.id] = v }); return n })
   const usadosView = useMemo(() => { const q = norm(buscaSim.trim()); return usados.filter((u) => !q || norm(u.ins?.nome || '').includes(q) || norm(u.ins?.categoria || '').includes(q)) }, [usados, buscaSim])
 
-  const cobertura = base.fatTotal > 0 ? base.fatFicha / base.fatTotal * 100 : 0
+  // ── EVOLUÇÃO (12 meses): mesmo mix vendido no período analisado, custeado com o preço de CADA mês
+  //    → isola o efeito do preço. Mês sem compra suficiente (< 50% do custo com preço comprado no mês) = sem ponto.
+  const evo = useMemo(() => {
+    if (aba !== 'evo') return null
+    const top = usados.slice(0, 5)
+    const margem: (number | null)[] = [], precos: (number | null)[][] = top.map(() => [])
+    for (const m of evoMeses) {
+      const [i, f] = mesRange(m)
+      const pr = precosPeriodo(entradas, i, f, fallback)
+      let custo = 0, comCompra = 0
+      for (const p of real.prods) p.consumo?.forEach((q, id) => {
+        const x = pr(id), c = q * custoUnitario(insMap.get(id), x.preco) * p.qtd
+        custo += c; if (x.fonte === 'compra') comCompra += c
+      })
+      margem.push(real.fat > 0 && custo > 0 && comCompra / custo >= 0.5 ? (real.fat - custo) / real.fat * 100 : null)
+      top.forEach((t, k) => { const x = pr(t.id); precos[k].push(x.fonte === 'compra' ? x.preco : null) })
+    }
+    const indices = precos.map((vals) => { const b = vals.find((v) => v != null); return vals.map((v) => v != null && b ? v / b * 100 : null) })
+    return { top, margem, precos, indices }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aba, evoMeses, entradas, fallback, real, usados, insMap])
+  const mesCurto = (k: string) => rotuloPeriodo(k, true)
+
+  const cobertura = base.fatTotal > 0 ? (base.fatFicha + base.rod.fat) / base.fatTotal * 100 : 0
   const topVil = real.viloes[0]
-  const viraram = real.prods.filter((p) => p.preco > 0 && p.cmvB > 38 && p.cmvA <= 38)
+  const viraram = [...(real.rodRow ? [real.rodRow] : []), ...real.rodRows, ...real.prods].filter((p) => p.preco > 0 && p.cmvB > 38 && p.cmvA <= 38)
   const lojaNome = lojaId ? (lojas.find((l) => l.id === lojaId)?.nome || 'loja') : 'todas as lojas'
   const th = (k: keyof ProdRow, label: string, cls = '') => <th className={cls} onClick={() => setOrd((o) => ({ k, desc: o.k === k ? !o.desc : true }))}>{label}{ord.k === k ? (ord.desc ? ' ▾' : ' ▴') : ''}</th>
 
-  const exportar = () => downloadCsv(`impacto_margem_${mesA}_x_${mesB}.csv`, [
-    ['Produto', 'Grupo', 'Código PDV', 'Vendidos', 'Preço médio', `Custo ${mesA}`, `Custo ${mesB}`, `CMV ${mesA} %`, `CMV ${mesB} %`, 'Perda R$', 'Preço p/ manter'],
+  const exportar = () => downloadCsv(`impacto_margem_${labA}_x_${labB}.csv`.replace(/[/ º–]/g, '-'), [
+    ['Produto', 'Grupo', 'Código PDV', 'Vendidos', 'Preço médio', `Custo ${labA}`, `Custo ${labB}`, `CMV ${labA} %`, `CMV ${labB} %`, 'Perda R$', 'Preço p/ manter'],
     ...prodsView.map((p) => [titleCase(p.nome), titleCase(p.grupo), p.cod, +p.qtd.toFixed(2), +p.preco.toFixed(2), +p.cA.toFixed(4), +p.cB.toFixed(4), +p.cmvA.toFixed(2), +p.cmvB.toFixed(2), +p.perda.toFixed(2), +p.sug.toFixed(2)]),
   ])
 
   return (
     <div className="imp-screen">
       <div className="imp-filters">
-        <div className="imp-fg"><label htmlFor="imp-mesb">Mês analisado</label>
-          <select id="imp-mesb" className="imp-field" value={mesB} onChange={(e) => setMesB(e.target.value)}>{MESES.map((m) => <option key={m} value={m}>{mesNome(m)}</option>)}</select></div>
+        <div className="imp-fg"><label htmlFor="imp-modo">Comparar por</label>
+          <select id="imp-modo" className="imp-field sm" value={modo} onChange={(e) => trocarModo(e.target.value as ModoPeriodo | 'pers')}>
+            <option value="mes">Mês</option><option value="tri">Trimestre</option><option value="sem">Semestre</option><option value="ano">Ano</option><option value="pers">Personalizado</option>
+          </select></div>
+        <div className="imp-fg"><label htmlFor="imp-mesb">Período analisado</label>
+          {modo === 'pers'
+            ? <div className="imp-dates"><input type="date" className="imp-field" value={pers.bIni} onChange={(e) => setPers({ ...pers, bIni: e.target.value })} /><span>até</span><input type="date" className="imp-field" value={pers.bFim} onChange={(e) => setPers({ ...pers, bFim: e.target.value })} /></div>
+            : <select id="imp-mesb" className="imp-field" value={keyB} onChange={(e) => { const v = e.target.value; setKeyB(v); const i = lista.indexOf(v); if (i >= 0 && lista[i + 1]) setKeyA(lista[i + 1]) }}>{lista.map((m) => <option key={m} value={m}>{rotuloPeriodo(m)}</option>)}</select>}</div>
         <div className="imp-fg"><label htmlFor="imp-mesa">Comparar com</label>
-          <select id="imp-mesa" className="imp-field" value={mesA} onChange={(e) => setMesA(e.target.value)}>{MESES.map((m) => <option key={m} value={m}>{mesNome(m)}</option>)}</select></div>
+          {modo === 'pers'
+            ? <div className="imp-dates"><input type="date" className="imp-field" value={pers.aIni} onChange={(e) => setPers({ ...pers, aIni: e.target.value })} /><span>até</span><input type="date" className="imp-field" value={pers.aFim} onChange={(e) => setPers({ ...pers, aFim: e.target.value })} /></div>
+            : <select id="imp-mesa" className="imp-field" value={keyA} onChange={(e) => setKeyA(e.target.value)}>{lista.filter((m) => m < keyB).map((m) => <option key={m} value={m}>{rotuloPeriodo(m)}</option>)}</select>}</div>
+        <div className="imp-fg"><label htmlFor="imp-cat">Categoria</label>
+          <select id="imp-cat" className="imp-field" value={cat} onChange={(e) => { setCat(e.target.value); setAberto(null) }}><option value="">Todas</option>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
         <div className="imp-fg"><label>Loja</label><div className="imp-ro">{titleCase(lojaNome)} <span>(seletor do topo)</span></div></div>
-        <div className="imp-cov" title="Só entram produtos vendidos que têm ficha técnica ligada pelo código do PDV">
+        <div className="imp-cov" title={'Produtos com ficha ligada pelo código do PDV + rodízios (o custo vem dos itens lançados a R$ 0).' + (base.rod.nomes.length ? '\nRodízios reconhecidos: ' + base.rod.nomes.join(', ') : '')}>
           <span>Cobertura: <b>{pc(cobertura)}</b> do faturamento tem ficha</span>
           <span className="imp-covbar"><i style={{ width: Math.min(100, cobertura) + '%' }} /></span>
         </div>
@@ -196,29 +298,31 @@ export function ImpactoMargem() {
       </div>
 
       {loading ? <div className="imp-empty">Carregando compras, fichas e vendas…</div>
-        : !base.rows.length ? <div className="imp-empty">Sem vendas processadas em {mesNome(mesB)}{lojaId ? ' nesta loja' : ''}. Escolha outro mês ou confira o Recebimento de Vendas.</div>
+        : !base.rows.length ? <div className="imp-empty">Sem vendas processadas em {labB}{lojaId ? ' nesta loja' : ''}. Escolha outro período ou confira o Recebimento de Vendas.</div>
         : <>
-          <div className="imp-kpis">
-            <div className={'imp-kpi' + (real.mB < real.mA ? ' bad' : '')}><span className="lab">Margem bruta (produtos com ficha)</span><span className="num">{pc(real.mA)} → {pc(real.mB)}</span>
-              <span className="foot"><span className={real.mB < real.mA ? 'down' : 'upg'}>{real.mB < real.mA ? '▼' : '▲'} {Math.abs(real.mA - real.mB).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} pontos</span> com os preços de {mesNome(mesB).split(' ')[0].toLowerCase()}</span></div>
-            <div className={'imp-kpi' + (real.cuB > real.cuA ? ' bad' : ' ok')}><span className="lab">{real.cuB >= real.cuA ? 'Margem perdida' : 'Margem ganha'}</span><span className="num">{brl0(Math.abs(real.cuB - real.cuA))}</span><span className="foot">sobre {brl0(real.fat)} vendidos em {mesNome(mesB).split(' ')[0].toLowerCase()}</span></div>
-            <div className="imp-kpi warn"><span className="lab">Maior vilão</span><span className="num sm">{topVil ? titleCase(topVil.ins?.nome || '—') : '—'}</span>
-              <span className="foot">{topVil && topVil.a.preco > 0 ? <><VarPill v={(topVil.b.preco / topVil.a.preco - 1) * 100} /> · {brl0(topVil.v)} do total</> : 'nenhum insumo subiu'}</span></div>
-            <div className={'imp-kpi' + (viraram.length ? ' bad' : '')}><span className="lab">Viraram vermelho</span><span className="num">{viraram.length} produto{viraram.length === 1 ? '' : 's'}</span><span className="foot">CMV passou de 38%{viraram[0] ? ' · ex.: ' + titleCase(viraram[0].nome) : ''}</span></div>
+          <div className="imp-kbar">
+            <div className="it" title="Soma de TODOS os produtos vendidos no período (valor dos itens; não inclui taxa de serviço/entrega — por isso pode diferir do caixa)."><span className="k">Vendas em produtos</span><span className="v">{brl0(base.fatTotal)}</span></div>
+            <div className="it" title="Parte das vendas em que dá pra calcular o custo: produtos com ficha + rodízios (custo vem dos itens a R$ 0). É sobre ela que a margem é calculada."><span className="k">Analisado ({pc(cobertura)})</span><span className="v">{brl0(real.fat)}</span></div>
+            <div className="it"><span className="k">Margem bruta</span><span className="v">{pc(real.mA)} → {pc(real.mB)}</span></div>
+            <div className="it"><span className="k">Variação</span><span className={'v ' + (real.mB < real.mA ? 'neg' : 'pos')}>{real.mB < real.mA ? '−' : '+'}{Math.abs(real.mA - real.mB).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p.</span></div>
+            <div className="it"><span className="k">{real.cuB >= real.cuA ? 'Margem perdida' : 'Margem ganha'}</span><span className={'v ' + (real.cuB > real.cuA ? 'neg' : 'pos')}>{brl0(Math.abs(real.cuB - real.cuA))}</span></div>
+            <div className="it"><span className="k">Maior vilão</span><span className="v warn">{topVil ? titleCase(topVil.ins?.nome || '—') : '—'}</span>{topVil && topVil.a.preco > 0 && <VarPill v={(topVil.b.preco / topVil.a.preco - 1) * 100} />}</div>
+            <div className="it"><span className="k">Viraram vermelho</span><span className={'v ' + (viraram.length ? 'neg' : '')}>{viraram.length}</span></div>
           </div>
 
           <div className="imp-tabs" role="tablist">
-            <button role="tab" className={aba === 'real' ? 'on' : ''} onClick={() => setAba('real')}>Impacto real</button>
+            <button role="tab" className={aba === 'vil' ? 'on' : ''} onClick={() => setAba('vil')}>Vilões da margem <span className="imp-cnt">{real.viloes.length}</span></button>
+            <button role="tab" className={aba === 'prod' ? 'on' : ''} onClick={() => setAba('prod')}>Produtos afetados <span className="imp-cnt">{prodsView.length}</span></button>
             <button role="tab" className={aba === 'sim' ? 'on' : ''} onClick={() => setAba('sim')}>Simulador “e se…?”</button>
+            <button role="tab" className={aba === 'evo' ? 'on' : ''} onClick={() => setAba('evo')}>Evolução (12 meses)</button>
           </div>
 
-          {aba === 'real' ? (
-            <div className="imp-grid">
+          {aba === 'vil' ? (
               <div className="imp-card">
                 <h2>Vilões da margem <span className="hint">insumos que mais pesaram em R$</span></h2>
                 <div className="imp-scroll">
                   <table className="imp-tbl">
-                    <thead><tr><th>Insumo</th><th className="r">{mesNome(mesA).split(' ')[0]}</th><th className="r">{mesNome(mesB).split(' ')[0]}</th><th className="r">Var.</th><th className="r">Impacto</th><th /></tr></thead>
+                    <thead><tr><th>Insumo</th><th className="r">Antes ({labA})</th><th className="r">Agora ({labB})</th><th className="r">Var.</th><th className="r">Impacto</th><th /></tr></thead>
                     <tbody>
                       {real.viloes.length === 0 ? <tr><td colSpan={6} className="imp-empty">Nenhum insumo mudou de preço entre os dois meses.</td></tr>
                         : real.viloes.map((v) => {
@@ -235,11 +339,11 @@ export function ImpactoMargem() {
                     </tbody>
                   </table>
                 </div>
-                <div className="imp-note">Preço = <b>média ponderada das compras</b> do mês na rede (NF-e e entradas manuais; transferências e ajustes não contam). <b>últ.</b> = sem compra no mês, usa o último preço pago. O custo já desconta a perda na limpeza (rendimento do insumo).</div>
+                <div className="imp-note">Preço = <b>média ponderada das compras</b> de cada período na rede (NF-e e entradas manuais; transferências e ajustes não contam). <b>últ.</b> = sem compra no período, usa o último preço pago. O custo já desconta a perda na limpeza (rendimento do insumo).</div>
               </div>
-
+          ) : aba === 'prod' ? (
               <div className="imp-card">
-                <h2>Produtos afetados <input className="imp-search" placeholder="Buscar produto…" value={busca} onChange={(e) => setBusca(e.target.value)} /></h2>
+                <h2>Produtos afetados <label className="imp-tog" title="Itens de rodízio são vendidos a R$ 0 (o preço está no rodízio). Os totais de cima continuam contando o custo deles."><input type="checkbox" checked={soComPreco} onChange={(e) => setSoComPreco(e.target.checked)} />Só com preço de venda</label> <input className="imp-search" placeholder="Buscar produto…" value={busca} onChange={(e) => setBusca(e.target.value)} /></h2>
                 <div className="imp-scroll tall">
                   <table className="imp-tbl">
                     <thead><tr>{th('nome', 'Produto')}{th('preco', 'Preço médio', 'r')}{th('cB', 'Custo antes → agora', 'r')}{th('cmvB', 'CMV antes → agora')}{th('qtd', 'Vendidos', 'r')}{th('perda', 'Perda R$', 'r')}{th('sug', 'Preço p/ manter', 'r')}</tr></thead>
@@ -248,7 +352,7 @@ export function ImpactoMargem() {
                         : prodsView.slice(0, 400).map((p) => (
                           <Fragment key={p.cod}>
                             <tr className="clk" onClick={() => setAberto((a) => a === p.cod ? null : p.cod)}>
-                              <td>{aberto === p.cod ? '▾' : '▸'} {titleCase(p.nome)} <span className="muted">· {titleCase(p.grupo)}</span></td>
+                              <td title={p.cabecas ? 'Rodízios lançados: ' + p.cabecas : undefined}>{aberto === p.cod ? '▾' : '▸'} {titleCase(p.nome)} <span className="muted">· {titleCase(p.grupo)}</span></td>
                               <td className="r">{p.preco > 0 ? brl(p.preco) : <span className="muted">R$ 0 (rodízio)</span>}</td>
                               <td className="r">{brl(p.cA)} → <b>{brl(p.cB)}</b></td>
                               <td>{p.preco > 0 ? <><Cmv v={p.cmvA} /> → <b><Cmv v={p.cmvB} /></b></> : <span className="muted">—</span>}</td>
@@ -275,13 +379,31 @@ export function ImpactoMargem() {
                     </tbody>
                   </table>
                 </div>
-                <div className="imp-note">Mesmo volume vendido em {mesNome(mesB).split(' ')[0].toLowerCase()}, custeado com os preços dos dois meses. Semáforo do CMV: <Cmv v={25} /> até 30% · <Cmv v={35} /> até 38% · <Cmv v={40} /> acima. “Preço p/ manter” = preço que devolve o CMV de antes.{prodsView.length > 400 ? ` Mostrando 400 de ${prodsView.length} (use a busca ou o Exportar).` : ''}</div>
+                <div className="imp-note">Mesmo volume vendido em {labB}, custeado com os preços dos dois períodos. Semáforo do CMV: <Cmv v={25} /> até 30% · <Cmv v={35} /> até 38% · <Cmv v={40} /> acima. “Preço p/ manter” = preço que devolve o CMV de antes.{prodsView.length > 400 ? ` Mostrando 400 de ${prodsView.length} (use a busca ou o Exportar).` : ''}</div>
+              </div>
+          ) : aba === 'evo' ? (
+            <div className="imp-col">
+              <div className="imp-card">
+                <h2>Margem bruta com os preços de cada mês <span className="hint">mix vendido em {labB}{cat ? ' · ' + cat : ''} — só o efeito do preço</span></h2>
+                <div className="imp-chart-pad">
+                  {evo && <ImpLineChart labels={evoMeses.map(mesCurto)} series={[{ nome: 'Margem bruta', cor: SERIE_CORES[0], vals: evo.margem }]} fmtY={(v) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%'} />}
+                </div>
+                <div className="imp-note">Cada ponto = quanto seria a margem do que foi vendido em {labB} se os insumos custassem o preço médio daquele mês. Mês sem compras suficientes fica sem ponto.</div>
+              </div>
+              <div className="imp-card">
+                <h2>Preço dos principais insumos <span className="hint">índice: 1º mês com compra = 100</span></h2>
+                <div className="imp-chart-pad">
+                  {evo && <ImpLineChart labels={evoMeses.map(mesCurto)} refY={100}
+                    series={evo.top.map((t, k) => ({ nome: titleCase(t.ins?.nome || ''), cor: SERIE_CORES[k], vals: evo.indices[k], tip: (i: number) => { const v = evo.precos[k][i]; return v != null ? `${brl(v)}/${unLabel(t.ins)} (índice ${Math.round(evo.indices[k][i] || 0)})` : 'sem compra' } }))}
+                    fmtY={(v) => Math.round(v).toString()} />}
+                </div>
+                <div className="imp-note">Os 5 insumos que mais pesam no custo do que foi vendido. Índice 120 = 20% mais caro que no primeiro mês com compra. Passe o mouse para ver o preço em R$.</div>
               </div>
             </div>
           ) : (
             <div className="imp-grid">
               <div className="imp-card">
-                <h2>Cenário <span className="hint">parte dos preços de {mesNome(mesB).split(' ')[0].toLowerCase()}</span></h2>
+                <h2>Cenário <span className="hint">parte dos preços de {labB}</span></h2>
                 <div className="imp-chips">
                   {catsTop.map((c) => <button key={c} className="imp-chip" onClick={() => aplicar((i) => i.categoria === c, 10)}>{titleCase(c)} +10%</button>)}
                   {usados[0] && <button className="imp-chip" onClick={() => aplicar((i) => i.id === usados[0].id, 15)}>{titleCase(usados[0].ins?.nome || '')} +15%</button>}
@@ -308,21 +430,21 @@ export function ImpactoMargem() {
               </div>
 
               <div className="imp-col">
-                <div className="imp-kpis three">
-                  <div className={'imp-kpi' + (simulado.mS < real.mB ? ' bad' : '')}><span className="lab">Margem hoje → simulada</span><span className="num">{pc(real.mB)} → {pc(simulado.mS)}</span>
-                    <span className="foot">{Object.keys(sim).length ? <span className={simulado.mS < real.mB ? 'down' : 'upg'}>{simulado.mS < real.mB ? '▼' : '▲'} {Math.abs(real.mB - simulado.mS).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} pontos</span> : 'monte um cenário ao lado'}</span></div>
-                  <div className={'imp-kpi' + (simulado.cuS > real.cuB ? ' bad' : '')}><span className="lab">Impacto no mês</span><span className="num">{simulado.cuS >= real.cuB ? '−' : '+'} {brl0(Math.abs(simulado.cuS - real.cuB))}</span><span className="foot">com o volume de {mesNome(mesB).split(' ')[0].toLowerCase()}</span></div>
-                  <div className={'imp-kpi' + (simulado.viram.length ? ' bad' : '')}><span className="lab">Passariam a vermelho</span><span className="num">{simulado.viram.length}</span><span className="foot">{simulado.viram.length ? simulado.viram.slice(0, 2).map((p) => titleCase(p.nome)).join(', ') + (simulado.viram.length > 2 ? '…' : '') : 'nenhum produto cruza 38%'}</span></div>
+                <div className="imp-kbar">
+                  <div className="it"><span className="k">Margem hoje → simulada</span><span className="v">{pc(real.mB)} → {pc(simulado.mS)}</span></div>
+                  <div className="it"><span className="k">Variação</span><span className={'v ' + (simulado.mS < real.mB ? 'neg' : Object.keys(sim).length ? 'pos' : '')}>{Object.keys(sim).length ? (simulado.mS < real.mB ? '−' : '+') + Math.abs(real.mB - simulado.mS).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' p.p.' : '—'}</span></div>
+                  <div className="it"><span className="k">Impacto no mês</span><span className={'v ' + (simulado.cuS > real.cuB ? 'neg' : '')}>{simulado.cuS >= real.cuB ? '−' : '+'}{brl0(Math.abs(simulado.cuS - real.cuB))}</span></div>
+                  <div className="it"><span className="k">Passariam a vermelho</span><span className={'v ' + (simulado.viram.length ? 'neg' : '')}>{simulado.viram.length}</span></div>
                 </div>
                 <div className="imp-card">
-                  <h2>Produtos no cenário <span className="hint">o que mais perde primeiro</span></h2>
+                  <h2>Produtos no cenário <label className="imp-tog" title="Itens de rodízio são vendidos a R$ 0 (o preço está no rodízio). Os totais de cima continuam contando o custo deles."><input type="checkbox" checked={soComPreco} onChange={(e) => setSoComPreco(e.target.checked)} />Só com preço de venda</label><span className="hint">o que mais perde primeiro</span></h2>
                   <div className="imp-scroll tall">
                     <table className="imp-tbl">
                       <thead><tr><th>Produto</th><th className="r">Preço médio</th><th>CMV hoje → simulado</th><th className="r">Perda/mês</th><th className="r">Preço p/ manter</th></tr></thead>
                       <tbody>
                         {!Object.keys(sim).length ? <tr><td colSpan={5} className="imp-empty">Escolha um atalho ou digite a variação de um insumo.</td></tr>
                           : simulado.prods.length === 0 ? <tr><td colSpan={5} className="imp-empty">Nenhum produto vendido usa os insumos alterados.</td></tr>
-                          : simulado.prods.slice(0, 300).map((p) => (
+                          : simulado.prods.filter((p) => !soComPreco || p.preco > 0).slice(0, 300).map((p) => (
                             <tr key={p.cod}>
                               <td>{titleCase(p.nome)} {p.preco > 0 && p.cmvS > 38 && p.cmvB <= 38 && <span className="imp-flag">● vira vermelho</span>}</td>
                               <td className="r">{p.preco > 0 ? brl(p.preco) : <span className="muted">R$ 0</span>}</td>
