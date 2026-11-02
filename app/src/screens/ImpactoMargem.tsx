@@ -19,7 +19,7 @@ type Insumo = InsumoUn & { nome: string; categoria?: string | null; preco_compra
 type Ficha = { id: string; produto_id?: string | null; rendimento_porcoes?: number | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens_ficha?: { insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number | null }[] }
 type Venda = { loja_id: string; data: string; produto_id: string; produto_nome?: string; grupo?: string; qtd?: number; faturado?: number }
 type Ent = { insumo_id: string; quantidade?: number; custo_unitario?: number; criado_em?: string; tipo?: string | null }
-type ProdRow = { cod: string; nome: string; grupo: string; qtd: number; fat: number; preco: number; consumo: Consumo | null; cA: number; cB: number; cmvA: number; cmvB: number; perda: number; sug: number; itens?: string[] }
+type ProdRow = { cod: string; nome: string; grupo: string; qtd: number; fat: number; preco: number; consumo: Consumo | null; cA: number; cB: number; cmvA: number; cmvB: number; perda: number; sug: number; itens?: string[]; cabecas?: string }
 
 const brl = (v: number) => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const brl0 = (v: number) => 'R$ ' + Math.round(v).toLocaleString('pt-BR')
@@ -171,13 +171,13 @@ export function ImpactoMargem() {
     const rodOk = base.rod.qtd > 0 && (!cat || /rod[ií]zio/i.test(cat))
     const itens0 = prods.filter((p) => p.fat <= 0)
     // linha sintética de rodízio: receita das CABEÇAS × custo dos ITENS a R$0 (por rodízio vendido)
-    const mkRod = (cod: string, nome: string, grupo: string, qtd: number, fatH: number, itens: ProdRow[]): ProdRow | null => {
+    const mkRod = (cod: string, nome: string, cabecas: string, qtd: number, fatH: number, itens: ProdRow[]): ProdRow | null => {
       if (!(qtd > 0) || !itens.length) return null
       const consumo: Consumo = new Map()
       itens.forEach((p) => p.consumo?.forEach((q, id) => consumo.set(id, (consumo.get(id) || 0) + q * p.qtd / qtd)))
       const cA = itens.reduce((s, p) => s + p.cA * p.qtd, 0) / qtd, cB = itens.reduce((s, p) => s + p.cB * p.qtd, 0) / qtd
       const preco = fatH / qtd
-      return { cod, nome, grupo, qtd, fat: fatH, preco, consumo, cA, cB, cmvA: preco > 0 ? cA / preco * 100 : 0, cmvB: preco > 0 ? cB / preco * 100 : 0, perda: (cB - cA) * qtd, sug: precoParaManter(cA, cB, preco), itens: itens.map((p) => p.cod) }
+      return { cod, nome, grupo: 'Rodízio', cabecas, qtd, fat: fatH, preco, consumo, cA, cB, cmvA: preco > 0 ? cA / preco * 100 : 0, cmvB: preco > 0 ? cB / preco * 100 : 0, perda: (cB - cA) * qtd, sug: precoParaManter(cA, cB, preco), itens: itens.map((p) => p.cod) }
     }
     let rodRow: ProdRow | null = null
     const rodRows: ProdRow[] = []
@@ -352,7 +352,7 @@ export function ImpactoMargem() {
                         : prodsView.slice(0, 400).map((p) => (
                           <Fragment key={p.cod}>
                             <tr className="clk" onClick={() => setAberto((a) => a === p.cod ? null : p.cod)}>
-                              <td>{aberto === p.cod ? '▾' : '▸'} {titleCase(p.nome)} <span className="muted">· {titleCase(p.grupo)}</span></td>
+                              <td title={p.cabecas ? 'Rodízios lançados: ' + p.cabecas : undefined}>{aberto === p.cod ? '▾' : '▸'} {titleCase(p.nome)} <span className="muted">· {titleCase(p.grupo)}</span></td>
                               <td className="r">{p.preco > 0 ? brl(p.preco) : <span className="muted">R$ 0 (rodízio)</span>}</td>
                               <td className="r">{brl(p.cA)} → <b>{brl(p.cB)}</b></td>
                               <td>{p.preco > 0 ? <><Cmv v={p.cmvA} /> → <b><Cmv v={p.cmvB} /></b></> : <span className="muted">—</span>}</td>

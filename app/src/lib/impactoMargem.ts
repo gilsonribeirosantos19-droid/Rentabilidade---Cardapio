@@ -159,10 +159,13 @@ export function rotuloPeriodo(key: string, curto = false): string {
 // dos itens dela (ex.: "Rodízio De Sushis", itens a R$0 com ficha) pelas palavras do nome.
 // Ignora "rodízio", artigos e plural ("sushi" casa com "sushis"). Sem par → null ("outros").
 const STOP_ROD = new Set(['rodizio', 'rodizios', 'de', 'do', 'da', 'dos', 'das', 'e', 'o', 'a', 'com', 'sem', 'r'])
+// apelidos: cabeça cujo nome não bate com o grupo dos itens (regra do dono: "Rodízio Dupla" usa os itens do Rodízio Sushi)
+const ALIAS_ROD: Record<string, string> = { dupla: 'sushi' }
 export function tokensRodizio(s: string): string[] {
   return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     .split(/[^a-z]+/).filter((w) => w.length > 1 && !STOP_ROD.has(w))
     .map((w) => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w))
+    .map((w) => ALIAS_ROD[w] || w)
 }
 export function ligarRodizio(nomeCabeca: string, grupoCabeca: string, gruposItens: string[]): string | null {
   const tc = new Set([...tokensRodizio(nomeCabeca), ...tokensRodizio(grupoCabeca)])

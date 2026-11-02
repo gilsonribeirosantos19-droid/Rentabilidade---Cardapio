@@ -126,5 +126,6 @@ describe('ligarRodizio (cabeça → grupo dos itens)', () => {
     expect(ligarRodizio('RODIZIO FESTIVAL 99,90', '', grupos)).toBe('Rodízio Festival')
     expect(ligarRodizio('Rodizio Premium', 'Rodizio', grupos)).toBe('Rodízio Premium')
   })
+  it('Rodízio Dupla → itens do Rodízio Sushi (apelido)', () => { expect(ligarRodizio('077 - Rodizio Dupla', '', grupos)).toBe('Rodízio De Sushis') })
   it('sem palavra em comum → null', () => { expect(ligarRodizio('Rodízio Kids', '', grupos)).toBeNull() })
 })
