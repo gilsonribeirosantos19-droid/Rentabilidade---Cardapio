@@ -7,8 +7,6 @@ import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlCur as brl } from '../lib/format'
-import { normGrupo } from '../lib/rodizio'
-import { useRodizioMapa } from '../lib/useRodizioMapa'
 import './produtos.css'
 
 type Produto = {
@@ -35,12 +33,7 @@ type Produto = {
   situacao?: string
   ativo?: boolean
 }
-// rod: ligação do RODÍZIO (cabeça) com o grupo de lançamento dos itens — só p/ produto de rodízio.
-//   '' = automático pelo nome · ROD_NAO = não é rodízio · outro = nome do grupo
-type Form = Partial<Produto> & { rod?: string }
-const ROD_AUTO = '(automático pelo nome)'
-const ROD_NAO = '✕ Não é rodízio'
-const ehRodizio = (f: Form) => /rod[ií]zio/i.test((f.nome || '') + ' ' + (f.grupo || ''))
+type Form = Partial<Produto>
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const TIPO_LABEL: Record<string, string> = { produto_acabado: 'Produto acabado', revenda: 'Mercadoria p/ revenda', combo: 'Combo', outro: 'Outro' }
@@ -72,7 +65,6 @@ const sitEfetiva = (p: Produto) => p.situacao || (p.ativo !== false ? 'ativo' : 
 export function Produtos() {
   const { tenantId } = useAuth()
   const qc = useQueryClient()
-  const { data: rodMapa = new Map<string, string>() } = useRodizioMapa(tenantId)
   const [busca, setBusca] = useState('')
   const [fGrupo, setFGrupo] = useState('')
   const [fSit, setFSit] = useState('ativos')
@@ -141,16 +133,8 @@ export function Produtos() {
       }
       if (f.id) { const { error } = await supabase.from('produtos').update(payload).eq('id', f.id); if (error) throw error }
       else { const { error } = await supabase.from('produtos').insert({ ...payload, tenant_id: tenantId }); if (error) throw error }
-      if (codPdv && f.rod !== undefined) {
-        const r = f.rod === ROD_AUTO ? '' : f.rod
-        const q = r
-          ? supabase.from('rodizio_grupos').upsert({ tenant_id: tenantId, cabeca_codigo: codPdv, cabeca_nome: nome, grupo: r === ROD_NAO ? '' : normGrupo(r), atualizado_em: new Date().toISOString() }, { onConflict: 'tenant_id,cabeca_codigo' })
-          : supabase.from('rodizio_grupos').delete().eq('tenant_id', tenantId).eq('cabeca_codigo', codPdv)
-        const { error } = await q
-        if (error && r) throw new Error('Produto salvo, mas a ligação do rodízio não: ' + (/rodizio_grupos/.test(error.message) ? 'rode o SQL sql_avulso/rodizio_grupos.sql.' : error.message))
-      }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['produtos'] }); qc.invalidateQueries({ queryKey: ['rodizio-mapa'] }); setEditing(null); showToast('Produto salvo.', 'ok') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['produtos'] }); setEditing(null); showToast('Produto salvo.', 'ok') },
     onError: (e: Error) => showToast(e.message, 'err'),
   })
   const delMut = useMutation({
@@ -159,14 +143,6 @@ export function Produtos() {
     onError: (e: Error) => showToast(e.message, 'err'),
   })
 
-  // ligação atual do rodízio p/ o formulário (só p/ produto de rodízio ou já cadastrado)
-  const comRod = (p: Produto): Form => {
-    const cod = (p.codigo_pdv || '').trim()
-    if (!cod || (!rodMapa.has(cod) && !ehRodizio(p))) return p
-    if (!rodMapa.has(cod)) return { ...p, rod: ROD_AUTO }
-    const g = rodMapa.get(cod) as string
-    return { ...p, rod: g === '' ? ROD_NAO : (opts.grupos.find((x) => normGrupo(x) === g) || g) }
-  }
   const duplicar = (p: Produto) => { const { id, codigo_pdv, ...rest } = p; void id; void codigo_pdv; setEditing({ ...rest, nome: (p.nome || '') + ' (cópia)' }) }
 
   return (
@@ -206,7 +182,7 @@ export function Produtos() {
                   <td><span className={'badge ' + (p.participa_cmv ? 'b-sim' : 'b-nao')}>{p.participa_cmv ? 'Sim' : 'Não'}</span></td>
                   <td>{sitBadge(p)}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
-                    <button className="act-btn" title={canEdit ? 'Editar' : 'Ver'} onClick={() => setEditing(comRod(p))}>{canEdit ? '✎' : '👁'}</button>
+                    <button className="act-btn" title={canEdit ? 'Editar' : 'Ver'} onClick={() => setEditing(p)}>{canEdit ? '✎' : '👁'}</button>
                     {canEdit && <button className="act-btn" title="Duplicar" onClick={() => duplicar(p)}>⧉</button>}
                     {canEdit && <button className="act-btn del" title="Inativar" onClick={() => { if (confirm(`Inativar "${p.nome}"?`)) delMut.mutate(p.id) }}>🗑</button>}
                   </td>
@@ -287,19 +263,6 @@ function ProdutoModal({ inicial, opts, saving, canEdit = true, onClose, onSave }
               </select>
             </div>
           </div>
-
-          {(form.rod !== undefined || ehRodizio(form)) && <>
-            <div className="sec-head"><span>🍣</span> Rodízio</div>
-            <div className="form-row">
-              <div className="form-group"><label>Itens deste rodízio são lançados no grupo</label>
-                <SearchSelect value={form.rod ?? ROD_AUTO} onChange={(v) => setForm((f) => ({ ...f, rod: v || ROD_AUTO }))}
-                  options={[ROD_AUTO, ROD_NAO, ...opts.grupos.filter((g) => /rod[ií]zio|mini rod/i.test(g) && normGrupo(g) !== 'RODIZIOS'), ...opts.grupos.filter((g) => !/rod[ií]zio|mini rod/i.test(g))]} />
-              </div>
-              <div className="form-group"><label>&nbsp;</label>
-                <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.45 }}>O custo do rodízio = tudo que foi lançado nos itens desse grupo ÷ rodízios vendidos (aparece na Engenharia de Cardápio e no Impacto na Margem). Deixe <b>automático</b> se o nome já casa; use <b>Não é rodízio</b> p/ vouchers.</div>
-              </div>
-            </div>
-          </>}
 
           <div className="sec-head"><span>🧾</span> Fiscal</div>
           <div className="form-row cols-4">
