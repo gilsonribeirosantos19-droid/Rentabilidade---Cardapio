@@ -109,3 +109,4 @@
 .imp-legend i, .imp-tip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .imp-tip { position: absolute; top: 4px; transform: translateX(-50%); background: #fff; border: 1px solid var(--n-200); border-radius: 8px; box-shadow: 0 4px 14px rgba(15,23,42,.12); padding: 7px 10px; font-size: 12px; color: var(--n-700); pointer-events: none; white-space: nowrap; display: flex; flex-direction: column; gap: 3px; z-index: 3; }
 .imp-tip div { display: flex; align-items: center; gap: 6px; }
+.imp-alert { font-size: 12px; color: var(--warn-ink); background: var(--warn-tint); border: 1px solid var(--warn); border-radius: 8px; padding: 8px 14px; line-height: 1.45; }

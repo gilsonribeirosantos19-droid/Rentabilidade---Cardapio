@@ -8,7 +8,7 @@ import { downloadCsv } from '../lib/csv'
 import { precosPeriodo, criarExplosao, custoConsumo, custoUnitario, precoParaManter, ligarRodizio, listarPeriodos, intervaloPeriodo, rotuloPeriodo, type FichaX, type InsumoUn, type Consumo, type PrecoPer, type ModoPeriodo } from '../lib/impactoMargem'
 import { ImpLineChart, SERIE_CORES } from './impactoChart'
 import { useRodizioMapa } from '../lib/useRodizioMapa'
-import { normGrupo } from '../lib/rodizio'
+import { normGrupo, ehRodNome } from '../lib/rodizio'
 import './impacto.css'
 
 // Gestão › Impacto na Margem — quanto a variação do preço de COMPRA dos insumos tirou (ou devolveu)
@@ -18,7 +18,7 @@ import './impacto.css'
 //  • vendas = vendas_produto_dia com o portão (só dia 'processado'), loja = seletor global
 
 type Insumo = InsumoUn & { nome: string; categoria?: string | null; preco_compra?: number }
-type Ficha = { id: string; produto_id?: string | null; rendimento_porcoes?: number | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens_ficha?: { insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number | null }[] }
+type Ficha = { id: string; produto_id?: string | null; status?: string | null; rendimento_porcoes?: number | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens_ficha?: { insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number | null }[] }
 type Venda = { loja_id: string; data: string; produto_id: string; produto_nome?: string; grupo?: string; qtd?: number; faturado?: number }
 type Ent = { insumo_id: string; quantidade?: number; custo_unitario?: number; criado_em?: string; tipo?: string | null }
 type ProdRow = { cod: string; nome: string; grupo: string; qtd: number; fat: number; preco: number; consumo: Consumo | null; cA: number; cB: number; cmvA: number; cmvB: number; perda: number; sug: number; itens?: string[]; cabecas?: string }
@@ -32,6 +32,8 @@ const titleCase = (s: string) => (s || '').toLowerCase().replace(/(^|[\s\-/(])(\
 const dot = (c: number) => c <= 30 ? 'g' : c <= 38 ? 'y' : 'r'
 const unLabel = (i?: Insumo) => { const u = (i?.unidade_medida || i?.unidade_compra || 'kg').toLowerCase(); return u === 'un' || u === 'pct' || u === 'cx' ? u : (u === 'litro' || u === 'ml' || u === 'l') ? 'L' : 'kg' }
 const discreto = (i?: Insumo) => ['un', 'pct', 'cx'].includes((i?.unidade_medida || i?.unidade_compra || 'g').toLowerCase())
+// quantidade por porção com a unidade certa: un/pct/cx · ml (líquido) · g
+const qtdUn = (i: Insumo | undefined, q: number) => { const u = unLabel(i); return qtdFmt(q) + (discreto(i) ? ' ' + u : u === 'L' ? ' ml' : ' g') }
 
 // meses: 'YYYY-MM' → [primeiro dia, último dia]
 const mesKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -89,7 +91,7 @@ export function ImpactoMargem() {
   const en = !!tenantId
   const { data: insumos = [], isLoading: l1 } = useQuery({ queryKey: ['imp-ins', tenantId], enabled: en, queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,categoria,unidade_medida,unidade_compra,rendimento_pct,preco_compra').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: saldos = [] } = useQuery({ queryKey: ['imp-sld', tenantId], enabled: en, queryFn: () => fetchAll<{ insumo_id: string; custo_medio?: number; loja_id?: string }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
-  const { data: fichas = [], isLoading: l2 } = useQuery({ queryKey: ['imp-fichas', tenantId], enabled: en, queryFn: () => fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,rendimento_porcoes,insumo_vinculado_id,rendimento_receita_g,itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).neq('status', 'arquivada').order('id').range(f, t)) })
+  const { data: fichas = [], isLoading: l2 } = useQuery({ queryKey: ['imp-fichas', tenantId], enabled: en, queryFn: () => fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,status,rendimento_porcoes,insumo_vinculado_id,rendimento_receita_g,itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).neq('status', 'arquivada').order('id').range(f, t)) })
   const { data: produtos = [] } = useQuery({ queryKey: ['imp-prod', tenantId], enabled: en, queryFn: () => fetchAll<{ id: string; codigo_pdv?: string }>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: entradas = [], isLoading: l3 } = useQuery({
     queryKey: ['imp-ent', tenantId, desde, fimMax], enabled: en,
@@ -137,7 +139,7 @@ export function ImpactoMargem() {
     // A receita está na cabeça, o custo nos itens → a cabeça entra na receita (margem) e na cobertura.
     const rod = { fat: 0, qtd: 0, nomes: [] as string[], heads: [] as { cod: string; nome: string; grupo: string; qtd: number; fat: number }[] }
     // cabeça = cadastrada em Cadastros › Rodízios (grupo ≠ '') ou, sem cadastro, "rodízio" no nome/grupo
-    const ehRod = (a: { cod: string; nome: string; grupo: string }) => rodMapa.has(a.cod) ? rodMapa.get(a.cod) !== '' : /rod[ií]zio/i.test(a.nome + ' ' + a.grupo)
+    const ehRod = (a: { cod: string; nome: string; grupo: string }) => rodMapa.has(a.cod) ? rodMapa.get(a.cod) !== '' : ehRodNome(a.nome + ' ' + a.grupo)
     const rows: { cod: string; nome: string; grupo: string; qtd: number; fat: number; consumo: Consumo | null }[] = []
     agg.forEach((a) => {
       fatTotal += a.fat
@@ -172,7 +174,7 @@ export function ImpactoMargem() {
       })
     }
     // rodízio: só entra sem filtro de categoria ou com categoria de rodízio
-    const rodOk = base.rod.qtd > 0 && (!cat || /rod[ií]zio/i.test(cat))
+    const rodOk = base.rod.qtd > 0 && (!cat || ehRodNome(cat))
     const itens0 = prods.filter((p) => p.fat <= 0)
     // linha sintética de rodízio: receita das CABEÇAS × custo dos ITENS a R$0 (por rodízio vendido)
     const mkRod = (cod: string, nome: string, cabecas: string, qtd: number, fatH: number, itens: ProdRow[]): ProdRow | null => {
@@ -185,6 +187,8 @@ export function ImpactoMargem() {
     }
     let rodRow: ProdRow | null = null
     const rodRows: ProdRow[] = []
+    // itens de rodízio (R$ 0) cujo rodízio vendido não foi reconhecido: o custo entra no total SEM a receita → avisa
+    const rodSem: ProdRow[] = []
     if (rodOk && itens0.length) {
       rodRow = mkRod('__rodizio', 'Rodízios (todos)', 'Rodízio', base.rod.qtd, base.rod.fat, itens0)
       // um por tipo: cabeça ligada ao grupo de lançamento dos itens dela
@@ -203,11 +207,14 @@ export function ImpactoMargem() {
       }
       const out = porGrupo.get('__outros')
       if (out && semCabeca.length) { const r = mkRod('__rod_outros', 'Rodízios (outros)', out.nomes.join(', '), out.qtd, out.fat, semCabeca); if (r) rodRows.push(r) }
-    }
+      else rodSem.push(...semCabeca.filter((p) => ehRodNome(p.grupo)))
+    } else if (!cat || ehRodNome(cat)) rodSem.push(...itens0.filter((p) => ehRodNome(p.grupo)))   // nenhum rodízio (cabeça) reconhecido
     const fat = prods.reduce((s, p) => s + p.fat, 0) + (rodRow ? rodRow.fat : 0)
     const cuA = prods.reduce((s, p) => s + p.cA * p.qtd, 0), cuB = prods.reduce((s, p) => s + p.cB * p.qtd, 0)
     const viloes = [...vil.entries()].map(([id, o]) => ({ id, ins: insMap.get(id), a: precoA(id), b: precoB(id), ...o })).filter((x) => Math.abs(x.v) >= 0.5).sort((x, y) => y.v - x.v)
-    return { prods, rodRow, rodRows, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
+    const rodSemGrupos = [...new Set(rodSem.map((p) => titleCase(p.grupo)))]
+    const rodSemCusto = rodSem.reduce((s, p) => s + p.cB * p.qtd, 0)
+    return { prods, rodRow, rodRows, rodSemGrupos, rodSemCusto, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [base, precoA, precoB, insMap, cat, rodMapa])
   const cats = useMemo(() => [...new Set(base.rows.filter((r) => r.consumo).map((r) => titleCase(r.grupo)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [base])
@@ -315,6 +322,8 @@ export function ImpactoMargem() {
             <div className="it"><span className="k">Viraram vermelho</span><span className={'v ' + (viraram.length ? 'neg' : '')}>{viraram.length}</span></div>
           </div>
 
+          {real.rodSemGrupos.length > 0 && <div className="imp-alert">⚠ Itens de rodízio lançados sem o rodízio vendido reconhecido: <b>{real.rodSemGrupos.join(', ')}</b>. O custo deles (<b>{brl0(real.rodSemCusto)}</b>) entra na margem <b>sem a receita</b> — confira o nome do rodízio no PDV.</div>}
+
           <div className="imp-tabs" role="tablist">
             <button role="tab" className={aba === 'vil' ? 'on' : ''} onClick={() => setAba('vil')}>Vilões da margem <span className="imp-cnt">{real.viloes.length}</span></button>
             <button role="tab" className={aba === 'prod' ? 'on' : ''} onClick={() => setAba('prod')}>Produtos afetados <span className="imp-cnt">{prodsView.length}</span></button>
@@ -372,8 +381,9 @@ export function ImpactoMargem() {
                                   <tbody>
                                     {[...p.consumo.entries()].map(([id, q]) => { const ins = insMap.get(id); return { id, ins, q, a: q * custoUnitario(ins, pA(id)), b: q * custoUnitario(ins, pB(id)) } })
                                       .sort((x, y) => (y.b - y.a) - (x.b - x.a)).map((l) => (
-                                        <tr key={l.id}><td>{titleCase(l.ins?.nome || '(insumo removido)')}</td><td className="r">{discreto(l.ins) ? qtdFmt(l.q) + ' un' : qtdFmt(l.q) + ' g'}</td><td className="r">{brl(l.a)}</td><td className="r">{brl(l.b)}</td>
-                                          <td className={'r ' + (l.b > l.a ? 'neg' : l.b < l.a ? 'pos' : 'muted')}>{l.b >= l.a ? '+' : '−'} {brl(Math.abs(l.b - l.a))}</td></tr>
+                                        <tr key={l.id}><td>{titleCase(l.ins?.nome || '(insumo removido)')}</td><td className="r">{qtdUn(l.ins, l.q)}</td><td className="r">{brl(l.a)}</td><td className="r">{brl(l.b)}</td>
+                                          {Math.abs(l.b - l.a) < 0.005 ? <td className="r muted">{brl(0)}</td>
+                                            : <td className={'r ' + (l.b > l.a ? 'neg' : 'pos')}>{l.b > l.a ? '+' : '−'} {brl(Math.abs(l.b - l.a))}</td>}</tr>
                                       ))}
                                   </tbody>
                                 </table>

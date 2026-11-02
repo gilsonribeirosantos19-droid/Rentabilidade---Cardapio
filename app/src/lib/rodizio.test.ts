@@ -56,3 +56,13 @@ describe('mapaEfetivo (automático pelo nome + cadastro manda)', () => {
     expect(ratearRodizio(linhas, m).custoCabeca.has('A|3364')).toBe(false)
   })
 })
+
+import { ehRodNome } from './rodizio'
+describe('ehRodNome (sem depender de acento)', () => {
+  it('reconhece RODÍZIO, RODIZÍO, RODIZIO e minúsculo', () => {
+    for (const s of ['070 - Rodízio de Sushi', '075 - RODIZÍO FESTIVAL', 'RODIZIO PREMIUM', 'rodizio infantil', 'Rodízios']) expect(ehRodNome(s)).toBe(true)
+  })
+  it('não marca o que não é rodízio', () => {
+    for (const s of ['Hot Philadelphia', '', null, 'Combinado de Outubro']) expect(ehRodNome(s)).toBe(false)
+  })
+})

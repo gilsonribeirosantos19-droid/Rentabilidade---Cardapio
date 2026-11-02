@@ -130,3 +130,13 @@ describe('ligarRodizio (cabeça → grupo dos itens)', () => {
   it('Rodízio Em Casa → grupo Rodízio Em Casa ("em" ignorado, casa pelo "casa")', () => { expect(ligarRodizio('071 - Rodízio Em Casa', '', [...grupos, 'RODÍZIO EM CASA'])).toBe('RODÍZIO EM CASA') })
   it('sem palavra em comum → null', () => { expect(ligarRodizio('Rodízio Kids', '', grupos)).toBeNull() })
 })
+
+describe('criarExplosao — produto com 2 fichas', () => {
+  it('usa a ficha ATIVA, mesmo vindo depois do rascunho', () => {
+    const ex = criarExplosao([
+      { id: 'r', produto_id: 'P', status: 'rascunho', rendimento_porcoes: 1, itens: [{ insumo_id: 'X', quantidade_g: 999 }] },
+      { id: 'a', produto_id: 'P', status: 'ativa', rendimento_porcoes: 1, itens: [{ insumo_id: 'X', quantidade_g: 10 }] },
+    ])
+    expect(ex.fichaDoProduto('P')?.id).toBe('a')
+  })
+})
