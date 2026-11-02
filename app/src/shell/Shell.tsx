@@ -43,6 +43,7 @@ import { Rendimentos } from '../screens/Rendimentos'
 import { CmvTeoricoReal } from '../screens/CmvTeoricoReal'
 import { Precificacao } from '../screens/Precificacao'
 import { ImpactoMargem } from '../screens/ImpactoMargem'
+import { Rodizios } from '../screens/Rodizios'
 import { Fechamento } from '../screens/Fechamento'
 import { Dre } from '../screens/Dre'
 import { DreOrcamento } from '../screens/DreOrcamento'
@@ -93,6 +94,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'fornecedores') return <Fornecedores />
   if (k === 'insumos') return <Insumos />
   if (k === 'produtos') return <Produtos />
+  if (k === 'rodizios') return <Rodizios />
   if (k === 'fichas') return <FichasTecnicas />
   if (k === 'estoque/saldo') return <SaldoEstoque />
   if (k === 'estoque/movimentacao') return <Movimentacao />

@@ -76,6 +76,7 @@ export const MODULES: Module[] = [
       { label: 'Insumos', key: 'insumos' },
       { label: 'Produtos', key: 'produtos' },
       { label: 'Fichas Técnicas', key: 'fichas' },
+      { label: 'Rodízios', key: 'rodizios' },
       { label: 'Fornecedores', key: 'fornecedores' },
     ],
   },

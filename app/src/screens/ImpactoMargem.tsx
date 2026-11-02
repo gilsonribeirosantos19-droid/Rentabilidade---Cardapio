@@ -7,6 +7,8 @@ import { custoDoInsumo, type CostCtx } from '../lib/cost'
 import { downloadCsv } from '../lib/csv'
 import { precosPeriodo, criarExplosao, custoConsumo, custoUnitario, precoParaManter, ligarRodizio, listarPeriodos, intervaloPeriodo, rotuloPeriodo, type FichaX, type InsumoUn, type Consumo, type PrecoPer, type ModoPeriodo } from '../lib/impactoMargem'
 import { ImpLineChart, SERIE_CORES } from './impactoChart'
+import { useRodizioMapa } from '../lib/useRodizioMapa'
+import { normGrupo } from '../lib/rodizio'
 import './impacto.css'
 
 // Gestão › Impacto na Margem — quanto a variação do preço de COMPRA dos insumos tirou (ou devolveu)
@@ -49,6 +51,7 @@ const Cmv = ({ v }: { v: number }) => <span className="imp-cmv"><i className={'i
 
 export function ImpactoMargem() {
   const { tenantId } = useAuth()
+  const { data: rodMapa = new Map<string, string>() } = useRodizioMapa(tenantId)   // Cadastros › Rodízios (cabeça → grupo)
   const { lojaId, lojas } = useLoja()
   // período: mês / trimestre / semestre / ano / personalizado.
   // padrão = último período FECHADO × o anterior (o corrente ainda está incompleto); no ano, o ano corrente × o anterior
@@ -132,8 +135,9 @@ export function ImpactoMargem() {
     let fatTotal = 0, fatFicha = 0
     // RODÍZIO: o garçom lança o "Rodízio Sushi R$ 86,90" (SEM ficha) e depois os itens do grupo rodízio a R$ 0 (COM ficha).
     // A receita está na cabeça, o custo nos itens → a cabeça entra na receita (margem) e na cobertura.
-    const rod = { fat: 0, qtd: 0, nomes: [] as string[], heads: [] as { nome: string; grupo: string; qtd: number; fat: number }[] }
-    const ehRod = (a: { nome: string; grupo: string }) => /rod[ií]zio/i.test(a.nome + ' ' + a.grupo)
+    const rod = { fat: 0, qtd: 0, nomes: [] as string[], heads: [] as { cod: string; nome: string; grupo: string; qtd: number; fat: number }[] }
+    // cabeça = cadastrada em Cadastros › Rodízios (grupo ≠ '') ou, sem cadastro, "rodízio" no nome/grupo
+    const ehRod = (a: { cod: string; nome: string; grupo: string }) => rodMapa.has(a.cod) ? rodMapa.get(a.cod) !== '' : /rod[ií]zio/i.test(a.nome + ' ' + a.grupo)
     const rows: { cod: string; nome: string; grupo: string; qtd: number; fat: number; consumo: Consumo | null }[] = []
     agg.forEach((a) => {
       fatTotal += a.fat
@@ -141,11 +145,11 @@ export function ImpactoMargem() {
       const consumo = f ? explosao.porPorcao(f.id) : null
       const ok = !!consumo && consumo.size > 0
       if (ok) fatFicha += a.fat
-      else if (a.fat > 0 && a.qtd > 0 && ehRod(a)) { rod.fat += a.fat; rod.qtd += a.qtd; rod.nomes.push(titleCase(a.nome)); rod.heads.push({ nome: a.nome, grupo: a.grupo, qtd: a.qtd, fat: a.fat }) }
+      else if (a.fat > 0 && a.qtd > 0 && ehRod(a)) { rod.fat += a.fat; rod.qtd += a.qtd; rod.nomes.push(titleCase(a.nome)); rod.heads.push({ cod: a.cod, nome: a.nome, grupo: a.grupo, qtd: a.qtd, fat: a.fat }) }
       if (a.qtd > 0) rows.push({ ...a, consumo: ok ? consumo : null })
     })
     return { rows, fatTotal, fatFicha, rod }
-  }, [vendas, lojaId, prodByCod, explosao])
+  }, [vendas, lojaId, prodByCod, explosao, rodMapa])
 
   const custoCom = (c: Consumo, pr: (id: string) => number) => custoConsumo(c, insMap, pr)
   const pA = (id: string) => precoA(id).preco
@@ -187,7 +191,8 @@ export function ImpactoMargem() {
       const gruposItens = [...new Set(itens0.map((p) => p.grupo))]
       const porGrupo = new Map<string, { qtd: number; fat: number; nomes: string[] }>()
       for (const h of base.rod.heads) {
-        const g = ligarRodizio(h.nome, h.grupo, gruposItens) ?? '__outros'
+        const cad = rodMapa.get(h.cod)   // cadastro manda; sem cadastro → sugestão pelo nome
+        const g = (cad ? gruposItens.find((x) => normGrupo(x) === cad) : undefined) ?? ligarRodizio(h.nome, h.grupo, gruposItens) ?? '__outros'
         const o = porGrupo.get(g) || { qtd: 0, fat: 0, nomes: [] }; o.qtd += h.qtd; o.fat += h.fat; o.nomes.push(titleCase(h.nome)); porGrupo.set(g, o)
       }
       const semCabeca: ProdRow[] = []
@@ -204,7 +209,7 @@ export function ImpactoMargem() {
     const viloes = [...vil.entries()].map(([id, o]) => ({ id, ins: insMap.get(id), a: precoA(id), b: precoB(id), ...o })).filter((x) => Math.abs(x.v) >= 0.5).sort((x, y) => y.v - x.v)
     return { prods, rodRow, rodRows, viloes, fat, cuA, cuB, mA: fat > 0 ? (fat - cuA) / fat * 100 : 0, mB: fat > 0 ? (fat - cuB) / fat * 100 : 0 }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [base, precoA, precoB, insMap, cat])
+  }, [base, precoA, precoB, insMap, cat, rodMapa])
   const cats = useMemo(() => [...new Set(base.rows.filter((r) => r.consumo).map((r) => titleCase(r.grupo)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [base])
 
   const prodsView = useMemo(() => {
