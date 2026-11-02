@@ -54,7 +54,7 @@ export function custoUnitario(ins: InsumoUn | undefined, preco: number): number 
 }
 
 export type ItemX = { insumo_id?: string | null; produto_id?: string | null; quantidade_g?: number | null }
-export type FichaX = { id: string; produto_id?: string | null; rendimento_porcoes?: number | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens: ItemX[] }
+export type FichaX = { id: string; produto_id?: string | null; status?: string | null; rendimento_porcoes?: number | null; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens: ItemX[] }
 export type Consumo = Map<string, number>   // insumo CRU → quantidade (g/ml líquidos ou unidades)
 
 // "Explode" a ficha até o insumo CRU (igual ao CMV Teórico):
@@ -67,7 +67,8 @@ export function criarExplosao(fichas: FichaX[]) {
   const byProduto = new Map<string, FichaX>()
   const byVinc = new Map<string, FichaX>()
   for (const f of fichas) {
-    if (f.produto_id && !byProduto.has(f.produto_id)) byProduto.set(f.produto_id, f)
+    // produto com 2+ fichas → a ATIVA manda (rascunho só se não houver ativa)
+    if (f.produto_id) { const cur = byProduto.get(f.produto_id); if (!cur || (cur.status !== 'ativa' && f.status === 'ativa')) byProduto.set(f.produto_id, f) }
     if (f.insumo_vinculado_id && +(f.rendimento_receita_g || 0) > 0) byVinc.set(f.insumo_vinculado_id, f)
   }
   const add = (dst: Consumo, src: Consumo, k: number) => { if (!k) return; src.forEach((q, id) => dst.set(id, (dst.get(id) || 0) + q * k)) }
