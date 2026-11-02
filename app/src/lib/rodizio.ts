@@ -13,7 +13,8 @@ export type RodMapa = Map<string, string>
 
 export type LinhaRod = { lojaId: string; codigo: string; grupo: string; qVenda: number; vBruta: number; custoUnit: number; nome?: string }
 
-const ehRodNome = (s: string) => /rod[ií]zio/i.test(s)
+// "rodízio" no nome — sem depender de acento (o PDV manda RODÍZIO, RODIZÍO, RODIZIO…)
+export const ehRodNome = (s?: string | null) => /RODIZIO/.test(normGrupo(s))
 
 // Mapa efetivo = cadastro (manda) + ligação automática pelo nome p/ cabeças sem cadastro:
 // cabeça = vendida COM preço, SEM custo de ficha, com "rodízio" no nome/grupo.

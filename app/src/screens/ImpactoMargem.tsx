@@ -8,7 +8,7 @@ import { downloadCsv } from '../lib/csv'
 import { precosPeriodo, criarExplosao, custoConsumo, custoUnitario, precoParaManter, ligarRodizio, listarPeriodos, intervaloPeriodo, rotuloPeriodo, type FichaX, type InsumoUn, type Consumo, type PrecoPer, type ModoPeriodo } from '../lib/impactoMargem'
 import { ImpLineChart, SERIE_CORES } from './impactoChart'
 import { useRodizioMapa } from '../lib/useRodizioMapa'
-import { normGrupo } from '../lib/rodizio'
+import { normGrupo, ehRodNome } from '../lib/rodizio'
 import './impacto.css'
 
 // Gestão › Impacto na Margem — quanto a variação do preço de COMPRA dos insumos tirou (ou devolveu)
@@ -137,7 +137,7 @@ export function ImpactoMargem() {
     // A receita está na cabeça, o custo nos itens → a cabeça entra na receita (margem) e na cobertura.
     const rod = { fat: 0, qtd: 0, nomes: [] as string[], heads: [] as { cod: string; nome: string; grupo: string; qtd: number; fat: number }[] }
     // cabeça = cadastrada em Cadastros › Rodízios (grupo ≠ '') ou, sem cadastro, "rodízio" no nome/grupo
-    const ehRod = (a: { cod: string; nome: string; grupo: string }) => rodMapa.has(a.cod) ? rodMapa.get(a.cod) !== '' : /rod[ií]zio/i.test(a.nome + ' ' + a.grupo)
+    const ehRod = (a: { cod: string; nome: string; grupo: string }) => rodMapa.has(a.cod) ? rodMapa.get(a.cod) !== '' : ehRodNome(a.nome + ' ' + a.grupo)
     const rows: { cod: string; nome: string; grupo: string; qtd: number; fat: number; consumo: Consumo | null }[] = []
     agg.forEach((a) => {
       fatTotal += a.fat
@@ -172,7 +172,7 @@ export function ImpactoMargem() {
       })
     }
     // rodízio: só entra sem filtro de categoria ou com categoria de rodízio
-    const rodOk = base.rod.qtd > 0 && (!cat || /rod[ií]zio/i.test(cat))
+    const rodOk = base.rod.qtd > 0 && (!cat || ehRodNome(cat))
     const itens0 = prods.filter((p) => p.fat <= 0)
     // linha sintética de rodízio: receita das CABEÇAS × custo dos ITENS a R$0 (por rodízio vendido)
     const mkRod = (cod: string, nome: string, cabecas: string, qtd: number, fatH: number, itens: ProdRow[]): ProdRow | null => {
