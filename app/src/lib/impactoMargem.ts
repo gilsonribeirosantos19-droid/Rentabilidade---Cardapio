@@ -158,7 +158,7 @@ export function rotuloPeriodo(key: string, curto = false): string {
 // ── RODÍZIO: liga a "cabeça" (ex.: "Rodízio Sushi" R$86,90, sem ficha) ao GRUPO de lançamento
 // dos itens dela (ex.: "Rodízio De Sushis", itens a R$0 com ficha) pelas palavras do nome.
 // Ignora "rodízio", artigos e plural ("sushi" casa com "sushis"). Sem par → null ("outros").
-const STOP_ROD = new Set(['rodizio', 'rodizios', 'de', 'do', 'da', 'dos', 'das', 'e', 'o', 'a', 'com', 'sem', 'r'])
+const STOP_ROD = new Set(['rodizio', 'rodizios', 'de', 'do', 'da', 'dos', 'das', 'e', 'em', 'o', 'a', 'com', 'sem', 'r'])
 // apelidos: cabeça cujo nome não bate com o grupo dos itens (regra do dono: "Rodízio Dupla" usa os itens do Rodízio Sushi)
 const ALIAS_ROD: Record<string, string> = { dupla: 'sushi' }
 export function tokensRodizio(s: string): string[] {

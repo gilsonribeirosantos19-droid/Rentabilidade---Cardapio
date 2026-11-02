@@ -127,5 +127,6 @@ describe('ligarRodizio (cabeça → grupo dos itens)', () => {
     expect(ligarRodizio('Rodizio Premium', 'Rodizio', grupos)).toBe('Rodízio Premium')
   })
   it('Rodízio Dupla → itens do Rodízio Sushi (apelido)', () => { expect(ligarRodizio('077 - Rodizio Dupla', '', grupos)).toBe('Rodízio De Sushis') })
+  it('Rodízio Em Casa → grupo Rodízio Em Casa ("em" ignorado, casa pelo "casa")', () => { expect(ligarRodizio('071 - Rodízio Em Casa', '', [...grupos, 'RODÍZIO EM CASA'])).toBe('RODÍZIO EM CASA') })
   it('sem palavra em comum → null', () => { expect(ligarRodizio('Rodízio Kids', '', grupos)).toBeNull() })
 })
