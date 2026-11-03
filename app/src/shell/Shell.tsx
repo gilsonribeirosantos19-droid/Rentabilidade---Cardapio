@@ -55,6 +55,7 @@ import { EngenhariaCardapio } from '../screens/EngenhariaCardapio'
 import { CurvaAbcVendas } from '../screens/CurvaAbcVendas'
 import { SugestaoCompra } from '../screens/SugestaoCompra'
 import { Cotacao } from '../screens/Cotacao'
+import { ComprasFornecedor } from '../screens/ComprasFornecedor'
 import { ConfigGeral } from '../screens/ConfigGeral'
 import { ConfigParametros } from '../screens/ConfigParametros'
 import { ConfigAuditoria } from '../screens/ConfigAuditoria'
@@ -120,6 +121,7 @@ function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: b
   if (k === 'compras/pedidos') return <Compras />
   if (k === 'compras/sugestao') return <SugestaoCompra />
   if (k === 'compras/cotacao') return <Cotacao />
+  if (k === 'compras/por-fornecedor') return <ComprasFornecedor />
   if (k === 'ajuda') return <AjudaPage />
   if (k === 'config/geral') return <ConfigGeral />
   if (k === 'config/auditoria') return <ConfigAuditoria />

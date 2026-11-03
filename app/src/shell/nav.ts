@@ -50,6 +50,7 @@ export const MODULES: Module[] = [
       { label: 'Sugestão de Compras', key: 'compras/sugestao' },
       { label: 'Cotação de Compras', key: 'compras/cotacao' },
       { label: 'Pedidos de Compra', key: 'compras/pedidos' },
+      { label: 'Compras por Fornecedor', key: 'compras/por-fornecedor' },
     ],
   },
   {
