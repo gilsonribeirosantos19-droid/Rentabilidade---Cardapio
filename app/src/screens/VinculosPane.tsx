@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useToastTipo } from '../lib/toast'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlZero as brl } from '../lib/format'
@@ -44,11 +45,12 @@ export function VinculosPane({ fornecedores }: { fornecedores: Fornecedor[] }) {
 
   const { data: insumos = [] } = useQuery({
     queryKey: ['insumos-vin', tenantId], enabled: !!tenantId,
-    queryFn: async () => { const { data } = await supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome'); return (data ?? []) as Insumo[] },
+    queryFn: () => fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,categoria').eq('tenant_id', tenantId).eq('ativo', true).order('nome').order('id').range(f, t)),   // PAGINADO
   })
   const { data: vinculos = [] } = useQuery({
     queryKey: ['vinculos-full', tenantId], enabled: !!tenantId,
-    queryFn: async () => { const { data } = await supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId); return (data ?? []) as Vinculo[] },
+    // PAGINADO: o banco corta em 1000 linhas (Sushi PN tem 1.466 vínculos — os do fim sumiam da tela)
+    queryFn: () => fetchAll<Vinculo>((f, t) => supabase.from('insumo_fornecedores').select('*').eq('tenant_id', tenantId).order('id').range(f, t)),
   })
   const { data: embOpcoes = [] } = useQuery({
     queryKey: ['emb-opcoes', tenantId], enabled: !!tenantId,

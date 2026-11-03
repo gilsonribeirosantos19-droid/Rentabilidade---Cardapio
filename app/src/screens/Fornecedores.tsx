@@ -42,8 +42,8 @@ export function Fornecedores() {
     queryKey: ['insumo-forn', tenantId], enabled: !!tenantId,
     queryFn: async () => {
       // filtra por tenant explicitamente (não depende só da RLS), igual às demais queries
-      const { data } = await supabase.from('insumo_fornecedores').select('fornecedor_id').eq('tenant_id', tenantId)
-      return (data ?? []) as { fornecedor_id: string }[]
+      // PAGINADO: >1000 vínculos → a contagem por fornecedor saía menor
+      return fetchAll<{ fornecedor_id: string }>((f, t) => supabase.from('insumo_fornecedores').select('fornecedor_id').eq('tenant_id', tenantId).order('id').range(f, t))
     },
   })
   const itensPorForn = useMemo(() => {
