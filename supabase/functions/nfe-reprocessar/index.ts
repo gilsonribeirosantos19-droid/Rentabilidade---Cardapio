@@ -6,6 +6,19 @@ const supabase = createClient(
   Deno.env.get('APP_SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
+// Vínculos insumo×fornecedor do tenant, PAGINADO: o banco devolve no máximo 1000 linhas por busca
+// (Sushi PN tem 1.466) — sem paginar, os vínculos do fim "sumiam" e a nota caía em 'aguardando vínculo'.
+async function todosVinculos(tenantId: string, cols: string): Promise<any[]> {
+  const out: any[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase.from('insumo_fornecedores').select(cols).eq('tenant_id', tenantId).order('id').range(from, from + 999)
+    if (error) throw error
+    out.push(...(data || []))
+    if (!data || data.length < 1000) break
+  }
+  return out
+}
+
 // MULTI-TENANT: resgata as notas 'em_transito' de QUALQUER tenant (Mori, Joya, Sushi PN, novos...).
 // Antes o tenant estava FIXO no Mori — por isso as notas da Joya nunca completavam o XML e ficavam
 // presas em "Pendente SEFAZ" pra sempre (nada manifestava ciência nem baixava o XML pra elas).
@@ -97,7 +110,7 @@ Deno.serve(async (_req) => {
       continue
     }
 
-    if (!vincCache[TEN]) vincCache[TEN] = (await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id').eq('tenant_id', TEN)).data || []
+    if (!vincCache[TEN]) vincCache[TEN] = await todosVinculos(TEN, 'id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id')
     if (!fornCache[TEN]) fornCache[TEN] = (await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', TEN)).data || []
     const vincExist = vincCache[TEN]
     const fornAll = fornCache[TEN]

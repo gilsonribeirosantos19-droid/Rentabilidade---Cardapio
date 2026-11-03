@@ -7,6 +7,19 @@ const supabase = createClient(
   Deno.env.get('APP_SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 )
 
+// Vínculos insumo×fornecedor do tenant, PAGINADO: o banco devolve no máximo 1000 linhas por busca
+// (Sushi PN tem 1.466) — sem paginar, os vínculos do fim "sumiam" e a nota caía em 'aguardando vínculo'.
+async function todosVinculos(tenantId: string, cols: string): Promise<any[]> {
+  const out: any[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase.from('insumo_fornecedores').select(cols).eq('tenant_id', tenantId).order('id').range(from, from + 999)
+    if (error) throw error
+    out.push(...(data || []))
+    if (!data || data.length < 1000) break
+  }
+  return out
+}
+
 const MORI_TENANT_ID = '33e81daf-662f-43d1-8684-0702e959c4f9'  // default p/ compat: webhook do Mori não passa ?tenant
 const FOCUS_TOKEN = Deno.env.get('FOCUS_NFE_TOKEN')!
 const FOCUS_URL   = 'https://api.focusnfe.com.br'
@@ -255,7 +268,7 @@ async function rodarReprocessar(tenant?: string) {
 
       // cache por tenant (evita query por nota)
       if (!lojasCache[n.tenant_id]) lojasCache[n.tenant_id] = (await supabase.from('lojas').select('id,cnpj').eq('tenant_id', n.tenant_id)).data || []
-      if (!vincCache[n.tenant_id]) vincCache[n.tenant_id] = (await supabase.from('insumo_fornecedores').select('id,codigo_fornecedor,fornecedor_id').eq('tenant_id', n.tenant_id)).data || []
+      if (!vincCache[n.tenant_id]) vincCache[n.tenant_id] = await todosVinculos(n.tenant_id, 'id,codigo_fornecedor,fornecedor_id')
       if (!fornCache[n.tenant_id]) fornCache[n.tenant_id] = (await supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', n.tenant_id)).data || []
       // fornecedor da nota pelo CNPJ do emitente (posições 6-20 da chave) — auto-vincula só se for DELE
       const _cnpjEmit = String(n.chave_acesso||'').substring(6,20)
@@ -694,10 +707,7 @@ Deno.serve(async (req) => {
       // passem o check de itensExistentes ao mesmo tempo, sem o índice único a barrar).
       await supabase.from('nfe_itens').delete().eq('nfe_id', nfe.id)
 
-      const { data: vincExist } = await supabase
-        .from('insumo_fornecedores')
-        .select('id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id')
-        .eq('tenant_id', TENANT_ID)
+      const vincExist = await todosVinculos(TENANT_ID, 'id,codigo_fornecedor,insumo_id,qtd_por_embalagem,fornecedor_id')
 
       // Fornecedor da nota pelo CNPJ do emitente. SÓ auto-vincula se o vínculo for DESSE fornecedor:
       // casar só pelo código amarra errado (códigos genéricos 2000000000xxx colidem entre fornecedores).
