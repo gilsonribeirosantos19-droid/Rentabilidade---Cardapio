@@ -154,16 +154,17 @@
 .etq-plabel .pl-modo { font-size: 6.5pt; font-weight: 700; border-bottom: 1px solid #000; padding-bottom: .6mm; margin-bottom: 1mm; }
 .etq-plabel .pl-dates { display: flex; flex-direction: column; gap: .9mm; }
 .etq-plabel .pl-drow { display: flex; justify-content: flex-start; align-items: baseline; gap: 1.5mm; font-size: 8.5pt; }
-.etq-plabel .pl-drow span { font-weight: 700; flex: 0 0 23mm; }
-.etq-plabel .pl-drow b { font-weight: 700; font-size: 8.5pt; white-space: nowrap; }
+.etq-plabel .pl-drow span { font-weight: 700; flex: 0 0 22mm; }
+.etq-plabel .pl-drow b { font-weight: 700; font-size: 9.5pt; white-space: nowrap; }
 .etq-plabel .pl-bottom { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 2mm; }
 .etq-plabel .pl-resp { font-size: 7pt; font-weight: 600; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .etq-plabel .pl-qrbox { flex: none; display: flex; flex-direction: column; align-items: center; }
 .etq-plabel .pl-qr { width: 13mm; height: 13mm; image-rendering: pixelated; }
 .etq-plabel .pl-code { font-size: 6pt; font-weight: 700; letter-spacing: .2px; margin-top: .3mm; text-align: center; }
-/* nitidez na térmica (estilo Fixee): preto puro, tudo em negrito pesado + traço engrossado.
-   A térmica não imprime cinza — traço fino/antisserrilhado sai pontilhado e claro. */
-.etq-plabel, .etq-plabel * { color: #000 !important; font-weight: 800 !important; -webkit-text-stroke: .35px #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* nitidez na térmica (estilo Fixee): preto puro, negrito + traço levemente engrossado.
+   A térmica não imprime cinza — traço fino/antisserrilhado sai pontilhado e claro.
+   (2026-11-03: 800 + traço .35px saía pesado demais e colava as letras → 700 + .15px + espaçamento) */
+.etq-plabel, .etq-plabel * { color: #000 !important; font-weight: 700 !important; -webkit-text-stroke: .15px #000; letter-spacing: .25px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .etq-plabel .pl-modo { border-bottom-width: 1.5px; }
 .etq-plabel .pl-qr { -webkit-text-stroke: 0; }
 @media print {
