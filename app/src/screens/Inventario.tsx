@@ -6,7 +6,7 @@ import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
-import { brl } from '../lib/format'
+import { brl, parseQtdBR, fmtQtdBR } from '../lib/format'
 import { isoD } from '../lib/date'
 import './estoque.css'
 
@@ -146,7 +146,8 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, 
   useEffect(() => {
     const c: Record<string, string> = {}
     // vem EM BRANCO: só mostra valor nos itens já contados (qtd_contada salva). Em branco = ainda não contado.
-    itens.forEach((it) => { c[it.id] = it.qtd_contada != null ? Number(it.qtd_contada).toFixed(3) : '' })
+    // padrão BR no campo (2,125 / 1.550) — o campo lê vírgula=decimal e ponto=milhar (parseQtdBR)
+    itens.forEach((it) => { c[it.id] = it.qtd_contada != null ? fmtQtdBR(Number(it.qtd_contada)) : '' })
     setCounts(c); setOrig(c)
   }, [itens])
 
@@ -155,8 +156,9 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, 
   const rows = visItens.map((it) => {
     const sys = it.qtd_sistema || 0
     const raw = counts[it.id]
-    const contado = raw != null && String(raw).trim() !== '' && !isNaN(parseFloat(raw))
-    const cnt = contado ? parseFloat(raw) : 0
+    const parsed = parseQtdBR(raw)
+    const contado = parsed != null
+    const cnt = parsed ?? 0
     const dif = contado ? cnt - sys : null   // em branco (não contado) = sem diferença (não vira −saldo)
     const vDif = dif == null ? 0 : dif * (it.custo_medio || 0)
     return { it, sys, cnt, dif, vDif, contado }
@@ -173,7 +175,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, 
         : 'Encerrar o inventário? Os saldos serão ajustados com base nas quantidades contadas.'
       if (!confirm(msg)) throw new Error('__cancel__')
       // salva só as contagens editadas
-      const updates = itens.filter((it) => counts[it.id] != null && counts[it.id] !== orig[it.id]).map((it) => ({ id: it.id, qtd_contada: parseFloat(counts[it.id]) || 0 }))
+      const updates = itens.filter((it) => counts[it.id] != null && counts[it.id] !== orig[it.id]).map((it) => ({ id: it.id, qtd_contada: parseQtdBR(counts[it.id]) ?? 0 }))
       if (updates.length) { const { error } = await supabase.from('inventario_itens').upsert(updates, { onConflict: 'id' }); if (error) throw error }
       const { error } = await supabase.rpc('encerrar_inventario', { p_inventario_id: invId })
       if (error) throw error
@@ -221,7 +223,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, 
           <tbody>
             {isLoading ? <tr><td colSpan={7} className="empty">Carregando…</td></tr>
               : rows.length === 0 ? <tr><td colSpan={7} className="empty">Sem itens.</td></tr>
-              : rows.map(({ it, sys, dif, vDif, contado }) => {
+              : rows.map(({ it, sys, cnt, dif, vDif, contado }) => {
                 const ins = insMap[it.insumo_id]; const un = ins?.unidade_medida || ins?.unidade_compra || '—'
                 const cls = dif == null ? '#cbd5e1' : dif > 0.001 ? '#16a34a' : dif < -0.001 ? '#e11d48' : '#94a3b8'; const sinal = (dif || 0) > 0 ? '+' : ''
                 return (
@@ -229,7 +231,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, 
                     <td>{ins?.nome || it.insumo_id}</td>
                     <td style={{ color: '#94a3b8' }}>{un}</td>
                     <td className="r mono">{qtd(sys)}</td>
-                    <td className="r">{isAtivo && canEdit ? <input type="number" step="0.001" min="0" className="field" style={{ width: 110, height: 32, textAlign: 'right' }} placeholder="0,000" value={counts[it.id] ?? ''} onChange={(e) => setCounts((c) => ({ ...c, [it.id]: e.target.value }))} /> : <span className="mono">{contado ? qtd(parseFloat(counts[it.id])) : '—'}</span>}</td>
+                    <td className="r">{isAtivo && canEdit ? <input type="text" inputMode="decimal" className="field" title="Padrão brasileiro: 1.550 = mil quinhentos e cinquenta · 1,55 = um vírgula cinquenta e cinco" style={{ width: 110, height: 32, textAlign: 'right', ...((counts[it.id] || '').trim() && !contado ? { borderColor: '#e11d48', color: '#e11d48' } : {}) }} placeholder="0,000" value={counts[it.id] ?? ''} onChange={(e) => setCounts((c) => ({ ...c, [it.id]: e.target.value }))} onBlur={() => { const n = parseQtdBR(counts[it.id]); if (n != null) setCounts((c) => ({ ...c, [it.id]: fmtQtdBR(n) })) }} /> : <span className="mono">{contado ? qtd(cnt) : '—'}</span>}</td>
                     <td className="r mono" style={{ color: cls }}>{dif == null ? '—' : sinal + qtd(dif)}</td>
                     <td className="r mono">{brl(it.custo_medio)}</td>
                     <td className="r mono" style={{ color: cls }}>{dif == null ? '—' : sinal + brl(vDif)}</td>

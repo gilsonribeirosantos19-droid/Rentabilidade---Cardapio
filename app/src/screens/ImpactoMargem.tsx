@@ -10,6 +10,7 @@ import { ImpLineChart, SERIE_CORES } from './impactoChart'
 import { useRodizioMapa } from '../lib/useRodizioMapa'
 import { normGrupo, ehRodNome } from '../lib/rodizio'
 import './impacto.css'
+import { NumInput } from '../components/NumInput'
 
 // Gestão › Impacto na Margem — quanto a variação do preço de COMPRA dos insumos tirou (ou devolveu)
 // da margem, com o volume que foi VENDIDO no mês. Só leitura (não mexe em custo médio/CMV).
@@ -434,7 +435,7 @@ export function ImpactoMargem() {
                         <tr key={u.id} className={v ? 'chg' : ''}>
                           <td>{titleCase(u.ins?.nome || '')} <span className="muted">· {titleCase(u.ins?.categoria || '')}</span></td>
                           <td className="r">{brl(pB(u.id))} <span className="muted">/{unLabel(u.ins)}</span></td>
-                          <td className="r"><input className="imp-pct" type="number" step="1" id={'imp-sim-' + u.id} aria-label={'Variação % ' + (u.ins?.nome || '')} value={v || ''} placeholder="0"
+                          <td className="r"><NumInput className="imp-pct" step="1" id={'imp-sim-' + u.id} aria-label={'Variação % ' + (u.ins?.nome || '')} value={v || ''} placeholder="0"
                             onChange={(e) => { const n = parseFloat(e.target.value) || 0; setSim((s) => { const x = { ...s }; if (n) x[u.id] = n; else delete x[u.id]; return x }) }} /></td>
                           <td className="r">{brl(pS(u.id))}</td>
                         </tr>) })}

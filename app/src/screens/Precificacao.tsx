@@ -7,6 +7,7 @@ import { custoFichaPorcao, type CostCtx, type FichasByProduto, type FichaItem } 
 import { downloadXlsx } from '../lib/excel'
 import { brlCur as brl } from '../lib/format'
 import './precificacao.css'
+import { NumInput } from '../components/NumInput'
 
 // Precificação (Gestão) — planilha em lote. Custo e preço vêm das fichas técnicas reais.
 // 2 abas: "Por CMV" (simulador: digita novo preço, vê CMV/markup/margem novos) e
@@ -204,16 +205,16 @@ export function Precificacao() {
       <div className="prec-card prec-bar prec-sub">
         {tab === 'cmv' ? (
           <>
-            <div className="fld"><label>CMV alvo %</label><input type="number" step="0.5" value={cmvAlvo} onChange={(e) => setCmvAlvo(e.target.value)} style={{ width: 84, textAlign: 'right' }} /></div>
+            <div className="fld"><label>CMV alvo %</label><NumInput step="0.5" value={cmvAlvo} onChange={(e) => setCmvAlvo(e.target.value)} style={{ width: 84, textAlign: 'right' }} /></div>
             <button className="prec-btn ghost" onClick={sugerir}>Sugerir novo preço</button>
             <button className="prec-btn ghost" onClick={arredondar}>Arredondar p/ ,90</button>
           </>
         ) : (
           <>
             <div className="fld"><label>Canal</label><select value={canal} onChange={(e) => setCanal(e.target.value as 'salao' | 'ifood')} style={{ width: 150 }}><option value="salao">Salão / própria</option><option value="ifood">iFood</option></select></div>
-            <div className="fld"><label>DV padrão %</label><input type="number" step="0.1" value={dDv} onChange={(e) => setDDv(e.target.value)} style={{ width: 84, textAlign: 'right' }} /></div>
-            <div className="fld"><label>DF padrão %</label><input type="number" step="0.1" value={dDf} onChange={(e) => setDDf(e.target.value)} style={{ width: 84, textAlign: 'right' }} /></div>
-            <div className="fld"><label>ML padrão %</label><input type="number" step="0.1" value={dMl} onChange={(e) => setDMl(e.target.value)} style={{ width: 84, textAlign: 'right' }} /></div>
+            <div className="fld"><label>DV padrão %</label><NumInput step="0.1" value={dDv} onChange={(e) => setDDv(e.target.value)} style={{ width: 84, textAlign: 'right' }} /></div>
+            <div className="fld"><label>DF padrão %</label><NumInput step="0.1" value={dDf} onChange={(e) => setDDf(e.target.value)} style={{ width: 84, textAlign: 'right' }} /></div>
+            <div className="fld"><label>ML padrão %</label><NumInput step="0.1" value={dMl} onChange={(e) => setDMl(e.target.value)} style={{ width: 84, textAlign: 'right' }} /></div>
             <button className="prec-btn ghost" onClick={aplicarVisiveis}>Aplicar aos visíveis</button>
           </>
         )}
@@ -247,7 +248,7 @@ export function Precificacao() {
                     <td className="num mk">{r.precoAtual > 0 ? r.mk.toFixed(2) + 'x' : '—'}</td>
                     <td className="num marg">{n2(r.mg)}</td>
                     <td className="num marg">{r.precoAtual > 0 ? pct(r.mgp) : '—'}</td>
-                    <td className="sepL"><input className="cin hot num" type="number" step="0.10" value={r.novo} onChange={(e) => setNovoById((p) => ({ ...p, [r.id]: parseFloat(e.target.value) || 0 }))} /></td>
+                    <td className="sepL"><NumInput className="cin hot num" step="0.10" value={r.novo} onChange={(e) => setNovoById((p) => ({ ...p, [r.id]: parseFloat(e.target.value) || 0 }))} /></td>
                     <td className={'num cmv ' + cls(r.ncmv)}>{r.novo > 0 ? pct(r.ncmv) : '—'}</td>
                     <td className="num mk">{r.novo > 0 ? r.nmk.toFixed(2) + 'x' : '—'}</td>
                     <td className="num marg">{n2(r.nmg)}</td>
@@ -269,9 +270,9 @@ export function Precificacao() {
                     <td className="l nm">{r.nome}</td>
                     <td className="l cat">{r.cat}</td>
                     <td className="num val">{n2(r.custo)}</td>
-                    <td><input className="cin hot num" type="number" step="0.1" value={r.tp.dv} onChange={(e) => setTrad(r.id, 'dv', parseFloat(e.target.value) || 0, r)} /></td>
-                    <td><input className="cin hot num" type="number" step="0.1" value={r.tp.df} onChange={(e) => setTrad(r.id, 'df', parseFloat(e.target.value) || 0, r)} /></td>
-                    <td><input className="cin hot num" type="number" step="0.1" value={r.tp.ml} onChange={(e) => setTrad(r.id, 'ml', parseFloat(e.target.value) || 0, r)} /></td>
+                    <td><NumInput className="cin hot num" step="0.1" value={r.tp.dv} onChange={(e) => setTrad(r.id, 'dv', parseFloat(e.target.value) || 0, r)} /></td>
+                    <td><NumInput className="cin hot num" step="0.1" value={r.tp.df} onChange={(e) => setTrad(r.id, 'df', parseFloat(e.target.value) || 0, r)} /></td>
+                    <td><NumInput className="cin hot num" step="0.1" value={r.tp.ml} onChange={(e) => setTrad(r.id, 'ml', parseFloat(e.target.value) || 0, r)} /></td>
                     <td className="num preco sepL">{r.tOk ? brl(r.tPreco) : '—'}</td>
                     <td className="num mk">{r.tOk ? r.tMk.toFixed(2) + 'x' : '—'}</td>
                     <td className={'num cmv ' + cls(r.tCmv)}>{r.tOk ? pct(r.tCmv) : '—'}</td>

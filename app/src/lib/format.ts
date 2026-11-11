@@ -42,6 +42,22 @@ export function brlCur(v?: number | null): string {
 // OBS: não confundir com o `num` FORMATADOR (número→texto) de Divergencias/VinculosPane — outra função.
 export const num = (v?: string) => parseFloat((v || '0').replace(',', '.')) || 0
 
+// Quantidade DIGITADA no padrão brasileiro → número (null = vazio/inválido).
+// Vírgula = decimal, ponto = milhar: "1.550" = 1550 · "1,55" = 1,55 · "2.650,5" = 2650,5.
+// Sem vírgula, ponto só é milhar se vier em grupos de 3 ("1.550", "12.300.000"); senão é decimal ("1.5").
+// Usar junto com fmtQtdBR ao carregar valor salvo no campo (String(2.125) = "2.125" seria lido como 2125!).
+export function parseQtdBR(v?: string | null): number | null {
+  let s = String(v ?? '').replace(/\s/g, '')
+  if (!s) return null
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.')
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '')
+  if (!/^-?(\d+\.?\d*|\.\d+)$/.test(s)) return null
+  const n = Number(s)
+  return Number.isFinite(n) ? n : null
+}
+// Número → texto de campo no padrão BR (até 3 casas): 1550 → "1.550" · 1.55 → "1,55". Ida e volta com parseQtdBR.
+export const fmtQtdBR = (n?: number | null) => (n == null || !Number.isFinite(n) ? '' : n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 }))
+
 // Escapa HTML — SEMPRE usar ao interpolar texto vindo de DADO (nome de insumo, fornecedor, loja,
 // razão social, endereço, descrição de NF-e do fornecedor) dentro de uma string HTML (geradores de
 // PDF/impressão via document.write) ou em `dangerouslySetInnerHTML`. Sem isso = XSS armazenado:

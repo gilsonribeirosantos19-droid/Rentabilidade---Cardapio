@@ -6,6 +6,7 @@ import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlZero as brl } from '../lib/format'
+import { NumInput } from '../components/NumInput'
 
 type Fornecedor = { id: string; codigo?: string; razao_social?: string; nome_fantasia?: string; nome?: string; cnpj?: string; contato?: string; whatsapp?: string; cidade?: string }
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; categoria?: string }
@@ -195,7 +196,7 @@ export function VinculosPane({ fornecedores }: { fornecedores: Fornecedor[] }) {
               <div className="form-group"><label className="form-label">Embalagem fornecedor</label>
                 <SearchSelect value={form.embalagem_descricao || ''} options={embOpcoes} placeholder="Selecione a embalagem..." onChange={(v) => onEmbChange(v)} />
               </div>
-              <div className="form-group"><label className="form-label">Qt. na Embalagem (un. estoque)</label><input className="form-input" style={{ fontFamily: 'DM Mono, monospace' }} type="number" step="0.001" min="0" placeholder="Auto" value={form.qtd_por_embalagem ?? ''} onChange={(e) => setF('qtd_por_embalagem', e.target.value)} /></div>
+              <div className="form-group"><label className="form-label">Qt. na Embalagem (un. estoque)</label><NumInput className="form-input" style={{ fontFamily: 'DM Mono, monospace' }} step="0.001" min="0" placeholder="Auto" value={form.qtd_por_embalagem ?? ''} onChange={(e) => setF('qtd_por_embalagem', e.target.value)} /></div>
             </div>
             <label className="vin-chk"><input type="checkbox" checked={!!form.embalagem_padrao} onChange={(e) => setF('embalagem_padrao', e.target.checked)} /> Embalagem padrão deste fornecedor</label>
             {showConv && <div className="conv-preview"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg><span>1 {form.embalagem_descricao} = {num(Number(form.qtd_por_embalagem))} {selUnd}</span></div>}
@@ -203,7 +204,7 @@ export function VinculosPane({ fornecedores }: { fornecedores: Fornecedor[] }) {
           <div className="form-section" style={{ marginBottom: 0 }}>
             <div className="form-section-title">Preço</div>
             <div className="form-grid">
-              <div className="form-group"><label className="form-label">Último preço de compra (R$)</label><input className="form-input" type="number" step="0.01" min="0" placeholder="0,00" value={form.preco_unitario ?? ''} onChange={(e) => setF('preco_unitario', e.target.value)} /></div>
+              <div className="form-group"><label className="form-label">Último preço de compra (R$)</label><NumInput className="form-input" step="0.01" min="0" placeholder="0,00" value={form.preco_unitario ?? ''} onChange={(e) => setF('preco_unitario', e.target.value)} /></div>
               <div className="form-group"><label className="form-label">Data da última entrada</label><input className="form-input" type="date" value={form.ultima_entrada || ''} onChange={(e) => setF('ultima_entrada', e.target.value)} /></div>
             </div>
           </div>

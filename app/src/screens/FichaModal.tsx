@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlCur as brl } from '../lib/format'
+import { NumInput } from '../components/NumInput'
 
 type Ins = { id: string; nome?: string; categoria?: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
 type Prod = { id: string; nome?: string; grupo?: string; categoria?: string; preco_venda?: number | null }
@@ -223,10 +224,10 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
           </div>
           <div className="fm-row">
             <div className="fm-g"><label className="fm-l">Rendimento (porções) *</label><input className="fm-i" type="number" min="1" value={porcoes} onChange={(e) => setPorcoes(e.target.value)} /></div>
-            <div className="fm-g"><label className="fm-l">Preço de venda — salão (R$)</label><input className="fm-i" type="number" step="0.01" value={preco} disabled={ehProc} onChange={(e) => setPreco(e.target.value)} placeholder={precoProduto ? `Vem do produto: ${brl(precoProduto)}` : 'Ex: 49.90'} />{!preco && precoProduto ? <small className="fm-hint">Vazio = usa o preço do produto ({brl(precoProduto)}). Preencha só p/ um preço diferente.</small> : null}</div>
+            <div className="fm-g"><label className="fm-l">Preço de venda — salão (R$)</label><NumInput className="fm-i" step="0.01" value={preco} disabled={ehProc} onChange={(e) => setPreco(e.target.value)} placeholder={precoProduto ? `Vem do produto: ${brl(precoProduto)}` : 'Ex: 49,90'} />{!preco && precoProduto ? <small className="fm-hint">Vazio = usa o preço do produto ({brl(precoProduto)}). Preencha só p/ um preço diferente.</small> : null}</div>
           </div>
           <div className="fm-row">
-            <div className="fm-g"><label className="fm-l">Preço de delivery (R$)</label><input className="fm-i" type="number" step="0.01" value={precoDel} disabled={ehProc} onChange={(e) => setPrecoDel(e.target.value)} placeholder="Ex: 59.90 (maior, p/ cobrir o iFood)" /><small className="fm-hint">Deixe vazio se for igual ao salão</small></div>
+            <div className="fm-g"><label className="fm-l">Preço de delivery (R$)</label><NumInput className="fm-i" step="0.01" value={precoDel} disabled={ehProc} onChange={(e) => setPrecoDel(e.target.value)} placeholder="Ex: 59,90 (maior, p/ cobrir o iFood)" /><small className="fm-hint">Deixe vazio se for igual ao salão</small></div>
             <div className="fm-g"><label className="fm-l">Status</label><select className="fm-i" value={status} onChange={(e) => setStatus(e.target.value)}><option value="ativa">Ativa</option><option value="rascunho">Rascunho</option><option value="arquivada">Arquivada</option></select></div>
           </div>
 
@@ -236,7 +237,7 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
             <div className="fm-g"><label className="fm-l">Insumo que receberá o custo</label><SearchSelect value={vincName} options={insNames} placeholder="— Não vincular —" onChange={(nm) => setVincId(insByName.get(nm) || '')} /></div>
             <div className="fm-g"><label className="fm-l">Rendimento da receita *</label>
               <div style={{ display: 'flex', gap: 8 }}>
-                <input className="fm-i" type="number" step="any" value={rendVal} disabled={!vincId} onChange={(e) => setRendVal(e.target.value)} placeholder="Ex: 800" style={{ flex: 1 }} />
+                <NumInput className="fm-i" step="any" value={rendVal} disabled={!vincId} onChange={(e) => setRendVal(e.target.value)} placeholder="Ex: 800" style={{ flex: 1 }} />
                 <select className="fm-i" value={rendUnid} disabled={!vincId} onChange={(e) => setRendUnid(e.target.value)} style={{ width: 80 }}><option value="kg">kg</option><option value="g">g</option><option value="L">litro</option><option value="ml">ml</option></select>
               </div>
               {vincId && pesoEntrada.maiorKg > 0 && (
@@ -261,7 +262,7 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
           <div className="ing-add">
             <div className="ing-add-s"><SearchSelect value={addLabel} options={[...addPickMap.keys()]} placeholder="Buscar insumo ou produto (p/ meia porção)" onChange={(lb) => setAddSel(addPickMap.get(lb) || null)} /></div>
             <div className="ing-add-f"><label>UM</label><div className="ing-um">{addSel ? (addSel.kind === 'produto' ? 'porção' : umOf(insMap[addSel.id])) : '—'}</div></div>
-            <div className="ing-add-f"><label>Quantidade</label><input className="ing-qtd" type="number" step="any" value={addQtd} onChange={(e) => setAddQtd(e.target.value)} placeholder={addSel?.kind === 'produto' ? 'Ex.: 0,5' : 'Ex.: 0,100'} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionar() } }} /></div>
+            <div className="ing-add-f"><label>Quantidade</label><NumInput className="ing-qtd" step="any" value={addQtd} onChange={(e) => setAddQtd(e.target.value)} placeholder={addSel?.kind === 'produto' ? 'Ex.: 0,5' : 'Ex.: 0,100'} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); adicionar() } }} /></div>
             <button className="ing-add-btn" onClick={adicionar} disabled={!addSel || !(Number(addQtd) > 0)}>Adicionar</button>
           </div>
           <div className="ing-tbl">

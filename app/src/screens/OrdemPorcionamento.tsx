@@ -8,6 +8,7 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { num } from '../lib/format'
 import './config.css'
+import { NumInput } from '../components/NumInput'
 
 // Produção › Lançar › Ordem de Porcionamento (apontamento).
 // Vai para o Portal do Gerente quando ele for migrado. Aponta a pesagem:
@@ -99,8 +100,8 @@ export function OrdemPorcionamento({ lojaFixa }: { lojaFixa?: string } = {}) {
           {!lojaFixa && <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Loja</label><select value={lojaSel} onChange={(e) => setLojaSel(e.target.value)}><option value="">—</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>}
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Item a ser porcionado *</label><SearchSelect value={insSel?.nome || ''} options={porcOpts} placeholder="Selecione…" onChange={selecionarItem} /></div>
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>UM</label><input value={insSel?.unidade_medida?.toUpperCase() || ''} readOnly style={{ background: '#f1f5f9' }} /></div>
-          <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Quantidade</label><input value={qtd} onChange={(e) => setQtd(e.target.value)} style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></div>
-          <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Peso (kg) *</label><input value={peso} onChange={(e) => setPeso(e.target.value)} placeholder="0,000" style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></div>
+          <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Quantidade</label><NumInput value={qtd} onChange={(e) => setQtd(e.target.value)} style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></div>
+          <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Peso (kg) *</label><NumInput value={peso} onChange={(e) => setPeso(e.target.value)} placeholder="0,000" style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></div>
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Peso médio</label><input value={qtdEnt ? q3(pesoEnt / qtdEnt) : ''} readOnly style={{ background: '#f1f5f9', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></div>
         </div>
       </div>

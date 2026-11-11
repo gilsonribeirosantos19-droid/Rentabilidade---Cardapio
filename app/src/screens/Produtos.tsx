@@ -8,6 +8,7 @@ import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import { brlCur as brl } from '../lib/format'
 import './produtos.css'
+import { NumInput } from '../components/NumInput'
 
 type Produto = {
   id: string
@@ -255,7 +256,7 @@ function ProdutoModal({ inicial, opts, saving, canEdit = true, onClose, onSave }
 
           <div className="sec-head"><span>💰</span> Comercial / CMV</div>
           <div className="form-row cols-3">
-            <div className="form-group"><label>Preço de venda (R$)</label><input type="number" step="0.01" min="0" value={form.preco_venda ?? ''} onChange={(e) => set('preco_venda', e.target.value)} placeholder="0,00" /></div>
+            <div className="form-group"><label>Preço de venda (R$)</label><NumInput step="0.01" min="0" value={form.preco_venda ?? ''} onChange={(e) => set('preco_venda', e.target.value)} placeholder="0,00" /></div>
             <div className="form-group"><label>&nbsp;</label><div className="form-check"><input type="checkbox" id="cmv" checked={!!form.participa_cmv} onChange={(e) => set('participa_cmv', e.target.checked)} /><label htmlFor="cmv">Participa do CMV</label></div></div>
             <div className="form-group"><label>Tipo de baixa de estoque</label>
               <select value={form.tipo_baixa || 'nao_baixar'} onChange={(e) => set('tipo_baixa', e.target.value)}>

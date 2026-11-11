@@ -7,6 +7,7 @@ import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { brlCur as brl } from '../lib/format'
 import './insumos.css'
+import { NumInput } from '../components/NumInput'
 
 // Title Case pt-BR enquanto digita: 1ª letra de cada palavra maiúscula (igual à normalização do banco)
 const titleCase = (s: string) => s.toLowerCase().replace(/(^|\s)(\S)/g, (_m, sp, c) => sp + (c as string).toUpperCase())
@@ -591,7 +592,7 @@ function EmbalagensEditor({ unidadeBase, value, onChange }: { unidadeBase?: stri
                     </select>
                   )}
               </td>
-              <td className="c"><input className="emb-in num" value={r.qtd ?? ''} onChange={(e) => set(i, { qtd: parseFloat((e.target.value || '').replace(',', '.')) || undefined })} /></td>
+              <td className="c"><NumInput className="emb-in num" value={r.qtd ?? ''} onChange={(e) => set(i, { qtd: parseFloat((e.target.value || '').replace(',', '.')) || undefined })} /></td>
               <td className="c"><input type="checkbox" checked={!!r.ver} onChange={(e) => set(i, { ver: e.target.checked })} /></td>
               <td className="c">{isBase(r) ? <input type="checkbox" checked onChange={() => {}} title="O padrão é sempre a unidade de estoque (fixo)" style={{ cursor: 'default' }} /> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
               <td className="c">{isBase(r) ? '' : <button type="button" className="emb-del" title="Remover" onClick={() => del(i)}>✕</button>}</td>

@@ -10,6 +10,7 @@ import { DetailModal } from '../components/DetailModal'
 import { brlDash as brl } from '../lib/format'
 import { fmtDH, isoD as iso } from '../lib/date'
 import './estoque.css'
+import { NumInput } from '../components/NumInput'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
 type Saida = { id: string; insumo_id: string; loja_id?: string | null; quantidade?: number; tipo?: string; motivo?: string | null; responsavel?: string | null; criado_em?: string }
@@ -222,7 +223,7 @@ function SaidaModal({ insumos, lojas, getSaldo, saving, onClose, onSave }: { ins
         <div className="fg"><label>Insumo *</label><SearchSelect value={insSel?.nome || ''} onChange={(nm) => set('insumo_id', insByName.get(nm) || '')} options={insOptions} placeholder="Selecione..." /></div>
         {s && <div className="saldo-info">Saldo disponível: {qtd(s.quantidade || 0)} · Custo médio: {brl(s.custo_medio)}</div>}
         <div className="row2" style={{ marginBottom: 14 }}>
-          <div className="fg" style={{ margin: 0 }}><label>Quantidade *</label><input type="number" min="0" step="0.001" placeholder="0.000" value={f.quantidade} onChange={(e) => set('quantidade', e.target.value)} /></div>
+          <div className="fg" style={{ margin: 0 }}><label>Quantidade *</label><NumInput min="0" step="0.001" placeholder="0,000" value={f.quantidade} onChange={(e) => set('quantidade', e.target.value)} /></div>
           <div className="fg" style={{ margin: 0 }}><label>Tipo *</label>
             <select value={f.tipo} onChange={(e) => set('tipo', e.target.value)}><option value="consumo">Consumo (produção)</option><option value="perda">Perda</option><option value="vencimento">Vencimento</option><option value="transferencia">Transferência</option><option value="descarte">Descarte</option></select>
           </div>

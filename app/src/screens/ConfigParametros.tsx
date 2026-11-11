@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import './config.css'
+import { NumInput } from '../components/NumInput'
 
 // Configurações › Parâmetros — regras de negócio (tabela `parametros`: modulo, chave, valor=string).
 // Parâmetros "Em breve" salvam mas não têm efeito ainda → ficam desabilitados com selo.
@@ -200,7 +201,7 @@ export function ConfigParametros() {
                             </select>
                           )}
                           {f.type === 'input' && (
-                            <input className="p-input" type="number" min={f.min} max={f.max} step={f.step} disabled={dis} value={val[key] ?? f.def} onChange={(e) => setField(m.key, f.chave, e.target.value)} />
+                            <NumInput className="p-input" min={f.min} max={f.max} step={f.step} disabled={dis} value={val[key] ?? f.def} onChange={(e) => setField(m.key, f.chave, e.target.value)} />
                           )}
                           {f.hint && <div className="p-hint">{f.hint}</div>}
                         </div>

@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import './config.css'
+import { NumInput } from '../components/NumInput'
 
 // Produção › Item de Porcionamento — define, para um insumo (matéria-prima),
 // quais derivados ele gera (também insumos), com % rendimento de cada.
@@ -119,7 +120,7 @@ export function ItemPorcionamento() {
                   <SearchSelect value={insMap[form.insumoId]?.nome || ''} options={insNomes} meta={insMeta} placeholder="Selecione o insumo…" onChange={(nm) => setForm({ ...form, insumoId: insByNome.get(nm) || '' })} />
                 </div>
                 <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Setor de Produção</label><select value={form.setorId} onChange={(e) => setForm({ ...form, setorId: e.target.value })}><option value="">—</option>{setores.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}</select></div>
-                <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Perda esperada (%)</label><input value={form.perda} onChange={(e) => setForm({ ...form, perda: e.target.value })} /></div>
+                <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Perda esperada (%)</label><NumInput value={form.perda} onChange={(e) => setForm({ ...form, perda: e.target.value })} /></div>
                 <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Situação</label><select value={form.ativo ? '1' : '0'} onChange={(e) => setForm({ ...form, ativo: e.target.value === '1' })}><option value="1">Ativo</option><option value="0">Inativo</option></select></div>
               </div>
 
@@ -131,7 +132,7 @@ export function ItemPorcionamento() {
                       <tr key={i}>
                         <td><SearchSelect value={insMap[d.insumoId]?.nome || ''} options={insNomes} meta={insMeta} placeholder="Selecione o derivado…" onChange={(nm) => setD(i, { insumoId: insByNome.get(nm) || '' })} /></td>
                         <td className="c muted">{insMap[d.insumoId]?.unidade_medida || '—'}</td>
-                        <td className="r"><input value={d.rend} onChange={(e) => setD(i, { rend: e.target.value })} style={{ width: 90, height: 28, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace' }} /></td>
+                        <td className="r"><NumInput value={d.rend} onChange={(e) => setD(i, { rend: e.target.value })} style={{ width: 90, height: 28, border: '1px solid #cbd5e1', borderRadius: 6, textAlign: 'right', padding: '0 8px', fontFamily: 'DM Mono, monospace' }} /></td>
                         <td className="c">{canEdit && <button className="act del" onClick={() => rmD(i)} title="Remover">✕</button>}</td>
                       </tr>
                     ))}

@@ -8,6 +8,7 @@ import { SearchSelect } from '../components/SearchSelect'
 import { brl } from '../lib/format'
 import { fmtDH, isoD } from '../lib/date'
 import './estoque.css'
+import { NumInput } from '../components/NumInput'
 
 type Insumo = { id: string; nome: string }
 type Loja = { id: string; nome: string }
@@ -82,7 +83,7 @@ export function AjusteCustoMedio() {
         <div className="adj-grid">
           <div className="adj-fg"><label>Insumo *</label><SearchSelect value={insumoId ? (insMap[insumoId] || '') : ''} options={['Selecione um insumo...', ...insumos.map((i) => i.nome)]} placeholder="Selecione um insumo..." onChange={(nm) => trocarInsumo(nm === 'Selecione um insumo...' ? '' : (insByNome[nm] || ''))} /></div>
           <div className="adj-fg"><label>Data do Ajuste *</label><input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
-          <div className="adj-fg"><label>Novo Custo Médio (R$/KG) *</label><input type="number" min="0.01" step="0.01" placeholder="0,00" value={novo} onChange={(e) => setNovo(e.target.value)} /></div>
+          <div className="adj-fg"><label>Novo Custo Médio (R$/KG) *</label><NumInput min="0.01" step="0.01" placeholder="0,00" value={novo} onChange={(e) => setNovo(e.target.value)} /></div>
           <div className="adj-fg"><label>Motivo / observação</label><input placeholder="Ex.: correção de nota, contagem…" value={motivo} onChange={(e) => setMotivo(e.target.value)} /></div>
         </div>
 

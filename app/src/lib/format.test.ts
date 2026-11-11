@@ -3,7 +3,29 @@
 // passam a mostrar valor errado ou travessão onde não devia. Nomes em PT (relatório legível).
 
 import { describe, it, expect } from 'vitest'
-import { brl, brlDash, brlNum, brlZero, brlCur, num } from './format'
+import { brl, brlDash, brlNum, brlZero, brlCur, num, parseQtdBR, fmtQtdBR } from './format'
+
+describe('parseQtdBR / fmtQtdBR (quantidade digitada no padrão brasileiro)', () => {
+  it('ponto = milhar, vírgula = decimal', () => {
+    expect(parseQtdBR('1.550')).toBe(1550)
+    expect(parseQtdBR('1550')).toBe(1550)
+    expect(parseQtdBR('1,55')).toBe(1.55)
+    expect(parseQtdBR('2.650,5')).toBe(2650.5)
+    expect(parseQtdBR('12.300.000')).toBe(12300000)
+  })
+  it('ponto fora de grupo de 3 = decimal; vazio/lixo = null', () => {
+    expect(parseQtdBR('1.5')).toBe(1.5)
+    expect(parseQtdBR(' 0,250 ')).toBe(0.25)
+    expect(parseQtdBR('')).toBeNull()
+    expect(parseQtdBR('abc')).toBeNull()
+    expect(parseQtdBR('1,2,3')).toBeNull()
+  })
+  it('ida e volta: valor salvo → campo → valor (2,125 kg não vira 2125)', () => {
+    for (const n of [2.125, 1550, 1.55, 0.001, 0, 2650.5]) expect(parseQtdBR(fmtQtdBR(n))).toBe(n)
+    expect(fmtQtdBR(1550)).toBe('1.550')
+    expect(fmtQtdBR(2.125)).toBe('2,125')
+  })
+})
 
 const semNbsp = (s: string) => s.replace(/ /g, ' ')   // Intl usa espaço-fixo; normaliza p/ comparar
 
