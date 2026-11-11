@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { usePortalLoja } from './portalLoja'
+import { parseQtdBR, fmtQtdBR } from '../lib/format'
 
 // Portal › Inventário — consulta inventários da loja e preenche a contagem.
 // Fiel ao loja.html: salvar só GRAVA a contagem (o estoque só ajusta ao FECHAR o inventário).
@@ -65,12 +66,14 @@ export function PortalInventario() {
   const abrir = async (i: Inv) => {
     const { data } = await supabase.from('inventario_itens').select('id,inventario_id,insumo_id,qtd_contada').eq('inventario_id', i.id)
     const its = (data ?? []) as InvItem[]
-    setLinhas(its.map((it) => { const ins = insMap[it.insumo_id]; return { id: it.id, insumo_id: it.insumo_id, codigo: fmtCod(ins?.codigo_interno), nome: ins?.nome || it.insumo_id, categoria: ins?.categoria || '', embalagem: embalagem(ins), unidade: unidade(ins), qtd: it.qtd_contada == null ? '' : String(it.qtd_contada) } }))
+    setLinhas(its.map((it) => { const ins = insMap[it.insumo_id]; return { id: it.id, insumo_id: it.insumo_id, codigo: fmtCod(ins?.codigo_interno), nome: ins?.nome || it.insumo_id, categoria: ins?.categoria || '', embalagem: embalagem(ins), unidade: unidade(ins), qtd: it.qtd_contada == null ? '' : fmtQtdBR(Number(it.qtd_contada)) } }))   // padrão BR no campo (String(2.125) seria lido como 2125)
     setFCat(''); setFBusca(''); setFMostrar('todos'); setWide(false); setInv(i)
   }
   const cats = useMemo(() => [...new Set(linhas.map((l) => l.categoria).filter(Boolean))].sort(), [linhas])
   const setQtd = (id: string, v: string) => setLinhas((ls) => ls.map((l) => (l.id === id ? { ...l, qtd: v } : l)))
   const lancado = (l: Linha) => l.qtd !== '' && l.qtd != null
+  // campo no padrão BR: vírgula = decimal, ponto = milhar ("1.550" = 1550 · "1,55" = 1,55)
+  const num = (v: string) => parseQtdBR(v) ?? 0
   const filtradas = useMemo(() => linhas.filter((l) => { if (fCat && l.categoria !== fCat) return false; const b = fBusca.toLowerCase().trim(); if (b && !l.nome.toLowerCase().includes(b) && !l.codigo.includes(b)) return false; if (fMostrar === 'sim' && !lancado(l)) return false; if (fMostrar === 'nao' && lancado(l)) return false; return true }), [linhas, fCat, fBusca, fMostrar])
   const total = linhas.length, nLanc = linhas.filter(lancado).length, pct = total ? Math.round((nLanc / total) * 100) : 0
 
@@ -78,7 +81,6 @@ export function PortalInventario() {
     mutationFn: async () => {
       if (!inv) return
       if (!lojaId) throw new Error('Sua conta não está ligada a uma loja.')
-      const num = (v: string) => parseFloat(String(v).replace(',', '.')) || 0
       const rows = linhas.map((l) => ({ id: l.id, inventario_id: inv.id, qtd_contada: lancado(l) ? num(l.qtd) : null, tenant_id: tenantId }))
       const { error } = await supabase.from('inventario_itens').upsert(rows, { onConflict: 'id' }); if (error) throw error
     },
@@ -91,7 +93,6 @@ export function PortalInventario() {
     mutationFn: async () => {
       if (!inv) return
       if (!lojaId) throw new Error('Sua conta não está ligada a uma loja.')
-      const num = (v: string) => parseFloat(String(v).replace(',', '.')) || 0
       const rows = linhas.map((l) => ({ id: l.id, inventario_id: inv.id, qtd_contada: lancado(l) ? num(l.qtd) : null, tenant_id: tenantId }))
       const { error: e1 } = await supabase.from('inventario_itens').upsert(rows, { onConflict: 'id' }); if (e1) throw e1
       const { error: e2 } = await supabase.from('inventarios').update({ contagem_concluida: true, concluida_em: new Date().toISOString(), concluida_por: usuario?.nome || null }).eq('id', inv.id); if (e2) throw e2
@@ -173,15 +174,15 @@ export function PortalInventario() {
                 <tbody>
                   {!linhas.length ? <tr><td colSpan={7} className="p-empty">Nenhum item neste inventário. Contate o administrador.</td></tr>
                     : !filtradas.length ? <tr><td colSpan={7} className="p-empty">Nenhum item para este filtro.</td></tr>
-                      : filtradas.map((l) => { const c = parseFloat(String(l.qtd).replace(',', '.')) || 0; return (
+                      : filtradas.map((l) => { const c = num(l.qtd); const invalido = !!String(l.qtd || '').trim() && parseQtdBR(l.qtd) == null; return (
                         <tr key={l.id}>
                           <td className="mono" style={{ fontSize: 11 }}>{l.codigo}</td>
                           <td>{l.nome}</td>
                           <td style={{ fontSize: 12 }}>{l.embalagem}</td>
                           <td>{l.unidade}</td>
-                          <td className="r"><input type="number" className="p-qtd" min="0" step="0.001" placeholder="0,000" value={l.qtd} readOnly={travada} onChange={(e) => setQtd(l.id, e.target.value)} style={travada ? { background: '#f1f5f9', color: '#64748b' } : undefined} /></td>
+                          <td className="r"><input type="text" inputMode="decimal" className="p-qtd" title="Padrão brasileiro: 1.550 = mil quinhentos e cinquenta · 1,55 = um vírgula cinquenta e cinco" placeholder="0,000" value={l.qtd} readOnly={travada} onChange={(e) => setQtd(l.id, e.target.value)} onBlur={() => { const n = parseQtdBR(l.qtd); if (n != null) setQtd(l.id, fmtQtdBR(n)) }} style={travada ? { background: '#f1f5f9', color: '#64748b' } : invalido ? { borderColor: '#e11d48', color: '#e11d48' } : undefined} /></td>
                           <td className="r mono">0,000</td>
-                          <td className="r mono">{(c >= 0 ? '+' : '') + c.toFixed(3)}</td>
+                          <td className="r mono">{(c >= 0 ? '+' : '') + c.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
                         </tr>
                       ) })}
                 </tbody>
