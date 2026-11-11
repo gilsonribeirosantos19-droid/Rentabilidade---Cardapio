@@ -13,7 +13,7 @@ import './estoque.css'
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; participa_cmv?: string }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number }
 type Inv = { id: string; loja_id?: string; grupo_id?: string; status?: string; tipo?: string; data_inicial?: string; data_final?: string; criado_em?: string; contagem_concluida?: boolean; concluida_em?: string | null; concluida_por?: string | null }
-type InvItem = { id: string; inventario_id: string; insumo_id: string; qtd_sistema?: number; qtd_contada?: number | null; custo_medio?: number }
+type InvItem = { id: string; tenant_id?: string; inventario_id: string; insumo_id: string; qtd_sistema?: number; qtd_contada?: number | null; custo_medio?: number }
 type Grupo = { id: string; nome: string; tipo?: string; ativo?: boolean; itens?: { insumo_id: string }[] }
 
 const qtd = (v?: number | null) => Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
@@ -137,6 +137,7 @@ export function Inventario() {
 
 function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, showToast, toast }: { invId: string; insMap: Record<string, Insumo>; lojaMap: Record<string, string>; grupoMap: Record<string, string>; canEdit?: boolean; onBack: () => void; showToast: (m: string, t?: 'ok' | 'err') => void; toast: { msg: string; tipo: 'ok' | 'err' } | null }) {
   const qc = useQueryClient()
+  const { tenantId } = useAuth()
   const { data: inv } = useQuery({ queryKey: ['inv-one', invId], queryFn: async () => { const { data } = await supabase.from('inventarios').select('*').eq('id', invId).limit(1); return (data?.[0] || null) as Inv | null } })
   const { data: itens = [], isLoading } = useQuery({ queryKey: ['inv-itens', invId], queryFn: async () => { const { data } = await supabase.from('inventario_itens').select('*').eq('inventario_id', invId).order('insumo_id'); return (data ?? []) as InvItem[] } })
 
@@ -174,8 +175,9 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, 
         ? `Este inventário é de ${ref.split('-').reverse().join('/')} (data passada).\n\nO estoque será reconciliado NA DATA DA CONTAGEM e o que entrou/saiu depois será preservado. Encerrar?`
         : 'Encerrar o inventário? Os saldos serão ajustados com base nas quantidades contadas.'
       if (!confirm(msg)) throw new Error('__cancel__')
-      // salva só as contagens editadas
-      const updates = itens.filter((it) => counts[it.id] != null && counts[it.id] !== orig[it.id]).map((it) => ({ id: it.id, qtd_contada: parseQtdBR(counts[it.id]) ?? 0 }))
+      // salva só as contagens editadas. Upsert manda a linha COM tenant_id/inventario_id/insumo_id:
+      // o RLS checa o upsert como INSERT — só {id, qtd_contada} dava "violates row-level security policy".
+      const updates = itens.filter((it) => counts[it.id] != null && counts[it.id] !== orig[it.id]).map((it) => ({ id: it.id, tenant_id: it.tenant_id || tenantId, inventario_id: it.inventario_id, insumo_id: it.insumo_id, qtd_contada: parseQtdBR(counts[it.id]) ?? 0 }))
       if (updates.length) { const { error } = await supabase.from('inventario_itens').upsert(updates, { onConflict: 'id' }); if (error) throw error }
       const { error } = await supabase.rpc('encerrar_inventario', { p_inventario_id: invId })
       if (error) throw error
