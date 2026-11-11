@@ -8,6 +8,7 @@ import { useLoja } from '../lib/loja'
 import { SearchSelect } from '../components/SearchSelect'
 import { brl, num } from '../lib/format'
 import './config.css'
+import { NumInput } from '../components/NumInput'
 
 // Produção › Lançar › Ordem de Produção (apontamento).
 // Item COM ficha técnica (Shari, molhos). Escolhe a ficha + quantidade →
@@ -108,7 +109,7 @@ export function OrdemProducao({ lojaFixa }: { lojaFixa?: string } = {}) {
           {!lojaFixa && <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Loja</label><select value={lojaSel} onChange={(e) => setLojaSel(e.target.value)}><option value="">—</option>{lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}</select></div>}
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Item a produzir * <span className="muted" style={{ fontWeight: 400 }}>(só itens com ficha)</span></label><SearchSelect value={fichaSel?.nome || ''} options={fichaOpts} placeholder="Selecione…" onChange={(nm) => setFichaId(fichaByNome.get(nm) || '')} /></div>
           <div className="cfg-fg" style={{ marginBottom: 0 }}><label>UM</label><input value={produzido?.unidade_medida?.toUpperCase() || ''} readOnly style={{ background: '#f1f5f9' }} /></div>
-          <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Quantidade a produzir *</label><input value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></div>
+          <div className="cfg-fg" style={{ marginBottom: 0 }}><label>Quantidade a produzir *</label><NumInput value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" style={{ textAlign: 'right', fontFamily: 'DM Mono, monospace' }} /></div>
         </div>
       </div>
 

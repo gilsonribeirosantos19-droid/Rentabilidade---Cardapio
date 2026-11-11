@@ -10,6 +10,7 @@ import { brl } from '../lib/format'
 import { isoD } from '../lib/date'
 import { calcFator } from '../lib/embalagem'
 import './fiscal.css'
+import { NumInput } from '../components/NumInput'
 
 // Período: rótulos do dropdown com busca ↔ valor interno
 const PER_OPTS = ['Todos', 'Mês Atual', 'Mês Anterior', 'Período']
@@ -453,7 +454,7 @@ export function MonitorNfe() {
                           const val = rq !== undefined && rq !== '' ? Number(rq) : notaQ
                           const dif = +(val - notaQ).toFixed(3)
                           return <>
-                            <td className="r"><input className="field" style={{ width: 84, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} type="number" step="0.001" min="0" value={rq !== undefined ? rq : String(notaQ)} onChange={(e) => setRecebQ(it.id, e.target.value)} /></td>
+                            <td className="r"><NumInput className="field" style={{ width: 84, textAlign: 'right', fontFamily: 'DM Mono, monospace' }} step="0.001" min="0" value={rq !== undefined ? rq : String(notaQ)} onChange={(e) => setRecebQ(it.id, e.target.value)} /></td>
                             <td className="r mono" style={{ color: dif !== 0 ? '#dc2626' : '#94a3b8', fontWeight: 600 }}>{dif > 0 ? '+' : ''}{fmtQ(dif)}</td>
                             <td>{dif !== 0 ? <select className="field" value={receb[it.id]?.m || ''} onChange={(e) => setRecebM(it.id, e.target.value)}><option value="">Motivo…</option><option>Avaria / quebra</option><option>Falta na entrega</option><option>Sobra</option><option>Validade curta</option><option>Divergência de preço</option><option>Outro</option></select> : <span style={{ color: '#cbd5e1' }}>—</span>}</td>
                           </>
@@ -665,7 +666,7 @@ function CorrigirItem({ item, nfe, insumos, vinculos, forn, lojas, tenantId, onC
               <div className="cor-fg"><label>Item interno (estoque) *</label><SearchSelect value={insSel?.nome || ''} options={[...new Set(insumos.map((i) => i.nome))]} meta={insMeta} placeholder="Pesquisar por nome ou código..." onChange={(nm) => setInsId(insByName.get(nm) || '')} /></div>
               <div className="cor-fg"><label>Un. controle *</label><input readOnly value={insSel?.unidade_medida || ''} placeholder="—" /></div>
               <div className="cor-fg"><label>Emb. (fornecedor) *</label><SearchSelect value={embDesc} options={embOpts} placeholder="Selecione..." onChange={onEmb} /></div>
-              <div className="cor-fg"><label>Qt. na emb. *</label><input className="mono" type="number" step="0.001" min="0" value={qtEmb} onChange={(e) => setQtEmb(e.target.value)} /></div>
+              <div className="cor-fg"><label>Qt. na emb. *</label><NumInput className="mono" step="0.001" min="0" value={qtEmb} onChange={(e) => setQtEmb(e.target.value)} /></div>
             </div>
             <div className="cor-r2">
               <div className="cor-fg"><label>Código no fornecedor</label><input className="mono" value={codForn} onChange={(e) => setCodForn(e.target.value)} placeholder="(da NF-e)" /></div>

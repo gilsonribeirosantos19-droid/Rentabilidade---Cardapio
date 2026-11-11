@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { usePortalLoja } from './portalLoja'
+import { NumInput } from '../components/NumInput'
 
 // Portal › Receber Mercadoria — o gerente confere as NF-e que chegaram (status "A receber" =
 // status 'pronta' + ainda sem recebimento) e confirma. O lançamento no estoque roda na RPC
@@ -214,7 +215,7 @@ export function PortalReceber() {
                       </td>
                       <td className="r mono" style={{ whiteSpace: 'nowrap' }}>{fmtQ(l.nota)} {unc}</td>
                       <td className="r" style={{ whiteSpace: 'nowrap' }}>
-                        <input type="number" inputMode="decimal" step="0.001" min="0" style={{ width: 80, textAlign: 'right', fontFamily: 'DM Mono, monospace', fontWeight: 600, fontSize: 13, color: '#0f2744', padding: '7px 10px', borderRadius: 8, border: '1px solid #eef1f6', background: '#fff', outline: 'none' }}
+                        <NumInput inputMode="decimal" step="0.001" min="0" style={{ width: 80, textAlign: 'right', fontFamily: 'DM Mono, monospace', fontWeight: 600, fontSize: 13, color: '#0f2744', padding: '7px 10px', borderRadius: 8, border: '1px solid #eef1f6', background: '#fff', outline: 'none' }}
                           value={l.rq !== undefined ? l.rq : String(l.nota)} onChange={(e) => setQ(it.id, e.target.value)} /> <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>{unc}</span>
                       </td>
                       <td className="r mono" style={{ fontWeight: 700, color: '#14315f', whiteSpace: 'nowrap' }}>{fmtQ(l.est)} {l.une}</td>

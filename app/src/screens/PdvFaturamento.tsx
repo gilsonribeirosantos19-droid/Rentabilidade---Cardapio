@@ -7,6 +7,7 @@ import { useAuth } from '../lib/auth'
 import { ChartBox } from '../components/ChartBox'
 import { brl } from '../lib/format'
 import './pdv.css'
+import { NumInput } from '../components/NumInput'
 
 type Fat = { id: string; data: string; canal?: string; valor?: number; observacao?: string | null }
 
@@ -220,7 +221,7 @@ export function PdvFaturamento() {
                 <option value="salão">Salão</option><option value="delivery">Delivery próprio</option><option value="ifood">iFood</option><option value="rappi">Rappi</option><option value="outros">Outros</option>
               </select>
             </div>
-            <div className="fg"><label>Valor (R$) *</label><input type="number" min="0" step="0.01" placeholder="0,00" value={modal.valor} onChange={(e) => setF('valor', e.target.value)} /></div>
+            <div className="fg"><label>Valor (R$) *</label><NumInput min="0" step="0.01" placeholder="0,00" value={modal.valor} onChange={(e) => setF('valor', e.target.value)} /></div>
             <div className="fg"><label>Observação</label><input type="text" placeholder="Opcional" value={modal.obs} onChange={(e) => setF('obs', e.target.value)} /></div>
             <div className="modal-foot">
               <button className="btn-sec" onClick={() => setModal(null)}>Cancelar</button>

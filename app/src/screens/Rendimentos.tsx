@@ -8,6 +8,7 @@ import { custoDoInsumo } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import './estoque.css'
+import { NumInput } from '../components/NumInput'
 
 type Insumo = { id: string; nome?: string; unidade_medida?: string; unidade_compra?: string; preco_compra?: number; rendimento_pct?: number; ativo?: boolean }
 type Teste = { id: string; insumo_id: string; peso_bruto?: number; peso_liquido?: number; rendimento_pct?: number; observacao?: string | null; criado_em?: string }
@@ -227,11 +228,11 @@ export function Rendimentos() {
             <div className="row2">
               <div className="fg">
                 <label>Peso Bruto (kg) *</label>
-                <input type="number" min="0" step="0.001" placeholder="Ex: 5.000" value={modal.form.peso_bruto} onChange={(e) => setModal((m) => m && ({ ...m, form: { ...m.form, peso_bruto: e.target.value } }))} />
+                <NumInput min="0" step="0.001" placeholder="Ex: 5,000" value={modal.form.peso_bruto} onChange={(e) => setModal((m) => m && ({ ...m, form: { ...m.form, peso_bruto: e.target.value } }))} />
               </div>
               <div className="fg">
                 <label>Peso Líquido (kg) *</label>
-                <input type="number" min="0" step="0.001" placeholder="Ex: 4.250" value={modal.form.peso_liquido} onChange={(e) => setModal((m) => m && ({ ...m, form: { ...m.form, peso_liquido: e.target.value } }))} />
+                <NumInput min="0" step="0.001" placeholder="Ex: 4,250" value={modal.form.peso_liquido} onChange={(e) => setModal((m) => m && ({ ...m, form: { ...m.form, peso_liquido: e.target.value } }))} />
               </div>
             </div>
             {pv && (

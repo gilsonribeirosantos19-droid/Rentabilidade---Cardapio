@@ -9,6 +9,7 @@ import { SearchSelect } from '../components/SearchSelect'
 import { calcFator } from '../lib/embalagem'
 import { brl, num } from '../lib/format'
 import { hojeStr, fmtDH as fmtDataHora } from '../lib/date'
+import { NumInput } from '../components/NumInput'
 
 // Portal › Estoque — 3 sub-abas: Relatório (posição atual + estoque inicial da
 // última contagem), Movimentação (lança entrada/saída) e Histórico. Fiel ao loja.html.
@@ -328,7 +329,7 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
           <SearchSelect value={insSel?.nome || ''} placeholder="Buscar insumo…" options={[...new Set(listaInsumos.map((i) => i.nome || '').filter(Boolean))]} onChange={(nome) => { const found = listaInsumos.find((i) => (i.nome || '') === nome); onInsumo(found?.id || '') }} />
         </div>
         <div style={{ marginBottom: 12 }}><label style={lbl}>{tipo === 'entrada' ? 'Quantas embalagens *' : 'Quantidade *'}</label>
-          <input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" />
+          <NumInput min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" />
         </div>
 
         {tipo === 'entrada' && (
@@ -339,7 +340,7 @@ function Movimentacao({ insumos, grupos, gruposItens, insMap, fornecedores, tena
               <div><label style={lbl}>Quantidade na embalagem</label><SearchSelect value={unidCompra} onChange={onEmb} options={embOpts} placeholder="Escolha a embalagem..." /></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-              <div><label style={lbl}>Preço por embalagem (R$)</label><input type="number" min="0" step="0.01" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={custo} onChange={(e) => setCusto(e.target.value)} /></div>
+              <div><label style={lbl}>Preço por embalagem (R$)</label><NumInput min="0" step="0.01" className="p-field" style={{ width: '100%', textAlign: 'right' }} value={custo} onChange={(e) => setCusto(e.target.value)} /></div>
               <div><label style={lbl}>Valor total</label><div style={{ fontSize: 14, fontWeight: 700, height: 34, display: 'flex', alignItems: 'center', color: '#f97316' }}>{brl(valorTotal)}</div></div>
             </div>
             {num(qtd) > 0 && num(custo) > 0 && <div style={{ fontSize: 12, color: '#166534', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6, padding: '7px 10px', marginBottom: 10 }}>{num(qtd)} × {num(fator) || 1} = <b>{(num(qtd) * (num(fator) || 1)).toLocaleString('pt-BR', { maximumFractionDigits: 3 })} {unSel}</b> no estoque · <b>{brl(num(custo) / (num(fator) || 1))}/{unSel}</b></div>}
@@ -589,7 +590,7 @@ function Historico({ insumos, grupos, gruposItens, insMap, grupoNome, tenantId, 
             </div>
             <div style={{ padding: '16px 18px' }}>
               <label style={{ fontSize: 11, color: '#64748b', fontWeight: 600, display: 'block', marginBottom: 5 }}>Quantidade correta <span style={{ color: '#94a3b8', fontWeight: 400 }}>(0 = apagar o lançamento)</span></label>
-              <input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={corrQtd} onChange={(e) => setCorrQtd(e.target.value)} autoFocus />
+              <NumInput min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={corrQtd} onChange={(e) => setCorrQtd(e.target.value)} autoFocus />
               <div style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 8 }}>O saldo é ajustado pela diferença (devolve a errada, aplica a certa). Custo médio não muda em saída.</div>
             </div>
             <div style={{ padding: '12px 18px 16px', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

@@ -9,6 +9,7 @@ import { SearchSelect } from '../components/SearchSelect'
 import { brlDash as brl, escapeHtml } from '../lib/format'
 import { isoD } from '../lib/date'
 import './estoque.css'
+import { NumInput } from '../components/NumInput'
 
 type Pedido = { id: string; loja_id?: string | null; status?: string; observacao?: string | null; data_pedido?: string; created_at?: string; fornecedor_id?: string | null }
 type LojaQtd = { loja_id: string; qtd: number }
@@ -245,7 +246,7 @@ function Processar({ tenantId, shared, canEdit = true, onGerado }: { tenantId: s
               : consolidado.map((d) => <tr key={d.key} className={detItem === d.key ? 'sel' : ''}>
                 <td style={{ cursor: 'pointer', userSelect: 'none', fontWeight: detItem === d.key ? 700 : undefined }} onClick={() => toggleDet(d.key)} title="Clique para ver as lojas que pediram">{d.nome}</td>
                 <td className="r mono">{fmtQty(d.total)}</td>
-                <td className="r"><input type="number" className="field" style={{ width: 100, height: 30, textAlign: 'right' }} min="0" step="0.001" value={qComprar[d.key] ?? d.total} onChange={(e) => setQComprar((p) => ({ ...p, [d.key]: parseFloat(e.target.value) || 0 }))} /></td>
+                <td className="r"><NumInput className="field" style={{ width: 100, height: 30, textAlign: 'right' }} min="0" step="0.001" value={qComprar[d.key] ?? d.total} onChange={(e) => setQComprar((p) => ({ ...p, [d.key]: parseFloat(e.target.value) || 0 }))} /></td>
                 <td>{d.unidade}</td>
                 <td style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{ultCompra(d.insId, fornSel[d.key])}</td>
                 <td style={{ fontSize: 12 }}>{d.fornecedorId ? <span style={{ color: '#16a34a', fontWeight: 600 }}>{fornMap[d.fornecedorId]}</span> : <span style={{ color: '#94a3b8' }}>—</span>}</td>

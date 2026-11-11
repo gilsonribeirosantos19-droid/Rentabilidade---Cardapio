@@ -11,6 +11,7 @@ import { DetailModal } from '../components/DetailModal'
 import { brlDash as brl } from '../lib/format'
 import { fmtDH, isoD } from '../lib/date'
 import './estoque.css'
+import { NumInput } from '../components/NumInput'
 
 type Insumo = { id: string; nome: string; categoria?: string; unidade_medida?: string; unidade_compra?: string }
 type Entrada = { id: string; insumo_id: string; loja_id?: string | null; quantidade?: number; quantidade_fornecedor?: number; fator_conversao?: number; unidade_compra?: string; custo_unitario?: number; custo_total?: number; tipo?: string; fornecedor_id?: string | null; fornecedor_nome?: string | null; lote?: string | null; validade?: string | null; observacao?: string | null; criado_em?: string }
@@ -250,11 +251,11 @@ function EntradaModal({ tenantId, insumos, fornecedores, getSaldo, inicial, savi
           <div className="fg" style={{ margin: 0 }}><label>Data *</label><input type="date" value={f.data} onChange={(e) => set('data', e.target.value)} /></div>
         </div>
         <div className="row3" style={{ marginBottom: showConv ? 0 : 22 }}>
-          <div className="fg" style={{ margin: 0 }}><label>Quantas embalagens *</label><input type="number" min="0" step="0.001" placeholder="1" value={f.qtd} onChange={(e) => set('qtd', e.target.value)} /></div>
+          <div className="fg" style={{ margin: 0 }}><label>Quantas embalagens *</label><NumInput min="0" step="0.001" placeholder="1" value={f.qtd} onChange={(e) => set('qtd', e.target.value)} /></div>
           <div className="fg" style={{ margin: 0 }}><label>Quantidade na embalagem *</label>
             <SearchSelect value={f.unidade} onChange={onEmb} options={embOpts} placeholder="Escolha a embalagem..." />
           </div>
-          <div className="fg" style={{ margin: 0 }}><label>Preço por embalagem (R$) *</label><input type="number" min="0" step="0.01" placeholder="0,00" value={f.custo} onChange={(e) => set('custo', e.target.value)} /></div>
+          <div className="fg" style={{ margin: 0 }}><label>Preço por embalagem (R$) *</label><NumInput min="0" step="0.01" placeholder="0,00" value={f.custo} onChange={(e) => set('custo', e.target.value)} /></div>
         </div>
         {showConv && <div className="conv-box" style={{ marginTop: 16, marginBottom: 4 }}>{qtd(q)} × {fator.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} = <b>{qtd(q * fator)} {unBase}</b> no estoque · <b>{brl0(custo / fator)}/{unBase}</b> · Total: <b>{brl0(custo * q)}</b></div>}
         <div className="row3" style={{ marginTop: 22, marginBottom: 22 }}>

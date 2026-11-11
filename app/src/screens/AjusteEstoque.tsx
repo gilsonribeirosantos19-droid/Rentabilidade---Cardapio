@@ -7,6 +7,7 @@ import { usePerms } from '../lib/perms'
 import { SearchSelect } from '../components/SearchSelect'
 import { fmtDH, isoD } from '../lib/date'
 import './estoque.css'
+import { NumInput } from '../components/NumInput'
 
 type Insumo = { id: string; nome: string; unidade_medida?: string; unidade_compra?: string }
 type Loja = { id: string; nome: string }
@@ -129,7 +130,7 @@ export function AjusteEstoque() {
                       <tr key={l.id} className={on ? 'sel' : ''}>
                         <td className="c-sel"><input type="checkbox" checked={on} onChange={(e) => toggleLoja(l.id, e.target.checked)} /></td>
                         <td>{l.nome}</td><td>{un}</td><td className="c-num">{fmtQ(atual)}</td>
-                        <td className="c-num"><input className="gnova" type="number" step="0.001" value={nv ?? ''} disabled={!on} onChange={(e) => setNova((prev) => ({ ...prev, [l.id]: e.target.value }))} /></td>
+                        <td className="c-num"><NumInput className="gnova" step="0.001" value={nv ?? ''} disabled={!on} onChange={(e) => setNova((prev) => ({ ...prev, [l.id]: e.target.value }))} /></td>
                         <td className="c-num">{dif}</td><td>{sit}</td>
                       </tr>
                     )

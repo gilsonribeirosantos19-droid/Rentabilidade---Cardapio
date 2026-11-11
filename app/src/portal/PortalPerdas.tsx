@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth'
 import { usePortalLoja } from './portalLoja'
 import { brl, num } from '../lib/format'
 import { hojeStr } from '../lib/date'
+import { NumInput } from '../components/NumInput'
 
 // Portal › Perdas — registra perdas reais (insumo ou produto) + dashboard
 // (histórico recente, resumo do período, donut por motivo). Fiel ao loja.html.
@@ -164,7 +165,7 @@ export function PortalPerdas() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, marginBottom: 12 }}>
             <div><label style={lbl}>Unidade</label><input className="p-field" style={{ width: '100%', background: '#f1f5f9' }} readOnly value={unidade} /></div>
-            <div><label style={lbl}>Quantidade *</label><input type="number" min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" /></div>
+            <div><label style={lbl}>Quantidade *</label><NumInput min="0" step="0.001" className="p-field" style={{ width: '100%', textAlign: 'right', fontFamily: 'DM Mono, monospace' }} value={qtd} onChange={(e) => setQtd(e.target.value)} placeholder="0,000" /></div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
