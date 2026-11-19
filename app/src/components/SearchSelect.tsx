@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './searchselect.css'
-
-const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+import { matchBusca } from '../lib/nome'
 
 export function SearchSelect({
   value,
@@ -50,7 +49,7 @@ export function SearchSelect({
     setOpen((o) => !o)
   }
 
-  const filtered = options.filter((o) => norm(o + ' ' + (meta?.[o] || '')).includes(norm(q)))
+  const filtered = options.filter((o) => matchBusca(o + ' ' + (meta?.[o] || ''), q))
 
   return (
     <div className="ass" ref={ref}>
