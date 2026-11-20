@@ -78,7 +78,8 @@ import { EtiquetasRelatorios } from '../screens/EtiquetasRelatorios'
 import { EtiquetasConfig } from '../screens/EtiquetasConfig'
 import { Placeholder } from '../screens/Placeholder'
 
-type Tab = { key: string; label: string }
+import { TabBar } from './TabBar'
+import { fecharAbas, moverAba, type Tab } from './tabs'
 
 function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: boolean }) {
   const { podeVer } = usePerms()
@@ -199,12 +200,11 @@ export function Shell() {
     return () => window.removeEventListener('aiko:open-screen', h as EventListener)
   }, [])
 
-  function closeTab(key: string) {
-    setOpenTabs((t) => {
-      const n = t.filter((x) => x.key !== key)
-      if (active === key) setActive(n.length ? n[n.length - 1].key : '__home')
-      return n
-    })
+  // fecha 1 ou várias abas; se a ativa sair, abre a vizinha (regra em ./tabs.ts)
+  function closeTabs(keys: string[]) {
+    const r = fecharAbas(openTabs, active, keys)
+    setOpenTabs(r.tabs)
+    setActive(r.active)
   }
 
   const crumbSection = active === '__home' ? 'Visão geral' : labelForKey(active)
@@ -252,21 +252,8 @@ export function Shell() {
           </div>
         </div>}
 
-        {!isFull && <div className="tabs">
-          <div className={'tab' + (active === '__home' ? ' on' : '')} onClick={() => setActive('__home')} title="Visão geral">
-            🏠
-          </div>
-          {openTabs.map((t) => (
-            <div
-              key={t.key}
-              className={'tab' + (active === t.key ? ' on' : '')}
-              onClick={() => setActive(t.key)}
-            >
-              {t.label}
-              <span className="x" onClick={(e) => { e.stopPropagation(); closeTab(t.key) }}>×</span>
-            </div>
-          ))}
-        </div>}
+        {!isFull && <TabBar tabs={openTabs} active={active} onActivate={setActive} onClose={closeTabs}
+          onMove={(from, to) => setOpenTabs((t) => moverAba(t, from, to))} />}
 
         <div className="content">
           <div style={{ display: active === '__home' ? 'block' : 'none', height: '100%', overflowY: 'auto' }}>

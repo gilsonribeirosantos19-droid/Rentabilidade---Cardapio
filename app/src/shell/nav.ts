@@ -167,6 +167,11 @@ export function labelForKey(key: string): string {
   return key
 }
 
+// Módulo dono da tela (ícone e nome mostrados na aba).
+export function moduleForKey(key: string): Module | undefined {
+  return MODULES.find((m) => (m.sections ?? []).some((s) => ('group' in s ? s.items.some((i) => i.key === key) : s.key === key)))
+}
+
 // Título longo/descritivo da tela (2º nível do breadcrumb no topo).
 // Só as telas que TIRARAM o título de dentro do conteúdo entram aqui;
 // as demais caem no labelForKey (breadcrumb de 1 nível só).
