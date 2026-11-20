@@ -71,6 +71,8 @@
 
 /* toolbar de ações (Saídas/Entradas) */
 .est-screen .act-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+/* barra com busca/filtros (Entradas, Saídas) vira cartão; a do Inventário (só botões) fica como está */
+.est-screen .act-bar:has(.srch) { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); padding: 10px 14px; }
 .est-screen .btn-pri { height: 38px; padding: 0 16px; border: none; border-radius: 9px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
 .est-screen .btn-pri:hover { background: var(--brand-strong); }
 .est-screen .btn-pri:disabled { opacity: .55; cursor: default; }
@@ -235,6 +237,9 @@
 .est-screen .cm-grid.fc .col-fant { min-width: 165px; white-space: nowrap; }
 .est-screen .cm-grid.fc .col-cnpj { min-width: 155px; white-space: nowrap; }
 .est-screen .cm-toprow { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+/* Fechamento: busca + tabela formam um cartão só */
+.est-screen .cm-toprow { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); border-radius: 12px 12px 0 0; padding: 10px 12px; margin-bottom: 0; }
+.est-screen .cm-toprow + .cm-grid-wrap { background: #fff; border-color: #e7ebf0; border-top: 0; border-radius: 0 0 12px 12px; }
 .est-screen .cm-selall { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--n-600); cursor: pointer; margin-left: auto; }
 .est-screen .cm-selall input { width: 15px; height: 15px; accent-color: var(--brand); }
 .est-screen .gnova { width: 120px; height: 30px; border: 1px solid var(--n-300); border-radius: 5px; padding: 0 8px; font-size: 13px; font-family: 'DM Mono', monospace; text-align: right; background: #fff; color: var(--n-900); }
