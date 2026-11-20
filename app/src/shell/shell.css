@@ -73,13 +73,13 @@
 /* ====== ABAS DO WORKSPACE — estilo NAVEGADOR (Chrome) ======
    classes próprias (.wtabs/.wtab) p/ não afetar telas que reusam .tabs/.tab.
    Aba ativa tem a cor do conteúdo (--surface-2) e "encaixa" nele; × só na ativa. */
-.wtabs { display: flex; align-items: flex-end; height: 40px; padding: 6px 4px 0 6px; background: #dbe2ec; flex-shrink: 0; position: relative; user-select: none; }
+.wtabs { display: flex; align-items: flex-end; height: 36px; padding: 5px 4px 0 6px; background: #e6ebf2; flex-shrink: 0; position: relative; user-select: none; }
 .wtabs + .content { border-top: 0; }
-.wtabs-scroll { display: flex; align-items: flex-end; flex: 1; min-width: 0; height: 34px; }
-.wtab { position: relative; display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 7px 0 12px; border-radius: 10px 10px 0 0; flex: 0 1 210px; min-width: 0; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #475569; outline: none; }
+.wtabs-scroll { display: flex; align-items: flex-end; flex: 1; min-width: 0; height: 31px; }
+.wtab { position: relative; display: flex; align-items: center; gap: 7px; height: 31px; padding: 0 7px 0 12px; border-radius: 9px 9px 0 0; flex: 0 1 210px; min-width: 0; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #5b6b85; outline: none; }
 .wtab:focus-visible { box-shadow: inset 0 0 0 2px var(--orange); }
-.wtab:not(.on):hover { background: rgba(255,255,255,.55); }
-.wtab.on { background: var(--surface-2); color: var(--text1); z-index: 2; }
+.wtab:not(.on):hover { background: rgba(255,255,255,.6); }
+.wtab.on { background: var(--surface-2); color: var(--text1); font-weight: 700; z-index: 2; box-shadow: 0 -1px 3px rgba(15,39,68,.07); }
 .wtab.on::before, .wtab.on::after { content: ''; position: absolute; bottom: 0; width: 10px; height: 10px; pointer-events: none; }
 .wtab.on::before { left: -10px; background: radial-gradient(circle at 0 0, transparent 9.5px, var(--surface-2) 10px); }
 .wtab.on::after { right: -10px; background: radial-gradient(circle at 100% 0, transparent 9.5px, var(--surface-2) 10px); }
@@ -89,7 +89,7 @@
 .wtab .lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wtab .x { width: 18px; height: 18px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 15px; line-height: 1; color: #8a96aa; }
 .wtab .x:hover { background: rgba(220,38,38,.12); color: var(--red); }
-.wtab .sep { position: absolute; left: 0; top: 9px; bottom: 9px; width: 1px; background: #b4bfcf; }
+.wtab .sep { position: absolute; left: 0; top: 8px; bottom: 8px; width: 1px; background: #c3ccd8; }
 .wtab.on .sep, .wtab.nosep .sep, .wtab:hover .sep, .wtab:hover + .wtab .sep { display: none; }
 .wtab.home { flex: none; width: 44px; padding: 0; justify-content: center; }
 .wtab.home .ic { width: 16px; height: 16px; }
@@ -99,7 +99,7 @@
 .wtab.dragging { opacity: .45; }
 .wtab.drop-l { box-shadow: inset 3px 0 0 var(--orange); }
 .wtab.drop-r { box-shadow: inset -3px 0 0 var(--orange); }
-.wtabs-more { flex: none; align-self: flex-end; margin: 0 4px 3px; height: 28px; padding: 0 8px; border-radius: 7px; border: 1px solid transparent; background: none; font: inherit; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.wtabs-more { flex: none; align-self: flex-end; margin: 0 4px 3px; height: 26px; padding: 0 8px; border-radius: 7px; border: 1px solid transparent; background: none; font: inherit; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
 .wtabs-more:hover, .wtabs-more.on { background: var(--surface); border-color: var(--border-2); color: var(--text1); }
 .wtabs-more .n { background: var(--nav); color: #fff; border-radius: 9px; padding: 0 6px; font-size: 11px; line-height: 17px; font-variant-numeric: tabular-nums; }
 .wtabs-pop { position: fixed; z-index: 80; background: var(--surface); border: 1px solid var(--border-2); border-radius: 10px; box-shadow: 0 14px 34px rgba(15,39,68,.2); padding: 5px; min-width: 230px; font-size: 13px; }

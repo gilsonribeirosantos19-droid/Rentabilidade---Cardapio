@@ -119,9 +119,12 @@ export function TabBar({ tabs, active, onActivate, onClose, onMove }: Props) {
         })}
       </div>
 
-      <button className={'wtabs-more' + (pop?.kind === 'list' ? ' on' : '')} title="Abas abertas" onClick={abrirLista}>
-        ▾ <span className="n">{tabs.length}</span>
-      </button>
+      {/* a lista só tem serventia a partir de 2 abas — com 1 aba o botão some */}
+      {tabs.length >= 2 && (
+        <button className={'wtabs-more' + (pop?.kind === 'list' ? ' on' : '')} title="Abas abertas" onClick={abrirLista}>
+          ▾ <span className="n">{tabs.length}</span>
+        </button>
+      )}
 
       {pop?.kind === 'ctx' && (() => {
         const outras = fecharOutras(tabs, pop.key)
