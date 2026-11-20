@@ -55,7 +55,7 @@ export function Cotacao() {
       {view === 'list' && (
         <>
           <div className="cot-top">
-            <div><div className="cot-h">Cotação de Compras</div><div className="cot-sub">Puxe o pedido das lojas, compare fornecedores e compre pelo menor preço.</div></div>
+            <div><div className="cot-sub">Puxe o pedido das lojas, compare fornecedores e compre pelo menor preço.</div></div>
             {canEdit
               ? <button className="cot-btn pri" onClick={() => setView('nova')}>+ Nova cotação</button>
               : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}

@@ -42,8 +42,9 @@
 .cfg-modal .mx { border: none; background: var(--n-100); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; color: var(--n-600); font-size: 14px; }
 .cfg-modal .mb { padding: 16px 18px; }
 .cfg-fg { margin-bottom: 12px; }
-.cfg-fg label { display: block; font-size: 11.5px; color: var(--n-600); font-weight: 600; margin-bottom: 4px; }
-.cfg-fg input, .cfg-fg select { width: 100%; height: 36px; border: 1px solid var(--n-300); border-radius: 8px; padding: 0 11px; font-size: 13px; font-family: inherit; color: var(--n-900); background: #fff; }
+.cfg-fg label { display: block; font-size: 11px; color: var(--n-500); font-weight: 500; margin-bottom: 4px; }
+.cfg-fg .ass-btn { height: 34px; }
+.cfg-fg input, .cfg-fg select { width: 100%; height: 34px; border: 1px solid var(--n-300); border-radius: 8px; padding: 0 11px; font-size: 13px; font-family: inherit; color: var(--n-900); background: #fff; }
 .cfg-fg input:focus, .cfg-fg select:focus { outline: none; border-color: var(--brand); }
 .cfg-fg.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 /* lista de lojas do supervisor — coluna única, checkbox pequeno (escapa do input grande do .cfg-fg) */
@@ -52,7 +53,7 @@
 .cfg-fg .usr-lojas label:hover { background: var(--n-100); }
 .cfg-fg .usr-lojas input { width: 16px; height: 16px; min-width: 16px; flex: none; accent-color: var(--brand); margin: 0; padding: 0; }
 .cfg-modal .mf { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 18px; border-top: 1px solid #eef2f6; }
-.cfg-btn { height: 36px; padding: 0 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--n-300); background: #fff; color: var(--n-700); transition: transform .06s ease, background .12s ease, box-shadow .12s ease; }
+.cfg-btn { height: 34px; padding: 0 15px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--n-300); background: #fff; color: var(--n-700); transition: transform .06s ease, background .12s ease, box-shadow .12s ease; }
 .cfg-btn:hover { background: var(--n-100); }
 .cfg-btn:active { transform: scale(.96); }
 .cfg-btn:disabled { opacity: .6; cursor: default; transform: none; }

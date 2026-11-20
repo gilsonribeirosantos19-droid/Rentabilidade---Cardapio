@@ -203,7 +203,7 @@ export function DistribuicaoCentral() {
             {sel.status === 'enviada' && <button className="btn-g" disabled={busy} onClick={marcarSeparando}>Pegar p/ separar</button>}
             <div style={{ marginLeft: 'auto' }} />
             <button className="btn-g" disabled title="Fase 3 — emissão fiscal" style={{ opacity: .5 }}>Emitir NF-e ⓕ</button>
-            <button className="btn-g" style={{ background: '#0d9488', color: '#fff', borderColor: '#0d9488' }} disabled={busy} onClick={confirmarEnvio}>{busy ? 'Enviando…' : '✓ Confirmar envio'}</button>
+            <button className="btn-g" style={{ background: 'var(--brand)', color: '#fff', borderColor: 'var(--brand)' }} disabled={busy} onClick={confirmarEnvio}>{busy ? 'Enviando…' : '✓ Confirmar envio'}</button>
           </div>
         </aside>
       </>}

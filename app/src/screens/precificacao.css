@@ -4,7 +4,7 @@
   --prec-green:#16a34a; --prec-teal:#00b890; --prec-amber:#f59e0b; --prec-red:#e11d48;
   --prec-t1:#0f172a; --prec-t2:#475569; --prec-t3:#64748b; --prec-t4:#94a3b8;
   --prec-bd:#e5e9f0; --prec-bd2:#eef1f5; --prec-head:#f1f4f9;
-  padding:4px 2px 60px; position:relative;
+  padding:10px 18px 60px; position:relative;
   font-variant-numeric:tabular-nums;
 }
 .prec-screen .num{font-family:'DM Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
