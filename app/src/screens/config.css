@@ -27,7 +27,7 @@
 .cfg-card tbody td { padding: 4px 14px; border-bottom: 1px solid #f2f5f9; color: var(--n-900); }
 .cfg-card tbody td.r { text-align: right; }
 .cfg-card tbody tr:hover td { background: #d0dff2; }
-.cfg-card .empty { color: var(--n-400); padding: 12px 14px; font-size: 12px; }
+.content .cfg-card .empty, .content .cfg-card td.empty { color: var(--n-400); padding: 12px 14px; font-size: 12px; } /* mensagem pequena dentro do quadro (exceção ao padrão .empty) */
 .cfg-card .act { border: none; background: transparent; cursor: pointer; color: var(--n-500); font-size: 12px; padding: 3px 6px; border-radius: 6px; transition: transform .06s ease, background .12s ease; }
 .cfg-card .act:hover { background: #eef2f6; color: var(--n-900); }
 .cfg-card .act:active { transform: scale(.9); }

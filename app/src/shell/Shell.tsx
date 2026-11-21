@@ -79,6 +79,7 @@ import { EtiquetasConfig } from '../screens/EtiquetasConfig'
 import { Placeholder } from '../screens/Placeholder'
 
 import { TabBar } from './TabBar'
+import { CommandPalette } from './CommandPalette'
 import { fecharAbas, moverAba, type Tab } from './tabs'
 
 function ScreenFor({ k, label, isAdmin }: { k: string; label: string; isAdmin: boolean }) {
@@ -215,6 +216,7 @@ export function Shell() {
 
   return (
     <div className={'shell' + (dived ? ' dived' : '')}>
+      <CommandPalette onOpen={openScreen} />
       <Sidebar activeKey={active} onOpen={openScreen} dived={dived} setDived={setDived} />
 
       <div className="main">
@@ -232,6 +234,10 @@ export function Shell() {
                 {lojas.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
               </select>
             )}
+            <button className="cmdk-btn" title="Buscar e abrir uma tela (Ctrl+K)" onClick={() => window.dispatchEvent(new Event('aiko:busca-telas'))}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+              <span>Buscar tela</span><kbd>Ctrl K</kbd>
+            </button>
             <Ajuda onOpenCentral={() => openScreen('ajuda', 'Central de Ajuda')} />
             <Novidades />
             <div style={{ position: 'relative' }}>

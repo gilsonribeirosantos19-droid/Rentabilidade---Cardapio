@@ -51,7 +51,6 @@
 .est-screen .tbl tfoot td { padding: 8px 12px; border-top: 2px solid var(--n-200); }
 .est-screen .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
 .est-screen .cmv-box { display: inline-flex; width: 18px; height: 18px; border: 1px solid var(--n-300); border-radius: 4px; align-items: center; justify-content: center; color: var(--brand); font-size: 12px; font-weight: 800; background: #fff; }
-.est-screen .empty { text-align: center; color: var(--n-400); padding: 40px 20px; font-size: 14px; }
 
 /* Movimentação: checkboxes, radios, dropdown de colunas */
 .est-screen .mov-chk { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--n-700); cursor: pointer; }

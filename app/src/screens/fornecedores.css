@@ -17,9 +17,9 @@
 
 /* tabela */
 .forn-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
-.forn-screen .tbl-scroll { overflow-x: auto; }
+.forn-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 280px); } /* lista rola dentro do cartão → cabeçalho fixo (padrão das telas de Estoque) */
 .forn-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.forn-screen thead th { background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid var(--n-200); white-space: nowrap; }
+.forn-screen thead th { position: sticky; top: 0; z-index: 2; background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid var(--n-200); white-space: nowrap; }
 .forn-screen thead th.r { text-align: right; }
 .forn-screen tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: var(--n-900); white-space: nowrap; vertical-align: middle; }
 .forn-screen tbody td.r { text-align: right; }
@@ -31,7 +31,6 @@
 .forn-screen .b-inativo { background: var(--n-100); color: var(--n-500); }
 .forn-screen .act-btn { border: none; background: none; border-radius: 6px; padding: 2px 7px; font-size: 16px; line-height: 1; color: var(--n-400); cursor: pointer; }
 .forn-screen .act-btn:hover { background: var(--n-100); color: var(--n-600); }
-.forn-screen .empty { text-align: center; color: var(--n-400); padding: 50px 20px; font-size: 14px; }
 
 /* modal */
 .forn-screen .overlay { position: fixed; inset: 0; background: rgba(15,23,42,.4); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }

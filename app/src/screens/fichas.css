@@ -42,7 +42,6 @@
 .kebab-item:hover { background: var(--n-50); }
 .kebab-item.danger { color: #b45309; }
 .kebab-item.danger:hover { background: #fff7ed; }
-.fic-screen .empty { text-align: center; color: var(--n-400); padding: 50px 20px; font-size: 14px; }
 
 /* modal de visualização */
 .fic-screen .overlay { position: fixed; inset: 0; background: rgba(15,23,42,.4); display: flex; align-items: flex-start; justify-content: center; z-index: 100; padding: 30px 20px; overflow-y: auto; }
