@@ -345,12 +345,12 @@ export function Insumos() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
               <input placeholder="Buscar item..." value={busca} onChange={(e) => setBusca(e.target.value)} />
             </div>
-            <FSel value={fTipo} onChange={setFTipo} ph="Tipo do item ▾" options={opts.tipos} />
-            <FSel value={fFam} onChange={setFFam} ph="Família ▾" options={opts.familias} />
-            <FSel value={fGrupo} onChange={setFGrupo} ph="Grupo ▾" options={opts.grupos} />
-            <FSel value={fSub} onChange={setFSub} ph="Subgrupo ▾" options={opts.subgrupos} />
-            <select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Status ▾</option><option value="true">Ativo</option><option value="false">Inativo</option></select>
-            {canEdit && contaFolhas.length > 0 && <button className="prod-filter" style={{ cursor: 'pointer', fontWeight: 600, color: '#b45309', whiteSpace: 'nowrap' }} title="Casa os itens sem conta com a conta de mesmo nome (ex.: Salmão Fresco → Salmão)" onClick={autoClassificar}>✨ Auto classificar (DRE)</button>}
+            <FSel value={fTipo} onChange={setFTipo} ph="Tipo do item" options={opts.tipos} />
+            <FSel value={fFam} onChange={setFFam} ph="Família" options={opts.familias} />
+            <FSel value={fGrupo} onChange={setFGrupo} ph="Grupo" options={opts.grupos} />
+            <FSel value={fSub} onChange={setFSub} ph="Subgrupo" options={opts.subgrupos} />
+            <select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Status</option><option value="true">Ativo</option><option value="false">Inativo</option></select>
+            {canEdit && contaFolhas.length > 0 && <button className="prod-filter" style={{ cursor: 'pointer', fontWeight: 600, color: '#b45309', whiteSpace: 'nowrap' }} title="Casa os itens sem conta com a conta de mesmo nome (ex.: Salmão Fresco → Salmão)" onClick={autoClassificar}>✨ Classificar DRE</button>}
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
             <table>
@@ -413,8 +413,8 @@ export function Insumos() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
               <input placeholder="Buscar insumo..." value={cBusca} onChange={(e) => setCBusca(e.target.value)} />
             </div>
-            <FSel value={cCat} onChange={setCCat} ph="Categoria ▾" options={opts.grupos} />
-            <select className="prod-filter" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="">Status ▾</option><option value="ativo">Ativo</option><option value="atencao">Estoque baixo</option><option value="critico">Crítico</option></select>
+            <FSel value={cCat} onChange={setCCat} ph="Categoria" options={opts.grupos} />
+            <select className="prod-filter" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="">Status</option><option value="ativo">Ativo</option><option value="atencao">Estoque baixo</option><option value="critico">Crítico</option></select>
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
             <table>

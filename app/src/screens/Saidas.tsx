@@ -155,7 +155,9 @@ export function Saidas() {
         <div className="fbar-ss" style={{ minWidth: 155 }}><SearchSelect value={STIPO_LBL[fTipo] || ''} options={STIPO_OPTS} placeholder="Tipo: Todos" onChange={(l) => { setFTipo(STIPO_VAL[l] || ''); setPag(1) }} /></div>
         <div className="fbar-ss" style={{ minWidth: 160 }}><SearchSelect value={fResp} options={resps} placeholder="Responsável: Todos" onChange={(v) => { setFResp(v); setPag(1) }} /></div>
         <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={fMotivo} options={motivos} placeholder="Motivo: Todos" onChange={(v) => { setFMotivo(v); setPag(1) }} /></div>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* espaçador: numa linha só empurra o período pra direita; se a barra quebrar, a 2ª linha começa pela esquerda */}
+        <div style={{ flex: '1 0 0' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={periodoSel} options={SPER_OPTS} placeholder="Período" onChange={(l) => setPreset(SPER_VAL[l] ? l : 'Período')} /></div>
           <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} />
           <span style={{ color: '#94a3b8' }}>–</span>
