@@ -12,6 +12,7 @@
 /* barra de filtros */
 .ins-screen .prod-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .ins-screen .prod-search { position: relative; flex: 1; min-width: 200px; }
+.ins-screen .prod-toolbar.flt-bar { align-items: flex-end; padding: 10px 14px; }
 .ins-screen .prod-search svg { position: absolute; left: 13px; top: 10px; }
 .ins-screen .prod-toolbar .ass-btn { height: 34px; border-radius: 8px; }
 .ins-screen .prod-search input { width: 100%; height: 34px; border: 1px solid var(--n-200); border-radius: 8px; padding: 0 12px 0 36px; font-size: 13px; font-family: inherit; color: var(--n-900); background: #fff; }

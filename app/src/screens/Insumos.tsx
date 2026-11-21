@@ -340,16 +340,18 @@ export function Insumos() {
       {/* ===== PRODUTOS / ITENS ===== */}
       {tab === 'produtos' && (
         <div className="ins-body">
-          <div className="prod-toolbar">
-            <div className="prod-search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-              <input placeholder="Buscar item..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+          <div className="prod-toolbar flt-bar">
+            <div className="flt-f flt-grow"><label>Buscar</label>
+              <div className="prod-search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                <input placeholder="Item ou código..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+              </div>
             </div>
-            <FSel value={fTipo} onChange={setFTipo} ph="Tipo do item" options={opts.tipos} />
-            <FSel value={fFam} onChange={setFFam} ph="Família" options={opts.familias} />
-            <FSel value={fGrupo} onChange={setFGrupo} ph="Grupo" options={opts.grupos} />
-            <FSel value={fSub} onChange={setFSub} ph="Subgrupo" options={opts.subgrupos} />
-            <select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Status</option><option value="true">Ativo</option><option value="false">Inativo</option></select>
+            <div className="flt-f"><label>Tipo do item</label><FSel value={fTipo} onChange={setFTipo} ph="Todos" options={opts.tipos} /></div>
+            <div className="flt-f"><label>Família</label><FSel value={fFam} onChange={setFFam} ph="Todas" options={opts.familias} /></div>
+            <div className="flt-f"><label>Grupo</label><FSel value={fGrupo} onChange={setFGrupo} ph="Todos" options={opts.grupos} /></div>
+            <div className="flt-f"><label>Subgrupo</label><FSel value={fSub} onChange={setFSub} ph="Todos" options={opts.subgrupos} /></div>
+            <div className="flt-f"><label>Status</label><select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Todos</option><option value="true">Ativo</option><option value="false">Inativo</option></select></div>
             {canEdit && contaFolhas.length > 0 && <button className="prod-filter" style={{ cursor: 'pointer', fontWeight: 600, color: '#b45309', whiteSpace: 'nowrap' }} title="Casa os itens sem conta com a conta de mesmo nome (ex.: Salmão Fresco → Salmão)" onClick={autoClassificar}>✨ Classificar DRE</button>}
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
@@ -408,13 +410,15 @@ export function Insumos() {
       {/* ===== BASE DE CUSTOS ===== */}
       {tab === 'custos' && (
         <div className="ins-body">
-          <div className="prod-toolbar">
-            <div className="prod-search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-              <input placeholder="Buscar insumo..." value={cBusca} onChange={(e) => setCBusca(e.target.value)} />
+          <div className="prod-toolbar flt-bar">
+            <div className="flt-f flt-grow"><label>Buscar</label>
+              <div className="prod-search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                <input placeholder="Insumo ou código..." value={cBusca} onChange={(e) => setCBusca(e.target.value)} />
+              </div>
             </div>
-            <FSel value={cCat} onChange={setCCat} ph="Categoria" options={opts.grupos} />
-            <select className="prod-filter" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="">Status</option><option value="ativo">Ativo</option><option value="atencao">Estoque baixo</option><option value="critico">Crítico</option></select>
+            <div className="flt-f"><label>Categoria</label><FSel value={cCat} onChange={setCCat} ph="Todas" options={opts.grupos} /></div>
+            <div className="flt-f"><label>Status</label><select className="prod-filter" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="">Todos</option><option value="ativo">Ativo</option><option value="atencao">Estoque baixo</option><option value="critico">Crítico</option></select></div>
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
             <table>
