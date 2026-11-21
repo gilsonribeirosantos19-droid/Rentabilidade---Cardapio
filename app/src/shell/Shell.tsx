@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, type ComponentType } from 'react'
 import './shell.css'
 import { Sidebar } from './Sidebar'
 import { labelForKey, titleForKey, ADMIN_ONLY_KEYS } from './nav'
@@ -7,76 +7,80 @@ import { usePerms } from '../lib/perms'
 import { useLoja } from '../lib/loja'
 import { Novidades } from './Novidades'
 import { Ajuda } from './Ajuda'
-import { AjudaPage } from '../screens/AjudaPage'
-import { Fornecedores } from '../screens/Fornecedores'
-import { Insumos } from '../screens/Insumos'
-import { Produtos } from '../screens/Produtos'
-import { FichasTecnicas } from '../screens/FichasTecnicas'
-import { SaldoEstoque } from '../screens/SaldoEstoque'
-import { Movimentacao } from '../screens/Movimentacao'
-import { Kardex } from '../screens/Kardex'
-import { Saidas } from '../screens/Saidas'
-import { Entradas } from '../screens/Entradas'
-import { Inventario } from '../screens/Inventario'
+// Telas carregadas SOB DEMANDA (2026-11-21): cada tela vira um arquivo à parte, baixado só na 1ª vez que abre.
+// Antes o app baixava as ~70 telas de uma vez ao entrar (~2 MB). Visão geral (Inicio) segue junto.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function lz(f: () => Promise<Record<string, any>>, nome: string) { return lazy(() => f().then((m) => ({ default: m[nome] as ComponentType<any> }))) }
+const AjudaPage = lz(() => import('../screens/AjudaPage'), 'AjudaPage')
+const Fornecedores = lz(() => import('../screens/Fornecedores'), 'Fornecedores')
+const Insumos = lz(() => import('../screens/Insumos'), 'Insumos')
+const Produtos = lz(() => import('../screens/Produtos'), 'Produtos')
+const FichasTecnicas = lz(() => import('../screens/FichasTecnicas'), 'FichasTecnicas')
+const SaldoEstoque = lz(() => import('../screens/SaldoEstoque'), 'SaldoEstoque')
+const Movimentacao = lz(() => import('../screens/Movimentacao'), 'Movimentacao')
+const Kardex = lz(() => import('../screens/Kardex'), 'Kardex')
+const Saidas = lz(() => import('../screens/Saidas'), 'Saidas')
+const Entradas = lz(() => import('../screens/Entradas'), 'Entradas')
+const Inventario = lz(() => import('../screens/Inventario'), 'Inventario')
 import { Inicio } from '../screens/Inicio'
-import { EntradasProcessadas } from '../screens/EntradasProcessadas'
-import { MonitorNfe } from '../screens/MonitorNfe'
-import { AuditoriaConversao } from '../screens/AuditoriaConversao'
-import { NfeExcluidas } from '../screens/NfeExcluidas'
-import { DistribuicaoCentral } from '../screens/DistribuicaoCentral'
-import { Metas } from '../screens/Metas'
-import { DistribuicaoNovaRequisicao } from '../screens/DistribuicaoNovaRequisicao'
-import { DistribuicaoRomaneios } from '../screens/DistribuicaoRomaneios'
-import { DistribuicaoEmBreve } from '../screens/DistribuicaoEmBreve'
-import { HistoricoEntradas } from '../screens/HistoricoEntradas'
-import { ConsumoInsumos } from '../screens/ConsumoInsumos'
-import { HistoricoCustos } from '../screens/HistoricoCustos'
-import { CurvaABC } from '../screens/CurvaABC'
-import { InflacaoInsumos } from '../screens/InflacaoInsumos'
-import { ResumoEstoque } from '../screens/ResumoEstoque'
-import { AjusteEstoque } from '../screens/AjusteEstoque'
-import { AjusteCustoMedio } from '../screens/AjusteCustoMedio'
-import { Recalcular } from '../screens/Recalcular'
-import { Compras } from '../screens/Compras'
-import { Divergencias } from '../screens/Divergencias'
-import { Rendimentos } from '../screens/Rendimentos'
-import { CmvTeoricoReal } from '../screens/CmvTeoricoReal'
-import { Precificacao } from '../screens/Precificacao'
-import { ImpactoMargem } from '../screens/ImpactoMargem'
-import { Fechamento } from '../screens/Fechamento'
-import { Dre } from '../screens/Dre'
-import { DreOrcamento } from '../screens/DreOrcamento'
-import { DrePlanoContas } from '../screens/DrePlanoContas'
-import { DreLancamentos } from '../screens/DreLancamentos'
-import { FaturamentoVendas } from '../screens/FaturamentoVendas'
-import { VendasDiario } from '../screens/VendasDiario'
-import { MonitorVendas } from '../screens/MonitorVendas'
-import { EngenhariaCardapio } from '../screens/EngenhariaCardapio'
-import { CurvaAbcVendas } from '../screens/CurvaAbcVendas'
-import { SugestaoCompra } from '../screens/SugestaoCompra'
-import { Cotacao } from '../screens/Cotacao'
-import { ComprasFornecedor } from '../screens/ComprasFornecedor'
-import { ConfigGeral } from '../screens/ConfigGeral'
-import { ConfigParametros } from '../screens/ConfigParametros'
-import { ConfigAuditoria } from '../screens/ConfigAuditoria'
-import { ConfigUsuarios } from '../screens/ConfigUsuarios'
-import { ConfigPermissoes } from '../screens/ConfigPermissoes'
-import { SetorProducao } from '../screens/SetorProducao'
-import { ItemPorcionamento } from '../screens/ItemPorcionamento'
-import { OrdemPorcionamento } from '../screens/OrdemPorcionamento'
-import { OrdemProducao } from '../screens/OrdemProducao'
-import { MonitorProducao } from '../screens/MonitorProducao'
-import { PlanejamentoProducao } from '../screens/PlanejamentoProducao'
-import { CalendarioProducao } from '../screens/CalendarioProducao'
-import { AtividadesProducao } from '../screens/AtividadesProducao'
-import { EtiquetasPrazos } from '../screens/EtiquetasPrazos'
-import { EtiquetasEmitir } from '../screens/EtiquetasEmitir'
-import { EtiquetasBaixa } from '../screens/EtiquetasBaixa'
-import { EtiquetasLista } from '../screens/EtiquetasLista'
-import { EtiquetasDashboard } from '../screens/EtiquetasDashboard'
-import { EtiquetasRelatorios } from '../screens/EtiquetasRelatorios'
-import { EtiquetasConfig } from '../screens/EtiquetasConfig'
-import { Placeholder } from '../screens/Placeholder'
+const EntradasProcessadas = lz(() => import('../screens/EntradasProcessadas'), 'EntradasProcessadas')
+const MonitorNfe = lz(() => import('../screens/MonitorNfe'), 'MonitorNfe')
+const AuditoriaConversao = lz(() => import('../screens/AuditoriaConversao'), 'AuditoriaConversao')
+const NfeExcluidas = lz(() => import('../screens/NfeExcluidas'), 'NfeExcluidas')
+const DistribuicaoCentral = lz(() => import('../screens/DistribuicaoCentral'), 'DistribuicaoCentral')
+const Metas = lz(() => import('../screens/Metas'), 'Metas')
+const DistribuicaoNovaRequisicao = lz(() => import('../screens/DistribuicaoNovaRequisicao'), 'DistribuicaoNovaRequisicao')
+const DistribuicaoRomaneios = lz(() => import('../screens/DistribuicaoRomaneios'), 'DistribuicaoRomaneios')
+const DistribuicaoEmBreve = lz(() => import('../screens/DistribuicaoEmBreve'), 'DistribuicaoEmBreve')
+const HistoricoEntradas = lz(() => import('../screens/HistoricoEntradas'), 'HistoricoEntradas')
+const ConsumoInsumos = lz(() => import('../screens/ConsumoInsumos'), 'ConsumoInsumos')
+const HistoricoCustos = lz(() => import('../screens/HistoricoCustos'), 'HistoricoCustos')
+const CurvaABC = lz(() => import('../screens/CurvaABC'), 'CurvaABC')
+const InflacaoInsumos = lz(() => import('../screens/InflacaoInsumos'), 'InflacaoInsumos')
+const ResumoEstoque = lz(() => import('../screens/ResumoEstoque'), 'ResumoEstoque')
+const AjusteEstoque = lz(() => import('../screens/AjusteEstoque'), 'AjusteEstoque')
+const AjusteCustoMedio = lz(() => import('../screens/AjusteCustoMedio'), 'AjusteCustoMedio')
+const Recalcular = lz(() => import('../screens/Recalcular'), 'Recalcular')
+const Compras = lz(() => import('../screens/Compras'), 'Compras')
+const Divergencias = lz(() => import('../screens/Divergencias'), 'Divergencias')
+const Rendimentos = lz(() => import('../screens/Rendimentos'), 'Rendimentos')
+const CmvTeoricoReal = lz(() => import('../screens/CmvTeoricoReal'), 'CmvTeoricoReal')
+const Precificacao = lz(() => import('../screens/Precificacao'), 'Precificacao')
+const ImpactoMargem = lz(() => import('../screens/ImpactoMargem'), 'ImpactoMargem')
+const Fechamento = lz(() => import('../screens/Fechamento'), 'Fechamento')
+const Dre = lz(() => import('../screens/Dre'), 'Dre')
+const DreOrcamento = lz(() => import('../screens/DreOrcamento'), 'DreOrcamento')
+const DrePlanoContas = lz(() => import('../screens/DrePlanoContas'), 'DrePlanoContas')
+const DreLancamentos = lz(() => import('../screens/DreLancamentos'), 'DreLancamentos')
+const FaturamentoVendas = lz(() => import('../screens/FaturamentoVendas'), 'FaturamentoVendas')
+const VendasDiario = lz(() => import('../screens/VendasDiario'), 'VendasDiario')
+const MonitorVendas = lz(() => import('../screens/MonitorVendas'), 'MonitorVendas')
+const EngenhariaCardapio = lz(() => import('../screens/EngenhariaCardapio'), 'EngenhariaCardapio')
+const CurvaAbcVendas = lz(() => import('../screens/CurvaAbcVendas'), 'CurvaAbcVendas')
+const SugestaoCompra = lz(() => import('../screens/SugestaoCompra'), 'SugestaoCompra')
+const Cotacao = lz(() => import('../screens/Cotacao'), 'Cotacao')
+const ComprasFornecedor = lz(() => import('../screens/ComprasFornecedor'), 'ComprasFornecedor')
+const ConfigGeral = lz(() => import('../screens/ConfigGeral'), 'ConfigGeral')
+const ConfigParametros = lz(() => import('../screens/ConfigParametros'), 'ConfigParametros')
+const ConfigAuditoria = lz(() => import('../screens/ConfigAuditoria'), 'ConfigAuditoria')
+const ConfigUsuarios = lz(() => import('../screens/ConfigUsuarios'), 'ConfigUsuarios')
+const ConfigPermissoes = lz(() => import('../screens/ConfigPermissoes'), 'ConfigPermissoes')
+const SetorProducao = lz(() => import('../screens/SetorProducao'), 'SetorProducao')
+const ItemPorcionamento = lz(() => import('../screens/ItemPorcionamento'), 'ItemPorcionamento')
+const OrdemPorcionamento = lz(() => import('../screens/OrdemPorcionamento'), 'OrdemPorcionamento')
+const OrdemProducao = lz(() => import('../screens/OrdemProducao'), 'OrdemProducao')
+const MonitorProducao = lz(() => import('../screens/MonitorProducao'), 'MonitorProducao')
+const PlanejamentoProducao = lz(() => import('../screens/PlanejamentoProducao'), 'PlanejamentoProducao')
+const CalendarioProducao = lz(() => import('../screens/CalendarioProducao'), 'CalendarioProducao')
+const AtividadesProducao = lz(() => import('../screens/AtividadesProducao'), 'AtividadesProducao')
+const EtiquetasPrazos = lz(() => import('../screens/EtiquetasPrazos'), 'EtiquetasPrazos')
+const EtiquetasEmitir = lz(() => import('../screens/EtiquetasEmitir'), 'EtiquetasEmitir')
+const EtiquetasBaixa = lz(() => import('../screens/EtiquetasBaixa'), 'EtiquetasBaixa')
+const EtiquetasLista = lz(() => import('../screens/EtiquetasLista'), 'EtiquetasLista')
+const EtiquetasDashboard = lz(() => import('../screens/EtiquetasDashboard'), 'EtiquetasDashboard')
+const EtiquetasRelatorios = lz(() => import('../screens/EtiquetasRelatorios'), 'EtiquetasRelatorios')
+const EtiquetasConfig = lz(() => import('../screens/EtiquetasConfig'), 'EtiquetasConfig')
+const Placeholder = lz(() => import('../screens/Placeholder'), 'Placeholder')
 
 import { TabBar } from './TabBar'
 import { CommandPalette } from './CommandPalette'
@@ -267,7 +271,10 @@ export function Shell() {
           </div>
           {openTabs.map((t) => (
             <div key={t.key} style={{ display: active === t.key ? 'block' : 'none', height: '100%' }}>
-              <ScreenFor k={t.key} label={t.label} isAdmin={isAdmin} />
+              {/* tela sob demanda: enquanto o arquivo dela baixa (só na 1ª vez), mostra "Carregando…" */}
+              <Suspense fallback={<div className="empty">Carregando…</div>}>
+                <ScreenFor k={t.key} label={t.label} isAdmin={isAdmin} />
+              </Suspense>
             </div>
           ))}
         </div>
