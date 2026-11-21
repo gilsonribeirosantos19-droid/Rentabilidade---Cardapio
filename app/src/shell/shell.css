@@ -25,6 +25,11 @@
 .shell.dived .mod { justify-content: center; padding: 9px 0; margin: 3px 6px; }
 .shell.dived .mod svg { width: 18px; height: 18px; }
 .shell.dived .mod .l, .shell.dived .mod .ch { display: none; }
+/* título de seção do menu (OPERACIONAL, VENDAS…) — só organização, mesmas cores do menu */
+.mgrp { padding: 14px 26px 4px; font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); white-space: nowrap; }
+.shell.dived .mgrp { padding: 8px 0 2px; margin: 0 14px; }
+.shell.dived .mgrp span { display: none; }
+.shell.dived .mgrp::after { content: ''; display: block; height: 1px; background: rgba(255,255,255,.12); }
 .mgrow { flex: 1; }
 .muser { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 8px; }
 .shell.dived .muser { justify-content: center; padding: 10px 0; }

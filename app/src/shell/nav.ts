@@ -12,6 +12,16 @@ export const ADMIN_ONLY_KEYS = new Set(['config/usuarios', 'config/permissoes', 
 // Telas SEMPRE acessíveis (nunca entram na matriz de permissões nem são bloqueadas). Ex.: ajuda.
 export const ALWAYS_KEYS = new Set(['ajuda'])
 
+// Organização do menu em SEÇÕES (aprovado 2026-11-20, "por área"): ordem dos módulos + título da seção.
+// Só afeta a ordem/os títulos da barra lateral — permissões e telas não mudam.
+export const MENU_SECOES: { titulo: string | null; modulos: string[] }[] = [
+  { titulo: null, modulos: ['inicio'] },
+  { titulo: 'Operacional', modulos: ['cadastros', 'estoque', 'compras', 'producao', 'etiquetas', 'distribuicao'] },
+  { titulo: 'Vendas', modulos: ['pdv'] },
+  { titulo: 'Gestão', modulos: ['gestao', 'fiscal'] },
+  { titulo: 'Sistema', modulos: ['config'] },
+]
+
 export const MODULES: Module[] = [
   { id: 'inicio', label: 'Visão geral', icon: 'home', home: true },
   {
