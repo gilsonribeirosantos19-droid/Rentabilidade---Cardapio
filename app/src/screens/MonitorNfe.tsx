@@ -9,6 +9,7 @@ import { imprimirDanfeOuLocal, gerarDanfeXml, gerarDanfeAiko } from '../lib/danf
 import { brl } from '../lib/format'
 import { isoD } from '../lib/date'
 import { calcFator } from '../lib/embalagem'
+import { fatorCustoNota, custoUnitarioReal } from '../lib/nfeCusto'
 import './fiscal.css'
 import { NumInput } from '../components/NumInput'
 
@@ -208,6 +209,9 @@ export function MonitorNfe() {
     // nota recebida pela loja → usa a DATA DA CHEGADA (recebida_em). Senão, segue o parâmetro (emissão/processamento).
     const dataReceb = n.recebida_em ? new Date(n.recebida_em).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : null
     const dataStr = dataReceb || (critDataMov === 'processamento' ? new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) : dataEmis)
+    // CUSTO REAL: impostos destacados (ICMS-ST, IPI), frete/outras e desconto da nota entram no custo dos itens,
+    // rateados pelo valor: fator = total da nota ÷ soma dos produtos (lib/nfeCusto.ts). Fator 1 = nada muda.
+    const fx = fatorCustoNota(n.valor_total, items)
     let okItens = 0; const falhas: string[] = []
     for (const it of items) {
       const v = resolveVinc(it, fornId)
@@ -216,7 +220,7 @@ export function MonitorNfe() {
       // se a loja conferiu, entra a QUANTIDADE RECEBIDA (na unid. de compra) × fator; senão, a da nota
       const qtdCompra = it.qtd_recebida != null ? Number(it.qtd_recebida) : (it.quantidade || 0)
       const qtdEst = +(qtdCompra * fator).toFixed(6)
-      const custoUnit = +((it.valor_unitario || 0) / fator).toFixed(6)
+      const custoUnit = custoUnitarioReal(it.valor_unitario, fx.fator, fator)
       try {
         await registrarEntradaNfe(v.insumo_id, loja, fornId, fornNome, { quantidade: qtdEst, unidade_compra: it.unidade_nfe || null, fator_conversao: fator, custo_unitario: custoUnit, tipo: 'nfe', nfe_numero: `${n.numero}/${n.serie}`, chave_acesso: n.chave_acesso || null, observacao: `NF-e ${n.numero}/${n.serie}`, criado_em: dataStr + 'T12:00:00.000Z' })
         okItens++
@@ -230,6 +234,9 @@ export function MonitorNfe() {
     }
     if (okItens < items.length) { await supabase.rpc('estornar_nfe', { p_nfe_id: n.id }).then(() => {}, () => {}); return { ok: false, msg: `NF-e ${n.numero}: falha em ${items.length - okItens} item(ns), revertida.\n${falhas.join('\n')}` } }
     await supabase.from('nfe_recebidas').update({ status: 'processada', processada_em: new Date().toISOString() }).eq('id', n.id)
+    // informa quando o custo foi ajustado (ou quando o ajuste foi barrado por dado suspeito)
+    if (fx.aplicado) return { ok: true, msg: `NF-e ${n.numero}: custo inclui impostos/frete/desconto da nota (${fx.fator >= 1 ? '+' : ''}${((fx.fator - 1) * 100).toFixed(1).replace('.', ',')}% sobre o preço dos produtos).` }
+    if (fx.motivo && fx.somaProdutos > 0 && (Number(n.valor_total) || 0) > 0) return { ok: true, msg: `NF-e ${n.numero}: ⚠ ${fx.motivo}.` }
     return { ok: true }
   }
 
@@ -243,7 +250,8 @@ export function MonitorNfe() {
     let ok = 0, fail = 0; const msgs: string[] = []
     for (let i = 0; i < notas.length; i++) { const r = await processarUma(notas[i]); if (r.ok) ok++; else { fail++; if (r.msg) msgs.push(r.msg) }; if (r.msg && r.ok) msgs.push(r.msg); setProg({ done: i + 1, total: notas.length }) }
     setPicked(new Set()); await invalidarTudo(); setBusy(false); setProg(null)
-    showToast(`${ok} processada(s)${fail ? ` · ${fail} com problema` : ''}.`, fail ? 'err' : 'ok')
+    const ajustadas = msgs.filter((m) => m.includes('custo inclui')).length
+    showToast(`${ok} processada(s)${ajustadas ? ` · ${ajustadas} com impostos/frete somados ao custo` : ''}${fail ? ` · ${fail} com problema` : ''}.`, fail ? 'err' : 'ok')
     if (msgs.length) console.warn('Monitor:\n' + msgs.join('\n'))
     if (fail && msgs.length) alert('Por que não processou:\n\n' + msgs.join('\n\n'))
   }
