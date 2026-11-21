@@ -212,7 +212,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, 
           <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>{inv ? `${TIPO_LABEL[inv.tipo || ''] || inv.tipo} · ${fmtD(inv.data_inicial)} a ${fmtD(inv.data_final)} · ${inv.status === 'ativo' ? 'Ativo' : 'Encerrado'}` : ''}</div>
         </div>
         <button className="btn-sec" onClick={onBack}>← Voltar</button>
-        {isAtivo && canEdit && <button className="btn-sec" style={{ color: '#e11d48', borderColor: '#fecaca' }} disabled={cancelarMut.isPending} onClick={() => cancelarMut.mutate()}>{cancelarMut.isPending ? 'Cancelando…' : '✕ Cancelar inventário'}</button>}
+        {isAtivo && canEdit && <button className="btn-sec btn-del" disabled={cancelarMut.isPending} onClick={() => cancelarMut.mutate()}>{cancelarMut.isPending ? 'Cancelando…' : '✕ Cancelar inventário'}</button>}
         {isAtivo && canEdit && <button className="btn-pri" disabled={encMut.isPending} onClick={() => encMut.mutate()}>{encMut.isPending ? 'Encerrando…' : '✓ Encerrar e ajustar estoque'}</button>}
         {inv && !isAtivo && canEdit && <button className="btn-sec" disabled={reabrirMut.isPending} onClick={() => reabrirMut.mutate()}>↺ Reabrir</button>}
         {!canEdit && <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
@@ -335,7 +335,7 @@ function GruposModal({ grupos, insumos, tenantId, onClose, onChange, showToast }
                   <td>{g.nome}</td>
                   <td style={{ color: '#94a3b8' }}>{TIPO_LABEL[g.tipo || ''] || g.tipo || '—'}</td>
                   <td className="r mono">{g.itens?.length || 0}</td>
-                  <td className="c"><div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}><button className="btn-sec" style={{ height: 30 }} onClick={() => setEdit(g)}>Editar</button><button className="btn-sec" style={{ height: 30, color: '#e11d48' }} onClick={() => excluir(g.id)}>Excluir</button></div></td>
+                  <td className="c"><div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}><button className="btn-sec" style={{ height: 30 }} onClick={() => setEdit(g)}>Editar</button><button className="btn-sec btn-del" style={{ height: 30 }} onClick={() => excluir(g.id)}>Excluir</button></div></td>
                 </tr>)}
             </tbody>
           </table>

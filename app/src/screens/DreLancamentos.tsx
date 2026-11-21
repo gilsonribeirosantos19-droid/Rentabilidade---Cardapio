@@ -99,7 +99,7 @@ export function DreLancamentos() {
                     <td className="l" style={{ color: '#94a3c4' }}>{l.loja_id ? (lojaById.get(l.loja_id) || '—') : 'Geral'}</td>
                     <td className="l" style={{ color: '#586084' }}>{l.descricao || '—'}</td>
                     <td style={{ fontWeight: 600 }}>{brl(l.valor)}</td>
-                    <td className="l"><button className="dcl-btn" style={{ height: 28, padding: '0 9px', color: '#e11d48' }} onClick={() => { if (confirm('Remover este lançamento?')) delMut.mutate(l.id) }}>✕</button></td>
+                    <td className="l"><button className="dcl-btn btn-del" title="Remover lançamento" style={{ height: 28, padding: '0 9px' }} onClick={() => { if (confirm('Remover este lançamento?')) delMut.mutate(l.id) }}>✕</button></td>
                   </tr>
                 ))}
             </tbody>

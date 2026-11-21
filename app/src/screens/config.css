@@ -61,7 +61,7 @@
 .cfg-btn.pri:hover { background: var(--brand-strong); }
 .cfg-btn.pri:active { background: #d95f08; }
 .cfg-btn.danger { color: var(--danger); border-color: var(--danger-border); }
-.cfg-btn.danger:hover { background: var(--danger-tint); }
+.cfg-btn.danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
 
 /* seleção de insumos (grupo de compra) */
 .cfg-ins-box { border: 1px solid #e5e9f0; border-radius: 8px; max-height: 280px; overflow: auto; }

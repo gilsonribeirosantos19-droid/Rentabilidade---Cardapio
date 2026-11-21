@@ -210,7 +210,7 @@ export function ConfigPermissoes() {
             : grupos.map((g) => (
               <div key={g.id} className={'grp-item' + (g.id === selId ? ' on' : '')} onClick={() => selecionar(g.id)}>
                 <span className="nm">{g.nome}</span>
-                <span className="st" style={{ color: g.ativo !== false ? '#16a34a' : '#94a3b8' }}>{g.ativo !== false ? 'Ativo' : 'Inativo'}</span>
+                <span className={'st badge ' + (g.ativo !== false ? 'ok' : 'off')}>{g.ativo !== false ? 'Ativo' : 'Inativo'}</span>
               </div>
             ))}
         </div>
@@ -267,7 +267,7 @@ export function ConfigPermissoes() {
                                 <td className="mono" style={{ fontSize: 11.5, color: '#475569' }}>{u.email || '—'}</td>
                                 <td>{u.nome || '—'}</td>
                                 <td style={{ fontSize: 11.5, color: '#64748b' }}>{grupoAtual[u.id] || '—'}</td>
-                                <td style={{ fontSize: 11.5, color: u.ativo !== false ? '#16a34a' : '#94a3b8' }}>{u.ativo !== false ? 'Ativo' : 'Inativo'}</td>
+                                <td><span className={'badge ' + (u.ativo !== false ? 'ok' : 'off')}>{u.ativo !== false ? 'Ativo' : 'Inativo'}</span></td>
                               </tr>
                             ))}
                         </tbody>

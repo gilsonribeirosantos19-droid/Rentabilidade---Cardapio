@@ -157,6 +157,9 @@ textarea.input { height: auto; padding: 9px 12px; min-height: 70px; resize: vert
 .badge { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
 .badge.ok { background: var(--emerald-tint); color: var(--emerald); }
 .badge.off { background: var(--n-100); color: var(--n-500); }
+/* botão de EXCLUIR/CANCELAR padrão (2026-11-20): contorno vermelho, enche no hover. Use junto da classe do botão da tela. */
+.content button.btn-del { color: #e11d48; border-color: #fca5a5; background: #fff; }
+.content button.btn-del:hover:not(:disabled) { background: #e11d48; color: #fff; border-color: #e11d48; }
 .icon-btn { width: 30px; height: 30px; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; cursor: pointer; color: var(--text2); display: inline-flex; align-items: center; justify-content: center; }
 .icon-btn:hover { border-color: var(--orange); color: var(--orange); }
 

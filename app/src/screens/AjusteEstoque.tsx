@@ -91,8 +91,8 @@ export function AjusteEstoque() {
     <div className="est-screen">
       <div className="adj-tbar">
         {canEdit ? <>
-          <button className="adj-tbtn pri" title="Salvar ajuste" disabled={salvarMut.isPending} onClick={() => salvarMut.mutate()}>💾</button>
-          <button className="adj-tbtn" title="Limpar / novo" onClick={limpar}>✕</button>
+          <button className="adj-tbtn txt pri" title="Salvar ajuste" disabled={salvarMut.isPending} onClick={() => salvarMut.mutate()}>{salvarMut.isPending ? 'Salvando…' : 'Salvar'}</button>
+          <button className="adj-tbtn txt" title="Limpar / novo" onClick={limpar}>Limpar</button>
         </> : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
       </div>
 

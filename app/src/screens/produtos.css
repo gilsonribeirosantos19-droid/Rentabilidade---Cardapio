@@ -31,6 +31,7 @@
 .prod-screen .b-sim { background: var(--emerald-tint); color: var(--emerald); }
 .prod-screen .b-nao { background: var(--n-100); color: var(--n-500); }
 .prod-screen .b-ativo { background: var(--emerald-tint); color: var(--emerald); }
+.prod-screen .badge.b-ativo, .prod-screen .badge.b-inativo { border-radius: 20px; } /* selo de situação = pílula (padrão) */
 .prod-screen .b-inativo { background: var(--n-100); color: var(--n-500); }
 .prod-screen .b-desenv { background: #fffbeb; color: #d97706; }
 

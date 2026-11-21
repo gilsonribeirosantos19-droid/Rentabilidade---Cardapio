@@ -193,7 +193,9 @@
 .est-screen .adj-tbtn { width: 38px; height: 38px; border: 1px solid var(--n-300); background: #fff; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--n-700); font-size: 17px; }
 .est-screen .adj-tbtn:hover { background: #eef2f7; }
 .est-screen .adj-tbtn.pri { background: var(--brand); border: none; color: #fff; }
-.est-screen .adj-tbtn.pri:hover { background: #ea6c00; }
+.est-screen .adj-tbtn.pri:hover { background: var(--brand-strong); }
+/* botões da barra de Ajustes com TEXTO (antes só emoji 💾 ↻ ✕) */
+.est-screen .adj-tbtn.txt { width: auto; height: 34px; padding: 0 14px; gap: 6px; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit; }
 .est-screen .adj-tbtn:disabled { opacity: .55; cursor: default; }
 .est-screen .adj-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); padding: 16px 18px; margin-bottom: 16px; }
 .est-screen .adj-sec-head { font-size: 13px; font-weight: 700; color: var(--n-900); margin-bottom: 14px; }

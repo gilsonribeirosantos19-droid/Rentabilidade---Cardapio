@@ -86,7 +86,7 @@ function Responsaveis() {
               : resps.map((r) => (
                 <tr key={r.id}>
                   <td>{r.nome}</td>
-                  <td><span className={'etq-sit ' + (r.ativo !== false ? 'ok' : 'baixada')}>{r.ativo !== false ? 'Ativo' : 'Inativo'}</span></td>
+                  <td><span className={'etq-sit ' + (r.ativo !== false ? 'ok' : 'off')}>{r.ativo !== false ? 'Ativo' : 'Inativo'}</span></td>
                   <td className="r">{canEdit && <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                     <button className="etq-btn etq-btn-sm" onClick={() => { const n = prompt('Novo nome:', r.nome); if (n && n.trim() && n.trim() !== r.nome) rename.mutate({ id: r.id, nome: n.trim() }) }}>Renomear</button>
                     <button className="etq-btn etq-btn-sm" onClick={() => toggle.mutate({ id: r.id, ativo: r.ativo === false })}>{r.ativo !== false ? 'Desativar' : 'Ativar'}</button>
@@ -164,7 +164,7 @@ function Operadores({ lojas }: { lojas: Loja[] }) {
                   <tr key={o.id}>
                     <td>{o.nome}</td>
                     <td style={{ color: '#64748b' }}>{lojaNome(o.loja_id)}</td>
-                    <td><span className={'etq-sit ' + (bloq ? 'vd' : o.ativo ? 'ok' : 'baixada')}>{bloq ? 'Bloqueado' : o.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                    <td><span className={'etq-sit ' + (bloq ? 'vd' : o.ativo ? 'ok' : 'off')}>{bloq ? 'Bloqueado' : o.ativo ? 'Ativo' : 'Inativo'}</span></td>
                     <td className="r">{canEdit && <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                       <button className="etq-btn etq-btn-sm" onClick={() => setEdit({ id: o.id, nome: o.nome, loja_id: o.loja_id || '', pin: '' })}>Editar</button>
                       {bloq && <button className="etq-btn etq-btn-sm" onClick={() => patch.mutate({ id: o.id, data: { tentativas: 0, bloqueado_ate: null } })}>Desbloquear</button>}
