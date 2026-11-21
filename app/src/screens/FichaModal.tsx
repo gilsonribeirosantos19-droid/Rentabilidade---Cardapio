@@ -22,7 +22,7 @@ const nq = (s?: string) => { const n = parseFloat(String(s ?? '').replace(',', '
 // exibe a quantidade com casas claras: peso/volume (kg/L) SEMPRE com 3 casas (0,200) e vírgula BR
 const showQ = (s: string | undefined, weight: boolean) => nq(s).toLocaleString('pt-BR', weight ? { minimumFractionDigits: 3, maximumFractionDigits: 3 } : { maximumFractionDigits: 3 })
 
-export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng, custoIngLoja, custoProduto, lojas, tenantId, onClose, onSaved }: {
+export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng, custoIngLoja, custoProduto, semiAcabadoDe, lojas, tenantId, onClose, onSaved }: {
   ficha: FichaIn | null
   titulo?: string
   produtos: Prod[]
@@ -31,6 +31,9 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
   custoIng: (ins: Ins, qtdG: number) => number
   custoIngLoja: (ins: Ins, qtdG: number, lojaId: string) => number
   custoProduto: (produtoId: string) => number   // custo de 1 porção do produto (p/ meia porção / combo)
+  // produto é SEMI-ACABADO (ficha de processado)? → devolve o insumo vinculado e o rendimento do lote (g). Usado p/ AVISAR
+  // quem pôs o semi-acabado como produto (o certo é lançar o insumo em gramas — caso Shari nos bentôs, 2026-11).
+  semiAcabadoDe?: (produtoId: string) => { insumoId: string; rendG: number } | null
   lojas: { id: string; nome?: string }[]
   tenantId: string | null
   onClose: () => void
@@ -274,15 +277,29 @@ export function FichaModal({ ficha, titulo, produtos, insumos, insMap, custoIng,
                     const p = prodById[r.produto_id]
                     const ct = custoRow(r)
                     const cu = custoProduto(r.produto_id)
+                    // semi-acabado lançado como produto → aviso + botão que troca pelo insumo vinculado (qtd do produto = kg)
+                    const semi = semiAcabadoDe?.(r.produto_id) || null
+                    const insSemi = semi ? insMap[semi.insumoId] : undefined
+                    const umSemi = insSemi ? umOf(insSemi).trim().toLowerCase() : ''
+                    const qtdTroca = !insSemi ? null : isW(umSemi) ? (Number(r.qtd) || 0) : umSemi === 'g' || umSemi === 'ml' ? (Number(r.qtd) || 0) * 1000 : null
+                    const trocar = () => { if (!semi || qtdTroca == null) return; setItens((a) => a.map((x, i) => (i === idx ? { insumo_id: semi.insumoId, qtd: String(+qtdTroca.toFixed(6)) } : x))) }
                     return (
-                      <div className="ing-trow" key={idx}>
-                        <div className="ins" title="Clique para editar" style={{ cursor: 'pointer' }} onClick={() => editarItem(idx)}>{p?.nome || '(produto)'}</div>
-                        <div className="um">porção</div>
-                        <div className="r">{showQ(r.qtd, false)}</div>
-                        <div className="r muted">—</div>
-                        <div className="r mono">{brl(cu)}</div>
-                        <div className="r bold mono">{brl(ct)}</div>
-                        <div className="c"><button className="ing2-del" title="Remover" onClick={() => setItens((a) => a.filter((_, i) => i !== idx))}>🗑</button></div>
+                      <div key={idx}>
+                        <div className="ing-trow">
+                          <div className="ins" title="Clique para editar" style={{ cursor: 'pointer' }} onClick={() => editarItem(idx)}>{p?.nome || '(produto)'}</div>
+                          <div className="um">{semi ? 'kg' : 'porção'}</div>
+                          <div className="r">{showQ(r.qtd, false)}</div>
+                          <div className="r muted">—</div>
+                          <div className="r mono">{brl(cu)}</div>
+                          <div className="r bold mono">{brl(ct)}</div>
+                          <div className="c"><button className="ing2-del" title="Remover" onClick={() => setItens((a) => a.filter((_, i) => i !== idx))}>🗑</button></div>
+                        </div>
+                        {semi && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: '2px 16px 8px', padding: '7px 10px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, fontSize: 12, color: '#92400e' }}>
+                            <span>⚠ <b>{p?.nome || 'Este produto'}</b> é um <b>semi-acabado</b> (receita que rende {(semi.rendG / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 })} kg). O jeito certo é lançar o <b>insumo {insSemi?.nome ? `"${insSemi.nome}"` : 'vinculado'}</b> em {insSemi && isW(umSemi) ? 'kg' : 'gramas'}.</span>
+                            {qtdTroca != null && <button type="button" className="btn-ghost" style={{ height: 26, padding: '0 10px', fontSize: 12 }} onClick={trocar}>Trocar pelo insumo ({qtdTroca.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} {isW(umSemi) ? umSemi : umSemi})</button>}
+                          </div>
+                        )}
                       </div>
                     )
                   }

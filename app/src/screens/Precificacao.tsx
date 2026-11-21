@@ -18,6 +18,7 @@ type Item = { id?: string; insumo_id?: string | null; produto_id?: string | null
 type Ficha = {
   id: string; nome?: string; categoria?: string; rendimento_porcoes?: number; preco_venda?: number | null
   status?: string; produto_id?: string | null; itens_ficha?: Item[]
+  insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null   // ficha de semi-acabado (processado)
 }
 type Produto = { id: string; nome?: string; grupo?: string; categoria?: string; preco_venda?: number | null; codigo_pdv?: string }
 type Insumo = { id: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }
@@ -61,7 +62,7 @@ export function Precificacao() {
   const { data: fichas = [], isLoading } = useQuery({
     queryKey: ['fichas', tenantId], enabled: !!tenantId,
     queryFn: () => fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas')
-      .select('id,nome,categoria,rendimento_porcoes,preco_venda,status,produto_id, itens_ficha(id,insumo_id,produto_id,quantidade_g,ordem)')
+      .select('id,nome,categoria,rendimento_porcoes,preco_venda,status,produto_id,insumo_vinculado_id,rendimento_receita_g, itens_ficha(id,insumo_id,produto_id,quantidade_g,ordem)')
       .eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
   })
   const { data: produtos = [] } = useQuery({
@@ -91,8 +92,10 @@ export function Precificacao() {
 
   const produtoById = useMemo(() => Object.fromEntries(produtos.map((p) => [p.id, p])) as Record<string, Produto>, [produtos])
   const fichasByProduto: FichasByProduto = useMemo(() => {
-    const m = new Map<string, { itens: Item[]; rendimento_porcoes?: number }>()
-    fichas.forEach((f) => { if (f.produto_id) m.set(f.produto_id, { itens: f.itens_ficha || [], rendimento_porcoes: f.rendimento_porcoes }) })
+    // só fichas NÃO arquivadas (antes até ficha desativada podia virar a base do custo do produto);
+    // leva insumo_vinculado_id + rendimento_receita_g p/ o semi-acabado ser custeado POR KG (igual à Ficha Técnica)
+    const m = new Map<string, { itens: Item[]; rendimento_porcoes?: number; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null }>()
+    fichas.forEach((f) => { if (f.produto_id && (f.status || 'ativa') !== 'arquivada') m.set(f.produto_id, { itens: f.itens_ficha || [], rendimento_porcoes: f.rendimento_porcoes, insumo_vinculado_id: f.insumo_vinculado_id, rendimento_receita_g: f.rendimento_receita_g }) })
     return m as FichasByProduto
   }, [fichas])
   // em "Todas": média do custo médio de cada insumo entre as lojas (onde tem custo > 0)

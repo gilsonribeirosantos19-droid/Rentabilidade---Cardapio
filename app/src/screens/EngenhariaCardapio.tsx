@@ -15,7 +15,7 @@ import './faturamento.css'
 // Filtro "Incluir itens com valor zerado": no rodízio os itens entram com R$ 0 — por padrão ocultos.
 
 type Prod = { id: string; lojaId: string; loja: string; item: string; codigo: string; grupo: string; qVenda: number; vBruta: number; vDesc: number; vCustoMedio: number }
-type FichaEng = { id: string; produto_id?: string; rendimento_porcoes?: number; itens_ficha?: { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }[] }
+type FichaEng = { id: string; produto_id?: string; rendimento_porcoes?: number; status?: string; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null; itens_ficha?: { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }[] }
 type Mov = { insumo_id: string; quantidade?: number; custo_unitario?: number; loja_id?: string; criado_em?: string }
 
 const m2 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -191,7 +191,7 @@ export function EngenhariaCardapio() {
 
   // ── custo da ficha por produto (de-para código PDV → produto → ficha), POR LOJA ──
   const { data: engProdutos = [] } = useQuery({ queryKey: ['eng-prod', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; codigo_pdv?: string }>((f, t) => supabase.from('produtos').select('id,codigo_pdv').eq('tenant_id', tenantId).order('id').range(f, t)) })
-  const { data: engFichas = [] } = useQuery({ queryKey: ['eng-fichas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<FichaEng>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,rendimento_porcoes,itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).order('id').range(f, t)) })
+  const { data: engFichas = [] } = useQuery({ queryKey: ['eng-fichas', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<FichaEng>((f, t) => supabase.from('fichas_tecnicas').select('id,produto_id,rendimento_porcoes,status,insumo_vinculado_id,rendimento_receita_g,itens_ficha(insumo_id,produto_id,quantidade_g)').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: engInsumos = [] } = useQuery({ queryKey: ['eng-ins', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ id: string; preco_compra?: number; rendimento_pct?: number; unidade_medida?: string; unidade_compra?: string }>((f, t) => supabase.from('insumos').select('id,preco_compra,rendimento_pct,unidade_medida,unidade_compra').eq('tenant_id', tenantId).order('id').range(f, t)) })
   const { data: engSaldos = [] } = useQuery({ queryKey: ['eng-sld', tenantId], enabled: !!tenantId, queryFn: () => fetchAll<{ insumo_id: string; custo_medio?: number; loja_id?: string }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,custo_medio,loja_id').eq('tenant_id', tenantId).order('id').range(f, t)) })
   // histórico de movimentos ATÉ o fim do período → custo médio reconstruído NA DATA (custo do mês, não o de hoje)
@@ -200,7 +200,8 @@ export function EngenhariaCardapio() {
   const prodByCod = useMemo(() => { const m = new Map<string, string>(); engProdutos.forEach((p) => { const c = (p.codigo_pdv || '').trim(); if (c) m.set(c, p.id) }); return m }, [engProdutos])
   const fichaByProduto = useMemo(() => { const m = new Map<string, FichaEng>(); engFichas.forEach((f) => { if (f.produto_id) m.set(f.produto_id, f) }); return m }, [engFichas])
   // mapa produto_id -> ficha base, p/ combos/meia porção descerem no custo (custoFichaPorcao recursivo)
-  const fichasCostMap = useMemo(() => { const m = new Map<string, { itens: { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }[]; rendimento_porcoes?: number }>(); engFichas.forEach((f) => { if (f.produto_id) m.set(f.produto_id, { itens: f.itens_ficha || [], rendimento_porcoes: f.rendimento_porcoes || 1 }) }); return m }, [engFichas])
+  // só fichas não arquivadas; semi-acabado (insumo_vinculado + rendimento_receita_g) é custeado POR KG (igual à Ficha Técnica)
+  const fichasCostMap = useMemo(() => { const m = new Map<string, { itens: { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }[]; rendimento_porcoes?: number; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null }>(); engFichas.forEach((f) => { if (f.produto_id && (f.status || 'ativa') !== 'arquivada') m.set(f.produto_id, { itens: f.itens_ficha || [], rendimento_porcoes: f.rendimento_porcoes || 1, insumo_vinculado_id: f.insumo_vinculado_id, rendimento_receita_g: f.rendimento_receita_g }) }); return m }, [engFichas])
   // movimentos por loja (p/ reconstruir o custo médio na data, por loja)
   const engEntByLoja = useMemo(() => { const m: Record<string, Mov[]> = {}; engEntradas.forEach((e) => { const k = e.loja_id || ''; (m[k] = m[k] || []).push(e) }); return m }, [engEntradas])
   const engSaiByLoja = useMemo(() => { const m: Record<string, Mov[]> = {}; engSaidas.forEach((s) => { const k = s.loja_id || ''; (m[k] = m[k] || []).push(s) }); return m }, [engSaidas])
