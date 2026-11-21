@@ -343,7 +343,7 @@ export function FichasTecnicas() {
         const pid = (!dup && editing !== 'new') ? (editing as Ficha).produto_id : null
         const prodList = (pid && !ativos.some((p) => p.id === pid)) ? (() => { const ex = produtos.find((p) => p.id === pid); return ex ? [...ativos, ex] : ativos })() : ativos
         const fecha = () => { setEditing(null); setDup(null) }
-        return <FichaModal ficha={src} titulo={dup ? 'Duplicar Ficha Técnica' : undefined} produtos={prodList} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} custoIngLoja={custoIngLoja} custoProduto={(pid: string) => { const f = fichaByProduto[pid]; return f ? custoFicha(f) : 0 }} lojas={lojas} tenantId={tenantId} onClose={fecha} onSaved={fecha} />
+        return <FichaModal ficha={src} titulo={dup ? 'Duplicar Ficha Técnica' : undefined} produtos={prodList} insumos={insumos} insMap={insMap} custoIng={custoIngrediente} custoIngLoja={custoIngLoja} custoProduto={(pid: string) => { const f = fichaByProduto[pid]; return f ? custoFicha(f) : 0 }} semiAcabadoDe={(pid: string) => { const f = fichaByProduto[pid]; return f && f.insumo_vinculado_id && Number(f.rendimento_receita_g) > 0 ? { insumoId: f.insumo_vinculado_id, rendG: Number(f.rendimento_receita_g) } : null }} lojas={lojas} tenantId={tenantId} onClose={fecha} onSaved={fecha} />
       })()}
     </div>
   )

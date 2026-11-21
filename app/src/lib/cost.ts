@@ -7,7 +7,14 @@ export type Vinculo = { insumo_id: string; preco_unitario?: number }
 export type InsumoLike = { id: string; preco_compra?: number; unidade_medida?: string; unidade_compra?: string; rendimento_pct?: number }
 export type FichaItem = { insumo_id?: string; produto_id?: string | null; quantidade_g?: number }
 // mapa produto_id -> ficha do prato base (p/ combos / meia porção descerem recursivamente)
-export type FichasByProduto = Map<string, { itens: FichaItem[]; rendimento_porcoes?: number }>
+// insumo_vinculado_id + rendimento_receita_g preenchidos = ficha de SEMI-ACABADO (processado: receita de um LOTE
+// que rende X gramas, ex.: Shari = 11.700 g) → o produto vale POR KG, e a quantidade no item é em kg.
+export type FichaBase = { itens: FichaItem[]; rendimento_porcoes?: number; insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null }
+export type FichasByProduto = Map<string, FichaBase>
+
+// ficha de semi-acabado (processado)? — mesma regra da Ficha Técnica (custoFicha em FichasTecnicas.tsx)
+export const ehSemiAcabado = (f?: { insumo_vinculado_id?: string | null; rendimento_receita_g?: number | null } | null): boolean =>
+  !!(f && f.insumo_vinculado_id && Number(f.rendimento_receita_g) > 0)
 // strictLoja: modo "custo POR LOJA" (usado na Ficha) — NÃO usa custo de outra loja nem vínculo,
 // cai direto no preco_compra do insumo. Sem a flag = comportamento antigo (compat, não muda nada).
 export type CostCtx = { entradas?: Mov[]; saidas?: Mov[]; saldos?: Saldo[]; vinculos?: Vinculo[]; insumos?: InsumoLike[]; dataLimite?: string | null; strictLoja?: boolean }
@@ -51,7 +58,14 @@ export function custoFichaPorcao(itens: FichaItem[], rendimentoPorcoes: number, 
       const base = fichasByProduto.get(it.produto_id)
       if (!base) return
       const s2 = new Set(seen || []); s2.add(it.produto_id)               // clone por ramo (evita loop, permite reuso legítimo)
-      total += custoFichaPorcao(base.itens || [], base.rendimento_porcoes || 1, lojaId, ctx, fichasByProduto, s2) * (+(it.quantidade_g || 0))
+      if (ehSemiAcabado(base)) {
+        // SEMI-ACABADO: custo do LOTE ÷ kg que o lote rende = R$/kg; × quantidade (em kg). Igual à Ficha Técnica.
+        // (antes tratava como "porção" = lote inteiro → ex.: 0,150 de Shari custava 0,150 × lote de 11,7 kg)
+        const custoLote = custoFichaPorcao(base.itens || [], 1, lojaId, ctx, fichasByProduto, s2)
+        total += custoLote / (Number(base.rendimento_receita_g) / 1000) * (+(it.quantidade_g || 0))
+      } else {
+        total += custoFichaPorcao(base.itens || [], base.rendimento_porcoes || 1, lojaId, ctx, fichasByProduto, s2) * (+(it.quantidade_g || 0))
+      }
       return
     }
     const ins = insumos.find((i) => i.id === it.insumo_id)
