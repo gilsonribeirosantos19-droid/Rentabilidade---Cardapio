@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { MODULES, MENU_SECOES, type Module } from './nav'
-import { ICONS } from './icons'
+import { ICONS, ICONS_SOLID } from './icons'
 import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { supabase } from '../lib/db'
@@ -104,9 +104,8 @@ export function Sidebar({
                 }
               }}
             >
-              {ICONS[m.icon]}
+              {ICONS_SOLID[m.icon] ?? ICONS[m.icon]}
               <span className="l">{m.label}</span>
-              {m.sections && <span className="ch">›</span>}
             </div>
           )
   }
