@@ -6,7 +6,7 @@
 /* toolbar densa */
 .sug-screen .sug-toolbar { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 12px; margin-bottom: 10px; }
 .sug-screen .fld { display: flex; flex-direction: column; gap: 2px; }
-.sug-screen .fld label { font-size: 10px; color: var(--n-500); font-weight: 500; }
+.sug-screen .fld label { font-size: 11px; color: var(--n-500); font-weight: 500; }
 .sug-screen .fld select, .sug-screen .fld input { height: 32px; border: 1px solid var(--n-300); border-radius: 7px; padding: 0 10px; font-size: 12.5px; background: #fff; color: var(--n-900); font-family: inherit; min-width: 130px; }
 /* dropdown com busca na toolbar: mesma altura/largura dos campos */
 .sug-screen .fld .ass { min-width: 150px; }

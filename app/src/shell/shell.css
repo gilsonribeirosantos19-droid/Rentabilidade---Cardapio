@@ -170,6 +170,9 @@ textarea.input { height: auto; padding: 9px 12px; min-height: 70px; resize: vert
 .flt-f > label { font-size: 11px; font-weight: 500; color: var(--n-500); white-space: nowrap; }
 .flt-f.flt-grow { flex: 1 1 200px; min-width: 200px; }
 .flt-f.flt-grow > :not(label) { width: 100%; }
+
+/* números das tabelas com dígitos de largura igual → colunas de valor ficam alinhadas */
+.content table { font-variant-numeric: tabular-nums; }
 .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
