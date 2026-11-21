@@ -30,7 +30,7 @@
 
 /* tabela */
 .pdv-screen table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-.pdv-screen .tbl thead th { background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 10px; text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--n-200); white-space: nowrap; }
+.pdv-screen .tbl thead th { background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 10px; text-align: left; padding: 5px 12px; border-bottom: 1px solid var(--n-200); white-space: nowrap; }
 .pdv-screen .tbl th.r, .pdv-screen .tbl td.r { text-align: right; }
 .pdv-screen .tbl tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: var(--n-900); }
 .pdv-screen .tbl tbody tr:last-child td { border-bottom: none; }

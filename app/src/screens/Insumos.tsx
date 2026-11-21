@@ -8,6 +8,7 @@ import { useLoja } from '../lib/loja'
 import { brlCur as brl } from '../lib/format'
 import './insumos.css'
 import { NumInput } from '../components/NumInput'
+import { matchBusca, acharDuplicado } from '../lib/nome'
 
 // Title Case pt-BR enquanto digita: 1ª letra de cada palavra maiúscula (igual à normalização do banco)
 const titleCase = (s: string) => s.toLowerCase().replace(/(^|\s)(\S)/g, (_m, sp, c) => sp + (c as string).toUpperCase())
@@ -44,7 +45,6 @@ const UN_LABEL: Record<string, string> = { un: 'Unidade', kg: 'Quilograma', g: '
 const UN_OPTS = ['un', 'kg', 'litro', 'pct', 'cx', 'fardo', 'bd', 'sc']
 const unLabel = (u?: string) => UN_LABEL[(u || '').toLowerCase().trim()] || (u || '')
 
-const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 const fmtCodigo = (c?: number) => (c != null ? String(c).padStart(6, '0') : '—')
 const getStatus = (i: Insumo) => { const r = Number(i.rendimento_pct ?? 100); return r < 60 ? 'critico' : r < 72 ? 'atencao' : 'ativo' }
 const ST_TXT: Record<string, string> = { ativo: 'Ativo', atencao: 'Estoque baixo', critico: 'Crítico' }
@@ -148,9 +148,8 @@ export function Insumos() {
   }, [lista, clsf])
 
   const produtos = useMemo(() => {
-    const q = norm(busca.trim())
     return lista.filter((i) => {
-      if (q && !norm([i.nome, i.codigo_interno, i.categoria].filter(Boolean).join(' ')).includes(q)) return false
+      if (!matchBusca([i.nome, i.codigo_interno, i.categoria].filter(Boolean).join(' '), busca)) return false
       if (fTipo && (i.tipo_item || '') !== fTipo) return false
       if (fFam && (i.familia || '') !== fFam) return false
       if (fGrupo && (i.categoria || '') !== fGrupo) return false
@@ -163,9 +162,8 @@ export function Insumos() {
   }, [lista, busca, fTipo, fFam, fGrupo, fSub, fStatus])
 
   const custos = useMemo(() => {
-    const q = norm(cBusca.trim())
     return lista.filter((i) => {
-      if (q && !norm(i.nome || '').includes(q)) return false
+      if (!matchBusca(i.nome, cBusca)) return false
       if (cCat && (i.categoria || '') !== cCat) return false
       if (cStatus && getStatus(i) !== cStatus) return false
       return true
@@ -206,14 +204,27 @@ export function Insumos() {
           if (n > 0) throw new Error(`Não dá pra inativar: ${n} ${n === 1 ? 'item de fornecedor vinculado' : 'itens de fornecedor vinculados'}. Use "Desativar" na lista (⋮) para transferir os vínculos para outro item primeiro.`)
         }
       }
+      // TRAVA ANTI-DUPLICIDADE: não deixa existir 2 itens ATIVOS com o mesmo nome (ignora maiúsculas,
+      // acento e espaço). Busca FRESCA no banco (a lista em memória pode estar desatualizada).
+      // O banco também recusa (índice uq_insumos_nome_ativo) — esta checagem só dá a mensagem amigável.
+      if (payload.ativo) {
+        const ativos = await fetchAll<{ id: string; nome: string; codigo_interno?: number; ativo?: boolean }>((a, b) =>
+          supabase.from('insumos').select('id,nome,codigo_interno,ativo').eq('tenant_id', tenantId).eq('ativo', true).order('id').range(a, b))
+        const dup = acharDuplicado(ativos, nome, f.id)
+        if (dup) throw new Error(`Já existe o item "${dup.nome}" (código ${fmtCodigo(dup.codigo_interno)}) ativo. Use o existente em vez de criar outro — se for diferente, mude o nome (ex.: "Kani Desfiado").`)
+      }
+      const erroDup = (e: { code?: string; message?: string }) =>
+        e.code === '23505' && (e.message || '').includes('uq_insumos_nome_ativo')
+          ? new Error(`Já existe um item ativo com o nome "${nome}". Use o existente em vez de criar outro.`)
+          : e
       if (f.id) {
-        const { error } = await supabase.from('insumos').update(payload).eq('id', f.id); if (error) throw error
+        const { error } = await supabase.from('insumos').update(payload).eq('id', f.id); if (error) throw erroDup(error)
       } else {
         // próximo código = maior do banco + 1 (busca FRESCA, não da lista em memória, que poderia
         // estar capada ou desatualizada → evita gerar código duplicado). codigo_interno é inteiro.
         const { data: mx } = await supabase.from('insumos').select('codigo_interno').eq('tenant_id', tenantId).order('codigo_interno', { ascending: false }).limit(1)
         const prox = (Number(mx?.[0]?.codigo_interno) || 0) + 1
-        const { error } = await supabase.from('insumos').insert({ ...payload, tenant_id: tenantId, preco_compra: 0, rendimento_pct: 100, codigo_interno: prox }); if (error) throw error
+        const { error } = await supabase.from('insumos').insert({ ...payload, tenant_id: tenantId, preco_compra: 0, rendimento_pct: 100, codigo_interno: prox }); if (error) throw erroDup(error)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['insumos'] }); showToast('Item salvo.', 'ok'); setCadForm(novoForm()); setTab('produtos') },
@@ -329,17 +340,19 @@ export function Insumos() {
       {/* ===== PRODUTOS / ITENS ===== */}
       {tab === 'produtos' && (
         <div className="ins-body">
-          <div className="prod-toolbar">
-            <div className="prod-search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-              <input placeholder="Buscar item..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+          <div className="prod-toolbar flt-bar">
+            <div className="flt-f flt-grow"><label>Buscar</label>
+              <div className="prod-search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                <input placeholder="Item ou código..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+              </div>
             </div>
-            <FSel value={fTipo} onChange={setFTipo} ph="Tipo do item ▾" options={opts.tipos} />
-            <FSel value={fFam} onChange={setFFam} ph="Família ▾" options={opts.familias} />
-            <FSel value={fGrupo} onChange={setFGrupo} ph="Grupo ▾" options={opts.grupos} />
-            <FSel value={fSub} onChange={setFSub} ph="Subgrupo ▾" options={opts.subgrupos} />
-            <select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Status ▾</option><option value="true">Ativo</option><option value="false">Inativo</option></select>
-            {canEdit && contaFolhas.length > 0 && <button className="prod-filter" style={{ cursor: 'pointer', fontWeight: 600, color: '#b45309', whiteSpace: 'nowrap' }} title="Casa os itens sem conta com a conta de mesmo nome (ex.: Salmão Fresco → Salmão)" onClick={autoClassificar}>✨ Auto classificar (DRE)</button>}
+            <div className="flt-f"><label>Tipo do item</label><FSel value={fTipo} onChange={setFTipo} ph="Todos" options={opts.tipos} /></div>
+            <div className="flt-f"><label>Família</label><FSel value={fFam} onChange={setFFam} ph="Todas" options={opts.familias} /></div>
+            <div className="flt-f"><label>Grupo</label><FSel value={fGrupo} onChange={setFGrupo} ph="Todos" options={opts.grupos} /></div>
+            <div className="flt-f"><label>Subgrupo</label><FSel value={fSub} onChange={setFSub} ph="Todos" options={opts.subgrupos} /></div>
+            <div className="flt-f"><label>Status</label><select className="prod-filter" value={fStatus} onChange={(e) => setFStatus(e.target.value)}><option value="">Todos</option><option value="true">Ativo</option><option value="false">Inativo</option></select></div>
+            {canEdit && contaFolhas.length > 0 && <button className="prod-filter" style={{ cursor: 'pointer', fontWeight: 600, color: '#b45309', whiteSpace: 'nowrap' }} title="Casa os itens sem conta com a conta de mesmo nome (ex.: Salmão Fresco → Salmão)" onClick={autoClassificar}>✨ Classificar DRE</button>}
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
             <table>
@@ -397,13 +410,15 @@ export function Insumos() {
       {/* ===== BASE DE CUSTOS ===== */}
       {tab === 'custos' && (
         <div className="ins-body">
-          <div className="prod-toolbar">
-            <div className="prod-search">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-              <input placeholder="Buscar insumo..." value={cBusca} onChange={(e) => setCBusca(e.target.value)} />
+          <div className="prod-toolbar flt-bar">
+            <div className="flt-f flt-grow"><label>Buscar</label>
+              <div className="prod-search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                <input placeholder="Insumo ou código..." value={cBusca} onChange={(e) => setCBusca(e.target.value)} />
+              </div>
             </div>
-            <FSel value={cCat} onChange={setCCat} ph="Categoria ▾" options={opts.grupos} />
-            <select className="prod-filter" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="">Status ▾</option><option value="ativo">Ativo</option><option value="atencao">Estoque baixo</option><option value="critico">Crítico</option></select>
+            <div className="flt-f"><label>Categoria</label><FSel value={cCat} onChange={setCCat} ph="Todas" options={opts.grupos} /></div>
+            <div className="flt-f"><label>Status</label><select className="prod-filter" value={cStatus} onChange={(e) => setCStatus(e.target.value)}><option value="">Todos</option><option value="ativo">Ativo</option><option value="atencao">Estoque baixo</option><option value="critico">Crítico</option></select></div>
           </div>
           <div className="tbl-card"><div className="tbl-scroll">
             <table>
@@ -524,7 +539,7 @@ function SearchSelect({ value, onChange, options, placeholder }: { value: string
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
   }, [])
-  const filtered = options.filter((o) => norm(o).includes(norm(q)))
+  const filtered = options.filter((o) => matchBusca(o, q))
   return (
     <div className="ss" ref={ref}>
       <button type="button" className={'ss-btn' + (value ? '' : ' ph')} onClick={() => { setOpen((o) => !o); setQ('') }}>

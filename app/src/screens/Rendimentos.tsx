@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase, fetchAll } from '../lib/db'
 import { useAuth } from '../lib/auth'
 import { useLoja } from '../lib/loja'
-import { custoDoInsumo } from '../lib/cost'
+import { custoDoInsumo, custoMedioRede } from '../lib/cost'
 import { SearchSelect } from '../components/SearchSelect'
 import { downloadCsv } from '../lib/csv'
 import './estoque.css'
@@ -24,7 +24,7 @@ const novoForm = (): Form => ({ insumo_id: '', peso_bruto: '', peso_liquido: '',
 
 export function Rendimentos() {
   const { tenantId } = useAuth()
-  const { lojaId } = useLoja()
+  const { lojaId, lojas } = useLoja()
   const qc = useQueryClient()
   const [fInsumo, setFInsumo] = useState('')
   const [pag, setPag] = useState(1)
@@ -38,7 +38,7 @@ export function Rendimentos() {
       const [insumos, testes, saldos, vinc] = await Promise.all([
         fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,unidade_medida,unidade_compra,preco_compra,rendimento_pct,ativo').eq('tenant_id', tenantId).order('nome').order('id').range(f, t)),
         fetchAll<Teste>((f, t) => supabase.from('testes_rendimento').select('id,insumo_id,peso_bruto,peso_liquido,rendimento_pct,observacao,criado_em').eq('tenant_id', tenantId).order('criado_em', { ascending: false }).order('id').range(f, t)),
-        fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio').eq('tenant_id', tenantId).order('id').range(f, t)),
+        fetchAll<Saldo & { quantidade?: number }>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,custo_medio,quantidade').eq('tenant_id', tenantId).order('id').range(f, t)),
         fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('insumo_id,preco_unitario').eq('tenant_id', tenantId).order('id').range(f, t)),
       ])
       return { insumos, testes, saldos, vinc }
@@ -48,8 +48,13 @@ export function Rendimentos() {
   const insumos = data?.insumos ?? []
   const testes = data?.testes ?? []
   const insMap = useMemo(() => { const m: Record<string, Insumo> = {}; insumos.forEach((i) => { m[i.id] = i }); return m }, [insumos])
-  // custo por kg — custo médio da LOJA selecionada (topo), fallback qualquer loja/preço de compra
-  const custoKg = (id: string) => custoDoInsumo(id, lojaId, { saldos: data?.saldos, insumos, vinculos: data?.vinc })
+  // custo por kg (o RENDIMENTO % é global da rede; só o R$ depende do custo):
+  //  · loja escolhida no topo → custo médio DAQUELA loja (estrito: sem custo próprio → preço de compra, nunca outra loja)
+  //  · "Todas as lojas" → média da REDE ponderada pelo estoque de cada loja (antes pegava a 1ª loja que achava)
+  const custoKg = (id: string) => lojaId
+    ? custoDoInsumo(id, lojaId, { saldos: data?.saldos, insumos, strictLoja: true })
+    : custoMedioRede(id, data?.saldos ?? [], insumos)
+  const origemCusto = lojaId ? `Custo da loja ${lojas.find((l) => l.id === lojaId)?.nome ?? 'selecionada'}` : 'Custo: média da rede (ponderada pelo estoque de cada loja)'
 
   // selects: só insumos ATIVOS (a lista inclui inativos só p/ resolver nome de testes antigos)
   const ativos = useMemo(() => insumos.filter((i) => i.ativo !== false), [insumos])
@@ -197,6 +202,8 @@ export function Rendimentos() {
             </tbody>
           </table>
         </div>
+        {/* de onde vem o custo do Custo Real/kg e da perda (rendimento % é sempre o global da rede) */}
+        <div style={{ fontSize: 11.5, color: '#64748b', padding: '6px 12px 0' }}>{origemCusto} · rendimento padrão: global da rede</div>
         <div className="pag-bar">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>{filtrado.length ? `Mostrando ${(pagAtual - 1) * porPag + 1} a ${Math.min(pagAtual * porPag, filtrado.length)} de ${filtrado.length}` : 'Nenhum registro'}</span>

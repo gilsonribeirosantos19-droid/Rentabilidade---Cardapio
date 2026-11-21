@@ -8,12 +8,14 @@
 /* barra de filtros: dropdown com busca e campos na mesma altura (34px) */
 .fiscal-screen .fl-bar .ass-btn { height: 34px; }
 .fiscal-screen .fl-bar .field { height: 34px; }
-.fiscal-screen .f1 .field { height: 34px; }
+.fiscal-screen .f1 .field, .fiscal-screen .mon-top-r .field { height: 34px; }
 .fiscal-screen .field { height: 30px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: var(--n-900); background: #fff; }
 .fiscal-screen .field:focus { outline: none; border-color: var(--brand); }
 .fiscal-screen select.field { cursor: pointer; }
-.fiscal-screen .btn-g { height: 36px; padding: 0 13px; border: 1px solid var(--n-200); border-radius: 8px; background: #fff; color: var(--n-600); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.fiscal-screen .btn-g { height: 34px; padding: 0 13px; border: 1px solid var(--n-200); border-radius: 8px; background: #fff; color: var(--n-600); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
 .fiscal-screen .btn-g:hover { background: var(--n-50); }
+/* Distribuição tem topo (breadcrumb) com o nome da tela → esconde o título repetido. Telas Fiscal são tela cheia (sem abas) e mantêm o título. */
+.wtabs + .content .fh-title { display: none; }
 
 /* barra de filtros PADRÃO (igual Movimentação/Estoque) — rótulo normal em cima do campo */
 .fiscal-screen .ds-filterbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 9px 14px; margin: 8px 0 12px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
@@ -100,7 +102,7 @@
 .fiscal-screen .mon-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .fiscal-screen .mon-top-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .fiscal-screen .lbl-mini { font-size: 12px; color: var(--n-600); font-weight: 600; white-space: nowrap; }
-.fiscal-screen .btn-xml { height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.fiscal-screen .btn-xml { height: 34px; padding: 0 14px; border: none; border-radius: 8px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
 .fiscal-screen .f1 { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin: 6px 0 12px; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 10px 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .fiscal-screen .f1 .ds-field { display: flex; flex-direction: column; gap: 3px; }
 .fiscal-screen .f1 .ds-field > label { font-size: 11px; font-weight: 500; color: var(--n-500); text-transform: none; letter-spacing: .01em; }
@@ -150,7 +152,7 @@
 .fiscal-screen .vfoot { display: flex; gap: 10px; margin-top: 8px; }
 .fiscal-screen .v-pri { height: 40px; padding: 0 18px; border: none; border-radius: 9px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .fiscal-screen .v-sec { height: 40px; padding: 0 16px; border: 1px solid var(--n-200); border-radius: 9px; background: #fff; color: var(--n-600); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.fiscal-screen .btn-pri { height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.fiscal-screen .btn-pri { height: 34px; padding: 0 14px; border: none; border-radius: 8px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .fiscal-screen .btn-pri:disabled { opacity: .5; cursor: default; }
 
 /* Corrigir item da NF-e (tela nova de vínculo) */

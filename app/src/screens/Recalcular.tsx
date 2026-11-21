@@ -103,8 +103,8 @@ export function Recalcular() {
   return (
     <div className="est-screen">
       <div className="adj-tbar" style={{ maxWidth: 680 }}>
-        <button className="adj-tbtn pri" title="Recalcular (executar)" disabled={recalcMut.isPending} onClick={() => recalcMut.mutate()}>↻</button>
-        <button className="adj-tbtn" title="Limpar" onClick={() => { setLojaSel(new Set()); setAlvoIns(''); setAlvoFicha(''); setDoCM(true); setDoFicha(false); setResult('') }}>✕</button>
+        <button className="adj-tbtn txt pri" title="Recalcular (executar)" disabled={recalcMut.isPending} onClick={() => recalcMut.mutate()}>{recalcMut.isPending ? 'Recalculando…' : 'Recalcular'}</button>
+        <button className="adj-tbtn txt" title="Limpar" onClick={() => { setLojaSel(new Set()); setAlvoIns(''); setAlvoFicha(''); setDoCM(true); setDoFicha(false); setResult('') }}>Limpar</button>
         {recalcMut.isPending && <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>Recalculando…</span>}
       </div>
 

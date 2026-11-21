@@ -6,8 +6,8 @@
 .mvend-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
 .mvend-screen .ds-field > label { font-size: 11px; font-weight: 500; color: var(--n-500); }
 .mvend-screen .ds-field .ass { width: 100%; }
-.mvend-screen .ds-field .ass-btn { height: 30px; }
-.mvend-screen .field { height: 30px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: var(--n-700); background: #fff; }
+.mvend-screen .ds-field .ass-btn { height: 34px; }
+.mvend-screen .field { height: 34px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: var(--n-700); background: #fff; }
 .mvend-screen .field:focus { outline: none; border-color: var(--brand); }
 .mvend-screen select.field { cursor: pointer; }
 .mvend-screen .ds-actions { margin-left: auto; display: flex; gap: 8px; }
@@ -44,9 +44,9 @@
 .mvend-screen .toolbar .sp { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--n-500); }
 
 .mvend-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.mvend-screen thead th { background: var(--n-50); color: var(--n-500); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 5px 10px; text-align: left; border-bottom: 1px solid #e7ebf0; white-space: nowrap; }
+.mvend-screen thead th { background: var(--n-100); color: var(--n-500); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 5px 10px; text-align: left; border-bottom: 1px solid #e7ebf0; white-space: nowrap; }
 .mvend-screen thead th.r { text-align: right; } .mvend-screen thead th.c { text-align: center; }
-.mvend-screen tbody td { padding: 4px 10px; border-bottom: 1px solid var(--n-100); color: var(--n-900); white-space: nowrap; line-height: 1.6; }
+.mvend-screen tbody td { padding: 4px 10px; border-bottom: 1px solid var(--n-100); color: var(--n-900); white-space: nowrap; line-height: 1.5; }
 .mvend-screen tbody td.r { text-align: right; font-family: 'DM Mono', monospace; } .mvend-screen tbody td.c { text-align: center; }
 .mvend-screen tbody tr { cursor: pointer; }
 .mvend-screen tbody tr:hover td { background: #d0dff2; }

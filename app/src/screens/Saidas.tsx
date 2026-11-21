@@ -141,26 +141,29 @@ export function Saidas() {
 
   return (
     <div className="est-screen">
-      <div className="act-bar">
+      {/* Barra padrão (versão B aprovada 2026-11-20): nome em cima de cada filtro; a barra só filtra; ação "Nova saída" no canto direito */}
+      <div className="act-bar lbl">
+        <div className="ds-field"><label>Buscar</label>
+          <div className="srch">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            <input placeholder="Insumo ou código..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
+          </div>
+        </div>
+        <div className="ds-field"><label>Tipo</label><div className="fbar-ss" style={{ minWidth: 140 }}><SearchSelect value={STIPO_LBL[fTipo] || ''} options={STIPO_OPTS} placeholder="Todos" onChange={(l) => { setFTipo(STIPO_VAL[l] || ''); setPag(1) }} /></div></div>
+        <div className="ds-field"><label>Responsável</label><div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={fResp} options={resps} placeholder="Todos" onChange={(v) => { setFResp(v); setPag(1) }} /></div></div>
+        <div className="ds-field"><label>Motivo</label><div className="fbar-ss" style={{ minWidth: 140 }}><SearchSelect value={fMotivo} options={motivos} placeholder="Todos" onChange={(v) => { setFMotivo(v); setPag(1) }} /></div></div>
+        <div className="ds-field"><label>Período</label><div className="fbar-ss" style={{ minWidth: 125 }}><SearchSelect value={periodoSel} options={SPER_OPTS} placeholder="Período" onChange={(l) => setPreset(SPER_VAL[l] ? l : 'Período')} /></div></div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} /></div>
+        {/* espaçador: numa linha só empurra a ação pra direita; se a barra quebrar, a 2ª linha começa pela esquerda */}
+        <div style={{ flex: '1 0 0', marginLeft: -10 }} />
         {canEdit
-          ? <button className="btn-pri" disabled={!lojaId} title={!lojaId ? 'Selecione uma loja específica no topo' : ''} onClick={() => { if (!lojaId) { showToast('Selecione uma loja específica no topo para registrar a saída.', 'err'); return } setModal(true) }}>
+          // sempre com a aparência normal (antes ficava desbotado em "Todas as lojas"); sem loja, o clique avisa
+          ? <button className="btn-pri" title={!lojaId ? 'Selecione uma loja específica no topo' : ''} onClick={() => { if (!lojaId) { showToast('Selecione uma loja específica no topo para registrar a saída.', 'err'); return } setModal(true) }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               Nova saída
             </button>
-          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
-        <div className="srch">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <input placeholder="Buscar insumo..." value={busca} onChange={(e) => { setBusca(e.target.value); setPag(1) }} />
-        </div>
-        <div className="fbar-ss" style={{ minWidth: 155 }}><SearchSelect value={STIPO_LBL[fTipo] || ''} options={STIPO_OPTS} placeholder="Tipo: Todos" onChange={(l) => { setFTipo(STIPO_VAL[l] || ''); setPag(1) }} /></div>
-        <div className="fbar-ss" style={{ minWidth: 160 }}><SearchSelect value={fResp} options={resps} placeholder="Responsável: Todos" onChange={(v) => { setFResp(v); setPag(1) }} /></div>
-        <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={fMotivo} options={motivos} placeholder="Motivo: Todos" onChange={(v) => { setFMotivo(v); setPag(1) }} /></div>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={periodoSel} options={SPER_OPTS} placeholder="Período" onChange={(l) => setPreset(SPER_VAL[l] ? l : 'Período')} /></div>
-          <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} />
-          <span style={{ color: '#94a3b8' }}>–</span>
-          <input type="date" className="field" value={ate} onChange={(e) => { setAte(e.target.value); setPeriodoSel('Período') }} />
-        </div>
+          : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20, alignSelf: 'center' }}>👁 Somente leitura</span>}
       </div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">

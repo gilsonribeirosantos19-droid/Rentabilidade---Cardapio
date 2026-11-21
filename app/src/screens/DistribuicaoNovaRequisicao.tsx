@@ -94,7 +94,7 @@ export function DistribuicaoNovaRequisicao() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 12 }}>
           <span className="muted" style={{ fontSize: 13 }}><b>{selIds.length}</b> {selIds.length === 1 ? 'item' : 'itens'} selecionado(s)</span>
           <div style={{ marginLeft: 'auto' }} />
-          <button className="btn-g" style={{ background: '#0d9488', color: '#fff', borderColor: '#0d9488' }} disabled={busy || !filialId || !selIds.length} onClick={enviar}>{busy ? 'Enviando…' : '📤 Enviar requisição ao CD'}</button>
+          <button className="btn-g" style={{ background: 'var(--brand)', color: '#fff', borderColor: 'var(--brand)' }} disabled={busy || !filialId || !selIds.length} onClick={enviar}>{busy ? 'Enviando…' : '📤 Enviar requisição ao CD'}</button>
         </div>
       </>}
 

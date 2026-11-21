@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { MODULES, type Module } from './nav'
-import { ICONS } from './icons'
+import { MODULES, MENU_SECOES, type Module } from './nav'
+import { ICONS, ICONS_SOLID } from './icons'
 import { useAuth } from '../lib/auth'
 import { usePerms } from '../lib/perms'
 import { supabase } from '../lib/db'
@@ -64,7 +64,32 @@ export function Sidebar({
           </div>
         </div>
 
-        {modules.map((m) => {
+        {/* módulos agrupados em seções (nav.ts MENU_SECOES); seção sem módulo visível não mostra título.
+            Módulo que não estiver em nenhuma seção cai no fim, sem título (não some). */}
+        {[...MENU_SECOES, { titulo: null, modulos: modules.map((m) => m.id).filter((id) => !MENU_SECOES.some((s) => s.modulos.includes(id))) }].flatMap((sec, si) => {
+          const doGrupo = sec.modulos.map((id) => modules.find((m) => m.id === id)).filter((m): m is Module => !!m)
+          if (!doGrupo.length) return []
+          return [
+            sec.titulo ? <div key={'sec' + si} className="mgrp"><span>{sec.titulo}</span></div> : null,
+            ...doGrupo.map((m) => renderMod(m)),
+          ]
+        })}
+
+        <div className="mgrow" />
+        <div className="muser">
+          <div className="mavatar">{(nome[0] || 'U').toUpperCase()}</div>
+          <div className="muinfo">
+            <div className="muname">{nome}</div>
+            <div className="murole">{usuario?.role || usuario?.perfil || 'Usuário'}</div>
+          </div>
+          <button title="Sair" onClick={() => signOut()} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 17, padding: '4px 6px', borderRadius: 6, flexShrink: 0 }}>⎋</button>
+        </div>
+      </nav>
+      {renderSecbar()}
+    </>
+  )
+
+  function renderMod(m: Module) {
           const on = m.id === dived || (m.home && activeKey === '__home')
           return (
             <div
@@ -79,24 +104,15 @@ export function Sidebar({
                 }
               }}
             >
-              {ICONS[m.icon]}
+              {ICONS_SOLID[m.icon] ?? ICONS[m.icon]}
               <span className="l">{m.label}</span>
-              {m.sections && <span className="ch">›</span>}
             </div>
           )
-        })}
+  }
 
-        <div className="mgrow" />
-        <div className="muser">
-          <div className="mavatar">{(nome[0] || 'U').toUpperCase()}</div>
-          <div className="muinfo">
-            <div className="muname">{nome}</div>
-            <div className="murole">{usuario?.role || usuario?.perfil || 'Usuário'}</div>
-          </div>
-          <button title="Sair" onClick={() => signOut()} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 17, padding: '4px 6px', borderRadius: 6, flexShrink: 0 }}>⎋</button>
-        </div>
-      </nav>
-
+  function renderSecbar() {
+    return (
+      <>
       {/* coluna de seções */}
       {active && (
         <nav className="secbar">
@@ -149,6 +165,7 @@ export function Sidebar({
           })}
         </nav>
       )}
-    </>
-  )
+      </>
+    )
+  }
 }

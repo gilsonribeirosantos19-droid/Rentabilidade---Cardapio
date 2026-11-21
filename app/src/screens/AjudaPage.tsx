@@ -27,9 +27,9 @@ export function AjudaPage() {
   useEffect(() => { if (filtrados.length && (!sel || !filtrados.find((a) => a.id === sel))) setSel(filtrados[0].id) }, [filtrados, sel])
 
   return (
-    <div style={{ padding: '14px 18px 40px', maxWidth: 1100, margin: '0 auto' }}>
+    <div style={{ padding: '10px 18px 40px', maxWidth: 1100, margin: '0 auto' }}>
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: '#14315f', display: 'flex', alignItems: 'center', gap: 9 }}>❓ Central de Ajuda</div>
+        
         <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>Manual do sistema — guias por módulo. Também disponível no ícone <b>?</b> no topo, pra ajuda rápida.</div>
       </div>
 

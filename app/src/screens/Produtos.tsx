@@ -148,15 +148,17 @@ export function Produtos() {
 
   return (
     <div className="prod-screen">
-      <div className="pr-toolbar">
-        <div className="pr-search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <input placeholder="Buscar por nome ou código..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+      <div className="pr-toolbar flt-bar">
+        <div className="flt-f flt-grow"><label>Buscar</label>
+          <div className="pr-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            <input placeholder="Nome ou código..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+          </div>
         </div>
-        <div className="pr-grupo"><SearchSelect value={fGrupo} onChange={setFGrupo} options={opts.grupos} placeholder="Todos os grupos" /></div>
-        <div className="pr-grupo" style={{ minWidth: 150 }}><SearchSelect value={fTipo} onChange={setFTipo} options={opts.tipos} placeholder="Todos os tipos" /></div>
-        <div className="pr-grupo" style={{ minWidth: 150 }}><SearchSelect value={SIT_TO_LBL[fSit]} onChange={(l) => setFSit(SIT_TO_VAL[l] || 'ativos')} options={SIT_OPTS} placeholder="Situação" /></div>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        <div className="flt-f"><label>Grupo</label><div className="pr-grupo"><SearchSelect value={fGrupo} onChange={setFGrupo} options={opts.grupos} placeholder="Todos" /></div></div>
+        <div className="flt-f"><label>Tipo</label><div className="pr-grupo" style={{ minWidth: 150 }}><SearchSelect value={fTipo} onChange={setFTipo} options={opts.tipos} placeholder="Todos" /></div></div>
+        <div className="flt-f"><label>Situação</label><div className="pr-grupo" style={{ minWidth: 150 }}><SearchSelect value={SIT_TO_LBL[fSit]} onChange={(l) => setFSit(SIT_TO_VAL[l] || 'ativos')} options={SIT_OPTS} placeholder="Situação" /></div></div>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 34, fontSize: 13, color: '#334155', cursor: 'pointer', whiteSpace: 'nowrap' }}>
           <input type="checkbox" checked={incluirZerado} onChange={(e) => setIncluirZerado(e.target.checked)} style={{ width: 15, height: 15, accentColor: '#f97316' }} />
           Incluir itens com valor zerado
         </label>

@@ -6,17 +6,17 @@
 .fatv-screen .ds-field { display: flex; flex-direction: column; gap: 3px; }
 .fatv-screen .ds-field > label { font-size: 11px; font-weight: 500; color: var(--n-500); }
 .fatv-screen .ds-field .ass { width: 100%; }
-.fatv-screen .ds-field .ass-btn { height: 30px; }
-.fatv-screen .field { height: 30px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: var(--n-700); background: #fff; }
+.fatv-screen .ds-field .ass-btn { height: 34px; }
+.fatv-screen .field { height: 34px; border: 1px solid #a7b3c4; border-radius: 8px; padding: 0 10px; font-size: 12.5px; font-family: inherit; color: var(--n-700); background: #fff; }
 .fatv-screen .field:focus { outline: none; border-color: var(--brand); }
 .fatv-screen select.field { cursor: pointer; }
 .fatv-screen .ds-actions { margin-left: auto; display: flex; gap: 8px; }
-.fatv-screen .btn-ghost { height: 30px; padding: 0 12px; border: 1px solid var(--n-200); border-radius: 8px; background: #fff; color: var(--n-600); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.fatv-screen .btn-ghost { height: 34px; padding: 0 12px; border: 1px solid var(--n-200); border-radius: 8px; background: #fff; color: var(--n-600); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .fatv-screen .btn-ghost:hover { background: var(--n-50); }
 
 /* multi-select loja (reaproveita padrão do Monitor) */
 .fatv-screen .ms { position: relative; }
-.fatv-screen .ms-btn { height: 30px; min-width: 170px; border: 1px solid var(--n-300); border-radius: 8px; padding: 0 10px; font-size: 12.5px; background: #fff; color: var(--n-700); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: inherit; }
+.fatv-screen .ms-btn { height: 34px; min-width: 170px; border: 1px solid var(--n-300); border-radius: 8px; padding: 0 10px; font-size: 12.5px; background: #fff; color: var(--n-700); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: inherit; }
 .fatv-screen .ms-btn:hover { border-color: var(--n-400); }
 .fatv-screen .ms-back { position: fixed; inset: 0; z-index: 40; }
 .fatv-screen .ms-pop { position: absolute; top: 38px; left: 0; z-index: 50; background: #fff; border: 1px solid var(--n-200); border-radius: 9px; box-shadow: 0 8px 24px rgba(15,23,42,.14); min-width: 210px; max-height: 300px; overflow: auto; padding: 6px; }

@@ -61,7 +61,7 @@ export function SetorProducao() {
                       <tr key={s.id}>
                         <td>{s.nome}</td>
                         <td className="muted">{s.responsavel || '—'}</td>
-                        <td className="c"><span style={{ color: s.ativo !== false ? '#166534' : '#94a3b8', fontWeight: 600, fontSize: 11.5 }}>{s.ativo !== false ? 'Ativo' : 'Inativo'}</span></td>
+                        <td className="c"><span className={'badge ' + (s.ativo !== false ? 'ok' : 'off')}>{s.ativo !== false ? 'Ativo' : 'Inativo'}</span></td>
                         <td className="r">
                           {canEdit ? <>
                             <button className="act" onClick={() => setModal({ id: s.id, nome: s.nome || '', responsavel: s.responsavel || '', ativo: s.ativo !== false })}>Editar</button>

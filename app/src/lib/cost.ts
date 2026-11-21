@@ -64,6 +64,21 @@ export function custoFichaPorcao(itens: FichaItem[], rendimentoPorcoes: number, 
   return total / por
 }
 
+// Custo da REDE (visão "Todas as lojas") = média do custo médio das lojas PONDERADA pelo estoque de cada uma
+// (loja com mais estoque pesa mais). Usado onde o dono olha a rede inteira (ex.: Rendimentos, que usa o
+// rendimento GLOBAL da rede). NÃO usar na Ficha/Fechamento — lá o custo é estritamente por loja.
+// Ordem: média ponderada (lojas com estoque > 0) → média simples das lojas com custo → preco_compra → 0.
+export type SaldoQtd = Saldo & { quantidade?: number }
+export function custoMedioRede(insumoId: string, saldos: SaldoQtd[], insumos: InsumoLike[]): number {
+  const comCusto = (saldos || []).filter((s) => s.insumo_id === insumoId && +(s.custo_medio || 0) > 0)
+  let somaQ = 0, somaV = 0
+  comCusto.forEach((s) => { const q = +(s.quantidade || 0); if (q > 0) { somaQ += q; somaV += q * +(s.custo_medio || 0) } })
+  if (somaQ > 0) return somaV / somaQ
+  if (comCusto.length) return comCusto.reduce((t, s) => t + +(s.custo_medio || 0), 0) / comCusto.length
+  const ins = (insumos || []).find((i) => i.id === insumoId)
+  return ins && +(ins.preco_compra || 0) > 0 ? +(ins.preco_compra || 0) : 0
+}
+
 export function custoDoInsumo(insumoId: string, lojaId: string | null, ctx: CostCtx): number {
   if (ctx.dataLimite && (ctx.entradas || ctx.saidas)) {
     const r = custoMedioNaData(insumoId, ctx.dataLimite, ctx)

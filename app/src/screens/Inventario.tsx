@@ -84,19 +84,19 @@ export function Inventario() {
 
   return (
     <div className="est-screen">
-      <div className="act-bar" style={{ justifyContent: 'flex-end' }}>
-        {canEdit ? <>
+      {/* filtros + ações numa linha só (padrão da Entradas/Saídas): filtros à esquerda, botões no canto direito */}
+      <div className="ds-filterbar">
+        <div className="ds-field" style={{ minWidth: 160 }}><label>Loja</label><SearchSelect value={lojas.find((l) => l.id === fLoja)?.nome || ''} options={lojas.map((l) => l.nome)} placeholder="Todas" onChange={(nm) => setFLoja(lojas.find((l) => l.nome === nm)?.id || '')} /></div>
+        <div className="ds-field" style={{ minWidth: 170 }}><label>Grupo de inventário</label><SearchSelect value={grupos.find((g) => g.id === fGrupo)?.nome || ''} options={grupos.map((g) => g.nome)} placeholder="Todos" onChange={(nm) => setFGrupo(grupos.find((g) => g.nome === nm)?.id || '')} /></div>
+        <div className="ds-field"><label>Nº do inventário</label><input className="field" placeholder="Número" value={fNum} onChange={(e) => setFNum(e.target.value)} /></div>
+        <div className="ds-field"><label>De</label><input type="date" className="field" value={fIni} onChange={(e) => setFIni(e.target.value)} /></div>
+        <div className="ds-field"><label>Até</label><input type="date" className="field" value={fFim} onChange={(e) => setFFim(e.target.value)} /></div>
+        {/* espaçador: numa linha só empurra os botões pra direita; se quebrar, a 2ª linha começa pela esquerda */}
+        <div style={{ flex: '1 0 0', marginLeft: -12 }} />
+        {canEdit ? <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn-sec" onClick={() => setGruposOpen(true)}>⚙ Grupos</button>
           <button className="btn-pri" onClick={() => setNovoOpen(true)}>+ Novo inventário</button>
-        </> : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
-      </div>
-
-      <div className="ds-filterbar">
-        <div className="ds-field" style={{ minWidth: 160 }}><label>Loja</label><SearchSelect value={lojas.find((l) => l.id === fLoja)?.nome || ''} options={lojas.map((l) => l.nome)} placeholder="Todas as lojas" onChange={(nm) => setFLoja(lojas.find((l) => l.nome === nm)?.id || '')} /></div>
-        <div className="ds-field" style={{ minWidth: 180 }}><label>Grupo Inventário</label><SearchSelect value={grupos.find((g) => g.id === fGrupo)?.nome || ''} options={grupos.map((g) => g.nome)} placeholder="Todos os grupos" onChange={(nm) => setFGrupo(grupos.find((g) => g.nome === nm)?.id || '')} /></div>
-        <div className="ds-field"><label>N. Inventário</label><input className="field" placeholder="[digite...]" value={fNum} onChange={(e) => setFNum(e.target.value)} /></div>
-        <div className="ds-field"><label>D. Inicial</label><input type="date" className="field" value={fIni} onChange={(e) => setFIni(e.target.value)} /></div>
-        <div className="ds-field"><label>D. Final</label><input type="date" className="field" value={fFim} onChange={(e) => setFFim(e.target.value)} /></div>
+        </div> : <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20, alignSelf: 'center' }}>👁 Somente leitura</span>}
       </div>
 
       <div className="tbl-wrap"><div className="tbl-scroll">
@@ -212,7 +212,7 @@ function InvDetalhe({ invId, insMap, lojaMap, grupoMap, canEdit = true, onBack, 
           <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>{inv ? `${TIPO_LABEL[inv.tipo || ''] || inv.tipo} · ${fmtD(inv.data_inicial)} a ${fmtD(inv.data_final)} · ${inv.status === 'ativo' ? 'Ativo' : 'Encerrado'}` : ''}</div>
         </div>
         <button className="btn-sec" onClick={onBack}>← Voltar</button>
-        {isAtivo && canEdit && <button className="btn-sec" style={{ color: '#e11d48', borderColor: '#fecaca' }} disabled={cancelarMut.isPending} onClick={() => cancelarMut.mutate()}>{cancelarMut.isPending ? 'Cancelando…' : '✕ Cancelar inventário'}</button>}
+        {isAtivo && canEdit && <button className="btn-sec btn-del" disabled={cancelarMut.isPending} onClick={() => cancelarMut.mutate()}>{cancelarMut.isPending ? 'Cancelando…' : '✕ Cancelar inventário'}</button>}
         {isAtivo && canEdit && <button className="btn-pri" disabled={encMut.isPending} onClick={() => encMut.mutate()}>{encMut.isPending ? 'Encerrando…' : '✓ Encerrar e ajustar estoque'}</button>}
         {inv && !isAtivo && canEdit && <button className="btn-sec" disabled={reabrirMut.isPending} onClick={() => reabrirMut.mutate()}>↺ Reabrir</button>}
         {!canEdit && <span style={{ fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}
@@ -335,7 +335,7 @@ function GruposModal({ grupos, insumos, tenantId, onClose, onChange, showToast }
                   <td>{g.nome}</td>
                   <td style={{ color: '#94a3b8' }}>{TIPO_LABEL[g.tipo || ''] || g.tipo || '—'}</td>
                   <td className="r mono">{g.itens?.length || 0}</td>
-                  <td className="c"><div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}><button className="btn-sec" style={{ height: 30 }} onClick={() => setEdit(g)}>Editar</button><button className="btn-sec" style={{ height: 30, color: '#e11d48' }} onClick={() => excluir(g.id)}>Excluir</button></div></td>
+                  <td className="c"><div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}><button className="btn-sec" style={{ height: 30 }} onClick={() => setEdit(g)}>Editar</button><button className="btn-sec btn-del" style={{ height: 30 }} onClick={() => excluir(g.id)}>Excluir</button></div></td>
                 </tr>)}
             </tbody>
           </table>

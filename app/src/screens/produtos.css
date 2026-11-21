@@ -4,11 +4,13 @@
 /* toolbar */
 .prod-screen .pr-toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04); }
 .prod-screen .pr-search { position: relative; flex: 1; min-width: 240px; }
-.prod-screen .pr-search svg { position: absolute; left: 13px; top: 12px; }
-.prod-screen .pr-search input { width: 100%; height: 40px; border: 1px solid var(--n-200); border-radius: 9px; padding: 0 12px 0 36px; font-size: 13px; font-family: inherit; color: var(--n-900); }
+.prod-screen .pr-toolbar.flt-bar { align-items: flex-end; padding: 10px 14px; }
+.prod-screen .pr-search svg { position: absolute; left: 13px; top: 10px; }
+.prod-screen .pr-toolbar .ass-btn { height: 34px; border-radius: 8px; }
+.prod-screen .pr-search input { width: 100%; height: 34px; border: 1px solid var(--n-200); border-radius: 8px; padding: 0 12px 0 36px; font-size: 13px; font-family: inherit; color: var(--n-900); }
 .prod-screen .pr-search input:focus { outline: none; border-color: var(--brand); }
 .prod-screen .pr-grupo { min-width: 180px; }
-.prod-screen .pr-novo { height: 40px; padding: 0 16px; border: none; border-radius: 9px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+.prod-screen .pr-novo { height: 34px; padding: 0 16px; border: none; border-radius: 8px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
 .prod-screen .pr-novo:hover { background: var(--brand-strong); }
 
 /* tabela */
@@ -29,6 +31,7 @@
 .prod-screen .b-sim { background: var(--emerald-tint); color: var(--emerald); }
 .prod-screen .b-nao { background: var(--n-100); color: var(--n-500); }
 .prod-screen .b-ativo { background: var(--emerald-tint); color: var(--emerald); }
+.prod-screen .badge.b-ativo, .prod-screen .badge.b-inativo { border-radius: 20px; } /* selo de situação = pílula (padrão) */
 .prod-screen .b-inativo { background: var(--n-100); color: var(--n-500); }
 .prod-screen .b-desenv { background: #fffbeb; color: #d97706; }
 

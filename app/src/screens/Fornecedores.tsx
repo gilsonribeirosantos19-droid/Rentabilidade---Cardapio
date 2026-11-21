@@ -122,15 +122,17 @@ export function Fornecedores() {
         <VinculosPane fornecedores={lista} />
       ) : (
       <>
-      <div className="fl-toolbar">
-        <div className="fl-search">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <input placeholder="Buscar por código, nome ou CNPJ..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+      <div className="fl-toolbar flt-bar">
+        <div className="flt-f flt-grow"><label>Buscar</label>
+          <div className="fl-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth={2}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            <input placeholder="Código, nome ou CNPJ..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+          </div>
         </div>
-        <div className="fl-cidade"><SearchSelect value={fCidade} onChange={setFCidade} options={cidades} placeholder="Cidade ▾" /></div>
-        <select className="fl-status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
-          <option value="">Status ▾</option><option value="ativo">Ativo</option><option value="inativo">Inativo</option>
-        </select>
+        <div className="flt-f"><label>Cidade</label><div className="fl-cidade"><SearchSelect value={fCidade} onChange={setFCidade} options={cidades} placeholder="Todas" /></div></div>
+        <div className="flt-f"><label>Status</label><select className="fl-status" value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+          <option value="">Todos</option><option value="ativo">Ativo</option><option value="inativo">Inativo</option>
+        </select></div>
         {canEdit
           ? <button className="fl-novo" onClick={() => setEditing({ status: 'ativo' })}>+ Novo Fornecedor</button>
           : <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd9a4', padding: '5px 11px', borderRadius: 20 }}>👁 Somente leitura</span>}

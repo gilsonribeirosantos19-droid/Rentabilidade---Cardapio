@@ -148,7 +148,7 @@ export function ConfigUsuarios() {
     <div className="usr-card" key={u.id} style={inativo ? { opacity: 0.55 } : undefined}>
       <div className="usr-avatar">{(u.nome || '?')[0].toUpperCase()}</div>
       <div className="usr-info">
-        <div className="usr-nome">{u.nome || '—'}{inativo ? ' · inativo' : ''}</div>
+        <div className="usr-nome">{u.nome || '—'}{inativo && <span className="badge off" style={{ marginLeft: 8 }}>Inativo</span>}</div>
         <div className="usr-email">{u.email || '—'}{u.role === 'gerente' && u.loja_id ? ` · ${lojaNome[u.loja_id] || 'loja'}` : ''}</div>
       </div>
       <span className={'role-badge ' + roleCls(u.role)}>{ROLE_LABEL[u.role || ''] || u.role || '—'}</span>

@@ -15,8 +15,8 @@
 .fic-screen .srch svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
 .fic-screen .btn-ghost { height: 34px; padding: 0 14px; border: 1px solid var(--n-200); border-radius: 8px; background: #fff; color: var(--n-600); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .fic-screen .btn-ghost:hover { background: var(--n-50); }
-.fic-screen .fic-nova { height: 34px; padding: 0 16px; border: none; border-radius: 8px; background: var(--info); color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
-.fic-screen .fic-nova:hover { background: var(--info-strong); }
+.fic-screen .fic-nova { height: 34px; padding: 0 16px; border: none; border-radius: 8px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+.fic-screen .fic-nova:hover { background: var(--brand-strong); }
 .fic-screen .fic-foot { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 12px 18px; margin-top: 14px; font-size: 13px; color: var(--n-500); }
 
 .fic-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
