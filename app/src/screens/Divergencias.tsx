@@ -5,7 +5,7 @@ import { useAuth } from '../lib/auth'
 import { downloadCsv } from '../lib/csv'
 import './estoque.css'
 
-type Insumo = { id: string; nome: string }
+type Insumo = { id: string; nome: string; preco_compra?: number }
 type Saldo = { insumo_id: string; loja_id?: string | null; quantidade?: number; custo_medio?: number }
 type Ficha = { id: string; nome?: string; preco_venda?: number | null; status?: string }
 type Vinc = { id: string; insumo_id: string; qtd_por_embalagem?: number | null; embalagem_descricao?: string; codigo_fornecedor?: string; fornecedor_id?: string }
@@ -37,8 +37,9 @@ export function Divergencias() {
       const nfeRec = (pendRaw ?? []) as Nfe[]
       const pendIds = nfeRec.map((n) => n.id)
       const desdeVendas = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10)
-      const [insumos, saldos, fichas, vinc, nfeItens, vendas, nfePresas, fornecedores, lojasR] = await Promise.all([
-        fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome').eq('tenant_id', tenantId).order('id').range(f, t)),
+      const iniMes = new Date().toLocaleDateString('en-CA').slice(0, 8) + '01'   // 1º dia do mês atual (data local)
+      const [insumos, saldos, fichas, vinc, nfeItens, vendas, nfePresas, fornecedores, lojasR, saidasMes] = await Promise.all([
+        fetchAll<Insumo>((f, t) => supabase.from('insumos').select('id,nome,preco_compra').eq('tenant_id', tenantId).order('id').range(f, t)),
         fetchAll<Saldo>((f, t) => supabase.from('saldo_estoque').select('insumo_id,loja_id,quantidade,custo_medio').eq('tenant_id', tenantId).order('id').range(f, t)),
         fetchAll<Ficha>((f, t) => supabase.from('fichas_tecnicas').select('id,nome,preco_venda,status').eq('tenant_id', tenantId).eq('status', 'ativa').order('id').range(f, t)),
         fetchAll<Vinc>((f, t) => supabase.from('insumo_fornecedores').select('id,insumo_id,qtd_por_embalagem,embalagem_descricao,codigo_fornecedor,fornecedor_id').eq('tenant_id', tenantId).order('id').range(f, t)),
@@ -49,8 +50,10 @@ export function Divergencias() {
         supabase.from('nfe_recebidas').select('numero,serie,nome_emitente,valor_total,created_at').eq('tenant_id', tenantId).eq('status', 'em_transito').then((r) => (r.data ?? []) as Nfe[], () => [] as Nfe[]),
         fetchAll<Forn>((f, t) => supabase.from('fornecedores').select('id,cnpj').eq('tenant_id', tenantId).order('id').range(f, t)),
         supabase.from('lojas').select('id,nome').eq('tenant_id', tenantId).then((r) => (r.data ?? []) as { id: string; nome: string }[], () => [] as { id: string; nome: string }[]),
+        // saídas do MÊS ATUAL (p/ "itens sem custo no mês")
+        fetchAll<{ insumo_id: string; loja_id?: string | null; quantidade?: number }>((f, t) => supabase.from('saidas_estoque').select('insumo_id,loja_id,quantidade').eq('tenant_id', tenantId).gte('criado_em', iniMes).order('id').range(f, t)).catch(() => [] as { insumo_id: string; loja_id?: string | null; quantidade?: number }[]),
       ])
-      return { insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas, fornecedores, lojas: lojasR }
+      return { insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas, fornecedores, lojas: lojasR, saidasMes }
     },
   })
 
@@ -88,7 +91,7 @@ export function Divergencias() {
 
   const checks = useMemo<Check[]>(() => {
     if (!data) return []
-    const { insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas, fornecedores, lojas } = data
+    const { insumos, saldos, fichas, vinc, nfeItens, nfeRec, vendas, nfePresas, fornecedores, lojas, saidasMes } = data
     const insMap: Record<string, string> = {}; insumos.forEach((i) => { insMap[i.id] = i.nome })
     const recMap: Record<string, Nfe> = {}; nfeRec.forEach((n) => { recMap[n.id] = n })
     const lojaMap: Record<string, string> = {}; lojas.forEach((l) => { lojaMap[l.id] = l.nome })
@@ -107,6 +110,13 @@ export function Divergencias() {
     const c: Check[] = []
     c.push({ key: 'nfe', titulo: 'Itens de NF-e sem vínculo', sev: 4, destino: ['fiscal/monitor', 'Monitor NF-e'], cols: ['NF-e', 'Produto da nota'], rows: nfeItens.filter((it) => { const n = recMap[it.nfe_id || '']; return n && n.status !== 'processada' && !resolvido(it) }).map((it) => ({ a: recMap[it.nfe_id || '']?.numero || '—', b: it.descricao_nfe || '—' })) })
     c.push({ key: 'custo', titulo: 'Saldo com custo médio zerado', sev: 2, destino: ['ajustes/custo', 'Ajuste de Custo Médio'], cols: ['Insumo', 'Saldo · Loja'], rows: saldos.filter((s) => (+(s.quantidade || 0) > 0) && !(+(s.custo_medio || 0) > 0)).map((s) => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) + ' · ' + comLoja(s.loja_id) })) })
+    // ITENS SEM CUSTO NO MÊS: tiveram saída no mês e não têm custo em NENHUMA loja nem preço de compra → valem R$ 0
+    // (no Fechamento ficam a R$ 0 em consumo/perdas/transferência; se forem contados no inventário, distorcem o CMV)
+    const comCusto = new Set(saldos.filter((s) => +(s.custo_medio || 0) > 0).map((s) => s.insumo_id))
+    insumos.forEach((i) => { if (+(i.preco_compra || 0) > 0) comCusto.add(i.id) })
+    const semMap: Record<string, { a: string; q: number; lj: string }> = {}
+    ;(saidasMes || []).forEach((s) => { if (comCusto.has(s.insumo_id) || !(+(s.quantidade || 0) > 0)) return; const k = s.insumo_id + '|' + (s.loja_id || ''); const o = (semMap[k] ||= { a: insMap[s.insumo_id] || '—', q: 0, lj: comLoja(s.loja_id) }); o.q += +(s.quantidade || 0) })
+    c.push({ key: 'semcusto', titulo: 'Itens sem custo no mês (valem R$ 0)', sev: 2, destino: ['insumos', 'Insumos'], cols: ['Insumo', 'Saída no mês · Loja'], rows: Object.values(semMap).sort((x, y) => x.a.localeCompare(y.a)).map((o) => ({ a: o.a, b: num(o.q) + ' · ' + o.lj })) })
     c.push({ key: 'neg', titulo: 'Estoque negativo', sev: 1, destino: ['ajustes/estoque', 'Ajuste de Estoque'], cols: ['Insumo', 'Saldo · Loja'], rows: saldos.filter((s) => +(s.quantidade || 0) < 0).map((s) => ({ a: insMap[s.insumo_id] || '—', b: num(s.quantidade) + ' · ' + comLoja(s.loja_id) })) })
     const vMap: Record<string, number> = {}; vendas.forEach((v) => { vMap[v.produto_nome || '—'] = (vMap[v.produto_nome || '—'] || 0) + (+(v.qtd || 0)) })
     c.push({ key: 'venda', titulo: 'Produtos vendidos sem ficha técnica', sev: 7, destino: ['fichas', 'Fichas Técnicas'], cols: ['Produto', 'Qtd vendida'], rows: Object.entries(vMap).map(([n, q]) => ({ a: n, b: num(q) })) })

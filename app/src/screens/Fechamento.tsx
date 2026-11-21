@@ -16,7 +16,9 @@ type Inv = { id: string; loja_id?: string; status?: string; data_final?: string 
 type InvItem = { inventario_id: string; insumo_id: string; qtd_contada?: number; custo_medio?: number }
 type Fech = { loja_id?: string; competencia?: string; situacao?: string; estoque_inicial?: number; compras?: number; entradas_transferencia?: number; saidas_transferencia?: number; consumo?: number; perdas?: number; estoque_final?: number; cmv?: number; faturamento?: number }
 type ItemRow = { id: string; nome: string; un: string; ei: number; compras: number; entT: number; saiT: number; consumo: number; perdas: number; ef: number; cmv: number }
-type Row = { loja: Loja; situacao: 'aberto' | 'fechado'; itens: ItemRow[]; faturamento: number; estoque_inicial: number; compras: number; entradas_transferencia: number; saidas_transferencia: number; consumo: number; perdas: number; estoque_final: number; cmv: number }
+// item do mês SEM CUSTO (custo R$ 0): onde = inventário (EI/EF a R$0 → distorce o CMV) | transferência (distorce o CMV) | saída (só colunas Consumo/Perdas)
+type SemCusto = { loja: string; nome: string; onde: 'inventário' | 'transferência' | 'saída' }
+type Row = { loja: Loja; situacao: 'aberto' | 'fechado'; itens: ItemRow[]; semCusto: SemCusto[]; faturamento: number; estoque_inicial: number; compras: number; entradas_transferencia: number; saidas_transferencia: number; consumo: number; perdas: number; estoque_final: number; cmv: number }
 
 // data LOCAL (Brasil) do movimento — evita que lançamento de madrugada (UTC) caia no dia/mês errado
 const dataOf = (m: Mov) => { const r = m.criado_em || m.created_at; return r ? new Date(r).toLocaleDateString('en-CA') : '' }
@@ -127,11 +129,14 @@ export function Fechamento() {
       const cmFimL = (id: string) => { if (cmCache[id] == null) { try { cmCache[id] = custoDoInsumo(id, l.id, ctxL) } catch { cmCache[id] = 0 } } return cmCache[id] }
       const byIns: Record<string, ItemRow> = {}
       const ens = (id: string) => byIns[id] || (byIns[id] = { id, nome: insMap[id]?.nome || '—', un: insMap[id]?.unidade_medida || '', ei: 0, compras: 0, entT: 0, saiT: 0, consumo: 0, perdas: 0, ef: 0, cmv: 0 })
-      const addInv = (inv: Inv | null, campo: 'ei' | 'ef') => { (inv && itensByInv[inv.id] || []).forEach((it) => { if (cmvSet.has(it.insumo_id)) ens(it.insumo_id)[campo] += (it.qtd_contada || 0) * (it.custo_medio || 0) }) }
+      // itens SEM CUSTO no mês (aviso): só registra, NÃO muda nenhum cálculo
+      const semCusto = new Map<string, SemCusto>()
+      const marcaSem = (id: string, onde: SemCusto['onde']) => { const k = id + '|' + onde; if (!semCusto.has(k)) semCusto.set(k, { loja: l.nome || '—', nome: insMap[id]?.nome || '—', onde }) }
+      const addInv = (inv: Inv | null, campo: 'ei' | 'ef') => { (inv && itensByInv[inv.id] || []).forEach((it) => { if (cmvSet.has(it.insumo_id)) { ens(it.insumo_id)[campo] += (it.qtd_contada || 0) * (it.custo_medio || 0); if ((it.qtd_contada || 0) > 0 && !((it.custo_medio || 0) > 0)) marcaSem(it.insumo_id, 'inventário') } }) }
       addInv(ini, 'ei'); addInv(fin, 'ef')
       // ajuste de estoque (correção) NÃO é compra: como EI e EF são contagem física, o ajuste já está refletido no EF → não entra em Compras (o ajuste de saída também já cai fora abaixo)
       entMes.filter((e) => e.loja_id === l.id && cmvSet.has(e.insumo_id)).forEach((e) => { const o = ens(e.insumo_id), v = (e.quantidade || 0) * (e.custo_unitario || 0); if (e.tipo === 'transferencia') o.entT += v; else if (e.tipo !== 'ajuste') o.compras += v })
-      saiMes.filter((s) => s.loja_id === l.id && cmvSet.has(s.insumo_id)).forEach((s) => { const o = ens(s.insumo_id), v = (s.quantidade || 0) * cmFimL(s.insumo_id); if (s.tipo === 'consumo') o.consumo += v; else if (s.tipo === 'transferencia') o.saiT += v; else if (['perda', 'vencimento', 'descarte'].includes(s.tipo || '')) o.perdas += v })
+      saiMes.filter((s) => s.loja_id === l.id && cmvSet.has(s.insumo_id)).forEach((s) => { const o = ens(s.insumo_id), v = (s.quantidade || 0) * cmFimL(s.insumo_id); if ((s.quantidade || 0) > 0 && !(cmFimL(s.insumo_id) > 0)) marcaSem(s.insumo_id, s.tipo === 'transferencia' ? 'transferência' : 'saída'); if (s.tipo === 'consumo') o.consumo += v; else if (s.tipo === 'transferencia') o.saiT += v; else if (['perda', 'vencimento', 'descarte'].includes(s.tipo || '')) o.perdas += v })
       // CMV por inventário = EI + Compras + Ent.Transf − Saí.Transf − Estoque Final.
       // (As perdas já entram naturalmente — o Estoque Final físico da contagem já as reflete;
       // somá-las de novo seria contar em dobro. E as saídas de transferência PRECISAM ser
@@ -140,13 +145,13 @@ export function Fechamento() {
         .filter((o) => o.ei || o.compras || o.entT || o.consumo || o.perdas || o.saiT || o.ef)
         .sort((a, b) => b.cmv - a.cmv)
       const ag = itens.reduce((a, o) => { (['ei', 'compras', 'entT', 'consumo', 'perdas', 'saiT', 'ef'] as const).forEach((k) => { a[k] += o[k] }); return a }, { ei: 0, compras: 0, entT: 0, consumo: 0, perdas: 0, saiT: 0, ef: 0 })
-      return { itens, estoque_inicial: ag.ei, compras: ag.compras, entradas_transferencia: ag.entT, saidas_transferencia: ag.saiT, consumo: ag.consumo, perdas: ag.perdas, estoque_final: ag.ef, cmv: ag.ei + ag.compras + ag.entT - ag.saiT - ag.ef }
+      return { itens, semCusto: [...semCusto.values()], estoque_inicial: ag.ei, compras: ag.compras, entradas_transferencia: ag.entT, saidas_transferencia: ag.saiT, consumo: ag.consumo, perdas: ag.perdas, estoque_final: ag.ef, cmv: ag.ei + ag.compras + ag.entT - ag.saiT - ag.ef }
     }
 
     return base.lojas.map((l) => {
       const c = compoLoja(l)
       const fech = base.fechamentos.find((f) => f.loja_id === l.id && f.competencia === comp && f.situacao === 'fechado')
-      if (fech) return { loja: l, situacao: 'fechado', itens: c.itens, faturamento: +(fech.faturamento || 0), estoque_inicial: +(fech.estoque_inicial || 0), compras: +(fech.compras || 0), entradas_transferencia: +(fech.entradas_transferencia || 0), saidas_transferencia: +(fech.saidas_transferencia || 0), consumo: +(fech.consumo || 0), perdas: +(fech.perdas || 0), estoque_final: +(fech.estoque_final || 0), cmv: +(fech.cmv || 0) }
+      if (fech) return { loja: l, situacao: 'fechado', itens: c.itens, semCusto: c.semCusto, faturamento: +(fech.faturamento || 0), estoque_inicial: +(fech.estoque_inicial || 0), compras: +(fech.compras || 0), entradas_transferencia: +(fech.entradas_transferencia || 0), saidas_transferencia: +(fech.saidas_transferencia || 0), consumo: +(fech.consumo || 0), perdas: +(fech.perdas || 0), estoque_final: +(fech.estoque_final || 0), cmv: +(fech.cmv || 0) }
       return { loja: l, situacao: 'aberto', faturamento: icoFatByLoja[l.id] || 0, ...c }
     })
   }, [base, invMap, itensByInv, comp, icoFatByLoja])
@@ -158,6 +163,11 @@ export function Fechamento() {
   }, [rows, busca])
 
   const total = useMemo(() => buscaRows.reduce((a, r) => { (['estoque_inicial', 'compras', 'entradas_transferencia', 'saidas_transferencia', 'consumo', 'perdas', 'estoque_final', 'cmv'] as const).forEach((k) => { a[k] = (a[k] || 0) + r[k] }); return a }, {} as Record<string, number>), [buscaRows])
+
+  // aviso "itens sem custo no mês" (das lojas em tela) — inventário/transferência afetam o CMV; saída só Consumo/Perdas
+  const semAll = useMemo(() => buscaRows.flatMap((r) => r.semCusto || []), [buscaRows])
+  const semCmv = semAll.filter((s) => s.onde !== 'saída').length
+  const [verSem, setVerSem] = useState(false)
 
   const anos = useMemo(() => { const y = now.getFullYear(); return Array.from({ length: 5 }, (_, i) => y + 1 - i) }, [now])
   const toggleRow = (id: string) => setSel((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -261,6 +271,27 @@ export function Fechamento() {
           <button className="btn-ghost" onClick={exportCSV}>↓ Exportar</button>
         </div>
       </div>
+
+      {semAll.length > 0 && (
+        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#92400e' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span>⚠ <b>{semAll.length}</b> {semAll.length === 1 ? 'item ficou' : 'itens ficaram'} <b>sem custo</b> neste mês (valem R$ 0).
+              {semCmv > 0 ? <> <b>{semCmv}</b> {semCmv === 1 ? 'afeta' : 'afetam'} o <b>CMV</b> (inventário/transferência).</> : <> Só afetam as colunas Consumo/Perdas, não o CMV.</>}
+              {' '}Cadastre o preço de compra ou vincule a nota antes de fechar.</span>
+            <button className="btn-ghost" style={{ height: 28, padding: '0 10px', fontSize: 12 }} onClick={() => setVerSem((v) => !v)}>{verSem ? 'Ocultar itens' : 'Ver itens'}</button>
+          </div>
+          {verSem && (
+            <div style={{ marginTop: 8, maxHeight: 220, overflow: 'auto', background: '#fff', border: '1px solid #fde68a', borderRadius: 8 }}>
+              <table className="cm-grid" style={{ fontSize: 12.5 }}>
+                <thead><tr><th>Loja</th><th>Insumo</th><th>Onde está sem custo</th><th>Afeta o CMV?</th></tr></thead>
+                <tbody>{[...semAll].sort((a, b) => (a.onde === 'saída' ? 1 : 0) - (b.onde === 'saída' ? 1 : 0) || a.loja.localeCompare(b.loja) || a.nome.localeCompare(b.nome)).map((s, i) => (
+                  <tr key={i}><td>{s.loja}</td><td>{s.nome}</td><td>{s.onde === 'inventário' ? 'Inventário (contado a R$ 0)' : s.onde === 'transferência' ? 'Transferência enviada' : 'Saída (consumo/perda)'}</td><td>{s.onde === 'saída' ? 'Não' : <b>Sim</b>}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="cm-toprow">
         <input className="cm-grid-search" style={{ marginBottom: 0 }} placeholder="Digite um texto para pesquisar..." value={busca} onChange={(e) => setBusca(e.target.value)} />
