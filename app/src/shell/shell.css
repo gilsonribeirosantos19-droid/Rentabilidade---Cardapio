@@ -2,7 +2,8 @@
 .shell { display: flex; height: 100vh; overflow: hidden; }
 
 /* ====== SIDEBAR (2 níveis, estilo Conta Azul) ====== */
-.modbar { width: 220px; background: var(--nav); flex-shrink: 0; display: flex; flex-direction: column; padding: 14px 0; transition: width .22s ease; overflow-y: auto; }
+/* tom do menu (aprovado 2026-11-20, referência do dono): marinho bem escuro com degradê sutil; texto cinza-claro peso 400; ícones azul-claro */
+.modbar { width: 220px; background: linear-gradient(180deg, #06163c 0%, #081b49 100%); flex-shrink: 0; display: flex; flex-direction: column; padding: 14px 0; transition: width .22s ease; overflow-y: auto; }
 .shell.dived .modbar { width: 52px; }
 .modbar::-webkit-scrollbar { width: 6px; } .modbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 4px; }
 .mlogo { display: flex; align-items: center; gap: 9px; padding: 2px 16px 14px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 8px; }
@@ -14,11 +15,14 @@
 .mlogo .m-uline { display: block; width: 28px; height: 3px; background: var(--orange); border-radius: 3px; margin-top: 5px; }
 .shell.dived .mlogo .txt { display: none; }
 
-.mod { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 9px; margin: 4px 10px; cursor: pointer; color: rgba(255,255,255,.74); position: relative; }
+.mod { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 9px; margin: 4px 10px; cursor: pointer; color: #c3cdd8; position: relative; }
 .mod:hover { background: rgba(255,255,255,.07); color: #fff; }
 .mod.on { background: rgba(249,115,22,.16); color: var(--orange); }
 .mod svg { width: 19px; height: 19px; flex: none; }
-.mod .l { font-size: 13.5px; font-weight: 500; white-space: nowrap; }
+.mod:not(.on) svg { color: #c9d6f5; }
+.mod:not(.on):hover svg { color: #fff; }
+.mod .l { font-size: 13.5px; font-weight: 400; white-space: nowrap; }
+.mod.on .l { font-weight: 500; }
 .mod .ch { margin-left: auto; font-size: 13px; color: rgba(255,255,255,.4); font-weight: 700; }
 .shell.dived .mod { justify-content: center; padding: 11px 0; margin: 5px 6px; }
 .shell.dived .mod svg { width: 18px; height: 18px; }
@@ -32,19 +36,19 @@
 .shell.dived .muinfo { display: none; }
 
 /* coluna de seções */
-.secbar { width: 168px; background: var(--nav-deep); flex-shrink: 0; display: none; flex-direction: column; padding: 14px 0; overflow-y: auto; border-right: 1px solid rgba(0,0,0,.25); }
+.secbar { width: 168px; background: #05133a; flex-shrink: 0; display: none; flex-direction: column; padding: 14px 0; overflow-y: auto; border-right: 1px solid rgba(0,0,0,.25); }
 .shell.dived .secbar { display: flex; }
 .secbar::-webkit-scrollbar { width: 6px; } .secbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 4px; }
 .sback { display: flex; align-items: center; gap: 9px; padding: 4px 14px 13px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 8px; cursor: pointer; color: var(--n-100); }
 .sback:hover .sbk { background: var(--orange); color: #fff; border-color: var(--orange); }
 .sbk { width: 24px; height: 24px; border-radius: 7px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex: none; color: var(--n-300); }
 .sback b { font-size: 16px; font-weight: 800; }
-.sitem { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; margin: 3px 9px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 13px; font-weight: 500; }
+.sitem { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; margin: 3px 9px; cursor: pointer; color: #c3cdd8; font-size: 13px; font-weight: 400; }
 .sitem:hover { background: rgba(255,255,255,.07); color: #fff; }
 .sitem.on { background: rgba(249,115,22,.15); color: var(--brand); font-weight: 600; }
 .sdot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .5; flex: none; }
 .sgrp { margin-top: 6px; }
-.sgrp-h { display: flex; align-items: center; gap: 10px; padding: 11px 14px 8px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 13px; font-weight: 600; }
+.sgrp-h { display: flex; align-items: center; gap: 10px; padding: 11px 14px 8px; cursor: pointer; color: #c3cdd8; font-size: 13px; font-weight: 500; }
 .sgrp-h:hover { color: #fff; }
 .sgrp-h svg { width: 12px; height: 12px; margin-left: auto; transition: transform .15s; }
 .sgrp.col .sgrp-h svg { transform: rotate(-90deg); }
