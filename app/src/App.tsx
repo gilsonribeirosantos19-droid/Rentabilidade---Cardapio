@@ -1,10 +1,19 @@
+import { lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './lib/auth'
 import { LojaProvider } from './lib/loja'
 import { Login } from './screens/Login'
-import { ResetPassword } from './screens/ResetPassword'
-import { Shell } from './shell/Shell'
-import { PortalShell } from './portal/PortalShell'
-import { PortalHub } from './portal/PortalHub'
+
+// Cada "app" baixa só o que usa (2026-11-21): o gerente no tablet baixa o Portal, não o ERP inteiro (e vice-versa).
+const ResetPassword = lazy(() => import('./screens/ResetPassword').then((m) => ({ default: m.ResetPassword })))
+const Shell = lazy(() => import('./shell/Shell').then((m) => ({ default: m.Shell })))
+const PortalShell = lazy(() => import('./portal/PortalShell').then((m) => ({ default: m.PortalShell })))
+const PortalHub = lazy(() => import('./portal/PortalHub').then((m) => ({ default: m.PortalHub })))
+
+const Carregando = () => (
+  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="spinner" />
+  </div>
+)
 
 function Gate() {
   const { session, loading, usuario, recovery, signOut } = useAuth()
@@ -47,7 +56,9 @@ export default function App() {
   // O hub da rede (/portal) agora é tratado DENTRO do Gate — exige login (ver Gate()).
   return (
     <AuthProvider>
-      <Gate />
+      <Suspense fallback={<Carregando />}>
+        <Gate />
+      </Suspense>
     </AuthProvider>
   )
 }
