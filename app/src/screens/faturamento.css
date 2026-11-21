@@ -68,4 +68,3 @@
 .fatv-screen tbody td.canc-sim { color: var(--danger); font-weight: 700; }
 .fatv-screen tfoot td { position: sticky; bottom: 0; background: var(--n-100); font-weight: 800; padding: 4px 9px; border-top: 2px solid #d6dce6; text-align: right; font-family: 'DM Mono', monospace; color: var(--n-900); }
 .fatv-screen tfoot td.l { text-align: left; font-family: inherit; }
-.fatv-screen .empty { text-align: center; color: var(--n-400); padding: 30px; }

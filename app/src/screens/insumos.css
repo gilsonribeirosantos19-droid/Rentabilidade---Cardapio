@@ -23,9 +23,9 @@
 
 /* tabela */
 .ins-screen .tbl-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; overflow: hidden; }
-.ins-screen .tbl-scroll { overflow-x: auto; }
+.ins-screen .tbl-scroll { overflow: auto; max-height: calc(100vh - 280px); } /* lista rola dentro do cartão → cabeçalho fixo (padrão das telas de Estoque) */
 .ins-screen table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.ins-screen thead th { background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid var(--n-200); white-space: nowrap; }
+.ins-screen thead th { position: sticky; top: 0; z-index: 2; background: var(--n-100); color: var(--n-500); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 10px; text-align: left; padding: 4px 9px; border-bottom: 1px solid var(--n-200); white-space: nowrap; }
 .ins-screen thead th.r { text-align: right; }
 .ins-screen thead th.c { text-align: center; }
 .ins-screen tbody td { padding: 4px 12px; border-bottom: 1px solid #eef1f5; color: var(--n-900); white-space: nowrap; vertical-align: middle; }
@@ -49,7 +49,6 @@
 .ins-screen .acoes-btn:hover { background: var(--n-100); color: var(--n-600); }
 .ins-screen .colgrid { cursor: pointer; vertical-align: -3px; margin-right: 9px; opacity: .85; }
 
-.ins-screen .empty { text-align: center; color: var(--n-400); padding: 50px 20px; font-size: 14px; }
 
 /* ===== ABA CADASTRO DE ITEM (form) ===== */
 .ins-screen .form-card { background: #fff; border: 1px solid #e7ebf0; border-radius: 12px; padding: 22px 24px; max-width: 1020px; }

@@ -36,7 +36,6 @@
 .pdv-screen .tbl tbody tr:last-child td { border-bottom: none; }
 .pdv-screen .tbl tbody tr:hover td { background: #d0dff2; }
 .pdv-screen .mono { font-family: 'DM Mono', monospace; }
-.pdv-screen .empty { text-align: center; color: var(--n-400); padding: 24px; }
 
 /* donut legenda + resumo */
 .pdv-screen .canal-leg-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; color: var(--n-700); }

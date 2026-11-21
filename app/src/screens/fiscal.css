@@ -68,7 +68,6 @@
 .fiscal-screen .lnk-btn:hover { background: var(--n-50); }
 .fiscal-screen .kebab { border: none; background: none; cursor: pointer; color: var(--n-400); font-size: 16px; padding: 2px 6px; border-radius: 6px; }
 .fiscal-screen .kebab:hover { background: var(--n-100); }
-.fiscal-screen .empty { text-align: center; color: var(--n-400); padding: 40px 20px; font-size: 14px; }
 
 .fiscal-screen .pag-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; font-size: 12px; color: var(--n-400); }
 .fiscal-screen .pag-btn { min-width: 30px; height: 30px; border: 1px solid var(--n-200); border-radius: 7px; background: #fff; color: var(--n-600); font-size: 12px; cursor: pointer; font-family: inherit; }

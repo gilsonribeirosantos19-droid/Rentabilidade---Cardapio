@@ -60,7 +60,6 @@
 .cmv-screen tfoot td.r { text-align: right; }
 .cmv-screen .act-btn { display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--n-200); background: #fff; font-size: 11px; font-weight: 600; color: var(--n-500); cursor: pointer; font-family: inherit; }
 .cmv-screen .act-btn:hover { background: var(--n-50); }
-.cmv-screen .empty { padding: 32px; text-align: center; color: var(--n-400); }
 
 /* resumo inferior */
 .cmv-screen .bottom-row { display: flex; align-items: stretch; background: #fff; border: 1px solid var(--n-200); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04); margin-bottom: 12px; }

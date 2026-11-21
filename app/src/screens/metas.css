@@ -40,7 +40,6 @@
 .metas-screen .chip-dif.pos { background: var(--ok-tint-2); color: var(--ok-strong); } .metas-screen .chip-dif.neg { background: var(--danger-tint-2); color: var(--danger-strong); }
 .metas-screen .pct { color: var(--n-400); font-family: 'DM Mono', monospace; font-size: 12px; }
 .metas-screen .tk-ok { color: var(--ok-strong); } .metas-screen .tk-low { color: var(--danger-strong); }
-.metas-screen .empty { text-align: center; color: var(--n-400); padding: 30px; }
 .metas-screen .gtag { display: inline-block; font-size: 9.5px; font-weight: 700; background: var(--info-tint); color: var(--info-strong); padding: 1px 7px; border-radius: 20px; margin-left: 8px; }
 
 /* modal de configuração */
