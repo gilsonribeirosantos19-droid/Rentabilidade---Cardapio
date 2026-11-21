@@ -14,20 +14,20 @@
 .mlogo .m-uline { display: block; width: 28px; height: 3px; background: var(--orange); border-radius: 3px; margin-top: 5px; }
 .shell.dived .mlogo .txt { display: none; }
 
-.mod { display: flex; align-items: center; gap: 12px; padding: 9px 16px; border-radius: 9px; margin: 2px 10px; cursor: pointer; color: rgba(255,255,255,.74); position: relative; }
+/* menu compacto (2026-11-20): ícone 16px, nome 12.5px peso 400 (500 parecia negrito), linhas baixas; selecionado peso 500 */
+.mod { display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 8px; margin: 1px 10px; cursor: pointer; color: rgba(255,255,255,.74); position: relative; }
 .mod:hover { background: rgba(255,255,255,.07); color: #fff; }
 .mod.on { background: rgba(249,115,22,.16); color: var(--orange); }
-.mod svg { width: 19px; height: 19px; flex: none; }
-/* letras do menu (2026-11-20): mais finas (400; 500 parecia negrito) e um pouco menores; selecionado fica 500 */
-.mod .l { font-size: 13px; font-weight: 400; white-space: nowrap; }
+.mod svg { width: 16px; height: 16px; flex: none; }
+.mod .l { font-size: 12.5px; font-weight: 400; white-space: nowrap; }
 .mod.on .l { font-weight: 500; }
-.mod .ch { margin-left: auto; font-size: 13px; color: rgba(255,255,255,.4); font-weight: 700; }
-.shell.dived .mod { justify-content: center; padding: 9px 0; margin: 3px 6px; }
-.shell.dived .mod svg { width: 18px; height: 18px; }
+.mod .ch { margin-left: auto; font-size: 12px; color: rgba(255,255,255,.4); font-weight: 700; }
+.shell.dived .mod { justify-content: center; padding: 8px 0; margin: 2px 6px; }
+.shell.dived .mod svg { width: 16px; height: 16px; }
 .shell.dived .mod .l, .shell.dived .mod .ch { display: none; }
 /* título de seção do menu (OPERACIONAL, VENDAS…) — só organização, mesmas cores do menu */
-.mgrp { padding: 14px 26px 4px; font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); white-space: nowrap; }
-.shell.dived .mgrp { padding: 8px 0 2px; margin: 0 14px; }
+.mgrp { padding: 11px 24px 3px; font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); white-space: nowrap; }
+.shell.dived .mgrp { padding: 6px 0 2px; margin: 0 14px; }
 .shell.dived .mgrp span { display: none; }
 .shell.dived .mgrp::after { content: ''; display: block; height: 1px; background: rgba(255,255,255,.12); }
 .mgrow { flex: 1; }
@@ -45,13 +45,13 @@
 .sback { display: flex; align-items: center; gap: 9px; padding: 4px 14px 13px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 8px; cursor: pointer; color: var(--n-100); }
 .sback:hover .sbk { background: var(--orange); color: #fff; border-color: var(--orange); }
 .sbk { width: 24px; height: 24px; border-radius: 7px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex: none; color: var(--n-300); }
-.sback b { font-size: 16px; font-weight: 800; }
-.sitem { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 8px; margin: 2px 9px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 12.5px; font-weight: 400; }
+.sback b { font-size: 15px; font-weight: 800; }
+.sitem { display: flex; align-items: center; gap: 9px; padding: 6px 12px; border-radius: 8px; margin: 1px 9px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 12px; font-weight: 400; }
 .sitem:hover { background: rgba(255,255,255,.07); color: #fff; }
 .sitem.on { background: rgba(249,115,22,.15); color: var(--brand); font-weight: 600; }
 .sdot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .5; flex: none; }
 .sgrp { margin-top: 6px; }
-.sgrp-h { display: flex; align-items: center; gap: 10px; padding: 9px 14px 6px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 12.5px; font-weight: 500; }
+.sgrp-h { display: flex; align-items: center; gap: 9px; padding: 7px 12px 5px; cursor: pointer; color: rgba(255,255,255,.72); font-size: 12px; font-weight: 500; }
 .sgrp-h:hover { color: #fff; }
 .sgrp-h svg { width: 12px; height: 12px; margin-left: auto; transition: transform .15s; }
 .sgrp.col .sgrp-h svg { transform: rotate(-90deg); }
