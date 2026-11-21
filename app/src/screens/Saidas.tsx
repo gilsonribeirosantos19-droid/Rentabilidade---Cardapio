@@ -156,7 +156,7 @@ export function Saidas() {
         <div className="fbar-ss" style={{ minWidth: 160 }}><SearchSelect value={fResp} options={resps} placeholder="Responsável: Todos" onChange={(v) => { setFResp(v); setPag(1) }} /></div>
         <div className="fbar-ss" style={{ minWidth: 150 }}><SearchSelect value={fMotivo} options={motivos} placeholder="Motivo: Todos" onChange={(v) => { setFMotivo(v); setPag(1) }} /></div>
         {/* espaçador: numa linha só empurra o período pra direita; se a barra quebrar, a 2ª linha começa pela esquerda */}
-        <div style={{ flex: '1 0 0' }} />
+        <div style={{ flex: '1 0 0', marginLeft: -8 }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div className="fbar-ss" style={{ minWidth: 130 }}><SearchSelect value={periodoSel} options={SPER_OPTS} placeholder="Período" onChange={(l) => setPreset(SPER_VAL[l] ? l : 'Período')} /></div>
           <input type="date" className="field" value={de} onChange={(e) => { setDe(e.target.value); setPeriodoSel('Período') }} />
